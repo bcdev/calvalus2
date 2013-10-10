@@ -59,6 +59,7 @@ public class StreamingProductReader extends AbstractProductReader {
 
     private SequenceFile.Reader reader;
     private int sliceHeight;
+    private Document dom;
 
     public StreamingProductReader(Path path, Configuration configuration) {
         super(null);    // TODO  use a ProductReaderPluigin
@@ -76,6 +77,7 @@ public class StreamingProductReader extends AbstractProductReader {
         for (Band band : bands) {
             band.setSourceImage(new BandImage(band, product.getPreferredTileSize()));
         }
+        initGeoCodings(dom, product);
         return product;
     }
 
@@ -101,10 +103,10 @@ public class StreamingProductReader extends AbstractProductReader {
         Text sliceHeightText = metadata.get(new Text("slice.height"));
         sliceHeight = Integer.parseInt(sliceHeightText.toString());
 
-        Document dom = createDOM(metadata.get(new Text("dim")));
+        dom = createDOM(metadata.get(new Text("dim")));
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
-        initGeoCodings(dom, product);
+
 
         Path indexPath = StreamingProductIndex.getIndexPath(path);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);

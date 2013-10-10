@@ -32,6 +32,11 @@ public class FilteredRecordSource implements RecordSource {
         };
     }
 
+    @Override
+    public String getTimeAndLocationColumnDescription() {
+        return input.getTimeAndLocationColumnDescription();
+    }
+
     private class RecIt extends RecordIterator {
 
         private final Iterator<Record> inputIt;

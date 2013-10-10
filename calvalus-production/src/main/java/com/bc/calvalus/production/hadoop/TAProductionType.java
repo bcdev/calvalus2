@@ -107,7 +107,7 @@ public class TAProductionType extends HadoopProductionType {
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
-        boolean autoStaging = productionRequest.isAutoStaging();
+        boolean autoStaging = productionRequest.getBoolean("autoStaging", true);
         return new Production(productionId,
                               productionName,
                               null, // no dedicated output directory

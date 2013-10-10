@@ -18,4 +18,6 @@ public interface RecordSource {
      * @throws Exception if any error occurs.
      */
     Iterable<Record> getRecords() throws Exception;
+
+    String getTimeAndLocationColumnDescription();
 }

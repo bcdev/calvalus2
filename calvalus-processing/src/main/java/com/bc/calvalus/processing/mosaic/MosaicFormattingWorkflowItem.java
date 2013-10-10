@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -61,10 +60,6 @@ public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
     }
 
     protected void configureJob(Job job) throws IOException {
-        Configuration jobConfig = job.getConfiguration();
-
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
-
         job.setInputFormatClass(DirectoryFileInputFormat.class);
         FileInputFormat.setInputPaths(job, new Path(getInputDir()));
 

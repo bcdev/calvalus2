@@ -25,12 +25,11 @@ public class RegionTest extends GWTTestCase {
 
         LatLng[] polygon = region.getVertices();
         assertNotNull(polygon);
-        assertEquals(5, polygon.length);
+        assertEquals(4, polygon.length);
         assertEquals(LatLng.newInstance(-90, -180), polygon[0]);
         assertEquals(LatLng.newInstance(-90, 180), polygon[1]);
         assertEquals(LatLng.newInstance(90, 180), polygon[2]);
         assertEquals(LatLng.newInstance(90, -180), polygon[3]);
-        assertEquals(LatLng.newInstance(-90, -180), polygon[4]);
     }
 
     public void testGetGeometryWktFormatsVertices() {

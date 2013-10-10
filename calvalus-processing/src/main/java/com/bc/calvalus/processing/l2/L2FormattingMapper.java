@@ -39,7 +39,9 @@ import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -152,23 +154,36 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         return targetProduct;
     }
 
-    private void writeQuicklooks(Mapper.Context context, Configuration jobConfig, String productName,
-                                 Product targetProduct) {
+    private void writeQuicklooks(Mapper.Context context, Configuration jobConfig, String productName, Product targetProduct) {
         LOG.info("Creating quicklooks.");
-        String outputBandList = jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
-        String[] bandNames = outputBandList.split(",");
-        for (String bandName : bandNames) {
-            Quicklooks.QLConfig qlConfig = getQuicklookConfig(context, bandName);
-            if (qlConfig != null) {
-                QLMapper.createQuicklook(targetProduct, productName, context, qlConfig);
+
+        List<Quicklooks.QLConfig> qlConfigList = getValidQlConfigs(jobConfig);
+        if (qlConfigList.size() == 1) {
+            QLMapper.createQuicklook(targetProduct, productName, context, qlConfigList.get(0));
+        } else {
+            for (Quicklooks.QLConfig qlConfig : qlConfigList) {
+                String imageFileName = productName + "_" + qlConfig.getBandName();
+                QLMapper.createQuicklook(targetProduct, imageFileName, context, qlConfig);
             }
         }
         LOG.info("Finished creating quicklooks.");
     }
 
-    private Quicklooks.QLConfig getQuicklookConfig(Mapper.Context context, String bandName) {
-        Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
-        for (Quicklooks.QLConfig config : configs) {
+    private List<Quicklooks.QLConfig> getValidQlConfigs(Configuration conf) {
+        Quicklooks.QLConfig[] allQlConfigs = Quicklooks.get(conf);
+        String[] bandNames = conf.getStrings(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
+        List<Quicklooks.QLConfig> qlConfigList = new ArrayList<Quicklooks.QLConfig>(bandNames.length);
+        for (String bandName : bandNames) {
+            Quicklooks.QLConfig qlConfig = getQuicklookConfig(allQlConfigs, bandName);
+            if (qlConfig != null) {
+                qlConfigList.add(qlConfig);
+            }
+        }
+        return qlConfigList;
+    }
+
+    private Quicklooks.QLConfig getQuicklookConfig(Quicklooks.QLConfig[] allQlConfigs, String bandName) {
+        for (Quicklooks.QLConfig config : allQlConfigs) {
             if (bandName.equalsIgnoreCase(config.getBandName())) {
                 return config;
             }

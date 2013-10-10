@@ -24,25 +24,15 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static com.bc.calvalus.portal.client.L3ConfigUtils.*;
+import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
+import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -228,9 +218,9 @@ public class L3ConfigForm extends Composite {
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
             periodCount.setValue(getPeriodCount(minDate,
-                                                maxDate,
-                                                steppingPeriodLength.getValue(),
-                                                compositingPeriodLength.getValue()));
+                    maxDate,
+                    steppingPeriodLength.getValue(),
+                    compositingPeriodLength.getValue()));
         } else {
             periodCount.setValue(0);
         }
@@ -241,8 +231,9 @@ public class L3ConfigForm extends Composite {
             Polygon polygon = selectedRegion.createPolygon();
             regionBounds = Region.getBounds(polygon);
         } else {
-            regionBounds = LatLngBounds.newInstance(LatLng.newInstance(-90, -180),
-                                                    LatLng.newInstance(90, 180));
+            final LatLng sw = LatLng.newInstance(-90, -180);
+            final LatLng ne = LatLng.newInstance(90, 180);
+            regionBounds = LatLngBounds.newInstance(sw, ne);
         }
         updateTargetSize();
     }
@@ -312,7 +303,7 @@ public class L3ConfigForm extends Composite {
         boolean compositingPeriodLengthValid = compositingPeriodLength.getValue() >= 1 && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
-                                          "Compositing period length must be >= 1 and less or equal to than period");
+                    "Compositing period length must be >= 1 and less or equal to than period");
         }
 
         boolean resolutionValid = resolution.getValue() > 0.0;
@@ -374,7 +365,13 @@ public class L3ConfigForm extends Composite {
             } else {
                 parameters.put(prefix + ".name", variable.name);
             }
-            parameters.put(prefix + ".aggregator", variable.aggregator);
+            String aggregator = variable.aggregator;
+            if (aggregator.startsWith("PERCENTILE_")) {
+                parameters.put(prefix + ".aggregator", "PERCENTILE");
+                parameters.put(prefix + ".percentage", aggregator.substring("PERCENTILE_".length()));
+            } else {
+                parameters.put(prefix + ".aggregator", aggregator);
+            }
             parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
             parameters.put(prefix + ".fillValue", variable.fillValue + "");
         }
@@ -470,7 +467,15 @@ public class L3ConfigForm extends Composite {
                 "AVG",
                 "AVG_ML",
                 "MIN_MAX",
-                "PERCENTILE"
+                "PERCENTILE_2",
+                "PERCENTILE_5",
+                "PERCENTILE_10",
+                "PERCENTILE_25",
+                "PERCENTILE_50",
+                "PERCENTILE_75",
+                "PERCENTILE_90",
+                "PERCENTILE_95",
+                "PERCENTILE_98"
         );
 
         SelectionCell aggregatorCell = new SelectionCell(valueList);

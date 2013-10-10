@@ -15,16 +15,19 @@ public class BundleDescriptor {
     @Parameter(itemAlias = "processorDescriptor")
     ProcessorDescriptor[] processorDescriptors;
 
+    private String bundleLocation;
+
 
     public BundleDescriptor() {
     }
 
-    public BundleDescriptor(String bundleName, String bundleVersion, ProcessorDescriptor... processorDescriptors) {
+    public BundleDescriptor(String bundleName, String bundleVersion, String bundleLocation, ProcessorDescriptor... processorDescriptors) {
         Assert.notNull(bundleName, "bundleName");
         Assert.notNull(bundleVersion, "bundleVersion");
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
         this.processorDescriptors = processorDescriptors;
+        this.bundleLocation = bundleLocation;
     }
 
     public String getBundleName() {
@@ -37,5 +40,13 @@ public class BundleDescriptor {
 
     public ProcessorDescriptor[] getProcessorDescriptors() {
         return processorDescriptors;
+    }
+
+    public void setBundleLocation(String bundleLocation) {
+        this.bundleLocation = bundleLocation;
+    }
+
+    public String getBundleLocation() {
+        return bundleLocation;
     }
 }

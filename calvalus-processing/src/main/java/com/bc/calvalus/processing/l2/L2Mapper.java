@@ -63,6 +63,7 @@ import java.util.regex.Pattern;
  * <ul>
  * <li>transforms request to parameter objects</li>
  * <li>instantiates and calls operator</li>
+ * <li>handles results</li>
  * </ul>
  *
  * @author Boe

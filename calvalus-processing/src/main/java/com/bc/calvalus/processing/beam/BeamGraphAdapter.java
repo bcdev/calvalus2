@@ -85,7 +85,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             NodeContext targetNodeContext = graphContext.getNodeContext(targetNode);
             targetProduct = targetNodeContext.getTargetProduct();
         } catch (GraphException e) {
-            throw new IOException("GraphException", e);
+            throw new IOException("Error executing Graph: " + e.getMessage(), e);
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             getLogger().info("Skip processing");

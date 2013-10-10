@@ -1,0 +1,51 @@
+Calvalus Installation Instruction (Version 1.7)
+-----------------------------------------------
+
+Prerequisites:
+To use the Calvalus software a Java JDK 1.6 from Oracle is required.
+Apache Hadoop has to be of Version 1.x.
+Both software packages have to be installed on all nodes of the cluster.
+A Namenode and a Tasktracker service have to be running.
+
+
+The Calvalus software archive consist of:
+ - the the Calvalus software bundle
+ - the BEAM software bundle
+ - the CPT (Calvalus production tool)
+ - a sample configuration file for the CPT ("calvalus.config")
+
+The CPT tool can be used to install/uninstall software bundle and processing request.
+For a more detailed description see chapter 7 of the Software User Manual.
+
+To let the CPT know with which cluster it should connect the
+supplied "calvalus.config" should be adapted.
+
+It is mostly sufficient to change the hostname of the Namenode and the Tasktracker.
+These are the configuration keys: "calvalus.hadoop.fs.default.name" and "calvalus.hadoop.mapred.job.tracker"
+The adapted configuration file should then be placed into
+the directory $HOME/.calvalus/ of the user that uses the CPT tool.
+
+The CPT tool is a Java JAR containing all required dependencies. It can be invoked with:
+
+java -jar cpt.jar
+
+For help:
+java -jar cpt.jar --help
+
+The remaining step is to install the BEAM and the Calvalus bundle into the HDFS:
+
+java -jar cpt.jar --deploy beam-bundle/*.jar beam-4.11.1
+java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-1.7
+
+Whereas the name of the BEAM and Calvalus bundle are given in the "calvalus.hadoop.calvalus.calvalus.bundle" and
+the "calvalus.hadoop.calvalus.beam.bundle" configuration property.
+
+To validate the bundle deployment you can use the "hadoop fs" tool:
+hadoop fs -ls /calvalus/software/1.0
+
+This should list two sub-directories.
+
+
+To do actual processing one or more processor bundles are required.
+They are not part of this software archive.
+

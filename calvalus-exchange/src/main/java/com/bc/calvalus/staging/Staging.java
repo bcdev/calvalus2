@@ -3,11 +3,19 @@ package com.bc.calvalus.staging;
 import com.bc.ceres.core.CanceledException;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public abstract class Staging implements Runnable {
+
     private boolean cancelled;
 
     /**
@@ -37,29 +45,31 @@ public abstract class Staging implements Runnable {
         DirScanner dirScanner = new DirScanner(sourceDir, true, true);
         String[] entryNames = dirScanner.scan();
         //            ... then create new file (avoid including the new ZIP in the ZIP!)
-        ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(targetZipFile)));
-        zipOutputStream.setMethod(ZipEntry.DEFLATED);
+        if (entryNames.length > 0) {
+            ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(targetZipFile)));
+            zipOutputStream.setMethod(ZipEntry.DEFLATED);
 
-        try {
-            for (String entryName : entryNames) {
-                ZipEntry zipEntry = new ZipEntry(entryName.replace('\\', '/'));
+            try {
+                for (String entryName : entryNames) {
+                    ZipEntry zipEntry = new ZipEntry(entryName.replace('\\', '/'));
 
-                File sourceFile = new File(sourceDir, entryName);
-                FileInputStream inputStream = new FileInputStream(sourceFile);
-                try {
-                    zipOutputStream.putNextEntry(zipEntry);
-                    copy(inputStream, zipOutputStream);
-                    zipOutputStream.closeEntry();
-                } finally {
-                    inputStream.close();
+                    File sourceFile = new File(sourceDir, entryName);
+                    FileInputStream inputStream = new FileInputStream(sourceFile);
+                    try {
+                        zipOutputStream.putNextEntry(zipEntry);
+                        copy(inputStream, zipOutputStream);
+                        zipOutputStream.closeEntry();
+                    } finally {
+                        inputStream.close();
+                    }
                 }
+            } finally {
+                zipOutputStream.close();
             }
-        } finally {
-            zipOutputStream.close();
         }
     }
 
-    private static void copy(InputStream inputStream, OutputStream outputStream) throws IOException{
+    private static void copy(InputStream inputStream, OutputStream outputStream) throws IOException {
         byte[] buffer = new byte[64 * 1024];
         while (true) {
             int n = inputStream.read(buffer);

@@ -20,6 +20,7 @@
                     <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
+                        <g:Button ui:field='checkRecordSourceButton' text="Check"/>
                         <g:Button ui:field='removeRecordSourceButton' text="Remove"/>
                     </g:HorizontalPanel>
                 </g:VerticalPanel>

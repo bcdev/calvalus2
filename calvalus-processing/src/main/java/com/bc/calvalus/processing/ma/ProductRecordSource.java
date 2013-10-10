@@ -86,6 +86,11 @@ public class ProductRecordSource implements RecordSource {
         };
     }
 
+    @Override
+    public String getTimeAndLocationColumnDescription() {
+        return "BEAM product format";
+    }
+
     public static RecordTransformer createShiftTransformer(Header header, Rectangle inputRect) {
         List<String> attributeNames = Arrays.asList(header.getAttributeNames());
         final int xAttributeIndex = attributeNames.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_X_ATT_NAME);

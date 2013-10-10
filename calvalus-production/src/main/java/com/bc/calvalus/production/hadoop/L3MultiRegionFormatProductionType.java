@@ -1,13 +1,10 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3BinProcessorWorkflowItem;
-import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -15,7 +12,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
@@ -46,7 +42,7 @@ public class L3MultiRegionFormatProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level 3 Multi-Region-Formatting", productionRequest);
+        String defaultProductionName = createProductionName("Level-3 Multi-Region-Formatting", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
@@ -69,15 +65,6 @@ public class L3MultiRegionFormatProductionType extends HadoopProductionType {
                 JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
-        String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
-        jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
-
-        List<DateRange> dateRanges = productionRequest.getDateRanges();
-        DateRange dateRange = dateRanges.get(0);
-        String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-        String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
-        jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
-        jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
         WorkflowItem workflowItem = new L3MultiRegionFormatWorkflowItem(getProcessingService(), productionName, jobConfig);
 

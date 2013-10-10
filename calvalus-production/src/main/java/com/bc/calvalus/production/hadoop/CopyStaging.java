@@ -74,9 +74,10 @@ class CopyStaging extends ProductionStaging {
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / fileStatuses.length, path.getName()));
             }
         }
-         if (totalFilesSize < 2L * GIGABYTE) {
-            zip(stagingDir, new File(stagingDir, stagingDir.getName() + ".zip"));
-         }
+        if (totalFilesSize < 2L * GIGABYTE) {
+            String zipFilename = getSafeFilename(production.getName() + ".zip");
+            zip(stagingDir, new File(stagingDir, zipFilename));
+        }
 
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0F, ""));
     }

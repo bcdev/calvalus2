@@ -57,8 +57,6 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.setIfUnset("calvalus.system.beam.imageManager.enableSourceTileCaching", "true");
-
         // because the size of the value objects can get very big
         // it is better to report progress more often
         // to prevent timeouts (Hadoop default is 10000)

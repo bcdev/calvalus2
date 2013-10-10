@@ -18,11 +18,16 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.AbstractWorkflowItem;
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
@@ -92,9 +97,77 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     public void updateStatus() {
         if (jobId != null) {
             if (!getStatus().isDone()) {
-                setStatus(processingService.getJobStatus(jobId));
+                ProcessStatus newJobStatus = processingService.getJobStatus(jobId);
+                if (newJobStatus.getState().equals(ProcessState.ERROR)) {
+                    String failedTaskMessage = getDiagnosticFromFirstFailedTask();
+                    if (failedTaskMessage != null) {
+                        newJobStatus = new ProcessStatus(ProcessState.ERROR, newJobStatus.getProgress(), failedTaskMessage);
+                    }
+                }
+                setStatus(newJobStatus);
             }
         }
+    }
+
+    private String getDiagnosticFromFirstFailedTask() {
+        JobClient jobClient = processingService.getJobClient();
+        org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
+        try {
+            RunningJob runningJob = jobClient.getJob(downgradeJobId);
+            if (runningJob == null) {
+                return null;
+            }
+//            for (TaskReport mapTaskReport : jobClient.getMapTaskReports(downgradeJobId)) {
+//                System.out.println("mapTaskReport = " + mapTaskReport.getCurrentStatus() + " "+ mapTaskReport.getState());
+//                if (mapTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
+//                    String[] taskDiagnostics = mapTaskReport.getDiagnostics();
+//                    System.out.println("taskDiagnostics = " + Arrays.toString(taskDiagnostics));
+//                    if (taskDiagnostics.length > 0) {
+//                        return getErrorMessageFromDiagnostics(taskDiagnostics);
+//                    }
+//                }
+//            }
+//            for (TaskReport reduceTaskReport : jobClient.getReduceTaskReports(downgradeJobId)) {
+//                System.out.println("reduceTaskReport = " + reduceTaskReport.getCurrentStatus() + " "+ reduceTaskReport.getState());
+//                if (reduceTaskReport.getCurrentStatus().equals(TIPStatus.FAILED)) {
+//                    String[] taskDiagnostics = reduceTaskReport.getDiagnostics();
+//                    System.out.println("taskDiagnostics = " + Arrays.toString(taskDiagnostics));
+//                    if (taskDiagnostics.length > 0) {
+//                        return getErrorMessageFromDiagnostics(taskDiagnostics);
+//                    }
+//                }
+//            }
+
+            int eventCounter = 0;
+            while (true) {
+                TaskCompletionEvent[] taskCompletionEvents = runningJob.getTaskCompletionEvents(eventCounter);
+                if (taskCompletionEvents.length == 0) {
+                    break;
+                }
+                eventCounter += taskCompletionEvents.length;
+                for (TaskCompletionEvent taskCompletionEvent : taskCompletionEvents) {
+                    if (taskCompletionEvent.getTaskStatus().equals(TaskCompletionEvent.Status.FAILED)) {
+                        String[] taskDiagnostics = runningJob.getTaskDiagnostics(taskCompletionEvent.getTaskAttemptId());
+                        if (taskDiagnostics.length > 0) {
+                            return getErrorMessageFromDiagnostics(taskDiagnostics);
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
+    }
+
+    static String getErrorMessageFromDiagnostics(String[] taskDiagnostics) {
+        // this is a stack trace and we only want the case
+        // so take the first line
+        // remove the "*Exception: " prefixes (can be multiple)
+        String firstMessage = taskDiagnostics[0];
+        String firstLine = firstMessage.split("\\n")[0];
+        String[] firstLineSplit = firstLine.split("Exception: ");
+        return firstLineSplit[firstLineSplit.length - 1];
     }
 
     @Override
@@ -136,11 +209,11 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected JobID submitJob(Job job) throws IOException {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE),
-                             configuration);
+        final String calvalusBundle = configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE);
+        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), configuration);
         // Add BEAM modules to classpath of Hadoop jobs
-        addBundleToClassPath(configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE),
-                             configuration);
+        final String beamBundle = configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE);
+        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, beamBundle), configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

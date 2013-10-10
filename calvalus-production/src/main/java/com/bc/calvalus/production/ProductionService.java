@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
 
@@ -13,7 +14,7 @@ import java.io.OutputStream;
 public interface ProductionService {
 
     /**
-     * Gets all known product sets.
+     * Gets all known product sets which match the given filter.
      *
      * @param filter A filter expression (not yet used).
      *
@@ -24,18 +25,18 @@ public interface ProductionService {
     ProductSet[] getProductSets(String filter) throws ProductionException;
 
     /**
-     * Gets all known processors.
+     * Gets all known bundles which match the given filter.
      *
-     * @param filter A filter expression (not yet used).
+     * @param filter A filter to define which bundle is searched for.
      *
      * @return The processors.
      *
      * @throws ProductionException If a service error occurred.
      */
-    BundleDescriptor[] getBundles(String filter) throws ProductionException;
+    BundleDescriptor[] getBundles(BundleFilter filter) throws ProductionException;
 
     /**
-     * Gets all known productions.
+     * Gets all known productions which match the given filter.
      *
      * @param filter A filter expression (not yet used).
      *
@@ -157,7 +158,29 @@ public interface ProductionService {
      *
      * @return true, if the file could be found and removed.
      *
-     * @throws ProductionException If an error occured (file exists, but can't be removed).
+     * @throws ProductionException If an error occurred (file exists, but can't be removed).
      */
     boolean removeUserFile(String userName, String path) throws ProductionException;
+
+    /**
+     * Deletes a directory from the user's file space in the inventory.
+     *
+     * @param userName The name of an authorised user.
+     * @param path     A relative path into the user's file space.
+     *
+     * @return true, if the directory could be found and removed.
+     *
+     * @throws ProductionException If an error occurred (directory exists, but can't be removed).
+     */
+    boolean removeUserDirectory(String userName, String path) throws ProductionException;
+
+    /**
+     * Gets the qualified path to the specified user file.
+     *
+     * @param userName The name of the user.
+     * @param filePath A relative path.
+     *
+     * @return A fully qualified path to the user file.
+     */
+    String getQualifiedUserPath(String userName, String filePath);
 }

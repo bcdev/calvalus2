@@ -16,8 +16,10 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -25,6 +27,8 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
@@ -46,7 +50,9 @@ import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -57,12 +63,16 @@ import java.util.Map;
  */
 public class L2ConfigForm extends Composite {
 
+    public static final String NO_PROCESSOR_SELCTION = "<none>";
+
     interface TheUiBinder extends UiBinder<Widget, L2ConfigForm> {
+
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     interface L2Style extends CssResource {
+
         String explanatoryValue();
 
         String explanatoryLabel();
@@ -90,21 +100,28 @@ public class L2ConfigForm extends Composite {
     FormPanel uploadForm;
     @UiField
     Button editParametersButton;
+    @UiField
+    CheckBox showMyProcessors;
+    @UiField
+    CheckBox showSystemProcessors;
+    @UiField
+    CheckBox showAllUserProcessors;
 
     private final boolean selectionMandatory;
+    private final PortalContext portalContext;
     private final Filter<DtoProcessorDescriptor> processorFilter;
-    private final DtoProcessorDescriptor[] allProcessors;
     private final Map<DtoParameterDescriptor, Widget> parameterDescriptorWidgets;
-
-    private DtoProcessorDescriptor[] processorDescriptors;
+    private final List<DtoProcessorDescriptor> processorDescriptors;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, null, selectionMandatory);
     }
 
     public L2ConfigForm(PortalContext portalContext, Filter<DtoProcessorDescriptor> processorFilter, boolean selectionMandatory) {
+        this.portalContext = portalContext;
         this.processorFilter = processorFilter;
         this.selectionMandatory = selectionMandatory;
+        this.processorDescriptors = new ArrayList<DtoProcessorDescriptor>();
         initWidget(uiBinder.createAndBindUi(this));
 
         FileUploadManager.submitOnChange(uploadForm, fileUpload, "echo=xml",
@@ -129,7 +146,6 @@ public class L2ConfigForm extends Composite {
         parameterDescriptorWidgets = new HashMap<DtoParameterDescriptor, Widget>();
         editParametersButton.addClickHandler(new EditParametersAction());
 
-        allProcessors = portalContext.getProcessors();
         updateProcessorList();
         processorList.addChangeHandler(new ChangeHandler() {
             @Override
@@ -138,32 +154,47 @@ public class L2ConfigForm extends Composite {
             }
         });
 
+        ValueChangeHandler<Boolean> valueChangeHandler = new ValueChangeHandler<Boolean>() {
+            @Override
+            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+                updateProcessorList();
+            }
+        };
+        showMyProcessors.addValueChangeHandler(valueChangeHandler);
+        showAllUserProcessors.addValueChangeHandler(valueChangeHandler);
+        showSystemProcessors.addValueChangeHandler(valueChangeHandler);
+
         updateProcessorDetails();
 
     }
 
     public void updateProcessorList() {
-        DtoProcessorDescriptor[] filteredProcessorDesc = allProcessors;
+        DtoProcessorDescriptor oldSelection = getSelectedProcessorDescriptor();
+
+        processorDescriptors.clear();
+        if (showSystemProcessors.getValue()) {
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_SYSTEM));
+        }
+        if (showMyProcessors.getValue()) {
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_USER));
+        }
+        if (showAllUserProcessors.getValue()) {
+            Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_ALL_USERS));
+        }
+
         if (processorFilter != null) {
-            ArrayList<DtoProcessorDescriptor> filtered = new ArrayList<DtoProcessorDescriptor>(allProcessors.length);
-            for (DtoProcessorDescriptor productSet : allProcessors) {
-                if (processorFilter.accept(productSet)) {
-                    filtered.add(productSet);
+            final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
+            while (iterator.hasNext()) {
+                DtoProcessorDescriptor productSet = iterator.next();
+                if (!processorFilter.accept(productSet)) {
+                    iterator.remove();
                 }
             }
-            filteredProcessorDesc = filtered.toArray(new DtoProcessorDescriptor[filtered.size()]);
         }
-        DtoProcessorDescriptor oldSelection = null;
-        if (processorDescriptors != null) {
-            int selectedIndex = processorList.getSelectedIndex();
-            if (selectedIndex != -1) {
-                oldSelection = processorDescriptors[selectionMandatory ? selectedIndex : selectedIndex - 1];
-            }
-        }
-        processorDescriptors = filteredProcessorDesc;
+
         processorList.clear();
         if (!selectionMandatory) {
-            processorList.addItem("<none>");
+            processorList.addItem(NO_PROCESSOR_SELCTION);
         }
         int newSelectionIndex = 0;
         boolean productSetChanged = true;
@@ -204,7 +235,7 @@ public class L2ConfigForm extends Composite {
         int selectedIndex = processorList.getSelectedIndex();
         int offset = selectionMandatory ? 0 : 1;
         if (selectedIndex >= offset) {
-            return processorDescriptors[selectedIndex - offset];
+            return processorDescriptors.get(selectedIndex - offset);
         } else {
             return null;
         }
@@ -226,10 +257,11 @@ public class L2ConfigForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
         DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
-            parameters.put("processorBundleName", processorDescriptor.getBundleName());
-            parameters.put("processorBundleVersion", processorDescriptor.getBundleVersion());
-            parameters.put("processorName", processorDescriptor.getExecutableName());
-            parameters.put("processorParameters", getProcessorParameters());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, getProcessorParameters());
         }
         return parameters;
     }

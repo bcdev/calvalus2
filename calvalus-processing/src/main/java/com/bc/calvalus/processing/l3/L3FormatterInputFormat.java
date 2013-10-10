@@ -16,13 +16,13 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
@@ -33,9 +33,9 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * A input format that generate a single input split for the l3 job.
@@ -49,20 +49,35 @@ public class L3FormatterInputFormat extends FileInputFormat {
      */
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
-        List<FileStatus> fileStatuses = listStatus(job);
-        List<InputSplit> splits = new ArrayList<InputSplit>(1);
-        Set<String> allHosts = new HashSet<String>();
-        for (FileStatus file : fileStatuses) {
-            Path path = file.getPath();
-            FileSystem fs = path.getFileSystem(job.getConfiguration());
-            long length = file.getLen();
-            BlockLocation[] blkLocations = fs.getFileBlockLocations(file, 0, length);
+        List<FileStatus> fileStatusOfParts = listStatus(job);
+        CalvalusLogger.getLogger().info("Total part files to process : " + fileStatusOfParts.size());
+        Map<Path, List<String>> directoryToHostMap = new HashMap<Path, List<String>>();
+        for (FileStatus fileStatusOfPart : fileStatusOfParts) {
+
+            Path partPath = fileStatusOfPart.getPath();
+            FileSystem fs = partPath.getFileSystem(job.getConfiguration());
+            long length = fileStatusOfPart.getLen();
+            BlockLocation[] blkLocations = fs.getFileBlockLocations(fileStatusOfPart, 0, length);
             String[] hosts = blkLocations[0].getHosts();
+
+            Path directoryPath = partPath.getParent();
+            List<String> allHosts = directoryToHostMap.get(directoryPath);
+            if (allHosts == null) {
+                allHosts = new ArrayList<String>();
+                directoryToHostMap.put(directoryPath, allHosts);
+            }
             allHosts.addAll(Arrays.asList(hosts));
         }
-        Path[] inputPaths = FileInputFormat.getInputPaths(job);
-        // length has no meaning
-        splits.add(new FileSplit(inputPaths[0], 0, 42, allHosts.toArray(new String[allHosts.size()])));
+        List<InputSplit> splits = new ArrayList<InputSplit>();
+        for (Map.Entry<Path, List<String>> pathListEntry : directoryToHostMap.entrySet()) {
+            Path partDir = pathListEntry.getKey();
+            List<String> allHosts = pathListEntry.getValue();
+
+            // length has no meaning
+            FileSplit split = new FileSplit(partDir, 0, 42, allHosts.toArray(new String[allHosts.size()]));
+            splits.add(split);
+        }
+        CalvalusLogger.getLogger().info("Total part directories to process : " + splits.size());
         return splits;
     }
 

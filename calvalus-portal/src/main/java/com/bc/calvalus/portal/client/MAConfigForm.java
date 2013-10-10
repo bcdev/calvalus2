@@ -45,6 +45,8 @@ public class MAConfigForm extends Composite {
     Button addRecordSourceButton;
     @UiField
     Button removeRecordSourceButton;
+    @UiField
+    Button checkRecordSourceButton;
 
     @UiField
     IntegerBox macroPixelSize;
@@ -76,6 +78,7 @@ public class MAConfigForm extends Composite {
         AddRecordSourceAction addRecordSourceAction = new AddRecordSourceAction();
         addRecordSourceButton.addClickHandler(addRecordSourceAction);
         removeRecordSourceButton.addClickHandler(new RemoveRecordSourceAction());
+        checkRecordSourceButton.addClickHandler(new CheckRecordSourceAction());
 
         fileUpload = new FileUpload();
         fileUpload.setName("fileUpload");
@@ -117,6 +120,22 @@ public class MAConfigForm extends Composite {
             }
         });
     }
+
+    private void checkRecordSource(final String recordSource) {
+        portalContext.getBackendService().checkUserFile(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
+            @Override
+            public void onSuccess(String message) {
+                Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Failed", "Failed to parse " + recordSource + ": " + caught.getMessage());
+            }
+        });
+    }
+
+
 
     private void setRecordSources(String[] filePaths) {
         recordSources.clear();
@@ -270,6 +289,15 @@ public class MAConfigForm extends Composite {
                 Dialog.error("Remove File",
                              "No file selected.");
             }
+        }
+    }
+
+    private class CheckRecordSourceAction implements ClickHandler {
+        @Override
+        public void onClick(ClickEvent event) {
+            final String recordSource = getSelectedRecordSourceFilename();
+            // should be made async!
+            checkRecordSource(recordSource);
         }
     }
 }

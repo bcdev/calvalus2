@@ -154,6 +154,11 @@ public abstract class AbstractInventoryService implements InventoryService {
         return getFileSystem().delete(makeQualified(path), false);
     }
 
+    @Override
+    public boolean removeDirectory(String path) throws IOException {
+        return getFileSystem().delete(makeQualified(path), true);
+    }
+
     public FileStatus[] globFileStatuses(List<String> pathPatterns) throws IOException {
         Pattern pattern = createPattern(pathPatterns);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);

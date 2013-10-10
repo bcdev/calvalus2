@@ -25,6 +25,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
+import java.util.ServiceLoader;
+
 /**
  * The configuration for the match-up analysis.
  *
@@ -188,7 +190,22 @@ public class MAConfig implements XmlConvertible {
         if (service != null) {
             return service.createRecordSource(getRecordSourceUrl());
         } else {
-            throw new IllegalStateException("Service not found: " + className);
+            if (className != null) {
+                throw new IllegalStateException("record source reader service " + className + " of point data file not found");
+            } else {
+                ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
+                StringBuffer supportedExtensions = new StringBuffer();
+                for (RecordSourceSpi spi : loader) {
+                    for (String extension : spi.getAcceptedExtensions()) {
+                        if (supportedExtensions.length() > 0) {
+                            supportedExtensions.append(", ");
+                        }
+                        supportedExtensions.append(extension);
+                    }
+                }
+                throw new IllegalArgumentException("no record source reader found for filename extension of " + getRecordSourceUrl()
+                                                   + " point data file (one of " + supportedExtensions + " expected)");
+            }
         }
     }
 

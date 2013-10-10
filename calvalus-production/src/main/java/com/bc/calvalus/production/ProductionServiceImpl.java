@@ -1,10 +1,12 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -66,7 +68,7 @@ public class ProductionServiceImpl implements ProductionService {
         this.productionTypes = productionTypes;
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
-        this.logger = Logger.getLogger("com.bc.calvalus");
+        this.logger = CalvalusLogger.getLogger();
     }
 
     @Override
@@ -79,7 +81,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(String filter) throws ProductionException {
+    public BundleDescriptor[] getBundles(BundleFilter filter) throws ProductionException {
         try {
             return processingService.getBundles(filter);
         } catch (Exception e) {
@@ -142,8 +144,7 @@ public class ProductionServiceImpl implements ProductionService {
 
 
     @Override
-    public synchronized void scpProduction(final String productionId, final String scpPath) throws
-                                                                                            ProductionException {
+    public synchronized void scpProduction(final String productionId, final String scpPath) throws ProductionException {
 
         executorService.submit(new Runnable() {
             @Override
@@ -163,7 +164,7 @@ public class ProductionServiceImpl implements ProductionService {
 
                         scpTo = new ScpTo(user, host);
                         scpTo.connect();
-                        Production production = getProduction(productionId);
+                        final Production production = getProduction(productionId);
                         ProductionType type = findProductionType(production.getProductionRequest());
                         if (!(type instanceof HadoopProductionType)) {
                             return;
@@ -175,7 +176,8 @@ public class ProductionServiceImpl implements ProductionService {
                         File[] listToCopy = inputDir.listFiles(new FilenameFilter() {
                             @Override
                             public boolean accept(File dir, String name) {
-                                return !name.startsWith(inputDir.getName());
+                                final String zippedProductionFilename = ProductionStaging.getSafeFilename(production.getName() + ".zip");
+                                return !name.equals(zippedProductionFilename);
                             }
                         });
                         logger.info("Starting to copy via scp");
@@ -352,6 +354,20 @@ public class ProductionServiceImpl implements ProductionService {
         } catch (IOException e) {
             throw new ProductionException(e);
         }
+    }
+
+    @Override
+    public boolean removeUserDirectory(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.removeDirectory(getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
+    public String getQualifiedUserPath(String userName, String path) {
+        return inventoryService.getQualifiedPath(getUserPath(userName, path));
     }
 
     private String getUserGlob(String userName, String dirPath) {

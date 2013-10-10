@@ -178,6 +178,11 @@ public class ProductRecordSourceTest {
             public Iterable<Record> getRecords() throws Exception {
                 return Arrays.asList((Record) RecordUtils.newRecord(new GeoPos(0F, 1F), null, "?"));
             }
+
+            @Override
+            public String getTimeAndLocationColumnDescription() {
+                return null;
+            }
         };
 
         MAConfig config = new MAConfig();

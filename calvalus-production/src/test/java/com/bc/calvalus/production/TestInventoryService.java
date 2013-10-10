@@ -57,4 +57,9 @@ public class TestInventoryService implements InventoryService {
     public boolean removeFile(String userPath) throws IOException {
         return false;
     }
+
+    @Override
+    public boolean removeDirectory(String userPath) throws IOException {
+        return false;
+    }
 }

@@ -49,6 +49,7 @@ public interface JobConfigNames {
 
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
+    String CALVALUS_L2_BUNDLE_LOCATION = "calvalus.l2.bundleLocation";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
 
     String CALVALUS_METADATA_TEMPLATE = "calvalus.metadata.template";
@@ -56,14 +57,23 @@ public interface JobConfigNames {
     String CALVALUS_PROJECT_NAME = "calvalus.project.name";
 
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
+    String CALVALUS_L3_FEATURE_NAMES = "calvalus.l3.featureNames";
     String CALVALUS_L3_FORMAT_PARAMETERS = "calvalus.l3.format.parameters";
-    String CALVALUS_L3_PARAMETERS_FIRST = "calvalus.l3.parameters.first";
+    String CALVALUS_CELL_PARAMETERS = "calvalus.cell.parameters";
     String CALVALUS_L3_REDUCERS = "calvalus.l3.reducers";
     String CALVALUS_L3_COMPUTE_OUTPUTS = "calvalus.l3.computeOutputs";
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
 
+    public static final String[] LEVEL3_METADATA_KEYS = {
+            JobConfigNames.CALVALUS_MIN_DATE,
+            JobConfigNames.CALVALUS_MAX_DATE,
+            JobConfigNames.CALVALUS_REGION_GEOMETRY,
+            JobConfigNames.CALVALUS_INPUT_REGION_NAME,
+            JobConfigNames.CALVALUS_L3_PARAMETERS,
+            JobConfigNames.CALVALUS_L3_FEATURE_NAMES
+    };
 
     String CALVALUS_MIN_DATE = "calvalus.minDate";
     String CALVALUS_MAX_DATE = "calvalus.maxDate";

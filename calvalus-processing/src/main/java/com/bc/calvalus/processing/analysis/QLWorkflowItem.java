@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -55,6 +56,11 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
     }
 
     protected void configureJob(Job job) throws IOException {
+        Configuration jobConfig = job.getConfiguration();
+
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(QLMapper.class);
@@ -63,5 +69,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
+        ProcessorFactory.installProcessorBundle(jobConfig);
+
     }
 }

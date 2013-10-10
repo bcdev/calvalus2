@@ -86,6 +86,12 @@ public class QLProductionType extends HadoopProductionType {
                                     ProductionRequest productionRequest) throws ProductionException {
 
         Configuration jobConfig = createJobConfig(productionRequest);
+
+        ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, jobConfig);
+        setRequestParameters(productionRequest, jobConfig);
+        processorProductionRequest.configureProcessor(jobConfig);
+
         setRequestParameters(productionRequest, jobConfig);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();

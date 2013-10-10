@@ -88,7 +88,7 @@ public class L2PlusProductionType extends HadoopProductionType {
 
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
         boolean isFormattingRequired = processorDescriptor != null &&
-                processorDescriptor.getFormatting() != ProcessorDescriptor.FormattingType.IMPLICIT;
+                                       processorDescriptor.getFormatting() != ProcessorDescriptor.FormattingType.IMPLICIT;
         boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
 
         if (isFormattingRequired && isFormattingRequested) {
@@ -168,6 +168,10 @@ public class L2PlusProductionType extends HadoopProductionType {
         String processorBundle = processorProductionRequest.getProcessorBundle();
         if (processorBundle != null) {
             formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            String processorBundleLocation = processorProductionRequest.getProcessorBundleLocation();
+            if (processorBundleLocation != null) {
+                formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
+            }
         }
 
         formatJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, formattingInputDir);
@@ -197,7 +201,7 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                     ProcessorProductionRequest processorProductionRequest) throws
                                                                                                            ProductionException {
 
-        productionRequest.ensureParameterSet("processorName");
+        productionRequest.ensureParameterSet(ProcessorProductionRequest.PROCESSOR_NAME);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 

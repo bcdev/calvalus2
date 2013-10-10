@@ -72,7 +72,6 @@ public class L2ProductionType extends HadoopProductionType {
                                       String productionName,
                                       ProductionRequest productionRequest) throws ProductionException {
 
-        productionRequest.ensureParameterSet("processorName");
         List<DateRange> dateRanges = productionRequest.getDateRanges();
 
         String outputDir = getOutputPath(productionRequest, productionId, "");

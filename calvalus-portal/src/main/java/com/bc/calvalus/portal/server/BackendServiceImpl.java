@@ -18,6 +18,7 @@ package com.bc.calvalus.portal.server;
 
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
@@ -34,6 +35,9 @@ import com.bc.calvalus.portal.shared.DtoRegion;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordSource;
+import com.bc.calvalus.processing.ma.RecordSourceSpi;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -41,12 +45,15 @@ import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.Principal;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -76,6 +83,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private ProductionService productionService;
     private BackendConfig backendConfig;
     private Timer statusObserver;
+    private static final DateFormat CCSDS_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /**
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
@@ -170,9 +178,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public DtoProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException {
+    public DtoProcessorDescriptor[] getProcessors(String filterString) throws BackendServiceException {
         try {
             List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
+            final BundleFilter filter = BundleFilter.fromString(filterString);
+            filter.withTheUser(getUserName());
+
             final BundleDescriptor[] bundleDescriptors = productionService.getBundles(filter);
             for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
                 DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
@@ -189,7 +200,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
         for (int i = 0; i < processorDescriptors.length; i++) {
             dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                        processorDescriptors[i]);
+                                        bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
         }
         return dtoDescriptors;
     }
@@ -294,6 +305,65 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    @Override
+    public boolean removeUserDirectory(String filePath) throws BackendServiceException {
+        try {
+            return productionService.removeUserDirectory(getUserName(), filePath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public String checkUserFile(String filePath) throws BackendServiceException {
+        try {
+            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            Iterable<Record> records = recordSource.getRecords();
+            int numRecords = 0;
+            double latMin = +Double.MAX_VALUE;
+            double latMax = -Double.MAX_VALUE;
+            double lonMin = +Double.MAX_VALUE;
+            double lonMax = -Double.MAX_VALUE;
+            long timeMin = Long.MAX_VALUE;
+            long timeMax = Long.MIN_VALUE;
+
+            for (Record record : records) {
+                GeoPos location = record.getLocation();
+                if (location != null && location.isValid()) {
+                    numRecords++;
+                    latMin = Math.min(latMin, location.getLat());
+                    latMax = Math.max(latMax, location.getLat());
+                    lonMin = Math.min(lonMin, location.getLon());
+                    lonMax = Math.max(lonMax, location.getLon());
+                }
+                Date time = record.getTime();
+                if (time != null) {
+                    timeMin = Math.min(timeMin, time.getTime());
+                    timeMax = Math.max(timeMax, time.getTime());
+                }
+            }
+            String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
+                                             recordSource.getTimeAndLocationColumnDescription(),
+                                             numRecords);
+            if (numRecords > 0) {
+                reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
+                                           latMin, latMax, lonMin, lonMax);
+            }
+            if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
+                reportMsg += String.format("Time range: [%s, %s]\n",
+                                           CCSDS_FORMAT.format(new Date(timeMin)),
+                                           CCSDS_FORMAT.format(new Date(timeMax)));
+            } else {
+                reportMsg += "No time information given.\n";
+            }
+            return reportMsg.replace("\n", "<br>");
+        } catch (Exception e) {
+            throw convert(e);
+        }
+    }
+
     private String[] convert(String[] strings) {
         if (strings == null) {
             return new String[0];
@@ -312,7 +382,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getRegionWKT());
     }
 
-    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion,
+    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
@@ -320,6 +390,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
                                           bundleName,
                                           bundleVersion,
+                                          bundlePath,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
                                           processorDescriptor.getOutputProductType(),
@@ -420,7 +491,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                      gwtProductionRequest.getProductionParameters());
     }
 
-    private BackendServiceException convert(ProductionException e) {
+    private BackendServiceException convert(Exception e) {
         log(e.getMessage(), e);
         return new BackendServiceException(e.getMessage(), e);
     }

@@ -43,7 +43,21 @@ public abstract class RecordSourceSpi {
      * @param recordSourceUrl A record source URL.
      * @return {@code true}, if this SPI can decode the content of the given URL.
      */
-    protected abstract boolean canDecodeContent(String recordSourceUrl);
+    protected boolean canDecodeContent(String recordSourceUrl) {
+        for (String extension : getAcceptedExtensions()) {
+            if (recordSourceUrl.endsWith(extension)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Defines the supported extensions of filenames this record source reader can decode.
+     * Example: { ".csv", ".txt" }
+     * @return array of strings of file name extensions
+     */
+    public abstract String[] getAcceptedExtensions();
 
     /**
      * Gets a SPI instance for the given SPI class name.

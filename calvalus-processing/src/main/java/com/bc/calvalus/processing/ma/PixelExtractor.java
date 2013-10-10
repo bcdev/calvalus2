@@ -262,7 +262,7 @@ public class PixelExtractor {
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
         for (int i = 0, y = y0; y < y0 + height; y++) {
             for (int x = x0; x < x0 + width; x++, i++) {
-                if (!band.isPixelValid(x0, y0)) {
+                if (!band.isPixelValid(x, y)) {
                     samples[i] = Float.NaN;
                 }
             }

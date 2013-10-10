@@ -12,7 +12,6 @@ import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import javax.security.auth.login.FailedLoginException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,8 +38,8 @@ import java.util.regex.Pattern;
  */
 public class IngestionTool extends Configured implements Tool {
 
-    static final String DEFAULT_PRODUCT_TYPE = "MER_RR__1P";
-    static final String DEFAULT_REVISION = "r03";
+    public static final String DEFAULT_PRODUCT_TYPE = "MER_RR__1P";
+    public static final String DEFAULT_REVISION = "r03";
     //static final String DEFAULT_PATTERN = "<type>.*\.N1";
 
     private static Options options;
@@ -68,108 +67,12 @@ public class IngestionTool extends Configured implements Tool {
 
     @Override
     public int run(String[] args) throws Exception {
+        // parse command line arguments
+        CommandLineParser commandLineParser = new PosixParser();
+        final CommandLine commandLine = commandLineParser.parse(options, args);
         try {
-            String productType = DEFAULT_PRODUCT_TYPE;
-            String revision = DEFAULT_REVISION;
-            long blockSizeParameter = -1;
-
-            // parse command line arguments
-            CommandLineParser commandLineParser = new PosixParser();
-            final CommandLine commandLine = commandLineParser.parse(options, args);
-
-            if (commandLine.hasOption("producttype")) {
-                productType = commandLine.getOptionValue("producttype");
-            }
-            if (commandLine.hasOption("revision")) {
-                revision = commandLine.getOptionValue("revision");
-            }
-            if (commandLine.hasOption("blocksize")) {
-                blockSizeParameter = Long.parseLong(commandLine.getOptionValue("blocksize"));
-            }
-            final String filenamePattern;
-            if (commandLine.hasOption("filenamepattern")) {
-                filenamePattern = commandLine.getOptionValue("filenamepattern");
-            } else {
-                filenamePattern = productType + ".*\\.N1";
-            }
-            Pattern pattern = Pattern.compile(filenamePattern);
-
             FileSystem hdfs = FileSystem.get(getConf());
-            final short replication;
-            if (commandLine.hasOption("replication")) {
-                replication = Short.parseShort(commandLine.getOptionValue("replication"));
-            } else {
-                replication = hdfs.getDefaultReplication();
-            }
-
-            boolean verify = commandLine.hasOption("verify");
-
-            // determine input files
-            List<File> sourceFiles = new ArrayList<File>();
-            for (String path : commandLine.getArgs()) {
-                File file = new File(path);
-                collectInputFiles(file, pattern, sourceFiles);
-            }
-            if (sourceFiles.isEmpty()) {
-                throw new FileNotFoundException("no files found");
-            }
-            System.out.format("%d files to be ingested\n", sourceFiles.size());
-
-            // cache HDFS parameters for block size
-            final int bufferSize = hdfs.getConf().getInt("io.file.buffer.size", 4096);
-            final int checksumSize = hdfs.getConf().getInt("io.bytes.per.checksum", 512);
-
-            // loop over input files
-            for (File sourceFile : sourceFiles) {
-                String archivePath = getArchivePath(sourceFile, productType, revision, pattern);
-
-                // calculate block size to cover complete N1
-                // blocksize must be a multiple of checksum size
-                long fileSize = sourceFile.length();
-                long blockSize;
-                if (blockSizeParameter == -1) {
-                    blockSize = ((fileSize + checksumSize - 1) / checksumSize) * checksumSize;
-                } else {
-                    blockSize = ((blockSizeParameter + checksumSize - 1) / checksumSize) * checksumSize;
-                }
-
-                // construct HDFS output stream
-                Path destPath = new Path(archivePath, sourceFile.getName());
-                // copy if either verification is off or target does not exist or target has different size
-                if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
-                    int attempt = 1;
-                    boolean finished = false;
-                    IOException exception = null;
-                    System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
-                    while (attempt <= 3 && !finished) {
-                        short actualReplication = attempt == 1 ? replication : 3;
-                        OutputStream out = hdfs.create(destPath, true, bufferSize, actualReplication, blockSize);
-                        FileInputStream in = new FileInputStream(sourceFile);
-                        try  {
-                            IOUtils.copyBytes(in, out, getConf(), true);
-                            finished = true;
-                            if (actualReplication != replication) {
-                                hdfs.setReplication(destPath, replication);
-                            }
-                        }catch (IOException ioe){
-                            System.err.print("copying attempt " + attempt + " failed.");
-                            ioe.printStackTrace();
-                            exception = ioe;
-                        } finally {
-                            out.close();
-                            in.close();
-                        }
-                        attempt++;
-                    }
-                    if (!finished) {
-                        throw new IOException("Failed to copy: " + sourceFile, exception);
-                    }
-                } else {
-                    System.out.println(MessageFormat.format("skipping {0} existing in {1}", sourceFile, archivePath));
-                }
-            }
-
-            return 0;
+            return handleIngestionCommand(commandLine, commandLine.getArgs(), hdfs);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -177,6 +80,111 @@ public class IngestionTool extends Configured implements Tool {
             formatter.printHelp("ingest.sh", options);
             return 1;
         }
+    }
+
+    public static int handleIngestionCommand(CommandLine commandLine, String[] files, FileSystem hdfs) throws IOException {
+        String productType = DEFAULT_PRODUCT_TYPE;
+        String revision = DEFAULT_REVISION;
+        long blockSizeParameter = -1;
+
+
+        if (commandLine.hasOption("producttype")) {
+            productType = commandLine.getOptionValue("producttype");
+        }
+        if (commandLine.hasOption("revision")) {
+            revision = commandLine.getOptionValue("revision");
+        }
+        if (commandLine.hasOption("blocksize")) {
+            blockSizeParameter = Long.parseLong(commandLine.getOptionValue("blocksize"));
+        }
+        final String filenamePattern;
+        if (commandLine.hasOption("filenamepattern")) {
+            filenamePattern = commandLine.getOptionValue("filenamepattern");
+        } else {
+            filenamePattern = productType + ".*\\.N1";
+        }
+        Pattern pattern = Pattern.compile(filenamePattern);
+
+        final short replication;
+        if (commandLine.hasOption("replication")) {
+            replication = Short.parseShort(commandLine.getOptionValue("replication"));
+        } else {
+            replication = hdfs.getDefaultReplication();
+        }
+
+        boolean verify = commandLine.hasOption("verify");
+
+        // determine input files
+        List<File> sourceFiles = new ArrayList<File>();
+        for (String path : files) {
+            File file = new File(path);
+            collectInputFiles(file, pattern, sourceFiles);
+        }
+        if (sourceFiles.isEmpty()) {
+            throw new FileNotFoundException("no files found");
+        }
+        System.out.format("%d files to be ingested\n", sourceFiles.size());
+
+
+        return ingest(productType, revision, blockSizeParameter, pattern, hdfs, replication, verify, sourceFiles);
+    }
+
+    private static int ingest(String productType, String revision, long blockSizeParameter, Pattern pattern, FileSystem hdfs, short replication, boolean verify, List<File> sourceFiles) throws IOException {
+        // cache HDFS parameters for block size
+        final int bufferSize = hdfs.getConf().getInt("io.file.buffer.size", 4096);
+        final int checksumSize = hdfs.getConf().getInt("io.bytes.per.checksum", 512);
+
+        // loop over input files
+        for (File sourceFile : sourceFiles) {
+            String archivePath = getArchivePath(sourceFile, productType, revision, pattern);
+
+            // calculate block size to cover complete N1
+            // blocksize must be a multiple of checksum size
+            long fileSize = sourceFile.length();
+            long blockSize;
+            if (blockSizeParameter == -1) {
+                blockSize = ((fileSize + checksumSize - 1) / checksumSize) * checksumSize;
+            } else {
+                blockSize = ((blockSizeParameter + checksumSize - 1) / checksumSize) * checksumSize;
+            }
+
+            // construct HDFS output stream
+            Path destPath = new Path(archivePath, sourceFile.getName());
+            // copy if either verification is off or target does not exist or target has different size
+            if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
+                int attempt = 1;
+                boolean finished = false;
+                IOException exception = null;
+                System.out.println(MessageFormat.format("archiving {0} in {1}", sourceFile, archivePath));
+                while (attempt <= 3 && !finished) {
+                    short actualReplication = attempt == 1 ? replication : 3;
+                    OutputStream out = hdfs.create(destPath, true, bufferSize, actualReplication, blockSize);
+                    FileInputStream in = new FileInputStream(sourceFile);
+                    try  {
+                        IOUtils.copyBytes(in, out, hdfs.getConf(), true);
+                        finished = true;
+                        if (actualReplication != replication) {
+                            hdfs.setReplication(destPath, replication);
+                        }
+                    }catch (IOException ioe){
+                        System.err.print("copying attempt " + attempt + " failed.");
+                        ioe.printStackTrace();
+                        exception = ioe;
+                    } finally {
+                        out.close();
+                        in.close();
+                    }
+                    attempt++;
+                }
+                if (!finished) {
+                    throw new IOException("Failed to copy: " + sourceFile, exception);
+                }
+            } else {
+                System.out.println(MessageFormat.format("skipping {0} existing in {1}", sourceFile, archivePath));
+            }
+        }
+
+        return 0;
     }
 
     static void collectInputFiles(File file, Pattern filter, List<File> accu) throws IOException {
