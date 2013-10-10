@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileRecordReader;
+import org.apache.hadoop.mapreduce.task.JobContextImpl;
 import org.apache.hadoop.util.StringUtils;
 
 import java.io.IOException;
@@ -90,7 +91,7 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
     }
 
     public Path getFirstInputDirectory(Job job) throws IOException {
-        JobContext jobContext = new JobContext(job.getConfiguration(), null);
+        JobContext jobContext = new JobContextImpl(job.getConfiguration(), null);
         List<FileStatus> fileStatuses = listStatus(jobContext);
         if (fileStatuses.isEmpty()) {
             return null;

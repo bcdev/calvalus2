@@ -1,11 +1,11 @@
 package com.bc.calvalus.processing.ma;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
+import com.bc.calvalus.processing.hadoop.IOUtils;
 import org.esa.beam.framework.datamodel.GeoPos;
 
-import java.io.*;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.Iterator;
@@ -32,14 +32,14 @@ import java.util.Iterator;
  * If the format of the CSV text differs from the given default structure.
  * A number of parameters can be set in comment lines (lines starting with '#') in the format "key=value":
  * <ul>
- *     <li>'latColumn': the name of the column containing the latitude values.</li>
- *     <li>'lonColumn': the name of the column containing the longitude values.</li>
- *     <li>'timeColumn': the name of the column containing the date values.</li>
- *     <li>'timeColumns': a comma separated list of column names containing the date/time information.
- *     The values of the columns are concatenated separated by the pipe character ('|').
- *     For parsing this combined value a 'dateFormat' has to be given as well.</li>
- *     <li>'dateFormat': as {@link DateFormat} for interpreting the date/time information.</li>
- *     <li>'columnSeparator': the character that separates different columns on a line.</li>
+ * <li>'latColumn': the name of the column containing the latitude values.</li>
+ * <li>'lonColumn': the name of the column containing the longitude values.</li>
+ * <li>'timeColumn': the name of the column containing the date values.</li>
+ * <li>'timeColumns': a comma separated list of column names containing the date/time information.
+ * The values of the columns are concatenated separated by the pipe character ('|').
+ * For parsing this combined value a 'dateFormat' has to be given as well.</li>
+ * <li>'dateFormat': as {@link DateFormat} for interpreting the date/time information.</li>
+ * <li>'columnSeparator': the character that separates different columns on a line.</li>
  * </ul>
  * </p>
  *
@@ -85,8 +85,8 @@ public class CsvRecordSource implements RecordSource {
     @Override
     public String getTimeAndLocationColumnDescription() {
         return "columns for lat=\"" + getHeader().getAttributeName(latIndex)
-                + "\" lon=\"" + getHeader().getAttributeName(lonIndex)
-                + "\" time=\"" + csvLineReader.getTimeColumnNames() + "\"";
+               + "\" lon=\"" + getHeader().getAttributeName(lonIndex)
+               + "\" time=\"" + csvLineReader.getTimeColumnNames() + "\"";
     }
 
     /**
@@ -95,6 +95,7 @@ public class CsvRecordSource implements RecordSource {
      *
      * @param textValues The text values to convert.
      * @param types      The types.
+     *
      * @return The array of converted objects.
      */
     public static Object[] toObjects(String[] textValues, Class<?>[] types) {
@@ -157,6 +158,7 @@ public class CsvRecordSource implements RecordSource {
     }
 
     private class CsvRecordIterator extends RecordIterator {
+
         @Override
         protected Record getNextRecord() {
 
@@ -173,36 +175,36 @@ public class CsvRecordSource implements RecordSource {
 
             if (getHeader().getAttributeNames().length != textValues.length) {
                 System.out.println("different number of columns " + textValues.length
-                                           + " instead of " + getHeader().getAttributeNames().length
-                                           + " in line " + csvLineReader.getLineNumber() +
-                                           " of point data file");
+                                   + " instead of " + getHeader().getAttributeNames().length
+                                   + " in line " + csvLineReader.getLineNumber() +
+                                   " of point data file");
             }
 
             final Object[] values = toObjects(textValues, attributeTypes);
 
             final GeoPos location;
-            if (! header.hasLocation()) {
+            if (!header.hasLocation()) {
                 String msg = "missing lat and lon columns in header of point data file (one of " +
-                        csvLineReader.getLatNames() + " and one of " + csvLineReader.getLonNames() + " expected)";
+                             csvLineReader.getLatNames() + " and one of " + csvLineReader.getLonNames() + " expected)";
                 throw new IllegalArgumentException(msg);
             } else if (values[latIndex] instanceof Number && values[lonIndex] instanceof Number) {
                 location = new GeoPos(((Number) values[latIndex]).floatValue(),
                                       ((Number) values[lonIndex]).floatValue());
                 if (location.getLat() < -90.0f || location.getLat() > 90.0f || location.getLon() < -180.0f || location.getLon() > 360.0f) {
                     throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
-                                           + "' and '" + textValues[lonIndex]
-                                           + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
-                                           + " of point data file out of range [-90..90] or [-180..360]");
+                                                       + "' and '" + textValues[lonIndex]
+                                                       + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                                                       + " of point data file out of range [-90..90] or [-180..360]");
                 }
             } else {
                 throw new IllegalArgumentException("lat and lon value '" + textValues[latIndex]
-                       + "' and '" + textValues[lonIndex]
-                       + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
-                       + " of point data file not well-formed numbers");
+                                                   + "' and '" + textValues[lonIndex]
+                                                   + "' in line " + csvLineReader.getLineNumber() + " column " + latIndex + " and " + lonIndex
+                                                   + " of point data file not well-formed numbers");
             }
 
             final Date time;
-            if (! header.hasTime()) {
+            if (!header.hasTime()) {
                 time = null;
             } else {
                 time = csvLineReader.extractTime(values, csvLineReader.getLineNumber());
@@ -217,21 +219,13 @@ public class CsvRecordSource implements RecordSource {
 
         @Override
         public RecordSource createRecordSource(String url) throws Exception {
-            InputStream inputStream;
-            if (url.startsWith("hdfs:")) {
-                final Configuration conf = new Configuration();
-                final Path path = new Path(url);
-                inputStream = path.getFileSystem(conf).open(path);
-            } else {
-                inputStream = new URL(url).openStream();
-            }
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            InputStreamReader inputStreamReader = new InputStreamReader(IOUtils.getInputStream(url));
             return new CsvRecordSource(inputStreamReader, CsvRecordWriter.DEFAULT_DATE_FORMAT);
         }
 
         @Override
         public String[] getAcceptedExtensions() {
-            return new String[] { ".txt", ".csv" };
+            return new String[]{".txt", ".csv"};
         }
     }
 

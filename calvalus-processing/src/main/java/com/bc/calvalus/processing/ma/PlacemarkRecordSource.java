@@ -1,16 +1,13 @@
 package com.bc.calvalus.processing.ma;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
+import com.bc.calvalus.processing.hadoop.IOUtils;
 import org.esa.beam.dataio.placemark.PlacemarkIO;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PinDescriptor;
 import org.esa.beam.framework.datamodel.Placemark;
 
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,11 +19,13 @@ import java.util.List;
  * @author Norman
  */
 public class PlacemarkRecordSource implements RecordSource {
+
     public static final String URL_PARAM_NAME = "url";
     public static final String[] ATTRIBUTE_NAMES = new String[]{
             "placemark_name",
             "placemark_latitude",
-            "placemark_longitude"};
+            "placemark_longitude"
+    };
 
     private final Header header;
     private final Reader reader;
@@ -66,21 +65,13 @@ public class PlacemarkRecordSource implements RecordSource {
 
         @Override
         public RecordSource createRecordSource(String url) throws Exception {
-            InputStream inputStream;
-            if (url.startsWith("hdfs:")) {
-                final Configuration conf = new Configuration();
-                final Path path = new Path(url);
-                inputStream = path.getFileSystem(conf).open(path);
-            } else {
-                inputStream = new URL(url).openStream();
-            }
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+            InputStreamReader inputStreamReader = new InputStreamReader(IOUtils.getInputStream(url));
             return new PlacemarkRecordSource(inputStreamReader);
         }
 
         @Override
         public String[] getAcceptedExtensions() {
-            return new String[] { ".placemark" };
+            return new String[]{".placemark"};
         }
     }
 

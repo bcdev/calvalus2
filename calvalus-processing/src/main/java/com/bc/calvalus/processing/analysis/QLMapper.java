@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.IOUtils;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
@@ -33,7 +34,6 @@ import com.bc.ceres.grender.Viewport;
 import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FsUrlStreamHandlerFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -70,7 +70,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,19 +85,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     private static final String FILE_BYTES_WRITTEN = "FILE_BYTES_WRITTEN";
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
-
-    static {
-        try {
-            // Make "hdfs:" a recognised URL protocol
-            URL.setURLStreamHandlerFactory(new FsUrlStreamHandlerFactory());
-        } catch (Throwable e) {
-            // ignore as it is most likely already set
-            String msg = String.format("Cannot set URLStreamHandlerFactory (message: '%s'). " +
-                                       "This may not be a problem because it is most likely already set.",
-                                       e.getMessage());
-            LOGGER.fine(msg);
-        }
-    }
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
@@ -209,7 +195,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             masterBand.getImageInfo(new ProgressableWrappingPM(context));
             multiLevelSource = BandImageMultiLevelSource.create(masterBand, new ProgressableWrappingPM(context));
 
-            InputStream inputStream = new URL(cpdURL).openStream();
+            InputStream inputStream = IOUtils.getInputStream(cpdURL);
             try {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
@@ -286,7 +272,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     private static void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
                                            boolean canUseAlpha, List<Layer> layerChildren) throws IOException {
         BufferedImage legend = createImageLegend(masterBand, canUseAlpha, ImageLegend.VERTICAL);
-        RenderedImage logo = ImageIO.read(new URL(qlConfig.getOverlayURL()).openStream());
+        RenderedImage logo = ImageIO.read(IOUtils.getInputStream(qlConfig.getOverlayURL()));
         float scale = (float) legend.getWidth() / (float) logo.getWidth();
         RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
                                                   RenderingHints.VALUE_ANTIALIAS_ON);
@@ -316,7 +302,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
 
     private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
                                                                                                         IOException {
-        InputStream inputStream = new URL(overlayURL).openStream();
+        InputStream inputStream = IOUtils.getInputStream(overlayURL);
         BufferedImage bufferedImage = ImageIO.read(inputStream);
         final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
         layerChildren.add(0, overlayLayer);

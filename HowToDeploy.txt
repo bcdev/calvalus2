@@ -17,9 +17,9 @@ mkdir calvalus-software/calvalus-bundle
 
 cp INSTALL.txt calvalus-software/
 cp calvalus.config calvalus-software/
-cp calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*  calvalus-software/calvalus-bundle
-cp calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*  calvalus-software/beam-bundle
-cp calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar calvalus-software/cpt.jar
+cp calvalus-processing/target/calvalus-processing-1.8-cdh4-calvalus/*  calvalus-software/calvalus-bundle
+cp calvalus-processing/target/calvalus-processing-1.8-cdh4-beam/*  calvalus-software/beam-bundle
+cp calvalus-production/target/calvalus-production-1.8-cdh4-tool.jar calvalus-software/cpt.jar
 tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus

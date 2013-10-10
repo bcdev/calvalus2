@@ -16,6 +16,8 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.lib.map.WrappedMapper;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -184,9 +186,9 @@ public class QLMapperMain {
                 return new String[0];
             }
         };
-        final Mapper mapper = new Mapper();
-        return mapper.new Context(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
-                                  statusReporter, inputSplit);
+        final WrappedMapper mapper = new WrappedMapper();
+        return mapper.new Context(new MapContextImpl(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
+                                                     statusReporter, inputSplit));
     }
 
 
