@@ -84,9 +84,13 @@ public class CsvRecordSource implements RecordSource {
 
     @Override
     public String getTimeAndLocationColumnDescription() {
-        return "columns for lat=\"" + getHeader().getAttributeName(latIndex)
-                + "\" lon=\"" + getHeader().getAttributeName(lonIndex)
-                + "\" time=\"" + csvLineReader.getTimeColumnNames() + "\"";
+        String timeColumnNames = csvLineReader.getTimeColumnNames();
+        String latLonMsg = "columns for lat=\"" + getHeader().getAttributeName(latIndex)
+                + "\" lon=\"" + getHeader().getAttributeName(lonIndex);
+        if (timeColumnNames != null) {
+            latLonMsg = latLonMsg.concat("\" time=\"" + timeColumnNames + "\"");
+        }
+        return latLonMsg;
     }
 
     /**

@@ -220,7 +220,7 @@ public class CsvLineReader {
             }
             return StringUtils.join(timeComponents, ",");
         } else {
-            throw new IllegalStateException("No time information expected");
+            return null;
         }
     }
 }
