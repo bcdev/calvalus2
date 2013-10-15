@@ -269,11 +269,26 @@ public class MAConfigForm extends Composite {
                                                                       uploadForm,
                                                                       new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
                                                                                        "and BEAM placemark files (<b>*.placemark</b>)."),
-                                                                      new HTML("<p>The first line of the TAB-separated CSV file must contain header names. <br/>" +
+                                                                      new HTML("<h4>Standard format:</h4>" +
+                                                                                       "The first line of the TAB-separated CSV file must contain header names. <br/>" +
                                                                                        "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
-                                                                                       "application of the max. time difference criterion. Other names will be<br/>" +
+                                                                                       "application of the max. time difference criterion. The time information <br/>" +
+                                                                                       "has be in the format 'yyyy-MM-dd HH:mm:ss'. Other names will be<br/>" +
                                                                                        "matched against names in the resulting L2 products in order to generate<br/>" +
-                                                                                       "the match-up scatter-plots and statistics, for example 'CONC_CHL'.</p>"));
+                                                                                       "the match-up scatter-plots and statistics, for example 'CONC_CHL'." +
+                                                                                       "<h4>Custom format:</h4>" +
+                                                                                       "If the file deviates from the standard format header lines<br/>" +
+                                                                                       "following the '# &lt;key&gt;=&lt;value&gt;' syntax can added to the file to customize the format:<br/>" +
+                                                                                       "<ol>" +
+                                                                                       "<li><b>columnSeparator</b> The character separating the columns.</li>" +
+                                                                                       "<li><b>latColumn</b> The name of the column containing the latitude.</li>" +
+                                                                                       "<li><b>lonColumn</b> The name of the column containing the longitude.</li>" +
+                                                                                       "<li><b>timeColumn</b> The name of the column containing the time.</li>" +
+                                                                                       "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
+                                                                                       "The content will be concatenated separated by COMMA.</li>" +
+                                                                                       "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
+                                                                                       "</ol>" +
+                                                                                       ""));
             fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
