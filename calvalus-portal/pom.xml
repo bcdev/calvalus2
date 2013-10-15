@@ -18,6 +18,8 @@
 
     <properties>
         <gwt.version>2.5.1</gwt.version>
+        <maven.build.timestamp.format>dd-MM-yyyy</maven.build.timestamp.format>
+        <timestamp>${maven.build.timestamp}</timestamp>
     </properties>
 
     <dependencies>
@@ -100,6 +102,12 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <!-- Generate compiled stuff in the folder used for developing mode -->
         <outputDirectory>target/www/WEB-INF/classes</outputDirectory>
 

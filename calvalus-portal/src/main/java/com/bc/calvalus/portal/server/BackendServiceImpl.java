@@ -52,6 +52,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -76,7 +78,20 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    public static final String VERSION = "Calvalus version 1.7-SNAPSHOT (built on 2013-03-13)";
+    private static final Properties calvalusVersionProperties;
+    static {
+        InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
+        calvalusVersionProperties = new Properties();
+        try {
+            calvalusVersionProperties.load(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final String VERSION = String.format("Calvalus version %s (built %s)",
+                                                       calvalusVersionProperties.get("version"),
+                                                       calvalusVersionProperties.get("timestamp"));
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
