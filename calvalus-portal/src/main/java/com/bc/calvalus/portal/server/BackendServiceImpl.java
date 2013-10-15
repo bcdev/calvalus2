@@ -315,7 +315,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public String checkUserFile(String filePath) throws BackendServiceException {
+    public String checkUserRecordSource(String filePath) throws BackendServiceException {
         try {
             String url = productionService.getQualifiedUserPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
@@ -359,6 +359,32 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 reportMsg += "No time information given.\n";
             }
             return reportMsg.replace("\n", "<br>");
+        } catch (Exception e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public float[] listUserRecordSource(String filePath) throws BackendServiceException {
+        try {
+            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            Iterable<Record> records = recordSource.getRecords();
+            List<GeoPos> geoPoses = new ArrayList<GeoPos>();
+            for (Record record : records) {
+                GeoPos location = record.getLocation();
+                if (location != null && location.isValid()) {
+                    geoPoses.add(location);
+                }
+            }
+            float[] latLons = new float[geoPoses.size() * 2];
+            int i = 0;
+            for (GeoPos geoPos : geoPoses) {
+                latLons[i++] = geoPos.lat;
+                latLons[i++] = geoPos.lon;
+            }
+            return latLons;
         } catch (Exception e) {
             throw convert(e);
         }

@@ -4,6 +4,13 @@ import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.maps.client.MapOptions;
+import com.google.gwt.maps.client.MapWidget;
+import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.maps.client.base.LatLngBounds;
+import com.google.gwt.maps.client.overlays.Marker;
+import com.google.gwt.maps.client.overlays.MarkerImage;
+import com.google.gwt.maps.client.overlays.MarkerOptions;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -44,9 +51,11 @@ public class MAConfigForm extends Composite {
     @UiField
     Button addRecordSourceButton;
     @UiField
-    Button removeRecordSourceButton;
-    @UiField
     Button checkRecordSourceButton;
+    @UiField
+    Button viewRecordSourceButton;
+    @UiField
+    Button removeRecordSourceButton;
 
     @UiField
     IntegerBox macroPixelSize;
@@ -79,6 +88,7 @@ public class MAConfigForm extends Composite {
         addRecordSourceButton.addClickHandler(addRecordSourceAction);
         removeRecordSourceButton.addClickHandler(new RemoveRecordSourceAction());
         checkRecordSourceButton.addClickHandler(new CheckRecordSourceAction());
+        viewRecordSourceButton.addClickHandler(new ViewRecordSourceAction());
 
         fileUpload = new FileUpload();
         fileUpload.setName("fileUpload");
@@ -122,7 +132,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void checkRecordSource(final String recordSource) {
-        portalContext.getBackendService().checkUserFile(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
+        portalContext.getBackendService().checkUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
             @Override
             public void onSuccess(String message) {
                 Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
@@ -135,6 +145,50 @@ public class MAConfigForm extends Composite {
         });
     }
 
+    private void viewRecordSource(final String recordSource) {
+        portalContext.getBackendService().listUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<float[]>() {
+            @Override
+            public void onSuccess(float[] points) {
+                MapOptions mapOptions = MapOptions.newInstance();
+                mapOptions.setCenter(LatLng.newInstance(0.0, 0.0));
+                mapOptions.setDisableDoubleClickZoom(false);
+                mapOptions.setScrollWheel(true);
+                mapOptions.setMapTypeControl(true);
+                mapOptions.setZoomControl(false);
+                mapOptions.setPanControl(false);
+                mapOptions.setStreetViewControl(false);
+                final MapWidget mapWidget = new MapWidget(mapOptions);
+                mapWidget.setSize("800px", "640px");
+                MarkerImage markerImage = MarkerImage.newInstance("https://maps.gstatic.com/intl/en_ALL/mapfiles/markers2/measle.png");
+                for (int i = 0; i < points.length; ) {
+                    final float lat = points[i++];
+                    final float lon = points[i++];
+                    MarkerOptions markerOptions = MarkerOptions.newInstance();
+                    markerOptions.setPosition(LatLng.newInstance(lat, lon));
+                    Marker marker = Marker.newInstance(markerOptions);
+                    marker.setIcon(markerImage);
+                    marker.setMap(mapWidget);
+                }
+
+                Dialog dialog = new Dialog("Viewing " + recordSource, mapWidget, Dialog.ButtonType.CLOSE) {
+                    @Override
+                    protected void onShow() {
+                        mapWidget.triggerResize();
+                        final LatLng sw = LatLng.newInstance(-90, -180);
+                        final LatLng ne = LatLng.newInstance(90, 180);
+                        mapWidget.fitBounds(LatLngBounds.newInstance(sw, ne));
+                        mapWidget.setZoom(2);
+                    }
+                };
+                dialog.show();
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Failed", "Failed to view " + recordSource + ": " + caught.getMessage());
+            }
+        });
+    }
 
 
     private void setRecordSources(String[] filePaths) {
@@ -247,7 +301,7 @@ public class MAConfigForm extends Composite {
         private void cancelSubmit() {
             closeDialogs();
             if (submitEvent != null) {
-                 submitEvent.cancel();
+                submitEvent.cancel();
             }
         }
 
@@ -300,4 +354,14 @@ public class MAConfigForm extends Composite {
             checkRecordSource(recordSource);
         }
     }
+
+    private class ViewRecordSourceAction implements ClickHandler {
+        @Override
+        public void onClick(ClickEvent event) {
+            final String recordSource = getSelectedRecordSourceFilename();
+            // should be made async!
+            viewRecordSource(recordSource);
+        }
+    }
+
 }
