@@ -287,8 +287,7 @@ public class MAConfigForm extends Composite {
                                                                                        "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
                                                                                        "The content will be concatenated separated by COMMA.</li>" +
                                                                                        "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
-                                                                                       "</ol>" +
-                                                                                       ""));
+                                                                                       "</ol>"));
             fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
