@@ -116,7 +116,7 @@ public class CsvLineReader {
                     throw new IllegalArgumentException("unexpected argument type.");
                 }
             }
-            String fullTimeString = StringUtils.join(timeComponents, "|");
+            String fullTimeString = StringUtils.join(timeComponents, ",");
             try {
                 return dateFormat.parse(fullTimeString);
             } catch (ParseException e) {

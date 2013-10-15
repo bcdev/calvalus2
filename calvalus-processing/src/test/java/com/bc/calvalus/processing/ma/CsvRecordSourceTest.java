@@ -186,7 +186,7 @@ public class CsvRecordSourceTest {
          final String CSV = ""
                  + "# Test CSV\n"
                  + "# timeColumns=day,month,year\n"
-                 + "# dateFormat=dd|MM|yyyy\n"
+                 + "# dateFormat=dd,MM,yyyy\n"
                  + "ID\tLAT\tLON\tday\tyear\tmonth\tSITE\tCHL\tFLAG\n"
                  + "16\t53.1\t13.6\t03\t2003\t04\tA\t0.5\t1\n"
                  + "17\t53.3\t13.4\t08\t2003\t04\tA\t0.9\t0\n"
