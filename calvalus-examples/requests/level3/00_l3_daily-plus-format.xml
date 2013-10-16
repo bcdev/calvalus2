@@ -12,19 +12,20 @@
         <wps:Input>
             <ows:Identifier>productionName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>example 00_l3_daily</wps:LiteralData>
+                <wps:LiteralData>example level3 00_l3_daily</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>inputPath</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1$</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>inputPath</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1$</wps:LiteralData>
+                <wps:LiteralData>/calvalus/examples/level3/00_l3_daily</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

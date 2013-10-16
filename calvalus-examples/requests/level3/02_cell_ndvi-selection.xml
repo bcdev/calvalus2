@@ -12,23 +12,23 @@
         <wps:Input>
             <ows:Identifier>productionName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>example 04_cell_ndvi-selection-plus-format</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.output.dir</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/04_cell_ndvi-selection-plus-format</wps:LiteralData>
+                <wps:LiteralData>example level3 02_cell_ndvi-selection</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/00_l3_daily-L3-1</wps:LiteralData>
+                <wps:LiteralData>/calvalus/examples/level3/00_l3_daily-L3-1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/examples/level3/02_cell_ndvi-selection</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
 
         <wps:Input>
             <ows:Identifier>calvalus.cell.parameters</ows:Identifier>
@@ -41,19 +41,6 @@
                         </postProcessor>
                     </parameters>
                 </wps:ComplexData>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.output.format</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>NetCDF4-BEAM</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
-            <ows:Identifier>calvalus.output.prefix</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>04_cell-ndvi</wps:LiteralData>
             </wps:Data>
         </wps:Input>
     </wps:DataInputs>

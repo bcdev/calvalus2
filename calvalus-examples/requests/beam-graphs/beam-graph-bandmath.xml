@@ -12,33 +12,33 @@
     <wps:Input>
       <ows:Identifier>productionName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell exec complex</wps:LiteralData>
+        <wps:LiteralData>beam l2 bandmath graph</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     
     <wps:Input>
       <ows:Identifier>processorBundleName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>examples-shell</wps:LiteralData>
+        <wps:LiteralData>example-beam-graphs</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
       <ows:Identifier>processorBundleVersion</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>1.0</wps:LiteralData>
+        <wps:LiteralData>0.0</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
       <ows:Identifier>processorName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>complex</wps:LiteralData>
+        <wps:LiteralData>bandmath</wps:LiteralData>
       </wps:Data>
     </wps:Input>
 
     <wps:Input>
       <ows:Identifier>calvalus.output.dir</ows:Identifier>
       <wps:Data>
-        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/complex" />
+        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/bandmath-graph" />
       </wps:Data>
     </wps:Input>
     <wps:Input>

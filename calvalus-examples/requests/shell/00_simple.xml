@@ -12,11 +12,24 @@
     <wps:Input>
       <ows:Identifier>productionName</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>shell exec simple</wps:LiteralData>
+        <wps:LiteralData>example 00_simple</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     
     <wps:Input>
+          <ows:Identifier>inputPath</ows:Identifier>
+          <wps:Data>
+              <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+      <wps:Input>
+          <ows:Identifier>calvalus.output.dir</ows:Identifier>
+          <wps:Data>
+              <wps:LiteralData>/calvalus/examples/shell/00_simple</wps:LiteralData>
+          </wps:Data>
+      </wps:Input>
+
+      <wps:Input>
       <ows:Identifier>processorBundleName</ows:Identifier>
       <wps:Data>
         <wps:LiteralData>examples-shell</wps:LiteralData>
@@ -25,7 +38,7 @@
     <wps:Input>
       <ows:Identifier>processorBundleVersion</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>1.0</wps:LiteralData>
+        <wps:LiteralData>0.0</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -36,27 +49,15 @@
     </wps:Input>
 
     <wps:Input>
-      <ows:Identifier>calvalus.output.dir</ows:Identifier>
-      <wps:Data>
-        <wps:Reference xlink:href="hdfs://master00:9000/calvalus/projects/cvtest/simple" />
-      </wps:Data>
-    </wps:Input>
-    <wps:Input>
-      <ows:Identifier>inputPath</ows:Identifier>
-      <wps:Data>
-        <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1</wps:LiteralData>
-      </wps:Data>
-    </wps:Input>
-    <wps:Input>
       <ows:Identifier>minDate</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>2008-06-01</wps:LiteralData>
+        <wps:LiteralData>2010-03-01</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
       <ows:Identifier>maxDate</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>2008-06-01</wps:LiteralData>
+        <wps:LiteralData>2010-03-01</wps:LiteralData>
       </wps:Data>
     </wps:Input>
   </wps:DataInputs>

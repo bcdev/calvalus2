@@ -12,21 +12,20 @@
         <wps:Input>
             <ows:Identifier>productionName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>example 03_l3f_ndvi-format</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-
-        <wps:Input>
-            <ows:Identifier>calvalus.output.dir</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/03_l3f_ndvi-format</wps:LiteralData>
+                <wps:LiteralData>example level3 03_l3f_ndvi-format</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/02_cell_ndvi-selection</wps:LiteralData>
+                <wps:LiteralData>/calvalus/examples/level3/02_cell_ndvi-selection</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/examples/level3/03_l3f_ndvi-format</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

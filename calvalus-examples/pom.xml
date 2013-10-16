@@ -10,10 +10,10 @@
         <version>1.7-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
-    <artifactId>calvalus-shell-executables</artifactId>
+    <artifactId>calvalus-examples</artifactId>
 
-    <name>Calvalus Shell Executable integrations</name>
-    <description>contains scripts and configuration to integrate shell executables into Calvalus.</description>
+    <name>Calvalus Examples bundles and Requests</name>
+    <description>Contains example bundles for all prodcution types and
+        scripts and configuration to integrate shell executables into Calvalus.</description>
 
 </project>
