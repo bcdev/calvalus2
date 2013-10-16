@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bundleDescriptor>
+    <bundleName>examples-python</bundleName>
+    <bundleVersion>1.0</bundleVersion>
+
+     <processorDescriptors>
+        <processorDescriptor>
+            <processorName>Python Example (file copy)</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>pythoncopy</executableName>
+            <outputFormats>default</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml><![CDATA[<p>Performs copy of data products.</p>]]></descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>prefix</name>
+                    <type>string</type>
+                    <description>prefix for new files</description>
+                    <defaultValue>copy_of_</defaultValue>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>

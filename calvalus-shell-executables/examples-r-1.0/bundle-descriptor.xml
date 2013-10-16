@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bundleDescriptor>
+    <bundleName>examples-r</bundleName>
+    <bundleVersion>1.0</bundleVersion>
+
+     <processorDescriptors>
+        <processorDescriptor>
+            <processorName>R Example (file copy)</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>rcopy</executableName>
+            <outputFormats>default</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml><![CDATA[<p>Performs copy of data products.</p>]]></descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>suffix</name>
+                    <type>string</type>
+                    <description>file name suffix</description>
+                    <defaultValue>.copy</defaultValue>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>
