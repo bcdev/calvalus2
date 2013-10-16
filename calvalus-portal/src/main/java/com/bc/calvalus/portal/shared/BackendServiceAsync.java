@@ -37,5 +37,7 @@ public interface BackendServiceAsync {
 
     void scpProduction(String productionId, String remotePath, AsyncCallback<Void> callback);
 
-    void checkUserFile(String s, AsyncCallback<String> callback);
+    void checkUserRecordSource(String s, AsyncCallback<String> callback);
+
+    void listUserRecordSource(String s, AsyncCallback<float[]> callback);
 }

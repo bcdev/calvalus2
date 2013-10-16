@@ -101,5 +101,7 @@ public interface BackendService extends RemoteService {
 
     boolean removeUserDirectory(String filePath) throws BackendServiceException;
 
-    String checkUserFile(String filePath) throws BackendServiceException;
+    String checkUserRecordSource(String filePath) throws BackendServiceException;
+
+    float[] listUserRecordSource(String filePath) throws BackendServiceException;
 }

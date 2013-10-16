@@ -116,7 +116,7 @@ public class CsvLineReader {
                     throw new IllegalArgumentException("unexpected argument type.");
                 }
             }
-            String fullTimeString = StringUtils.join(timeComponents, "|");
+            String fullTimeString = StringUtils.join(timeComponents, ",");
             try {
                 return dateFormat.parse(fullTimeString);
             } catch (ParseException e) {
@@ -174,17 +174,17 @@ public class CsvLineReader {
     }
 
     static Map<String, String> readHeaderParameters(LineNumberReader reader) throws IOException {
-        String line = reader.readLine();
+        int firstChar = reader.read();
         Map<String, String> parameters = new HashMap<String, String>();
-        while (line.startsWith("#")) {
+        while (firstChar == '#') {
+            String line = reader.readLine();
             if (line.contains("=")) {
-                line = line.substring(1);
                 String[] keyValue = line.split("=");
                 if (!keyValue[0].isEmpty() && !keyValue[1].isEmpty()) {
                     parameters.put(keyValue[0].trim(), keyValue[1].trim());
                 }
             }
-            line = reader.readLine();
+            firstChar = reader.read();
         }
         return parameters;
     }
@@ -220,7 +220,7 @@ public class CsvLineReader {
             }
             return StringUtils.join(timeComponents, ",");
         } else {
-            throw new IllegalStateException("No time information expected");
+            return null;
         }
     }
 }

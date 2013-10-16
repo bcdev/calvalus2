@@ -52,6 +52,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -76,7 +78,20 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
-    public static final String VERSION = "Calvalus version 1.8-cdh4 (built on 2013-05-25)";
+    private static final Properties calvalusVersionProperties;
+    static {
+        InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
+        calvalusVersionProperties = new Properties();
+        try {
+            calvalusVersionProperties.load(in);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static final String VERSION = String.format("Calvalus version %s (built %s)",
+                                                       calvalusVersionProperties.get("version"),
+                                                       calvalusVersionProperties.get("timestamp"));
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
 
@@ -315,7 +330,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public String checkUserFile(String filePath) throws BackendServiceException {
+    public String checkUserRecordSource(String filePath) throws BackendServiceException {
         try {
             String url = productionService.getQualifiedUserPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
@@ -359,6 +374,32 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 reportMsg += "No time information given.\n";
             }
             return reportMsg.replace("\n", "<br>");
+        } catch (Exception e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
+    public float[] listUserRecordSource(String filePath) throws BackendServiceException {
+        try {
+            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            Iterable<Record> records = recordSource.getRecords();
+            List<GeoPos> geoPoses = new ArrayList<GeoPos>();
+            for (Record record : records) {
+                GeoPos location = record.getLocation();
+                if (location != null && location.isValid()) {
+                    geoPoses.add(location);
+                }
+            }
+            float[] latLons = new float[geoPoses.size() * 2];
+            int i = 0;
+            for (GeoPos geoPos : geoPoses) {
+                latLons[i++] = geoPos.lat;
+                latLons[i++] = geoPos.lon;
+            }
+            return latLons;
         } catch (Exception e) {
             throw convert(e);
         }

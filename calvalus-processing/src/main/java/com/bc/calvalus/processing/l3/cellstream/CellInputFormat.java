@@ -30,8 +30,7 @@ import java.util.Map;
  */
 public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin> {
 
-    private static final String SUFFIX_NETCDF = ".nc";
-    private static final String SUFFIX_HDF = ".hdf";
+    private static final String PART_FILE_PREFIX = "part-";
 
     @Override
     public List<InputSplit> getSplits(JobContext job) throws IOException {
@@ -51,7 +50,9 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
         FileSplit fileSplit = (FileSplit) split;
         Path path = fileSplit.getPath();
         String filename = path.getName().toLowerCase();
-        if (filename.endsWith(SUFFIX_NETCDF) || filename.endsWith(SUFFIX_HDF)) {
+        if (filename.startsWith(PART_FILE_PREFIX)) {
+            return new SequenceFileRecordReader<LongWritable, L3TemporalBin>();
+        } else {
             CellRecordReader reader = new CellRecordReader(path, conf);
             CellFileSplit cellFileSplit = (CellFileSplit) split;
             Map<String, String> metadata = cellFileSplit.getMetadata();
@@ -64,8 +65,6 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
             metadata.put(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
 
             return reader;
-        } else {
-            return new SequenceFileRecordReader<LongWritable, L3TemporalBin>();
         }
     }
 
@@ -83,10 +82,10 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
     @Override
     protected boolean isSplitable(JobContext context, Path path) {
         String filename = path.getName().toLowerCase();
-        if (filename.endsWith(SUFFIX_NETCDF) || filename.endsWith(SUFFIX_HDF)) {
-            return false;
-        } else {
+        if (filename.startsWith(PART_FILE_PREFIX)) {
             return true;
+        } else {
+            return false;
         }
     }
 

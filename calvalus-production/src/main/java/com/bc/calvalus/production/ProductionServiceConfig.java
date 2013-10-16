@@ -54,13 +54,14 @@ public class ProductionServiceConfig {
 
     public static void overwriteConfigWithProperties(Map<String, String> calvalusConfig, Properties properties, String prefix) {
         for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            String name = entry.getKey().toString();
+            String key = entry.getKey().toString().trim();
+            String value = entry.getValue().toString().trim();
             if (prefix != null) {
-                if (name.startsWith(prefix)) {
-                    calvalusConfig.put(name, properties.getProperty(name));
+                if (key.startsWith(prefix)) {
+                    calvalusConfig.put(key, value);
                 }
             } else {
-                calvalusConfig.put(name, properties.getProperty(name));
+                calvalusConfig.put(key, value);
             }
         }
     }

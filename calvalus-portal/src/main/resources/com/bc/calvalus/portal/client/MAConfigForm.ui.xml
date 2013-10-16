@@ -21,6 +21,7 @@
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
                         <g:Button ui:field='checkRecordSourceButton' text="Check"/>
+                        <g:Button ui:field='viewRecordSourceButton' text="View"/>
                         <g:Button ui:field='removeRecordSourceButton' text="Remove"/>
                     </g:HorizontalPanel>
                 </g:VerticalPanel>
