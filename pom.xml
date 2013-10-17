@@ -23,12 +23,9 @@
         <module>calvalus-exchange</module>
         <module>calvalus-inventory</module>
         <module>calvalus-production</module>
-        <!--<module>calvalus-mc</module>-->
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
-
-        <!-- Experimental code. Parts may become productive code later. -->
-        <!--<module>calvalus-experiments</module>-->
+        <module>calvalus-examples</module>
     </modules>
 
     <repositories>
