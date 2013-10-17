@@ -1,0 +1,3 @@
+LAT LON NAME
+55.5    10.0  Hamburg
+51.5    0.0 London

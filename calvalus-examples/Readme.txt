@@ -16,7 +16,7 @@ to a Calvalus cluster before being used by one of the supplied requests.
 cpt --install bundles/r/examples-r-1.0
 cpt --install bundles/examples-python-1.0
 cpt --install bundles/examples-shell-1.0
-...
+
 
 3rd Party Bundles
 ==================
@@ -32,9 +32,10 @@ The supplied request can be executed using the CPT.
 cpt requests/r/rcopy.xml
 cpt requests/python/pythoncopy.xml
 cpt requests/shell/00_simple.xml
-....
 
-
+For the matchup use case the point files first has be copied to HDFS:
+hadoop fs -put requests/matchup/cities.txt hdfs://master00:9000/calvalus/examples/cities.txt
+cpt requests/matchup/00_cities.xml
 
 
 
