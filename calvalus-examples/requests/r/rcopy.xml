@@ -12,7 +12,7 @@
         <wps:Input>
             <ows:Identifier>productionName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>example 00_simple</wps:LiteralData>
+                <wps:LiteralData>example R-copy</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -25,14 +25,14 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/shell/00_simple</wps:LiteralData>
+                <wps:LiteralData>/calvalus/examples/r/r-copy</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
         <wps:Input>
             <ows:Identifier>processorBundleName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>examples-shell</wps:LiteralData>
+                <wps:LiteralData>examples-r</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -44,7 +44,7 @@
         <wps:Input>
             <ows:Identifier>processorName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>simple</wps:LiteralData>
+                <wps:LiteralData>rcopy</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -58,6 +58,17 @@
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>2010-03-01</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>processorParameters</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <suffix>_copy</suffix>
+                    </parameters>
+                </wps:ComplexData>
             </wps:Data>
         </wps:Input>
     </wps:DataInputs>

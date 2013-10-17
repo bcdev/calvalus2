@@ -19,8 +19,7 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1
-                </wps:LiteralData>
+                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -39,7 +38,7 @@
         <wps:Input>
             <ows:Identifier>processorBundleVersion</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>0.0</wps:LiteralData>
+                <wps:LiteralData>1.0</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
