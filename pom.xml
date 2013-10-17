@@ -27,11 +27,6 @@
         <module>calvalus-processing</module>
         <module>calvalus-commons</module>
 
-        <!-- Plug-ins to Calvalus -->
-        <module>calvalus-shell-executables</module>
-        <!--<module>calvalus-matchup</module>-->
-        <!--<module>calvalus-trend</module>-->
-
         <!-- Experimental code. Parts may become productive code later. -->
         <!--<module>calvalus-experiments</module>-->
     </modules>
