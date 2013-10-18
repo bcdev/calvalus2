@@ -79,6 +79,7 @@ public class OrderMAProductionView extends OrderProductionView {
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
 
         outputParametersForm = new OutputParametersForm();
+        outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 
         VerticalPanel panel = new VerticalPanel();
