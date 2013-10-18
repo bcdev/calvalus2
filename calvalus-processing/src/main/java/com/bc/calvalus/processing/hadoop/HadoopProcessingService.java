@@ -102,6 +102,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private void collectBundleDescriptors(String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
         final FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
+        if (fileStatuses == null) {
+            return;
+        }
         final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
 
         for (FileStatus file : fileStatuses) {
