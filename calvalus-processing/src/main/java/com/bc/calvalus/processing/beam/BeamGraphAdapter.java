@@ -9,8 +9,10 @@ import com.bc.ceres.resource.ReaderResource;
 import com.bc.ceres.resource.Resource;
 import com.bc.ceres.resource.ResourceEngine;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
@@ -32,7 +34,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
+import java.util.TimeZone;
 
 /**
  * A processor adapter that uses a BEAM GPF {@code Graph} to process input products.
@@ -40,6 +49,13 @@ import java.util.List;
  * @author MarcoZ
  */
 public class BeamGraphAdapter extends IdentityProcessorAdapter {
+
+    private static final SimpleDateFormat N1_TIME_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
+    private static final SimpleDateFormat YMD_DIR_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
+    static {
+        N1_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        YMD_DIR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     private GraphContext graphContext;
     private Product targetProduct;
@@ -127,10 +143,14 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
 
         ResourceEngine resourceEngine = new ResourceEngine();
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
+        final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
+        for (String key : processingParameters.stringPropertyNames()) {
+            velocityContext.put(key, processingParameters.get(key));
+        }
         velocityContext.put("system", System.getProperties());
         velocityContext.put("configuration", conf);
         velocityContext.put("parameterText", processorParameters);
-        velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
+        velocityContext.put("parameters", processingParameters);
 
         Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         velocityContext.put("inputPath", inputPath);
@@ -170,6 +190,57 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
     public class GlobalsFunctions {
         public Path createPath(String pathString) {
             return new Path(pathString);
+        }
+        // MER_RR__1PRACR20030601_092632_000026422016_00480_06546_0000.N1
+        public Path findCoveringN1(String master, String archiveRoot, FileSystem fileSystem) {
+            Path result = null;
+            try {
+                final String masterStartString = master.substring(14, 29);
+                final String masterDurationString = master.substring(30, 38);
+                final long masterStart = N1_TIME_FORMAT.parse(masterStartString).getTime();
+                final long masterStop = masterStart + (Long.parseLong("1" + masterDurationString)-100000000) * 1000;
+                getLogger().info("looking for slave of " + master + " in " + archiveRoot);
+                final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+                calendar.setTimeInMillis(masterStart);
+                final String thisDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
+                calendar.add(Calendar.DAY_OF_MONTH, -1);
+                final String previousDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
+                calendar.add(Calendar.DAY_OF_MONTH, 2);
+                final String nextDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
+                final FileStatus[] slaveFiles = fileSystem.listStatus(new Path[] {
+                        new Path(archiveRoot, previousDayDir),
+                        new Path(archiveRoot, thisDayDir),
+                        new Path(archiveRoot, nextDayDir)
+                }, new PathFilter() {
+                    @Override
+                    public boolean accept(Path path) {
+                        return path.getName().length() == 62 && path.getName().endsWith(".N1");
+                    }
+                });
+                for (FileStatus slaveFile : slaveFiles) {
+                    final String slave = slaveFile.getPath().getName();
+                    final String slaveStartString = slave.substring(14, 29);
+                    final String slaveDurationString = slave.substring(30, 38);
+                    final long slaveStart = N1_TIME_FORMAT.parse(slaveStartString).getTime();
+                    final long slaveStop = slaveStart + (Long.parseLong("1" + slaveDurationString)-100000000) * 1000;
+                    if (masterStart >= slaveStart && masterStop <= slaveStop) {
+                        getLogger().info("covering slave  " + slave + " found");
+                        return slaveFile.getPath();
+                    } else if ((masterStart + masterStop) / 2 >= slaveStart && (masterStart + masterStop) / 2 <= slaveStop) {
+                        result = slaveFile.getPath();
+                    }
+                }
+            } catch (ParseException e) {
+                throw new RuntimeException("failed to parse date in " + master, e);
+            }  catch (IOException e) {
+                throw new RuntimeException("failed to read dirs below " + archiveRoot, e);
+            }
+            if (result != null) {
+                getLogger().info("intersecting slave  " + result.getName() + " found");
+            } else {
+                getLogger().info("no slave found for " + master);
+            }
+            return result;
         }
     }
 }
