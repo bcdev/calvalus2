@@ -105,7 +105,8 @@ public class ProductRecordSource implements RecordSource {
     }
 
     public static RecordTransformer createAggregator(Header header, MAConfig config) {
-        final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(PIXEL_MASK_ATT_NAME);
+        String pixelMaskAttributeName = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_MASK_ATT_NAME;
+        final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(pixelMaskAttributeName);
         return new RecordAggregator(pixelMaskAttributeIndex, config.getFilteredMeanCoeff());
     }
 
@@ -157,6 +158,7 @@ public class ProductRecordSource implements RecordSource {
     }
 
     private static class YXComparator implements Comparator<PixelPosRecord> {
+
         @Override
         public int compare(PixelPosRecord o1, PixelPosRecord o2) {
             float y1 = o1.pixelPos.y;
@@ -178,6 +180,7 @@ public class ProductRecordSource implements RecordSource {
     }
 
     private abstract class OutputRecordGenerator<T> extends RecordIterator {
+
         private final Iterator<T> inputIterator;
 
         public OutputRecordGenerator(Iterator<T> inputIterator) {
@@ -228,6 +231,7 @@ public class ProductRecordSource implements RecordSource {
     }
 
     private static class PixelPosRecord {
+
         private final PixelPos pixelPos;
         private final Record record;
 
@@ -239,9 +243,9 @@ public class ProductRecordSource implements RecordSource {
         @Override
         public String toString() {
             return "PixelPosRecord{" +
-                    "pixelPos=" + pixelPos +
-                    ", record=" + record +
-                    '}';
+                   "pixelPos=" + pixelPos +
+                   ", record=" + record +
+                   '}';
         }
     }
 
