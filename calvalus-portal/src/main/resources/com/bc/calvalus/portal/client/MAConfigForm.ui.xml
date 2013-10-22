@@ -130,7 +130,7 @@
                                     </li>
                                     <li><i>var</i>.sigma - (filtered) mean value
                                     </li>
-                                    <li><i>var</i>.vc - The coefficient of variance: sigma / mean
+                                    <li><i>var</i>.cv - The coefficient of variance: sigma / mean
                                     </li>
                                     <li><i>var</i>.n - Number of good pixels that have been used for the analysis. n =
                                         nT -

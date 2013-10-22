@@ -1,0 +1,12 @@
+#!/usr/bin/Rscript
+
+args <- commandArgs(trailingOnly = TRUE)
+print(args)
+path <- unlist(strsplit(args, "/"))
+name <- path[length(path)]
+suffix <- '$parameters.get("suffix")'
+
+file.rename(args, paste(args, suffix, sep=""))
+write(paste('CALVALUS_OUTPUT_PRODUCT', paste(name, suffix, sep="")), stdout())
+
+q(status=0)

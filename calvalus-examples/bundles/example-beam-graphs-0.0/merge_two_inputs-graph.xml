@@ -6,7 +6,7 @@
     <header>
       <target refid="mergeNode" />
       <source name="merisL1B" description="MERIS L1b TOA">${inputPath}</source>
-      <source name="bandMath" description="MERIS L1b TOA">/calvalus/projects/cvtest/bandmath-graph/L2_of_${filename}.seq</source>
+      <source name="bandMath" description="MERIS L1b TOA">/calvalus/examples/beam-graphs/00_bandmath/L2_of_${filename}.seq</source>
     </header>
 
     <node id="mergeNode">

@@ -1,0 +1,24 @@
+#!/usr/bin/python
+# process /some/path/to/ATS_TOA_1P...N1
+import shutil
+import sys
+import os
+
+sys.path.append('examplepythonpackage-1.0/examplepythonpackage-1.0/src')
+from examplemodule import Example
+
+e = Example('abc')
+print e.getName()
+print 'CALVALUS_PROGRESS 0.25'
+
+#foreach( $i in $parameters.entrySet() )
+$i.key = "$i.value"
+print "$i.key={0}".format($i.key)
+#end
+prefix = '$parameters.get("prefix")'
+print 'prefix={0}'.format(prefix)
+
+print 'CALVALUS_PROGRESS 0.5'
+output = '{0}{1}'.format(prefix, os.path.basename(sys.argv[1]))
+shutil.copyfile(sys.argv[1], output)
+print 'CALVALUS_OUTPUT_PRODUCT {0}'.format(output)

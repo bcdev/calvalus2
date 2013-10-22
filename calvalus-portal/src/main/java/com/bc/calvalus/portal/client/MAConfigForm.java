@@ -154,33 +154,41 @@ public class MAConfigForm extends Composite {
                 mapOptions.setDisableDoubleClickZoom(false);
                 mapOptions.setScrollWheel(true);
                 mapOptions.setMapTypeControl(true);
-                mapOptions.setZoomControl(false);
-                mapOptions.setPanControl(false);
+                mapOptions.setZoomControl(true);
+                mapOptions.setPanControl(true);
                 mapOptions.setStreetViewControl(false);
                 final MapWidget mapWidget = new MapWidget(mapOptions);
-                mapWidget.setSize("800px", "640px");
+                mapWidget.setSize("800px", "520px");
+                LatLngBounds bounds = null;
                 MarkerImage markerImage = MarkerImage.newInstance("https://maps.gstatic.com/intl/en_ALL/mapfiles/markers2/measle.png");
                 for (int i = 0; i < points.length; ) {
                     final float lat = points[i++];
                     final float lon = points[i++];
+                    LatLng latLngPoint = LatLng.newInstance(lat, lon);
+                    if (bounds == null) {
+                        bounds = LatLngBounds.newInstance(latLngPoint, latLngPoint);
+                    } else {
+                        bounds.extend(latLngPoint);
+                    }
                     MarkerOptions markerOptions = MarkerOptions.newInstance();
-                    markerOptions.setPosition(LatLng.newInstance(lat, lon));
+                    markerOptions.setPosition(latLngPoint);
                     Marker marker = Marker.newInstance(markerOptions);
                     marker.setIcon(markerImage);
                     marker.setMap(mapWidget);
                 }
-
-                Dialog dialog = new Dialog("Viewing " + recordSource, mapWidget, Dialog.ButtonType.CLOSE) {
-                    @Override
-                    protected void onShow() {
-                        mapWidget.triggerResize();
-                        final LatLng sw = LatLng.newInstance(-90, -180);
-                        final LatLng ne = LatLng.newInstance(90, 180);
-                        mapWidget.fitBounds(LatLngBounds.newInstance(sw, ne));
-                        mapWidget.setZoom(2);
-                    }
-                };
-                dialog.show();
+                if (bounds != null) {
+                    final LatLngBounds finalBounds = bounds;
+                    String title = "Viewing " + recordSource + " with " + (points.length / 2) + " measurements";
+                    Dialog dialog = new Dialog(title, mapWidget, Dialog.ButtonType.CLOSE) {
+                        @Override
+                        protected void onShow() {
+                            mapWidget.triggerResize();
+                            mapWidget.fitBounds(finalBounds);
+                            mapWidget.panTo(finalBounds.getCenter());
+                        }
+                    };
+                    dialog.show();
+                }
             }
 
             @Override

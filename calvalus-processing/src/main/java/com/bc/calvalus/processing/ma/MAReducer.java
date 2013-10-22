@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -37,6 +36,7 @@ import java.util.logging.Logger;
  * @author Norman Fomferra
  */
 public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritable> {
+
     static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
