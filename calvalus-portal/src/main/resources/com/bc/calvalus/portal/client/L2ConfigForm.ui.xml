@@ -24,6 +24,7 @@
 
                 <g:ListBox ui:field="processorList" width="28em" visibleItemCount="12"/>
                 <g:Label ui:field="processorBundleName" addStyleNames="{style.explanatoryLabel}"/>
+                <g:Anchor ui:field="showProcessorSelectionHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
 
             </g:VerticalPanel>
 

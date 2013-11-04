@@ -10,6 +10,7 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.Label;
@@ -29,7 +30,9 @@ import java.util.Map;
 public class ProductSetSelectionForm extends Composite {
 
     interface TheUiBinder extends UiBinder<Widget, ProductSetSelectionForm> {
+
     }
+
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
     private static final DtoProductSet[] EMPTY_PRODUCT_SETS = new DtoProductSet[0];
 
@@ -59,6 +62,8 @@ public class ProductSetSelectionForm extends Composite {
     Label productSetEndDate;
     @UiField
     Label productSetRegionName;
+    @UiField
+    Anchor showHelp;
 
     public ProductSetSelectionForm(PortalContext portal) {
         this(portal, null);
@@ -97,6 +102,8 @@ public class ProductSetSelectionForm extends Composite {
 
         updateListBox(portal.getProductSets());
         updateDetailsView();
+
+        HelpSystem.addClickHandler(showHelp, "productSetSelection");
     }
 
     private void updateProductSetsListBox() {
@@ -210,6 +217,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public static interface ChangeHandler {
+
         void onProductSetChanged(DtoProductSet productSet);
     }
 

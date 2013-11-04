@@ -5,6 +5,9 @@
              xmlns:date='urn:import:com.google.gwt.user.datepicker.client'
         >
 
+    <ui:style src="style.css"/>
+
+
     <g:HorizontalPanel spacing="16">
 
         <g:VerticalPanel spacing="2">
@@ -63,6 +66,9 @@
                     </tr>
                 </table>
             </g:HTMLPanel>
+
+            <g:Anchor ui:field="showFilterHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
+
         </g:VerticalPanel>
 
         <g:VerticalPanel spacing="2">

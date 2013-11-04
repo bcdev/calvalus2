@@ -9,6 +9,7 @@
     <link type="text/css" rel="stylesheet" href="calvalus.css">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
+    <script type="text/javascript" language="javascript" src="blah.js"></script>
 
     <%-- Reanimate following line for OpenLayers support --%>
     <%--<script type="text/javascript" language="javascript" src="http://openlayers.org/api/2.9/OpenLayers.js"></script>--%>
@@ -50,6 +51,8 @@
                         <% } else { %>
                         Not logged in.
                         <% } %>
+                        <br/>
+                        <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp">Help</a>
                         <br/>
                         <a href="about.jsp" target="_blank">About</a>
                     </td>

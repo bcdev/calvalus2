@@ -33,6 +33,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
@@ -78,6 +79,8 @@ public class L2ConfigForm extends Composite {
         String explanatoryLabel();
 
         String centeredHorizontalPanel();
+
+        String anchor();
     }
 
     @UiField
@@ -106,6 +109,8 @@ public class L2ConfigForm extends Composite {
     CheckBox showSystemProcessors;
     @UiField
     CheckBox showAllUserProcessors;
+    @UiField
+    Anchor showProcessorSelectionHelp;
 
     private final boolean selectionMandatory;
     private final PortalContext portalContext;
@@ -166,6 +171,7 @@ public class L2ConfigForm extends Composite {
 
         updateProcessorDetails();
 
+        HelpSystem.addClickHandler(showProcessorSelectionHelp, "processorSelection");
     }
 
     public void updateProcessorList() {

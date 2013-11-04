@@ -26,6 +26,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
@@ -66,6 +67,8 @@ public class ManageBundleForm extends Composite {
     Button removeButton;
     @UiField
     Button uploadButton;
+    @UiField
+    Anchor showHelp;
 
     @UiField
     FlexTable processors;
@@ -80,6 +83,7 @@ public class ManageBundleForm extends Composite {
         removeButton.addClickHandler(new BundleRemoveHandler());
         uploadButton.addClickHandler(new BundleUploadHandler());
         bundleList.addChangeHandler(new BundleListChangeHandler());
+        HelpSystem.addClickHandler(showHelp, "managingBundles");
     }
 
     private void updateBundlesList() {
