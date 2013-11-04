@@ -2,8 +2,11 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
-    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
-
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'>
+        .anchor:hover {
+            cursor: pointer;
+        }
+    </ui:style>
     <g:HorizontalPanel width="100%">
 
         <g:VerticalPanel spacing="5" height="30em" width="100%">
@@ -12,10 +15,24 @@
                 <hr/>
             </g:HTMLPanel>
             <g:ListBox ui:field="bundleList" width="100%" visibleItemCount="25"/>
-            <g:HorizontalPanel>
-                <g:Button ui:field='removeButton' text="Remove"/>
-                <g:Button ui:field='uploadButton' text="Upload"/>
-            </g:HorizontalPanel>
+            <g:HTMLPanel>
+                <table style="width: 100%;">
+                    <tr>
+                        <td width="20%" align="left">
+                            <g:Button ui:field='removeButton' text="Remove"/>
+                        </td>
+
+                        <td width="20%" align="left">
+                            <g:Button ui:field='uploadButton' text="Upload"/>
+                        </td>
+
+                        <td width="60%" align="right">
+                            <g:Anchor ui:field="showHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
+                        </td>
+
+                    </tr>
+                </table>
+            </g:HTMLPanel>
         </g:VerticalPanel>
 
         <g:VerticalPanel spacing="5" height="44em" width="100%">

@@ -14,3 +14,8 @@
     font-weight: bold;
     color: #777799;
 }
+
+    /* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+.anchor:hover {
+    cursor: pointer;
+}

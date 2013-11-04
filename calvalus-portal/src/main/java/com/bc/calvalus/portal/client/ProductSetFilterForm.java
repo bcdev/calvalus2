@@ -90,6 +90,8 @@ public class ProductSetFilterForm extends Composite {
     Anchor manageRegionsAnchor;
     @UiField
     RegionMapWidget regionMap;
+    @UiField
+    Anchor showFilterHelp;
 
     static int radioGroupId;
 
@@ -148,6 +150,8 @@ public class ProductSetFilterForm extends Composite {
         });
 
         updateNumDays();
+
+        HelpSystem.addClickHandler(showFilterHelp, "productSetFiltering");
     }
 
     private void updateNumDays() {
