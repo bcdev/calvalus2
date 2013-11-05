@@ -1,7 +1,7 @@
 package com.bc.calvalus.portal.client.map;
 
+import com.bc.calvalus.portal.client.TestHelper;
 import com.google.gwt.junit.client.GWTTestCase;
-import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.maps.client.base.LatLng;
 
 public class RegionTest extends GWTTestCase {
@@ -13,7 +13,7 @@ public class RegionTest extends GWTTestCase {
 
     @Override
     protected void gwtSetUp() throws Exception {
-        assertMapsApiLoaded();
+        TestHelper.assertMapsApiLoaded();
     }
 
     public void testGetVerticesParsesGeometryWkt() {
@@ -83,16 +83,4 @@ public class RegionTest extends GWTTestCase {
         assertEquals(expected.getLongitude(), vertex.getLongitude(), 1e-5);
     }
 
-    private static void assertMapsApiLoaded() {
-        final long t0 = System.currentTimeMillis();
-        Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                final long t1 = System.currentTimeMillis();
-                long l = t1 - t0;
-                System.out.println("MapsApi loaded after " + l + " ms");
-            }
-        };
-        LoadApi.go(runnable, false);
-    }
 }

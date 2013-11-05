@@ -5,25 +5,24 @@ import com.google.gwt.junit.client.GWTTestCase;
 import java.util.Map;
 
 public class L3ConfigFormTest extends GWTTestCase {
+
     public String getModuleName() {
         return "com.bc.calvalus.portal.CalvalusPortalJUnit";
+    }
+
+    @Override
+    protected void gwtSetUp() throws Exception {
+        TestHelper.assertMapsApiLoaded();
     }
 
     public void testValueMap() {
         L3ConfigForm l3ConfigForm = new L3ConfigForm();
         Map<String, String> valueMap = l3ConfigForm.getValueMap();
         assertNotNull(valueMap);
-        assertEquals(10, valueMap.size());
+        assertEquals(6, valueMap.size());
 
-        // todo - make this work again! (nf)
-        /*
-        assertEquals("1", valueMap.get("variables.count"));
-        assertEquals("chl_conc", valueMap.get("variables.0.name"));
-        assertEquals("AVG_ML", valueMap.get("variables.0.aggregator"));
-        assertEquals("0.5", valueMap.get("variables.0.weightCoeff"));
-        assertEquals("NaN", valueMap.get("variables.0.fillValue"));
-        */
-        assertEquals("!l1_flags.INVALID AND !l1_flags.LAND_OCEAN", valueMap.get("variables.0.maskExpr"));
+        assertEquals("0", valueMap.get("variables.count"));
+        assertEquals("", valueMap.get("maskExpr"));
         assertEquals("10", valueMap.get("periodLength"));
         assertEquals("10", valueMap.get("compositingPeriodLength"));
         assertEquals("9.28", valueMap.get("resolution"));

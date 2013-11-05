@@ -10,10 +10,8 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.Iterator;
 
+import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.internal.matchers.StringContains.*;
 
 public class CsvRecordSourceTest {
 
@@ -23,11 +21,11 @@ public class CsvRecordSourceTest {
     @Test
     public void testSimpleCsv() throws Exception {
         final String CSV = ""
-                + "# Test CSV\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                           + "# Test CSV\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
 
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
@@ -54,13 +52,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testSimpleCsvWithMissingValues() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
@@ -73,59 +71,62 @@ public class CsvRecordSourceTest {
         assertNotNull(iterator);
 
         assertTrue(iterator.hasNext());
-        assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, "03.04.2003", null, 0.5, 1.0);
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, "03.04.2003", null, 0.5,
+                     1.0);
 
         assertTrue(iterator.hasNext());
-        assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, "08.04.2003", null, null, null);
+        assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, "08.04.2003", null, null,
+                     null);
 
         assertTrue(iterator.hasNext());
-        assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, "11.04.2003", "A", 0.4, null);
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, "11.04.2003", "A", 0.4,
+                     null);
 
         assertFalse(iterator.hasNext());
     }
-    
+
     @Test
-     public void testSimpleCsvWithGivenSeparator() throws Exception {
-         final String CSV = ""
-                 + "# Test CSV\n"
-                 + "# columnSeparator=,\n"
-                 + "ID,LAT,LONG,TIME,SITE,CHL,FLAG\n"
-                 + "16,53.1,13.6,03.04.2003,A,0.5,1\n"
-                 + "17,53.3,13.4,08.04.2003,A,0.9,0\n"
-                 + "18,53.1,13.5,11.04.2003,A,0.4,1\n";
- 
- 
-         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
-         assertHeader(recordSource.getHeader(), true, true, "ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG");
- 
-         Iterable<Record> records = recordSource.getRecords();
-         assertNotNull(records);
- 
-         Iterator<Record> iterator = records.iterator();
-         assertNotNull(iterator);
- 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, "03.04.2003", "A", 0.5, 1.0);
- 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, "08.04.2003", "A", 0.9, 0.0);
- 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, "11.04.2003", "A", 0.4, 1.0);
- 
-         assertFalse(iterator.hasNext());
-     }
+    public void testSimpleCsvWithGivenSeparator() throws Exception {
+        final String CSV = ""
+                           + "# Test CSV\n"
+                           + "# columnSeparator=,\n"
+                           + "ID,LAT,LONG,TIME,SITE,CHL,FLAG\n"
+                           + "16,53.1,13.6,03.04.2003,A,0.5,1\n"
+                           + "17,53.3,13.4,08.04.2003,A,0.9,0\n"
+                           + "18,53.1,13.5,11.04.2003,A,0.4,1\n";
+
+
+        CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
+        assertHeader(recordSource.getHeader(), true, true, "ID", "LAT", "LONG", "TIME", "SITE", "CHL", "FLAG");
+
+        Iterable<Record> records = recordSource.getRecords();
+        assertNotNull(records);
+
+        Iterator<Record> iterator = records.iterator();
+        assertNotNull(iterator);
+
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, "03.04.2003", "A", 0.5, 1.0);
+
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, "08.04.2003", "A", 0.9, 0.0);
+
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, "11.04.2003", "A", 0.4, 1.0);
+
+        assertFalse(iterator.hasNext());
+    }
 
     @Test
     public void testSimpleCsvWithGivenLatLonColumns() throws Exception {
         final String CSV = ""
-                + "# Test CSV\n"
-                + "# latColumn = LA\n"
-                + "# lonColumn = LO\n"
-                + "ID\tLA\tLO\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                           + "# Test CSV\n"
+                           + "# latColumn = LA\n"
+                           + "# lonColumn = LO\n"
+                           + "ID\tLA\tLO\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
 
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
@@ -152,12 +153,12 @@ public class CsvRecordSourceTest {
     @Test
     public void testSimpleCsvWithGivenTimeColumnButMissingDateFormat() throws Exception {
         final String CSV = ""
-                + "# Test CSV\n"
-                + "# timeColumn =myTIME\n"
-                + "ID\tLAT\tLON\tmyTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                           + "# Test CSV\n"
+                           + "# timeColumn =myTIME\n"
+                           + "ID\tLAT\tLON\tmyTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
 
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
@@ -182,51 +183,54 @@ public class CsvRecordSourceTest {
     }
 
     @Test
-     public void testSimpleCsvWithGivenCombinedTimeColumn() throws Exception {
-         final String CSV = ""
-                 + "# Test CSV\n"
-                 + "# timeColumns=day,month,year\n"
-                 + "# dateFormat=dd,MM,yyyy\n"
-                 + "ID\tLAT\tLON\tday\tyear\tmonth\tSITE\tCHL\tFLAG\n"
-                 + "16\t53.1\t13.6\t03\t2003\t04\tA\t0.5\t1\n"
-                 + "17\t53.3\t13.4\t08\t2003\t04\tA\t0.9\t0\n"
-                 + "18\t53.1\t13.5\t11\t2003\t04\tA\t0.4\t1\n";
+    public void testSimpleCsvWithGivenCombinedTimeColumn() throws Exception {
+        final String CSV = ""
+                           + "# Test CSV\n"
+                           + "# timeColumns=day,month,year\n"
+                           + "# dateFormat=dd,MM,yyyy\n"
+                           + "ID\tLAT\tLON\tday\tyear\tmonth\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03\t2003\t04\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08\t2003\t04\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11\t2003\t04\tA\t0.4\t1\n";
 
 
-         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
-         assertHeader(recordSource.getHeader(), true, true, "ID", "LAT", "LON", "day", "year", "month", "SITE", "CHL", "FLAG");
+        CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
+        assertHeader(recordSource.getHeader(), true, true, "ID", "LAT", "LON", "day", "year", "month", "SITE", "CHL", "FLAG");
 
-         Iterable<Record> records = recordSource.getRecords();
-         assertNotNull(records);
+        Iterable<Record> records = recordSource.getRecords();
+        assertNotNull(records);
 
-         Iterator<Record> iterator = records.iterator();
-         assertNotNull(iterator);
+        Iterator<Record> iterator = records.iterator();
+        assertNotNull(iterator);
 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, 3.0, 2003.0, 4.0, "A", 0.5, 1.0);
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.6F), SHORT_DATE_FORMAT.parse("03.04.2003"), 16.0, 53.1, 13.6, 3.0, 2003.0, 4.0, "A", 0.5,
+                     1.0);
 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, 8.0, 2003.0, 4.0, "A", 0.9, 0.0);
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.3F, 13.4F), SHORT_DATE_FORMAT.parse("08.04.2003"), 17.0, 53.3, 13.4, 8.0, 2003.0, 4.0, "A", 0.9,
+                     0.0);
 
-         assertTrue(iterator.hasNext());
-         assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, 11.0, 2003.0, 4.0, "A", 0.4, 1.0);
+        assertTrue(iterator.hasNext());
+        assertRecord(iterator.next(), new GeoPos(53.1F, 13.5F), SHORT_DATE_FORMAT.parse("11.04.2003"), 18.0, 53.1, 13.5, 11.0, 2003.0, 4.0, "A", 0.4,
+                     1.0);
 
-         assertFalse(iterator.hasNext());
-     }
+        assertFalse(iterator.hasNext());
+    }
 
 
     @Test
     public void testSimpleCsvWithGivenCombinedTimeColumnsButMissingDateFormat() throws Exception {
         final String CSV = ""
-                + "# Test CSV\n"
-                + "# timeColumns = day,month,year\n"
-                + "ID\tLAT\tLON\tmyTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
+                           + "# Test CSV\n"
+                           + "# timeColumns = day,month,year\n"
+                           + "ID\tLAT\tLON\tmyTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\tA\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\tA\t0.9\t0\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t1\n";
 
         try {
-        CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
+            CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
         } catch (Exception e) {
             assertEquals("header parameter 'timeColumns' requires a user supplied 'dateFormat'.", e.getMessage());
 
@@ -263,13 +267,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithMalformedTime() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
 
         try {
@@ -290,13 +294,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithNoTime() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tNoTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
-                + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tNoTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t03.04.2003\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t08.04.2003\t\t\t\n"
+                           + "18\t53.1\t13.5\t11.04.2003\tA\t0.4\t\n";
 
         CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
 
@@ -312,13 +316,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithMalformedLat() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
-                + "17\t\t13.4\t2003-04-08 00:00:00\t\t\t\n"
-                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                           + "17\t\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                           + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
 
         try {
             CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), LONG_DATE_FORMAT);
@@ -339,13 +343,13 @@ public class CsvRecordSourceTest {
     @Test
     public void testBadCsvWithNoLat() throws Exception {
         final String CSV = ""
-                + "\n"
-                + "# Test CSV\n"
-                + "\n"
-                + "ID\tNoLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
-                + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
-                + "17\t53.3\t13.4\t2003-04-08 00:00:00\t\t\t\n"
-                + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
+                           + "\n"
+                           + "# Test CSV\n"
+                           + "\n"
+                           + "ID\tNoLAT\tLONG\tTIME\tSITE\tCHL\tFLAG\n"
+                           + "16\t53.1\t13.6\t2003-04-03 00:00:00\t\t0.5\t1\n"
+                           + "17\t53.3\t13.4\t2003-04-08 00:00:00\t\t\t\n"
+                           + "18\t53.1\t13.5\t2003-04-11 00:00:00\tA\t0.4\t\n";
 
         try {
             CsvRecordSource recordSource = new CsvRecordSource(new StringReader(CSV), SHORT_DATE_FORMAT);
@@ -356,8 +360,9 @@ public class CsvRecordSourceTest {
             }
             fail("error not detected");
         } catch (Exception e) {
-            assertEquals("missing lat and lon columns in header of point data file (one of lat, latitude, northing and one of lon, long, longitude, easting expected)",
-                         e.getMessage());
+            assertEquals(
+                    "missing lat and lon columns in header of point data file (one of lat, latitude, northing and one of lon, long, longitude, easting expected)",
+                    e.getMessage());
         }
     }
 
