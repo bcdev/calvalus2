@@ -1,0 +1,174 @@
+#!/bin/bash
+
+inputFile="$inputFile"
+inFileName="$inputFile.name"
+
+#[[
+# for debuggin
+#set -x
+set -e
+set -m
+
+outFile=${inFileName}-l2gen.hdf
+
+export OCSSWROOT=./seadas-7.0/seadas-7.0
+L2GEN_BIN=${OCSSWROOT}/run/bin/linux_64/l2gen
+
+source $OCSSWROOT/OCSSW_bash.env
+
+# append newline to parameters.anc
+touch parameters.anc
+echo >> parameters.anc
+
+
+]]#
+
+#if ($inputRectangle)
+
+#set( $Double = 0.0 )
+
+#set( $Dspixl = $inputRectangle.x + 1 )
+#set( $spixl = $Double.valueOf($Dspixl).intValue() )
+
+#set( $Depixl = $inputRectangle.x + $inputRectangle.width )
+#set( $epixl = $Double.valueOf($Depixl).intValue() )
+
+#set( $Dsline = $inputRectangle.y + 1 )
+#set( $sline = $Double.valueOf($Dsline).intValue() )
+
+#set( $Deline = $inputRectangle.y + $inputRectangle.height )
+#set( $eline = $Double.valueOf($Deline).intValue() )
+
+echo "spixl=$spixl" >> parameters.anc
+echo "epixl=$epixl" >> parameters.anc
+echo "sline=$sline" >> parameters.anc
+echo "eline=$eline" >> parameters.anc
+#end
+
+#[[
+
+
+if [[ $inFileName =~ ^MER_ ]]
+then
+  # MER_RR__1PNACR20020523_103543_....
+  productTime="${inFileName:23:2}:${inFileName:25:2}:${inFileName:27:2}"
+  productDate="${inFileName:14:4}-${inFileName:18:2}-${inFileName:20:2}"
+elif [[ $inFileName =~ ^[AS][0-9]+ ]]
+then
+  # A2003001000000.L1B_LAC
+  productTime="${inFileName:8:2}:${inFileName:10:2}:${inFileName:12:2}"
+  pdate="${inFileName:1:7}"
+  pyear=${pdate%???}
+  pday=${pdate#$pyear}
+  productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y-%m-%d")
+fi
+
+echo "inFileName ${inFileName}"
+echo "productTime ${productTime}"
+echo "productDate ${productDate}"
+
+# get AUX data files
+s=`date -d "${productDate} ${productTime}Z" -u +%s`
+d=`date -d @$s -u +%Y%j%H%M%S`
+h=`date -d @$s -u +%H`
+
+h1=$((((1$h-100)/6)*6))
+d1="`date -d @$s -u +%Y%j``printf %02d ${h1}`"
+
+s2=$(($s + 21599))
+h21=`date -d @$s2 -u +%H`
+h22=$((((1$h21-100)/6)*6))
+d2="`date -d @$s2 -u +%Y%j``printf %02d ${h22}`"
+
+s3=$(($s + 21600))
+h31=`date -d @$s3 -u +%H`
+h32=$((((1$h31-100)/6)*6))
+d3="`date -d @$s3 -u +%Y%j``printf %02d ${h32}`"
+
+s4=$(($s - 43200))
+d4="`date -d @$s4 -u +%Y%j`00"
+
+d5="`date -d @$s -u +%Y%j`00"
+
+s6=$(($s + 43200))
+d6="`date -d @$s6 -u +%Y%j`00"
+
+icefile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_SEAICE_*|awk '{ print $8 }'`
+if [ "$icefile" != "" ]; then
+  if [ ! -e `basename $icefile` ]; then
+    hadoop fs -copyToLocal $icefile .
+  fi
+  echo "icefile=`basename $icefile`" >> parameters.anc
+fi
+met1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d1:0:4}/${d1:4:3}/?${d1}_*MET*|awk '{ print $8 }'`
+if [ "$met1" != "" ]; then
+  if [ ! -e `basename $met1` ]; then
+    hadoop fs -copyToLocal $met1 .
+  fi
+  echo "met1=`basename $met1`" >> parameters.anc
+fi
+met2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d2:0:4}/${d2:4:3}/?${d2}_*MET*|awk '{ print $8 }'`
+if [ "$met2" != "" ]; then
+  if [ ! -e `basename $met2` ]; then
+    hadoop fs -copyToLocal $met2 .
+  fi
+  echo "met2=`basename $met2`" >> parameters.anc
+fi
+met3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d3:0:4}/${d3:4:3}/?${d3}_*MET*|awk '{ print $8 }'`
+if [ "$met3" != "" ]; then
+  if [ ! -e `basename $met3` ]; then
+    hadoop fs -copyToLocal $met3 .
+  fi
+  echo "met3=`basename $met3`" >> parameters.anc
+fi
+ozone1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d4:0:4}/${d4:4:3}/?${d4}_O3_*|awk '{ print $8 }'`
+if [ "$ozone1" != "" ]; then
+  if [ ! -e `basename $ozone1` ]; then
+    hadoop fs -copyToLocal $ozone1 .
+  fi
+  echo "ozone1=`basename $ozone1`" >> parameters.anc
+fi
+ozone2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_O3_*|awk '{ print $8 }'`
+if [ "$ozone2" != "" ]; then
+  if [ ! -e `basename $ozone2` ]; then
+    hadoop fs -copyToLocal $ozone2 .
+  fi
+  echo "ozone2=`basename $ozone2`" >> parameters.anc
+fi
+ozone3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d6:0:4}/${d6:4:3}/?${d6}_O3_*|awk '{ print $8 }'`
+if [ "$ozone3" != "" ]; then
+  if [ ! -e `basename $ozone3` ]; then
+    hadoop fs -copyToLocal $ozone3 .
+  fi
+  echo "ozone3=`basename $ozone3`" >> parameters.anc
+fi
+sstfile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5:0:7}_SST_*|awk '{ print $8 }'`
+if [ "$sstfile" != "" ]; then
+  if [ ! -e `basename $sstfile` ]; then
+    hadoop fs -copyToLocal $sstfile .
+  fi
+  echo "sstfile=`basename $sstfile`" >> parameters.anc
+fi
+
+
+# for debugging purpose
+echo "=================="
+cat parameters.anc
+echo "=================="
+
+
+function handle_progress() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ Processing\ scan\ #\ +[0-9]+\ +\(([0-9]+)\ +of\ +([0-9]+)\)\ +after ]]; then
+    a1=${BASH_REMATCH[1]}
+    a2=${BASH_REMATCH[2]}
+    progress=$(echo "scale=3; ${a1} / ${a2}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" $progress
+  fi
+}
+
+echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc
+${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc | while read x ; do handle_progress "$x" ; done
+echo CALVALUS_OUTPUT_PRODUCT ${outFile}
+]]#

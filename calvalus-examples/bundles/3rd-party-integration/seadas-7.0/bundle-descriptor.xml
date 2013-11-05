@@ -1,0 +1,69 @@
+<bundleDescriptor>
+    <bundleName>seadas</bundleName>
+    <bundleVersion>7.0</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>l2gen</executableName>
+            <processorName>l2gen L2 Processing</processorName>
+            <processorVersion>6.7.0</processorVersion>
+            <defaultParameters><![CDATA[]]></defaultParameters>
+            <outputFormats>HDF</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml>
+                <![CDATA[<p>Performs seadas l2gen processing.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B,MODIS_L1B,SEAWIFS_L1B</inputProductTypes>
+            <outputProductType>SEADAS_L2GEN</outputProductType>
+            <validMaskExpression>true</validMaskExpression>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>chlor_a</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>pic</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>poc</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>angstrom</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Kd_490</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_413</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_443</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_490</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_510</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_560</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_620</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_665</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>Rrs_681</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>cdom_index</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>l2_flags</name>
+                </outputVariable>
+            </outputVariables>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>
