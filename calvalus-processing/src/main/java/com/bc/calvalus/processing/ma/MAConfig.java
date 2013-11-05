@@ -33,6 +33,7 @@ import java.util.ServiceLoader;
  * @author Norman
  */
 public class MAConfig implements XmlConvertible {
+
     /**
      * If {@code copyInput = true}, all fields of an input (reference) record will be
      * copied into a corresponding output record.
@@ -66,11 +67,18 @@ public class MAConfig implements XmlConvertible {
 
     /**
      * Coefficient for <i>filtered mean criterion</i>.
-     * If {@code filteredMeanCoeff = null}, the criterion will not be used.
+     * If {@code filteredMeanCoeff <= 0}, the criterion will not be used.
      * The default value is {@code 1.5}.
      */
     @Parameter(defaultValue = "1.5")
     private Double filteredMeanCoeff;
+
+    /**
+     * If set to {@code true} overlapping matchups, within one data product, are removed.
+     * Only the one closest in time to the in-situ data is preserved.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean filterOverlapping;
 
     /**
      * The band maths expression that identifies the "good" records in the macro pixel.
@@ -183,8 +191,8 @@ public class MAConfig implements XmlConvertible {
         String className = getRecordSourceSpiClassName();
         RecordSourceSpi service;
         if (className != null) {
-                service = RecordSourceSpi.getForClassName(className);
-        }else {
+            service = RecordSourceSpi.getForClassName(className);
+        } else {
             service = RecordSourceSpi.getForUrl(getRecordSourceUrl());
         }
         if (service != null) {
@@ -194,7 +202,7 @@ public class MAConfig implements XmlConvertible {
                 throw new IllegalStateException("record source reader service " + className + " of point data file not found");
             } else {
                 ServiceLoader<RecordSourceSpi> loader = ServiceLoader.load(RecordSourceSpi.class, Thread.currentThread().getContextClassLoader());
-                StringBuffer supportedExtensions = new StringBuffer();
+                StringBuilder supportedExtensions = new StringBuilder();
                 for (RecordSourceSpi spi : loader) {
                     for (String extension : spi.getAcceptedExtensions()) {
                         if (supportedExtensions.length() > 0) {
@@ -295,5 +303,9 @@ public class MAConfig implements XmlConvertible {
 
     public void setSortInputByPixelYX(boolean sortInputByPixelYX) {
         this.sortInputByPixelYX = sortInputByPixelYX;
+    }
+
+    public boolean getFilterOverlapping() {
+        return filterOverlapping;
     }
 }
