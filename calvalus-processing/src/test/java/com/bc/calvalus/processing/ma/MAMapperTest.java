@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.vividsolutions.jts.util.Assert;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -16,6 +15,8 @@ import org.mockito.stubbing.Answer;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Marco Peters
@@ -60,6 +61,7 @@ public class MAMapperTest {
         Mockito.when(context.getConfiguration()).thenReturn(jobConf);
         mapper.run(context);
 
-        Assert.equals(6, collectedMatchups.size());
+        assertEquals(6, collectedMatchups.size());
+
     }
 }
