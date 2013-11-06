@@ -11,7 +11,7 @@
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>2.0.0-mr1-cdh4.4.0</hadoop.version>
+        <hadoop.version>2.2.0-cdh5.0.0-beta-1</hadoop.version>
         <calvalus.version>1.8-cdh4</calvalus.version>
         <beam.version>4.11.1-SNAPSHOT</beam.version>
         <ceres.version>0.13.2</ceres.version>
@@ -169,6 +169,12 @@
                 <groupId>com.bc.calvalus</groupId>
                 <artifactId>calvalus-exchange</artifactId>
                 <version>${calvalus.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java</artifactId>
+                <version>2.5.0</version>
             </dependency>
 
             <!--  Ceres -->

@@ -172,6 +172,11 @@ public class QLMapperMain {
             }
 
             @Override
+            public float getProgress() {
+                return 0.5f;
+            }
+
+            @Override
             public void setStatus(String s) {
             }
         };
