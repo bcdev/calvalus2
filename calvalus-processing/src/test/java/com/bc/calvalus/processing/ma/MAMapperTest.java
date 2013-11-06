@@ -7,12 +7,15 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Counter;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,10 +26,67 @@ import static org.junit.Assert.*;
  */
 public class MAMapperTest {
 
-    @Test
-    public void testRun() throws Exception {
-        MAMapper mapper = new MAMapper();
+    private List<float[]> expectedMatchups;
 
+    @Before
+    public void setUp() throws Exception {
+        expectedMatchups = new ArrayList<float[]>();
+        expectedMatchups.add(new float[]{476.0f, 1365.0f, 67.13871f});
+        expectedMatchups.add(new float[]{477.0f, 1366.0f, 67.29978f});
+        expectedMatchups.add(new float[]{475.0f, 1353.0f, 68.66416f});
+        expectedMatchups.add(new float[]{477.0f, 1353.0f, 68.417816f});
+        expectedMatchups.add(new float[]{467.0f, 1386.0f, 66.52284f});
+        expectedMatchups.add(new float[]{466.0f, 1372.0f, 65.49009f});
+    }
+
+
+    @Test
+    public void testMatchUp_WindowSize3() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 3);
+
+        assertEquals(6, collectedMatchUps.size());
+        assertEquals(9, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+
+    }
+
+    @Test
+    public void testMatchUp_WindowSize5() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 5);
+
+        assertEquals(6, collectedMatchUps.size());
+        assertEquals(25, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+    }
+
+    private void testMatchUp(List<RecordWritable> collectedMatchUps, int matchUpIndex) {
+        int xColumn = 2;
+        int yColumn = 3;
+        int rad1Column = 6;
+
+        float[] expectedData = expectedMatchups.get(matchUpIndex);
+        assertEquals(expectedData[0], getCenterMatchupValue(collectedMatchUps, matchUpIndex, xColumn), 1.0e-6f);
+        assertEquals(expectedData[1], getCenterMatchupValue(collectedMatchUps, matchUpIndex, yColumn), 1.0e-6f);
+        assertEquals(expectedData[2], getCenterMatchupValue(collectedMatchUps, matchUpIndex, rad1Column), 1.0e-6f);
+    }
+
+    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize) throws URISyntaxException, IOException,
+                                                                                                         InterruptedException {
+        MAMapper mapper = new MAMapper();
 
         Mapper.Context context = Mockito.mock(Mapper.Context.class);
         FileSplit split = Mockito.mock(FileSplit.class);
@@ -35,7 +95,6 @@ public class MAMapperTest {
         Mockito.when(split.getLength()).thenReturn(1024L);
         Mockito.when(context.getInputSplit()).thenReturn(split);
         Mockito.when(context.getCounter(Mockito.anyString(), Mockito.anyString())).thenReturn(Mockito.mock(Counter.class));
-        final List<RecordWritable> collectedMatchups = new ArrayList<RecordWritable>();
         Answer recordAnswer = new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -53,37 +112,13 @@ public class MAMapperTest {
         MAConfig maConfig = new MAConfig();
         final String url = MAMapperTest.class.getResource("MER_RR__1P_TEST_MA-Data.txt").toExternalForm();
         maConfig.setRecordSourceUrl(url);
-        maConfig.setMacroPixelSize(3);
+        maConfig.setMacroPixelSize(macroPixelSize);
         maConfig.setFilteredMeanCoeff(0.0);
         maConfig.setMaxTimeDifference(1.0);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
         Mockito.when(context.getConfiguration()).thenReturn(jobConf);
         mapper.run(context);
-
-        assertEquals(6, collectedMatchups.size());
-        int xColumn = 2;
-        assertEquals(476.0f, getCenterMatchupValue(collectedMatchups, 0, xColumn), 1.0e-6f);
-        assertEquals(477.0f, getCenterMatchupValue(collectedMatchups, 1, xColumn), 1.0e-6f);
-        assertEquals(475.0f, getCenterMatchupValue(collectedMatchups, 2, xColumn), 1.0e-6f);
-        assertEquals(477.0f, getCenterMatchupValue(collectedMatchups, 3, xColumn), 1.0e-6f);
-        assertEquals(467.0f, getCenterMatchupValue(collectedMatchups, 4, xColumn), 1.0e-6f);
-        assertEquals(466.0f, getCenterMatchupValue(collectedMatchups, 5, xColumn), 1.0e-6f);
-        int yColumn = 3;
-        assertEquals(1365.0f, getCenterMatchupValue(collectedMatchups, 0, yColumn), 1.0e-6f);
-        assertEquals(1366.0f, getCenterMatchupValue(collectedMatchups, 1, yColumn), 1.0e-6f);
-        assertEquals(1353.0f, getCenterMatchupValue(collectedMatchups, 2, yColumn), 1.0e-6f);
-        assertEquals(1353.0f, getCenterMatchupValue(collectedMatchups, 3, yColumn), 1.0e-6f);
-        assertEquals(1386.0f, getCenterMatchupValue(collectedMatchups, 4, yColumn), 1.0e-6f);
-        assertEquals(1372.0f, getCenterMatchupValue(collectedMatchups, 5, yColumn), 1.0e-6f);
-        int rad1Column = 6;
-        assertEquals(67.13871f, getCenterMatchupValue(collectedMatchups, 0, rad1Column), 1.0e-6f);
-        assertEquals(67.29978f, getCenterMatchupValue(collectedMatchups, 1, rad1Column), 1.0e-6f);
-        assertEquals(68.66416f, getCenterMatchupValue(collectedMatchups, 2, rad1Column), 1.0e-6f);
-        assertEquals(68.417816f, getCenterMatchupValue(collectedMatchups, 3, rad1Column), 1.0e-6f);
-        assertEquals(66.52284f, getCenterMatchupValue(collectedMatchups, 4, rad1Column), 1.0e-6f);
-        assertEquals(65.49009f, getCenterMatchupValue(collectedMatchups, 5, rad1Column), 1.0e-6f);
-
     }
 
     private float getCenterMatchupValue(List<RecordWritable> collectedMatchups, int matchupIndex, int columnIndex) {
