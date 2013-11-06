@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Placemarks>
+    <Placemark name="pin_1">
+        <LABEL>Pin 1</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.821156</LATITUDE>
+        <LONGITUDE>8.3902645</LONGITUDE>
+        <PIXEL_X>476.5</PIXEL_X>
+        <PIXEL_Y>1365.5</PIXEL_Y>
+    </Placemark>
+    <Placemark name="pin_2">
+        <LABEL>Pin 2</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.808407</LATITUDE>
+        <LONGITUDE>8.400779</LONGITUDE>
+        <PIXEL_X>477.5</PIXEL_X>
+        <PIXEL_Y>1366.5</PIXEL_Y>
+    </Placemark>
+    <Placemark name="pin_3">
+        <LABEL>Pin 3</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.945927</LATITUDE>
+        <LONGITUDE>8.435439</LONGITUDE>
+        <PIXEL_X>475.5</PIXEL_X>
+        <PIXEL_Y>1353.5</PIXEL_Y>
+    </Placemark>
+    <Placemark name="pin_4">
+        <LABEL>Pin 4</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.940792</LATITUDE>
+        <LONGITUDE>8.466656</LONGITUDE>
+        <PIXEL_X>477.5</PIXEL_X>
+        <PIXEL_Y>1353.5</PIXEL_Y>
+    </Placemark>
+    <Placemark name="pin_5">
+        <LABEL>Pin 5</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.630222</LATITUDE>
+        <LONGITUDE>8.14528</LONGITUDE>
+        <PIXEL_X>467.5</PIXEL_X>
+        <PIXEL_Y>1386.5</PIXEL_Y>
+    </Placemark>
+    <Placemark name="pin_6">
+        <LABEL>Pin 6</LABEL>
+        <DESCRIPTION />
+        <LATITUDE>54.775455</LATITUDE>
+        <LONGITUDE>8.199578</LONGITUDE>
+        <PIXEL_X>466.5</PIXEL_X>
+        <PIXEL_Y>1372.5</PIXEL_Y>
+    </Placemark>
+</Placemarks>

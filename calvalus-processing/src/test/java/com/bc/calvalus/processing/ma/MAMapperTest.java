@@ -62,6 +62,37 @@ public class MAMapperTest {
         mapper.run(context);
 
         assertEquals(6, collectedMatchups.size());
+        int xColumn = 2;
+        assertEquals(476.0f, getCenterMatchupValue(collectedMatchups, 0, xColumn), 1.0e-6f);
+        assertEquals(477.0f, getCenterMatchupValue(collectedMatchups, 1, xColumn), 1.0e-6f);
+        assertEquals(475.0f, getCenterMatchupValue(collectedMatchups, 2, xColumn), 1.0e-6f);
+        assertEquals(477.0f, getCenterMatchupValue(collectedMatchups, 3, xColumn), 1.0e-6f);
+        assertEquals(467.0f, getCenterMatchupValue(collectedMatchups, 4, xColumn), 1.0e-6f);
+        assertEquals(466.0f, getCenterMatchupValue(collectedMatchups, 5, xColumn), 1.0e-6f);
+        int yColumn = 3;
+        assertEquals(1365.0f, getCenterMatchupValue(collectedMatchups, 0, yColumn), 1.0e-6f);
+        assertEquals(1366.0f, getCenterMatchupValue(collectedMatchups, 1, yColumn), 1.0e-6f);
+        assertEquals(1353.0f, getCenterMatchupValue(collectedMatchups, 2, yColumn), 1.0e-6f);
+        assertEquals(1353.0f, getCenterMatchupValue(collectedMatchups, 3, yColumn), 1.0e-6f);
+        assertEquals(1386.0f, getCenterMatchupValue(collectedMatchups, 4, yColumn), 1.0e-6f);
+        assertEquals(1372.0f, getCenterMatchupValue(collectedMatchups, 5, yColumn), 1.0e-6f);
+        int rad1Column = 6;
+        assertEquals(67.13871f, getCenterMatchupValue(collectedMatchups, 0, rad1Column), 1.0e-6f);
+        assertEquals(67.29978f, getCenterMatchupValue(collectedMatchups, 1, rad1Column), 1.0e-6f);
+        assertEquals(68.66416f, getCenterMatchupValue(collectedMatchups, 2, rad1Column), 1.0e-6f);
+        assertEquals(68.417816f, getCenterMatchupValue(collectedMatchups, 3, rad1Column), 1.0e-6f);
+        assertEquals(66.52284f, getCenterMatchupValue(collectedMatchups, 4, rad1Column), 1.0e-6f);
+        assertEquals(65.49009f, getCenterMatchupValue(collectedMatchups, 5, rad1Column), 1.0e-6f);
 
     }
+
+    private float getCenterMatchupValue(List<RecordWritable> collectedMatchups, int matchupIndex, int columnIndex) {
+        float[] data = getAggregatedNumber(collectedMatchups, matchupIndex, columnIndex).data;
+        return data[data.length / 2];
+    }
+
+    private AggregatedNumber getAggregatedNumber(List<RecordWritable> matchups, int matchupIndex, int columnIndex) {
+        return (AggregatedNumber) matchups.get(matchupIndex).getValues()[columnIndex];
+    }
+
 }

@@ -91,7 +91,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-            boolean containsData = false;
             Area area = new Area();
             int macroPixelSize = maConfig.getMacroPixelSize();
 
@@ -102,11 +101,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                         (int) pixelPos.y - macroPixelSize / 2,
                                                         macroPixelSize, macroPixelSize);
                     area.add(new Area(rectangle));
-                    containsData = true;
                 }
             }
 
-            if (containsData && !area.isEmpty()) { // todo - why do we need both checks? (mp)
+            if (!area.isEmpty()) {
                 if (!processorAdapter.supportsPullProcessing()) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
