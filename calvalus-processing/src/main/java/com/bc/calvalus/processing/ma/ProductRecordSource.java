@@ -73,14 +73,14 @@ public class ProductRecordSource implements RecordSource {
             return Collections.emptyList();
         }
 
-        final Iterable<Record> records = input.getRecords();
+        final Iterable<Record> inputRecords = input.getRecords();
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
                 if (sortInput) {
-                    return new PixelPosRecordGenerator(getInputRecordsSortedByPixelYX(records, pixelExtractor).iterator());
+                    return new PixelPosRecordGenerator(getInputRecordsSortedByPixelYX(inputRecords, pixelExtractor).iterator());
                 } else {
-                    return new RecordGenerator(records.iterator());
+                    return new RecordGenerator(inputRecords.iterator());
                 }
             }
         };
