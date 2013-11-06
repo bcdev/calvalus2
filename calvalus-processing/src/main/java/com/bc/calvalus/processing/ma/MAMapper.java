@@ -106,7 +106,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
             }
 
-            if (containsData && !area.isEmpty()) {
+            if (containsData && !area.isEmpty()) { // todo - why do we need both checks? (mp)
                 if (!processorAdapter.supportsPullProcessing()) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
@@ -150,8 +150,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 Header header = productRecordSource.getHeader();
                 Rectangle inputRect = processorAdapter.getInputRectangle();
-                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header,
-                                                                                                        inputRect);
+                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
                 RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
 

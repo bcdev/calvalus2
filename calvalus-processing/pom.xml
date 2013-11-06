@@ -135,11 +135,16 @@
             <artifactId>commons-cli</artifactId>
         </dependency>
 
-        <!--  JUnit -->
+        <!--  Test -->
 
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
         </dependency>
 
         <!--  JFreeChart -->
