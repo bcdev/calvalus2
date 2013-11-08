@@ -1,10 +1,21 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TiePointGeoCoding;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.text.ParseException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 import static org.junit.Assert.*;
 
@@ -102,26 +113,8 @@ public class ProductRecordSourceTest {
         MAConfig config1 = new MAConfig();
         config1.setMacroPixelSize(1);
         config1.setCopyInput(false);
-        config1.setSortInputByPixelYX(false);
 
-        ProductRecordSource noSort = createProductRecordSource(2, 3, input, config1);
-
-        List<Record> unsorted = getRecords(noSort);
-        assertEquals(5, unsorted.size());
-
-        assertEquals(2, ((int[]) unsorted.get(0).getAttributeValues()[PIXEL_Y])[0]);
-        assertEquals(2, ((int[]) unsorted.get(1).getAttributeValues()[PIXEL_Y])[0]);
-        assertEquals(0, ((int[]) unsorted.get(2).getAttributeValues()[PIXEL_Y])[0]);
-        assertEquals(1, ((int[]) unsorted.get(3).getAttributeValues()[PIXEL_Y])[0]);
-        assertEquals(0, ((int[]) unsorted.get(4).getAttributeValues()[PIXEL_Y])[0]);
-
-
-        MAConfig config2 = new MAConfig();
-        config2.setMacroPixelSize(1);
-        config2.setCopyInput(false);
-        config2.setSortInputByPixelYX(true);
-
-        ProductRecordSource sort = createProductRecordSource(2, 3, input, config2);
+        ProductRecordSource sort = createProductRecordSource(2, 3, input, config1);
         List<Record> sorted = getRecords(sort);
         assertEquals(5, sorted.size());
 
