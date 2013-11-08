@@ -2,10 +2,14 @@
 
 inputFile="$inputFile"
 inFileName="$inputFile.name"
+inputPathParent="$inputPath.parent"
+geoFileName=$inputPath.name.replace("L1B_","GEO_")
 
 #[[
+
 # for debuggin
 #set -x
+
 set -e
 set -m
 
@@ -47,7 +51,6 @@ echo "eline=$eline" >> parameters.anc
 
 #[[
 
-
 if [[ $inFileName =~ ^MER_ ]]
 then
   # MER_RR__1PNACR20020523_103543_....
@@ -55,17 +58,13 @@ then
   productDate="${inFileName:14:4}-${inFileName:18:2}-${inFileName:20:2}"
 elif [[ $inFileName =~ ^[AS][0-9]+ ]]
 then
-  # A2003001000000.L1B_LAC
+  # A2003001000000.L1B_LAC or S2003001000000.L1B_LAC
   productTime="${inFileName:8:2}:${inFileName:10:2}:${inFileName:12:2}"
   pdate="${inFileName:1:7}"
   pyear=${pdate%???}
   pday=${pdate#$pyear}
   productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y-%m-%d")
 fi
-
-echo "inFileName ${inFileName}"
-echo "productTime ${productTime}"
-echo "productDate ${productDate}"
 
 # get AUX data files
 s=`date -d "${productDate} ${productTime}Z" -u +%s`
@@ -150,11 +149,19 @@ if [ "$sstfile" != "" ]; then
   echo "sstfile=`basename $sstfile`" >> parameters.anc
 fi
 
+echo "ifile=${inputFile}" >> parameters.anc
+echo "ofile=${outFile}" >> parameters.anc
+
+if [[ $inFileName =~ ^A[0-9]+ ]]; then
+  # MODIS needs geofile
+  hadoop fs -copyToLocal ${inputPathParent}/${geoFileName} .
+  echo "geofile=`basename ${geoFileName}`" >> parameters.anc
+fi
 
 # for debugging purpose
-echo "=================="
+echo "=========parameters.anc========="
 cat parameters.anc
-echo "=================="
+echo "=========parameters.anc========="
 
 
 function handle_progress() {
@@ -168,7 +175,8 @@ function handle_progress() {
   fi
 }
 
-echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc
-${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc | while read x ; do handle_progress "$x" ; done
+echo ${L2GEN_BIN} par=parameters.anc
+#${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc | while read x ; do handle_progress "$x" ; done
+${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done
 echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#
