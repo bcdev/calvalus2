@@ -32,7 +32,6 @@ public class ProductRecordSource implements RecordSource {
     public static final String PIXEL_MASK_ATT_NAME = "pixel_mask";
 
     private final RecordSource input;
-    private final boolean sortInput;
     private final boolean empty;
     private final PixelExtractor pixelExtractor;
 
@@ -46,7 +45,6 @@ public class ProductRecordSource implements RecordSource {
         }
 
         this.input = input;
-        this.sortInput = config.getSortInputByPixelYX();
         this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(input);
 
         pixelExtractor = new PixelExtractor(input.getHeader(),
@@ -77,11 +75,7 @@ public class ProductRecordSource implements RecordSource {
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
-                if (sortInput) {
-                    return new PixelPosRecordGenerator(getInputRecordsSortedByPixelYX(inputRecords, pixelExtractor).iterator());
-                } else {
-                    return new RecordGenerator(inputRecords.iterator());
-                }
+                return new PixelPosRecordGenerator(getInputRecordsSortedByPixelYX(inputRecords, pixelExtractor).iterator());
             }
         };
     }
@@ -204,18 +198,6 @@ public class ProductRecordSource implements RecordSource {
         }
 
         protected abstract Record getRecord(T input) throws IOException;
-    }
-
-    private class RecordGenerator extends OutputRecordGenerator<Record> {
-
-        public RecordGenerator(Iterator<Record> inputIterator) {
-            super(inputIterator);
-        }
-
-        @Override
-        protected Record getRecord(Record input) throws IOException {
-            return pixelExtractor.extract(input);
-        }
     }
 
     private class PixelPosRecordGenerator extends OutputRecordGenerator<PixelPosRecord> {

@@ -74,7 +74,7 @@ public class MAConfig implements XmlConvertible {
     private Double filteredMeanCoeff;
 
     /**
-     * If set to {@code true} overlapping matchups, within one data product, are removed.
+     * If set to {@code true} overlapping match-ups, within one data product, are removed.
      * Only the one closest in time to the in-situ data is preserved.
      */
     @Parameter(defaultValue = "false")
@@ -86,14 +86,6 @@ public class MAConfig implements XmlConvertible {
      */
     @Parameter
     private String goodRecordExpression;
-
-    /**
-     * If set to {@code true}, reference records that lie within the products boundaries are first sorted by their
-     * pixel's Y coordinate, then by X. This setting may improve reading performance during pixel extraction.
-     * The default value is {@code true}.
-     */
-    @Parameter(defaultValue = "true")
-    private boolean sortInputByPixelYX;
 
     /**
      * The time format used in the output.
@@ -297,15 +289,11 @@ public class MAConfig implements XmlConvertible {
         this.goodRecordExpression = goodRecordExpression;
     }
 
-    public boolean getSortInputByPixelYX() {
-        return sortInputByPixelYX;
-    }
-
-    public void setSortInputByPixelYX(boolean sortInputByPixelYX) {
-        this.sortInputByPixelYX = sortInputByPixelYX;
-    }
-
     public boolean getFilterOverlapping() {
         return filterOverlapping;
+    }
+
+    public void setFilteredOverlapping(boolean filterOverlapping) {
+        this.filterOverlapping = filterOverlapping;
     }
 }
