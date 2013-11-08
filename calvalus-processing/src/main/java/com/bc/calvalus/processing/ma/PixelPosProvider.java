@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ma;
 
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
@@ -30,6 +31,8 @@ class PixelPosProvider {
     private final Product product;
     private final PixelTimeProvider pixelTimeProvider;
     private final long maxTimeDifference; // Note: time in ms (NOT h)
+    // todo make this a parameter
+    private int allowedPixelDisplacement;
 
 
     public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
@@ -42,6 +45,7 @@ class PixelPosProvider {
         } else {
             this.maxTimeDifference = 0L;
         }
+        allowedPixelDisplacement = 5;
     }
 
     /**
@@ -94,9 +98,19 @@ class PixelPosProvider {
         if (location == null) {
             return null;
         }
-        final PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
+        GeoCoding geoCoding = product.getGeoCoding();
+        final PixelPos pixelPos = geoCoding.getPixelPos(location, null);
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
-            return pixelPos;
+            if (allowedPixelDisplacement < 0) {
+                return pixelPos;
+            }
+            GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
+            PixelPos pixelPos2 = geoCoding.getPixelPos(geoPos, null);
+            float dx = pixelPos.x - pixelPos2.x;
+            float dy = pixelPos.y - pixelPos2.y;
+            if (Math.max(Math.abs(dx), Math.abs(dy)) < allowedPixelDisplacement) {
+                return pixelPos;
+            }
         }
         return null;
     }
