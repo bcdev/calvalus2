@@ -32,7 +32,6 @@ import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 
 import java.awt.Rectangle;
 import java.io.BufferedInputStream;
@@ -114,11 +113,12 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
 
         Rectangle inputRectangle = getInputRectangle();
+        Path inputPath = getInputPath();
         File inputFile;
         if (inputFileName != null) {
             inputFile = new File(inputFileName);
         } else {
-            inputFile = copyProductToLocal(getInputPath());
+            inputFile = copyProductToLocal(inputPath);
         }
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
@@ -128,6 +128,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
+        velocityContext.put("inputPath", inputPath);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
