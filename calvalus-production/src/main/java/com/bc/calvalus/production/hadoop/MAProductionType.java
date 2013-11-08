@@ -37,7 +37,7 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                            StagingService stagingService) {
+                     StagingService stagingService) {
         super("MA", inventoryService, processingService, stagingService);
     }
 
@@ -112,7 +112,6 @@ public class MAProductionType extends HadoopProductionType {
         l3Config.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", ""));
         l3Config.setGoodRecordExpression(productionRequest.getString("goodRecordExpression", ""));
         l3Config.setMaxTimeDifference(productionRequest.getDouble("maxTimeDifference", 3.0));
-        l3Config.setSortInputByPixelYX(productionRequest.getBoolean("sortInputByPixelYX", false));
         l3Config.setOutputGroupName(productionRequest.getString("outputGroupName", "SITE"));
         l3Config.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
         l3Config.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
