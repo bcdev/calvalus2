@@ -13,9 +13,7 @@ import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,12 +29,13 @@ public class MAMapperTest {
     @Before
     public void setUp() throws Exception {
         expectedMatchups = new ArrayList<float[]>();
+        //                                X    ,    Y   ,  radiance_1
+        expectedMatchups.add(new float[]{477.0f, 1353.0f, 68.417816f});
+        expectedMatchups.add(new float[]{475.0f, 1353.0f, 68.66416f});
         expectedMatchups.add(new float[]{476.0f, 1365.0f, 67.13871f});
         expectedMatchups.add(new float[]{477.0f, 1366.0f, 67.29978f});
-        expectedMatchups.add(new float[]{475.0f, 1353.0f, 68.66416f});
-        expectedMatchups.add(new float[]{477.0f, 1353.0f, 68.417816f});
-        expectedMatchups.add(new float[]{467.0f, 1386.0f, 66.52284f});
         expectedMatchups.add(new float[]{466.0f, 1372.0f, 65.49009f});
+        expectedMatchups.add(new float[]{467.0f, 1386.0f, 66.52284f});
     }
 
 
@@ -44,7 +43,7 @@ public class MAMapperTest {
     public void testMatchUp_WindowSize3() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 3);
+        executeMatchup(collectedMatchUps, 3, false);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
@@ -54,14 +53,13 @@ public class MAMapperTest {
         testMatchUp(collectedMatchUps, 3);
         testMatchUp(collectedMatchUps, 4);
         testMatchUp(collectedMatchUps, 5);
-
     }
 
     @Test
     public void testMatchUp_WindowSize5() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 5);
+        executeMatchup(collectedMatchUps, 5, false);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(25, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
@@ -84,8 +82,7 @@ public class MAMapperTest {
         assertEquals(expectedData[2], getCenterMatchupValue(collectedMatchUps, matchUpIndex, rad1Column), 1.0e-6f);
     }
 
-    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize) throws URISyntaxException, IOException,
-                                                                                                         InterruptedException {
+    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping) throws Exception {
         MAMapper mapper = new MAMapper();
 
         Mapper.Context context = Mockito.mock(Mapper.Context.class);
@@ -114,6 +111,7 @@ public class MAMapperTest {
         maConfig.setRecordSourceUrl(url);
         maConfig.setMacroPixelSize(macroPixelSize);
         maConfig.setFilteredMeanCoeff(0.0);
+        maConfig.setFilteredOverlapping(filterOverlapping);
         maConfig.setMaxTimeDifference(1.0);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
