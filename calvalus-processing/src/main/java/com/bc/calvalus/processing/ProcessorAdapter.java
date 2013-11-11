@@ -299,11 +299,14 @@ public abstract class ProcessorAdapter {
      * @throws java.io.IOException If an I/O error occurs
      */
     protected Product readProduct(Path inputPath, String inputFormat) throws IOException {
+        getLogger().info(String.format("Opening product from path = '%s'", inputPath.toString()));
+
         Configuration configuration = getConfiguration();
         Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
             StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
             product = reader.readProductNodes(null, null);
+            getLogger().info(String.format("Opened using StreamingProductReader"));
         } else {
             if (inputFormat != null) {
                 // if inputFormat is given, use it
@@ -374,6 +377,7 @@ public abstract class ProcessorAdapter {
      * @throws IOException
      */
     protected File copyProductToLocal(Path inputPath) throws IOException {
+        getLogger().info(String.format("Copying to local product file"));
         File localFile = new File(".", inputPath.getName());
         if (!localFile.exists()) {
             FileSystem fs = inputPath.getFileSystem(conf);
