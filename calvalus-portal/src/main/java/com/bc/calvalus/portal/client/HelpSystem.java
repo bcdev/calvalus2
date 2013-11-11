@@ -103,7 +103,7 @@ public class HelpSystem {
         // Description of window.open and its features:
         // https://developer.mozilla.org/en-US/docs/Web/API/window.open?redirectlocale=en-US&redirectslug=DOM%2Fwindow.open
         // The top feature is used to force a new browser window, otherwise the link would be opened in a new tab
-        Window.open(url, WINDOW_NAME, "top=10");
+        Window.open(url, WINDOW_NAME, "width=800,height=600,top=10");
     }
 
 }
