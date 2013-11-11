@@ -17,6 +17,7 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.graph.Graph;
@@ -42,6 +43,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
+import java.util.logging.Logger;
 
 /**
  * A processor adapter that uses a BEAM GPF {@code Graph} to process input products.
@@ -155,7 +157,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
-        velocityContext.put("GlobalFunctions", new GlobalsFunctions());
+        velocityContext.put("GlobalFunctions", new GlobalsFunctions(getLogger()));
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         FileSystem fs = FileSystem.get(conf);
@@ -187,7 +189,14 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         }
     }
 
-    public class GlobalsFunctions {
+    public static class GlobalsFunctions {
+
+        private final Logger logger;
+
+        public GlobalsFunctions(Logger logger) {
+            this.logger = logger;
+        }
+
         public Path createPath(String pathString) {
             return new Path(pathString);
         }
@@ -199,7 +208,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 final String masterDurationString = master.substring(30, 38);
                 final long masterStart = N1_TIME_FORMAT.parse(masterStartString).getTime();
                 final long masterStop = masterStart + (Long.parseLong("1" + masterDurationString)-100000000) * 1000;
-                getLogger().info("looking for slave of " + master + " in " + archiveRoot);
+                logger.info("looking for slave of " + master + " in " + archiveRoot);
                 final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
                 calendar.setTimeInMillis(masterStart);
                 final String thisDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
@@ -224,7 +233,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                     final long slaveStart = N1_TIME_FORMAT.parse(slaveStartString).getTime();
                     final long slaveStop = slaveStart + (Long.parseLong("1" + slaveDurationString)-100000000) * 1000;
                     if (masterStart >= slaveStart && masterStop <= slaveStop) {
-                        getLogger().info("covering slave  " + slave + " found");
+                        logger.info("covering slave  " + slave + " found");
                         return slaveFile.getPath();
                     } else if ((masterStart + masterStop) / 2 >= slaveStart && (masterStart + masterStop) / 2 <= slaveStop) {
                         result = slaveFile.getPath();
@@ -236,11 +245,23 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 throw new RuntimeException("failed to read dirs below " + archiveRoot, e);
             }
             if (result != null) {
-                getLogger().info("intersecting slave  " + result.getName() + " found");
+                logger.info("intersecting slave  " + result.getName() + " found");
             } else {
-                getLogger().info("no slave found for " + master);
+                logger.info("no slave found for " + master);
             }
             return result;
+        }
+
+        public Calendar getCalendar() {
+            return ProductData.UTC.createCalendar();
+        }
+
+        public String formatDate(String format, Date date) {
+            return ProductData.UTC.createDateFormat(format).format(date);
+        }
+
+        public Date parseDate(String format, String source) throws ParseException {
+            return ProductData.UTC.createDateFormat(format).parse(source);
         }
     }
 }
