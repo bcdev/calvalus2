@@ -19,7 +19,7 @@ import java.util.Map;
 public class HelpSystem {
 
     private static final String WINDOW_NAME = "_CVHelp";
-
+    private static final String HELP_HOME_LINK = "http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw";
     private static Map<String, String> keyMap = new HashMap<String, String>();
 
     static {
@@ -30,7 +30,7 @@ public class HelpSystem {
 
     }
 
-    static void init() {
+    private static void init() {
 
         try {
             new RequestBuilder(RequestBuilder.GET, "helpKeyMap.xml").sendRequest("", new RequestCallback() {
@@ -48,6 +48,15 @@ public class HelpSystem {
         } catch (RequestException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void addClickHandler(HasClickHandlers helpWidget, String url) {
+        String link = keyMap.get(url);
+        if (link == null) {
+            // todo - get this link from helpKeyMap.xml; introduce a header section
+            link = HELP_HOME_LINK;
+        }
+        helpWidget.addClickHandler(new HelpClickHandler(link));
     }
 
     private native static void parseXmlKeyMap(String xmlKeyMap)/*-{
@@ -75,18 +84,6 @@ public class HelpSystem {
         keyMap.put(key, value);
     }
 
-    public static void addClickHandler(HasClickHandlers helpWidget, String url) {
-        helpWidget.addClickHandler(new HelpClickHandler(url));
-    }
-
-    private static void showHelp(String url) {
-        // Description of window.open and its features:
-        // https://developer.mozilla.org/en-US/docs/Web/API/window.open?redirectlocale=en-US&redirectslug=DOM%2Fwindow.open
-        // The top feature is used to force a new browser window, otherwise the link would be opened in a new tab
-        Window.open(url, WINDOW_NAME, "top=10");
-    }
-
-
     private static class HelpClickHandler implements ClickHandler {
 
         private String url;
@@ -100,6 +97,13 @@ public class HelpSystem {
             showHelp(url);
         }
 
+    }
+
+    private static void showHelp(String url) {
+        // Description of window.open and its features:
+        // https://developer.mozilla.org/en-US/docs/Web/API/window.open?redirectlocale=en-US&redirectslug=DOM%2Fwindow.open
+        // The top feature is used to force a new browser window, otherwise the link would be opened in a new tab
+        Window.open(url, WINDOW_NAME, "top=10");
     }
 
 }
