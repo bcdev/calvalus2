@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.ma;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
@@ -12,6 +13,7 @@ import org.junit.Test;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -409,6 +411,30 @@ public class ProductRecordSourceTest {
         assertEquals(1, records.size());
     }
 
+    @Test
+    public void testYXComparator() throws Exception {
+        ProductRecordSource.YXComparator comparator = new ProductRecordSource.YXComparator();
+        List<ProductRecordSource.PixelPosRecord> list = new ArrayList<ProductRecordSource.PixelPosRecord>();
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(10, 0), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(12, 0), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(1, 6), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(16, 3), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(1, 3), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(4, 0), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(130, 23.498f), null));
+        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(125, 23.501f), null));
+
+        Collections.sort(list, comparator);
+        assertEquals(new PixelPos(4, 0), list.get(0).pixelPos);
+        assertEquals(new PixelPos(10, 0), list.get(1).pixelPos);
+        assertEquals(new PixelPos(12, 0), list.get(2).pixelPos);
+        assertEquals(new PixelPos(1, 3), list.get(3).pixelPos);
+        assertEquals(new PixelPos(16, 3), list.get(4).pixelPos);
+        assertEquals(new PixelPos(1, 6), list.get(5).pixelPos);
+        assertEquals(new PixelPos(125, 23.501f), list.get(6).pixelPos);
+        assertEquals(new PixelPos(130, 23.498f), list.get(7).pixelPos);
+
+    }
 
     private ProductRecordSource createProductRecordSource(int w, int h, RecordSource input, MAConfig config) {
         Product product = createProduct(w, h);

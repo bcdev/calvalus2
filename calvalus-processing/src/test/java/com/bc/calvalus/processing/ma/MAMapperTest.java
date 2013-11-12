@@ -30,8 +30,8 @@ public class MAMapperTest {
     public void setUp() throws Exception {
         expectedMatchups = new ArrayList<float[]>();
         //                                X    ,    Y   ,  radiance_1
-        expectedMatchups.add(new float[]{477.0f, 1353.0f, 68.417816f});
         expectedMatchups.add(new float[]{475.0f, 1353.0f, 68.66416f});
+        expectedMatchups.add(new float[]{477.0f, 1353.0f, 68.417816f});
         expectedMatchups.add(new float[]{476.0f, 1365.0f, 67.13871f});
         expectedMatchups.add(new float[]{477.0f, 1366.0f, 67.29978f});
         expectedMatchups.add(new float[]{466.0f, 1372.0f, 65.49009f});
@@ -56,6 +56,23 @@ public class MAMapperTest {
     }
 
     @Test
+    public void testMatchUp_WindowSize3_FilterOverlapping() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 3, true);
+
+        for (RecordWritable collectedMatchUp : collectedMatchUps) {
+            System.out.println("collectedMatchUp = " + collectedMatchUp);
+        }
+        assertEquals(4, collectedMatchUps.size());
+        assertEquals(9, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
+        testMatchUp(collectedMatchUps, 0, 0);
+        testMatchUp(collectedMatchUps, 3, 1);
+        testMatchUp(collectedMatchUps, 4, 2);
+        testMatchUp(collectedMatchUps, 5, 3);
+    }
+
+    @Test
     public void testMatchUp_WindowSize5() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
@@ -72,11 +89,16 @@ public class MAMapperTest {
     }
 
     private void testMatchUp(List<RecordWritable> collectedMatchUps, int matchUpIndex) {
+        testMatchUp(collectedMatchUps, matchUpIndex, matchUpIndex);
+
+    }
+
+    private void testMatchUp(List<RecordWritable> collectedMatchUps, int expectedMatchUpIndex, int matchUpIndex) {
         int xColumn = 2;
         int yColumn = 3;
         int rad1Column = 6;
 
-        float[] expectedData = expectedMatchups.get(matchUpIndex);
+        float[] expectedData = expectedMatchups.get(expectedMatchUpIndex);
         assertEquals(expectedData[0], getCenterMatchupValue(collectedMatchUps, matchUpIndex, xColumn), 1.0e-6f);
         assertEquals(expectedData[1], getCenterMatchupValue(collectedMatchUps, matchUpIndex, yColumn), 1.0e-6f);
         assertEquals(expectedData[2], getCenterMatchupValue(collectedMatchUps, matchUpIndex, rad1Column), 1.0e-6f);
@@ -113,6 +135,7 @@ public class MAMapperTest {
         maConfig.setFilteredMeanCoeff(0.0);
         maConfig.setFilteredOverlapping(filterOverlapping);
         maConfig.setMaxTimeDifference(1.0);
+//        maConfig.setCopyInput(true);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
         Mockito.when(context.getConfiguration()).thenReturn(jobConf);

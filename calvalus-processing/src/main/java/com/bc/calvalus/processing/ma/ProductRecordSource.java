@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -31,28 +32,30 @@ public class ProductRecordSource implements RecordSource {
     public static final String PIXEL_TIME_ATT_NAME = "pixel_time";
     public static final String PIXEL_MASK_ATT_NAME = "pixel_mask";
 
-    private final RecordSource input;
+    private final RecordSource referenceRecordSource;
     private final boolean empty;
     private final PixelExtractor pixelExtractor;
+    private final MAConfig config;
 
-    public ProductRecordSource(Product product, RecordSource input, MAConfig config) {
+    public ProductRecordSource(Product product, RecordSource referenceRecordSource, MAConfig config) {
 
         Assert.notNull(product, "product");
-        Assert.notNull(input, "input");
+        Assert.notNull(referenceRecordSource, "referenceRecordSource");
         Assert.notNull(config, "config");
-        if (!input.getHeader().hasLocation()) {
+        if (!referenceRecordSource.getHeader().hasLocation()) {
             throw new IllegalArgumentException("Input records don't have locations.");
         }
 
-        this.input = input;
-        this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(input);
+        this.referenceRecordSource = referenceRecordSource;
+        this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(referenceRecordSource);
 
-        pixelExtractor = new PixelExtractor(input.getHeader(),
+        this.config = config;
+        pixelExtractor = new PixelExtractor(referenceRecordSource.getHeader(),
                                             product,
-                                            config.getMacroPixelSize(),
-                                            config.getGoodPixelExpression(),
-                                            config.getMaxTimeDifference(),
-                                            config.getCopyInput());
+                                            this.config.getMacroPixelSize(),
+                                            this.config.getGoodPixelExpression(),
+                                            this.config.getMaxTimeDifference(),
+                                            this.config.getCopyInput());
     }
 
     @Override
@@ -71,7 +74,7 @@ public class ProductRecordSource implements RecordSource {
             return Collections.emptyList();
         }
 
-        final Iterable<Record> inputRecords = input.getRecords();
+        final Iterable<Record> inputRecords = referenceRecordSource.getRecords();
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {
@@ -124,6 +127,20 @@ public class ProductRecordSource implements RecordSource {
         }
     }
 
+    public RecordSelector createRecordSelector() {
+        if (config.getFilterOverlapping()) {
+            PixelPosRecordFactory pixelPosRecordFactory = new PixelPosRecordFactory(getHeader().getAttributeNames());
+            return new OverlappingRecordSelector(config.getMacroPixelSize(), pixelPosRecordFactory);
+        } else {
+            return new RecordSelector() {
+                @Override
+                public Iterable<Record> select(Iterable<Record> aggregatedRecords) {
+                    return aggregatedRecords;
+                }
+            };
+        }
+    }
+
     private static boolean shallApplyGoodRecordExpression(MAConfig config) {
         String goodRecordExpression = config.getGoodRecordExpression();
         return goodRecordExpression != null && !goodRecordExpression.isEmpty();
@@ -151,12 +168,15 @@ public class ProductRecordSource implements RecordSource {
         return Arrays.asList(records);
     }
 
-    private static class YXComparator implements Comparator<PixelPosRecord> {
+    static class YXComparator implements Comparator<PixelPosRecord> {
 
         @Override
         public int compare(PixelPosRecord o1, PixelPosRecord o2) {
-            float y1 = o1.pixelPos.y;
-            float y2 = o2.pixelPos.y;
+            // because in the code we get the pixel-pos by the geo-pos it can happen that pixels on the same line are
+            // wrongly sorted because of the little difference in y-direction.
+            // that's the reason why we compare y-position only as integer
+            int y1 = (int) o1.pixelPos.y;
+            int y2 = (int) o2.pixelPos.y;
             if (y1 < y2) {
                 return -2;
             } else if (y1 > y2) {
@@ -212,14 +232,60 @@ public class ProductRecordSource implements RecordSource {
         }
     }
 
-    private static class PixelPosRecord {
+    static class PixelPosRecordFactory {
 
-        private final PixelPos pixelPos;
-        private final Record record;
+        private final int xAttributeIndex;
+        private final int yAttributeIndex;
+        private final int timeAttributeIndex;
 
-        private PixelPosRecord(PixelPos pixelPos, Record record) {
-            this.pixelPos = pixelPos;
+        PixelPosRecordFactory(String[] attributeNames) {
+            List<String> attributeNamesList = Arrays.asList(attributeNames);
+            xAttributeIndex = attributeNamesList.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_X_ATT_NAME);
+            yAttributeIndex = attributeNamesList.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_Y_ATT_NAME);
+            timeAttributeIndex = attributeNamesList.indexOf(PIXEL_TIME_ATT_NAME);
+        }
+
+        PixelPosRecord create(Record record) {
+            Object[] attributeValues = record.getAttributeValues();
+            float[] xAttributeValue = ((AggregatedNumber) attributeValues[xAttributeIndex]).data;
+            float[] yAttributeValue = ((AggregatedNumber) attributeValues[yAttributeIndex]).data;
+            int xPos = (int) xAttributeValue[xAttributeValue.length / 2];
+            int yPos = (int) yAttributeValue[yAttributeValue.length / 2];
+
+            // can be null !!!!
+            Date eoTime = (Date) attributeValues[timeAttributeIndex];
+            Date insituTime = record.getTime();
+            long timeDiff = -1;
+            if (insituTime != null && eoTime != null) {
+                timeDiff = Math.abs(insituTime.getTime() - eoTime.getTime());
+            }
+            return new PixelPosRecord(new PixelPos(xPos, yPos), record, timeDiff);
+        }
+
+    }
+
+    static class PixelPosRecord {
+
+        final PixelPos pixelPos;
+        final Record record;
+        final long timeDiff;
+
+        PixelPosRecord(PixelPos pixelPos, Record record) {
+            this(pixelPos, record, -1);
+        }
+
+        PixelPosRecord(PixelPos pixelPos, Record record, long timeDiff) {
             this.record = record;
+            this.pixelPos = pixelPos;
+            this.timeDiff = timeDiff;
+        }
+
+        PixelPos getPixelPos() {
+            return pixelPos;
+        }
+
+        long getTimeDifference() {
+            return timeDiff;
         }
 
         @Override
@@ -227,6 +293,7 @@ public class ProductRecordSource implements RecordSource {
             return "PixelPosRecord{" +
                    "pixelPos=" + pixelPos +
                    ", record=" + record +
+                   ", timeDiff=" + timeDiff +
                    '}';
         }
     }

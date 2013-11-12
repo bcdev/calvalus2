@@ -38,6 +38,8 @@ import org.esa.beam.util.io.FileUtils;
 import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Logger;
 
 /**
@@ -151,19 +153,26 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
                 RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
+                RecordSelector recordSelector = productRecordSource.createRecordSelector();
 
                 t0 = now();
-                int numMatchUps = 0;
+                Collection<Record> aggregatedRecords = new ArrayList<Record>();
                 for (Record extractedRecord : extractedRecords) {
                     Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
                     Record aggregatedRecord = recordTransformer.transform(shiftedRecord);
                     if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
-                        context.write(new Text(String.format("%s_%06d", product.getName(), numMatchUps + 1)),
-                                      new RecordWritable(aggregatedRecord.getAttributeValues()));
-                        numMatchUps++;
-                        context.progress();
+                        aggregatedRecords.add(aggregatedRecord);
                     }
                 }
+
+                Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
+                int numMatchUps = 0;
+                for (Record selectedRecord : selectedRecords) {
+                    context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
+                                  new RecordWritable(selectedRecord.getAttributeValues()));
+                    context.progress();
+                }
+
                 long recordWriteTime = (now() - t0);
                 LOG.info(String.format("%s found %s match-ups, took %s sec",
                                        context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
