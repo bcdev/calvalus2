@@ -133,7 +133,7 @@ public class MAMapperTest {
         maConfig.setRecordSourceUrl(url);
         maConfig.setMacroPixelSize(macroPixelSize);
         maConfig.setFilteredMeanCoeff(0.0);
-        maConfig.setFilteredOverlapping(filterOverlapping);
+        maConfig.setFilterOverlapping(filterOverlapping);
         maConfig.setMaxTimeDifference(1.0);
 //        maConfig.setCopyInput(true);
 

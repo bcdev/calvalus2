@@ -144,9 +144,15 @@
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td class="name">Filtered mean coefficient:</td>
+                                    <td class="name">Filter mean coefficient:</td>
                                     <td class="value">
                                         <xsl:value-of select="value/parameters/filteredMeanCoeff"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="name">Filter overlapping Match-ups:</td>
+                                    <td class="value">
+                                        <xsl:value-of select="value/parameters/filterOverlapping"/>
                                     </td>
                                 </tr>
                             </xsl:when>

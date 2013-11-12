@@ -56,6 +56,14 @@
                         </tr>
                         <tr>
                             <td>
+                                <g:Label>Filter overlapping Match-ups:</g:Label>
+                            </td>
+                            <td colspan="2">
+                                <g:CheckBox ui:field='filterOverlapping'/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <g:Label>Grouping column:</g:Label>
                             </td>
                             <td colspan="2">

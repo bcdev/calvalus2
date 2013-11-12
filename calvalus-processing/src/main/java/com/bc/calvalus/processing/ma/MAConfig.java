@@ -293,7 +293,7 @@ public class MAConfig implements XmlConvertible {
         return filterOverlapping;
     }
 
-    public void setFilteredOverlapping(boolean filterOverlapping) {
+    public void setFilterOverlapping(boolean filterOverlapping) {
         this.filterOverlapping = filterOverlapping;
     }
 }

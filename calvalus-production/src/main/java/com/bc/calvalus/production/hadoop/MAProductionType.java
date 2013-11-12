@@ -105,18 +105,19 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     static MAConfig getMAConfig(ProductionRequest productionRequest) throws ProductionException {
-        MAConfig l3Config = new MAConfig();
-        l3Config.setMacroPixelSize(productionRequest.getInteger("macroPixelSize", 1));
-        l3Config.setFilteredMeanCoeff(productionRequest.getDouble("filteredMeanCoeff", 1.5));
-        l3Config.setCopyInput(productionRequest.getBoolean("copyInput", true));
-        l3Config.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", ""));
-        l3Config.setGoodRecordExpression(productionRequest.getString("goodRecordExpression", ""));
-        l3Config.setMaxTimeDifference(productionRequest.getDouble("maxTimeDifference", 3.0));
-        l3Config.setOutputGroupName(productionRequest.getString("outputGroupName", "SITE"));
-        l3Config.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
-        l3Config.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
-        l3Config.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
-        return l3Config;
+        MAConfig maConfig = new MAConfig();
+        maConfig.setMacroPixelSize(productionRequest.getInteger("macroPixelSize", 1));
+        maConfig.setFilteredMeanCoeff(productionRequest.getDouble("filteredMeanCoeff", 1.5));
+        maConfig.setFilterOverlapping(productionRequest.getBoolean("filterOverlapping", false));
+        maConfig.setCopyInput(productionRequest.getBoolean("copyInput", true));
+        maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", ""));
+        maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression", ""));
+        maConfig.setMaxTimeDifference(productionRequest.getDouble("maxTimeDifference", 3.0));
+        maConfig.setOutputGroupName(productionRequest.getString("outputGroupName", "SITE"));
+        maConfig.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
+        maConfig.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
+        maConfig.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
+        return maConfig;
     }
 
 }

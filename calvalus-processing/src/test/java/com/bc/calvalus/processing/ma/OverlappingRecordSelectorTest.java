@@ -32,12 +32,12 @@ public class OverlappingRecordSelectorTest {
         OverlappingRecordSelector selector = new OverlappingRecordSelector(macroPixelSize, recordFactory);
 
         mockPixelPosRecord(recordFactory, 0, new PixelPos(10, 11), 10); // keep this one
-        mockPixelPosRecord(recordFactory, 1, new PixelPos(10, 12), 10);
-        mockPixelPosRecord(recordFactory, 2, new PixelPos(10, 13), 10);
-
-        mockPixelPosRecord(recordFactory, 3, new PixelPos(100, 11), 10);
-        mockPixelPosRecord(recordFactory, 4, new PixelPos(100, 12), 2); // keep this one
+        mockPixelPosRecord(recordFactory, 1, new PixelPos(100, 11), 10);
+        mockPixelPosRecord(recordFactory, 2, new PixelPos(10, 12), 10);
+        mockPixelPosRecord(recordFactory, 3, new PixelPos(100, 12), 2); // keep this one
+        mockPixelPosRecord(recordFactory, 4, new PixelPos(10, 13), 10);
         mockPixelPosRecord(recordFactory, 5, new PixelPos(100, 13), 10);
+
 
         mockPixelPosRecord(recordFactory, 6, new PixelPos(10, 20), 4);
         mockPixelPosRecord(recordFactory, 7, new PixelPos(11, 20), 5);
@@ -50,7 +50,7 @@ public class OverlappingRecordSelectorTest {
 
         assertEquals(3, selectedRecords.size());
         assertEquals(0.0f, selectedRecords.get(0).getLocation().lat, 1.0e-6);
-        assertEquals(4.0f, selectedRecords.get(1).getLocation().lat, 1.0e-6);
+        assertEquals(3.0f, selectedRecords.get(1).getLocation().lat, 1.0e-6);
         assertEquals(9.0f, selectedRecords.get(2).getLocation().lat, 1.0e-6);
     }
 
