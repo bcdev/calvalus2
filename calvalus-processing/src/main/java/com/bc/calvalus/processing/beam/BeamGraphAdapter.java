@@ -30,6 +30,8 @@ import org.esa.beam.framework.gpf.graph.HeaderTarget;
 import org.esa.beam.framework.gpf.graph.Node;
 import org.esa.beam.framework.gpf.graph.NodeContext;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -264,4 +266,23 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             return ProductData.UTC.createDateFormat(format).parse(source);
         }
     }
+
+    public static void main(String[] args) throws FileNotFoundException {
+        ResourceEngine resourceEngine = new ResourceEngine();
+        VelocityContext velocityContext = resourceEngine.getVelocityContext();
+        velocityContext.put("system", System.getProperties());
+        Configuration conf = new Configuration();
+        conf.set("fs.default.name", "hdfs://master00:9000");
+        velocityContext.put("configuration", conf);
+
+        velocityContext.put("inputPath", new Path("MER_RR__1PNACR20030101_130000_xyz"));
+        velocityContext.put("GlobalFunctions", new GlobalsFunctions(Logger.getLogger("test")));
+
+        Reader inputReader = new FileReader(args[0]);
+        Resource processedGraph = resourceEngine.processResource(new ReaderResource(args[0], inputReader));
+        String graphAsText = processedGraph.getContent();
+        System.out.println("graphAsText = \n" + graphAsText.trim());
+
+    }
+
 }
