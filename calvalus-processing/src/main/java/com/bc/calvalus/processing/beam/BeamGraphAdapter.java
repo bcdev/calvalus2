@@ -191,6 +191,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         }
     }
 
+    // TODO mz/nf 2013-11-13 use some sort of plugin concept to add new functions to the velocity context
     public static class GlobalsFunctions {
 
         private final Logger logger;
