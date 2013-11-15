@@ -12,18 +12,21 @@ import java.util.Date;
  * @author Norman
  */
 public class DefaultRecord implements Record {
+
     private final GeoPos location;
     private final Date time;
-    private final Object[] values;
+    private final Object[] attributeValues;
+    private final Object[] annotationValues;
 
-    public DefaultRecord(Object ... values) {
-        this(null, null, values);
+    public DefaultRecord(GeoPos location, Date time, Object[] attributeValues) {
+        this(location, time, attributeValues, new Object[]{""});
     }
 
-    public DefaultRecord(GeoPos location, Date time, Object[] values) {
+    public DefaultRecord(GeoPos location, Date time, Object[] attributeValues, Object[] annotationValues) {
         this.location = location;
         this.time = time;
-        this.values = values;
+        this.attributeValues = attributeValues;
+        this.annotationValues = annotationValues;
     }
 
     @Override
@@ -38,15 +41,20 @@ public class DefaultRecord implements Record {
 
     @Override
     public Object[] getAttributeValues() {
-        return values;
+        return attributeValues;
+    }
+
+    @Override
+    public Object[] getAnnotationValues() {
+        return annotationValues;
     }
 
     @Override
     public String toString() {
         return "DefaultRecord{" +
-                "location=" + location +
-                ", time=" + time +
-                ", values=" + Arrays.asList(values) +
-                '}';
+               "location=" + location +
+               ", time=" + time +
+               ", values=" + Arrays.asList(attributeValues) +
+               '}';
     }
 }

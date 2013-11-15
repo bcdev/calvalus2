@@ -2,33 +2,34 @@ package com.bc.calvalus.processing.ma;
 
 import org.junit.Test;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Norman
  */
 public class PlotDatasetCollectorTest {
+
     @Test
     public void testThatGroupIndexIsIdentifiedIfAvailable() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("site");
-        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"});
+        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"}, new Object[]{""});
         assertEquals(3, collector.getGroupAttributeIndex());
     }
 
     @Test
     public void testThatGroupIndexIsNotIdentifiedIfNotFound() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("city");
-        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"});
+        collector.processHeaderRecord(new Object[]{"ID", "LAT", "LON", "SITE", "CHL"}, new Object[]{""});
         assertEquals(-1, collector.getGroupAttributeIndex());
     }
 
     @Test
     public void testThatVariablePairsAreFound() throws Exception {
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
-       collector.processHeaderRecord(new Object[]{
+        collector.processHeaderRecord(new Object[]{
                 "ID", "LAT", "LON", "DATE", "SITE",
-                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "*tsm"});
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "*tsm"
+        }, new Object[]{""});
         PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
 
         assertNotNull(variablePairs);
@@ -49,10 +50,11 @@ public class PlotDatasetCollectorTest {
     public void testThatUngroupedPlotsAreGenerated() throws Exception {
 
         PlotDatasetCollector collector = new PlotDatasetCollector(null);
-        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"});
-        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41});
-        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49});
-        collector.processDataRecord(2, new Object[]{"Benguela", 0.2, 0.27});
+        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"}, new Object[]{"ExclusionReason"});
+        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41}, new Object[]{""});
+        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49}, new Object[]{""});
+        collector.processDataRecord(2, new Object[]{"Benguela", 0.1, 0.11}, new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+        collector.processDataRecord(3, new Object[]{"Benguela", 0.2, 0.27}, new Object[]{""});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);
@@ -76,14 +78,14 @@ public class PlotDatasetCollectorTest {
     public void testThatGroupedPlotsAreGenerated() throws Exception {
 
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
-        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"});
-        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02});
-        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01});
-        collector.processDataRecord(2, new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03});
-        collector.processDataRecord(3, new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02});
-        collector.processDataRecord(4, new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01});
-        collector.processDataRecord(5, new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03});
-        collector.processDataRecord(6, new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03});  // will be rejected, warning logged
+        collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"}, new Object[]{""});
+        collector.processDataRecord(0, new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
+        collector.processDataRecord(1, new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
+        collector.processDataRecord(2, new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
+        collector.processDataRecord(3, new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
+        collector.processDataRecord(4, new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
+        collector.processDataRecord(5, new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
+        collector.processDataRecord(6, new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03}, new Object[]{""});  // will be rejected, warning logged
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);

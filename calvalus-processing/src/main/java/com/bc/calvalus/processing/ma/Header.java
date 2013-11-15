@@ -24,9 +24,25 @@ public interface Header {
     String[] getAttributeNames();
 
     /**
+     * @return The index of the attribute.
+     */
+    int getAttributeIndex(String name);
+
+    /**
      * @param index The column index of the attribute, starting from column 0
+     *
      * @return The attribute of the respective column, or null if index is less than 0
      */
     String getAttributeName(int index);
+
+    /**
+     * @return The array of annotation names.
+     */
+    String[] getAnnotationNames();
+
+    /**
+     * @return The index of the annotation.
+     */
+    int getAnnotationIndex(String name);
 }
 

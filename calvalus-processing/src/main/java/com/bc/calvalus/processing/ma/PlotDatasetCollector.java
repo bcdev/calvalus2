@@ -1,13 +1,11 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.calvalus.commons.CalvalusLogger;
-
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Builds a list of {@code PlotDataset}s from given record data.
@@ -16,13 +14,12 @@ import java.util.logging.Logger;
  */
 public class PlotDatasetCollector implements RecordProcessor {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
-
     private final String groupAttributeName;
     private Map<String, PlotDataset> plotDatasetMap;
     private List<PlotDataset> plotDatasets;
     private int groupAttributeIndex;
     private List<VariablePair> variablePairs;
+    private int exclusionIndex;
 
     public PlotDatasetCollector(String groupAttributeName) {
         this.groupAttributeName = groupAttributeName;
@@ -47,20 +44,28 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     @Override
-    public void processHeaderRecord(Object[] headerValues) {
+    public void processHeaderRecord(Object[] attributeNames, Object[] annotationNames) throws IOException {
         if (hasHeaderBeenSeen()) {
             throw new IllegalStateException("Header record seen twice.");
         }
-        this.groupAttributeIndex = findIndex(headerValues, groupAttributeName);
-        this.variablePairs = findVariablePairs(headerValues);
+        this.groupAttributeIndex = findIndex(attributeNames, groupAttributeName);
+        this.variablePairs = findVariablePairs(attributeNames);
         this.plotDatasetMap = new HashMap<String, PlotDataset>();
         this.plotDatasets = new ArrayList<PlotDataset>();
+        this.exclusionIndex = Arrays.asList(annotationNames).indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
     }
 
     @Override
-    public void processDataRecord(int recordIndex, Object[] recordValues) {
+    public void processDataRecord(int recordIndex, Object[] recordValues, Object[] annotationValues) throws IOException {
         if (!hasHeaderBeenSeen()) {
             throw new IllegalStateException("Data record seen before header record.");
+        }
+        String reason = "";
+        if (exclusionIndex >= 0) {
+            reason = (String) annotationValues[exclusionIndex];
+        }
+        if (!reason.isEmpty()) {
+            return;
         }
         final String groupName = getGroupName(recordValues);
         for (VariablePair variablePair : variablePairs) {
@@ -106,8 +111,8 @@ public class PlotDatasetCollector implements RecordProcessor {
 
     private boolean isValidNumber(Number number) {
         return number != null
-                && !Double.isNaN(number.doubleValue())
-                && !Double.isInfinite(number.doubleValue());
+               && !Double.isNaN(number.doubleValue())
+               && !Double.isInfinite(number.doubleValue());
     }
 
     private static void collectDataPoint(PlotDataset plotDataset, Number referenceValue, Number satelliteValue) {
@@ -183,7 +188,7 @@ public class PlotDatasetCollector implements RecordProcessor {
             }
         }
 
-        String aggHeaderName1 = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX +headerName1;
+        String aggHeaderName1 = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + headerName1;
         for (int j = i + 1; j < headerValues.length; j++) {
             String headerName2 = headerValues[j].toString();
             if (aggHeaderName1.equalsIgnoreCase(headerName2)) {
@@ -195,6 +200,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     public static class PlotDataset {
+
         private final String groupName;
         private final VariablePair variablePair;
         private final List<Point> points;
@@ -223,6 +229,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     public static class Point {
+
         public final double referenceValue;
         public final double satelliteMean;
         public final double satelliteSigma;
@@ -237,6 +244,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     public static class VariablePair {
+
         public final String referenceAttributeName;
         public final int referenceAttributeIndex;
         public final String satelliteAttributeName;

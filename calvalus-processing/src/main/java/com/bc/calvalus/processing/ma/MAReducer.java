@@ -48,7 +48,9 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
                 new CsvRecordWriter(createWriter(context, "records-all.txt"),
-                                    createWriter(context, "records-agg.txt")),
+                                    createWriter(context, "records-agg.txt"),
+                                    createWriter(context, "labeled-records-all.txt"),
+                                    createWriter(context, "labeled-records-agg.txt")),
                 plotDatasetCollector,
         };
 
@@ -82,13 +84,13 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
 
     private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
         for (RecordProcessor recordProcessor : recordProcessors) {
-            recordProcessor.processHeaderRecord(record.getValues());
+            recordProcessor.processHeaderRecord(record.getAttributeValues(), record.getAnnotationValues());
         }
     }
 
     private void processDataRecord(int recordIndex, RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
         for (RecordProcessor recordProcessor : recordProcessors) {
-            recordProcessor.processDataRecord(recordIndex, record.getValues());
+            recordProcessor.processDataRecord(recordIndex, record.getAttributeValues(), record.getAnnotationValues());
         }
     }
 

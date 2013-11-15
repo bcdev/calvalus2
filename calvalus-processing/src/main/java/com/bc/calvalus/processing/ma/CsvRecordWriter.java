@@ -5,9 +5,10 @@ import org.esa.beam.framework.datamodel.ProductData;
 import java.io.IOException;
 import java.io.Writer;
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 
-import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
+import static com.bc.calvalus.processing.ma.PixelExtractor.*;
 
 /**
  * Outputs records to 2 CSV files: records-all.txt and records-agg.txt
@@ -15,6 +16,7 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PR
  * @author Norman
  */
 public class CsvRecordWriter implements RecordProcessor {
+
     public static final DateFormat DEFAULT_DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
     public static final char DEFAULT_COLUMN_SEPARATOR_CHAR = '\t';
     static final String SUFFIX_MEAN = "_mean";
@@ -23,79 +25,98 @@ public class CsvRecordWriter implements RecordProcessor {
 
     private final Writer recordsAllWriter;
     private final Writer recordsAggWriter;
+    private final Writer labeledAllRecordsWriter;
+    private final Writer labeledAggRecordsWriter;
 
-    private char separatorChar;
-    private DateFormat dateFormat;
+    private final char separatorChar;
+    private final DateFormat dateFormat;
+    private int exclusionIndex;
 
-    public CsvRecordWriter(Writer recordsAllWriter, Writer recordsAggWriter) {
+    public CsvRecordWriter(Writer recordsAllWriter, Writer recordsAggWriter, Writer labeledAllRecordsWriter, Writer labeledAggRecordsWriter) {
         this.recordsAllWriter = recordsAllWriter;
         this.recordsAggWriter = recordsAggWriter;
+        this.labeledAllRecordsWriter = labeledAllRecordsWriter;
+        this.labeledAggRecordsWriter = labeledAggRecordsWriter;
         separatorChar = DEFAULT_COLUMN_SEPARATOR_CHAR;
         dateFormat = DEFAULT_DATE_FORMAT;
     }
 
-    public DateFormat getDateFormat() {
-        return dateFormat;
-    }
-
-    public void setDateFormat(DateFormat dateFormat) {
-        this.dateFormat = dateFormat;
-    }
-
-    public char getSeparatorChar() {
-        return separatorChar;
-    }
-
-    public void setSeparatorChar(char separatorChar) {
-        this.separatorChar = separatorChar;
-    }
-
     @Override
-    public void processHeaderRecord(Object[] headerValues) throws IOException {
+    public void processHeaderRecord(Object[] attributeNames, Object[] annotationNames) throws IOException {
 
-        recordsAllWriter.write(headerRecordToString(headerValues, false));
+        String annotationHeader = attributeNamesToString(annotationNames, false);
+        String allHeader = attributeNamesToString(attributeNames, false);
+        String aggHeader = attributeNamesToString(attributeNames, true);
+
+        recordsAllWriter.write(allHeader);
         recordsAllWriter.write("\n");
+        labeledAllRecordsWriter.write(allHeader);
+        labeledAllRecordsWriter.write(separatorChar);
+        labeledAllRecordsWriter.write(annotationHeader);
+        labeledAllRecordsWriter.write("\n");
 
-        recordsAggWriter.write(headerRecordToString(headerValues, true));
+        recordsAggWriter.write(aggHeader);
         recordsAggWriter.write("\n");
+        labeledAggRecordsWriter.write(aggHeader);
+        labeledAggRecordsWriter.write(separatorChar);
+        labeledAggRecordsWriter.write(annotationHeader);
+        labeledAggRecordsWriter.write("\n");
+
+        exclusionIndex = Arrays.asList(annotationNames).indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
     }
 
     @Override
-    public void processDataRecord(int recordIndex, Object[] recordValues) throws IOException {
-        int length = getCommonDataArrayLength(recordValues);
+    public void processDataRecord(int recordIndex, Object[] attributeValues, Object[] annotationValues) throws IOException {
+        int length = getCommonDataArrayLength(attributeValues);
+        String reason = "";
+        if (exclusionIndex >= 0) {
+            reason = (String) annotationValues[exclusionIndex];
+        }
+        String annotationLine = dataRecordToString(annotationValues, false, -1);
         if (length > 0) {
             for (int i = 0; i < length; i++) {
-                recordsAllWriter.write(dataRecordToString(recordValues, false, i));
-                recordsAllWriter.write("\n");
+                String line = dataRecordToString(attributeValues, false, i);
+                if (reason.isEmpty()) {
+                    recordsAllWriter.write(line + "\n");
+                }
+                labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
             }
         } else {
-            recordsAllWriter.write(dataRecordToString(recordValues, false, -1));
-            recordsAllWriter.write("\n");
+            String line = dataRecordToString(attributeValues, false, -1);
+            if (reason.isEmpty()) {
+                recordsAllWriter.write(line + "\n");
+            }
+            labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
         }
 
-        recordsAggWriter.write(dataRecordToString(recordValues, true, -1));
-        recordsAggWriter.write("\n");
+        String line = dataRecordToString(attributeValues, true, -1);
+        if (reason.isEmpty()) {
+            recordsAggWriter.write(line + "\n");
+        }
+        labeledAggRecordsWriter.write(line + separatorChar + annotationLine + "\n");
     }
 
     @Override
     public void finalizeRecordProcessing(int numRecords) throws IOException {
         recordsAllWriter.close();
         recordsAggWriter.close();
+        labeledAllRecordsWriter.close();
+        labeledAggRecordsWriter.close();
     }
 
     public static String toString(Object[] values) {
         return dataRecordToString(values, false, -1, DEFAULT_COLUMN_SEPARATOR_CHAR, DEFAULT_DATE_FORMAT);
     }
 
-    public String headerRecordToString(Object[] values, boolean statColumns) {
+    private String attributeNamesToString(Object[] values, boolean statColumns) {
         return headerRecordToString(values, statColumns, separatorChar);
     }
 
-    public String dataRecordToString(Object[] values, boolean statColumns, int dataIndex) {
-        return dataRecordToString(values, statColumns, dataIndex, separatorChar, dateFormat);
+    private String dataRecordToString(Object[] values, boolean statColumns, int aggregatedDataIndex) {
+        return dataRecordToString(values, statColumns, aggregatedDataIndex, separatorChar, dateFormat);
     }
 
-    public static String headerRecordToString(Object[] values, boolean statColumns, char separatorChar) {
+    private static String headerRecordToString(Object[] values, boolean statColumns, char separatorChar) {
         if (values == null) {
             return "";
         }
@@ -124,7 +145,8 @@ public class CsvRecordWriter implements RecordProcessor {
         return sb.toString();
     }
 
-    public static String dataRecordToString(Object[] values, boolean statColumns, int dataIndex, char separatorChar, DateFormat dateFormat) {
+    private static String dataRecordToString(Object[] values, boolean statColumns, int aggregatedDataIndex, char separatorChar,
+                                             DateFormat dateFormat) {
         if (values == null) {
             return "";
         }
@@ -141,8 +163,8 @@ public class CsvRecordWriter implements RecordProcessor {
                         sb.append(aggregatedNumber.mean).append(separatorChar);
                         sb.append(aggregatedNumber.sigma).append(separatorChar);
                         sb.append(aggregatedNumber.n);
-                    } else if (dataIndex >= 0) {
-                        sb.append(String.valueOf(aggregatedNumber.data[dataIndex]));
+                    } else if (aggregatedDataIndex >= 0) {
+                        sb.append(String.valueOf(aggregatedNumber.data[aggregatedDataIndex]));
                     } else {
                         sb.append(aggregatedNumber.toString());
                     }
@@ -164,7 +186,7 @@ public class CsvRecordWriter implements RecordProcessor {
     }
 
 
-    static int getCommonDataArrayLength(Object[] attributeValues) {
+    private static int getCommonDataArrayLength(Object[] attributeValues) {
         int commonLength = -1;
         for (Object attributeValue : attributeValues) {
             if (attributeValue instanceof AggregatedNumber) {

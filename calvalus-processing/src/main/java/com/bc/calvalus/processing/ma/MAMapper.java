@@ -54,6 +54,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int MiB = 1024 * 1024;
+    public static final String EXCLUSION_REASON_EXPRESSION = "RECORD_EXPRESSION";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -151,25 +152,28 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Header header = productRecordSource.getHeader();
                 Rectangle inputRect = processorAdapter.getInputRectangle();
                 RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
-                RecordTransformer recordTransformer = ProductRecordSource.createAggregator(header, maConfig);
+                RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
                 RecordSelector recordSelector = productRecordSource.createRecordSelector();
 
                 t0 = now();
                 Collection<Record> aggregatedRecords = new ArrayList<Record>();
+                int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                 for (Record extractedRecord : extractedRecords) {
                     Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
-                    Record aggregatedRecord = recordTransformer.transform(shiftedRecord);
-                    if (aggregatedRecord != null && recordFilter.accept(aggregatedRecord)) {
-                        aggregatedRecords.add(aggregatedRecord);
+                    Record aggregatedRecord = recordAggregator.transform(shiftedRecord);
+                    String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
+                    if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
+                        aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;
                     }
+                    aggregatedRecords.add(aggregatedRecord);
                 }
 
                 Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
                 int numMatchUps = 0;
                 for (Record selectedRecord : selectedRecords) {
                     context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
-                                  new RecordWritable(selectedRecord.getAttributeValues()));
+                                  new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
                 }
 
@@ -178,7 +182,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                        context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
                 if (numMatchUps > 0) {
                     // write header
-                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames()));
+                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
                 } else {

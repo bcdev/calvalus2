@@ -32,23 +32,24 @@ public class RecordWritableTest {
     @Test
     public void testConstructor() throws Exception {
         RecordWritable recordWritable = new RecordWritable();
-        assertArrayEquals(null, recordWritable.getValues());
+        assertArrayEquals(null, recordWritable.getAttributeValues());
     }
 
     @Test
     public void testWriteAndRead() throws Exception {
 
-        RecordWritable recordWritable = new RecordWritable(inputValues);
+        RecordWritable original = new RecordWritable(inputValues, new Object[]{PixelExtractor.EXCLUSION_REASON_ALL_MASKED});
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        recordWritable.write(new DataOutputStream(out));
+        original.write(new DataOutputStream(out));
         out.close();
         byte[] bytes = out.toByteArray();
 
-        recordWritable = new RecordWritable();
-        recordWritable.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
+        RecordWritable copy = new RecordWritable();
+        copy.readFields(new DataInputStream(new ByteArrayInputStream(bytes)));
 
-        Object[] outputValues = recordWritable.getValues();
+        assertEquals(PixelExtractor.EXCLUSION_REASON_ALL_MASKED, copy.getAnnotationValues()[0]);
+        Object[] outputValues = copy.getAttributeValues();
         assertNotNull(outputValues);
         assertArrayEquals(inputValues, outputValues);
 
@@ -67,18 +68,18 @@ public class RecordWritableTest {
     @Test
     public void testToString() throws Exception {
 
-        RecordWritable recordWritable = new RecordWritable();
-        recordWritable.setValues(inputValues);
+        RecordWritable recordWritable = new RecordWritable(inputValues, new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
 
         assertEquals("" +
-                             "Benguela\t" +
-                             "76432\t" +
-                             "-2.14\t" +
-                             "2011-08-19 07:55:06\t" +
-                             "NaN\t" +
-                             "1\t" +
-                             "0.5\t" +
-                             "3.4",
+                     "Benguela\t" +
+                     "76432\t" +
+                     "-2.14\t" +
+                     "2011-08-19 07:55:06\t" +
+                     "NaN\t" +
+                     "1\t" +
+                     "0.5\t" +
+                     "3.4\t" +
+                     "OVERLAPPING",
                      recordWritable.toString());
     }
 }

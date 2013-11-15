@@ -17,11 +17,9 @@
 package com.bc.calvalus.processing.ma;
 
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.junit.Test;
 
 import java.util.Date;
-import java.util.Iterator;
 
 import static org.junit.Assert.*;
 
@@ -73,12 +71,12 @@ public class ProductOffsetTransformerTest {
         assertArrayEquals(new int[]{69, 37, 21, 13}, yValues);
     }
 
-    private DefaultRecord createDataRecord(int[] pixelX, int[] pixelY, float[] measurements) {
-        return RecordUtils.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
-                                     "africa",
-                                     pixelX,
-                                     pixelY,
-                                     measurements);
+    private Record createDataRecord(int[] pixelX, int[] pixelY, float[] measurements) {
+        return RecordUtils.create(new GeoPos(53.0F, 13.3F), new Date(128L),
+                                  "africa",
+                                  pixelX,
+                                  pixelY,
+                                  measurements);
     }
 
 }

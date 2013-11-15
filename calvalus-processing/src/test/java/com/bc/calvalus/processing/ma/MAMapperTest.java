@@ -24,6 +24,8 @@ import static org.junit.Assert.*;
  */
 public class MAMapperTest {
 
+    private static final int EXCLUSION_REASON_INDEX = 0;
+
     private List<float[]> expectedMatchups;
 
     @Before
@@ -46,7 +48,7 @@ public class MAMapperTest {
         executeMatchup(collectedMatchUps, 3, false);
 
         assertEquals(6, collectedMatchUps.size());
-        assertEquals(9, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
+        assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
         testMatchUp(collectedMatchUps, 2);
@@ -64,12 +66,14 @@ public class MAMapperTest {
         for (RecordWritable collectedMatchUp : collectedMatchUps) {
             System.out.println("collectedMatchUp = " + collectedMatchUp);
         }
-        assertEquals(4, collectedMatchUps.size());
-        assertEquals(9, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
-        testMatchUp(collectedMatchUps, 0, 0);
-        testMatchUp(collectedMatchUps, 3, 1);
-        testMatchUp(collectedMatchUps, 4, 2);
-        testMatchUp(collectedMatchUps, 5, 3);
+        assertEquals(6, collectedMatchUps.size());
+        assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 2, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
     }
 
     @Test
@@ -79,7 +83,7 @@ public class MAMapperTest {
         executeMatchup(collectedMatchUps, 5, false);
 
         assertEquals(6, collectedMatchUps.size());
-        assertEquals(25, getAggregatedNumber(collectedMatchUps, 0, 2).data.length);
+        assertEquals(25, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
         testMatchUp(collectedMatchUps, 2);
@@ -89,19 +93,22 @@ public class MAMapperTest {
     }
 
     private void testMatchUp(List<RecordWritable> collectedMatchUps, int matchUpIndex) {
-        testMatchUp(collectedMatchUps, matchUpIndex, matchUpIndex);
-
+        testMatchUp(collectedMatchUps, matchUpIndex, "");
     }
 
-    private void testMatchUp(List<RecordWritable> collectedMatchUps, int expectedMatchUpIndex, int matchUpIndex) {
+    private void testMatchUp(List<RecordWritable> collectedMatchUps, int matchUpIndex, String expectedReason) {
         int xColumn = 2;
         int yColumn = 3;
         int rad1Column = 6;
 
-        float[] expectedData = expectedMatchups.get(expectedMatchUpIndex);
-        assertEquals(expectedData[0], getCenterMatchupValue(collectedMatchUps, matchUpIndex, xColumn), 1.0e-6f);
-        assertEquals(expectedData[1], getCenterMatchupValue(collectedMatchUps, matchUpIndex, yColumn), 1.0e-6f);
-        assertEquals(expectedData[2], getCenterMatchupValue(collectedMatchUps, matchUpIndex, rad1Column), 1.0e-6f);
+        float[] expectedData = expectedMatchups.get(matchUpIndex);
+        RecordWritable actualRecord = collectedMatchUps.get(matchUpIndex);
+        assertEquals(expectedData[0], getCenterMatchupValue(actualRecord, xColumn), 1.0e-6f);
+        assertEquals(expectedData[1], getCenterMatchupValue(actualRecord, yColumn), 1.0e-6f);
+        assertEquals(expectedData[2], getCenterMatchupValue(actualRecord, rad1Column), 1.0e-6f);
+
+        String actualReason = (String) actualRecord.getAnnotationValues()[EXCLUSION_REASON_INDEX];
+        assertEquals(expectedReason, actualReason);
     }
 
     private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping) throws Exception {
@@ -142,13 +149,13 @@ public class MAMapperTest {
         mapper.run(context);
     }
 
-    private float getCenterMatchupValue(List<RecordWritable> collectedMatchups, int matchupIndex, int columnIndex) {
-        float[] data = getAggregatedNumber(collectedMatchups, matchupIndex, columnIndex).data;
+    private float getCenterMatchupValue(RecordWritable record, int columnIndex) {
+        float[] data = getAggregatedNumber(record, columnIndex).data;
         return data[data.length / 2];
     }
 
-    private AggregatedNumber getAggregatedNumber(List<RecordWritable> matchups, int matchupIndex, int columnIndex) {
-        return (AggregatedNumber) matchups.get(matchupIndex).getValues()[columnIndex];
+    private AggregatedNumber getAggregatedNumber(RecordWritable record, int columnIndex) {
+        return (AggregatedNumber) record.getAttributeValues()[columnIndex];
     }
 
 }

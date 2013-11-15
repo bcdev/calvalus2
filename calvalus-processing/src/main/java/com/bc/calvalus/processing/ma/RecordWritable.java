@@ -24,6 +24,7 @@ import java.util.Map;
  * @author Norman
  */
 public class RecordWritable implements Writable {
+
     /**
      * The supported value types.
      * Basically a mapping between a 16-bit type code and the its corresponding Java class.
@@ -79,34 +80,45 @@ public class RecordWritable implements Writable {
         }
     }
 
-
-    private Object[] values;
+    private Object[] annotationValues;
+    private Object[] attributeValues;
 
     public RecordWritable() {
     }
 
-    public RecordWritable(Object[] values) {
-        this.values = values;
+    public RecordWritable(Object[] attributeValues, Object[] annotationValues) {
+        this.attributeValues = attributeValues;
+        this.annotationValues = annotationValues;
     }
 
-    public Object[] getValues() {
-        return values;
+    public Object[] getAnnotationValues() {
+        return annotationValues;
     }
 
-    public void setValues(Object[] values) {
-        this.values = values;
+    public Object[] getAttributeValues() {
+        return attributeValues;
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
+        writeObjectArray(out, attributeValues);
+        writeObjectArray(out, annotationValues);
+    }
+
+    @Override
+    public void readFields(DataInput in) throws IOException {
+        attributeValues = readObjectArray(in, attributeValues);
+        annotationValues = readObjectArray(in, annotationValues);
+    }
+
+    private void writeObjectArray(DataOutput out, Object[] values) throws IOException {
         out.writeInt(values.length);
         for (Object value : values) {
             writeValue(out, value);
         }
     }
 
-    @Override
-    public void readFields(DataInput in) throws IOException {
+    private Object[] readObjectArray(DataInput in, Object[] values) throws IOException {
         final int valueCount = in.readInt();
         if (values == null || values.length != valueCount) {
             values = new Object[valueCount];
@@ -114,13 +126,11 @@ public class RecordWritable implements Writable {
         for (int i = 0; i < valueCount; i++) {
             values[i] = readValue(in);
         }
+        return values;
     }
 
     private void writeValue(DataOutput out, Object value) throws IOException {
         final Type type = Type.getType(value);
-        if (type == null) {
-            throw new IllegalStateException("Received illegal data type: " + value.getClass());
-        }
         out.writeChar(type.getId());
         if (type == Type.INTEGER) {
             out.writeInt((Integer) value);
@@ -146,8 +156,8 @@ public class RecordWritable implements Writable {
             float[] data = aggregatedNumber.data;
             if (data != null) {
                 out.writeShort(data.length);
-                for (int i = 0; i < data.length; i++) {
-                    out.writeFloat(data[i]);
+                for (float aData : data) {
+                    out.writeFloat(aData);
                 }
             } else {
                 out.writeShort(0);
@@ -209,7 +219,7 @@ public class RecordWritable implements Writable {
      */
     @Override
     public String toString() {
-        return CsvRecordWriter.toString(values);
+        return CsvRecordWriter.toString(attributeValues) + "\t" + CsvRecordWriter.toString(annotationValues);
     }
 
 }

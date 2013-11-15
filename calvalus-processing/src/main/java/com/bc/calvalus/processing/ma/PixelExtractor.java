@@ -1,13 +1,20 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 
 /**
  * Generates an output record from a {@link Product} using an input reference record.
@@ -19,6 +26,7 @@ public class PixelExtractor {
 
     public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
     public static final String ATTRIB_NAME_AGGREG_PREFIX = "*";
+    public static final String EXCLUSION_REASON_ALL_MASKED = "PIXEL_EXPRESSION";
 
     private final Header header;
     private final Product product;
@@ -62,7 +70,9 @@ public class PixelExtractor {
      * Extracts an output record.
      *
      * @param inputRecord The input record.
+     *
      * @return The output record or {@code null}, if a certain inclusion criterion is not met.
+     *
      * @throws java.io.IOException If any I/O error occurs
      */
     public Record extract(Record inputRecord) throws IOException {
@@ -79,7 +89,9 @@ public class PixelExtractor {
      *
      * @param inputRecord The input record.
      * @param pixelPos    The validated pixel pos.
+     *
      * @return The output record or {@code null}, if a certain inclusion criterion is not met.
+     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
@@ -96,6 +108,7 @@ public class PixelExtractor {
         int height = macroPixelRect.height;
 
         final int[] maskSamples;
+        String exclusionReason = "";
         if (pixelMask != null) {
             maskSamples = new int[width * height];
             pixelMask.readPixels(x0, y0, width, height, maskSamples);
@@ -108,7 +121,7 @@ public class PixelExtractor {
                 }
             }
             if (allBad) {
-                return null;
+                exclusionReason = EXCLUSION_REASON_ALL_MASKED;
             }
         } else {
             maskSamples = null;
@@ -188,7 +201,7 @@ public class PixelExtractor {
             values[index++] = floatSamples;
         }
 
-        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values);
+        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values, new Object[]{exclusionReason});
     }
 
     private Header createHeader(Header inputHeader) {
@@ -253,6 +266,7 @@ public class PixelExtractor {
      * Gets the temporally and spatially valid pixel position.
      *
      * @param referenceRecord The reference record
+     *
      * @return The pixel position, or {@code null} if no such exist.
      */
     public PixelPos getPixelPos(Record referenceRecord) {
