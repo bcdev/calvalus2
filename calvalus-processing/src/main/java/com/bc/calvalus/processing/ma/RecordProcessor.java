@@ -8,7 +8,10 @@ import java.io.IOException;
  * @author Norman
  */
 public interface RecordProcessor {
-    void processHeaderRecord(Object[] headerValues) throws IOException;
-    void processDataRecord(int recordIndex, Object[] recordValues) throws IOException;
+
+    void processHeaderRecord(Object[] attributeNames, Object[] annotationNames) throws IOException;
+
+    void processDataRecord(int recordIndex, Object[] recordValues, Object[] annotationValues) throws IOException;
+
     void finalizeRecordProcessing(int numRecords) throws IOException;
 }

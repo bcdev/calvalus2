@@ -10,22 +10,22 @@ import java.util.List;
  */
 public class DefaultHeader implements Header {
 
+    public static final String ANNOTATION_EXCLUSION_REASON = "ExclusionReason";
+
     private final boolean hasLocation;
     private final boolean hasTime;
     private final List<String> attributeNames;
-
-    public DefaultHeader(String... attributeNames) {
-        this(false, false, attributeNames);
-    }
-
-    public DefaultHeader(boolean hasLocation, String... attributeNames) {
-        this(hasLocation, false, attributeNames);
-    }
+    private final List<String> annotationNames;
 
     public DefaultHeader(boolean hasLocation, boolean hasTime, String... attributeNames) {
+        this(hasLocation, hasTime, attributeNames, new String[]{ANNOTATION_EXCLUSION_REASON});
+    }
+
+    private DefaultHeader(boolean hasLocation, boolean hasTime, String[] attributeNames, String[] annotationNames) {
         this.hasLocation = hasLocation;
         this.hasTime = hasTime;
         this.attributeNames = Arrays.asList(attributeNames);
+        this.annotationNames = Arrays.asList(annotationNames);
     }
 
     @Override
@@ -41,6 +41,21 @@ public class DefaultHeader implements Header {
     @Override
     public String[] getAttributeNames() {
         return attributeNames.toArray(new String[attributeNames.size()]);
+    }
+
+    @Override
+    public int getAttributeIndex(String name) {
+        return attributeNames.indexOf(name);
+    }
+
+    @Override
+    public String[] getAnnotationNames() {
+        return annotationNames.toArray(new String[annotationNames.size()]);
+    }
+
+    @Override
+    public int getAnnotationIndex(String name) {
+        return annotationNames.indexOf(name);
     }
 
     @Override

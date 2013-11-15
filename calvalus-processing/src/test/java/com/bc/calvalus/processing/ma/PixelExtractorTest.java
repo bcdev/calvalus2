@@ -11,7 +11,7 @@ public class PixelExtractorTest {
 
     @Test(expected = NullPointerException.class)
     public void testExtractDoesNotAcceptNullRecord() throws Exception {
-        PixelExtractor extractor = new PixelExtractor(new DefaultHeader(), new Product("A", "B", 2, 2), 1, null, null, true);
+        PixelExtractor extractor = new PixelExtractor(new TestHeader(), new Product("A", "B", 2, 2), 1, null, null, true);
         extractor.extract(null);
     }
 }

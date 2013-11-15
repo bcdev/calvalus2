@@ -37,7 +37,7 @@ public class RecordAggregator implements RecordTransformer {
             }
             aggregatedValues[valueIndex] = attributeValue;
         }
-        return new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues);
+        return new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues, record.getAnnotationValues());
     }
 
     private int[] getMaskValues(Object[] attributeValues) {

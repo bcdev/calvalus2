@@ -14,12 +14,13 @@ public interface Record {
     /**
      * @return The location as (lat,lon) point or {@code null} if the location is not available (see {@link Header#hasLocation()}).
      *         The location is usually represented in form of one or more attribute values.
+     *         This is the location of the corresponding reference record.
      */
     GeoPos getLocation();
 
     /**
      * @return The UTC time in milliseconds or {@code null} if the time is not available (see {@link Header#hasTime()}).
-     *         The location is usually represented in form of one or more attribute values.
+     *         This is the time of the corresponding reference record.
      */
     Date getTime();
 
@@ -28,4 +29,11 @@ public interface Record {
      *         The array will be empty if this record doesn't have any attributes.
      */
     Object[] getAttributeValues();
+
+    /**
+     * @return The annotation values according to {@link Header#getAnnotationNames()}.
+     *         The array will be empty if this record doesn't have any annotations.
+     */
+    Object[] getAnnotationValues();
+
 }

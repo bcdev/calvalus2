@@ -14,24 +14,24 @@ public class RecordAggregatorTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksZeroLengthArrays() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
-                                                                      "x",
-                                                                      new float[0]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.create(null, null,
+                                                                   "x",
+                                                                   new float[0]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksVaryingLengthArrays() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
-                                                                      "x",
-                                                                      new float[3],
-                                                                      new int[2]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.create(null, null,
+                                                                   "x",
+                                                                   new float[3],
+                                                                   new int[2]));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testAggregateChecksSupportedArrayTypes() throws Exception {
-        new RecordAggregator(-1, 1.5).transform(RecordUtils.newRecord(null, null,
-                                                                      "x",
-                                                                      new Date[3]));
+        new RecordAggregator(-1, 1.5).transform(RecordUtils.create(null, null,
+                                                                   "x",
+                                                                   new Date[3]));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class RecordAggregatorTest {
         assertEquals(1.4, a5.mean, 1E-6);
         assertEquals(0.28284266, a5.sigma, 1E-6);
         assertEquals(a5.mean, a5.doubleValue(), 1E-6);
-        assertArrayEquals(new float[] {0.2F, 1.2F, 1.2F, 1.4F, 1.8F}, a5.data, 1E-6F);
+        assertArrayEquals(new float[]{0.2F, 1.2F, 1.2F, 1.4F, 1.8F}, a5.data, 1E-6F);
 
         Object v6 = aggregatedRecord.getAttributeValues()[5];
         assertEquals(AggregatedNumber.class, v6.getClass());
@@ -177,12 +177,12 @@ public class RecordAggregatorTest {
         assertEquals(0, v7);
     }
 
-    private DefaultRecord createDataRecord(float[] value5, int[] value6, int[] mask) {
-        return RecordUtils.newRecord(new GeoPos(53.0F, 13.3F), new Date(128L),
-                                     "africa",
-                                     value5,
-                                     value6,
-                                     mask);
+    private Record createDataRecord(float[] value5, int[] value6, int[] mask) {
+        return RecordUtils.create(new GeoPos(53.0F, 13.3F), new Date(128L),
+                                  "africa",
+                                  value5,
+                                  value6,
+                                  mask);
     }
 
 }

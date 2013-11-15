@@ -27,6 +27,8 @@ import static org.junit.Assert.*;
  */
 public class ProductRecordSourceTest {
 
+    public static final int EXCLUSION_REASON_INDEX = 0;
+
     @Test(expected = NullPointerException.class)
     public void testConstructorArg1CannotBeNull() throws Exception {
         new ProductRecordSource(null, createRecordSource(1), new MAConfig());
@@ -47,7 +49,7 @@ public class ProductRecordSourceTest {
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
 
-        RecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+        RecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                      new TestRecord(new GeoPos(1, 0)),
                                                      new TestRecord(new GeoPos(1, 1)),
                                                      new TestRecord(new GeoPos(0, 0)),
@@ -56,6 +58,7 @@ public class ProductRecordSourceTest {
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         int n = 0;
         for (Record r : output.getRecords()) {
+            assertSame(DefaultRecord.class, r.getClass());
             assertNotNull(r);
             n++;
         }
@@ -65,7 +68,7 @@ public class ProductRecordSourceTest {
     @Test
     public void testThatRecordsAreNotGeneratedForOutlyingCoordinates() throws Exception {
         // same test, but this time using the iterator
-        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+        DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                             new TestRecord(new GeoPos(-1, -1)),
                                                             new TestRecord(new GeoPos(-1, 2)),
                                                             new TestRecord(new GeoPos(-3, -1)));
@@ -82,7 +85,7 @@ public class ProductRecordSourceTest {
 
     @Test
     public void testTheIteratorForSourceRecordsThatAreInAndOutOfProductBoundaries() throws Exception {
-        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+        DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                             new TestRecord(new GeoPos(1, 0)),// in
                                                             new TestRecord(new GeoPos(-1, 2)),   // out
                                                             new TestRecord(new GeoPos(1, 1)), // in
@@ -103,7 +106,7 @@ public class ProductRecordSourceTest {
 
     @Test
     public void testThatInputSortingWorks() throws Exception {
-        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+        DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                             new TestRecord(new GeoPos(0.0F, 0.0F)),
                                                             new TestRecord(new GeoPos(0.0F, 1.0F)),
                                                             new TestRecord(new GeoPos(1.0F, 0.0F)),
@@ -166,12 +169,12 @@ public class ProductRecordSourceTest {
         RecordSource input = new RecordSource() {
             @Override
             public Header getHeader() {
-                return new DefaultHeader(true, "u", "v", "w");
+                return new TestHeader(true, "u", "v", "w");
             }
 
             @Override
             public Iterable<Record> getRecords() throws Exception {
-                return Arrays.asList((Record) RecordUtils.newRecord(new GeoPos(0F, 1F), null, "?"));
+                return Arrays.asList((Record) RecordUtils.create(new GeoPos(0F, 1F), null, "?"));
             }
 
             @Override
@@ -228,7 +231,7 @@ public class ProductRecordSourceTest {
 
     @Test
     public void testThatGetRecordsFulfillsIterableContract() throws Exception {
-        DefaultRecordSource input = new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"));
+        DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"));
         RecordUtils.addPointRecord(input, 1F, 0F);
         RecordUtils.addPointRecord(input, 1F, 1F);
         RecordUtils.addPointRecord(input, -2F, 1F);
@@ -280,8 +283,13 @@ public class ProductRecordSourceTest {
         config.setCopyInput(false);
         config.setGoodPixelExpression("b1 == 0");
 
-        ProductRecordSource output = createProductRecordSource(2, 3, new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"),
+        ProductRecordSource output = createProductRecordSource(2, 3, new DefaultRecordSource(new DefaultHeader(true, false, "lat", "lon"),
                                                                                              new TestRecord(new GeoPos(1.0F, 0.0F))), config);
+
+        assertNotNull(output.getHeader());
+        assertTrue(output.getHeader().hasLocation());
+        assertTrue(output.getHeader().hasTime());   // pixel_time in attributes
+        assertNotNull(output.getHeader().getAttributeNames());
 
         Iterable<Record> records = output.getRecords();
         Iterator<Record> iterator = records.iterator();
@@ -289,9 +297,10 @@ public class ProductRecordSourceTest {
 
         Record extract = iterator.next();
         assertNotNull(extract);
+        assertSame(DefaultRecord.class, extract.getClass());
 
-        assertNotNull(output.getHeader());
-        assertNotNull(output.getHeader().getAttributeNames());
+        assertNull(extract.getTime()); // no insitu time
+        assertEquals("", extract.getAnnotationValues()[EXCLUSION_REASON_INDEX]);
 
         GeoPos coordinate = extract.getLocation();
         assertEquals(1.0F, coordinate.lat, 0.0001F);
@@ -324,16 +333,28 @@ public class ProductRecordSourceTest {
         config.setMaxTimeDifference(null);
         config.setGoodPixelExpression("feq(X, 1.5)");
 
-        RecordSource input = new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude"),
-                                                     RecordUtils.newRecord(new GeoPos(0.0F, 0.0F), null),  // --> X=0.5,Y=2.5 --> reject
-                                                     RecordUtils.newRecord(new GeoPos(0.0F, 1.0F), null),  // --> X=1.5,Y=2.5 --> ok
-                                                     RecordUtils.newRecord(new GeoPos(0.5F, 0.0F), null),  // --> X=0.5,Y=1.5 --> reject
-                                                     RecordUtils.newRecord(new GeoPos(0.5F, 1.0F), null),  // --> X=1.5,Y=1.5 --> ok
-                                                     RecordUtils.newRecord(new GeoPos(1.0F, 0.0F), null),  // --> X=0.5,Y=0.5 --> reject
-                                                     RecordUtils.newRecord(new GeoPos(1.0F, 1.0F), null));  // --> X=0.5,Y=0.5 --> ok
+        RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
+                                                     RecordUtils.create(new GeoPos(0.0F, 0.0F), null),  // --> X=0.5,Y=2.5 --> reject
+                                                     RecordUtils.create(new GeoPos(0.0F, 1.0F), null),  // --> X=1.5,Y=2.5 --> ok
+                                                     RecordUtils.create(new GeoPos(0.5F, 0.0F), null),  // --> X=0.5,Y=1.5 --> reject
+                                                     RecordUtils.create(new GeoPos(0.5F, 1.0F), null),  // --> X=1.5,Y=1.5 --> ok
+                                                     RecordUtils.create(new GeoPos(1.0F, 0.0F), null),  // --> X=0.5,Y=0.5 --> reject
+                                                     RecordUtils.create(new GeoPos(1.0F, 1.0F), null));  // --> X=0.5,Y=0.5 --> ok
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         List<Record> records = getRecords(output);
-        assertEquals(3, records.size());
+        assertEquals(6, records.size());
+        int goodRecords = 0;
+        int allMaskedRecords = 0;
+        for (Record record : records) {
+            String reason = (String) record.getAnnotationValues()[EXCLUSION_REASON_INDEX];
+            if (reason.isEmpty()) {
+                goodRecords++;
+            } else if (reason.equals(PixelExtractor.EXCLUSION_REASON_ALL_MASKED)) {
+                allMaskedRecords++;
+            }
+        }
+        assertEquals(3, goodRecords);
+        assertEquals(3, allMaskedRecords);
     }
 
     @Test
@@ -349,8 +370,8 @@ public class ProductRecordSourceTest {
         float lon = 0.0F + 1.0F / (w - 1.0F);
         float lat = 1.0F - 1.0F / (h - 1.0F);
 
-        RecordSource input = new DefaultRecordSource(new DefaultHeader(true, "latitude", "longitude"),
-                                                     RecordUtils.newRecord(new GeoPos(lat, lon), null));  // --> center of first macro pixel
+        RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
+                                                     RecordUtils.create(new GeoPos(lat, lon), null));  // --> center of first macro pixel
 
         ProductRecordSource output = createProductRecordSource(w, h, input, config);
 
@@ -388,10 +409,10 @@ public class ProductRecordSourceTest {
         config.setMaxTimeDifference(null);
 
         RecordSource input = new DefaultRecordSource(new DefaultHeader(true, true, "latitude", "longitude", "time"),
-                                                     RecordUtils.newRecord(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
-                                                     RecordUtils.newRecord(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
-                                                     RecordUtils.newRecord(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
-                                                     RecordUtils.newRecord(new GeoPos(1, 1), date("07-MAY-2010 09:25:00"))); // still ok
+                                                     RecordUtils.create(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
+                                                     RecordUtils.create(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
+                                                     RecordUtils.create(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
+                                                     RecordUtils.create(new GeoPos(1, 1), date("07-MAY-2010 09:25:00"))); // still ok
 
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         List<Record> records = getRecords(output);
@@ -402,10 +423,10 @@ public class ProductRecordSourceTest {
         config.setMaxTimeDifference(0.25);
 
         input = new DefaultRecordSource(new DefaultHeader(true, true, "latitude", "longitude", "time"),
-                                        RecordUtils.newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
-                                        RecordUtils.newRecord(new GeoPos(0.5F, 0.5F), date("07-JUN-2010 13:25:00")), // rejected
-                                        RecordUtils.newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 10:59:00")), // ok
-                                        RecordUtils.newRecord(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 08:10:00"))); // rejected
+                                        RecordUtils.create(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
+                                        RecordUtils.create(new GeoPos(0.5F, 0.5F), date("07-JUN-2010 13:25:00")), // rejected
+                                        RecordUtils.create(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 10:59:00")), // ok
+                                        RecordUtils.create(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 08:10:00"))); // rejected
         output = createProductRecordSource(2, 3, input, config);
         records = getRecords(output);
         assertEquals(1, records.size());
@@ -496,9 +517,9 @@ public class ProductRecordSourceTest {
     private DefaultRecordSource createRecordSource(int n) {
         Record[] records = new Record[n];
         for (int i = 0; i < records.length; i++) {
-            records[i] = new DefaultRecord(new GeoPos(i, i), 1000L + i);
+            records[i] = RecordUtils.create(new GeoPos(i, i), 1000L + i);
         }
-        return new DefaultRecordSource(new DefaultHeader(true, "lat", "lon"), records);
+        return new DefaultRecordSource(new TestHeader(true, "lat", "lon"), records);
     }
 
     protected static class TestRecord implements Record {
@@ -515,6 +536,11 @@ public class ProductRecordSourceTest {
                     coordinate.lat,
                     coordinate.lon,
             };
+        }
+
+        @Override
+        public Object[] getAnnotationValues() {
+            return new Object[0];
         }
 
         @Override

@@ -1,15 +1,16 @@
 package com.bc.calvalus.processing.ma.expr;
 
 import com.bc.calvalus.processing.ma.AggregatedNumber;
-import com.bc.calvalus.processing.ma.DefaultHeader;
-import com.bc.calvalus.processing.ma.DefaultRecord;
+import com.bc.calvalus.processing.ma.Header;
+import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordUtils;
+import com.bc.calvalus.processing.ma.TestHeader;
 import com.bc.jexp.Symbol;
 import com.bc.jexp.Term;
 import com.bc.jexp.impl.ParserImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author Norman Fomferra
@@ -18,15 +19,15 @@ public class RecordExpressionTest {
 
     @Test
     public void testMedian() throws Exception {
-        DefaultHeader header = new DefaultHeader("*rho_1", "*rho_2", "*rho_3", "*rho_4", "*rho_5");
+        Header header = new TestHeader("*rho_1", "*rho_2", "*rho_3", "*rho_4", "*rho_5");
         HeaderNamespace namespace = new HeaderNamespace(header);
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
-        DefaultRecord record = new DefaultRecord(new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.1),
-                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.5),
-                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.4),
-                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.2),
-                                                 new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.3));
+        Record record = RecordUtils.create(new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.1),
+                                           new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.5),
+                                           new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.4),
+                                           new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.2),
+                                           new AggregatedNumber(24, 25, 16, 0.1, 4.0, 2.6, 0.3));
 
         ParserImpl parser = new ParserImpl(namespace);
 
@@ -50,7 +51,7 @@ public class RecordExpressionTest {
 
     @Test
     public void testThatHeaderNamespaceIgnoresAggregationPrefix() throws Exception {
-        DefaultHeader header = new DefaultHeader("lat", "lon", "*conc_chl", "*kd_460", "*l1p_flags.CC_LAND");
+        Header header = new TestHeader("lat", "lon", "*conc_chl", "*kd_460", "*l1p_flags.CC_LAND");
         HeaderNamespace namespace = new HeaderNamespace(header);
         assertNotNull(namespace.resolveSymbol("lat"));
         assertNotNull(namespace.resolveSymbol("lon"));
@@ -64,7 +65,7 @@ public class RecordExpressionTest {
 
     @Test
     public void testThatDotsCanBePartOfNameOfAggregatedVariables() throws Exception {
-        DefaultHeader header = new DefaultHeader("*l1p_flags.CC_LAND", "ref.CONC_CHL");
+        Header header = new TestHeader("*l1p_flags.CC_LAND", "ref.CONC_CHL");
         HeaderNamespace namespace = new HeaderNamespace(header);
 
         Symbol sym1 = namespace.resolveSymbol("l1p_flags.CC_LAND");
@@ -95,12 +96,12 @@ public class RecordExpressionTest {
 
     @Test
     public void testRecordsWithAggregatedNumbers() throws Exception {
-        DefaultHeader header = new DefaultHeader("*conc_chl");
+        Header header = new TestHeader("*conc_chl");
         HeaderNamespace namespace = new HeaderNamespace(header);
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
-        DefaultRecord record1 = new DefaultRecord(new AggregatedNumber(24, 25, 4, 0.1, 4.0, 2.6, 0.4));
-        DefaultRecord record2 = new DefaultRecord(new AggregatedNumber(16, 25, 3, 0.2, 4.1, 3.7, 0.3));
+        Record record1 = RecordUtils.create(new AggregatedNumber(24, 25, 4, 0.1, 4.0, 2.6, 0.4));
+        Record record2 = RecordUtils.create(new AggregatedNumber(16, 25, 3, 0.2, 4.1, 3.7, 0.3));
 
         ParserImpl parser = new ParserImpl(namespace);
 
@@ -141,12 +142,12 @@ public class RecordExpressionTest {
 
     @Test
     public void testRecordsWithScalars() throws Exception {
-        DefaultHeader header = new DefaultHeader("b", "s", "i", "f");
+        Header header = new TestHeader("b", "s", "i", "f");
         HeaderNamespace namespace = new HeaderNamespace(header);
         RecordEvalEnv recordEvalEnv = new RecordEvalEnv(namespace);
 
-        DefaultRecord record1 = new DefaultRecord(false, "x", 4, 0.6F);
-        DefaultRecord record2 = new DefaultRecord(true, "y", 3, 0.5F);
+        Record record1 = RecordUtils.create(false, "x", 4, 0.6F);
+        Record record2 = RecordUtils.create(true, "y", 3, 0.5F);
 
         ParserImpl parser = new ParserImpl(namespace);
 

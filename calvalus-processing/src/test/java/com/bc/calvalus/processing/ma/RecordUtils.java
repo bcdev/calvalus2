@@ -12,7 +12,12 @@ import java.util.Date;
  */
 @Ignore
 public class RecordUtils {
-    public static DefaultRecord newRecord(GeoPos coordinate, Date time, Object... values) {
+
+    public static Record create(Object... values) {
+        return new DefaultRecord(null, null, values);
+    }
+
+    public static Record create(GeoPos coordinate, Date time, Object... values) {
         if (coordinate != null || time != null) {
             ArrayList<Object> list;
             if (coordinate != null && time != null) {
@@ -25,11 +30,11 @@ public class RecordUtils {
             list.addAll(Arrays.asList(values));
             return new DefaultRecord(coordinate, time, list.toArray(new Object[list.size()]));
         } else {
-            return new DefaultRecord(values);
+            return new DefaultRecord(null, null, values);
         }
     }
 
     public static void addPointRecord(DefaultRecordSource recordSource, float lat, float lon, Object... attributeValues) {
-        recordSource.addRecord(newRecord(new GeoPos(lat, lon), null, attributeValues));
+        recordSource.addRecord(create(new GeoPos(lat, lon), null, attributeValues));
     }
 }

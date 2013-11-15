@@ -129,8 +129,8 @@ public class ProductRecordSource implements RecordSource {
 
     public RecordSelector createRecordSelector() {
         if (config.getFilterOverlapping()) {
-            PixelPosRecordFactory pixelPosRecordFactory = new PixelPosRecordFactory(getHeader().getAttributeNames());
-            return new OverlappingRecordSelector(config.getMacroPixelSize(), pixelPosRecordFactory);
+            PixelPosRecordFactory pixelPosRecordFactory = new PixelPosRecordFactory(getHeader());
+            return new OverlappingRecordSelector(config.getMacroPixelSize(), pixelPosRecordFactory, getHeader());
         } else {
             return new RecordSelector() {
                 @Override
@@ -238,11 +238,10 @@ public class ProductRecordSource implements RecordSource {
         private final int yAttributeIndex;
         private final int timeAttributeIndex;
 
-        PixelPosRecordFactory(String[] attributeNames) {
-            List<String> attributeNamesList = Arrays.asList(attributeNames);
-            xAttributeIndex = attributeNamesList.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_X_ATT_NAME);
-            yAttributeIndex = attributeNamesList.indexOf(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_Y_ATT_NAME);
-            timeAttributeIndex = attributeNamesList.indexOf(PIXEL_TIME_ATT_NAME);
+        PixelPosRecordFactory(Header header) {
+            xAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_X_ATT_NAME);
+            yAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_Y_ATT_NAME);
+            timeAttributeIndex = header.getAttributeIndex(PIXEL_TIME_ATT_NAME);
         }
 
         PixelPosRecord create(Record record) {
