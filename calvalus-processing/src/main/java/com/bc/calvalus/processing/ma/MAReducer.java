@@ -49,8 +49,8 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
                 new CsvRecordWriter(createWriter(context, "records-all.txt"),
                                     createWriter(context, "records-agg.txt"),
-                                    createWriter(context, "labeled-records-all.txt"),
-                                    createWriter(context, "labeled-records-agg.txt")),
+                                    createWriter(context, "annotated-records-all.txt"),
+                                    createWriter(context, "annotated-records-agg.txt")),
                 plotDatasetCollector,
         };
 
