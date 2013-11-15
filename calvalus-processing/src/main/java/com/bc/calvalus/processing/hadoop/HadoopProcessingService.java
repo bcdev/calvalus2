@@ -24,6 +24,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.ceres.binding.BindingException;
 import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -109,16 +110,16 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
         for (FileStatus file : fileStatuses) {
             try {
-                BundleDescriptor bd = new BundleDescriptor();
-                parameterBlockConverter.convertXmlToObject(readFile(file), bd);
+                BundleDescriptor bd = readBundleDescriptor(fileSystem, file.getPath());
                 bd.setBundleLocation(file.getPath().getParent().toString());
                 if (filter.getProcessorName() != null) {
                     final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
-                    for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                        if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
-                            processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
-                            parameterBlockConverter.convertXmlToObject(readFile(file), bd);
-                            descriptors.add(bd);
+                    if (processorDescriptors != null) {
+                        for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                            if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
+                                    processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                                descriptors.add(bd);
+                            }
                         }
                     }
                 } else {
@@ -131,13 +132,19 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     // this code exists somewhere else already
-    private String readFile(FileStatus subPath) throws IOException {
-        InputStream is = fileSystem.open(subPath.getPath());
+    private static String readFile(FileSystem fileSystem, Path path) throws IOException {
+        InputStream is = fileSystem.open(path);
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         IOUtils.copyBytes(is, baos);
         return baos.toString();
     }
 
+    public static BundleDescriptor readBundleDescriptor(FileSystem fileSystem, Path path) throws IOException, BindingException {
+        final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
+        final BundleDescriptor bd = new BundleDescriptor();
+        parameterBlockConverter.convertXmlToObject(readFile(fileSystem, path), bd);
+        return bd;
+    }
 
     public static void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
         final FileSystem fileSystem = FileSystem.get(configuration);

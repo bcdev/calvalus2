@@ -89,9 +89,11 @@ public class ProcessorProductionRequest {
                     bundle.getBundleVersion().equals(processorBundleVersion) &&
                     bundle.getBundleLocation().equals(processorBundleLocation)) {
                     ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
-                    for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                        if (processorDescriptor.getExecutableName().equals(processorName)) {
-                            return processorDescriptor;
+                    if (processorDescriptors != null) {
+                        for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                            if (processorDescriptor.getExecutableName().equals(processorName)) {
+                                return processorDescriptor;
+                            }
                         }
                     }
                 }

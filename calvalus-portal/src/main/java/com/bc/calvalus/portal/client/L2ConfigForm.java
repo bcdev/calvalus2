@@ -188,6 +188,16 @@ public class L2ConfigForm extends Composite {
             Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_ALL_USERS));
         }
 
+        {
+            final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
+            while (iterator.hasNext()) {
+                DtoProcessorDescriptor productSet = iterator.next();
+                if (BundleFilter.DUMMY_PROCESSOR_NAME.equals(productSet.getProcessorName())) {
+                    iterator.remove();
+                }
+            }
+        }
+
         if (processorFilter != null) {
             final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
             while (iterator.hasNext()) {

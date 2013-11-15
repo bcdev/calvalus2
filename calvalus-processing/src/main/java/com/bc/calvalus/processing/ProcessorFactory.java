@@ -30,11 +30,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.logging.Logger;
 
 /**
  * Creates a {@code ProcessorAdapter} for the given processor.
@@ -43,7 +45,7 @@ public class ProcessorFactory {
 
     public static final String CALVALUS_L2_PROCESSOR_FILES = "calvalus.l2.scriptFiles";
     private static final String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
-
+    private static final Logger logger = Logger.getLogger("com.bc.calvalus");
     enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
@@ -77,6 +79,20 @@ public class ProcessorFactory {
                 if (executable != null) {
                     processorType = detectProcessorType(bundlePath, executable, fs);
                     addBundleProcessorFiles(bundlePath, conf.get(JobConfigNames.CALVALUS_L2_OPERATOR), fs, conf);
+                }
+                // check for bundle to include, install it
+                try {
+                    BundleDescriptor bundleDescriptor =
+                            HadoopProcessingService.readBundleDescriptor(fs,
+                                                                         new Path(bundlePath,
+                                                                                  HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME));
+                    if (bundleDescriptor.getIncludeBundle() != null) {
+                        final Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
+                        HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
+                        addBundleArchives(includeBundlePath, fs, conf);
+                    }
+                } catch (Exception ex) {
+                    logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
                 }
             } else {
                 throw new IllegalArgumentException("Processor bundle does not exist.");

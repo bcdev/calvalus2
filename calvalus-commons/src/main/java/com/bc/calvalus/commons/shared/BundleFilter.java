@@ -11,6 +11,7 @@ public class BundleFilter {
     public static final String PROVIDER_SYSTEM = "SYSTEM";
     public static final String PROVIDER_USER = "USER";
     public static final String PROVIDER_ALL_USERS = "ALL_USER";
+    public static final String DUMMY_PROCESSOR_NAME = "auxiliary_bundle_without_processor";
 
     private static final char VALUE_SEPARATOR = ',';
     private static final char PARAMETER_SEPARATOR = ';';

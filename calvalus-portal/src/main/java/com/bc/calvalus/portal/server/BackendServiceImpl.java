@@ -212,12 +212,30 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private DtoProcessorDescriptor[] getDtoProcessorDescriptors(BundleDescriptor bundleDescriptor) {
         ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
-        DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
-        for (int i = 0; i < processorDescriptors.length; i++) {
-            dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                        bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
+        if (processorDescriptors != null) {
+            DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
+            for (int i = 0; i < processorDescriptors.length; i++) {
+                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
+                                            bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
+            }
+            return dtoDescriptors;
+        } else {
+            return new DtoProcessorDescriptor[] { new DtoProcessorDescriptor(null,
+                                                                             BundleFilter.DUMMY_PROCESSOR_NAME,
+                                                                             "",
+                                                                             "",
+                                                                             bundleDescriptor.getBundleName(),
+                                                                             bundleDescriptor.getBundleVersion(),
+                                                                             bundleDescriptor.getBundleLocation(),
+                                                                             null,
+                                                                             null,
+                                                                             null,
+                                                                             null,
+                                                                             null,
+                                                                             null,
+                                                                             null,
+                                                                             null) };
         }
-        return dtoDescriptors;
     }
 
     @Override

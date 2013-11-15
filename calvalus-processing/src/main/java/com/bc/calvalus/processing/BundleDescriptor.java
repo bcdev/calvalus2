@@ -12,6 +12,8 @@ public class BundleDescriptor {
     private String bundleName;
     @Parameter
     private String bundleVersion;
+    @Parameter
+    private String includeBundle;
     @Parameter(itemAlias = "processorDescriptor")
     ProcessorDescriptor[] processorDescriptors;
 
@@ -48,5 +50,9 @@ public class BundleDescriptor {
 
     public String getBundleLocation() {
         return bundleLocation;
+    }
+
+    public String getIncludeBundle() {
+        return includeBundle;
     }
 }
