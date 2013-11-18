@@ -24,7 +24,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -55,7 +57,21 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         };
 
         LOG.warning("Collecting records...");
-        int recordIndex = 0;
+        int recordIndex = processRecords(context, recordProcessors);
+
+        finalizeRecordProcessing(recordIndex, recordProcessors);
+
+        final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
+        ReportGenerator.generateReport(new TaskOutputStreamFactory(context),
+                                       jobConfig,
+                                       recordIndex,
+                                       plotDatasets);
+    }
+
+    int processRecords(Context context, RecordProcessor[] recordProcessors) throws IOException, InterruptedException {
+        int recordCount = 0;
+        int exclusionIndex = -1;
+
         while (context.nextKey()) {
             final Text key = context.getCurrentKey();
             final Iterator<RecordWritable> iterator = context.getValues().iterator();
@@ -65,21 +81,22 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                 context.write(key, record);
 
                 if (key.equals(MAMapper.HEADER_KEY)) {
+                    List<Object> annotNames = Arrays.asList(record.getAnnotationValues());
+                    exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                     processHeaderRecord(record, recordProcessors);
                 } else {
-                    processDataRecord(recordIndex, record, recordProcessors);
-                    recordIndex++;
+                    processDataRecord(recordCount, record, recordProcessors);
+                    if (exclusionIndex >= 0) {
+                        String reason = (String) record.getAnnotationValues()[exclusionIndex];
+                        if (!reason.isEmpty()) {
+                            continue;
+                        }
+                    }
+                    recordCount++;
                 }
             }
         }
-
-        finalizeRecordProcessing(recordIndex, recordProcessors);
-
-        final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
-        ReportGenerator.generateReport(new TaskOutputStreamFactory(context),
-                                       jobConfig,
-                                       recordIndex,
-                                       plotDatasets);
+        return recordCount;
     }
 
     private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
