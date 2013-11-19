@@ -115,7 +115,7 @@ public class ManageProductionsView extends PortalView {
         Column<DtoProduction, Boolean> checkColumn = createCheckBoxColumn();
         Column<DtoProduction, String> idColumn = createProductionIDColumn(sortHandler);
         TextColumn<DtoProduction> userColumn = createUserColumn(sortHandler);
-        TextColumn<DtoProduction> productionStatusColumn = createProductionStatusColum(sortHandler);
+        Column<DtoProduction, String> productionStatusColumn = createProductionStatusColum(sortHandler);
         TextColumn<DtoProduction> productionTimeColumn = createProductionTimeColumn(sortHandler);
         TextColumn<DtoProduction> stagingStatusColumn = createStagingStatusColumn(sortHandler);
         Column<DtoProduction, String> actionColumn = createActionColumn();
@@ -287,9 +287,32 @@ public class ManageProductionsView extends PortalView {
         return productionTimeColumn;
     }
 
-    private TextColumn<DtoProduction> createProductionStatusColum(
-            ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
-        TextColumn<DtoProduction> productionStatusColumn = new TextColumn<DtoProduction>() {
+    private Column<DtoProduction, String> createProductionStatusColum(ColumnSortEvent.ListHandler<DtoProduction> sortHandler) {
+
+        ClickableTextCell clickableTextCell = new ClickableTextCell();
+        Column<DtoProduction, String> productionStatusColumn = new Column<DtoProduction, String>(clickableTextCell) {
+            @Override
+            public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
+                DtoProcessStatus status = production.getProcessingStatus();
+                DtoProcessState state = status.getState();
+
+                if (state == DtoProcessState.COMPLETED || state == DtoProcessState.ERROR) {
+                    String url = GWT.getModuleBaseURL() + "hadoopLogs?productionId=" + production.getId();
+                    sb.appendHtmlConstant("<a href=\"" + url + "\" target=\"_blank\">" + state.toString() + "</a>");
+                } else if (state == DtoProcessState.RUNNING) {
+                    sb.appendEscaped(state.toString() + " (" + getProgressText(status.getProgress()) + ")");
+                } else {
+                    sb.appendEscaped(state.toString());
+                }
+                if (!status.getMessage().isEmpty()) {
+                    // TODO (mz 2013-11-19) replace by Tooltip to save screen real estate
+                    sb.appendHtmlConstant("<br/>");
+                    sb.appendHtmlConstant("<font size=\"-2\" color=\"#777799\">");
+                    sb.appendEscaped(status.getMessage());
+                    sb.appendHtmlConstant("</font>");
+                }
+            }
+
             @Override
             public String getValue(DtoProduction production) {
                 return getStatusText(production.getProcessingStatus());

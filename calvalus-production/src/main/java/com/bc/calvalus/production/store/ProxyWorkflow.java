@@ -17,11 +17,11 @@ import java.util.Date;
  *
  * @author Norman Fomferra
  */
-class ProxyWorkflow extends AbstractWorkflowItem {
+public class ProxyWorkflow extends AbstractWorkflowItem {
     private final ProcessingService processingService;
     private final Object[] jobIds;
 
-    public ProxyWorkflow(ProcessingService processingService,
+    ProxyWorkflow(ProcessingService processingService,
                          Object[] jobIds,
                          Date submitTime,
                          Date startTime,
@@ -63,4 +63,7 @@ class ProxyWorkflow extends AbstractWorkflowItem {
         return jobIds;
     }
 
+    public ProcessingService getProcessingService() {
+        return processingService;
+    }
 }

@@ -54,6 +54,13 @@
         <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
     </servlet>
 
+    <!-- Hadoop logfile servlet -->
+
+    <servlet>
+        <servlet-name>hadoopLogServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.HadoopLogServlet</servlet-class>
+    </servlet>
+
     <!-- File download servlet -->
 
     <servlet>
@@ -74,6 +81,10 @@
         <servlet-name>uploadServlet</servlet-name>
         <url-pattern>/calvalus/upload</url-pattern>
     </servlet-mapping>
+    <servlet-mapping>
+         <servlet-name>hadoopLogServlet</servlet-name>
+         <url-pattern>/calvalus/hadoopLogs</url-pattern>
+     </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>downloadServlet</servlet-name>
