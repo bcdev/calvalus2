@@ -33,7 +33,7 @@ public class ReportGenerator {
 
     public static void generateReport(OutputStreamFactory outputStreamFactory,
                                       Configuration configuration,
-                                      int recordIndex,
+                                      Map<String, Integer> annotatedRecordCounts,
                                       PlotDatasetCollector.PlotDataset[] plotDatasets) throws IOException, InterruptedException {
         LOG.info(String.format("Generating %d plot(s)...", plotDatasets.length));
 
@@ -46,7 +46,14 @@ public class ReportGenerator {
 
         summaryFileWriter.println();
         summaryFileWriter.printf("<performedAt>%s</performedAt>\n", new Date());
-        summaryFileWriter.printf("<recordCount>%s</recordCount>\n", recordIndex);
+        summaryFileWriter.printf("<recordCounts>\n");
+        for (Map.Entry<String, Integer> stringIntegerEntry : annotatedRecordCounts.entrySet()) {
+            summaryFileWriter.printf("  <recordCount>\n");
+            summaryFileWriter.printf("    <name>%s</name>\n", stringIntegerEntry.getKey());
+            summaryFileWriter.printf("    <value>%d</value>\n", stringIntegerEntry.getValue());
+            summaryFileWriter.printf("  </recordCount>\n");
+        }
+        summaryFileWriter.printf("</recordCounts>\n");
         summaryFileWriter.println();
 
         ArrayList<Map.Entry<String, String>> entries = getConfigurationList(configuration);

@@ -32,14 +32,14 @@ public class CsvRecordWriterTest {
     public void testWithScalarsOnly() throws Exception {
 
         writer.processHeaderRecord(createDataHeader("CHL"), new Object[]{"ExclusionReason"});
-        writer.processDataRecord(0, createDataRecord1(0.7), new Object[]{""});
-        writer.processDataRecord(1, createDataRecord2(2.2), new Object[]{MAMapper.EXCLUSION_REASON_EXPRESSION});
-        writer.processDataRecord(2, createDataRecord2(0.3), new Object[]{""});
-        writer.processDataRecord(3, createDataRecord3(1.4), new Object[]{""});
-        writer.processDataRecord(4, createDataRecord3(4.5), new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
-        writer.processDataRecord(5, createDataRecord4(Double.NaN), new Object[]{""});
-        writer.processDataRecord(6, createDataRecord4(null), new Object[]{""});
-        writer.finalizeRecordProcessing(4);
+        writer.processDataRecord(createDataRecord1(0.7), new Object[]{""});
+        writer.processDataRecord(createDataRecord2(2.2), new Object[]{MAMapper.EXCLUSION_REASON_EXPRESSION});
+        writer.processDataRecord(createDataRecord2(0.3), new Object[]{""});
+        writer.processDataRecord(createDataRecord3(1.4), new Object[]{""});
+        writer.processDataRecord(createDataRecord3(4.5), new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+        writer.processDataRecord(createDataRecord4(Double.NaN), new Object[]{""});
+        writer.processDataRecord(createDataRecord4(null), new Object[]{""});
+        writer.finalizeRecordProcessing();
 
         assertEquals("" +
                      "ID\tSITE\tLAT\tLON\tTIME\tCHL\n" +
@@ -87,15 +87,15 @@ public class CsvRecordWriterTest {
     public void testWithAggregatedNumbersWithoutDataArrays() throws Exception {
 
         writer.processHeaderRecord(createDataHeader("*CHL"), new Object[]{"ExclusionReason"});
-        writer.processDataRecord(0, createDataRecord1(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 0.7, 0.01)), new Object[]{""});
-        writer.processDataRecord(1, createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)), new Object[]{""});
-        writer.processDataRecord(2, createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)),
+        writer.processDataRecord(createDataRecord1(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 0.7, 0.01)), new Object[]{""});
+        writer.processDataRecord(createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)), new Object[]{""});
+        writer.processDataRecord(createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)),
                                  new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
-        writer.processDataRecord(3, createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.03)), new Object[]{""});
-        writer.processDataRecord(4, createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)), new Object[]{""});
-        writer.processDataRecord(5, createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)),
+        writer.processDataRecord(createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.03)), new Object[]{""});
+        writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)), new Object[]{""});
+        writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)),
                                  new Object[]{PixelExtractor.EXCLUSION_REASON_ALL_MASKED});
-        writer.finalizeRecordProcessing(4);
+        writer.finalizeRecordProcessing();
 
         assertEquals("" +
                      "ID\tSITE\tLAT\tLON\tTIME\tCHL\n" +
@@ -139,18 +139,18 @@ public class CsvRecordWriterTest {
     public void testWithAggregatedNumbersWithDataArrays() throws Exception {
 
         writer.processHeaderRecord(createDataHeader("*CHL"), new Object[]{"ExclusionReason"});
-        writer.processDataRecord(0, createDataRecord1(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 0.7, 0.01,
+        writer.processDataRecord(createDataRecord1(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 0.7, 0.01,
                                                                            new float[]{0.69F, 0.7F, 0.71F})), new Object[]{""});
-        writer.processDataRecord(1, createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.01,
+        writer.processDataRecord(createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.01,
                                                                            new float[]{0.29F, 0.3F, 0.31F})), new Object[]{""});
-        writer.processDataRecord(2, createDataRecord2(new AggregatedNumber(5, 5, 5, 24.0, 42.0, 0.42, 0.042,
+        writer.processDataRecord(createDataRecord2(new AggregatedNumber(5, 5, 5, 24.0, 42.0, 0.42, 0.042,
                                                                            new float[]{42.0F, 0.42F, 0.042F})),
                                  new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
-        writer.processDataRecord(3, createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.01,
+        writer.processDataRecord(createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.01,
                                                                            new float[]{1.39F, 1.4F, 1.41F})), new Object[]{""});
-        writer.processDataRecord(4, createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0,
+        writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0,
                                                                            new float[]{Float.NaN, Float.NaN, Float.NaN})), new Object[]{""});
-        writer.finalizeRecordProcessing(4);
+        writer.finalizeRecordProcessing();
 
         assertEquals("" +
                      "ID\tSITE\tLAT\tLON\tTIME\tCHL\n" +

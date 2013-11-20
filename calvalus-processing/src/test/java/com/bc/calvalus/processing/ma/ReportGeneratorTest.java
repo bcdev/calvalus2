@@ -9,7 +9,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Norman Fomferra
@@ -66,9 +68,14 @@ public class ReportGeneratorTest {
                 return new FileOutputStream(new File(outputDir, path));
             }
         };
+        Map<String, Integer> annotatedRecordCounts = new LinkedHashMap<String, Integer>();
+        annotatedRecordCounts.put("Total", 120);
+        annotatedRecordCounts.put("Excluded (RECORD_EXPRESSION)", 40);
+        annotatedRecordCounts.put("Excluded (OVERLAPPING)", 20);
+        annotatedRecordCounts.put("Good", 60);
         ReportGenerator.generateReport(outputStreamFactory,
                                        configuration,
-                                       1034,
+                                       annotatedRecordCounts,
                                        new PlotDatasetCollector.PlotDataset[]{plotDataset1, plotDataset2, plotDataset3});
     }
 }

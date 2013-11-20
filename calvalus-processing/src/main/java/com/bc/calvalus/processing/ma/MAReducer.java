@@ -24,9 +24,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -57,19 +62,21 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         };
 
         LOG.warning("Collecting records...");
-        int recordIndex = processRecords(context, recordProcessors);
+        Map<String, Integer> annotatedRecordCounts = processRecords(context, recordProcessors);
 
-        finalizeRecordProcessing(recordIndex, recordProcessors);
+        finalizeRecordProcessing(recordProcessors);
 
         final PlotDatasetCollector.PlotDataset[] plotDatasets = plotDatasetCollector.getPlotDatasets();
         ReportGenerator.generateReport(new TaskOutputStreamFactory(context),
                                        jobConfig,
-                                       recordIndex,
+                                       annotatedRecordCounts,
                                        plotDatasets);
     }
 
-    int processRecords(Context context, RecordProcessor[] recordProcessors) throws IOException, InterruptedException {
-        int recordCount = 0;
+    Map<String, Integer> processRecords(Context context, RecordProcessor[] recordProcessors) throws IOException, InterruptedException {
+        Map<String, Integer> exclusionRecordCounts = new HashMap<String, Integer>();
+        int goodRecordCount = 0;
+        int totalRecordCount = 0;
         int exclusionIndex = -1;
 
         while (context.nextKey()) {
@@ -85,18 +92,34 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                     exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                     processHeaderRecord(record, recordProcessors);
                 } else {
-                    processDataRecord(recordCount, record, recordProcessors);
+                    processDataRecord(record, recordProcessors);
+                    totalRecordCount++;
                     if (exclusionIndex >= 0) {
                         String reason = (String) record.getAnnotationValues()[exclusionIndex];
-                        if (!reason.isEmpty()) {
-                            continue;
+                        if (reason.isEmpty()) {
+                            goodRecordCount++;
+                        } else {
+                            Integer reasonCounter = exclusionRecordCounts.get(reason);
+                            if (reasonCounter == null) {
+                                reasonCounter = 1;
+                            } else {
+                                reasonCounter++;
+                            }
+                            exclusionRecordCounts.put(reason, reasonCounter);
                         }
                     }
-                    recordCount++;
                 }
             }
         }
-        return recordCount;
+        Map<String, Integer> annotatedRecordCounts = new LinkedHashMap<String, Integer>();
+        annotatedRecordCounts.put("Total", totalRecordCount);
+        ArrayList<String> keyList = new ArrayList<String>(exclusionRecordCounts.keySet());
+        Collections.sort(keyList);
+        for (String key : keyList) {
+            annotatedRecordCounts.put(String.format("Excluded (%s)", key), exclusionRecordCounts.get(key));
+        }
+        annotatedRecordCounts.put("Good", goodRecordCount);
+        return annotatedRecordCounts;
     }
 
     private void processHeaderRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
@@ -105,15 +128,15 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         }
     }
 
-    private void processDataRecord(int recordIndex, RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
+    private void processDataRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
         for (RecordProcessor recordProcessor : recordProcessors) {
-            recordProcessor.processDataRecord(recordIndex, record.getAttributeValues(), record.getAnnotationValues());
+            recordProcessor.processDataRecord(record.getAttributeValues(), record.getAnnotationValues());
         }
     }
 
-    private void finalizeRecordProcessing(int numRecords, RecordProcessor[] recordProcessors) throws IOException {
+    private void finalizeRecordProcessing(RecordProcessor[] recordProcessors) throws IOException {
         for (RecordProcessor recordProcessor : recordProcessors) {
-            recordProcessor.finalizeRecordProcessing(numRecords);
+            recordProcessor.finalizeRecordProcessing();
         }
     }
 

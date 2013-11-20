@@ -56,7 +56,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     @Override
-    public void processDataRecord(int recordIndex, Object[] recordValues, Object[] annotationValues) throws IOException {
+    public void processDataRecord(Object[] recordValues, Object[] annotationValues) throws IOException {
         if (!hasHeaderBeenSeen()) {
             throw new IllegalStateException("Data record seen before header record.");
         }
@@ -98,7 +98,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     @Override
-    public void finalizeRecordProcessing(int numRecords) throws IOException {
+    public void finalizeRecordProcessing() throws IOException {
     }
 
     private boolean isValidDataPoint(Number referenceValue, Number satelliteValue) {

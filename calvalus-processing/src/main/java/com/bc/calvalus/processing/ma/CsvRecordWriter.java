@@ -66,7 +66,7 @@ public class CsvRecordWriter implements RecordProcessor {
     }
 
     @Override
-    public void processDataRecord(int recordIndex, Object[] attributeValues, Object[] annotationValues) throws IOException {
+    public void processDataRecord(Object[] attributeValues, Object[] annotationValues) throws IOException {
         int length = getCommonDataArrayLength(attributeValues);
         String reason = "";
         if (exclusionIndex >= 0) {
@@ -97,7 +97,7 @@ public class CsvRecordWriter implements RecordProcessor {
     }
 
     @Override
-    public void finalizeRecordProcessing(int numRecords) throws IOException {
+    public void finalizeRecordProcessing() throws IOException {
         recordsAllWriter.close();
         recordsAggWriter.close();
         labeledAllRecordsWriter.close();

@@ -41,12 +41,13 @@
                             <xsl:value-of select="analysisSummary/performedAt"/>
                         </td>
                     </tr>
-                    <tr>
-                        <td class="name">Number of match-ups:</td>
-                        <td class="value">
-                            <xsl:value-of select="analysisSummary/recordCount"/>
-                        </td>
-                    </tr>
+                    <xsl:for-each select="analysisSummary/recordCounts/recordCount">
+                        <tr>
+                             <td class="name">Number of match-ups: <xsl:value-of select="name"/></td>
+                             <td class="value"><xsl:value-of select="value"/>
+                             </td>
+                        </tr>
+                    </xsl:for-each>
                 </table>
 
                 <h3>Analysis Parameters</h3>
