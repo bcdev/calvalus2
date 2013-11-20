@@ -113,7 +113,8 @@ public class ProcessorFactory {
         final FileStatus[] graphFiles = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().equals(executable + "-graph.xml");
+                String filename = path.getName();
+                return filename.equals(executable + "-graph.xml") || filename.equals(executable + "-graph.xml.vm");
             }
         });
         if (graphFiles.length == 1) {
