@@ -4,15 +4,18 @@ inputFile="$inputFile"
 inFileName="$inputFile.name"
 
 #[[
+
+#for debugging
+#set -x
+
 set -e
 set -m
 
-outFile=${inFileName:0:8}2${inFileName:9:$((${#inFileName} - 12))}.hdf
+outFile=${inFileName}-l2gen.hdf
 
 SEADAS=./seadas-6.3/seadas-6.3
 L2GEN_ENV=${SEADAS}/config/seadas.env
 L2GEN_BIN=${SEADAS}/run/bin/linux_64/l2gen
-GETANC_BIN=${SEADAS}/run/scripts/getanc.py
 
 . $L2GEN_ENV
 
@@ -67,75 +70,65 @@ h32=$((((1$h31-100)/6)*6))
 d3="`date -d @$s3 -u +%Y%j``printf %02d ${h32}`"
 
 s4=$(($s - 43200))
-d4="`date -d @$s4 -u +%Y%j`00"
+d4=`date -d @$s4 -u +%Y%j`
 
-d5="`date -d @$s -u +%Y%j`00"
+d5=`date -d @$s -u +%Y%j`
 
 s6=$(($s + 43200))
-d6="`date -d @$s6 -u +%Y%j`00"
+d6=`date -d @$s6 -u +%Y%j`
 
-icefile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_SEAICE_*|awk '{ print $8 }'`
-if [ "$icefile" != "" ]; then
-  if [ ! -e `basename $icefile` ]; then
-    hadoop fs -copyToLocal $icefile .
-  fi
-  echo "icefile=`basename $icefile`" >> parameters.anc
-fi
-met1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d1:0:4}/${d1:4:3}/?${d1}_*MET*|awk '{ print $8 }'`
-if [ "$met1" != "" ]; then
-  if [ ! -e `basename $met1` ]; then
-    hadoop fs -copyToLocal $met1 .
-  fi
-  echo "met1=`basename $met1`" >> parameters.anc
-fi
-met2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d2:0:4}/${d2:4:3}/?${d2}_*MET*|awk '{ print $8 }'`
-if [ "$met2" != "" ]; then
-  if [ ! -e `basename $met2` ]; then
-    hadoop fs -copyToLocal $met2 .
-  fi
-  echo "met2=`basename $met2`" >> parameters.anc
-fi
-met3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d3:0:4}/${d3:4:3}/?${d3}_*MET*|awk '{ print $8 }'`
-if [ "$met3" != "" ]; then
-  if [ ! -e `basename $met3` ]; then
-    hadoop fs -copyToLocal $met3 .
-  fi
-  echo "met3=`basename $met3`" >> parameters.anc
-fi
-ozone1=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d4:0:4}/${d4:4:3}/?${d4}_O3_*|awk '{ print $8 }'`
-if [ "$ozone1" != "" ]; then
-  if [ ! -e `basename $ozone1` ]; then
-    hadoop fs -copyToLocal $ozone1 .
-  fi
-  echo "ozone1=`basename $ozone1`" >> parameters.anc
-fi
-ozone2=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5}_O3_*|awk '{ print $8 }'`
-if [ "$ozone2" != "" ]; then
-  if [ ! -e `basename $ozone2` ]; then
-    hadoop fs -copyToLocal $ozone2 .
-  fi
-  echo "ozone2=`basename $ozone2`" >> parameters.anc
-fi
-ozone3=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d6:0:4}/${d6:4:3}/?${d6}_O3_*|awk '{ print $8 }'`
-if [ "$ozone3" != "" ]; then
-  if [ ! -e `basename $ozone3` ]; then
-    hadoop fs -copyToLocal $ozone3 .
-  fi
-  echo "ozone3=`basename $ozone3`" >> parameters.anc
-fi
-sstfile=`hadoop fs -ls /calvalus/auxiliary/seadas/anc/${d5:0:4}/${d5:4:3}/?${d5:0:7}_SST_*|awk '{ print $8 }'`
-if [ "$sstfile" != "" ]; then
-  if [ ! -e `basename $sstfile` ]; then
-    hadoop fs -copyToLocal $sstfile .
-  fi
-  echo "sstfile=`basename $sstfile`" >> parameters.anc
-fi
+ANC_ROOT=/calvalus/auxiliary/seadas/anc
+function get_anc() {
+  local label=$1
+  local year_doy=$2
 
+  echo "get_nac ${label} ${year_doy}"
+
+  while [ "$3" != "" ]; do
+    echo "testting $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}"
+    path=`hadoop fs -ls $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}|awk '{ print $8 }'`
+    if [ "$path" != "" ]; then
+     break
+    fi
+    shift
+  done
+  if [ "$path" == "" ]; then
+    echo "No auxdata found for type:${label} date:${year_doy} found"
+    exit 1
+  fi
+  local workfile=`basename $path`
+  if [ ! -e ${workfile} ]; then
+    echo "copy to cwd as ${workfile}"
+    hadoop fs -copyToLocal $path .
+  fi
+  echo "$label=${workfile}" >> parameters.anc
+}
+
+function get_ozone() {
+  get_anc $1 $2 N${2}00_O3_TOMSOMI_24h.hdf S${2}00${2:4:3}23_TOVS.OZONE S${2}00${2:4:3}23_TOAST.OZONE
+}
+
+
+get_anc "icefile" $d5 "?${d5}00_SEAICE_*"
+
+get_anc "met1" $d1 "S${d1}_NCEP.MET" "N${d1}_MET_NCEPN_6h.hdf"
+get_anc "met2" $d2 "S${d2}_NCEP.MET" "N${d2}_MET_NCEPN_6h.hdf"
+get_anc "met3" $d3 "S${d3}_NCEP.MET" "N${d3}_MET_NCEPN_6h.hdf"
+
+get_ozone "ozone1" $d4
+get_ozone "ozone2" $d5
+get_ozone "ozone3" $d6
+
+get_anc "sstfile" $d5 "?${d5}_SST_*"
+
+
+echo "ifile=${inputFile}" >> parameters.anc
+echo "ofile=${outFile}" >> parameters.anc
 
 # for debugging purpose
-echo "=================="
+echo "=========parameters.anc========="
 cat parameters.anc
-echo "=================="
+echo "=========parameters.anc========="
 
 
 function handle_progress() {
@@ -149,7 +142,7 @@ function handle_progress() {
   fi
 }
 
-echo ${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc
-${L2GEN_BIN} ifile=${inputFile} ofile=${outFile} par=parameters.anc | while read x ; do handle_progress "$x" ; done
+echo ${L2GEN_BIN} par=parameters.anc
+${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done
 echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#
