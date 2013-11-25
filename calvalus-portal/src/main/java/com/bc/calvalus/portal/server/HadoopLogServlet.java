@@ -132,7 +132,10 @@ public class HadoopLogServlet extends HttpServlet {
                 eventCounter += taskCompletionEvents.length;
                 for (TaskCompletionEvent event : taskCompletionEvents) {
                     if (event.getTaskStatus().equals(status)) {
+                        // TaskID taskID = event.getTaskAttemptId().getTaskID();
+                        // TODO in case of status == failed --> check if task has really failed.
                         displayTaskLogs(event.getTaskAttemptId(), event.getTaskTrackerHttp(), resp);
+                        return;
                     }
                 }
             }
