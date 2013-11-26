@@ -1,0 +1,180 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.bc.calvalus</groupId>
+        <artifactId>calvalus</artifactId>
+        <version>1.7-SNAPSHOT</version>
+    </parent>
+
+    <groupId>com.bc.calvalus</groupId>
+    <artifactId>calvalus-distribution</artifactId>
+    <packaging>pom</packaging>
+
+    <name>Calvalus Distribution</name>
+    <description>
+        Provides the various distributions of calvalus artifacts.
+    </description>
+
+    <dependencies>
+
+        <!--  Calvalus -->
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-processing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-production</artifactId>
+        </dependency>
+
+        <!--  Ceres -->
+         <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
+         commons-lang:commons-lang of org.apache.velocity:velocity into the BEAM assembly -->
+         <dependency>
+             <groupId>com.bc.ceres</groupId>
+             <artifactId>ceres-metadata</artifactId>
+         </dependency>
+
+         <!--  BEAM -->
+
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-core</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-gpf</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-netcdf</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-binning2</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-envisat-reader</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-geotiff</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>org.slf4j</groupId>
+             <artifactId>slf4j-simple</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>log4j</groupId>
+             <artifactId>log4j</artifactId>
+         </dependency>
+         <dependency>
+             <groupId>gov.nasa.gsfc.seadas</groupId>
+             <artifactId>seadas-reader</artifactId>
+             <version>1.4.4-SNAPSHOT</version>
+             <exclusions>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-ui</artifactId>
+                 </exclusion>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-visat</artifactId>
+                 </exclusion>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-visat-rcp</artifactId>
+                 </exclusion>
+             </exclusions>
+         </dependency>
+         <dependency>
+             <groupId>org.esa.beam</groupId>
+             <artifactId>beam-spot-vgt-reader</artifactId>
+             <version>1.2.4-SNAPSHOT</version>
+         </dependency>
+
+        <!--  JFreeChart -->
+
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jfree</groupId>
+            <artifactId>jcommon</artifactId>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>beam-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/beam.xml</descriptor>
+                            </descriptors>
+                            <finalName>beam-bundle-${project.version}</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>calvalus-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-bundle-${project.version}</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>productionTool</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/productionTool.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.bc.calvalus.production.cli.ProductionTool</mainClass>
+                                </manifest>
+                            </archive>
+                            <finalName>cpt</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

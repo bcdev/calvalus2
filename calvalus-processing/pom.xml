@@ -36,14 +36,6 @@
             <artifactId>calvalus-inventory</artifactId>
         </dependency>
 
-        <!--  Ceres -->
-        <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
-        commons-lang:commons-lang of org.apache.velocity:velocity into the BEAM assembly -->
-        <dependency>
-            <groupId>com.bc.ceres</groupId>
-            <artifactId>ceres-metadata</artifactId>
-        </dependency>
-
         <!--  BEAM -->
 
         <dependency>
@@ -65,42 +57,6 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-geotiff</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>gov.nasa.gsfc.seadas</groupId>
-            <artifactId>seadas-reader</artifactId>
-            <version>1.4.4-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.esa.beam</groupId>
-                    <artifactId>beam-ui</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.esa.beam</groupId>
-                    <artifactId>beam-visat</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.esa.beam</groupId>
-                    <artifactId>beam-visat-rcp</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-spot-vgt-reader</artifactId>
-            <version>1.2.4-SNAPSHOT</version>
         </dependency>
 
         <!--  Hadoop -->
@@ -152,12 +108,10 @@
         <dependency>
             <groupId>jfree</groupId>
             <artifactId>jfreechart</artifactId>
-            <version>1.0.13</version>
         </dependency>
         <dependency>
             <groupId>jfree</groupId>
             <artifactId>jcommon</artifactId>
-            <version>1.0.16</version>
         </dependency>
 
     </dependencies>
