@@ -1,0 +1,54 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
+
+    <g:VerticalPanel spacing="5" width="100%">
+
+        <g:HTMLPanel width="62em">
+            <h3>Bootstrapping Configuration</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:HTMLPanel>
+            <table cellspacing="4">
+                <tr>
+                    <td>
+                        <g:Label>CSV File:</g:Label>
+                    </td>
+                    <td>
+                        <g:FileUpload ui:field="csvFileUpload" name="csvFileUpload"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <g:Label>Number of Iterations:</g:Label>
+                    </td>
+                    <td>
+                        <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
+                    </td>
+                </tr>
+            </table>
+        </g:HTMLPanel>
+        <g:Label>Bootstrapping Processors:</g:Label>
+        <g:ListBox ui:field="processorList" width="50em" visibleItemCount="5"/>
+
+        <g:HTMLPanel width="62em">
+            <h3>Output Parameters</h3>
+            <hr/>
+        </g:HTMLPanel>
+
+        <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+            <g:Label>Production name:</g:Label>
+            <g:TextBox ui:field="productionName" visibleLength="48"/>
+        </g:HorizontalPanel>
+        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
+            Provide a name for the production to identify it later on. If left empty,
+            a name will be generated from the given parameters.
+            <p/>
+        </g:HTML>
+
+
+    </g:VerticalPanel>
+</ui:UiBinder>
