@@ -16,24 +16,52 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Statistical bootstrapping for data sets
  */
-public class BootstrappingView extends PortalView {
+public class BootstrappingView extends OrderProductionView {
 
 
-    private BootstrappingForm bootstrappingForm;
+    private final VerticalPanel widget;
 
     public BootstrappingView(PortalContext portalContext) {
         super(portalContext);
-        bootstrappingForm = new BootstrappingForm(portalContext);
+
+        VerticalPanel panel = new VerticalPanel();
+        panel.setWidth("100%");
+        panel.add(new BootstrappingForm(portalContext));
+        panel.add(new HTML("<br/>"));
+        panel.add(createOrderPanel());
+
+        this.widget = panel;
+
+    }
+
+    @Override
+    protected String getProductionType() {
+        return "Bootstrapping";
+    }
+
+    @Override
+    protected Map<String, String> getProductionParameters() {
+        return new HashMap<String, String>();
+    }
+
+    @Override
+    protected boolean validateForm() {
+        return false;
     }
 
     @Override
     public Widget asWidget() {
-        return bootstrappingForm;
+        return widget;
     }
 
     @Override
