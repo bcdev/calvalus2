@@ -5,7 +5,11 @@ import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DialogBox;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 
 import java.util.Map;
 
@@ -43,7 +47,7 @@ public abstract class OrderProductionView extends PortalView {
      *
      * @return The parameter map.
      */
-    protected abstract Map<String,String> getProductionParameters();
+    protected abstract Map<String, String> getProductionParameters();
 
     /**
      * Called by {@link #orderProduction}.
@@ -85,11 +89,11 @@ public abstract class OrderProductionView extends PortalView {
             progressBox.setAnimationEnabled(true);
             progressBox.setAutoHideEnabled(true);
             progressBox.setWidget(new HTML("Your production request is currently being processed on the server. After a preparation phase<br/>" +
-                                                   "you can observe its processing progress in the <b>Manage Productions</b> tab.<br/>" +
-                                                   "Depending on the number of files in the input file set, the preparation phase may take<br/>" +
-                                                   "seconds to minutes.<br/>" +
-                                                   "<br/>" +
-                                                   "This dialog box will then close automatically."));
+                                           "you can observe its processing progress in the <b>Manage Productions</b> tab.<br/>" +
+                                           "Depending on the number of files in the input file set, the preparation phase may take<br/>" +
+                                           "seconds to minutes.<br/>" +
+                                           "<br/>" +
+                                           "This dialog box will then close automatically."));
             progressBox.center();
 
             getPortal().getBackendService().orderProduction(request, new AsyncCallback<DtoProductionResponse>() {
