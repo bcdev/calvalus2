@@ -122,7 +122,7 @@
                 <executions>
                     <execution>
                         <configuration>
-                            <extraJvmArgs>-Xmx1024M -Xss100M</extraJvmArgs>
+                            <extraJvmArgs>-Xmx850M -Xss100M</extraJvmArgs>
                         </configuration>
                         <phase>prepare-package</phase>
                         <goals>
