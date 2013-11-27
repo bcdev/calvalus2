@@ -357,8 +357,8 @@ public abstract class ProcessorAdapter {
 
     private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
         if (readerPlugIn != null) {
-            Class[] inputTypes = readerPlugIn.getInputTypes();
-            for (Class inputType : inputTypes) {
+            Class<?>[] inputTypes = readerPlugIn.getInputTypes();
+            for (Class<?> inputType : inputTypes) {
                 if (inputType.isAssignableFrom(inputClass)) {
                     return true;
                 }
