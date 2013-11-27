@@ -3,7 +3,7 @@ Calvalus examples
 This module contains various examples demonstrating the capabilities of Calvalus.
 
 
-alias cpt ='java -jar ~/projects/calvalus/calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar'
+alias cpt ='java -jar ~/projects/calvalus/calvalus-distribution/target/cpt.jar'
 cd ~/projects/calvalus/calvalus-examples
 
 

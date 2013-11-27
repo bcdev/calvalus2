@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>calvalus-examples</artifactId>
+    <packaging>pom</packaging>
 
     <name>Calvalus Examples bundles and Requests</name>
     <description>Contains example bundles for all prodcution types and

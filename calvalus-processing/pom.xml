@@ -8,7 +8,6 @@
         <version>1.7-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-processing</artifactId>
     <packaging>jar</packaging>
 
@@ -116,20 +115,20 @@
 
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <descriptors>
-                        <descriptor>src/main/assembly/beam.xml</descriptor>
-                        <descriptor>src/main/assembly/calvalus.xml</descriptor>
-                        <!--<descriptor>src/main/assembly/job.xml</descriptor>-->
-                        <!--<descriptor>src/main/assembly/client.xml</descriptor>-->
-                    </descriptors>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <!--<build>-->
+        <!--<plugins>-->
+            <!--<plugin>-->
+                <!--<artifactId>maven-assembly-plugin</artifactId>-->
+                <!--<version>2.4</version>-->
+                <!--<configuration>-->
+                    <!--<descriptors>-->
+                        <!--<descriptor>src/main/assembly/beam.xml</descriptor>-->
+                        <!--<descriptor>src/main/assembly/calvalus.xml</descriptor>-->
+                        <!--&lt;!&ndash;<descriptor>src/main/assembly/job.xml</descriptor>&ndash;&gt;-->
+                        <!--&lt;!&ndash;<descriptor>src/main/assembly/client.xml</descriptor>&ndash;&gt;-->
+                    <!--</descriptors>-->
+                <!--</configuration>-->
+            <!--</plugin>-->
+        <!--</plugins>-->
+    <!--</build>-->
 </project>

@@ -4,47 +4,45 @@ Ensure no jobs are running which have been started from the portal (user == cvop
 
 Building
 --------
-mvn clean install
-(cd calvalus-processing; mvn -Dmaven.test.skip=true assembly:assembly)
-(cd calvalus-production; mvn -Dmaven.test.skip=true assembly:assembly)
+mvn clean package
+or faster:
+mvn clean package --offline -DskipTests=true
 
 ===========================================================================
 Software archive
 ----------------
 mkdir calvalus-software
-mkdir calvalus-software/beam-bundle
-mkdir calvalus-software/calvalus-bundle
 
 cp INSTALL.txt calvalus-software/
 cp calvalus.config calvalus-software/
-cp calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*  calvalus-software/calvalus-bundle
-cp calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*  calvalus-software/beam-bundle
-cp calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar calvalus-software/cpt.jar
+cp calvalus-distribution/target/calvalus-bundle/  calvalus-software/calvalus-bundle
+cp calvalus-distribution/target/beam-bundle/  calvalus-software/beam-bundle
+cp calvalus-distribution/target/cpt.jar calvalus-software/
 tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall calvalus-1.7-SNAPSHOT
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT
 
 for lc-cci
 ----------
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  calvalus-1.7-SNAPSHOT-lc
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-1.7-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT-lc
 
 BEAM
 -----
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.11.1-SNAPSHOT
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.11.1-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-4.11.1-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-4.11.1-SNAPSHOT
 
 
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall calvalus-1.7-portal-20131030
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-calvalus/*.jar calvalus-1.7-portal-20131030
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall beam-4.11.1-portal-20131030
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-processing/target/calvalus-processing-1.7-SNAPSHOT-beam/*.jar beam-4.11.1-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-4.11.1-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-4.11.1-portal-20131030
 
 WAR (for the portal)
 --------------------
@@ -73,13 +71,4 @@ cd ../webapps/calvalus/
 rm -rf staging/
 mv ../../temp/staging .
 
-
-Sample executable
------------------
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  examples-beam-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --uninstall  examples-shell-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/examples-beam-1.0/* examples-beam-1.0
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e --deploy  calvalus-shell-executables/examples-shell-1.0/* examples-shell-1.0
-
-java -jar calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -e calvalus-shell-executables/examples-shell-requests-1.0/simple.xml
 

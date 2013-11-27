@@ -20,14 +20,6 @@
             <useProjectArtifact>false</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
-            <excludes>
-                <exclude>com.bc.ceres:ceres-ui</exclude>
-                <exclude>org.esa.beam:beam-ui</exclude>
-                <exclude>org.esa.beam:beam-visat</exclude>
-                <exclude>org.esa.beam:beam-visat-rcp</exclude>
-                <exclude>com.jidesoft:*</exclude>
-                <exclude>javax.help:*</exclude>
-            </excludes>
         </dependencySet>
     </dependencySets>
 </assembly>

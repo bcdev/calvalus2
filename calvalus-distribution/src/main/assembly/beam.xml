@@ -24,10 +24,6 @@
                 <include>gov.nasa.gsfc.seadas:seadas-reader</include>
                 <include>com.bc.ceres:ceres-metadata</include>
             </includes>
-
-            <excludes>
-                <exclude>org.esa.beam:beam-ui</exclude>
-            </excludes>
             <scope>runtime</scope>
             <useTransitiveDependencies>true</useTransitiveDependencies>
             <useTransitiveFiltering>true</useTransitiveFiltering>

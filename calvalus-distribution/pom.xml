@@ -8,7 +8,6 @@
         <version>1.7-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-distribution</artifactId>
     <packaging>pom</packaging>
 
@@ -129,7 +128,7 @@
                             <descriptors>
                                 <descriptor>src/main/assembly/beam.xml</descriptor>
                             </descriptors>
-                            <finalName>beam-bundle-${project.version}</finalName>
+                            <finalName>beam-bundle</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>
@@ -144,7 +143,7 @@
                             <descriptors>
                                 <descriptor>src/main/assembly/calvalus.xml</descriptor>
                             </descriptors>
-                            <finalName>calvalus-bundle-${project.version}</finalName>
+                            <finalName>calvalus-bundle</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>
