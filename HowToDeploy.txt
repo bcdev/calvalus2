@@ -13,11 +13,11 @@ Software archive
 ----------------
 mkdir calvalus-software
 
-cp INSTALL.txt calvalus-software/
-cp calvalus.config calvalus-software/
-cp calvalus-distribution/target/calvalus-bundle/  calvalus-software/calvalus-bundle
-cp calvalus-distribution/target/beam-bundle/  calvalus-software/beam-bundle
-cp calvalus-distribution/target/cpt.jar calvalus-software/
+cp calvalus-distribution/src/main/resources/INSTALL.txt     calvalus-software/
+cp calvalus-distribution/src/main/resources/calvalus.config calvalus-software/
+cp calvalus-distribution/target/calvalus-bundle/            calvalus-software/
+cp calvalus-distribution/target/beam-bundle/                calvalus-software/
+cp calvalus-distribution/target/cpt.jar                     calvalus-software/
 tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
