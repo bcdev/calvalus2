@@ -18,13 +18,10 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.resource.ReaderResource;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -39,10 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.util.Collection;
 import java.util.logging.Level;
 
 /**
@@ -81,7 +75,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
 
-        addScriptResources(conf, scriptGenerator);
+        scriptGenerator.addScriptResources(conf);
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd);
 
@@ -106,11 +100,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
-        pm.setSubTaskName("Exec Level 2");
-        Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
 
         Rectangle inputRectangle = getInputRectangle();
         Path inputPath = getInputPath();
@@ -118,8 +107,23 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (inputFileName != null) {
             inputFile = new File(inputFileName);
         } else {
-            inputFile = copyProductToLocal(inputPath);
+            inputFile = copyFileToLocal(inputPath);
         }
+
+        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile);
+        return outputFilesNames.length;
+    }
+
+    public File getCurrentWorkingDir() {
+        return cwd;
+    }
+
+    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile) throws IOException {
+        pm.setSubTaskName("Exec Level 2");
+        Configuration conf = getConfiguration();
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -133,7 +137,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
 
-        addScriptResources(conf, scriptGenerator);
+        scriptGenerator.addScriptResources(conf);
         if (!scriptGenerator.hasStepScript()) {
             throw new RuntimeException("No script for step 'process' available.");
         }
@@ -150,8 +154,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 setHandler(keywordHandler).
                 start();
 
-        outputFilesNames = keywordHandler.getOutputFiles();
-        return outputFilesNames.length;
+        return keywordHandler.getOutputFiles();
     }
 
     @Override
@@ -198,7 +201,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
             velocityContext.put("outputPath", outputPath);
 
-            addScriptResources(conf, scriptGenerator);
+            scriptGenerator.addScriptResources(conf);
             if (scriptGenerator.hasStepScript()) {
                 scriptGenerator.writeScriptFiles(cwd);
 
@@ -246,14 +249,4 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return false;
     }
 
-    private void addScriptResources(Configuration conf, ScriptGenerator scriptGenerator) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
-        FileSystem fs = FileSystem.get(conf);
-        for (String scriptFile : scriptFiles) {
-            Path scriptFilePath = new Path(scriptFile);
-            InputStream inputStream = fs.open(scriptFilePath);
-            Reader reader = new InputStreamReader(inputStream);
-            scriptGenerator.addResource(new ReaderResource(scriptFile, reader));
-        }
-    }
 }

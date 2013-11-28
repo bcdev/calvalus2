@@ -17,3 +17,4 @@ com.bc.calvalus.production.hadoop.MAProductionType$Spi
 com.bc.calvalus.production.hadoop.PrevueProductionType$Spi
 com.bc.calvalus.production.hadoop.L2ProductionType$Spi
 com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
+com.bc.calvalus.production.hadoop.BootstrappingProductionType$Spi

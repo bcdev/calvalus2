@@ -317,7 +317,7 @@ public abstract class ProcessorAdapter {
                     if (canHandle(readerPlugIn, ImageInputStream.class)) {
                         input = openImageInputStream(inputPath);
                     } else if (canHandle(readerPlugIn, File.class)) {
-                        input = copyProductToLocal(inputPath);
+                        input = copyFileToLocal(inputPath);
                     }
 
                     if (input != null) {
@@ -331,7 +331,7 @@ public abstract class ProcessorAdapter {
                 ProductReader productReader = ProductIO.getProductReaderForInput(input);
                 if (productReader == null) {
                     // try a local file copy
-                    input = copyProductToLocal(inputPath);
+                    input = copyFileToLocal(inputPath);
                     productReader = ProductIO.getProductReaderForInput(input);
                     if (productReader == null) {
                         throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
@@ -368,15 +368,15 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Copies the product given to the local input directory for access as a ordinary {@code eFile}.
+     * Copies the file given to the local input directory for access as a ordinary {@code File}.
      *
-     * @param inputPath The path to the product in the HDFS.
+     * @param inputPath The path to the file in the HDFS.
      *
      * @return the local file that contains the copy.
      *
      * @throws IOException
      */
-    protected File copyProductToLocal(Path inputPath) throws IOException {
+    public File copyFileToLocal(Path inputPath) throws IOException {
         getLogger().info(String.format("Copying to local product file"));
         File localFile = new File(".", inputPath.getName());
         if (!localFile.exists()) {
