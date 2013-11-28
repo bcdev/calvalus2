@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -30,13 +31,15 @@ public class BootstrappingView extends OrderProductionView {
 
 
     private final VerticalPanel widget;
+    private final BootstrappingForm bootstrappingForm;
 
     public BootstrappingView(PortalContext portalContext) {
         super(portalContext);
 
+        this.bootstrappingForm = new BootstrappingForm(portalContext);
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
-        panel.add(new BootstrappingForm(portalContext));
+        panel.add(bootstrappingForm);
         panel.add(new HTML("<br/>"));
         panel.add(createOrderPanel());
 
@@ -51,12 +54,27 @@ public class BootstrappingView extends OrderProductionView {
 
     @Override
     protected Map<String, String> getProductionParameters() {
-        return new HashMap<String, String>();
+        HashMap<String, String> parameters = new HashMap<String, String>();
+
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "bootstrapping");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "1.0");
+        //parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "???");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "r-bootstrap");
+        //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
+
+        parameters.put("calvalus.bootstrap.numberOfIterations", bootstrappingForm.numberOfIterations.getText());
+
+        parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping_input.csv");
+
+        parameters.put("productionName", bootstrappingForm.productionName.getValue());
+
+        return parameters;
     }
 
     @Override
     protected boolean validateForm() {
-        return false;
+        Integer numIterValue = bootstrappingForm.numberOfIterations.getValue();
+        return numIterValue != null && numIterValue > 0;
     }
 
     @Override
