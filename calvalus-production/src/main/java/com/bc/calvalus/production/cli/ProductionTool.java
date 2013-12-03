@@ -25,6 +25,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.jdom.JDOMException;
 
@@ -232,7 +233,7 @@ public class ProductionTool {
             HadoopProductionType.setJobConfig(config, hadoopConfig);
             try {
                 JobClient jobClient = new JobClient(new JobConf(hadoopConfig));
-                RunningJob job = jobClient.getJob(productionId);
+                RunningJob job = jobClient.getJob(JobID.forName(productionId));
                 if (job != null) {
                     job.killJob();
                 }
