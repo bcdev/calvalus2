@@ -1,1 +1,1 @@
-$parameterText.startsWith("<parameters")?:$parameterText
+#if( $parameterText.startsWith("<parameters") )#{else}${parameterText}#end
