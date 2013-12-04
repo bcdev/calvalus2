@@ -131,7 +131,13 @@ public class ScriptGenerator {
         }
         Writer writer = new FileWriter(scriptFile);
         try {
-            writer.write(resource.getContent());
+            String resourceContent = resource.getContent();
+            if (resource.getPath().endsWith(VM_SUFFIX)) {
+                System.out.println("===========================================");
+                System.out.println(resourceContent);
+                System.out.println("===========================================");
+            }
+            writer.write(resourceContent);
         } finally {
             writer.close();
         }
