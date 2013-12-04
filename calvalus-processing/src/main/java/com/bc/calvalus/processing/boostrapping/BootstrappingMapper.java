@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -12,6 +13,8 @@ import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A mapper that performs bootstrapping.
@@ -19,7 +22,7 @@ import java.io.IOException;
  * @author MarcoZ
  * @author MarcoP
  */
-public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
+public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, IntWritable, Text> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -32,7 +35,8 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, Text
 
         NtimesInputSplit ntimesInputSplit = (NtimesInputSplit) inputSplit;
         long numberOfIterations = ntimesInputSplit.getLength();
-        // TODO feed number of iteration into the script
+        Map<String, String> velocityProps = new HashMap<String, String>();
+        velocityProps.put("numberOfIterations", Long.toString(numberOfIterations));
 
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
         Path inputPath = new Path(conf.get(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY));
@@ -40,11 +44,17 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, Text
         String[] outFiles = processorAdapter.processInput(ProgressMonitor.NULL,
                                                          null,
                                                          inputPath,
-                                                         inputFile);
+                                                         inputFile,
+                                                         velocityProps);
+
         if (outFiles != null && outFiles.length > 0) {
-            String result = FileUtils.readText(new File(processorAdapter.getCurrentWorkingDir(), outFiles[0]));
-            System.out.println("result = " + result);
-            context.write(new Text("dummyKey"), new Text(result));
+            String resultFile = outFiles[0];
+            String result = FileUtils.readText(new File(processorAdapter.getCurrentWorkingDir(), resultFile));
+            String[] headerAndBody = result.split("\n", 2);
+            if (headerAndBody.length == 2) {
+                context.write(new IntWritable(0), new Text(headerAndBody[0]+"\n"));
+                context.write(new IntWritable(1), new Text(headerAndBody[1]));
+            }
         }
     }
 }

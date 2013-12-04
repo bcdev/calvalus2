@@ -22,9 +22,9 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
@@ -41,7 +41,7 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
     public static final String INPUT_FILE_PROPRTY = "calvalus.bootstrap.inputFile";
 
     public static final int NUM_ITERATIONS_DEFAULT = 10000;
-    public static final int ITERATION_PER_NODE_DEFAULT = 20;
+    public static final int ITERATION_PER_NODE_DEFAULT = 100;
 
     public BootstrappingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
         super(processingService, jobName, jobConfig);
@@ -70,16 +70,12 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
 
         Configuration jobConfig = job.getConfiguration();
 
-
         job.setInputFormatClass(NtimesInputFormat.class);
         job.setMapperClass(BootstrappingMapper.class);
-//        job.setMapOutputKeyClass(Text.class);
-//        job.setMapOutputValueClass(Text.class);
-//        job.setReducerClass(MAReducer.class);
-//        job.setNumReduceTasks(1);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(Text.class);
+        job.setReducerClass(BoostrappingReducer.class);
+        job.setNumReduceTasks(1);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job);
         ProcessorFactory.installProcessorBundle(jobConfig);

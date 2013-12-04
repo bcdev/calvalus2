@@ -37,6 +37,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.logging.Level;
 
 /**
@@ -119,6 +120,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile) throws IOException {
+        return processInput(pm, inputRectangle, inputPath, inputFile, null);
+    }
+
+    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
@@ -136,6 +141,12 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
+
+        if (velocityProps != null) {
+            for (Map.Entry<String, String> entry : velocityProps.entrySet()) {
+                velocityContext.put(entry.getKey(), entry.getValue());
+            }
+        }
 
         scriptGenerator.addScriptResources(conf);
         if (!scriptGenerator.hasStepScript()) {

@@ -56,14 +56,17 @@ public class BootstrappingView extends OrderProductionView {
     protected Map<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
 
+        //TODO
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "bootstrapping");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "1.0");
-        //parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "???");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "0.1");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/home/marcop/software/bootstrapping-0.1");
         parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "r-bootstrap");
+
         //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
 
         parameters.put("calvalus.bootstrap.numberOfIterations", bootstrappingForm.numberOfIterations.getText());
 
+        //TODO
         parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping_input.csv");
 
         parameters.put("productionName", bootstrappingForm.productionName.getValue());
@@ -73,8 +76,8 @@ public class BootstrappingView extends OrderProductionView {
 
     @Override
     protected boolean validateForm() {
-        Integer numIterValue = bootstrappingForm.numberOfIterations.getValue();
-        return numIterValue != null && numIterValue > 0;
+        Integer numberOfIterationsValue = bootstrappingForm.numberOfIterations.getValue();
+        return numberOfIterationsValue != null && numberOfIterationsValue > 0;
     }
 
     @Override

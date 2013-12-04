@@ -12,8 +12,15 @@ import java.io.IOException;
  */
 public class NtimesInputSplit extends InputSplit implements Writable {
 
+    private static final String[] EMPTY_HOSTS = new String[0];
+
     private int numberOfIterations;
-    private String[] hosts; // TODO: do we need this ???
+    private String[] hosts = EMPTY_HOSTS;
+
+    // for deserialization
+    public NtimesInputSplit() {
+        this(0);
+    }
 
     public NtimesInputSplit(int numberOfIterations) {
         this.numberOfIterations = numberOfIterations;

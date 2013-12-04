@@ -101,8 +101,6 @@ public abstract class ProcessorAdapter {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
-        Assert.argument(inputSplit instanceof ProductSplit || inputSplit instanceof FileSplit,
-                        "input split is neither a FileSplit nor a ProductSplit");
     }
 
     protected MapContext getMapContext() {
