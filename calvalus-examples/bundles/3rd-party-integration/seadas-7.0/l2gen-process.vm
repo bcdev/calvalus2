@@ -3,7 +3,7 @@
 inputFile="$inputFile"
 inFileName="$inputFile.name"
 inputPathParent="$inputPath.parent"
-geoFileName=$inputPath.name.replace("L1B_","GEO_")
+geoFileName=$inputPath.name.replace("L1B_LAC","GEO*")
 
 #[[
 
@@ -142,8 +142,17 @@ echo "ofile=${outFile}" >> parameters.anc
 
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
-  hadoop fs -copyToLocal ${inputPathParent}/${geoFileName} .
-  echo "geofile=`basename ${geoFileName}`" >> parameters.anc
+
+  echo "testting ${inputPathParent}/${geoFileName}"
+  geoPath=`hadoop fs -ls ${inputPathParent}/${geoFileName}|awk '{ print $8 }'`
+  if [ "$geoPath" != "" ]; then
+    workfile=`basename $geoPath`
+    if [ ! -e ${workfile} ]; then
+      echo "copy to cwd as ${workfile}"
+      hadoop fs -copyToLocal $geoPath .
+      echo "geofile=${workfile}" >> parameters.anc
+    fi
+  fi
 fi
 
 # for debugging purpose
