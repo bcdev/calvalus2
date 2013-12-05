@@ -56,18 +56,20 @@ public class BootstrappingView extends OrderProductionView {
     protected Map<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
 
-        //TODO
+        //TODO like in all other views without parameters
+        //TODO show only bootstrap processor(s)
+        //TODO filter bootstrap processor(s) in all other views
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "bootstrapping");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "0.1");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/home/marcop/software/bootstrapping-0.1");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "0.2");
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/home/marcop/software/bootstrapping-0.2");
         parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "r-bootstrap");
 
         //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
 
         parameters.put("calvalus.bootstrap.numberOfIterations", bootstrappingForm.numberOfIterations.getText());
 
-        //TODO
-        parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping_input.csv");
+        //TODO like in MA uploading reuse / make generic
+        parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping/MERIS_AllProc_IBQ_all_Global_20131126_RR2.csv");
 
         parameters.put("productionName", bootstrappingForm.productionName.getValue());
 
