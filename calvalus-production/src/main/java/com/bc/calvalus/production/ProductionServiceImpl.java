@@ -403,7 +403,7 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
-        delteWorkflowOutput(production.getWorkflow());
+        deleteWorkflowOutput(production.getWorkflow());
         try {
             stagingService.deleteTree(production.getStagingPath());
         } catch (IOException e) {
@@ -412,7 +412,7 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    private void delteWorkflowOutput(WorkflowItem workflowItem) {
+    private void deleteWorkflowOutput(WorkflowItem workflowItem) {
         if (workflowItem instanceof HadoopWorkflowItem) {
             HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
             try {
@@ -422,7 +422,7 @@ public class ProductionServiceImpl implements ProductionService {
             }
         } else {
             for (WorkflowItem item : workflowItem.getItems()) {
-                delteWorkflowOutput(item);
+                deleteWorkflowOutput(item);
             }
         }
     }
