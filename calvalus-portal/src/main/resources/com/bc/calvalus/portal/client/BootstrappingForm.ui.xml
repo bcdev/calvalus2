@@ -11,26 +11,34 @@
             <hr/>
         </g:HTMLPanel>
 
-        <g:HTMLPanel>
-            <table cellspacing="4">
-                <tr>
-                    <td>
-                        <g:Label>CSV File:</g:Label>
-                    </td>
-                    <td>
-                        <g:FileUpload ui:field="csvFileUpload" name="csvFileUpload"/>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <g:Label>Number of Iterations:</g:Label>
-                    </td>
-                    <td>
-                        <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
-                    </td>
-                </tr>
-            </table>
-        </g:HTMLPanel>
+        <g:HorizontalPanel spacing="2">
+
+            <g:VerticalPanel spacing="2">
+                <g:Label>CSV Matchup files:</g:Label>
+
+                <g:ListBox ui:field='boostrapSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
+                <g:HorizontalPanel spacing="2">
+                    <g:Button ui:field='addBoostrapSourceButton' text="Add"/>
+                    <g:Button ui:field='removeBoostrapSourceButton' text="Remove"/>
+                </g:HorizontalPanel>
+            </g:VerticalPanel>
+
+            <g:HTMLPanel>
+                <table cellspacing="2" style="width: 30em">
+                    <tr>
+                        <td>
+                            <g:Label>Number of Iterations:</g:Label>
+                        </td>
+                        <td>
+                            <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
+                        </td>
+                    </tr>
+
+                </table>
+            </g:HTMLPanel>
+        </g:HorizontalPanel>
+
+
         <g:Label>Bootstrapping Processors:</g:Label>
         <g:ListBox ui:field="processorList" width="50em" visibleItemCount="5"/>
 

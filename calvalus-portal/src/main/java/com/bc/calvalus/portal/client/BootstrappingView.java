@@ -66,20 +66,19 @@ public class BootstrappingView extends OrderProductionView {
 
         //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
 
-        parameters.put("calvalus.bootstrap.numberOfIterations", bootstrappingForm.numberOfIterations.getText());
-
-        //TODO like in MA uploading reuse / make generic
-        parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping/MERIS_AllProc_IBQ_all_Global_20131126_RR2.csv");
-
-        parameters.put("productionName", bootstrappingForm.productionName.getValue());
-
+        parameters.putAll(bootstrappingForm.getValueMap());
         return parameters;
     }
 
     @Override
     protected boolean validateForm() {
-        Integer numberOfIterationsValue = bootstrappingForm.numberOfIterations.getValue();
-        return numberOfIterationsValue != null && numberOfIterationsValue > 0;
+        try {
+            bootstrappingForm.validateForm();
+            return true;
+        } catch (ValidationException e) {
+            e.handle();
+            return false;
+        }
     }
 
     @Override

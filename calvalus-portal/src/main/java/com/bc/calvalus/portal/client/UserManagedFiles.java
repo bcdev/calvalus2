@@ -30,7 +30,7 @@ class UserManagedFiles {
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
 
-    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget[] uploadDescriptions) {
+    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget...uploadDescriptions) {
         this.backendService = backendService;
         this.contentListbox = contentListbox;
         this.baseDir = baseDir;
