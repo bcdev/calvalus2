@@ -15,7 +15,7 @@
 
             <g:VerticalPanel spacing="2">
                 <g:Label>CSV Matchup files:</g:Label>
-                <g:ListBox ui:field='bootstrapSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
+                <g:ListBox ui:field='bootstrapSources' multipleSelect="false" visibleItemCount="8" width="30em"/>
 
                 <g:HorizontalPanel spacing="2">
                     <g:Button ui:field='addBootstrapSourceButton' text="Add"/>

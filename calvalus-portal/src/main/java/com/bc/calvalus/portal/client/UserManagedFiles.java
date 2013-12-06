@@ -20,6 +20,7 @@ import java.util.List;
  * Manages a list of files that can be uploaded and remove by the user.
  */
 class UserManagedFiles {
+
     private final BackendServiceAsync backendService;
     private final ListBox contentListbox;
     private final String baseDir;
@@ -29,8 +30,9 @@ class UserManagedFiles {
     private final RemoveAction removeAction;
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
+    private Filter<String> filePathFilter;
 
-    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget...uploadDescriptions) {
+    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget... uploadDescriptions) {
         this.backendService = backendService;
         this.contentListbox = contentListbox;
         this.baseDir = baseDir;
@@ -44,6 +46,8 @@ class UserManagedFiles {
 
         addAction = new AddAction();
         removeAction = new RemoveAction();
+
+        filePathFilter = Filter.ACCEPTING_ALL;
 
         FileUploadManager.configureForm(uploadForm,
                                         "dir=" + baseDir,
@@ -84,6 +88,9 @@ class UserManagedFiles {
     private void setItems(String[] filePaths) {
         contentListbox.clear();
         for (String filePath : filePaths) {
+            if (!filePathFilter.accept(filePath)) {
+                continue;
+            }
             int baseDirPos = filePath.lastIndexOf(baseDir + "/");
             if (baseDirPos >= 0) {
                 contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
@@ -104,6 +111,10 @@ class UserManagedFiles {
         return null;
     }
 
+    void setFilePathFilter(Filter<String> filter) {
+        filePathFilter = filter;
+    }
+
     ClickHandler getRemoveAction() {
         return removeAction;
     }
@@ -111,6 +122,7 @@ class UserManagedFiles {
     ClickHandler getAddAction() {
         return addAction;
     }
+
 
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
 
@@ -133,7 +145,7 @@ class UserManagedFiles {
                     if (filename == null || filename.isEmpty()) {
                         Dialog.info("File Upload",
                                     new HTML("No filename selected."),
-                                    new HTML("Please specify a point data file."));
+                                    new HTML("Please specify a " + what + "file."));
                         return;
                     }
                     monitorDialog = new Dialog("File Upload", new Label("Submitting '" + filename + "'..."), ButtonType.CANCEL) {
@@ -184,7 +196,7 @@ class UserManagedFiles {
             if (recordSource != null) {
                 Dialog.ask("Remove File",
                            new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
-                                            "Do you really want to continue?"),
+                                    "Do you really want to continue?"),
                            new Runnable() {
                                @Override
                                public void run() {

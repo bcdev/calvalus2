@@ -48,12 +48,26 @@ public class BootstrappingForm extends Composite {
 
         numberOfIterations.setValue(DEFAULT_NUMBER_OF_ITERATIONS);
 
-        HTML description = new HTML("The supported file types are TAB-separated CSV (<b>*.csv</b>) matchup files.<br/>");
+        final String fileExtension = ".csv";
+        HTML description = new HTML("The supported file types are TAB-separated CSV (<b>*" + fileExtension + "</b>) matchup files.<br/>");
+        final String baseDir = "bootstrapping";
         userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
                                                   bootstrapSources,
-                                                  "bootstrapping",
+                                                  baseDir,
                                                   "matchup",
                                                   description);
+        userManagedContent.setFilePathFilter(new Filter<String>() {
+            @Override
+            public boolean accept(String filePath) {
+                int lastSlashIndex = filePath.lastIndexOf("/");
+                boolean inBaseDir = false;
+                if (lastSlashIndex >= baseDir.length()) {
+                    String substring = filePath.substring(lastSlashIndex - baseDir.length(), lastSlashIndex);
+                    inBaseDir = baseDir.equals(substring);
+                }
+                return filePath.endsWith(fileExtension) && inBaseDir;
+            }
+        });
         addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
         removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
         userManagedContent.updateList();
