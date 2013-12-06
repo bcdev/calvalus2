@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -94,6 +95,7 @@ public class BootstrappingForm extends Composite {
         removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
         userManagedContent.updateList();
 
+        //TODO filter bootstrap processor(s) in all other views
         updateProcessorList();
     }
 
@@ -108,10 +110,20 @@ public class BootstrappingForm extends Composite {
         if (!bootstrapSourceValid) {
             throw new ValidationException(bootstrapSources, "Bootstrap source must be given.");
         }
+        boolean processorDescriptorValid = getSelectedProcessorDescriptor() != null;
+        if (!processorDescriptorValid) {
+            throw new ValidationException(this, "No Bootstrapping processor selected.");
+        }
     }
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
+        DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getProcessorName());
+
         parameters.put("calvalus.bootstrap.numberOfIterations", numberOfIterations.getText());
         parameters.put("calvalus.bootstrap.inputFile", userManagedContent.getSelectedFilename());
         parameters.put("productionName", productionName.getValue());

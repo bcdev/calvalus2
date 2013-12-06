@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.boostrapping.BootstrappingWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
@@ -49,6 +50,8 @@ public class BootstrappingProductionType extends HadoopProductionType {
 //        jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
         WorkflowItem workflowItem = new BootstrappingWorkflowItem(getProcessingService(), productionName, jobConfig);
 
         return new Production(productionId,

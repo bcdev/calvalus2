@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -55,17 +54,6 @@ public class BootstrappingView extends OrderProductionView {
     @Override
     protected Map<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
-
-        //TODO like in all other views without parameters
-        //TODO show only bootstrap processor(s)
-        //TODO filter bootstrap processor(s) in all other views
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "bootstrapping");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "0.2");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "/calvalus/home/marcop/software/bootstrapping-0.2");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "r-bootstrap");
-
-        //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
-
         parameters.putAll(bootstrappingForm.getValueMap());
         return parameters;
     }
