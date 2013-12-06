@@ -16,8 +16,17 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.*;
-import com.google.gwt.cell.client.*;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoProcessState;
+import com.bc.calvalus.portal.shared.DtoProcessStatus;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoProductionRequest;
+import com.google.gwt.cell.client.ButtonCell;
+import com.google.gwt.cell.client.Cell;
+import com.google.gwt.cell.client.CheckboxCell;
+import com.google.gwt.cell.client.ClickableTextCell;
+import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.cell.client.ValueUpdater;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -26,14 +35,34 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
-import com.google.gwt.user.cellview.client.*;
+import com.google.gwt.user.cellview.client.CellTable;
+import com.google.gwt.user.cellview.client.Column;
+import com.google.gwt.user.cellview.client.ColumnSortEvent;
+import com.google.gwt.user.cellview.client.ColumnSortList;
+import com.google.gwt.user.cellview.client.Header;
+import com.google.gwt.user.cellview.client.SimplePager;
+import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.FlexTable;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HasHorizontalAlignment;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.RangeChangeEvent;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Demo view that shows the list of productions taking place
@@ -52,7 +81,7 @@ public class ManageProductionsView extends PortalView {
     private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
     private static final String MERCI_URL = "http://calvalus-merci:8080/merci/";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
-            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+                                            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
     private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a><br><a href=\"" + MERCI_URL + "\" target=\"_blank\">Calvalus-Catalogue</a></small>";
 
     static final String RESTART = "Restart";
@@ -447,7 +476,7 @@ public class ManageProductionsView extends PortalView {
         if (production.isAutoStaging()) {
             if (isProcessingCompleted(production)) {
                 if (isStagingRunning(production) ||
-                        isStagingScheduled(production)) {
+                    isStagingScheduled(production)) {
                     return StageType.NO_STAGING;
                 } else if (isNotSuccessfulStaged(production)) {
                     return StageType.STAGE;
@@ -470,8 +499,8 @@ public class ManageProductionsView extends PortalView {
         }
 
         if (isStagingScheduled(production) ||
-                isStagingRunning(production) ||
-                isStagingCompleted(production)) {
+            isStagingRunning(production) ||
+            isStagingCompleted(production)) {
             if (hasAdditionalStagingPaths(production)) {
                 return StageType.MULTI_STAGE;
             }
@@ -503,7 +532,7 @@ public class ManageProductionsView extends PortalView {
 
     private static boolean isNotSuccessfulStaged(DtoProduction production) {
         return production.getStagingStatus().getState() == DtoProcessState.CANCELLED
-                || production.getStagingStatus().getState() == DtoProcessState.ERROR;
+               || production.getStagingStatus().getState() == DtoProcessState.ERROR;
     }
 
     private static boolean hasAdditionalStagingPaths(DtoProduction production) {
@@ -512,8 +541,8 @@ public class ManageProductionsView extends PortalView {
 
     static String getDownloadText(DtoProduction production) {
         if (production.getDownloadPath() != null
-                && production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-                && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
+            && production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
+            && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
@@ -526,7 +555,7 @@ public class ManageProductionsView extends PortalView {
             return null;
         }
         if (production.getProcessingStatus().isDone()
-                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return RESTART;
         } else {
             return CANCEL;
@@ -546,7 +575,7 @@ public class ManageProductionsView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Productions";
+        return "Productions";
     }
 
     @Override
@@ -600,9 +629,9 @@ public class ManageProductionsView extends PortalView {
 
     private void cancelProduction(DtoProduction production) {
         boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
-                "This operation cannot be undone.\n" +
-                "\n" +
-                "Do you wish to continue?");
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -628,10 +657,10 @@ public class ManageProductionsView extends PortalView {
         }
 
         boolean confirm = Window.confirm(toDeleteList.size() + " production(s) will be deleted and\n" +
-                "associated files will be removed from server.\n" +
-                "This operation cannot be undone.\n" +
-                "\n" +
-                "Do you wish to continue?");
+                                         "associated files will be removed from server.\n" +
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -739,7 +768,7 @@ public class ManageProductionsView extends PortalView {
         SafeHtmlBuilder htmlBuilder = new SafeHtmlBuilder();
         htmlBuilder.appendHtmlConstant("<b>Be careful!</b></br>");
         htmlBuilder.appendHtmlConstant("If you activate another staging than the default it is most likely that the " +
-                "result is immediately published and publicly available.</br>");
+                                       "result is immediately published and publicly available.</br>");
         htmlBuilder.appendHtmlConstant("<hr>");
         htmlBuilder.appendHtmlConstant("</br>");
         dialogContent.add(new HTML(htmlBuilder.toSafeHtml()));

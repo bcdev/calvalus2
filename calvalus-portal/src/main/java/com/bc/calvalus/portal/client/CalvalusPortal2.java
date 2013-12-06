@@ -13,22 +13,18 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
-import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
-import com.google.gwt.event.logical.shared.SelectionEvent;
-import com.google.gwt.event.logical.shared.SelectionHandler;
 import com.google.gwt.maps.client.LoadApi;
-import com.google.gwt.user.cellview.client.CellTree;
-import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
+import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.DecoratedTabPanel;
+import com.google.gwt.user.client.ui.DeckLayoutPanel;
+import com.google.gwt.user.client.ui.MenuBar;
+import com.google.gwt.user.client.ui.MenuItem;
 import com.google.gwt.user.client.ui.RootPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +36,7 @@ import java.util.Map;
  *
  * @author Norman
  */
-public class CalvalusPortal implements EntryPoint, PortalContext {
+public class CalvalusPortal2 implements EntryPoint, PortalContext {
 
     public static final String NO_FILTER = "";
 
@@ -55,18 +51,18 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoProcessorDescriptor[] allUserProcessors;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
-    private PortalView[] views;
-    private Map<String, Integer> viewTabIndices;
-    private DecoratedTabPanel mainPanel;
+    private Map<String, PortalView> idToViewMap;
+    private DeckLayoutPanel viewPanel;
     // A timer that periodically retrieves production statuses from server
     private Timer productionsUpdateTimer;
     private RegionMapModel regionMapModel;
     private ManageProductionsView manageProductionsView;
     private boolean productionListFiltered;
 
-    public CalvalusPortal() {
+    public CalvalusPortal2() {
         backendService = GWT.create(BackendService.class);
         productionListFiltered = true;
+        idToViewMap = new HashMap<String, PortalView>();
     }
 
     /**
@@ -152,8 +148,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     @Override
     public void showView(String id) {
-        Integer newViewIndex = viewTabIndices.get(id);
-        mainPanel.selectTab(newViewIndex);
+        PortalView view = idToViewMap.get(id);
+        viewPanel.showWidget(view.asWidget());
     }
 
     @Override
@@ -182,61 +178,40 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private void initFrontend() {
-
         regionMapModel = new RegionMapModelImpl(getRegions());
 
         manageProductionsView = new ManageProductionsView(this);
-        views = new PortalView[]{
-                new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-                new OrderL2ProductionView(this),
-                new OrderMAProductionView(this),
-                new OrderL3ProductionView(this),
-                new OrderTAProductionView(this),
-                new OrderFreshmonProductionView(this),
-                new OrderBootstrappingView(this),
-                new ManageRegionsView(this),
-                new ManageBundleView(this),
-                manageProductionsView,
-        };
 
-        viewTabIndices = new HashMap<String, Integer>();
-        for (int i = 0; i < views.length; i++) {
-            viewTabIndices.put(views[i].getViewId(), i);
-        }
+        viewPanel = new DeckLayoutPanel();
+        viewPanel.setSize("85em", "150em");  // todo
+        viewPanel.setVisible(true);
+        MenuBar mainMenuBar = new MenuBar();
+        mainMenuBar.setAutoOpen(true);
+        mainMenuBar.setAnimationEnabled(true);
+        mainMenuBar.addItem("Order", createOrderMenu());
+        mainMenuBar.addItem(createPortalViewMenuItem(manageProductionsView));
 
-        mainPanel = new DecoratedTabPanel();
-        mainPanel.setAnimationEnabled(true);
-        mainPanel.ensureDebugId("mainPanel");
-        for (PortalView view : views) {
-            mainPanel.add(view, view.getTitle());
-        }
+//        PortalView[] views = new PortalView[]{
+//                new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                new OrderL2ProductionView(this),
+//                new OrderMAProductionView(this),
+//                new OrderL3ProductionView(this),
+//                new OrderTAProductionView(this),
+//                new OrderFreshmonProductionView(this),
+//                new OrderBootstrappingView(this),
+//                new ManageRegionsView(this),
+//                new ManageBundleView(this),
+//                manageProductionsView,
+//        };
 
-        mainPanel.addSelectionHandler(new SelectionHandler<Integer>() {
-            @Override
-            public void onSelection(SelectionEvent<Integer> integerSelectionEvent) {
-                Integer tabIndex = integerSelectionEvent.getSelectedItem();
-                if (tabIndex != null && tabIndex >= 0 && tabIndex < views.length) {
-                    PortalView view = views[tabIndex];
-                    GWT.log("Now showing: " + view.getTitle());
-                    view.onShowing();
-                }
-            }
-        });
-        mainPanel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
-            @Override
-            public void onBeforeSelection(BeforeSelectionEvent<Integer> integerBeforeSelectionEvent) {
-                int tabIndex = mainPanel.getTabBar().getSelectedTab();
-                if (tabIndex >= 0 && tabIndex < views.length) {
-                    PortalView view = views[tabIndex];
-                    GWT.log("Now hidden: " + view.getTitle());
-                    view.onHidden();
-                }
-            }
-        });
 
         removeSplashScreen();
 
         showView(OrderL2ProductionView.ID);
+        VerticalPanel mainPanel = new VerticalPanel();
+        mainPanel.add(mainMenuBar);
+        mainPanel.add(viewPanel);
+        mainPanel.ensureDebugId("mainPanel");
         showMainPanel(mainPanel);
 
         productionsUpdateTimer = new Timer() {
@@ -245,6 +220,29 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 updateProductionList();
             }
         };
+    }
+
+    private MenuBar createOrderMenu() {
+        MenuBar orderMenu = new MenuBar(true);
+        orderMenu.addItem(createPortalViewMenuItem(new OrderL2ProductionView(this)));
+        orderMenu.addItem(createPortalViewMenuItem(new OrderMAProductionView(this)));
+        orderMenu.addItem(createPortalViewMenuItem(new OrderL3ProductionView(this)));
+        orderMenu.addItem(createPortalViewMenuItem(new OrderTAProductionView(this)));
+        orderMenu.addSeparator();
+        orderMenu.addItem(createPortalViewMenuItem(new OrderFreshmonProductionView(this)));
+        orderMenu.addItem(createPortalViewMenuItem(new OrderBootstrappingView(this)));
+        return orderMenu;
+    }
+
+    private MenuItem createPortalViewMenuItem(final PortalView portalView) {
+        idToViewMap.put(portalView.getViewId(), portalView);
+        viewPanel.add(portalView.asWidget());
+        return new MenuItem(portalView.getTitle(), new Command() {
+            @Override
+            public void execute() {
+                viewPanel.showWidget(portalView.asWidget());
+            }
+        });
     }
 
     private void showMainPanel(Widget mainPanel) {
@@ -310,25 +308,25 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
      * Do not remove code.
      * Alternative menu component - example taken from GWTShowcase. May be used as a left-menu.
      */
-    @SuppressWarnings({"UnusedDeclaration"})
-    private CellTree createMainMenu() {
-        final SingleSelectionModel<PortalView> selectionModel = new SingleSelectionModel<PortalView>();
-        final MainMenuModel treeModel = new MainMenuModel(this, views, selectionModel);
-        // Create the cell tree.
-        CellTree mainMenu = new CellTree(treeModel, null);
-        mainMenu.setAnimationEnabled(true);
-        mainMenu.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.DISABLED);
-        selectionModel.addSelectionChangeHandler(
-                new SelectionChangeEvent.Handler() {
-                    public void onSelectionChange(SelectionChangeEvent event) {
-                        PortalView selected = selectionModel.getSelectedObject();
-                        if (selected != null) {
-                            showView(selected.getViewId());
-                        }
-                    }
-                });
-        return mainMenu;
-    }
+//    @SuppressWarnings({"UnusedDeclaration"})
+//    private CellTree createMainMenu() {
+//        final SingleSelectionModel<PortalView> selectionModel = new SingleSelectionModel<PortalView>();
+//        final MainMenuModel treeModel = new MainMenuModel(this, views, selectionModel);
+//        // Create the cell tree.
+//        CellTree mainMenu = new CellTree(treeModel, null);
+//        mainMenu.setAnimationEnabled(true);
+//        mainMenu.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.DISABLED);
+//        selectionModel.addSelectionChangeHandler(
+//                new SelectionChangeEvent.Handler() {
+//                    public void onSelectionChange(SelectionChangeEvent event) {
+//                        PortalView selected = selectionModel.getSelectedObject();
+//                        if (selected != null) {
+//                            showView(selected.getViewId());
+//                        }
+//                    }
+//                });
+//        return mainMenu;
+//    }
 
     private void updateProductionList() {
         backendService.getProductions(getProductionFilterString(), new UpdateProductionsCallback());
@@ -343,7 +341,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onSuccess(DtoRegion[] regions) {
             List<Region> regionList = RegionConverter.decodeRegions(regions);
-            CalvalusPortal.this.regions = new ListDataProvider<Region>(regionList);
+            CalvalusPortal2.this.regions = new ListDataProvider<Region>(regionList);
             maybeInitFrontend();
         }
 
@@ -351,7 +349,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.regions = new ListDataProvider<Region>();
+            CalvalusPortal2.this.regions = new ListDataProvider<Region>();
         }
     }
 
@@ -359,7 +357,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         @Override
         public void onSuccess(DtoProductSet[] productSets) {
-            CalvalusPortal.this.productSets = productSets;
+            CalvalusPortal2.this.productSets = productSets;
             maybeInitFrontend();
         }
 
@@ -367,7 +365,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.productSets = new DtoProductSet[0];
+            CalvalusPortal2.this.productSets = new DtoProductSet[0];
         }
     }
 
@@ -394,11 +392,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         private void assign(DtoProcessorDescriptor[] processors) {
             if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
-                CalvalusPortal.this.systemProcessors = processors;
+                CalvalusPortal2.this.systemProcessors = processors;
             } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
-                CalvalusPortal.this.userProcessors = processors;
+                CalvalusPortal2.this.userProcessors = processors;
             } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
-                CalvalusPortal.this.allUserProcessors = processors;
+                CalvalusPortal2.this.allUserProcessors = processors;
             }
         }
     }
@@ -415,7 +413,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.productions = new ListDataProvider<DtoProduction>();
+            CalvalusPortal2.this.productions = new ListDataProvider<DtoProduction>();
         }
     }
 

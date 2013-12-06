@@ -18,7 +18,7 @@
     <inherits name='com.bc.calvalus.commons.CalvalusCommons'/>
 
     <!-- Specify the app entry point class.                         -->
-    <entry-point class='com.bc.calvalus.portal.client.CalvalusPortal'/>
+    <entry-point class='com.bc.calvalus.portal.client.CalvalusPortal2'/>
 
     <!-- Specify the paths for translatable code                    -->
     <source path='client'/>
