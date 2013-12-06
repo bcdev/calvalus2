@@ -18,14 +18,10 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.FileUpload;
-import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
@@ -41,6 +37,7 @@ public class MAConfigForm extends Composite {
     private static final String POINT_DATA_DIR = "point-data";
 
     private final PortalContext portalContext;
+    private final UserManagedFiles userManagedContent;
 
     interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
 
@@ -75,8 +72,6 @@ public class MAConfigForm extends Composite {
     @UiField
     TextBox goodRecordExpression;
 
-    private FileUpload fileUpload;
-    private FormPanel uploadForm;
 
     public MAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
@@ -89,51 +84,42 @@ public class MAConfigForm extends Composite {
         filterOverlapping.setValue(false);
         outputGroupName.setValue("SITE");
 
-        AddRecordSourceAction addRecordSourceAction = new AddRecordSourceAction();
-        addRecordSourceButton.addClickHandler(addRecordSourceAction);
-        removeRecordSourceButton.addClickHandler(new RemoveRecordSourceAction());
+        Widget[] uploadDescriptions = new Widget[]{
+                new HTML(
+                        "The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
+                                "and BEAM placemark files (<b>*.placemark</b>)."),
+                new HTML("<h4>Standard format:</h4>" +
+                                 "The first line of the TAB-separated CSV file must contain header names. <br/>" +
+                                 "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
+                                 "application of the max. time difference criterion. The time information <br/>" +
+                                 "has be in the format 'yyyy-MM-dd HH:mm:ss'. Other names will be<br/>" +
+                                 "matched against names in the resulting L2 products in order to generate<br/>" +
+                                 "the match-up scatter-plots and statistics, for example 'CONC_CHL'." +
+                                 "<h4>Custom format:</h4>" +
+                                 "If the file deviates from the standard format header lines<br/>" +
+                                 "following the '# &lt;key&gt;=&lt;value&gt;' syntax can added to the file to customize the format:<br/>" +
+                                 "<ol>" +
+                                 "<li><b>columnSeparator</b> The character separating the columns.</li>" +
+                                 "<li><b>latColumn</b> The name of the column containing the latitude.</li>" +
+                                 "<li><b>lonColumn</b> The name of the column containing the longitude.</li>" +
+                                 "<li><b>timeColumn</b> The name of the column containing the time.</li>" +
+                                 "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
+                                 "The content will be concatenated separated by COMMA.</li>" +
+                                 "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
+                                 "</ol>")
+        };
+
+        userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
+                                                  recordSources,
+                                                  POINT_DATA_DIR,
+                                                  "in-situ or point data",
+                                                  uploadDescriptions);
+
+        addRecordSourceButton.addClickHandler(userManagedContent.getAddAction());
+        removeRecordSourceButton.addClickHandler(userManagedContent.getRemoveAction());
         checkRecordSourceButton.addClickHandler(new CheckRecordSourceAction());
         viewRecordSourceButton.addClickHandler(new ViewRecordSourceAction());
-
-        fileUpload = new FileUpload();
-        fileUpload.setName("fileUpload");
-        uploadForm = new FormPanel();
-        uploadForm.setWidget(fileUpload);
-
-        FileUploadManager.configureForm(uploadForm,
-                                        "dir=" + POINT_DATA_DIR,
-                                        addRecordSourceAction,
-                                        addRecordSourceAction);
-
-        updateRecordSources();
-    }
-
-    private void updateRecordSources() {
-        portalContext.getBackendService().listUserFiles(POINT_DATA_DIR, new AsyncCallback<String[]>() {
-            @Override
-            public void onSuccess(String[] filePaths) {
-                setRecordSources(filePaths);
-            }
-
-            @Override
-            public void onFailure(Throwable caught) {
-                Dialog.error("Error", "Failed to get list of point data files from server.");
-            }
-        });
-    }
-
-    private void removeRecordSource(final String recordSource) {
-        portalContext.getBackendService().removeUserFile(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<Boolean>() {
-            @Override
-            public void onSuccess(Boolean removed) {
-                updateRecordSources();
-            }
-
-            @Override
-            public void onFailure(Throwable caught) {
-                Dialog.error("Error", "Failed to remove file '" + recordSource + "' from server.");
-            }
-        });
+        userManagedContent.updateList();
     }
 
     private void checkRecordSource(final String recordSource) {
@@ -203,37 +189,13 @@ public class MAConfigForm extends Composite {
         });
     }
 
-
-    private void setRecordSources(String[] filePaths) {
-        recordSources.clear();
-        for (String filePath : filePaths) {
-            int baseDirPos = filePath.lastIndexOf(POINT_DATA_DIR + "/");
-            if (baseDirPos >= 0) {
-                recordSources.addItem(filePath.substring(baseDirPos + POINT_DATA_DIR.length() + 1), filePath);
-            } else {
-                recordSources.addItem(filePath);
-            }
-        }
-        if (recordSources.getItemCount() > 0) {
-            recordSources.setSelectedIndex(0);
-        }
-    }
-
-    String getSelectedRecordSourceFilename() {
-        int selectedIndex = recordSources.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            return recordSources.getItemText(selectedIndex);
-        }
-        return null;
-    }
-
     public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
     }
 
     public void validateForm() throws ValidationException {
         boolean macroPixelSizeValid = macroPixelSize.getValue() >= 1
-                                      && macroPixelSize.getValue() <= 31
-                                      && macroPixelSize.getValue() % 2 == 1;
+                && macroPixelSize.getValue() <= 31
+                && macroPixelSize.getValue() % 2 == 1;
         if (!macroPixelSizeValid) {
             throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 31");
         }
@@ -251,7 +213,6 @@ public class MAConfigForm extends Composite {
         if (!recordSourceValid) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
         }
-
     }
 
     public Map<String, String> getValueMap() {
@@ -270,117 +231,11 @@ public class MAConfigForm extends Composite {
     }
 
 
-    private class AddRecordSourceAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
-
-        private Dialog fileUploadDialog;
-        private Dialog monitorDialog;
-        private FormPanel.SubmitEvent submitEvent;
-
-        @Override
-        public void onClick(ClickEvent event) {
-            VerticalPanel verticalPanel = UIUtils.createVerticalPanel(2,
-                                                                      new HTML("Select in-situ or point data file:"),
-                                                                      uploadForm,
-                                                                      new HTML(
-                                                                              "The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
-                                                                              "and BEAM placemark files (<b>*.placemark</b>)."),
-                                                                      new HTML("<h4>Standard format:</h4>" +
-                                                                               "The first line of the TAB-separated CSV file must contain header names. <br/>" +
-                                                                               "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
-                                                                               "application of the max. time difference criterion. The time information <br/>" +
-                                                                               "has be in the format 'yyyy-MM-dd HH:mm:ss'. Other names will be<br/>" +
-                                                                               "matched against names in the resulting L2 products in order to generate<br/>" +
-                                                                               "the match-up scatter-plots and statistics, for example 'CONC_CHL'." +
-                                                                               "<h4>Custom format:</h4>" +
-                                                                               "If the file deviates from the standard format header lines<br/>" +
-                                                                               "following the '# &lt;key&gt;=&lt;value&gt;' syntax can added to the file to customize the format:<br/>" +
-                                                                               "<ol>" +
-                                                                               "<li><b>columnSeparator</b> The character separating the columns.</li>" +
-                                                                               "<li><b>latColumn</b> The name of the column containing the latitude.</li>" +
-                                                                               "<li><b>lonColumn</b> The name of the column containing the longitude.</li>" +
-                                                                               "<li><b>timeColumn</b> The name of the column containing the time.</li>" +
-                                                                               "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
-                                                                               "The content will be concatenated separated by COMMA.</li>" +
-                                                                               "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
-                                                                               "</ol>"));
-            fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
-                @Override
-                protected void onOk() {
-                    String filename = fileUpload.getFilename();
-                    if (filename == null || filename.isEmpty()) {
-                        Dialog.info("File Upload",
-                                    new HTML("No filename selected."),
-                                    new HTML("Please specify a point data file."));
-                        return;
-                    }
-                    monitorDialog = new Dialog("File Upload", new Label("Submitting '" + filename + "'..."), ButtonType.CANCEL) {
-                        @Override
-                        protected void onCancel() {
-                            cancelSubmit();
-                        }
-                    };
-                    monitorDialog.show();
-                    uploadForm.submit();
-                }
-            };
-
-            fileUploadDialog.show();
-        }
-
-        private void cancelSubmit() {
-            closeDialogs();
-            if (submitEvent != null) {
-                submitEvent.cancel();
-            }
-        }
-
-        @Override
-        public void onSubmit(FormPanel.SubmitEvent event) {
-            this.submitEvent = event;
-        }
-
-        @Override
-        public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
-            closeDialogs();
-            updateRecordSources();
-            Dialog.info("File Upload",
-                        "File successfully uploaded.");
-
-        }
-
-        private void closeDialogs() {
-            monitorDialog.hide();
-            fileUploadDialog.hide();
-        }
-    }
-
-    private class RemoveRecordSourceAction implements ClickHandler {
-
-        @Override
-        public void onClick(ClickEvent event) {
-            final String recordSource = getSelectedRecordSourceFilename();
-            if (recordSource != null) {
-                Dialog.ask("Remove File",
-                           new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
-                                    "Do you really want to continue?"),
-                           new Runnable() {
-                               @Override
-                               public void run() {
-                                   removeRecordSource(recordSource);
-                               }
-                           });
-            } else {
-                Dialog.error("Remove File",
-                             "No file selected.");
-            }
-        }
-    }
-
     private class CheckRecordSourceAction implements ClickHandler {
 
         @Override
         public void onClick(ClickEvent event) {
-            final String recordSource = getSelectedRecordSourceFilename();
+            final String recordSource = userManagedContent.getSelectedFilename();
             // should be made async!
             checkRecordSource(recordSource);
         }
@@ -390,7 +245,7 @@ public class MAConfigForm extends Composite {
 
         @Override
         public void onClick(ClickEvent event) {
-            final String recordSource = getSelectedRecordSourceFilename();
+            final String recordSource = userManagedContent.getSelectedFilename();
             // should be made async!
             viewRecordSource(recordSource);
         }
