@@ -17,7 +17,7 @@
 package com.bc.calvalus.portal.client;
 
 /**
- * Filterers the object according to a given criteria.
+ * Filters the object according to a given criteria.
  *
  * @author MarcoZ
  */
