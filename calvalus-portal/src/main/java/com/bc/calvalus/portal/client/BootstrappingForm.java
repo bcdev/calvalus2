@@ -56,6 +56,7 @@ public class BootstrappingForm extends Composite {
                                                   description);
         addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
         removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
+        userManagedContent.updateList();
     }
 
     public void validateForm() throws ValidationException {
