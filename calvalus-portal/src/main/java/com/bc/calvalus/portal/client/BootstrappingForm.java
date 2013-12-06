@@ -1,13 +1,10 @@
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
@@ -23,7 +20,6 @@ import java.util.Map;
 public class BootstrappingForm extends Composite {
 
     private static final int DEFAULT_NUMBER_OF_ITERATIONS = 10000;
-    private final PortalContext portalContext;
     private final UserManagedFiles userManagedContent;
 
 
@@ -34,11 +30,11 @@ public class BootstrappingForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
-    ListBox boostrapSources;
+    ListBox bootstrapSources;
     @UiField
-    Button addBoostrapSourceButton;
+    Button addBootstrapSourceButton;
     @UiField
-    Button removeBoostrapSourceButton;
+    Button removeBootstrapSourceButton;
 
     @UiField
     ListBox processorList;
@@ -48,19 +44,18 @@ public class BootstrappingForm extends Composite {
     TextBox productionName;
 
     public BootstrappingForm(PortalContext portalContext) {
-        this.portalContext = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
 
         numberOfIterations.setValue(DEFAULT_NUMBER_OF_ITERATIONS);
 
         HTML description = new HTML("The supported file types are TAB-separated CSV (<b>*.csv</b>) matchup files.<br/>");
         userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  boostrapSources,
-                                                  "boostrapping",
+                                                  bootstrapSources,
+                                                  "bootstrapping",
                                                   "matchup",
                                                   description);
-        addBoostrapSourceButton.addClickHandler(userManagedContent.getAddAction());
-        removeBoostrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
+        addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
+        removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
     }
 
     public void validateForm() throws ValidationException {
@@ -70,9 +65,9 @@ public class BootstrappingForm extends Composite {
             throw new ValidationException(numberOfIterations, "Number of Iterations must be > 0");
         }
 
-        boolean boostrapSourceValid = boostrapSources.getSelectedIndex() >= 0;
-        if (!boostrapSourceValid) {
-            throw new ValidationException(boostrapSources, "Boostrap source must be given.");
+        boolean bootstrapSourceValid = bootstrapSources.getSelectedIndex() >= 0;
+        if (!bootstrapSourceValid) {
+            throw new ValidationException(bootstrapSources, "Bootstrap source must be given.");
         }
     }
 
