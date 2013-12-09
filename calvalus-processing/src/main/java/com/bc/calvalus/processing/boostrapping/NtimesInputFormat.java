@@ -35,7 +35,9 @@ public class NtimesInputFormat extends InputFormat {
         for (int i = 0; i < numberOfSplits; i++) {
             splits.add(new NtimesInputSplit(iterationsPerNode));
         }
-        splits.add(new NtimesInputSplit(iterationsRemaining));
+        if (iterationsRemaining > 0) {
+            splits.add(new NtimesInputSplit(iterationsRemaining));
+        }
         return splits;
     }
 
@@ -46,7 +48,7 @@ public class NtimesInputFormat extends InputFormat {
     @Override
     public RecordReader<NullWritable, NullWritable> createRecordReader(InputSplit split,
                                                                        TaskAttemptContext context) throws IOException,
-            InterruptedException {
+                                                                                                          InterruptedException {
         return new NoRecordReader();
     }
 }
