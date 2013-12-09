@@ -30,7 +30,6 @@ class UserManagedFiles {
     private final RemoveAction removeAction;
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
-    private Filter<String> filePathFilter;
 
     UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget... uploadDescriptions) {
         this.backendService = backendService;
@@ -47,13 +46,10 @@ class UserManagedFiles {
         addAction = new AddAction();
         removeAction = new RemoveAction();
 
-        filePathFilter = Filter.ACCEPTING_ALL;
-
         FileUploadManager.configureForm(uploadForm,
                                         "dir=" + baseDir,
                                         addAction,
                                         addAction);
-
     }
 
 
@@ -88,9 +84,6 @@ class UserManagedFiles {
     private void setItems(String[] filePaths) {
         contentListbox.clear();
         for (String filePath : filePaths) {
-            if (!filePathFilter.accept(filePath)) {
-                continue;
-            }
             int baseDirPos = filePath.lastIndexOf(baseDir + "/");
             if (baseDirPos >= 0) {
                 contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
@@ -106,11 +99,6 @@ class UserManagedFiles {
     public String getSelectedFilePath() {
         int selectedIndex = contentListbox.getSelectedIndex();
         return selectedIndex >= 0 ? contentListbox.getValue(selectedIndex) : "";
-    }
-
-
-    void setFilePathFilter(Filter<String> filter) {
-        filePathFilter = filter;
     }
 
     ClickHandler getRemoveAction() {

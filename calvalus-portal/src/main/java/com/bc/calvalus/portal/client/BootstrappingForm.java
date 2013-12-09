@@ -80,18 +80,6 @@ public class BootstrappingForm extends Composite {
                                                   baseDir,
                                                   "matchup",
                                                   description);
-        userManagedContent.setFilePathFilter(new Filter<String>() {
-            @Override
-            public boolean accept(String filePath) {
-                int lastSlashIndex = filePath.lastIndexOf("/");
-                boolean inBaseDir = false;
-                if (lastSlashIndex >= baseDir.length()) {
-                    String substring = filePath.substring(lastSlashIndex - baseDir.length(), lastSlashIndex);
-                    inBaseDir = baseDir.equals(substring);
-                }
-                return filePath.endsWith(fileExtension) && inBaseDir;
-            }
-        });
         addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
         removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
         userManagedContent.updateList();
