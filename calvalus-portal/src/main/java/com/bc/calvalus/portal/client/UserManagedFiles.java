@@ -95,7 +95,7 @@ class UserManagedFiles {
             if (baseDirPos >= 0) {
                 contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
             } else {
-                contentListbox.addItem(filePath);
+                contentListbox.addItem(filePath, filePath);
             }
         }
         if (contentListbox.getItemCount() > 0) {
@@ -103,13 +103,11 @@ class UserManagedFiles {
         }
     }
 
-    public String getSelectedFilename() {
+    public String getSelectedFilePath() {
         int selectedIndex = contentListbox.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            return contentListbox.getItemText(selectedIndex);
-        }
-        return null;
+        return selectedIndex >= 0 ? contentListbox.getValue(selectedIndex) : "";
     }
+
 
     void setFilePathFilter(Filter<String> filter) {
         filePathFilter = filter;
@@ -123,6 +121,14 @@ class UserManagedFiles {
         return addAction;
     }
 
+
+    private String getSelectedFilename() {
+        int selectedIndex = contentListbox.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            return contentListbox.getItemText(selectedIndex);
+        }
+        return null;
+    }
 
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
 

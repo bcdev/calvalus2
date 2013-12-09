@@ -107,7 +107,7 @@ public class BootstrappingForm extends Composite {
             throw new ValidationException(numberOfIterations, "Number of Iterations must be > 0");
         }
 
-        boolean bootstrapSourceValid = bootstrapSources.getSelectedIndex() >= 0;
+        boolean bootstrapSourceValid = userManagedContent.getSelectedFilePath() != null;
         if (!bootstrapSourceValid) {
             throw new ValidationException(bootstrapSources, "Bootstrap source must be given.");
         }
@@ -123,11 +123,16 @@ public class BootstrappingForm extends Composite {
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
-        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getProcessorName());
+        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
 
         parameters.put(BootstrappingWorkflowItem.NUM_ITERATIONS_PROPERTY, numberOfIterations.getText());
-        parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, userManagedContent.getSelectedFilename());
-        parameters.put("productionName", productionName.getValue());
+        parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, userManagedContent.getSelectedFilePath());
+        if (!productionName.getValue().isEmpty()) {
+            parameters.put("productionName", productionName.getValue());
+        }
+        parameters.put("autoStaging", String.valueOf(true));
+
+
         return parameters;
     }
 

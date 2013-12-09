@@ -85,27 +85,27 @@ public class MAConfigForm extends Composite {
         outputGroupName.setValue("SITE");
 
         HTML description1 = new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
-                                             "and BEAM placemark files (<b>*.placemark</b>).");
+                                     "and BEAM placemark files (<b>*.placemark</b>).");
         HTML description2 = new HTML(
                 "<h4>Standard format:</h4>" +
-                        "The first line of the TAB-separated CSV file must contain header names. <br/>" +
-                        "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
-                        "application of the max. time difference criterion. The time information <br/>" +
-                        "has be in the format 'yyyy-MM-dd HH:mm:ss'. Other names will be<br/>" +
-                        "matched against names in the resulting L2 products in order to generate<br/>" +
-                        "the match-up scatter-plots and statistics, for example 'CONC_CHL'." +
-                        "<h4>Custom format:</h4>" +
-                        "If the file deviates from the standard format header lines<br/>" +
-                        "following the '# &lt;key&gt;=&lt;value&gt;' syntax can added to the file to customize the format:<br/>" +
-                        "<ol>" +
-                        "<li><b>columnSeparator</b> The character separating the columns.</li>" +
-                        "<li><b>latColumn</b> The name of the column containing the latitude.</li>" +
-                        "<li><b>lonColumn</b> The name of the column containing the longitude.</li>" +
-                        "<li><b>timeColumn</b> The name of the column containing the time.</li>" +
-                        "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
-                        "The content will be concatenated separated by COMMA.</li>" +
-                        "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
-                        "</ol>");
+                "The first line of the TAB-separated CSV file must contain header names. <br/>" +
+                "At least 'LATITUDE' and 'LONGITUDE' must be given, 'TIME' is needed for <br/>" +
+                "application of the max. time difference criterion. The time information <br/>" +
+                "has be in the format 'yyyy-MM-dd HH:mm:ss'. Other names will be<br/>" +
+                "matched against names in the resulting L2 products in order to generate<br/>" +
+                "the match-up scatter-plots and statistics, for example 'CONC_CHL'." +
+                "<h4>Custom format:</h4>" +
+                "If the file deviates from the standard format header lines<br/>" +
+                "following the '# &lt;key&gt;=&lt;value&gt;' syntax can added to the file to customize the format:<br/>" +
+                "<ol>" +
+                "<li><b>columnSeparator</b> The character separating the columns.</li>" +
+                "<li><b>latColumn</b> The name of the column containing the latitude.</li>" +
+                "<li><b>lonColumn</b> The name of the column containing the longitude.</li>" +
+                "<li><b>timeColumn</b> The name of the column containing the time.</li>" +
+                "<li><b>timeColumns</b> A comma separated list of column names.<br/>" +
+                "The content will be concatenated separated by COMMA.</li>" +
+                "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
+                "</ol>");
 
         userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
                                                   recordSources,
@@ -122,7 +122,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void checkRecordSource(final String recordSource) {
-        portalContext.getBackendService().checkUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
+        portalContext.getBackendService().checkUserRecordSource(recordSource, new AsyncCallback<String>() {
             @Override
             public void onSuccess(String message) {
                 Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
@@ -136,7 +136,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void viewRecordSource(final String recordSource) {
-        portalContext.getBackendService().listUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<float[]>() {
+        portalContext.getBackendService().listUserRecordSource(recordSource, new AsyncCallback<float[]>() {
             @Override
             public void onSuccess(float[] points) {
                 MapOptions mapOptions = MapOptions.newInstance();
@@ -193,8 +193,8 @@ public class MAConfigForm extends Composite {
 
     public void validateForm() throws ValidationException {
         boolean macroPixelSizeValid = macroPixelSize.getValue() >= 1
-                && macroPixelSize.getValue() <= 31
-                && macroPixelSize.getValue() % 2 == 1;
+                                      && macroPixelSize.getValue() <= 31
+                                      && macroPixelSize.getValue() % 2 == 1;
         if (!macroPixelSizeValid) {
             throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 31");
         }
@@ -208,7 +208,7 @@ public class MAConfigForm extends Composite {
             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
         }
 
-        boolean recordSourceValid = recordSources.getSelectedIndex() >= 0;
+        boolean recordSourceValid = userManagedContent.getSelectedFilePath() != null;
         if (!recordSourceValid) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
         }
@@ -224,8 +224,7 @@ public class MAConfigForm extends Composite {
         parameters.put("filteredMeanCoeff", filteredMeanCoeff.getText());
         parameters.put("filterOverlapping", String.valueOf(filterOverlapping.getValue()));
         parameters.put("outputGroupName", outputGroupName.getText());
-        int selectedIndex = recordSources.getSelectedIndex();
-        parameters.put("recordSourceUrl", selectedIndex >= 0 ? recordSources.getValue(selectedIndex) : "");
+        parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
         return parameters;
     }
 
@@ -234,9 +233,8 @@ public class MAConfigForm extends Composite {
 
         @Override
         public void onClick(ClickEvent event) {
-            final String recordSource = userManagedContent.getSelectedFilename();
             // should be made async!
-            checkRecordSource(recordSource);
+            checkRecordSource(userManagedContent.getSelectedFilePath());
         }
     }
 
@@ -244,9 +242,8 @@ public class MAConfigForm extends Composite {
 
         @Override
         public void onClick(ClickEvent event) {
-            final String recordSource = userManagedContent.getSelectedFilename();
             // should be made async!
-            viewRecordSource(recordSource);
+            viewRecordSource(userManagedContent.getSelectedFilePath());
         }
     }
 
