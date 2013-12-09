@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.processing.boostrapping.BootstrappingWorkflowItem;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -124,8 +125,8 @@ public class BootstrappingForm extends Composite {
         parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
         parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getProcessorName());
 
-        parameters.put("calvalus.bootstrap.numberOfIterations", numberOfIterations.getText());
-        parameters.put("calvalus.bootstrap.inputFile", userManagedContent.getSelectedFilename());
+        parameters.put(BootstrappingWorkflowItem.NUM_ITERATIONS_PROPERTY, numberOfIterations.getText());
+        parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, userManagedContent.getSelectedFilename());
         parameters.put("productionName", productionName.getValue());
         return parameters;
     }
