@@ -93,6 +93,7 @@ public class ManageBundleForm extends Composite {
     }
 
     private void fillBundleList() {
+        bundleList.clear();
         if (processorsDesc.length > 0) {
             Set<String> bundles = new HashSet<String>(processorsDesc.length);
             for (DtoProcessorDescriptor descriptor : processorsDesc) {
