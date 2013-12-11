@@ -119,7 +119,7 @@ public class L2ConfigForm extends Composite {
     private final List<DtoProcessorDescriptor> processorDescriptors;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
-        this(portalContext, null, selectionMandatory);
+        this(portalContext, new L2ProcessorFilter(), selectionMandatory);
     }
 
     public L2ConfigForm(PortalContext portalContext, Filter<DtoProcessorDescriptor> processorFilter, boolean selectionMandatory) {
@@ -188,23 +188,12 @@ public class L2ConfigForm extends Composite {
             Collections.addAll(processorDescriptors, portalContext.getProcessors(BundleFilter.PROVIDER_ALL_USERS));
         }
 
-        {
-            final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
-            while (iterator.hasNext()) {
-                DtoProcessorDescriptor productSet = iterator.next();
-                if (BundleFilter.DUMMY_PROCESSOR_NAME.equals(productSet.getProcessorName())) {
-                    iterator.remove();
-                }
-            }
-        }
-
-        if (processorFilter != null) {
-            final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
-            while (iterator.hasNext()) {
-                DtoProcessorDescriptor productSet = iterator.next();
-                if (!processorFilter.accept(productSet)) {
-                    iterator.remove();
-                }
+        final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
+        while (iterator.hasNext()) {
+            DtoProcessorDescriptor processorDescriptor = iterator.next();
+            if (BundleFilter.DUMMY_PROCESSOR_NAME.equals(processorDescriptor.getProcessorName()) ||
+                (processorFilter != null && !processorFilter.accept(processorDescriptor))) {
+                iterator.remove();
             }
         }
 
@@ -432,4 +421,13 @@ public class L2ConfigForm extends Composite {
             return checkBox;
         }
     }
+
+    private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {
+
+        @Override
+        public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
+            return dtoProcessorDescriptor.isL2Processor();
+        }
+    }
+
 }

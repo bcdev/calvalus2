@@ -20,6 +20,7 @@ import java.util.List;
  * Manages a list of files that can be uploaded and remove by the user.
  */
 class UserManagedFiles {
+
     private final BackendServiceAsync backendService;
     private final ListBox contentListbox;
     private final String baseDir;
@@ -30,7 +31,7 @@ class UserManagedFiles {
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
 
-    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget...uploadDescriptions) {
+    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget... uploadDescriptions) {
         this.backendService = backendService;
         this.contentListbox = contentListbox;
         this.baseDir = baseDir;
@@ -49,7 +50,6 @@ class UserManagedFiles {
                                         "dir=" + baseDir,
                                         addAction,
                                         addAction);
-
     }
 
 
@@ -88,7 +88,7 @@ class UserManagedFiles {
             if (baseDirPos >= 0) {
                 contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
             } else {
-                contentListbox.addItem(filePath);
+                contentListbox.addItem(filePath, filePath);
             }
         }
         if (contentListbox.getItemCount() > 0) {
@@ -96,12 +96,9 @@ class UserManagedFiles {
         }
     }
 
-    public String getSelectedFilename() {
+    public String getSelectedFilePath() {
         int selectedIndex = contentListbox.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            return contentListbox.getItemText(selectedIndex);
-        }
-        return null;
+        return selectedIndex >= 0 ? contentListbox.getValue(selectedIndex) : "";
     }
 
     ClickHandler getRemoveAction() {
@@ -110,6 +107,15 @@ class UserManagedFiles {
 
     ClickHandler getAddAction() {
         return addAction;
+    }
+
+
+    private String getSelectedFilename() {
+        int selectedIndex = contentListbox.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            return contentListbox.getItemText(selectedIndex);
+        }
+        return null;
     }
 
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
@@ -133,7 +139,7 @@ class UserManagedFiles {
                     if (filename == null || filename.isEmpty()) {
                         Dialog.info("File Upload",
                                     new HTML("No filename selected."),
-                                    new HTML("Please specify a point data file."));
+                                    new HTML("Please specify a " + what + "file."));
                         return;
                     }
                     monitorDialog = new Dialog("File Upload", new Label("Submitting '" + filename + "'..."), ButtonType.CANCEL) {
@@ -184,7 +190,7 @@ class UserManagedFiles {
             if (recordSource != null) {
                 Dialog.ask("Remove File",
                            new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
-                                            "Do you really want to continue?"),
+                                    "Do you really want to continue?"),
                            new Runnable() {
                                @Override
                                public void run() {

@@ -93,6 +93,7 @@ public class ManageBundleForm extends Composite {
     }
 
     private void fillBundleList() {
+        bundleList.clear();
         if (processorsDesc.length > 0) {
             Set<String> bundles = new HashSet<String>(processorsDesc.length);
             for (DtoProcessorDescriptor descriptor : processorsDesc) {
@@ -152,6 +153,7 @@ public class ManageBundleForm extends Composite {
                                @Override
                                public void run() {
                                    removeBundle(bundleName);
+                                   updateBundlesList();
                                }
                            });
             } else {
@@ -261,7 +263,7 @@ public class ManageBundleForm extends Composite {
             @Override
             public void onSubmitComplete(FormPanel.SubmitCompleteEvent submitCompleteEvent) {
                 closeDialogs();
-                ManageBundleForm.this.updateBundlesList();
+                updateBundlesList();
                 updateBundleDetails();
                 String resultHTML = submitCompleteEvent.getResults();
                 if (resultHTML.equals(bundleFileUpload.getFilename())) {

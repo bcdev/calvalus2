@@ -15,27 +15,18 @@
 
             <g:VerticalPanel spacing="2">
                 <g:Label>CSV Matchup files:</g:Label>
+                <g:ListBox ui:field='bootstrapSources' multipleSelect="false" visibleItemCount="8" width="30em"/>
 
-                <g:ListBox ui:field='boostrapSources' multipleSelect="false" visibleItemCount="8" width="20em"/>
                 <g:HorizontalPanel spacing="2">
-                    <g:Button ui:field='addBoostrapSourceButton' text="Add"/>
-                    <g:Button ui:field='removeBoostrapSourceButton' text="Remove"/>
+                    <g:Button ui:field='addBootstrapSourceButton' text="Add"/>
+                    <g:Button ui:field='removeBootstrapSourceButton' text="Remove"/>
                 </g:HorizontalPanel>
             </g:VerticalPanel>
 
-            <g:HTMLPanel>
-                <table cellspacing="2" style="width: 30em">
-                    <tr>
-                        <td>
-                            <g:Label>Number of Iterations:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
-                        </td>
-                    </tr>
-
-                </table>
-            </g:HTMLPanel>
+            <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                <g:Label>Number of Iterations:</g:Label>
+                <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
+            </g:HorizontalPanel>
         </g:HorizontalPanel>
 
 

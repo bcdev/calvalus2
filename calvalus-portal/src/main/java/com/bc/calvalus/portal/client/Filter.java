@@ -17,11 +17,18 @@
 package com.bc.calvalus.portal.client;
 
 /**
- * Filterers the object according to a given criteria.
+ * Filters the object according to a given criteria.
  *
  * @author MarcoZ
  */
 interface Filter<T> {
+
+    static final Filter<String> ACCEPTING_ALL = new Filter<String>() {
+        @Override
+        public boolean accept(String filePath) {
+            return true;
+        }
+    };
 
     boolean accept(T t);
 }
