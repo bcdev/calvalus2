@@ -119,7 +119,7 @@ public class L2ConfigForm extends Composite {
     private final List<DtoProcessorDescriptor> processorDescriptors;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
-        this(portalContext, null, selectionMandatory);
+        this(portalContext, new L2ProcessorFilter(), selectionMandatory);
     }
 
     public L2ConfigForm(PortalContext portalContext, Filter<DtoProcessorDescriptor> processorFilter, boolean selectionMandatory) {
@@ -421,4 +421,13 @@ public class L2ConfigForm extends Composite {
             return checkBox;
         }
     }
+
+    private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {
+
+        @Override
+        public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
+            return dtoProcessorDescriptor.isL2Processor();
+        }
+    }
+
 }

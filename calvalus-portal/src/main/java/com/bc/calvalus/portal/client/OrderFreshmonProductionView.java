@@ -60,16 +60,21 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             public boolean accept(DtoProcessorDescriptor processorDescriptor) {
                 if (processorDescriptor.getBundleName().startsWith("freshmon")) {
                     DtoProductSet productSet = productSetSelectionForm.getProductSet();
-                    if (productSet != null)  {
+                    if (productSet != null) {
                         String productType = productSet.getProductType();
                         if (productType != null) {
-                            String[] inputProductTypes = processorDescriptor.getInputProductTypes();
-                            for (String inputProductType : inputProductTypes) {
-                                if (inputProductType.equals(productType)) {
-                                    return true;
-                                }
-                            }
+                            return canHandleProductType(processorDescriptor, productType);
                         }
+                    }
+                }
+                return false;
+            }
+
+            private boolean canHandleProductType(DtoProcessorDescriptor processorDescriptor, String productType) {
+                String[] inputProductTypes = processorDescriptor.getInputProductTypes();
+                for (String inputProductType : inputProductTypes) {
+                    if (inputProductType.equals(productType)) {
+                        return true;
                     }
                 }
                 return false;

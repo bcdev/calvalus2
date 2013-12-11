@@ -34,6 +34,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String bundleLocation;
     private String descriptionHtml;
     private String[] inputProductTypes;
+    private boolean isL2Processor;
     private String outputProductType;
     private String[] outputFormats;
     private String defaultMaskExpression;
@@ -56,6 +57,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String bundleLocation,
                                   String descriptionHtml,
                                   String[] inputProductTypes,
+                                  boolean isL2Processor,
                                   String outputProductType,
                                   String[] outputFormats,
                                   String formattingType,
@@ -71,6 +73,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.bundleLocation = bundleLocation;
         this.descriptionHtml = descriptionHtml;
         this.inputProductTypes = inputProductTypes;
+        this.isL2Processor = isL2Processor;
         this.outputProductType = outputProductType;
         this.outputFormats = outputFormats;
         this.formattingType = formattingType;
@@ -113,6 +116,10 @@ public class DtoProcessorDescriptor implements IsSerializable {
 
     public String[] getInputProductTypes() {
         return inputProductTypes;
+    }
+
+    public boolean isL2Processor() {
+        return isL2Processor;
     }
 
     public String getOutputProductType() {

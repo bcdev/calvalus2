@@ -61,6 +61,9 @@ public class ProcessorDescriptor {
     @Parameter(itemAlias = "jobParameter")
     private JobParameter[] jobConfig;
 
+    @Parameter(defaultValue = "true")
+    private boolean isL2Processor;
+
     @Parameter(itemAlias = "parameterDescriptor")
     private ParameterDescriptor[] parameterDescriptors;
 
@@ -125,6 +128,10 @@ public class ProcessorDescriptor {
         return inputProductTypes;
     }
 
+    public boolean isL2Processor() {
+        return isL2Processor;
+    }
+
     public String getOutputProductType() {
         return outputProductType;
     }
@@ -144,12 +151,15 @@ public class ProcessorDescriptor {
     }
 
     // only used in tests
-
     public void setOutputProductType(String outputProductType) {
         this.outputProductType = outputProductType;
     }
 
-    public void setParameterDescriptors(ParameterDescriptor...parameterDescriptors) {
+    public void setL2Processor(boolean l2Processor) {
+        isL2Processor = l2Processor;
+    }
+
+    public void setParameterDescriptors(ParameterDescriptor... parameterDescriptors) {
         this.parameterDescriptors = parameterDescriptors;
     }
 
@@ -191,6 +201,7 @@ public class ProcessorDescriptor {
     }
 
     public static class ParameterDescriptor {
+
         private String name;
         private String type;
         private String description;

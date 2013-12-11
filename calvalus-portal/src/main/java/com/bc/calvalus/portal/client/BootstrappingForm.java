@@ -55,7 +55,6 @@ public class BootstrappingForm extends Composite {
     TextBox productionName;
 
     private final List<DtoProcessorDescriptor> processorDescriptors;
-    private final Filter<DtoProcessorDescriptor> processorFilter;
 
 
     public BootstrappingForm(PortalContext portalContext) {
@@ -63,12 +62,6 @@ public class BootstrappingForm extends Composite {
         initWidget(uiBinder.createAndBindUi(this));
 
         processorDescriptors = new ArrayList<DtoProcessorDescriptor>();
-        processorFilter = new Filter<DtoProcessorDescriptor>() {
-            @Override
-            public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
-                return true;
-            }
-        };
 
         numberOfIterations.setValue(DEFAULT_NUMBER_OF_ITERATIONS);
 
@@ -133,7 +126,8 @@ public class BootstrappingForm extends Composite {
         final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
         while (iterator.hasNext()) {
             DtoProcessorDescriptor processorDescriptor = iterator.next();
-            if (!"Bootstrapping in R".equals(processorDescriptor.getProcessorName())) {
+            boolean isBootstrapProcessor = "r-bootstrap".equals(processorDescriptor.getExecutableName());
+            if (!isBootstrapProcessor || processorDescriptor.isL2Processor()) {
                 iterator.remove();
             }
         }

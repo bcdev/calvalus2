@@ -79,6 +79,7 @@ import java.util.logging.Logger;
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
     private static final Properties calvalusVersionProperties;
+
     static {
         InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
         calvalusVersionProperties = new Properties();
@@ -220,21 +221,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
             return dtoDescriptors;
         } else {
-            return new DtoProcessorDescriptor[] { new DtoProcessorDescriptor(null,
-                                                                             BundleFilter.DUMMY_PROCESSOR_NAME,
-                                                                             "",
-                                                                             "",
-                                                                             bundleDescriptor.getBundleName(),
-                                                                             bundleDescriptor.getBundleVersion(),
-                                                                             bundleDescriptor.getBundleLocation(),
-                                                                             null,
-                                                                             null,
-                                                                             null,
-                                                                             null,
-                                                                             null,
-                                                                             null,
-                                                                             null,
-                                                                             null) };
+            return new DtoProcessorDescriptor[]{
+                    new DtoProcessorDescriptor(null,
+                                               BundleFilter.DUMMY_PROCESSOR_NAME,
+                                               "",
+                                               "",
+                                               bundleDescriptor.getBundleName(),
+                                               bundleDescriptor.getBundleVersion(),
+                                               bundleDescriptor.getBundleLocation(),
+                                               null,
+                                               null,
+                                               true,
+                                               null,
+                                               null,
+                                               null,
+                                               null,
+                                               null,
+                                               null)
+            };
         }
     }
 
@@ -452,6 +456,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           bundlePath,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
+                                          processorDescriptor.isL2Processor(),
                                           processorDescriptor.getOutputProductType(),
                                           convert(processorDescriptor.getOutputFormats()),
                                           processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
