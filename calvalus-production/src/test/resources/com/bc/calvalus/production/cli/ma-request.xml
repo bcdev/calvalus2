@@ -29,7 +29,9 @@
             <ows:Identifier>calvalus.input.format</ows:Identifier>
             <ows:Title>input format</ows:Title>
             <wps:Data>
-                <wps:LiteralData>BEAM-DIMAP</wps:LiteralData>
+                <wps:LiteralData>
+                    BEAM-DIMAP
+                </wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

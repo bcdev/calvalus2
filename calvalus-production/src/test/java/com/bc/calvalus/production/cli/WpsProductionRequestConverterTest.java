@@ -48,6 +48,8 @@ public class WpsProductionRequestConverterTest {
         assertNotNull(parameters.get("calvalus.output.compression"));
         assertEquals("", parameters.get("calvalus.output.compression"));
 
+        assertEquals("BEAM-DIMAP", parameters.get("calvalus.input.format"));
+
         assertNull(productionRequest.getRegionGeometry(null));
 
         assertNotNull(parameters.get("calvalus.plainText.parameter"));
