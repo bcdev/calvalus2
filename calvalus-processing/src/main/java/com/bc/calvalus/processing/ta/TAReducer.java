@@ -54,7 +54,7 @@ public class TAReducer extends Reducer<Text, L3TemporalBin, Text, TAPoint> imple
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        this.binManager = L3Config.get(conf).createBinningContext().getBinManager();
+        this.binManager = L3Config.get(conf).createBinningContext(null).getBinManager();
         minDate = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
         maxDate = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
     }

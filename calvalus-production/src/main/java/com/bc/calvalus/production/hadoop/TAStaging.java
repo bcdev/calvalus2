@@ -81,7 +81,7 @@ class TAStaging extends ProductionStaging {
 
 
             L3Config l3Config = l3WorkflowItem.getL3Config();
-            BinManager binManager = l3Config.createBinningContext().getBinManager();
+            BinManager binManager = l3Config.createBinningContext(null).getBinManager();
             if (taResult == null) {
                 taResult = new TAResult();
                 List<String> outputFeatureNames = new ArrayList<String>();

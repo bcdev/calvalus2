@@ -98,7 +98,7 @@ public class L3ConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = l3Config.createBinningContext().getBinManager();
+        BinManager binManager = l3Config.createBinningContext(null).getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
         assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());

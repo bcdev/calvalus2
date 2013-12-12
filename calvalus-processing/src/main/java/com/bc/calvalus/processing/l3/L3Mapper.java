@@ -16,10 +16,14 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
@@ -53,8 +57,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final L3Config l3Config = L3Config.get(context.getConfiguration());
-        final BinningContext ctx = l3Config.createBinningContext();
+        Configuration conf = context.getConfiguration();
+        final L3Config l3Config = L3Config.get(conf);
+        Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final BinningContext ctx = l3Config.createBinningContext(regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);

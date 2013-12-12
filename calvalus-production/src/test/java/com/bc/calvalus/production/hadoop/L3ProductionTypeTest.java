@@ -89,7 +89,7 @@ public class L3ProductionTypeTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         L3Config l3Config = L3ProductionType.getL3Config(productionRequest);
         assertNotNull(l3Config);
-        assertEquals(4320, l3Config.createBinningContext().getPlanetaryGrid().getNumRows());
+        assertEquals(4320, l3Config.createBinningContext(null).getPlanetaryGrid().getNumRows());
         assertEquals("NOT INVALID", l3Config.createVariableContext().getValidMaskExpression());
         assertNotNull(l3Config.getSuperSampling());
         assertEquals(1, (int) l3Config.getSuperSampling());
@@ -97,7 +97,7 @@ public class L3ProductionTypeTest {
         assertEquals("a", l3Config.createVariableContext().getVariableName(0));
         assertEquals("b", l3Config.createVariableContext().getVariableName(1));
         assertEquals("c", l3Config.createVariableContext().getVariableName(2));
-        BinManager binManager = l3Config.createBinningContext().getBinManager();
+        BinManager binManager = l3Config.createBinningContext(null).getBinManager();
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
         assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);

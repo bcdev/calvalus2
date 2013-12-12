@@ -20,6 +20,7 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinningContext;
@@ -110,14 +111,16 @@ public class L3Config implements XmlConvertible {
         getBinningConfig().setAggregatorConfigs(aggregators);
     }
 
-    public BinningContext createBinningContext() {
+    public BinningContext createBinningContext(Geometry regionGeometry) {
         VariableContext variableContext = createVariableContext();
         Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
         L3BinManagerImpl binManager = new L3BinManagerImpl(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
         return new BinningContextImpl(createPlanetaryGrid(),
                                       binManager,
                                       binningConfig.getCompositingType(),
-                                      getSuperSampling() != null ? getSuperSampling() : 1);
+                                      getSuperSampling() != null ? getSuperSampling() : 1,
+                                      null,
+                                      regionGeometry);
     }
 
     public PlanetaryGrid createPlanetaryGrid() {

@@ -105,7 +105,6 @@ public class TAReducerTest {
         PropertySet aggProperties = aggConf.asPropertySet();
         aggProperties.setValue("varName", "chl_conc");
         aggProperties.setValue("weightCoeff", 0.5);
-        aggProperties.setValue("fillValue", Float.NaN);
 //        aggConf.setVarName("chl_conc");
 //        aggConf.setWeightCoeff(0.5);
 //        aggConf.setFillValue(Float.NaN);

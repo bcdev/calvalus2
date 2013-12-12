@@ -52,7 +52,7 @@ public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, L
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
         L3Config cellL3Config = CellProcessorMapper.getCellL3Config(conf);
-        binManager = cellL3Config.createBinningContext().getBinManager();
+        binManager = cellL3Config.createBinningContext(null).getBinManager();
 
         String[] featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         ArrayList<String> inputFeatureNames = new ArrayList<String>();

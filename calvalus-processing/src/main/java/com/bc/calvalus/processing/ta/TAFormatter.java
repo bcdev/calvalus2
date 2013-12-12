@@ -45,9 +45,6 @@ public class TAFormatter {
     private static final String PART_FILE_PREFIX = "part-r-";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private BinningContext binningContext;
-    private File outputFile;
-
     private final Logger logger;
     private final Configuration hadoopConf;
     private Path partsDir;
@@ -59,10 +56,8 @@ public class TAFormatter {
 
     public int format(File outputFile, L3Config l3Config, String hadoopJobOutputDir) throws Exception {
 
-        this.outputFile = outputFile;
-
         partsDir = new Path(hadoopJobOutputDir);
-        binningContext = l3Config.createBinningContext();
+        BinningContext binningContext = l3Config.createBinningContext(null);
         final BinManager binManager = binningContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {

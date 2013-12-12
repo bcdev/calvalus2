@@ -213,7 +213,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-binning2</artifactId>
-                <version>0.8.2-SNAPSHOT</version>
+                <version>0.8.4-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>

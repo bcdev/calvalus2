@@ -46,7 +46,7 @@ public class L3Formatter {
 
     public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
         L3Config l3Config = L3Config.get(conf);
-        planetaryGrid = l3Config.createBinningContext().getPlanetaryGrid();
+        planetaryGrid = l3Config.createPlanetaryGrid();
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
         this.configuration = conf;
