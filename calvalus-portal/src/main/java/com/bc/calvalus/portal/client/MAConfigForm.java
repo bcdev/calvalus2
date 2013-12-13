@@ -122,7 +122,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void checkRecordSource(final String recordSource) {
-        portalContext.getBackendService().checkUserRecordSource(recordSource, new AsyncCallback<String>() {
+        portalContext.getBackendService().checkUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
             @Override
             public void onSuccess(String message) {
                 Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
@@ -136,7 +136,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void viewRecordSource(final String recordSource) {
-        portalContext.getBackendService().listUserRecordSource(recordSource, new AsyncCallback<float[]>() {
+        portalContext.getBackendService().listUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<float[]>() {
             @Override
             public void onSuccess(float[] points) {
                 MapOptions mapOptions = MapOptions.newInstance();
@@ -234,7 +234,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            checkRecordSource(userManagedContent.getSelectedFilePath());
+            checkRecordSource(userManagedContent.getSelectedFilename());
         }
     }
 
@@ -243,7 +243,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            viewRecordSource(userManagedContent.getSelectedFilePath());
+            viewRecordSource(userManagedContent.getSelectedFilename());
         }
     }
 

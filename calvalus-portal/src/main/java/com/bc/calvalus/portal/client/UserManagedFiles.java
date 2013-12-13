@@ -110,7 +110,7 @@ class UserManagedFiles {
     }
 
 
-    private String getSelectedFilename() {
+    public String getSelectedFilename() {
         int selectedIndex = contentListbox.getSelectedIndex();
         if (selectedIndex >= 0) {
             return contentListbox.getItemText(selectedIndex);
