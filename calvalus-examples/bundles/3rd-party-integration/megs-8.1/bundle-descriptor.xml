@@ -194,5 +194,231 @@
                 </parameterDescriptor>
             </parameterDescriptors>
         </processorDescriptor>
+
+        <processorDescriptor>
+            <executableName>megsNormalised</executableName>
+            <processorName>MEGS L2 Processing (normalised)</processorName>
+            <processorVersion>8.1</processorVersion>
+            <defaultParameters><![CDATA[]]></defaultParameters>
+            <outputFormats>NetCDF</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>Performs MEGS processing.</p>]]>
+            </descriptionHtml>
+            <formatting>IMPLICIT</formatting>
+            <inputProductTypes>MERIS_L1B</inputProductTypes>
+            <outputProductType>MERIS_L2</outputProductType>
+            <validMaskExpression>true</validMaskExpression>
+
+            <jobConfig>
+                <jobParameter>
+                    <name>calvalus.hadoop.mapred.max.map.failures.percent</name>
+                    <value>10</value>
+                </jobParameter>
+            </jobConfig>
+
+            <outputVariables>
+                <outputVariable>
+                    <name>reflectance_01</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_02</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_03</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_04</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_05</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_06</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_07</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_08</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_09</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_10</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_12</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_13</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>reflectance_14</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>water_vapour</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>chlorophyll_1</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>gvi</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>cloud_top_pressure</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>yellow_substance</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rectified_rho_ir</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>suspended_particle_matter</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rectified_rho_near_ir</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>chlorophyll_2</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>boa_vegetation_index</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>pressure</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>photoactive_radiation</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>alpha</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>alpha_c</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>c_type</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>aerosol_optical_thickness</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>cloud_optical_thickness</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>l2_flags</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_01</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_02</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_03</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_04</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_05</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_06</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_07</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_08</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_09</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_10</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_12</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_13</name>
+                </outputVariable>
+                <outputVariable>
+                    <name>rho_ex_w_14</name>
+                </outputVariable>
+            </outputVariables>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>do_land_branch</name>
+                    <type>boolean</type>
+                    <description>Do all the land branch processing.</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>do_water_branch</name>
+                    <type>boolean</type>
+                    <description>Do all the water branch processing.</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>do_cloud_branch</name>
+                    <type>boolean</type>
+                    <description>Do all the cloud branch processing.</description>
+                    <defaultValue>true</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>user_wind_u</name>
+                    <type>boolean</type>
+                    <description>Use user given environment data (wind_u) for Level 2 instead of ECMWF.</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>wind_u</name>
+                    <type>string</type>
+                    <description>User value for zonal wind (Range [-100,100]).</description>
+                    <defaultValue>3</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>user_wind_v</name>
+                    <type>boolean</type>
+                    <description>Use user given environment data (wind_v) for Level 2 instead of ECMWF.</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>wind_v</name>
+                    <type>string</type>
+                    <description>User value for meridional wind (Range [-100,100]).</description>
+                    <defaultValue>4</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>user_pressure</name>
+                    <type>boolean</type>
+                    <description>Use user given environment data (pressure) for Level 2 instead of ECMWF.</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>pressure</name>
+                    <type>string</type>
+                    <description>User value for surface atmospheric pressure (Range [100,2000]).</description>
+                    <defaultValue>1013.25</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>user_ozone</name>
+                    <type>boolean</type>
+                    <description>Use user given environment data (ozone) for Level 2 instead of ECMWF.</description>
+                    <defaultValue>false</defaultValue>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>ozone</name>
+                    <type>string</type>
+                    <description>User value for total ozone content (Range [0,1000]).</description>
+                    <defaultValue>350.0</defaultValue>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </processorDescriptor>
+
     </processorDescriptors>
 </bundleDescriptor>
