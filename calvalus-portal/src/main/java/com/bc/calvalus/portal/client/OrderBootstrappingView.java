@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -55,26 +54,19 @@ public class OrderBootstrappingView extends OrderProductionView {
     @Override
     protected Map<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
-
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, "bootstrapping");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, "1.0");
-        //parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, "???");
-        parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, "r-bootstrap");
-        //parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, "???");
-
-        parameters.put("calvalus.bootstrap.numberOfIterations", bootstrappingForm.numberOfIterations.getText());
-
-        parameters.put("calvalus.bootstrap.inputFile", "/calvalus/home/marcop/boostrapping_input.csv");
-
-        parameters.put("productionName", bootstrappingForm.productionName.getValue());
-
+        parameters.putAll(bootstrappingForm.getValueMap());
         return parameters;
     }
 
     @Override
     protected boolean validateForm() {
-        Integer numIterValue = bootstrappingForm.numberOfIterations.getValue();
-        return numIterValue != null && numIterValue > 0;
+        try {
+            bootstrappingForm.validateForm();
+            return true;
+        } catch (ValidationException e) {
+            e.handle();
+            return false;
+        }
     }
 
     @Override

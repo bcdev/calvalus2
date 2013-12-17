@@ -18,8 +18,8 @@ import java.util.Map;
  */
 public class HelpSystem {
 
+    static final String HELP_HOME_LINK = "http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw";
     private static final String WINDOW_NAME = "_CVHelp";
-    private static final String HELP_HOME_LINK = "http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw";
     private static Map<String, String> keyMap = new HashMap<String, String>();
 
     static {
@@ -59,6 +59,14 @@ public class HelpSystem {
         helpWidget.addClickHandler(new HelpClickHandler(link));
     }
 
+
+    static void showURL(String url, String windowName) {
+        // Description of window.open and its features:
+        // https://developer.mozilla.org/en-US/docs/Web/API/window.open?redirectlocale=en-US&redirectslug=DOM%2Fwindow.open
+        // The top feature is used to force a new browser window, otherwise the link would be opened in a new tab
+        Window.open(url, windowName, "width=800,height=600,top=10");
+    }
+
     private native static void parseXmlKeyMap(String xmlKeyMap)/*-{
         if ($wnd.DOMParser) {
             parser = new DOMParser();
@@ -94,16 +102,9 @@ public class HelpSystem {
 
         @Override
         public void onClick(ClickEvent event) {
-            showHelp(url);
+            showURL(url, WINDOW_NAME);
         }
 
-    }
-
-    private static void showHelp(String url) {
-        // Description of window.open and its features:
-        // https://developer.mozilla.org/en-US/docs/Web/API/window.open?redirectlocale=en-US&redirectslug=DOM%2Fwindow.open
-        // The top feature is used to force a new browser window, otherwise the link would be opened in a new tab
-        Window.open(url, WINDOW_NAME, "width=800,height=600,top=10");
     }
 
 }

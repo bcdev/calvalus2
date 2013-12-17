@@ -88,6 +88,13 @@ p,li {
     font-size: 10pt;
 }
 
+.gwt-MenuBar-horizontal .gwt-MenuItem {
+    font-size: 16px;
+}
+
+.gwt-MenuBar-vertical .gwt-MenuItem {
+    font-size: 16px;
+}
 
 
 
