@@ -50,9 +50,11 @@ $default
     #set( $first_col_bloc = $Double.valueOf($blockStartX).intValue() + 1 )
     #set( $blockStartY = $inputRectangle.y / 64 )
     #set( $first_lin_bloc = $Double.valueOf($blockStartY).intValue() + 1 )
-    #set( $blockCountX = (($productWidth - $inputRectangle.x) / 32) - $blockStartX + 1 )
+    #set( $blockEndX = ($productWidth - $inputRectangle.x) / 32 )
+    #set( $blockCountX = $Double.valueOf($blockEndX).intValue() - $Double.valueOf($blockStartX).intValue() + 1 )
     #set( $n_col_bloc = $Double.valueOf($blockCountX).intValue() )
-    #set( $blockCountY = (($inputRectangle.y + $inputRectangle.height) / 64) - $blockStartY + 1 )
+    #set( $blockEndY = ($inputRectangle.y + $inputRectangle.height) / 64 )
+    #set( $blockCountY = $Double.valueOf($blockEndY).intValue() - $Double.valueOf($blockStartY).intValue() + 1 )
     #set( $n_lin_bloc = $Double.valueOf($blockCountY).intValue() )
     #set( $switch_zone = "1" )
 #else
