@@ -110,8 +110,13 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         } else {
             inputFile = copyFileToLocal(inputPath);
         }
+        Rectangle productRect = null;
+        if (inputRectangle != null) {
+            Product inputProduct = getInputProduct();
+            productRect = new Rectangle(0, 0, inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+        }
 
-        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile);
+        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect);
         return outputFilesNames.length;
     }
 
@@ -119,11 +124,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return cwd;
     }
 
-    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile) throws IOException {
-        return processInput(pm, inputRectangle, inputPath, inputFile, null);
+    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle) throws IOException {
+        return processInput(pm, inputRectangle, inputPath, inputFile, productRectangle, null);
     }
 
-    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Map<String, String> velocityProps) throws IOException {
+    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
@@ -140,6 +145,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
+
+        velocityContext.put("productRectangle", productRectangle);
+
         velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
 
         if (velocityProps != null) {
@@ -180,7 +188,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
             if (hasInvalidStartAndStopTime(product)) {
-                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time.");
+                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time. Copying from input.");
                 // When processing with Polymere no time information is attached to the product.
                 // When processing with MEGS and input rectangle the start time is invalid.
                 // Therefor we have to adjust it here.

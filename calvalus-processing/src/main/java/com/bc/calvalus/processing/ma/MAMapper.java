@@ -113,7 +113,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                         inputProduct.getSceneRasterHeight());
                     Rectangle maRectangle = area.getBounds();
                     maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
-                    processorAdapter.setProcessingRectangle(fullScene.intersection(maRectangle));
+                    Rectangle processingRectangle = fullScene.intersection(maRectangle);
+                    LOG.info("processing rectangle: " + processingRectangle);
+                    processorAdapter.setProcessingRectangle(processingRectangle);
                 }
                 Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
                 if (product == null) {
@@ -121,6 +123,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                     return;
                 }
+                // TODO mz 2013-12-20 make this configurable
+                //if (!processorAdapter.supportsPullProcessing()) {
+                //    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 5));
+                //}
 
                 // Actually wrong name for processed products, but we need the field "source_name" in the export data table
                 product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));

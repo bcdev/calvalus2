@@ -45,6 +45,7 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, IntW
                                                          null,
                                                          inputPath,
                                                          inputFile,
+                                                         null,
                                                          velocityProps);
 
         if (outFiles != null && outFiles.length > 0) {

@@ -251,10 +251,9 @@ public abstract class ProcessorAdapter {
      */
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
-            Geometry regionGeometry = JobUtils.createGeometry(
-                    getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,
-                                                                                         inputSplit) {
+            String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            Geometry regionGeometry = JobUtils.createGeometry(geometryWkt);
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,inputSplit) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();
