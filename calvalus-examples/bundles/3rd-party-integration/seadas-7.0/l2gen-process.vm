@@ -28,25 +28,36 @@ echo >> parameters.anc
 ]]#
 
 #if ($inputRectangle)
-
 #set( $Double = 0.0 )
+#if ($inputFile.name.startsWith("A"))
+# MODIS
+#set( $Dspixl = $productRectangle.width - ( $inputRectangle.x + $inputRectangle.width) )
+#set( $spixl = $Double.valueOf($Dspixl).intValue() )
+#set( $Depixl = $productRectangle.width - $inputRectangle.x )
+#set( $epixl = $Double.valueOf($Depixl).intValue() )
+#set( $Dsline = $productRectangle.height - ( $inputRectangle.y + $inputRectangle.height) )
+#set( $sline = $Double.valueOf($Dsline).intValue() )
+#set( $Deline = $productRectangle.height - $inputRectangle.y )
+#set( $eline = $Double.valueOf($Deline).intValue() )
+
+#else
 
 #set( $Dspixl = $inputRectangle.x + 1 )
 #set( $spixl = $Double.valueOf($Dspixl).intValue() )
-
 #set( $Depixl = $inputRectangle.x + $inputRectangle.width )
 #set( $epixl = $Double.valueOf($Depixl).intValue() )
-
 #set( $Dsline = $inputRectangle.y + 1 )
 #set( $sline = $Double.valueOf($Dsline).intValue() )
-
 #set( $Deline = $inputRectangle.y + $inputRectangle.height )
 #set( $eline = $Double.valueOf($Deline).intValue() )
+
+#end
 
 echo "spixl=$spixl" >> parameters.anc
 echo "epixl=$epixl" >> parameters.anc
 echo "sline=$sline" >> parameters.anc
 echo "eline=$eline" >> parameters.anc
+
 #end
 
 #[[
