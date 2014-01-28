@@ -52,7 +52,7 @@ do
 done
 ln -vs "$(readlink -f "${DATABASE_SOURCE_DIR}/database.db")" "database/database.db"
 
-# Prepare symoblic links for ADF files
+# link in the ADF files
 ADF_DIR=${PACKAGE_DIR}/auxdatafiles/megs
 ln -vs "$(readlink -f "${ADF_DIR}/aeroclim/20/aeroclim.20.08.prd")" "files/aeroclim.prd"
 ln -vs "$(readlink -f "${ADF_DIR}/atmosphere/34/atmosphere.34.03.01.prd")" "files/atmosphere.prd"
@@ -66,7 +66,7 @@ ln -vs "$(readlink -f "${ADF_DIR}/lv2conf/43/lv2conf.43.01.03.prd")" "files/lv2c
 ln -vs "$(readlink -f "${ADF_DIR}/vapour/22/vapour.22.00.prd")" "files/vapour.prd"
 ln -vs "$(readlink -f "${ADF_DIR}/vegetation/33/vegetation.33.01.prd")" "files/vegetation.prd"
 
-# link resources files
+# link the Resource files
 RESOURCE_DIR=${PACKAGE_DIR}/resources
 for f in fLOV.dat globcolour_config.txt ang_net.net atm_net_back.net atm_net_for.net wat_net_back.net wat_net_for.net
 do
