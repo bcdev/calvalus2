@@ -77,8 +77,8 @@ echo "calling MEGS ..."
 ./${PACKAGE_DIR}/bin/megs.sh
 
 # rename result file
-outputfile=`head -1 "files/$prdOutput" | cut -d'=' -f2 | sed s/\"//g`
-mv "files/$prdOutput" "${outputfile}"
+outputfile=$(basename $inputName N1)MEGS.nc
+mv files/output.nc "${outputfile}"
 echo "CALVALUS_OUTPUT_PRODUCT ${outputfile}"
 
 # for retrieving internal files

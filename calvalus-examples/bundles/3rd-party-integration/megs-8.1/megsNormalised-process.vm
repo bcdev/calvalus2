@@ -4,16 +4,22 @@ inputFile="$inputFile"
 inputName="$inputFile.name"
 #if ($inputFile.name.startsWith("MER_RR__1"))
     prdInput=l1_rr.prd
+    prdOutput=l2_rr.prd
 #elseif($inputFile.name.startsWith("MER_RRG_1"))
     prdInput=l1_rrg.prd
+    prdOutput=l2_rrg.prd
 #elseif($inputFile.name.startsWith("MER_FR__1"))
     prdInput=l1_fr.prd
+    prdOutput=l2_fr.prd
 #elseif($inputFile.name.startsWith("MER_FRS_1"))
     prdInput=l1_frs.prd
+    prdOutput=l2_frs.prd
 #elseif($inputFile.name.startsWith("MER_FRG_1"))
     prdInput=l1_frg.prd
+    prdOutput=l2_frg.prd
 #elseif($inputFile.name.startsWith("MER_FSG_1"))
     prdInput=l1_fsg.prd
+    prdOutput=l2_fsg.prd
 #end
 #[[
 
