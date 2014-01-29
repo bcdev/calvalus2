@@ -167,7 +167,7 @@ processing_version format character*33
 processing_version value MEGS_8.0_Reference_Configuration
 breakpoints_list comment Comma separated list of ODESA selected breakpoints (warning: spaces forbidden in the list!!!)
 breakpoints_list format character*6721
-breakpoints_list value LAT,LON,RN_01,RN_02,RN_03,RN_04,RN_05,RN_06,RN_07,RN_08,RN_09,RN_10,RN_12,RN_13,RN_14,VAPR,CHL1,TOAVI,CTP,ODOC,RRIR,SPM,RRNIR,CHL2,BOAVI,PRESS,PAR,CALB,ALPHA,CTYPE,AOPT,COPT,L2FLAGS,RHO_WN_01,RHO_WN_02,RHO_WN_03,RHO_WN_04,RHO_WN_05,RHO_WN_06,RHO_WN_07,RHO_WN_08,RHO_WN_09,RHO_WN_10,RHO_WN_12,RHO_WN_13,RHO_WN_14
+breakpoints_list value LAT,LON,RN_01,RN_02,RN_03,RN_04,RN_05,RN_06,RN_07,RN_08,RN_09,RN_10,RN_12,RN_13,RN_14,VAPR,CHL1,TOAVI,CTP,ODOC,RRIR,SPM,RRNIR,CHL2,BOAVI,PRESS,PAR,CALB,ALPHA,CTYPE,AOPT,COPT,L2FLAGS,RHO_WN_01,RHO_WN_02,RHO_WN_03,RHO_WN_04,RHO_WN_05,RHO_WN_06,RHO_WN_07,RHO_WN_08,RHO_WN_09,RHO_WN_10,RHO_WN_12,RHO_WN_13,RHO_WN_14,NRRS_01,NRRS_02,NRRS_03,NRRS_04,NRRS_05,NRRS_06,NRRS_07,NRRS_08,NRRS_09,NRRS_10,NRRS_12,NRRS_13,NRRS_14
 step12_int_file comment Switch activating Level 2 Step 1 to Step 2 intermediate file creation
 step12_int_file format integer
 step12_int_file module level2
