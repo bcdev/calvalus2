@@ -193,10 +193,10 @@ public class MAConfigForm extends Composite {
 
     public void validateForm() throws ValidationException {
         boolean macroPixelSizeValid = macroPixelSize.getValue() >= 1
-                                      && macroPixelSize.getValue() <= 31
+                                      && macroPixelSize.getValue() <= 201
                                       && macroPixelSize.getValue() % 2 == 1;
         if (!macroPixelSizeValid) {
-            throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 31");
+            throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 201");
         }
         boolean filteredMeanCoeffValid = filteredMeanCoeff.getValue() >= 0;
         if (!filteredMeanCoeffValid) {
