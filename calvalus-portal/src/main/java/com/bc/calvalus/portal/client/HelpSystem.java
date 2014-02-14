@@ -50,8 +50,8 @@ public class HelpSystem {
         }
     }
 
-    public static void addClickHandler(HasClickHandlers helpWidget, String url) {
-        String link = keyMap.get(url);
+    public static void addClickHandler(HasClickHandlers helpWidget, String urlKey) {
+        String link = keyMap.get(urlKey);
         if (link == null) {
             // todo - get this link from helpKeyMap.xml; introduce a header section
             link = HELP_HOME_LINK;
