@@ -233,8 +233,10 @@ public class L2PlusProductionType extends HadoopProductionType {
     }
 
     // TODO consider l2Gen output here too; this is only valid for sequential and MERIS files
+    // modified to cope with Landsat8 files; output dirs of processing are always fresh flat dirs containing only the to-be-formatted outputs
     private String createPathPattern(String basePath) {
-        return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
+        //return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
+        return basePath + "/.*.seq$";
     }
 
     private String getResultingProductionType(ProcessorDescriptor processorDescriptor) {
