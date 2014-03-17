@@ -31,6 +31,7 @@ import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.function.Function2D;
 import org.jfree.data.function.LineFunction2D;
+import org.jfree.data.time.Day;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;
@@ -242,7 +243,9 @@ public class TAGraph {
                 int year = calendar.get(Calendar.YEAR);
                 TimeSeries ts = getTimeSeries(yearlyTimeSeries, year);
                 calendar.set(Calendar.YEAR, 2000);
-                Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //allow also shorter sampling periods than one month, down to one day
+                Day time = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
                 double sample = record.outputVector.get(featureIndex);
                 ts.add(time, sample);
             } catch (ParseException e) {
@@ -276,7 +279,9 @@ public class TAGraph {
             try {
                 Date date = getCenterDate(record);
                 calendar.setTime(date);
-                Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //allow also shorter sampling periods than one month, down to one day
+                Day time = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
                 double sample = record.outputVector.get(featureIndex);
                 ts.add(time, sample);
             } catch (ParseException e) {
