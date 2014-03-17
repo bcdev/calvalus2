@@ -22,6 +22,7 @@ import org.esa.beam.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
 import java.io.*;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -156,6 +157,10 @@ class TAStaging extends ProductionStaging {
             }
         }
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
+        // handle umlaut in lake names
+        for (int i=0; i<imgUrls.size(); ++i) {
+            imgUrls.set(i, URLEncoder.encode(imgUrls.get(i), "UTF-8"));
+        }
         new ProductionWriter(production, imgUrls.toArray(new String[imgUrls.size()])).write(stagingDir);
     }
 
