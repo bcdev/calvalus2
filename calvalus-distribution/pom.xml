@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>1.8-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-distribution</artifactId>
@@ -162,6 +162,16 @@
                                 <manifest>
                                     <mainClass>com.bc.calvalus.production.cli.ProductionTool</mainClass>
                                 </manifest>
+                                <!-- required entries in manifest for TA staging -->
+                                <manifestEntries>
+                                    <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
+                                    <Specification-Version>1.0-mr</Specification-Version>
+                                    <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                    <Implementation-Title>com.sun.media.imageio</Implementation-Title>
+                                    <Implementation-Version>1.0_01</Implementation-Version>
+                                    <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
+                                    <Extension-Name>com.sun.media.imageio</Extension-Name>
+                                </manifestEntries>
                             </archive>
                             <finalName>cpt</finalName>
                             <appendAssemblyId>false</appendAssemblyId>

@@ -128,7 +128,11 @@ public class ProductionServiceImpl implements ProductionService {
             Production production = productionStore.getProduction(productionId);
             if (production != null) {
                 try {
-                    stageProductionResults(production);
+                    if (production.getProcessingStatus().getState() == ProcessState.COMPLETED
+                        && production.getStagingStatus().getState() == ProcessState.UNKNOWN
+                        && productionStagingsMap.get(production.getId()) == null) {
+                        stageProductionResults(production);
+                    }
                     count++;
                 } catch (ProductionException e) {
                     logger.log(Level.SEVERE, String.format("Failed to stage production '%s': %s",

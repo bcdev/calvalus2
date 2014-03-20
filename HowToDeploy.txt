@@ -22,13 +22,13 @@ tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.8-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.8-SNAPSHOT
 
 for lc-cci
 ----------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-1.7-SNAPSHOT-lc
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-1.8-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.8-SNAPSHOT-lc
 
 BEAM
 -----
@@ -40,13 +40,13 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 Portal Software
 -------------------
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-portal-20131030
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.8-portal-20131030
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-4.11.1-portal-20131030
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-4.11.1-portal-20131030
 
 WAR (for the portal)
 --------------------
-(cd calvalus-portal/target; scp calvalus-portal-1.7-SNAPSHOT.war cvop@bcvm03: )
+(cd calvalus-portal/target; scp calvalus-portal-1.8-SNAPSHOT.war cvop@bcvm03: )
 ssh cvop@bcvm03
 cd /opt/apache-tomcat-7.0.11/bin/
 ./shutdown.sh
@@ -59,7 +59,7 @@ mv staging/ ../../temp/
 cd ..
 rm -rf calvalus calvalus.war
 rm -rf ../work/Catalina/localhost/calvalus/
-mv /home/cvop/calvalus-portal-1.7-SNAPSHOT.war calvalus.war
+mv /home/cvop/calvalus-portal-1.8-SNAPSHOT.war calvalus.war
 
 # restart
 cd ../bin/

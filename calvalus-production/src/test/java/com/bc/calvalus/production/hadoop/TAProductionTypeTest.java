@@ -10,6 +10,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
@@ -74,7 +75,10 @@ public class TAProductionTypeTest {
     @Test
     public void testCreateTAConfig() throws ProductionException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        TAConfig taConfig = TAProductionType.getTAConfig(productionRequest);
+        String regionName = productionRequest.getString("regionName");
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, regionGeometry);
+        TAConfig taConfig = new TAConfig(regionConfiguration);
         assertNotNull(taConfig);
         TAConfig.RegionConfiguration[] taConfigRegions = taConfig.getRegions();
         assertNotNull(taConfigRegions);

@@ -89,4 +89,11 @@ public interface JobConfigNames {
     @Deprecated
     String CALVALUS_BEAM_TILE_CACHE_SIZE = "calvalus.beam.tileCacheSize";
 
+    String TA_WITH_TIMESERIES_PLOT = "withTimeseriesPlot";
+    String TA_WITH_AGGREGATED_CSV = "withAggregatedCsv";
+    String TA_WITH_PIXEL_CSV = "withPixelCsv";
+    String TA_WITH_L3_OUTPUTS = "withL3Outputs";
+
+    String CALVALUS_TA_SKIPL3_FLAG = "skipL3";
+    String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
 }

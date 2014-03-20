@@ -16,10 +16,17 @@
 
 package com.bc.calvalus.processing.ta;
 
+import org.esa.beam.binning.support.VectorImpl;
+import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.xy.DefaultXYDataset;
 import org.jfree.data.xy.XYDataset;
 import org.junit.Test;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -139,5 +146,28 @@ public class TAGraphTest {
         assertEquals(5, minMax.getItemCount(0));
         assertEquals(9.370273404582926, DatasetUtilities.findMaximumRangeValue(minMax).doubleValue(), 1E-6);
         assertEquals(-1.3702734045829268, DatasetUtilities.findMinimumRangeValue(minMax).doubleValue(), 1E-6);
+    }
+
+    // writes a file that shall be screened for a test
+    public void testPlotGraph() throws IOException {
+        TAResult taResult = new TAResult();
+        taResult.setOutputFeatureNames("chl_conc_mean", "chl_conc_stdev");
+
+        taResult.addRecord("balticsea", "2008-01-01", "2008-01-07", new VectorImpl(new float[]{0.3F, 0.1F}));
+        taResult.addRecord("northsea", "2008-01-01", "2008-01-07", new VectorImpl(new float[]{0.8F, 0.2F}));
+        taResult.addRecord("balticsea", "2008-03-01", "2008-03-07", new VectorImpl(new float[]{0.1F, 0.2F}));
+        taResult.addRecord("northsea", "2008-03-01", "2008-03-07", new VectorImpl(new float[]{0.4F, 0.0F}));
+        taResult.addRecord("balticsea", "2008-05-01", "2008-05-07", new VectorImpl(new float[]{0.8F, 0.0F}));
+        taResult.addRecord("northsea", "2008-05-01", "2008-05-07", new VectorImpl(new float[]{0.3F, 0.1F}));
+        taResult.addRecord("balticsea", "2008-10-01", "2008-10-07", new VectorImpl(new float[]{0.4F, 0.4F}));
+        taResult.addRecord("northsea", "2008-10-01", "2008-10-07", new VectorImpl(new float[]{0.4F, 0.4F}));
+        taResult.addRecord("balticsea", "2008-12-24", "2008-12-31", new VectorImpl(new float[]{0.6F, 0.3F}));
+        taResult.addRecord("northsea", "2008-12-24", "2008-12-31", new VectorImpl(new float[]{0.2F, 0.1F}));
+
+        final TAGraph taGraph = new TAGraph(taResult);
+        final JFreeChart chart = taGraph.createTimeseriesSigmaGraph("balticsea", 0, 1);
+        final FileOutputStream out = new FileOutputStream(new File("testgraph.png"));
+        TAGraph.writeChart(chart, out);
+        out.close();
     }
 }

@@ -27,8 +27,11 @@ import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -37,6 +40,9 @@ import java.util.List;
  * @author Norman
  */
 public class L3ProductionType extends HadoopProductionType {
+
+    public static final int MONTHLY = -30;
+    public static final int WEEKLY = -7;
 
     public static class Spi extends HadoopProductionType.Spi {
 
@@ -157,6 +163,17 @@ public class L3ProductionType extends HadoopProductionType {
                                getStagingService().getStagingDir());
     }
 
+    /**
+     * Generates a list of date ranges from min, may, period, and compositing period.
+     * The method supports also monthly with the period -30 and weekly with the period -7.
+     * Monthly means one range per calendar month.
+     * Weekly splits the year into weeks starting with 1st January.
+     * The week containing the 29th of Feb in leap years and the last week are prolonged to 8 days.
+     * @param productionRequest
+     * @param periodLengthDefault
+     * @return list of date ranges
+     * @throws ProductionException
+     */
     static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws
             ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
@@ -173,25 +190,93 @@ public class L3ProductionType extends HadoopProductionType {
             int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength",
                                                                        periodLength); // unit=days
 
-            final long periodLengthMillis = periodLength * MILLIS_PER_DAY;
-            final long compositingPeriodLengthMillis = compositingPeriodLength * MILLIS_PER_DAY;
+            final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 
-            long time = minDate.getTime();
+            // set end of the interval to beginning of the following day for simpler comparison
+            calendar.setTime(maxDate);
+            calendar.add(Calendar.DAY_OF_MONTH, 1);
+            final Date maxDate1 = calendar.getTime();
+
+            // adjust start date in monthly and weekly period
+            calendar.setTime(minDate);
+            maybeAdjustCalendarToPeriodStart(calendar, periodLength);
+
             while (true) {
 
-                // we subtract 1 ms for date2, because when formatting to date format we would get the following day.
-                Date date1 = new Date(time);
-                Date date2 = new Date(time + compositingPeriodLengthMillis - 1L);
+                // determine start and end of period
+                final Date date1 = calendar.getTime();
+                forwardCalendarByPeriod(calendar, compositingPeriodLength);
+                calendar.add(Calendar.SECOND, -1);
+                final Date date2 = calendar.getTime();
 
-                if (date2.after(new Date(maxDate.getTime() + MILLIS_PER_DAY))) {
+                // check whether end of period exceeds end of overall interval
+                if (date2.after(maxDate1)) {
                     break;
                 }
+                // accumulate date range for period
                 dateRangeList.add(new DateRange(date1, date2));
-                time += periodLengthMillis;
+
+                // proceed by one period length
+                calendar.setTime(date1);
+                forwardCalendarByPeriod(calendar, periodLength);
             }
         }
 
         return dateRangeList;
+    }
+
+    /**
+     * Forwards to start of month in case of monthly
+     * and start of "week" (beginning with 1st of Jan) in case of weekly.
+     * @param calendar
+     * @param periodLength larger than 0 for days, -30 for monthly, -7 for weekly periods
+     */
+    private static void maybeAdjustCalendarToPeriodStart(GregorianCalendar calendar, int periodLength) {
+        if (periodLength == MONTHLY) {
+            if (calendar.get(Calendar.DAY_OF_MONTH) != 1) {
+                calendar.set(Calendar.DAY_OF_MONTH, 1);
+                calendar.add(Calendar.MONTH, 1);
+            }
+        } else if (periodLength == WEEKLY) {
+            final int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+            calendar.set(Calendar.DAY_OF_YEAR, 1);
+            while (calendar.get(Calendar.DAY_OF_YEAR) < dayOfYear) {
+                forwardByOneWeekOfYear(calendar);
+            }
+        } else if (periodLength <= 0) {
+            throw new IllegalArgumentException("Compositing period " + periodLength + " not supported");
+        }
+    }
+
+    /**
+     * Forwards calendar by period days, or one calendar month, or one "week" (see next method).
+     * @param calendar
+     * @param period  larger than 0 for days, -30 for monthly, -7 for weekly periods
+     */
+    private static void forwardCalendarByPeriod(GregorianCalendar calendar, int period) {
+        if (period > 0) {
+            calendar.add(Calendar.DATE, period);
+        } else if (period == MONTHLY) {
+            calendar.add(Calendar.MONTH, 1);
+        } else if (period == WEEKLY) {
+            forwardByOneWeekOfYear(calendar);
+        } else {
+            throw new IllegalArgumentException("Compositing period " + period + " not supported");
+        }
+    }
+
+    /**
+     * Proceed calendar by 7 days, and add one additional day for the week containing the
+     * 29th of Feb in leap years and for the last week of the year to contain the 31th of Dec.
+     * @param calendar
+     */
+    private static void forwardByOneWeekOfYear(GregorianCalendar calendar) {
+        final int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
+        if ((dayOfYear == 8*7+1 && calendar.isLeapYear(calendar.get(Calendar.YEAR))) || dayOfYear >= 51*7+1) {
+            calendar.add(Calendar.DATE, 8);
+        } else {
+            calendar.add(Calendar.DATE, 7);
+        }
     }
 
     public static String getL3ConfigXml(ProductionRequest productionRequest) throws ProductionException {

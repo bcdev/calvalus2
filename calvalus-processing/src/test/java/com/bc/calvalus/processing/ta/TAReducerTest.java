@@ -57,7 +57,11 @@ public class TAReducerTest {
         temporalBins.add(createTBin(2, 7, 0.4f, 0.25f, 0.3f));
         temporalBins.add(createTBin(4, 6, 0.6f, 0.35f, 0.3f));
 
-        TAPoint taPoint = taReducer.computeTaPoint("northsea", temporalBins);
+        L3TemporalBin outputBin = (L3TemporalBin) taReducer.binManager.createTemporalBin(-1);
+        for (L3TemporalBin bin : temporalBins) {
+            taReducer.binManager.aggregateTemporalBin(bin, outputBin);
+        }
+        TAPoint taPoint = new TAPoint("northsea", taReducer.minDate, taReducer.maxDate, outputBin);
 
         assertNotNull(taPoint);
         assertEquals("northsea", taPoint.getRegionName());
