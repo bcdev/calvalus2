@@ -17,7 +17,9 @@
 package com.bc.calvalus.processing.ta;
 
 
+import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
+import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.binning.TemporalBin;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Config;
@@ -90,13 +92,15 @@ public class TAReducerTest {
         return tBin;
     }
 
-    private Configuration createConfiguration() {
+    private Configuration createConfiguration() throws BindingException {
         Configuration configuration;
         configuration = new Configuration();
         L3Config l3Config = createL3Config();
         configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
         configuration.set(JobConfigNames.CALVALUS_MIN_DATE, "2010-01-01");
         configuration.set(JobConfigNames.CALVALUS_MAX_DATE, "2010-01-10");
+        TAConfig taConfig = TAConfig.fromXml("<parameters><regions><region><name>aoi</name><geometry>polygon((0 0,0 1,1 1,1 0,0 0))</geometry></region></regions></parameters>");
+        configuration.set(JobConfigNames.CALVALUS_TA_PARAMETERS, taConfig.toXml());
         return configuration;
     }
 

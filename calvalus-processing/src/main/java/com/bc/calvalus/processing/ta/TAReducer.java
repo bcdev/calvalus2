@@ -188,6 +188,8 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
         compositingPeriodLength = conf.getInt("compositingPeriodLength", periodLength);
         regions = TAConfig.get(conf).getRegions();
         outputDirPath = conf.get(JobConfigNames.CALVALUS_OUTPUT_DIR);
+        minDate = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
+        maxDate = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
     }
 
     @Override
