@@ -88,6 +88,8 @@ public class L2ConfigForm extends Composite {
 
 
     @UiField
+    Label processorListLabel;
+    @UiField
     ListBox processorList;
     @UiField
     Label processorBundleName;
@@ -95,6 +97,8 @@ public class L2ConfigForm extends Composite {
     @UiField
     HTML processorDescriptionHTML;
 
+    @UiField
+    Label parametersLabel;
     @UiField
     TextArea processorParametersArea;
     @UiField
