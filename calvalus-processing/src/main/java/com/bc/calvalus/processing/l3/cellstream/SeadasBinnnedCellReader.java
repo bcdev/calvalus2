@@ -1,9 +1,9 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
 import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.support.SeadasGrid;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
@@ -150,9 +150,9 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
 
         numReadBins = 0;
 
-        L3Config l3Config = new L3Config();
-        l3Config.setNumRows(numRows);
-        PlanetaryGrid planetaryGrid = l3Config.createPlanetaryGrid();
+        BinningConfig binningConfig = new BinningConfig();
+        binningConfig.setNumRows(numRows);
+        PlanetaryGrid planetaryGrid = binningConfig.createPlanetaryGrid();
         seadasGrid = new SeadasGrid(planetaryGrid);
     }
 

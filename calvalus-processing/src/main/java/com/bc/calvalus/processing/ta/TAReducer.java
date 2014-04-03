@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -29,6 +29,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.BinningContext;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.BufferedWriter;
@@ -177,8 +178,8 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        final L3Config l3Config = L3Config.get(conf);
-        binManager = l3Config.createBinningContext(null).getBinManager();
+        BinningContext binningContext = HadoopBinManager.createBinningContext(conf, null);
+        binManager = binningContext.getBinManager();
         outputFeatureNames = new ArrayList<String>();
         for (int i = 0; i < binManager.getAggregatorCount(); i++) {
             Aggregator aggregator = binManager.getAggregator(i);

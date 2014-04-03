@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
@@ -13,6 +13,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.operator.BinningConfig;
 
 import java.io.IOException;
 
@@ -61,8 +62,8 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
     public void setConf(Configuration conf) {
         this.conf = conf;
 
-        L3Config l3Config = L3Config.get(conf);
-        planetaryGrid = l3Config.createPlanetaryGrid();
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        planetaryGrid = binningConfig.createPlanetaryGrid();
         geometryFactory = new GeometryFactory();
 
         L3MultiRegionFormatConfig l3MultiRegionFormatConfig = L3MultiRegionFormatConfig.get(conf);

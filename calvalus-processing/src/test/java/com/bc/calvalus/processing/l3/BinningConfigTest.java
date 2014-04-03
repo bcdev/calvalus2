@@ -41,34 +41,34 @@ import java.util.Arrays;
 
 import static org.junit.Assert.*;
 
-public class L3ConfigTest {
+public class BinningConfigTest {
 
-    private L3Config l3Config;
+    private BinningConfig binningConfig;
 
     @Before
     public void createL3Config() throws Exception {
-        l3Config = loadConfig("l3-parameters.xml");
+        binningConfig = loadConfig("l3-parameters.xml");
     }
 
     @Test
     public void testPlanetaryGrid() {
-        assertEquals(PlateCarreeGrid.class.getName(), l3Config.getBinningConfig().getPlanetaryGrid());
+        assertEquals(PlateCarreeGrid.class.getName(), binningConfig.getPlanetaryGrid());
     }
 
     @Test
     public void testPlanetaryGridCreation() {
-        PlanetaryGrid grid = new L3Config().createPlanetaryGrid();
+        PlanetaryGrid grid = new BinningConfig().createPlanetaryGrid();
         assertEquals(2160, grid.getNumRows());
         assertEquals(SEAGrid.class, grid.getClass());
 
-        grid = l3Config.createPlanetaryGrid();
+        grid = binningConfig.createPlanetaryGrid();
         assertEquals(4320, grid.getNumRows());
         assertEquals(PlateCarreeGrid.class, grid.getClass());
     }
 
     @Test
     public void testVariableContext() {
-        VariableContext varCtx = l3Config.createVariableContext();
+        VariableContext varCtx = binningConfig.createVariableContext();
 
         assertEquals(8, varCtx.getVariableCount());
 
@@ -98,7 +98,7 @@ public class L3ConfigTest {
 
     @Test
     public void testBinManager() {
-        BinManager binManager = l3Config.createBinningContext(null).getBinManager();
+        BinManager binManager = binningConfig.createBinningContext(null).getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
         assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());
@@ -110,19 +110,17 @@ public class L3ConfigTest {
 
     @Test
     public void testNumRows() {
-        assertEquals(4320, l3Config.getNumRows());
+        assertEquals(4320, binningConfig.getNumRows());
     }
 
     @Test
     public void testCompositingType() {
-        assertEquals(CompositingType.MOSAICKING, l3Config.getBinningConfig().getCompositingType());
+        assertEquals(CompositingType.MOSAICKING, binningConfig.getCompositingType());
     }
 
     @Test
     public void testL3configForCellProcressing() throws Exception {
-        L3Config cellProcessingConfig = loadConfig("l3-cellProcessing.xml");
-        assertNotNull(cellProcessingConfig);
-        BinningConfig binningConfig = cellProcessingConfig.getBinningConfig();
+        BinningConfig binningConfig = loadConfig("l3-cellProcessing.xml");
         assertNotNull(binningConfig);
         CellProcessorConfig postProcessorConfig = binningConfig.getPostProcessorConfig();
         assertNotNull(postProcessorConfig);
@@ -138,8 +136,8 @@ public class L3ConfigTest {
         assertArrayEquals(expected, actual);
     }
 
-    private L3Config loadConfig(String configPath) throws Exception {
-        return L3Config.fromXml(loadConfigProperties(configPath));
+    private BinningConfig loadConfig(String configPath) throws Exception {
+        return BinningConfig.fromXml(loadConfigProperties(configPath));
     }
 
     private String loadConfigProperties(String configPath) throws IOException {

@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -13,6 +13,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.framework.datamodel.ProductData;
+
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -69,7 +70,7 @@ public class TAMapper extends Mapper<LongWritable, L3TemporalBin, TAKey, L3Tempo
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        planetaryGrid = L3Config.get(conf).createPlanetaryGrid();
+        planetaryGrid = HadoopBinManager.getBinningConfig(conf).createPlanetaryGrid();
         regions = TAConfig.get(conf).getRegions();
     }
 

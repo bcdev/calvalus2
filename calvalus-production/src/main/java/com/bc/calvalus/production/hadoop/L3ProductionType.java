@@ -8,7 +8,6 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -23,6 +22,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.AggregatorDescriptor;
 import org.esa.beam.binning.TypedDescriptorsRegistry;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 
@@ -282,12 +282,12 @@ public class L3ProductionType extends HadoopProductionType {
     public static String getL3ConfigXml(ProductionRequest productionRequest) throws ProductionException {
         String l3ConfigXml = productionRequest.getString(JobConfigNames.CALVALUS_L3_PARAMETERS, null);
         if (l3ConfigXml == null) {
-            L3Config l3Config = getL3Config(productionRequest);
+            BinningConfig l3Config = getBinningConfig(productionRequest);
             l3ConfigXml = l3Config.toXml();
         } else {
             // Check L3 XML before sending it to Hadoop
             try {
-                L3Config.fromXml(l3ConfigXml);
+                BinningConfig.fromXml(l3ConfigXml);
             } catch (Throwable ignore) {
                 // if the aggregator is not on the classpath (because it is in a bundle)
                 // Conversion is not possible. So only a warning:
@@ -297,14 +297,14 @@ public class L3ProductionType extends HadoopProductionType {
         return l3ConfigXml;
     }
 
-    static L3Config getL3Config(ProductionRequest productionRequest) throws ProductionException {
-        L3Config l3Config = new L3Config();
-        l3Config.setNumRows(getNumRows(productionRequest));
-        l3Config.setSuperSampling(productionRequest.getInteger("superSampling", 1));
-        l3Config.setMaskExpr(productionRequest.getString("maskExpr", ""));
-        l3Config.setVariableConfigs(getVariables(productionRequest));
-        l3Config.setAggregatorConfigs(getAggregators(productionRequest));
-        return l3Config;
+    static BinningConfig getBinningConfig(ProductionRequest productionRequest) throws ProductionException {
+        BinningConfig binningConfig = new BinningConfig();
+        binningConfig.setNumRows(getNumRows(productionRequest));
+        binningConfig.setSuperSampling(productionRequest.getInteger("superSampling", 1));
+        binningConfig.setMaskExpr(productionRequest.getString("maskExpr", ""));
+        binningConfig.setVariableConfigs(getVariables(productionRequest));
+        binningConfig.setAggregatorConfigs(getAggregators(productionRequest));
+        return binningConfig;
     }
 
     static AggregatorConfig[] getAggregators(ProductionRequest request) throws ProductionException {

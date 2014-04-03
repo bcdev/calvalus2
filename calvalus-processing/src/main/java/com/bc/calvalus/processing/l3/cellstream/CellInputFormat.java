@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -17,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileRecordReader;
 import org.apache.hadoop.util.StringUtils;
+import org.esa.beam.binning.operator.BinningConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,9 +59,9 @@ public class CellInputFormat extends FileInputFormat<LongWritable, L3TemporalBin
             metadata.put(JobConfigNames.CALVALUS_MIN_DATE, reader.getStartDate());
             metadata.put(JobConfigNames.CALVALUS_MAX_DATE, reader.getEndDate());
 
-            L3Config l3Config = new L3Config();
-            l3Config.setNumRows(reader.getNumRows());
-            metadata.put(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+            BinningConfig binningConfig = new BinningConfig();
+            binningConfig.setNumRows(reader.getNumRows());
+            metadata.put(JobConfigNames.CALVALUS_L3_PARAMETERS, binningConfig.toXml());
 
             return reader;
         }
