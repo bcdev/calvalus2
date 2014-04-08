@@ -25,6 +25,13 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.awt.Rectangle;
@@ -37,9 +44,22 @@ import static org.junit.Assert.*;
  */
 public class BeamOperatorAdapterTest {
 
+    private static InternalTestOperator.Spi operatorSpi;
+
+    @BeforeClass
+    public static void setUp() throws Exception {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+        operatorSpi = new InternalTestOperator.Spi();
+        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(operatorSpi);
+    }
+
+    @AfterClass
+    public static void tearDown() throws Exception {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().removeOperatorSpi(operatorSpi);
+    }
+
     @Test
     public void testFullProduct() throws Exception {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
@@ -53,8 +73,32 @@ public class BeamOperatorAdapterTest {
     }
 
     @Test
+    public void testInitOfOperatorWithoutL2Parameters() throws Exception {
+        final Product sourceProduct = createSourceProduct();
+        ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
+        Configuration conf = new Configuration();
+        conf.set(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, "0");
+        conf.set(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, "0");
+        conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "InternalTestOp");
+        TaskAttemptID taskid = new TaskAttemptID();
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, productSplit);
+        BeamOperatorAdapter beamOperatorAdapter = new BeamOperatorAdapter(mapContext) {
+            @Override
+            public Product getInputProduct() throws IOException {
+                return sourceProduct;
+            }
+
+            @Override
+            public Rectangle getInputRectangle() throws IOException {
+                return null;
+            }
+        };
+
+        beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+    }
+
+    @Test
     public void testSubset() throws Exception {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
@@ -72,7 +116,6 @@ public class BeamOperatorAdapterTest {
 
     @Test
     public void testSubset_Null() throws Exception {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
@@ -89,7 +132,6 @@ public class BeamOperatorAdapterTest {
 
     @Test
     public void testSubset_EmptyRect() throws Exception {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
@@ -105,7 +147,6 @@ public class BeamOperatorAdapterTest {
 
     @Test
     public void testProductSplit() throws Exception {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 10, 20);
@@ -163,4 +204,28 @@ public class BeamOperatorAdapterTest {
         return sourceProduct;
     }
 
+
+    @OperatorMetadata(alias = "InternalTestOp", internal = true)
+    public static class InternalTestOperator extends Operator {
+
+        @Parameter(defaultValue = "a+b==c")
+        private String expression;
+
+        @Override
+        public void initialize() throws OperatorException {
+            if (expression == null) {
+                throw new OperatorException("expression should not be null. It has a default value.");
+            }
+            setTargetProduct(new Product("dummy", "dummy", 10, 10));
+        }
+
+        public static class Spi extends OperatorSpi {
+
+            public Spi() {
+                super(InternalTestOperator.class);
+            }
+
+        }
+
+    }
 }
