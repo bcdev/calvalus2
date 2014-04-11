@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.client;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.HasClickHandlers;
@@ -43,6 +44,7 @@ public class HelpSystem {
                 @Override
                 public void onError(Request res, Throwable throwable) {
                     // handle errors
+                    throwable.printStackTrace();
                 }
             });
         } catch (RequestException e) {
@@ -51,12 +53,7 @@ public class HelpSystem {
     }
 
     public static void addClickHandler(HasClickHandlers helpWidget, String urlKey) {
-        String link = keyMap.get(urlKey);
-        if (link == null) {
-            // todo - get this link from helpKeyMap.xml; introduce a header section
-            link = HELP_HOME_LINK;
-        }
-        helpWidget.addClickHandler(new HelpClickHandler(link));
+        helpWidget.addClickHandler(new HelpClickHandler(urlKey));
     }
 
     private native static void parseXmlKeyMap(String xmlKeyMap)/*-{
@@ -86,14 +83,19 @@ public class HelpSystem {
 
     private static class HelpClickHandler implements ClickHandler {
 
-        private String url;
+        private String urlKey;
 
-        public HelpClickHandler(String url) {
-            this.url = url;
+        public HelpClickHandler(String urlKey) {
+            this.urlKey = urlKey;
         }
 
         @Override
         public void onClick(ClickEvent event) {
+            String url = keyMap.get(urlKey);
+            if (url == null) {
+                // todo - get this link from helpKeyMap.xml; introduce a header section
+                url = HELP_HOME_LINK;
+            }
             showHelp(url);
         }
 

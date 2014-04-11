@@ -43,6 +43,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -158,7 +159,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoRegion[] loadRegions(String filter) throws BackendServiceException {
-        RegionPersistence regionPersistence = new RegionPersistence(getUserName());
+        RegionPersistence regionPersistence = new RegionPersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
         try {
             return regionPersistence.loadRegions();
         } catch (IOException e) {
@@ -168,7 +169,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void storeRegions(DtoRegion[] regions) throws BackendServiceException {
-        RegionPersistence regionPersistence = new RegionPersistence(getUserName());
+        RegionPersistence regionPersistence = new RegionPersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
         try {
             regionPersistence.storeRegions(regions);
         } catch (IOException e) {
@@ -634,5 +635,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             return userName;
         }
         return "anonymous";
+    }
+
+    public boolean isUserInRole(String role) {
+        return getThreadLocalRequest().isUserInRole(role) &&
+               // and the portal is either generic or destined to this user role ...
+               (! backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
+                role.equals(backendConfig.getConfigMap().get("calvalus.portal.userRole")));
     }
 }

@@ -3,6 +3,8 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
              xmlns:cell='urn:import:com.google.gwt.user.cellview.client'>
 
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
+
     <g:HorizontalPanel spacing="16">
 
         <g:VerticalPanel spacing="2">
@@ -107,6 +109,7 @@
                     </tr>
                 </table>
             </g:HTMLPanel>
+            <g:Anchor ui:field="showL3ParametersHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
         </g:VerticalPanel>
     </g:HorizontalPanel>
 </ui:UiBinder>

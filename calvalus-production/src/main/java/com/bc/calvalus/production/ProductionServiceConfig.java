@@ -31,7 +31,12 @@ import java.util.Properties;
  */
 public class ProductionServiceConfig {
 
+    static String appDataDir = null;
+
     public static File getUserAppDataDir() {
+        if (appDataDir != null) {
+            return new File(appDataDir);
+        }
         final String userHome = System.getProperty("user.home");
         return userHome != null ? new File(userHome, ".calvalus") : null;
     }
@@ -49,6 +54,9 @@ public class ProductionServiceConfig {
             }
         }
         overwriteConfigWithProperties(calvalusConfig, System.getProperties(), "calvalus.");
+        // memorise appDataDir if configured (remains null else)
+        appDataDir = calvalusConfig.get("calvalus.portal.appDataDir");
+
         return calvalusConfig;
     }
 

@@ -38,11 +38,15 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
+        String archiveRootDir = serviceConfiguration.get("calvalus.portal.archiveRootDir");
+        if (archiveRootDir == null) {
+            archiveRootDir = "eodata";
+        }
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClient jobClient = new JobClient(jobConf);
-            final InventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
+            final InventoryService inventoryService = new HdfsInventoryService(jobClient.getFs(), archiveRootDir);
             final HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
             final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {

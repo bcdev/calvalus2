@@ -15,10 +15,11 @@ import java.io.IOException;
 public class LocalInventoryService extends AbstractInventoryService {
 
     public static final File CONTEXT_DIR = new File(System.getProperty("user.home"), ".calvalus");
-    public static final File EODATA_DIR = new File(CONTEXT_DIR, "eodata");
+    public static final String EODATA = "eodata";
+    public static final File EODATA_DIR = new File(CONTEXT_DIR, EODATA);
 
     public LocalInventoryService() throws IOException {
-        super(LocalFileSystem.getLocal(new Configuration()));
+        super(LocalFileSystem.getLocal(new Configuration()), EODATA);
         CONTEXT_DIR.mkdirs();
         EODATA_DIR.mkdir();
     }

@@ -64,7 +64,7 @@ public class PatternBasedInputFormat extends InputFormat {
             List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
             FileSystem fs = FileSystem.get(configuration);
-            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(fs);
+            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(fs, "eodata");
 
             ProductInventory productInventory = ProductInventory.createInventory(configuration);
             List<InputSplit> splits = new ArrayList<InputSplit>(1000);

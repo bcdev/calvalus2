@@ -100,6 +100,8 @@ public class L3ConfigForm extends Composite {
     Button addVariableButton;
     @UiField
     Button removeVariableButton;
+    @UiField
+    Anchor showL3ParametersHelp;
 
     private Date minDate;
     private Date maxDate;
@@ -182,6 +184,8 @@ public class L3ConfigForm extends Composite {
         targetHeight.setEnabled(false);
 
         updateSpatialParameters(null);
+
+        HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
 
     private Variable createDefaultVariable() {
@@ -295,12 +299,12 @@ public class L3ConfigForm extends Composite {
             throw new ValidationException(periodCount, "Period count must be >= 1");
         }
 
-        boolean periodLengthValid = steppingPeriodLength.getValue() >= 1;
+        boolean periodLengthValid = steppingPeriodLength.getValue() >= 1 || steppingPeriodLength.getValue() == -7 || steppingPeriodLength.getValue() == -30;
         if (!periodLengthValid) {
             throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
         }
 
-        boolean compositingPeriodLengthValid = compositingPeriodLength.getValue() >= 1 && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
+        boolean compositingPeriodLengthValid = (compositingPeriodLength.getValue() >= 1 || compositingPeriodLength.getValue() == -7 || compositingPeriodLength.getValue() == -30) && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
                     "Compositing period length must be >= 1 and less or equal to than period");

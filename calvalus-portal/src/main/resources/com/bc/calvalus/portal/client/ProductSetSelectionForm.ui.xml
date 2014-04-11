@@ -70,7 +70,7 @@
                         </table>
                     </g:HTMLPanel>
                 </g:HorizontalPanel>
-                <g:Anchor ui:field="showHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
+                <g:Anchor ui:field="showProductSetSelectionHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
 
             </g:VerticalPanel>
 

@@ -4,8 +4,12 @@ import com.bc.calvalus.portal.client.Dialog;
 import com.bc.calvalus.portal.client.map.AbstractMapAction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.maps.client.base.LatLngBounds;
 import com.google.gwt.maps.client.overlays.Polygon;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.Image;
 
 /**
  * An action that locates the selected regions in the map by zooming to them.
@@ -14,7 +18,12 @@ import com.google.gwt.maps.client.overlays.Polygon;
  */
 public class LocateRegionsAction extends AbstractMapAction {
     public LocateRegionsAction() {
-        super("L", "Locate selected region(s)");
+        super("L", new Image(((Icons) GWT.create(Icons.class)).getIcon()), "Locate selected region(s)");
+    }
+
+    interface Icons extends ClientBundle {
+        @Source("RegionLocate24.gif")
+        ImageResource getIcon();
     }
 
     @Override

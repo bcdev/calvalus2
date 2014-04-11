@@ -187,6 +187,22 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <!-- TODO: seems to create the cc-patch dir but does not put it into the war file -->
+                    <execution>
+                        <id>cc-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/cc-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-cc-patch</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

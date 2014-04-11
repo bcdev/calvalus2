@@ -89,7 +89,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                String bundleLocationPattern = String.format("%s/%s/%s", CALVALUS_SOFTWARE_PATH, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                final String calvalusSoftwarePath = (jobClient.getConf().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
+                String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                 collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
             }
         } catch (IOException e) {

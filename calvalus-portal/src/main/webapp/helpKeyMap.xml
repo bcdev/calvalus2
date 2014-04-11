@@ -1,9 +1,13 @@
 <helpMap>
     <l2Processing>http://www.brockmann-consult.de/beam-wiki/x/XYC8Aw</l2Processing>
-
-    <processorSelection>http://www.brockmann-consult.de/beam-wiki/x/aoC8Aw</processorSelection>
     <productSetSelection>http://www.brockmann-consult.de/beam-wiki/x/ZoC8Aw</productSetSelection>
-    <porductSetFiltering>http://www.brockmann-consult.de/beam-wiki/x/aoC8Aw</porductSetFiltering>
+    <productSetFiltering>http://www.brockmann-consult.de/beam-wiki/x/aIC8Aw</productSetFiltering>
+    <processorSelection>http://www.brockmann-consult.de/beam-wiki/x/aoC8Aw</processorSelection>
 
+    <l3Processing>http://www.brockmann-consult.de/beam-wiki/x/OADJAw</l3Processing>
+    <l3Parameters>http://www.brockmann-consult.de/beam-wiki/x/NgDJAw</l3Parameters>
+
+    <manageRegions>http://www.brockmann-consult.de/beam-wiki/x/PgDJAw</manageRegions>
+    <manageProductions>http://www.brockmann-consult.de/beam-wiki/x/QADJAw</manageProductions>
     <managingBundles>http://www.brockmann-consult.de/beam-wiki/x/b4C8Aw</managingBundles>
 </helpMap>

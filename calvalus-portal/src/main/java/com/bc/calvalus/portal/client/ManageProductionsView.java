@@ -47,8 +47,8 @@ public class ManageProductionsView extends PortalView {
 
     private static final int UPDATE_PERIOD_MILLIS = 2000;
 
-    private static final String BEAM_NAME = "BEAM 4.11";
-    private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam/software";
+    private static final String BEAM_NAME = "BEAM";
+    private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam";
     private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
     private static final String MERCI_URL = "http://calvalus-merci:8080/merci/";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
@@ -151,6 +151,10 @@ public class ManageProductionsView extends PortalView {
             }
         });
 
+        Anchor manageProductionsHelp = new Anchor("Show Help");
+        HelpSystem.addClickHandler(manageProductionsHelp, "manageProductions");
+
+
         widget = new FlexTable();
         widget.setWidth("100%");
         FlexTable.FlexCellFormatter flexCellFormatter = widget.getFlexCellFormatter();
@@ -161,7 +165,7 @@ public class ManageProductionsView extends PortalView {
         flexCellFormatter.setHorizontalAlignment(2, 0, HasHorizontalAlignment.ALIGN_CENTER);
         flexCellFormatter.setColSpan(2, 0, 2);
         flexCellFormatter.setHorizontalAlignment(3, 0, HasHorizontalAlignment.ALIGN_LEFT);
-        flexCellFormatter.setColSpan(3, 0, 2);
+        flexCellFormatter.setHorizontalAlignment(3, 1, HasHorizontalAlignment.ALIGN_RIGHT);
         flexCellFormatter.setHorizontalAlignment(4, 0, HasHorizontalAlignment.ALIGN_LEFT);
         flexCellFormatter.setHorizontalAlignment(4, 1, HasHorizontalAlignment.ALIGN_RIGHT);
         widget.setCellSpacing(4);
@@ -169,8 +173,11 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(1, 0, productionTable);
         widget.setWidget(2, 0, pager);
         widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
+        widget.setWidget(3, 1, manageProductionsHelp);
         widget.setWidget(4, 0, new HTML(BEAM_HTML));
-        widget.setWidget(4, 1, new HTML(GANGLIA_HTML));
+        if (portalContext.withPortalFeature("catalogue")) {
+            widget.setWidget(4, 1, new HTML(GANGLIA_HTML));
+        }
 
         fireSortListEvent();
     }

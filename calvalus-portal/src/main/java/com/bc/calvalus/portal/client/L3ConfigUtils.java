@@ -17,9 +17,11 @@ public class L3ConfigUtils  {
         long millisPerDay = 24L * 60L * 60L * 1000L;
         long deltaMillis = maxDate.getTime() - minDate.getTime() + millisPerDay;
         int deltaDays = (int) (deltaMillis / millisPerDay);
-        int periodCount = deltaDays / steppingPeriodDays;
-        int remainingDays = deltaDays % steppingPeriodDays;
-        if (compositingPeriodDays <= remainingDays) {
+        int periodCount = deltaDays / Math.abs(steppingPeriodDays);
+        int remainingDays = deltaDays % Math.abs(steppingPeriodDays);
+        if (Math.abs(compositingPeriodDays) <= remainingDays) {
+            periodCount++;
+        } else if (steppingPeriodDays == -30 && periodCount == 0 && deltaDays >= 28) {
             periodCount++;
         }
         return periodCount;

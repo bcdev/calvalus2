@@ -104,4 +104,6 @@ public interface BackendService extends RemoteService {
     String checkUserRecordSource(String filePath) throws BackendServiceException;
 
     float[] listUserRecordSource(String filePath) throws BackendServiceException;
+
+    boolean isUserInRole(String role);
 }

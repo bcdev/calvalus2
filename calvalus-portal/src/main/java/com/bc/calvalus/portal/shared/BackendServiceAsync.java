@@ -40,4 +40,6 @@ public interface BackendServiceAsync {
     void checkUserRecordSource(String s, AsyncCallback<String> callback);
 
     void listUserRecordSource(String s, AsyncCallback<float[]> callback);
+
+    void isUserInRole(String role, AsyncCallback<Boolean> async);
 }

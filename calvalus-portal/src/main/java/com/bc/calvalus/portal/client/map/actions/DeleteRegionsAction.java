@@ -4,6 +4,10 @@ import com.bc.calvalus.portal.client.Dialog;
 import com.bc.calvalus.portal.client.map.AbstractMapAction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 
 /**
@@ -16,7 +20,12 @@ public class DeleteRegionsAction extends AbstractMapAction {
     private static final String TITLE = "Delete Regions";
 
     public DeleteRegionsAction() {
-        super("D", "Delete selected region(s)");
+        super("D", new Image(((Icons) GWT.create(Icons.class)).getIcon()), "Delete selected region(s)");
+    }
+
+    interface Icons extends ClientBundle {
+        @Source("RegionDelete24.gif")
+        ImageResource getIcon();
     }
 
     @Override

@@ -13,8 +13,8 @@ public class HdfsInventoryService extends AbstractInventoryService {
 
     public static final String CONTEXT_PATH = "/calvalus";
 
-    public HdfsInventoryService(FileSystem fileSystem) {
-        super(fileSystem);
+    public HdfsInventoryService(FileSystem fileSystem, String archiveRootDir) {
+        super(fileSystem, archiveRootDir);
     }
 
     @Override

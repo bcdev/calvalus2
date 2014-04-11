@@ -64,16 +64,28 @@ public class RegionMapToolbar implements IsWidget {
             }
         };
 
-        HorizontalPanel buttonPanel = new HorizontalPanel();
+        final VerticalPanel buttonPanel = new VerticalPanel();
         buttonPanel.setSpacing(2);
+        HorizontalPanel buttonPanel1 = new HorizontalPanel();
+        HorizontalPanel buttonPanel2 = new HorizontalPanel();
+        buttonPanel.add(buttonPanel1);
+        buttonPanel.add(buttonPanel2);
+        buttonPanel1.setSpacing(2);
+        buttonPanel2.setSpacing(2);
 
+        HorizontalPanel currentPanel = buttonPanel1;
         for (final MapAction action : regionMap.getActions()) {
             if (action instanceof MapAction.Separator) {
-                buttonPanel.add(new HTML("&nbsp;"));
+                //buttonPanel.add(new HTML("&nbsp;"));
+                currentPanel = buttonPanel2;
             } else if (action instanceof MapInteraction) {
                 MapInteraction interaction = (MapInteraction) action;
-                // todo - use interaction.getIcon() images here (nf)
-                ToggleButton toggleButton = new ToggleButton(interaction.getLabel(), interactionClickHandler);
+                ToggleButton toggleButton;
+                if (interaction.getImage() != null) {
+                    toggleButton = new ToggleButton(interaction.getImage(), interactionClickHandler);
+                } else {
+                    toggleButton = new ToggleButton(interaction.getLabel(), interactionClickHandler);
+                }
                 toggleButton.setTitle(interaction.getDescription());
                 interactions.put(toggleButton, interaction);
                 interactionButtons.put(interaction, toggleButton);
@@ -81,17 +93,26 @@ public class RegionMapToolbar implements IsWidget {
                     regionMap.setCurrentInteraction(interaction);
                     toggleButton.setDown(true);
                 }
-                buttonPanel.add(toggleButton);
+                currentPanel.add(toggleButton);
             } else {
-                // todo - use interaction.getIcon() images here (nf)
-                PushButton pushButton = new PushButton(action.getLabel(), new ClickHandler() {
-                    @Override
-                    public void onClick(ClickEvent clickEvent) {
-                        action.run(regionMap);
-                    }
-                });
+                PushButton pushButton;
+                if (action.getImage() != null) {
+                    pushButton = new PushButton(action.getImage(), new ClickHandler() {
+                        @Override
+                        public void onClick(ClickEvent clickEvent) {
+                            action.run(regionMap);
+                        }
+                    });
+                } else {
+                    pushButton = new PushButton(action.getLabel(), new ClickHandler() {
+                        @Override
+                        public void onClick(ClickEvent clickEvent) {
+                            action.run(regionMap);
+                        }
+                    });
+                }
                 pushButton.setTitle(action.getDescription());
-                buttonPanel.add(pushButton);
+                currentPanel.add(pushButton);
             }
         }
 

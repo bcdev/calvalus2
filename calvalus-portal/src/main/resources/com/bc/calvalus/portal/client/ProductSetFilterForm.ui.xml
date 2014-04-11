@@ -78,16 +78,16 @@
                 <hr/>
             </g:HTMLPanel>
 
-
-            <g:HorizontalPanel width="100%">
+            <!-- <g:HorizontalPanel width="100%"> -->
                 <g:HorizontalPanel spacing="2">
                     <g:RadioButton ui:field='spatialFilterOff' name="spatialFilter" text="No filter (global)"/>
                     <g:RadioButton ui:field='spatialFilterByRegion' name="spatialFilter" text="By region"/>
                 </g:HorizontalPanel>
-                <g:Anchor ui:field="manageRegionsAnchor">Manage regions</g:Anchor>
-            </g:HorizontalPanel>
+            <!-- </g:HorizontalPanel> -->
 
             <map:RegionMapWidget ui:field='regionMap' width="512px" height="240px"/>
+
+            <g:Anchor ui:field="manageRegionsAnchor" addStyleNames="{style.anchor}">Add and manage user regions</g:Anchor>
 
         </g:VerticalPanel>
 

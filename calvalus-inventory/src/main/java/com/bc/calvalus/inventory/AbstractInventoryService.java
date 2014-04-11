@@ -41,9 +41,11 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     private static final String USER_FILTER = "user=";
     private final FileSystem fileSystem;
+    private String archiveRootDir = "eodata";
 
-    public AbstractInventoryService(FileSystem fileSystem) {
+    public AbstractInventoryService(FileSystem fileSystem, String archiveRootDir) {
         this.fileSystem = fileSystem;
+        this.archiveRootDir = archiveRootDir;
     }
 
 
@@ -66,9 +68,9 @@ public abstract class AbstractInventoryService implements InventoryService {
     }
 
     private ProductSet[] loadPredefined() throws IOException {
-        Path databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME + ".new"));
+        Path databasePath = new Path(getQualifiedPath(archiveRootDir + "/" + ProductSetPersistable.FILENAME + ".new"));
         if (!getFileSystem().exists(databasePath)) {
-            databasePath = new Path(getQualifiedPath("eodata/" + ProductSetPersistable.FILENAME));
+            databasePath = new Path(getQualifiedPath(archiveRootDir + "/" + ProductSetPersistable.FILENAME));
         }
         if (getFileSystem().exists(databasePath)) {
             return readProductSets(new Path[]{databasePath});
