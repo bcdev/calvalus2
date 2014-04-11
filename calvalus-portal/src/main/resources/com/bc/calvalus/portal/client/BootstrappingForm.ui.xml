@@ -6,48 +6,50 @@
 
     <g:VerticalPanel spacing="5" width="100%">
 
-        <g:HTMLPanel width="62em">
-            <h3>Bootstrapping Configuration</h3>
-            <hr/>
-        </g:HTMLPanel>
+        <g:VerticalPanel spacing="16">
+            <g:HTMLPanel width="62em">
+                <h3>Bootstrapping Configuration</h3>
+                <hr/>
+            </g:HTMLPanel>
 
-        <g:HorizontalPanel spacing="2">
+            <g:HorizontalPanel spacing="2">
 
-            <g:VerticalPanel spacing="2">
-                <g:Label>CSV Matchup files:</g:Label>
-                <g:ListBox ui:field='bootstrapSources' multipleSelect="false" visibleItemCount="8" width="30em"/>
+                <g:VerticalPanel spacing="2">
+                    <g:Label>CSV Matchup files:</g:Label>
+                    <g:ListBox ui:field='bootstrapSources' multipleSelect="false" visibleItemCount="8" width="30em"/>
 
-                <g:HorizontalPanel spacing="2">
-                    <g:Button ui:field='addBootstrapSourceButton' text="Add"/>
-                    <g:Button ui:field='removeBootstrapSourceButton' text="Remove"/>
+                    <g:HorizontalPanel spacing="2">
+                        <g:Button ui:field='addBootstrapSourceButton' text="Add"/>
+                        <g:Button ui:field='removeBootstrapSourceButton' text="Remove"/>
+                    </g:HorizontalPanel>
+                </g:VerticalPanel>
+
+                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                    <g:Label>Number of Iterations:</g:Label>
+                    <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
                 </g:HorizontalPanel>
-            </g:VerticalPanel>
+            </g:HorizontalPanel>
+        </g:VerticalPanel>
+
+        <g:Composite ui:field='l2ConfigForm'/>
+
+        <g:VerticalPanel spacing="16">
+
+            <g:HTMLPanel width="62em">
+                <h3>Output Parameters</h3>
+                <hr/>
+            </g:HTMLPanel>
 
             <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-                <g:Label>Number of Iterations:</g:Label>
-                <g:IntegerBox ui:field="numberOfIterations" visibleLength="13"/>
+                <g:Label>Production name:</g:Label>
+                <g:TextBox ui:field="productionName" visibleLength="48"/>
             </g:HorizontalPanel>
-        </g:HorizontalPanel>
-
-
-        <g:Label>Bootstrapping Processors:</g:Label>
-        <g:ListBox ui:field="processorList" width="50em" visibleItemCount="5"/>
-
-        <g:HTMLPanel width="62em">
-            <h3>Output Parameters</h3>
-            <hr/>
-        </g:HTMLPanel>
-
-        <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
-            <g:Label>Production name:</g:Label>
-            <g:TextBox ui:field="productionName" visibleLength="48"/>
-        </g:HorizontalPanel>
-        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
-            Provide a name for the production to identify it later on. If left empty,
-            a name will be generated from the given parameters.
-            <p/>
-        </g:HTML>
-
+            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
+                Provide a name for the production to identify it later on. If left empty,
+                a name will be generated from the given parameters.
+                <p/>
+            </g:HTML>
+        </g:VerticalPanel>
 
     </g:VerticalPanel>
 </ui:UiBinder>

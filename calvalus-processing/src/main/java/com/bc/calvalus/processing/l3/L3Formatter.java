@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.TemporalBinSource;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.binning.operator.FormatterConfig;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
@@ -45,8 +46,8 @@ public class L3Formatter {
     private FormatterConfig formatterConfig;
 
     public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
-        L3Config l3Config = L3Config.get(conf);
-        planetaryGrid = l3Config.createPlanetaryGrid();
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        planetaryGrid = binningConfig.createPlanetaryGrid();
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
         this.configuration = conf;

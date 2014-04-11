@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.L3Config;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -16,6 +15,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -87,17 +87,17 @@ public class L3ProductionTypeTest {
     @Test
     public void testCreateL3Config() throws ProductionException {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
-        L3Config l3Config = L3ProductionType.getL3Config(productionRequest);
-        assertNotNull(l3Config);
-        assertEquals(4320, l3Config.createBinningContext(null).getPlanetaryGrid().getNumRows());
-        assertEquals("NOT INVALID", l3Config.createVariableContext().getValidMaskExpression());
-        assertNotNull(l3Config.getSuperSampling());
-        assertEquals(1, (int) l3Config.getSuperSampling());
-        assertEquals(3, l3Config.createVariableContext().getVariableCount());
-        assertEquals("a", l3Config.createVariableContext().getVariableName(0));
-        assertEquals("b", l3Config.createVariableContext().getVariableName(1));
-        assertEquals("c", l3Config.createVariableContext().getVariableName(2));
-        BinManager binManager = l3Config.createBinningContext(null).getBinManager();
+        BinningConfig binningConfig = L3ProductionType.getBinningConfig(productionRequest);
+        assertNotNull(binningConfig);
+        assertEquals(4320, binningConfig.createBinningContext(null).getPlanetaryGrid().getNumRows());
+        assertEquals("NOT INVALID", binningConfig.createVariableContext().getValidMaskExpression());
+        assertNotNull(binningConfig.getSuperSampling());
+        assertEquals(1, (int) binningConfig.getSuperSampling());
+        assertEquals(3, binningConfig.createVariableContext().getVariableCount());
+        assertEquals("a", binningConfig.createVariableContext().getVariableName(0));
+        assertEquals("b", binningConfig.createVariableContext().getVariableName(1));
+        assertEquals("c", binningConfig.createVariableContext().getVariableName(2));
+        BinManager binManager = binningConfig.createBinningContext(null).getBinManager();
         assertEquals(3, binManager.getAggregatorCount());
         assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
         assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);

@@ -20,20 +20,17 @@ import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class L3PartitionerTest {
 
-    @Test
+    @Test(expected = IllegalArgumentException.class)
     public void testIllegalConfig() {
-        try {
-            createPartitioner(113, "");
-            fail("IllegalArgumentException?");
-        } catch (IllegalArgumentException e) {
-        }
+        createPartitioner(113, "");
+        fail("IllegalArgumentException?");
     }
 
     @Test
@@ -150,7 +147,7 @@ public class L3PartitionerTest {
         L3Partitioner l3Partitioner = new L3Partitioner();
         Configuration configuration = new Configuration();
 
-        L3Config l3Config = new L3Config();
+        BinningConfig l3Config = new BinningConfig();
         l3Config.setNumRows(numRows);
         configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
 

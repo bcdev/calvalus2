@@ -31,6 +31,7 @@ import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.binning.cellprocessor.CellProcessorChain;
+import org.esa.beam.binning.operator.BinningConfig;
 
 import java.io.IOException;
 import java.util.Map;
@@ -73,16 +74,16 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         this.conf = conf;
         computeOutput = conf.getBoolean(JobConfigNames.CALVALUS_L3_COMPUTE_OUTPUTS, true);
 
-        L3Config l3Config = getL3Config(conf);
+        BinningConfig binningConfig = getL3Config(conf);
 
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        BinningContext binningContext = l3Config.createBinningContext(regionGeometry);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, regionGeometry);
         temporalBinner = new TemporalBinner(binningContext);
         cellChain = new CellProcessorChain(binningContext);
         conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, binningContext.getBinManager().getResultFeatureNames());
     }
 
-    private L3Config getL3Config(Configuration conf) {
+    private BinningConfig getL3Config(Configuration conf) {
         String cellL3Conf = conf.get(JobConfigNames.CALVALUS_CELL_PARAMETERS);
         String stdL3Conf = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
         String l3ConfXML;
@@ -91,13 +92,11 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         } else {
             l3ConfXML = stdL3Conf;
         }
-        L3Config l3Config;
         try {
-            l3Config = L3Config.fromXml(l3ConfXML);
+            return BinningConfig.fromXml(l3ConfXML);
         } catch (BindingException e) {
             throw new IllegalArgumentException("Invalid L3 configuration: " + e.getMessage(), e);
         }
-        return l3Config;
     }
 
     @Override

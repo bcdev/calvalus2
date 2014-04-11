@@ -88,6 +88,8 @@ public class L2ConfigForm extends Composite {
 
 
     @UiField
+    Label processorListLabel;
+    @UiField
     ListBox processorList;
     @UiField
     Label processorBundleName;
@@ -95,6 +97,8 @@ public class L2ConfigForm extends Composite {
     @UiField
     HTML processorDescriptionHTML;
 
+    @UiField
+    Label parametersLabel;
     @UiField
     TextArea processorParametersArea;
     @UiField
@@ -225,9 +229,15 @@ public class L2ConfigForm extends Composite {
         DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
             processorBundleName.setText("Bundle: " + processorDescriptor.getBundleName() + " v" + processorDescriptor.getBundleVersion());
-            processorParametersArea.setValue(processorDescriptor.getDefaultParameter());
+            String defaultParameter = processorDescriptor.getDefaultParameter();
+            DtoParameterDescriptor[] parameterDescriptors = processorDescriptor.getParameterDescriptors();
+            boolean hasParameterDescriptors = parameterDescriptors.length > 0;
+            if (defaultParameter.isEmpty() && hasParameterDescriptors) {
+                defaultParameter = formatAsXMLDescriptor(parameterDescriptors);
+            }
+            processorParametersArea.setValue(defaultParameter);
             processorDescriptionHTML.setHTML(processorDescriptor.getDescriptionHtml());
-            editParametersButton.setEnabled(processorDescriptor.getParameterDescriptors().length > 0);
+            editParametersButton.setEnabled(hasParameterDescriptors);
         } else {
             processorBundleName.setText("");
             processorParametersArea.setValue("");
@@ -275,6 +285,24 @@ public class L2ConfigForm extends Composite {
         return parameters;
     }
 
+    private String formatAsXMLDescriptor(DtoParameterDescriptor[] parameterDescriptors) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<parameters>\n");
+        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+            sb.append("  <");
+            sb.append(parameterDescriptor.getName());
+            sb.append(">");
+            sb.append(parameterDescriptor.getDefaultValue());
+            sb.append("</");
+            sb.append(parameterDescriptor.getName());
+            sb.append(">\n");
+        }
+
+        sb.append("</parameters>\n");
+        return sb.toString();
+    }
+
+
     private class EditParametersAction implements ClickHandler {
 
         @Override
@@ -294,7 +322,7 @@ public class L2ConfigForm extends Composite {
                                              Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
-                    processorParametersArea.setValue(formatAsXML(parameterDescriptors));
+                    processorParametersArea.setValue(formatAsXMLFromWidgets(parameterDescriptors));
                     hide();
                 }
             };
@@ -328,7 +356,7 @@ public class L2ConfigForm extends Composite {
             return paramTable;
         }
 
-        private String formatAsXML(DtoParameterDescriptor[] parameterDescriptors) {
+        private String formatAsXMLFromWidgets(DtoParameterDescriptor[] parameterDescriptors) {
             StringBuilder sb = new StringBuilder();
             sb.append("<parameters>\n");
             for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {

@@ -1,30 +1,38 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.production.ProductionRequest;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileUtil;
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.ta.*;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
+import com.bc.calvalus.processing.ta.TAGraph;
+import com.bc.calvalus.processing.ta.TAPoint;
+import com.bc.calvalus.processing.ta.TAReport;
+import com.bc.calvalus.processing.ta.TAResult;
+import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.WritableVector;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,8 +81,8 @@ class TAStaging extends ProductionStaging {
 
         final ProductionRequest productionRequest = production.getProductionRequest();
         final String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
-        final L3Config l3Config = L3Config.fromXml(l3ConfigXml);
-        final BinManager binManager = l3Config.createBinningContext(null).getBinManager();
+        BinningConfig binningConfig = BinningConfig.fromXml(l3ConfigXml);
+        final BinManager binManager = HadoopBinManager.createBinningContext(binningConfig, null).getBinManager();
 
         final List<String> outputFeatureNames = new ArrayList<String>();
         final int aggregatorCount = binManager.getAggregatorCount();

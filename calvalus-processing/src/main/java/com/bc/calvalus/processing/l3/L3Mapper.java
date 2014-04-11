@@ -58,11 +58,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        final L3Config l3Config = L3Config.get(conf);
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        final BinningContext ctx = l3Config.createBinningContext(regionGeometry);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(conf, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
-        final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
+        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
@@ -73,7 +72,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
-                                                                  l3Config.getSuperSampling(),
+                                                                  binningContext.getSuperSampling(),
                                                                   addedBands,
                                                                   SubProgressMonitor.create(pm, 50));
                 if (numObs > 0L) {

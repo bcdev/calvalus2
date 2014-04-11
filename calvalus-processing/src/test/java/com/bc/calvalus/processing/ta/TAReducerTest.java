@@ -17,16 +17,15 @@
 package com.bc.calvalus.processing.ta;
 
 
+import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
-import com.vividsolutions.jts.geom.Geometry;
-import org.esa.beam.binning.TemporalBin;
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
+import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.aggregators.AggregatorAverageML;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,8 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static java.lang.Math.sqrt;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class TAReducerTest {
 
@@ -95,8 +93,8 @@ public class TAReducerTest {
     private Configuration createConfiguration() throws BindingException {
         Configuration configuration;
         configuration = new Configuration();
-        L3Config l3Config = createL3Config();
-        configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3Config.toXml());
+        BinningConfig binningConfig = createL3Config();
+        configuration.set(JobConfigNames.CALVALUS_L3_PARAMETERS, binningConfig.toXml());
         configuration.set(JobConfigNames.CALVALUS_MIN_DATE, "2010-01-01");
         configuration.set(JobConfigNames.CALVALUS_MAX_DATE, "2010-01-10");
         TAConfig taConfig = TAConfig.fromXml("<parameters><regions><region><name>aoi</name><geometry>polygon((0 0,0 1,1 1,1 0,0 0))</geometry></region></regions></parameters>");
@@ -104,11 +102,11 @@ public class TAReducerTest {
         return configuration;
     }
 
-    private L3Config createL3Config() {
-        L3Config l3Config = new L3Config();
-        l3Config.setNumRows(2160);
-        l3Config.setSuperSampling(1); // unused
-        l3Config.setMaskExpr(""); // unused
+    private BinningConfig createL3Config() {
+        BinningConfig binningConfig = new BinningConfig();
+        binningConfig.setNumRows(2160);
+        binningConfig.setSuperSampling(1); // unused
+        binningConfig.setMaskExpr(""); // unused
         AggregatorConfig aggConf = new AggregatorAverageML.Descriptor().createConfig();
         PropertySet aggProperties = aggConf.asPropertySet();
         aggProperties.setValue("varName", "chl_conc");
@@ -116,7 +114,7 @@ public class TAReducerTest {
 //        aggConf.setVarName("chl_conc");
 //        aggConf.setWeightCoeff(0.5);
 //        aggConf.setFillValue(Float.NaN);
-        l3Config.setAggregatorConfigs(aggConf);
-        return l3Config;
+        binningConfig.setAggregatorConfigs(aggConf);
+        return binningConfig;
     }
 }

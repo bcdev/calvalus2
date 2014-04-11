@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.operator.BinningConfig;
 
 /**
  * Partitions the bins by their bin index.
@@ -56,8 +57,8 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        L3Config l3Config = L3Config.get(conf);
-        this.planetaryGrid = l3Config.createPlanetaryGrid();
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        this.planetaryGrid = binningConfig.createPlanetaryGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {

@@ -11,7 +11,7 @@
             <g:VerticalPanel spacing="2">
 
                 <g:HTMLPanel width="100%">
-                    <h3>Level-2 Processor</h3>
+                    <h3><g:Label ui:field="processorListLabel">Level-2 Processor</g:Label></h3>
                     <hr/>
                 </g:HTMLPanel>
                 <g:HorizontalPanel>
@@ -30,7 +30,7 @@
             <g:VerticalPanel spacing="2">
 
                 <g:HTMLPanel width="100%">
-                    <h3>Level-2 Parameters</h3>
+                    <h3><g:Label ui:field="parametersLabel">Level-2 Parameters</g:Label></h3>
                     <hr/>
                 </g:HTMLPanel>
 
