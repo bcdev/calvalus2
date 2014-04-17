@@ -31,10 +31,10 @@ import java.io.IOException;
  */
 public class TileIndexWritable implements WritableComparable {
 
-    private int macroTileX;
-    private int macroTileY;
-    private int tileX;
-    private int tileY;
+    private int macroTileX = -1;
+    private int macroTileY = -1;
+    private int tileX = -1;
+    private int tileY = -1;
 
     public TileIndexWritable() {
     }
