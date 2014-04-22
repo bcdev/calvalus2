@@ -71,4 +71,25 @@ cd ../webapps/calvalus/
 rm -rf staging/
 mv ../../temp/staging .
 
+===========================================================================
+CC Portal Software
+-------------------
+
+(cd calvalus-portal/target; scp -r calvalus-portal-1.8-SNAPSHOT.war www/cc-patch cvop@bcvm03: )
+
+ssh cvop@bcvm03
+cd /opt/apache-tomcat-7.0.11/webapps
+
+# save staging
+mv ccprocessing/staging ../temp/
+
+# redeploy
+rm -r ccprocessing.war ccprocessing
+mv /home/cvop/calvalus-portal-1.8-SNAPSHOT.war ccprocessing.war
+sleep 5
+cp -r /home/cvop/cc-patch/* ccprocessing
+
+# restore staging
+mv ccprocessing/staging ccprocessing/staging.template
+mv ../temp/staging ccprocessing/
 

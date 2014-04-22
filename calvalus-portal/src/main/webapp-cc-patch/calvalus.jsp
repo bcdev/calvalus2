@@ -5,7 +5,7 @@
 
 <html>
 <head>
-    <title>Calvalus Portal</title>
+    <title>CoastColour Processing On-Demand</title>
     <link type="text/css" rel="stylesheet" href="calvalus.css">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
@@ -51,7 +51,7 @@
                         Not logged in.
                         <% } %>
                         <br/>
-                        <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp">Help</a>
+                        <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp" onclick="window.open('http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw','_CVHelp','width=800,height=600'); return false;">Help</a>
                         <br/>
                         <a href="about.jsp" target="_blank">About</a>
                     </td>
