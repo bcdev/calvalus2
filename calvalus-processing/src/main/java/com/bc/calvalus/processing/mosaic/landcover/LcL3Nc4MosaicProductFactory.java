@@ -37,6 +37,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
             619.601f, 664.57306f, 680.82104f, 708.32904f, 753.37103f,
             761.50806f, 778.40906f, 864.87604f, 884.94403f, 900.00006f};
 
+    static final String[] SPOT_BANDNAMES = new String[] { "B0", "B2", "B3", "MIR" };
     static final float[] SPOT_WAVELENGTH = new float[]{450f, 645f, 835f, 1665f};
 
     static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
@@ -168,9 +169,18 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
         for (int i = 0; i < srMeanBandNames.size(); i++) {
             final String bandName = srMeanBandNames.get(i);
-            final int bandIndex;
+            int bandIndex = -1;
             try {
-                bandIndex = Integer.parseInt(bandName.substring("sr_".length(), bandName.length()-"_mean".length()));
+                final String inputBandName = bandName.substring("sr_".length(), bandName.length() - "_mean".length());
+                for (int j=0; j<SPOT_BANDNAMES.length; ++j) {
+                    if (SPOT_BANDNAMES[j].equals(inputBandName)) {
+                        bandIndex = j+1;
+                        break;
+                    }
+                }
+                if (bandIndex == -1) {
+                    bandIndex = Integer.parseInt(inputBandName);
+                }
             } catch (NumberFormatException ex) {
                 throw new RuntimeException("cannot determine band index from band name " + bandName, ex);
             }
