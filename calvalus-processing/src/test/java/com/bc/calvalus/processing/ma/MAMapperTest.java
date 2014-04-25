@@ -63,14 +63,33 @@ public class MAMapperTest {
 
         executeMatchup(collectedMatchUps, 3, true);
 
-        for (RecordWritable collectedMatchUp : collectedMatchUps) {
-            System.out.println("collectedMatchUp = " + collectedMatchUp);
-        }
+//        for (RecordWritable collectedMatchUp : collectedMatchUps) {
+//            System.out.println("collectedMatchUp = " + collectedMatchUp);
+//        }
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
         testMatchUp(collectedMatchUps, 2, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+    }
+
+    @Test
+    public void testMatchUp_WindowSize1_FilterOverlapping() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 1, true);
+
+//        for (RecordWritable collectedMatchUp : collectedMatchUps) {
+//            System.out.println("collectedMatchUp = " + collectedMatchUp);
+//        }
+        assertEquals(6, collectedMatchUps.size());
+        assertSame(Integer.class, collectedMatchUps.get(0).getAttributeValues()[2].getClass()); // scalar
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
         testMatchUp(collectedMatchUps, 3);
         testMatchUp(collectedMatchUps, 4);
         testMatchUp(collectedMatchUps, 5);
@@ -150,8 +169,15 @@ public class MAMapperTest {
     }
 
     private float getCenterMatchupValue(RecordWritable record, int columnIndex) {
-        float[] data = getAggregatedNumber(record, columnIndex).data;
-        return data[data.length / 2];
+        Object attrValue = record.getAttributeValues()[columnIndex];
+        if (attrValue instanceof AggregatedNumber) {
+            AggregatedNumber aggregatedNumber = (AggregatedNumber) attrValue;
+            float[] data = aggregatedNumber.data;
+            return data[data.length / 2];
+        } else if (attrValue instanceof Number) {
+            return ((Number) attrValue).floatValue();
+        }
+        throw new IllegalArgumentException();
     }
 
     private AggregatedNumber getAggregatedNumber(RecordWritable record, int columnIndex) {

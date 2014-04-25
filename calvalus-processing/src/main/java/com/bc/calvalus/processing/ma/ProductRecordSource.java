@@ -246,11 +246,19 @@ public class ProductRecordSource implements RecordSource {
 
         PixelPosRecord create(Record record) {
             Object[] attributeValues = record.getAttributeValues();
-            float[] xAttributeValue = ((AggregatedNumber) attributeValues[xAttributeIndex]).data;
-            float[] yAttributeValue = ((AggregatedNumber) attributeValues[yAttributeIndex]).data;
-            int xPos = (int) xAttributeValue[xAttributeValue.length / 2];
-            int yPos = (int) yAttributeValue[yAttributeValue.length / 2];
-
+            int xPos = 0;
+            int yPos = 0;
+            if (attributeValues[xAttributeIndex] instanceof AggregatedNumber &&
+                attributeValues[yAttributeIndex] instanceof AggregatedNumber) {
+                float[] xAttributeValue = ((AggregatedNumber) attributeValues[xAttributeIndex]).data;
+                float[] yAttributeValue = ((AggregatedNumber) attributeValues[yAttributeIndex]).data;
+                xPos = (int) xAttributeValue[xAttributeValue.length / 2];
+                yPos = (int) yAttributeValue[yAttributeValue.length / 2];
+            } else if (attributeValues[xAttributeIndex] instanceof Integer &&
+                       attributeValues[yAttributeIndex] instanceof Integer) {
+                xPos = (Integer) attributeValues[xAttributeIndex];
+                yPos = (Integer) attributeValues[yAttributeIndex];
+            }
             // can be null !!!!
             Date eoTime = (Date) attributeValues[timeAttributeIndex];
             Date insituTime = record.getTime();
