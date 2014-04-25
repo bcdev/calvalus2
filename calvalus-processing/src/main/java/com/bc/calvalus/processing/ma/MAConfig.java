@@ -118,6 +118,13 @@ public class MAConfig implements XmlConvertible {
     @Parameter
     private String recordSourceUrl;
 
+    /**
+     * If set to {@code true} the product or product parts
+     * that have been processed will be saved.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean saveProcessedProducts;
+
     // The following have been discussed but not yet decided.
 
     /**
@@ -295,5 +302,13 @@ public class MAConfig implements XmlConvertible {
 
     public void setFilterOverlapping(boolean filterOverlapping) {
         this.filterOverlapping = filterOverlapping;
+    }
+
+    public boolean getSaveProcessedProducts() {
+        return saveProcessedProducts;
+    }
+
+    public void setSaveProcessedProducts(boolean saveProcessedProducts) {
+        this.saveProcessedProducts = saveProcessedProducts;
     }
 }
