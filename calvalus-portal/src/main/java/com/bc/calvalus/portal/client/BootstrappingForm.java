@@ -84,7 +84,7 @@ public class BootstrappingForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(l2ConfigForm.getValueMap());
 
-        parameters.put(BootstrappingWorkflowItem.NUM_ITERATIONS_PROPERTY, numberOfIterations.getText());
+        parameters.put(BootstrappingWorkflowItem.NUM_ITERATIONS_PROPERTY, numberOfIterations.getValue().toString());
         parameters.put(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY, userManagedContent.getSelectedFilePath());
         if (!productionName.getValue().isEmpty()) {
             parameters.put("productionName", productionName.getValue());

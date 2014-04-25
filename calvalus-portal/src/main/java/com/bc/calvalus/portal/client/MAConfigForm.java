@@ -192,18 +192,20 @@ public class MAConfigForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        boolean macroPixelSizeValid = macroPixelSize.getValue() >= 1
-                                      && macroPixelSize.getValue() <= 201
-                                      && macroPixelSize.getValue() % 2 == 1;
+        Integer macroPixelSizeValue = macroPixelSize.getValue();
+        boolean macroPixelSizeValid = macroPixelSizeValue != null
+                                      && macroPixelSizeValue >= 1
+                                      && macroPixelSizeValue <= 201
+                                      && macroPixelSizeValue % 2 == 1;
         if (!macroPixelSizeValid) {
             throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 201");
         }
-        boolean filteredMeanCoeffValid = filteredMeanCoeff.getValue() >= 0;
+        boolean filteredMeanCoeffValid = filteredMeanCoeff.getValue() != null && filteredMeanCoeff.getValue() >= 0;
         if (!filteredMeanCoeffValid) {
             throw new ValidationException(filteredMeanCoeff, "Filtered mean coefficient must be >= 0 (0 disables this criterion)");
         }
 
-        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() >= 0;
+        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() != null && maxTimeDifference.getValue() >= 0;
         if (!maxTimeDifferenceValid) {
             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
         }
@@ -219,10 +221,10 @@ public class MAConfigForm extends Composite {
         parameters.put("copyInput", "true");
         parameters.put("goodPixelExpression", goodPixelExpression.getText());
         parameters.put("goodRecordExpression", goodRecordExpression.getText());
-        parameters.put("macroPixelSize", macroPixelSize.getText());
-        parameters.put("maxTimeDifference", maxTimeDifference.getText());
-        parameters.put("filteredMeanCoeff", filteredMeanCoeff.getText());
-        parameters.put("filterOverlapping", String.valueOf(filterOverlapping.getValue()));
+        parameters.put("macroPixelSize", macroPixelSize.getValue().toString());
+        parameters.put("maxTimeDifference", maxTimeDifference.getValue().toString());
+        parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
+        parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
         parameters.put("outputGroupName", outputGroupName.getText());
         parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
         return parameters;
