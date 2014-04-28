@@ -116,7 +116,12 @@ public class VCProductionType extends HadoopProductionType {
         pprL2.configureProcessor(configL2);
 
         int lastSlashIndex = level1Input.lastIndexOf("/");
-        String level2Input = outputDirL1Perturbation + "/" + level1Input.substring(lastSlashIndex);
+        String level2Input;
+        if (lastSlashIndex == -1) {
+            level2Input = outputDirL1Perturbation;
+        } else {
+            level2Input = outputDirL1Perturbation + "/" + level1Input.substring(lastSlashIndex - 1);
+        }
         configL2.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level2Input);
 
         String outputDirL2 = getOutputPath(productionRequest, productionId, "-L2");
