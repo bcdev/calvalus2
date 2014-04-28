@@ -154,9 +154,12 @@ public abstract class HadoopProductionType implements ProductionType {
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
         String relDir = productionRequest.getString("outputDir", productionId);
         String defaultDir = String.format("home/%s/%s", productionRequest.getUserName(), relDir);
-        String outputPath = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR,
-                                                        productionRequest.getString("outputPath", defaultDir));
-        return getInventoryService().getQualifiedPath(outputPath + dirSuffix);
+        String outputPath = productionRequest.getString("outputPath", defaultDir);
+        String outputDir = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
+        if (outputDir.endsWith("/")) {
+            outputDir = outputDir.substring(0, outputDir.length()-1);
+        }
+        return getInventoryService().getQualifiedPath(outputDir + dirSuffix);
     }
 
     /**
