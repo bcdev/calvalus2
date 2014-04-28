@@ -103,6 +103,7 @@ public class VCProductionType extends HadoopProductionType {
 
         maConfig = MAProductionType.getMAConfig(productionRequest);
         maConfig.setCopyInput(false);
+        maConfig.setSaveProcessedProducts(true);
         maConfig.setGoodPixelExpression("");
         configL1Perturbation.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
