@@ -47,7 +47,6 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
         ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG_ML", "0.5"),
                                                              new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"));
-        case2r.setL2Processor(true);
         case2r.setParameterDescriptors(
                 new ProcessorDescriptor.ParameterDescriptor("doSmile", "boolean", "Correct smile effect", "true", null),
                 new ProcessorDescriptor.ParameterDescriptor("doRadiometric", "boolean", "Correct radiometric effect", "false", null),

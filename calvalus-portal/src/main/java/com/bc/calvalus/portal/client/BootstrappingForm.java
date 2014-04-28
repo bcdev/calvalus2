@@ -96,8 +96,7 @@ public class BootstrappingForm extends Composite {
     private static class BootstrappingFilter implements Filter<DtoProcessorDescriptor> {
         @Override
         public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
-            boolean isBootstrapProcessor = "r-bootstrap".equals(dtoProcessorDescriptor.getExecutableName());
-            return isBootstrapProcessor && !dtoProcessorDescriptor.isL2Processor();
+            return dtoProcessorDescriptor.getProcessorCategory() == DtoProcessorDescriptor.DtoProcessorCategory.BOOTSTRAPPING;
         }
     }
 }
