@@ -27,7 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo view that lets users submit a new L3 production.
+ * Demo view that lets users submit a new Match-Up production.
  *
  * @author Norman
  */
@@ -63,17 +63,6 @@ public class OrderMAProductionView extends OrderProductionView {
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
-        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
-            @Override
-            public void temporalFilterChanged(Map<String, String> data) {
-                // ?
-            }
-
-            @Override
-            public void spatialFilterChanged(Map<String, String> data) {
-                // ?
-            }
-        });
 
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
