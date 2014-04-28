@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
@@ -28,6 +29,7 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
+import java.util.logging.Logger;
 
 /**
  * The staging job for match-up analysis (MA) results.
@@ -36,7 +38,9 @@ import java.io.File;
  */
 class CopyStaging extends ProductionStaging {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final long GIGABYTE = 1024L * 1024L * 1024L;
+
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
@@ -55,6 +59,7 @@ class CopyStaging extends ProductionStaging {
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
+        LOG.info("staging dir is: " + stagingDir);
 
         Path remoteOutputDir = new Path(production.getOutputPath());
         FileSystem fileSystem = remoteOutputDir.getFileSystem(hadoopConfiguration);
@@ -66,6 +71,7 @@ class CopyStaging extends ProductionStaging {
             for (int i = 0; i < fileStatuses.length; i++) {
                 FileStatus fileStatus = fileStatuses[i];
                 Path path = fileStatus.getPath();
+                LOG.info("copying: " + path);
                 FileUtil.copy(fileSystem,
                               path,
                               new File(stagingDir, path.getName()),
