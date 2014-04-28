@@ -118,8 +118,6 @@ public class VCProductionType extends HadoopProductionType {
         int lastSlashIndex = level1Input.lastIndexOf("/");
         String level2Input = outputDirL1Perturbation + "/" + level1Input.substring(lastSlashIndex);
         configL2.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level2Input);
-        configL2.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
-        configL2.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
 
         String outputDirL2 = getOutputPath(productionRequest, productionId, "-L2");
         configL2.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL2);
