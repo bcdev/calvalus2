@@ -39,11 +39,13 @@
                         </td>
                     </tr>
                 </table>
+
                 <hr/>
 
                 <p>Calvalus staging area
-                    <xsl:value-of select="@directory"/>
+                    <xsl:value-of select="substring-after(substring-after(@directory,'/staging/'),'/')"/>
                 </p>
+                <it>Use FTP on ftp.coastcolour.org with your portal credentials for bulk download.</it>
 
                 <hr/>
                 <table cellspacing="0"
