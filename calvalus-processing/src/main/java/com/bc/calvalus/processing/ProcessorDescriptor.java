@@ -61,6 +61,9 @@ public class ProcessorDescriptor {
     @Parameter(itemAlias = "jobParameter")
     private JobParameter[] jobConfig;
 
+    @Parameter(defaultValue = "LEVEL2")
+    private ProcessorCategory processorCategory;
+
     @Parameter(defaultValue = "true")
     private boolean isL2Processor;
 
@@ -86,6 +89,8 @@ public class ProcessorDescriptor {
         this.processorVersion = processorVersion;
         this.defaultParameters = defaultParameters;
         this.outputVariables = outputVariables;
+        formatting = FormattingType.OPTIONAL;
+        processorCategory = ProcessorCategory.LEVEL2;
     }
 
     public String getExecutableName() {
@@ -128,10 +133,6 @@ public class ProcessorDescriptor {
         return inputProductTypes;
     }
 
-    public boolean isL2Processor() {
-        return isL2Processor;
-    }
-
     public String getOutputProductType() {
         return outputProductType;
     }
@@ -150,13 +151,17 @@ public class ProcessorDescriptor {
         return parameterDescriptors;
     }
 
+    public ProcessorCategory getProcessorCategory() {
+        ProcessorCategory result = processorCategory;
+        if (!isL2Processor) {
+            result = ProcessorCategory.BOOTSTRAPPING;
+        }
+        return result;
+    }
+
     // only used in tests
     public void setOutputProductType(String outputProductType) {
         this.outputProductType = outputProductType;
-    }
-
-    public void setL2Processor(boolean l2Processor) {
-        isL2Processor = l2Processor;
     }
 
     public void setParameterDescriptors(ParameterDescriptor... parameterDescriptors) {
@@ -245,5 +250,11 @@ public class ProcessorDescriptor {
         IMPLICIT,  // MEGS, l2gen
         OPTIONAL,  // BEAM Operator -> Sequential or NetCDF or DIMAP or ...
         MANDATORY  // Formatting -> NetCDF or DIMAP
+    }
+
+    public enum ProcessorCategory {
+        LEVEL2,
+        BOOTSTRAPPING,
+        PERTURBATION
     }
 }

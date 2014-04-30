@@ -232,7 +232,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                bundleDescriptor.getBundleLocation(),
                                                null,
                                                null,
-                                               true,
+                                               DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
                                                null,
                                                null,
                                                null,
@@ -457,13 +457,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           bundlePath,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
-                                          processorDescriptor.isL2Processor(),
+                                          convert(processorDescriptor.getProcessorCategory()),
                                           processorDescriptor.getOutputProductType(),
                                           convert(processorDescriptor.getOutputFormats()),
                                           processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
                                           processorDescriptor.getMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()),
                                           convert(processorDescriptor.getParameterDescriptors()));
+    }
+
+    private DtoProcessorDescriptor.DtoProcessorCategory convert(ProcessorDescriptor.ProcessorCategory processorCategory) {
+        if (processorCategory == null) {
+            return DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2;
+        } else {
+            return DtoProcessorDescriptor.DtoProcessorCategory.valueOf(processorCategory.name());
+        }
     }
 
     private DtoParameterDescriptor[] convert(ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors) {

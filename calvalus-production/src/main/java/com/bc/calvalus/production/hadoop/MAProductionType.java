@@ -20,8 +20,7 @@ import org.esa.beam.util.StringUtils;
 import java.util.List;
 
 /**
- * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
- * given regions.
+ * Match-up analysis: A production type used for generating match-ups between Level1/Level2 products and in-situ data.
  *
  * @author MarcoZ
  * @author Norman

@@ -41,11 +41,15 @@ public class ProcessorProductionRequest {
     private final String processorParameters;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
-        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME, null);
-        this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION, null);
-        this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION, null);
-        this.processorName = productionRequest.getString(PROCESSOR_NAME, null);
-        this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS, "<parameters/>");
+        this(productionRequest, "");
+    }
+
+    public ProcessorProductionRequest(ProductionRequest productionRequest, String parameterPrefix) {
+        this.processorBundleName = productionRequest.getString(parameterPrefix + PROCESSOR_BUNDLE_NAME, null);
+        this.processorBundleVersion = productionRequest.getString(parameterPrefix + PROCESSOR_BUNDLE_VERSION, null);
+        this.processorBundleLocation = productionRequest.getString(parameterPrefix + PROCESSOR_BUNDLE_LOCATION, null);
+        this.processorName = productionRequest.getString(parameterPrefix + PROCESSOR_NAME, null);
+        this.processorParameters = productionRequest.getString(parameterPrefix + PROCESSOR_PARAMETERS, "<parameters/>");
     }
 
     public String getProcessorName() {

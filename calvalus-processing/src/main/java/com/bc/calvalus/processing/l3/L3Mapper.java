@@ -65,16 +65,18 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Level 3", 100);
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
+        final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
+        pm.beginTask("Level 3", progressForProcessing + progressForBinning);
         try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
                 HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   binningContext.getSuperSampling(),
                                                                   addedBands,
-                                                                  SubProgressMonitor.create(pm, 50));
+                                                                  SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);

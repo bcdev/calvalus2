@@ -87,7 +87,9 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        pm.beginTask("Level 2 processing", 100);
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
+        final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;
+        pm.beginTask("Level 2 processing", progressForProcessing + progressForSaving);
         try {
             processorAdapter.prepareProcessing();
             if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
@@ -105,10 +107,10 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 // process input and write target product
-                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, 50));
+                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, progressForProcessing));
                 if (numProducts > 0) {
                     LOG.info(context.getTaskAttemptID() + " target product created");
-                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
+                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
 
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {

@@ -80,8 +80,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         t0 = now();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        boolean pullProcessing = processorAdapter.supportsPullProcessing();
+        final int progressForProcessing = pullProcessing ? 20 : 80;
+        final int progressForSaving = maConfig.getSaveProcessedProducts() ? (pullProcessing ? 80 : 20) : 0;
+        final int progressForExtraction = pullProcessing ? 80 : 20;
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Match-Up analysis", 100);
+        pm.beginTask("Match-Up analysis", progressForProcessing + progressForSaving + progressForExtraction);
+        ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {
             Product inputProduct = processorAdapter.getInputProduct();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
@@ -97,7 +102,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             Area area = new Area();
             int macroPixelSize = maConfig.getMacroPixelSize();
 
+            int numReferenceRecords = 0;
             for (Record record : records) {
+                numReferenceRecords++;
                 PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
                 if (pixelPos != null) {
                     Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
@@ -108,7 +115,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
 
             if (!area.isEmpty()) {
-                if (!processorAdapter.supportsPullProcessing()) {
+
+                if (!pullProcessing) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
                     Rectangle maRectangle = area.getBounds();
@@ -117,16 +125,15 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     LOG.info("processing rectangle: " + processingRectangle);
                     processorAdapter.setProcessingRectangle(processingRectangle);
                 }
-                Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
+                Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
                 if (product == null) {
                     LOG.info("Processed product is null!");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                     return;
                 }
-                // TODO mz 2013-12-20 make this configurable
-                //if (!processorAdapter.supportsPullProcessing()) {
-                //    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 5));
-                //}
+                if (maConfig.getSaveProcessedProducts()) {
+                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
+                }
 
                 // Actually wrong name for processed products, but we need the field "source_name" in the export data table
                 product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
@@ -137,6 +144,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                        context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
 
                 t0 = now();
+
+                extractionPM.beginTask("Extraction", numReferenceRecords*2);
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecords;
                 try {
@@ -173,6 +182,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;
                     }
                     aggregatedRecords.add(aggregatedRecord);
+                    extractionPM.worked(1);
                 }
 
                 Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
@@ -181,6 +191,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
+                    extractionPM.worked(1);
                 }
 
                 long recordWriteTime = (now() - t0);
@@ -201,6 +212,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             t0 = now();
             context.progress();
         } finally {
+            extractionPM.done();
             pm.done();
             processorAdapter.dispose();
         }

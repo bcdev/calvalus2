@@ -294,28 +294,33 @@ public class L3ConfigForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        boolean periodCountValid = periodCount.getValue() >= 1;
+        boolean periodCountValid = periodCount.getValue() != null && periodCount.getValue() >= 1;
         if (!periodCountValid) {
             throw new ValidationException(periodCount, "Period count must be >= 1");
         }
 
-        boolean periodLengthValid = steppingPeriodLength.getValue() >= 1 || steppingPeriodLength.getValue() == -7 || steppingPeriodLength.getValue() == -30;
+        Integer steppingP = steppingPeriodLength.getValue();
+        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -30);
         if (!periodLengthValid) {
             throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
         }
 
-        boolean compositingPeriodLengthValid = (compositingPeriodLength.getValue() >= 1 || compositingPeriodLength.getValue() == -7 || compositingPeriodLength.getValue() == -30) && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
+        Integer compositingP = compositingPeriodLength.getValue();
+        boolean compositingPeriodLengthValid = compositingP != null &&
+                                               (compositingP >= 1 || compositingP == -7 || compositingP == -30) &&
+                                               compositingP <= steppingP;
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
                     "Compositing period length must be >= 1 and less or equal to than period");
         }
 
-        boolean resolutionValid = resolution.getValue() > 0.0;
+        boolean resolutionValid = resolution.getValue() != null && resolution.getValue() > 0.0;
         if (!resolutionValid) {
             throw new ValidationException(resolution, "Resolution must greater than zero");
         }
 
-        boolean superSamplingValid = superSampling.getValue() >= 1 && superSampling.getValue() <= 9;
+        Integer superSamplingValue = superSampling.getValue();
+        boolean superSamplingValid = superSamplingValue != null && superSamplingValue >= 1 && superSamplingValue <= 9;
         if (!superSamplingValid) {
             throw new ValidationException(superSampling, "Super-sampling must be >= 1 and <= 9");
         }
@@ -383,10 +388,10 @@ public class L3ConfigForm extends Composite {
             parameters.put("expression.count", expressionCount + "");
         }
         parameters.put("maskExpr", maskExpr.getText());
-        parameters.put("periodLength", steppingPeriodLength.getText());
-        parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
-        parameters.put("resolution", resolution.getText());
-        parameters.put("superSampling", superSampling.getText());
+        parameters.put("periodLength", steppingPeriodLength.getValue().toString());
+        parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
+        parameters.put("resolution", resolution.getValue().toString());
+        parameters.put("superSampling", superSampling.getValue().toString());
         return parameters;
     }
 

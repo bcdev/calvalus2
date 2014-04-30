@@ -458,7 +458,7 @@ public class L2ConfigForm extends Composite {
 
         @Override
         public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
-            return dtoProcessorDescriptor.isL2Processor();
+            return dtoProcessorDescriptor.getProcessorCategory() == DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2;
         }
     }
 
