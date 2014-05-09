@@ -16,6 +16,7 @@ import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -170,6 +171,11 @@ public class QLMapperMain {
             }
 
             @Override
+            public float getProgress() {
+                return 0;
+            }
+
+            @Override
             public void setStatus(String s) {
             }
         };
@@ -185,8 +191,8 @@ public class QLMapperMain {
             }
         };
         final Mapper mapper = new Mapper();
-        return mapper.new Context(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
-                                  statusReporter, inputSplit);
+        return null /* TODO mapper.new MapContextImpl(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
+                                  statusReporter, inputSplit)*/;
     }
 
 

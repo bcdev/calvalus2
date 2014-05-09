@@ -33,7 +33,7 @@
             <table style="width: 100%;">
                 <tr>
                     <td>
-                        <img src="images/coastcolour-logo.png" alt="Coastcolour logo">
+                        <a href="http://www.coastcolour.org/"><img src="images/coastcolour-logo.png" alt="Coastcolour logo"></a>
                     </td>
                     <td>
                         <h1 class="title">Calvalus</h1>

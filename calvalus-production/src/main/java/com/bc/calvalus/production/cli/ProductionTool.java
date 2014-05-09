@@ -48,11 +48,11 @@ import java.util.Map;
  * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
  * be one or more of the following:
  *  -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
- *                         production. Defaults to 'beam-4.10-SNAPSHOT'.
+ *                         production. Defaults to 'beam-5.0'.
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-1.2-201201'
+ *                         the production. Defaults to 'calvalus-2.0'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
@@ -123,8 +123,13 @@ public class ProductionTool {
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("production.db.type", "memory");
-        defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://master00:9000");
-        defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "master00:9001");
+        defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://node69:9000");
+        defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://node69:9000");
+        //defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "node69:9001");
+        defaultConfig.put("calvalus.hadoop.mapreduce.framework.name", "yarn");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "node69:9001");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "node69:9002");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "node69:9003");
 
         // TODO (mz, 2012-02-06) get these defaults from the server
         defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");

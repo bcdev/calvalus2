@@ -30,7 +30,7 @@
                 <table class="headerPanel">
                     <tr>
                         <td>
-                            <img src="/ccprocessing/images/coastcolour-logo.png" alt="Coastcolour logo"/>
+                            <a href="http://www.coastcolour.org/"><img src="/ccprocessing/images/coastcolour-logo.png" alt="Coastcolour logo"/></a>
                         </td>
                         <td>
                             <h1 class="title">Calvalus</h1>
@@ -61,7 +61,7 @@
                 </table>
                 <xsl:apply-templates select="readme"/>
                 <hr/>
-                <p class="copyright">Calvalus - Version 1.8-SNAPSHOT, &#169; 2013 Brockmann Consult GmbH</p>
+                <p class="copyright">Calvalus - Version 2.0-SNAPSHOT, &#169; 2013 Brockmann Consult GmbH</p>
             </body>
         </html>
     </xsl:template>

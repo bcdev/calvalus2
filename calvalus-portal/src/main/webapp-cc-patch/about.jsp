@@ -38,8 +38,8 @@
     </tr>
   </table>
   <hr>
-  <p>This is the CoastColour on-demand processing system, developed by <a href="http://www.brockmann-consult.de/" class="href">Brockmann Consult GmbH</a>.</p>
-  <p>Calvalus version 1.8-SNAPSHOT (built 22-04-2014), © 2014 Brockmann Consult GmbH</p>
+  <p>This is the <a href="http://www.coastcolour.org/">CoastColour</a> on-demand processing system, developed by <a href="http://www.brockmann-consult.de/" class="href">Brockmann Consult GmbH</a>.</p>
+  <p>Calvalus version 2.0-SNAPSHOT (built 22-04-2014), &#169; 2014 Brockmann Consult GmbH</p>
 
 </body>
 </html>
