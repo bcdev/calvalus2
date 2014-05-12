@@ -73,8 +73,7 @@ public class BootstrappingForm extends Composite {
             throw new ValidationException(numberOfIterations, "Number of Iterations must be > 0");
         }
 
-        boolean bootstrapSourceValid = userManagedContent.getSelectedFilePath() != null;
-        if (!bootstrapSourceValid) {
+        if (userManagedContent.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(bootstrapSources, "Bootstrap source must be given.");
         }
         l2ConfigForm.validateForm();

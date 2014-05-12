@@ -210,8 +210,7 @@ public class MAConfigForm extends Composite {
             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
         }
 
-        boolean recordSourceValid = userManagedContent.getSelectedFilePath() != null;
-        if (!recordSourceValid) {
+        if (userManagedContent.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
         }
     }
