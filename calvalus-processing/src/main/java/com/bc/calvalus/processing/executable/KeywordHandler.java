@@ -28,18 +28,21 @@ import java.util.regex.Pattern;
 /**
  * Handler that tries to extract keywords from stdout of a processor
  */
-class KeywordHandler extends ProcessObserver.DefaultHandler {
+public class KeywordHandler extends ProcessObserver.DefaultHandler {
 
     private final static String KEYWORD_PREFIX = "CALVALUS";
     private final static String PROGRESS_REGEX = "CALVALUS_PROGRESS ([0-9\\.]+)";
     private final static String INPUT_PRODUCT_REGEX = "CALVALUS_INPUT_PRODUCT (.+)$";
     private final static String OUTPUT_PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
+    private final static String NAMED_OUTPUT_PRODUCT_REGEX = "CALVALUS_NAMED_OUTPUT_PRODUCT\\s+(\\S+)\\s+(\\S+)$";
     private final String programName;
     private final MapContext mapContext;
     private final Pattern progressPattern;
     private final Pattern outputProductPattern;
+    private final Pattern namedOutputProductPattern;
     private final Pattern inputProductPattern;
     private final List<String> outputFiles;
+    private final List<NamedOutput> namedOutputFiles;
     private String inputFile = null;
 
     private int lastScan = 0;
@@ -51,8 +54,10 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         this.mapContext = mapContext;
         this.progressPattern = Pattern.compile(PROGRESS_REGEX);
         this.outputProductPattern = Pattern.compile(OUTPUT_PRODUCT_REGEX);
+        this.namedOutputProductPattern = Pattern.compile(NAMED_OUTPUT_PRODUCT_REGEX);
         this.inputProductPattern = Pattern.compile(INPUT_PRODUCT_REGEX);
         this.outputFiles = new ArrayList<String>();
+        this.namedOutputFiles = new ArrayList<NamedOutput>();
     }
 
     @Override
@@ -88,6 +93,13 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
             }
             if (line.equalsIgnoreCase("CALVALUS_SKIP_PROCESSING yes")) {
                 skipProcessing = true;
+                return;
+            }
+            Matcher namedOutputProductMatcher = namedOutputProductPattern.matcher(line);
+            if (namedOutputProductMatcher.find()) {
+                String name = namedOutputProductMatcher.group(1).trim();
+                String file = namedOutputProductMatcher.group(2).trim();
+                namedOutputFiles.add(new NamedOutput(name, file));
             }
         }
     }
@@ -111,11 +123,33 @@ class KeywordHandler extends ProcessObserver.DefaultHandler {
         return inputFile;
     }
 
-    public String[]  getOutputFiles() {
+    public String[] getOutputFiles() {
         return outputFiles.toArray(new String[outputFiles.size()]);
+    }
+
+    public NamedOutput[] getNamedOutputFiles() {
+        return namedOutputFiles.toArray(new NamedOutput[namedOutputFiles.size()]);
     }
 
     public boolean skipProcessing() {
         return skipProcessing;
+    }
+
+    public static class NamedOutput {
+        private final String name;
+        private final String file;
+
+        private NamedOutput(String name, String file) {
+            this.name = name;
+            this.file = file;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getFile() {
+            return file;
+        }
     }
 }
