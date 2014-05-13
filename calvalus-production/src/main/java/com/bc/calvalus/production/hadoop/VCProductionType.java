@@ -86,26 +86,26 @@ public class VCProductionType extends HadoopProductionType {
         configL1.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        Configuration configL1Perturbation = createJobConfig(productionRequest);
+        Configuration configL1Differentiation = createJobConfig(productionRequest);
 
-        ProcessorProductionRequest pprPerturbation = new ProcessorProductionRequest(productionRequest, "perturbation.");
-        setDefaultProcessorParameters(pprPerturbation, configL1Perturbation);
-        setRequestParameters(productionRequest, configL1Perturbation);
-        pprPerturbation.configureProcessor(configL1Perturbation);
+        ProcessorProductionRequest pprDifferentiation = new ProcessorProductionRequest(productionRequest, "differentiation.");
+        setDefaultProcessorParameters(pprDifferentiation, configL1Differentiation);
+        setRequestParameters(productionRequest, configL1Differentiation);
+        pprDifferentiation.configureProcessor(configL1Differentiation);
 
-        configL1Perturbation.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
-        configL1Perturbation.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
-        configL1Perturbation.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
+        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
+        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
+        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
 
-        String outputDirL1Perturbation = getOutputPath(productionRequest, productionId, "-L1Perturbation");
-        configL1Perturbation.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL1Perturbation);
-        configL1Perturbation.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
+        String outputDirL1Differentiation = getOutputPath(productionRequest, productionId, "-L1Differentiation");
+        configL1Differentiation.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL1Differentiation);
+        configL1Differentiation.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
 
         maConfig = MAProductionType.getMAConfig(productionRequest);
         maConfig.setCopyInput(false);
         maConfig.setSaveProcessedProducts(true);
         maConfig.setGoodPixelExpression("");
-        configL1Perturbation.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+        configL1Differentiation.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         Configuration configL2 = createJobConfig(productionRequest);
@@ -118,9 +118,9 @@ public class VCProductionType extends HadoopProductionType {
         int lastSlashIndex = level1Input.lastIndexOf("/");
         String level2Input;
         if (lastSlashIndex == -1) {
-            level2Input = outputDirL1Perturbation;
+            level2Input = outputDirL1Differentiation;
         } else {
-            level2Input = outputDirL1Perturbation + "/" + level1Input.substring(lastSlashIndex - 1);
+            level2Input = outputDirL1Differentiation + "/" + level1Input.substring(lastSlashIndex - 1);
         }
         configL2.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level2Input);
 
@@ -135,10 +135,10 @@ public class VCProductionType extends HadoopProductionType {
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         WorkflowItem workflowL1 = new MAWorkflowItem(getProcessingService(), productionName + " L1", configL1);
-        WorkflowItem workflowL1Perturbation = new MAWorkflowItem(getProcessingService(), productionName + " L1-Perturbation", configL1Perturbation);
+        WorkflowItem workflowL1Differentiation = new MAWorkflowItem(getProcessingService(), productionName + " L1-Differentiation", configL1Differentiation);
         WorkflowItem workflowL2 = new MAWorkflowItem(getProcessingService(), productionName + " L2", configL2);
 
-        WorkflowItem sequential = new Workflow.Sequential(workflowL1Perturbation, workflowL2);
+        WorkflowItem sequential = new Workflow.Sequential(workflowL1Differentiation, workflowL2);
         WorkflowItem workflow = new Workflow.Parallel(workflowL1, sequential);
         /*TODO add CSV merging*/
 

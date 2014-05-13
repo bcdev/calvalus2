@@ -255,6 +255,6 @@ public class ProcessorDescriptor {
     public enum ProcessorCategory {
         LEVEL2,
         BOOTSTRAPPING,
-        PERTURBATION
+        DIFFERENTIATION
     }
 }

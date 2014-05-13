@@ -149,6 +149,6 @@ public class DtoProcessorDescriptor implements IsSerializable {
     public enum DtoProcessorCategory {
         LEVEL2,
         BOOTSTRAPPING,
-        PERTURBATION
+        DIFFERENTIATION
     }
 }

@@ -35,11 +35,11 @@ import java.util.Map;
  */
 public class OrderVCProductionView extends OrderProductionView {
     public static final String ID = OrderVCProductionView.class.getName();
-    private static final String PROCESSOR_PREFIX = "perturbation.";
+    private static final String PROCESSOR_PREFIX = "differentiation.";
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
-    private L2ConfigForm perturbationConfigForm;
+    private L2ConfigForm differentiationConfigForm;
     private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -57,9 +57,9 @@ public class OrderVCProductionView extends OrderProductionView {
             }
         });
 
-        perturbationConfigForm = new L2ConfigForm(portalContext, new PerturbationFilter(), true);
-        perturbationConfigForm.processorListLabel.setText("Perturbation Processor");
-        perturbationConfigForm.parametersLabel.setText("Perturbation Parameters");
+        differentiationConfigForm = new L2ConfigForm(portalContext, new DifferentiationFilter(), true);
+        differentiationConfigForm.processorListLabel.setText("Differentiation Processor");
+        differentiationConfigForm.parametersLabel.setText("Differentiation Parameters");
 
         l2ConfigForm = new L2ConfigForm(portalContext, true);
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
@@ -83,7 +83,7 @@ public class OrderVCProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
-        panel.add(perturbationConfigForm);
+        panel.add(differentiationConfigForm);
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
         panel.add(outputParametersForm);
@@ -124,7 +124,7 @@ public class OrderVCProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            perturbationConfigForm.validateForm();
+            differentiationConfigForm.validateForm();
             l2ConfigForm.validateForm();
             maConfigForm.validateForm();
             return true;
@@ -134,15 +134,15 @@ public class OrderVCProductionView extends OrderProductionView {
         }
     }
 
-    public Map<String, String> getPerturbationValueMap() {
+    public Map<String, String> getDifferentiationValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        DtoProcessorDescriptor processorDescriptor = perturbationConfigForm.getSelectedProcessorDescriptor();
+        DtoProcessorDescriptor processorDescriptor = differentiationConfigForm.getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
             parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
             parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
             parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
             parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_PARAMETERS, perturbationConfigForm.getProcessorParameters());
+            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_PARAMETERS, differentiationConfigForm.getProcessorParameters());
         }
         return parameters;
     }
@@ -151,7 +151,7 @@ public class OrderVCProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
-        parameters.putAll(getPerturbationValueMap());
+        parameters.putAll(getDifferentiationValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
@@ -160,10 +160,10 @@ public class OrderVCProductionView extends OrderProductionView {
         return parameters;
     }
 
-    private static class PerturbationFilter implements Filter<DtoProcessorDescriptor> {
+    private static class DifferentiationFilter implements Filter<DtoProcessorDescriptor> {
         @Override
         public boolean accept(DtoProcessorDescriptor dtoProcessorDescriptor) {
-            return dtoProcessorDescriptor.getProcessorCategory() == DtoProcessorDescriptor.DtoProcessorCategory.PERTURBATION;
+            return dtoProcessorDescriptor.getProcessorCategory() == DtoProcessorDescriptor.DtoProcessorCategory.DIFFERENTIATION;
         }
     }
 }
