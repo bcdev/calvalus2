@@ -26,7 +26,7 @@ import java.util.Date;
 /**
  * Provides a {@code PixelPos} for a given {@code Record}, if possible.
  */
-class PixelPosProvider {
+public class PixelPosProvider {
 
     private final Product product;
     private final PixelTimeProvider pixelTimeProvider;
