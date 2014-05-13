@@ -48,21 +48,27 @@ import java.util.logging.Level;
 public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     private final File cwd;
+    private final String parameterSuffix;
     private String[] outputFilesNames;
     private String inputFileName;
     private boolean skipProcessing = false;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
+        this(mapContext, "");
+    }
+
+    public ExecutableProcessorAdapter(MapContext mapContext, String parameterSuffix) {
         super(mapContext);
+        this.parameterSuffix = parameterSuffix;
         this.cwd = new File(".");
     }
 
     @Override
     public void prepareProcessing() throws IOException {
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE+ parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PREPARE, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -76,7 +82,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
 
-        scriptGenerator.addScriptResources(conf);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd);
 
@@ -137,9 +143,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public KeywordHandler process(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, "");
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -162,7 +168,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             }
         }
 
-        scriptGenerator.addScriptResources(conf);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (!scriptGenerator.hasStepScript()) {
             throw new RuntimeException("No script for step 'process' available.");
         }
@@ -210,9 +216,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
 
             Configuration conf = getConfiguration();
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
             ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
             VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -225,7 +231,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
             velocityContext.put("outputPath", outputPath);
 
-            scriptGenerator.addScriptResources(conf);
+            scriptGenerator.addScriptResources(conf, parameterSuffix);
             if (scriptGenerator.hasStepScript()) {
                 scriptGenerator.writeScriptFiles(cwd);
 

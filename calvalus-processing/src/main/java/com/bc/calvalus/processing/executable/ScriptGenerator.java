@@ -109,8 +109,8 @@ public class ScriptGenerator {
         }
     }
 
-    public void addScriptResources(Configuration conf) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
+    public void addScriptResources(Configuration conf, String parameterSuffix) throws IOException {
+        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES + parameterSuffix);
         FileSystem fs = FileSystem.get(conf);
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);

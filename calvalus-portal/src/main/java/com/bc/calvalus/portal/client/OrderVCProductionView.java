@@ -21,7 +21,10 @@ import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -35,13 +38,16 @@ import java.util.Map;
  */
 public class OrderVCProductionView extends OrderProductionView {
     public static final String ID = OrderVCProductionView.class.getName();
-    private static final String PROCESSOR_PREFIX = "differentiation.";
+    private static final String DIFFERENTIATION_SUFFIX = ".differentiation";
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
     private L2ConfigForm differentiationConfigForm;
     private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
+    private final CheckBox vcOutputL1;
+    private final CheckBox vcOutputL1Diff;
+    private final CheckBox vcOutputL2;
     private OutputParametersForm outputParametersForm;
 
     private Widget widget;
@@ -74,6 +80,28 @@ public class OrderVCProductionView extends OrderProductionView {
 
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+        maConfigForm.goodPixelExpression.setEnabled(false);
+        maConfigForm.goodRecordExpression.setEnabled(false);
+
+        ///////////
+        HTMLPanel htmlPanel = new HTMLPanel("<h3>Vicarious-Calibration Output Parameters</h3><hr/>");
+        htmlPanel.setWidth("62em");
+
+        vcOutputL1 = new CheckBox("Output L1 Products");
+        vcOutputL1Diff = new CheckBox("Output L1 Differentiation Products");
+        vcOutputL2 = new CheckBox("Output L2 Products");
+
+        VerticalPanel verticalPanel = new VerticalPanel();
+        verticalPanel.setSpacing(4);
+        verticalPanel.add(htmlPanel);
+        verticalPanel.add(vcOutputL1);
+        verticalPanel.add(vcOutputL1Diff);
+        verticalPanel.add(vcOutputL2);
+
+        HorizontalPanel vcPanel = new HorizontalPanel();
+        vcPanel.setSpacing(16);
+        vcPanel.add(verticalPanel);
+        ///////////
 
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(false);
@@ -86,6 +114,7 @@ public class OrderVCProductionView extends OrderProductionView {
         panel.add(differentiationConfigForm);
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
+        panel.add(vcPanel);
         panel.add(outputParametersForm);
         panel.add(new HTML("<br/>"));
         panel.add(createOrderPanel());
@@ -138,12 +167,15 @@ public class OrderVCProductionView extends OrderProductionView {
         Map<String, String> parameters = new HashMap<String, String>();
         DtoProcessorDescriptor processorDescriptor = differentiationConfigForm.getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
-            parameters.put(PROCESSOR_PREFIX + ProcessorProductionRequest.PROCESSOR_PARAMETERS, differentiationConfigForm.getProcessorParameters());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleVersion());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleLocation());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME + DIFFERENTIATION_SUFFIX, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + DIFFERENTIATION_SUFFIX, differentiationConfigForm.getProcessorParameters());
         }
+        parameters.put("calvalus.vc.outputL1", vcOutputL1.getValue().toString());
+        parameters.put("calvalus.vc.outputL1Diff", vcOutputL1Diff.getValue().toString());
+        parameters.put("calvalus.vc.outputL2", vcOutputL2.getValue().toString());
         return parameters;
     }
 

@@ -30,7 +30,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.awt.Rectangle;
 import java.io.IOException;
@@ -66,26 +65,31 @@ public class ProcessorFactory {
     }
 
     public static void installProcessorBundle(Configuration conf) throws IOException {
+        installProcessorBundle(conf, "");
+    }
+
+    public static void installProcessorBundle(Configuration conf, String parameterSuffix) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
-        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE) != null) {
+        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix) != null) {
             final FileSystem fs = FileSystem.get(conf);
-            Path bundlePath = getBundlePath(conf, fs);
+            Path bundlePath = getBundlePath(conf, fs, parameterSuffix);
             if (bundlePath != null) {
                 HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
                 addBundleArchives(bundlePath, fs, conf);
                 DistributedCache.createSymlink(conf);
 
-                String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+                String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
                 if (executable != null) {
                     processorType = detectProcessorType(bundlePath, executable, fs);
-                    addBundleProcessorFiles(bundlePath, conf.get(JobConfigNames.CALVALUS_L2_OPERATOR), fs, conf);
+                    String[] processorFiles = getBundleProcessorFiles(executable, bundlePath, fs);
+                    if (processorFiles.length > 0) {
+                        conf.setStrings(CALVALUS_L2_PROCESSOR_FILES + parameterSuffix, processorFiles);
+                    }
                 }
                 // check for bundle to include, install it
                 try {
-                    BundleDescriptor bundleDescriptor =
-                            HadoopProcessingService.readBundleDescriptor(fs,
-                                                                         new Path(bundlePath,
-                                                                                  HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME));
+                    Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
+                    BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
                     if (bundleDescriptor.getIncludeBundle() != null) {
                         final Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
                         HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
@@ -99,14 +103,7 @@ public class ProcessorFactory {
             }
         }
 
-        conf.set(CALVALUS_L2_PROCESSOR_TYPE, processorType.toString());
-    }
-
-    private static void addBundleProcessorFiles(Path bundlePath, String processorName, FileSystem fs, Configuration conf) throws IOException {
-        String[] processorFiles = getBundleProcessorFiles(processorName, bundlePath, fs);
-        if (processorFiles.length > 0) {
-            conf.setStrings(CALVALUS_L2_PROCESSOR_FILES, processorFiles);
-        }
+        conf.set(CALVALUS_L2_PROCESSOR_TYPE + parameterSuffix, processorType.toString());
     }
 
     private static ProcessorType detectProcessorType(Path bundlePath, final String executable, FileSystem fs) throws IOException {
@@ -133,13 +130,13 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    private static Path getBundlePath(Configuration conf, FileSystem fs) throws IOException {
-        String bundleLocation = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
+    private static Path getBundlePath(Configuration conf, FileSystem fs, String parameterSuffix) throws IOException {
+        String bundleLocation = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION + parameterSuffix);
         final Path bundlePath;
         if (bundleLocation != null) {
             bundlePath = new Path(bundleLocation);
         } else {
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
+            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE+ parameterSuffix);
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
         }
         if (fs.exists(bundlePath)) {

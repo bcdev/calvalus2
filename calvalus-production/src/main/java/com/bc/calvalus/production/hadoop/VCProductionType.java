@@ -16,14 +16,12 @@
 
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
-import com.bc.calvalus.processing.ma.MAWorkflowItem;
+import com.bc.calvalus.processing.vc.VCWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -33,8 +31,6 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
-
-import java.util.List;
 
 /**
  * Vicarious Calibration: A production type used for supporting the computation of vicarious calibration coefficients
@@ -67,86 +63,42 @@ public class VCProductionType extends HadoopProductionType {
         String geometryWKT = regionGeometry != null ? regionGeometry.toString() : "";
         String regionName = productionRequest.getRegionName();
         String dataRanges = StringUtils.join(productionRequest.getDateRanges(), ",");
-
         String level1Input = productionRequest.getString("inputPath");
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        Configuration configL1 = createJobConfig(productionRequest);
+        Configuration jobConfig = createJobConfig(productionRequest);
 
-        configL1.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
-        configL1.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
-        configL1.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
 
-        String outputDirL1 = getOutputPath(productionRequest, productionId, "-L1");
-        configL1.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL1);
-        configL1.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
+        String outputDir = getOutputPath(productionRequest, productionId, "");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
 
         MAConfig maConfig = MAProductionType.getMAConfig(productionRequest);
-        maConfig.setGoodPixelExpression("");
-        configL1.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+        jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        Configuration configL1Differentiation = createJobConfig(productionRequest);
-
-        ProcessorProductionRequest pprDifferentiation = new ProcessorProductionRequest(productionRequest, "differentiation.");
-        setDefaultProcessorParameters(pprDifferentiation, configL1Differentiation);
-        setRequestParameters(productionRequest, configL1Differentiation);
-        pprDifferentiation.configureProcessor(configL1Differentiation);
-
-        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
-        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
-        configL1Differentiation.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
-
-        String outputDirL1Differentiation = getOutputPath(productionRequest, productionId, "-L1Differentiation");
-        configL1Differentiation.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL1Differentiation);
-        configL1Differentiation.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
-
-        maConfig = MAProductionType.getMAConfig(productionRequest);
-        maConfig.setCopyInput(false);
-        maConfig.setSaveProcessedProducts(true);
-        maConfig.setGoodPixelExpression("");
-        configL1Differentiation.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        Configuration configL2 = createJobConfig(productionRequest);
+        ProcessorProductionRequest pprDifferentiation = new ProcessorProductionRequest(productionRequest,
+                                                                                       VCWorkflowItem.DIFFERENTIATION_SUFFIX);
+        setDefaultProcessorParameters(pprDifferentiation, jobConfig);
+        setRequestParameters(productionRequest, jobConfig);
+        pprDifferentiation.configureProcessor(jobConfig);
 
         ProcessorProductionRequest pprL2 = new ProcessorProductionRequest(productionRequest);
-        setDefaultProcessorParameters(pprL2, configL2);
-        setRequestParameters(productionRequest, configL2);
-        pprL2.configureProcessor(configL2);
+        setDefaultProcessorParameters(pprL2, jobConfig);
+        setRequestParameters(productionRequest, jobConfig);
+        pprL2.configureProcessor(jobConfig);
 
-        int lastSlashIndex = level1Input.lastIndexOf("/");
-        String level2Input;
-        if (lastSlashIndex == -1) {
-            level2Input = outputDirL1Differentiation;
-        } else {
-            level2Input = outputDirL1Differentiation + "/" + level1Input.substring(lastSlashIndex - 1);
-        }
-        configL2.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level2Input);
 
-        String outputDirL2 = getOutputPath(productionRequest, productionId, "-L2");
-        configL2.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDirL2);
-        configL2.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, geometryWKT);
-
-        maConfig = MAProductionType.getMAConfig(productionRequest);
-        maConfig.setCopyInput(false);
-        maConfig.setGoodPixelExpression("");
-        configL2.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-        WorkflowItem workflowL1 = new MAWorkflowItem(getProcessingService(), productionName + " L1", configL1);
-        WorkflowItem workflowL1Differentiation = new MAWorkflowItem(getProcessingService(), productionName + " L1-Differentiation", configL1Differentiation);
-        WorkflowItem workflowL2 = new MAWorkflowItem(getProcessingService(), productionName + " L2", configL2);
-
-        WorkflowItem sequential = new Workflow.Sequential(workflowL1Differentiation, workflowL2);
-        WorkflowItem workflow = new Workflow.Parallel(workflowL1, sequential);
-        /*TODO add CSV merging*/
+        WorkflowItem workflow = new VCWorkflowItem(getProcessingService(), productionName, jobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              outputDirL2,
+                              outputDir,
                               stagingDir,
                               autoStaging,
                               productionRequest,
