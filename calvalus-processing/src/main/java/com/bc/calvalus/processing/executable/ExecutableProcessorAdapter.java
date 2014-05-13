@@ -129,6 +129,12 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
+        KeywordHandler keywordHandler = process(pm, inputRectangle, inputPath, inputFile, productRectangle, velocityProps);
+
+        return keywordHandler.getOutputFiles();
+    }
+
+    public KeywordHandler process(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
         String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
@@ -172,8 +178,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 setProgressMonitor(pm).
                 setHandler(keywordHandler).
                 start();
-
-        return keywordHandler.getOutputFiles();
+        return keywordHandler;
     }
 
     @Override
