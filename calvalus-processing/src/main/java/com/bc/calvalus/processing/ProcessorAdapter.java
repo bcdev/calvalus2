@@ -93,6 +93,7 @@ public abstract class ProcessorAdapter {
     private final Configuration conf;
     private final InputSplit inputSplit;
 
+    private File localInputFile;
     private Product inputProduct;
     private Rectangle inputRectangle;
     private Rectangle roiRectangle;
@@ -374,13 +375,15 @@ public abstract class ProcessorAdapter {
      * @throws IOException
      */
     public File copyFileToLocal(Path inputPath) throws IOException {
-        getLogger().info(String.format("Copying to local product file"));
-        File localFile = new File(".", inputPath.getName());
-        if (!localFile.exists()) {
-            FileSystem fs = inputPath.getFileSystem(conf);
-            FileUtil.copy(fs, inputPath, localFile, false, conf);
+        if (localInputFile == null) {
+            getLogger().info(String.format("Copying to local product file"));
+            localInputFile = new File(".", inputPath.getName());
+            if (!localInputFile.exists()) {
+                FileSystem fs = inputPath.getFileSystem(conf);
+                FileUtil.copy(fs, inputPath, localInputFile, false, conf);
+            }
         }
-        return localFile;
+        return localInputFile;
     }
 
     protected Object openImageInputStream(Path inputPath) throws IOException {
