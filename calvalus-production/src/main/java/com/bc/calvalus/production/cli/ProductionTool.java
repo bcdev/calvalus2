@@ -123,16 +123,18 @@ public class ProductionTool {
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("production.db.type", "memory");
-        defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://node69:9000");
+        //defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://node69:9000");
         defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://node69:9000");
         //defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "node69:9001");
         defaultConfig.put("calvalus.hadoop.mapreduce.framework.name", "yarn");
-        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "node69:9001");
-        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "node69:9002");
-        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "node69:9003");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "node69");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "node69:9001");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "node69:9002");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "node69:9003");
 
         // TODO (mz, 2012-02-06) get these defaults from the server
-        defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");
+        //defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");
+        defaultConfig.put("calvalus.hadoop.dfs.blocksize", "2147483136");
         defaultConfig.put("calvalus.hadoop.io.file.buffer.size", "131072");
         defaultConfig.put("calvalus.hadoop.dfs.replication", "1");
 
@@ -469,7 +471,7 @@ public class ProductionTool {
 
     private Configuration getHadoopConf(Map<String, String> config) {
         Configuration hadoopConfig = new Configuration();
-        hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
+        hadoopConfig.set("fs.defaultFS", config.get("calvalus.hadoop.fs.defaultFS"));
         return hadoopConfig;
     }
 

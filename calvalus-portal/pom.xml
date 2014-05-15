@@ -35,13 +35,11 @@
             <version>${gwt.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-dev</artifactId>
             <version>${gwt.version}</version>
         </dependency>
-
         <!-- GWT Maps API V3 -->
         <dependency>
             <groupId>com.github.branflake2267</groupId>
@@ -123,6 +121,7 @@
                     <execution>
                         <configuration>
                             <extraJvmArgs>-Xmx850M -Xss100M</extraJvmArgs>
+                            <localWorkers>1</localWorkers>
                         </configuration>
                         <phase>prepare-package</phase>
                         <goals>
