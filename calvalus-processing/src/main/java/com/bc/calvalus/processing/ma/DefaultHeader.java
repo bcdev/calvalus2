@@ -21,7 +21,7 @@ public class DefaultHeader implements Header {
         this(hasLocation, hasTime, attributeNames, new String[]{ANNOTATION_EXCLUSION_REASON});
     }
 
-    private DefaultHeader(boolean hasLocation, boolean hasTime, String[] attributeNames, String[] annotationNames) {
+    public DefaultHeader(boolean hasLocation, boolean hasTime, String[] attributeNames, String[] annotationNames) {
         this.hasLocation = hasLocation;
         this.hasTime = hasTime;
         this.attributeNames = Arrays.asList(attributeNames);

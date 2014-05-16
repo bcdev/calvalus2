@@ -57,7 +57,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -77,17 +76,17 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final int MiB = 1024 * 1024;
+
     public static final String EXCLUSION_REASON_EXPRESSION = "RECORD_EXPRESSION";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
         context.progress();
-        final long mapperStartTime = now();
 
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
+        maConfig.setCopyInput(false); // insitu data is merge separately
         final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         // write initial log entry for runtime measurements
@@ -95,9 +94,6 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
 
-        long t0;
-
-        t0 = now();
         ProcessorAdapter l2ProcessorAdapter = ProcessorFactory.createAdapter(context);
         boolean pullProcessing = l2ProcessorAdapter.supportsPullProcessing();
         final int progressForProcessing = pullProcessing ? 20 : 80;
@@ -107,6 +103,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         pm.beginTask("Match-Up analysis", progressForProcessing + progressForSaving + progressForExtraction);
         ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {
+            List<NamedRecordSource> namedRecordSources = new ArrayList<NamedRecordSource>();
             Path inputPath = l2ProcessorAdapter.getInputPath();
             l2ProcessorAdapter.copyFileToLocal(inputPath);
             File l1LocalFile = l2ProcessorAdapter.getInputFile();
@@ -146,8 +143,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     ProductFormatter.copyAndClose(inputStream, outputStream, context);
                 }
 
-//                RecordSource matchingReferenceRecordSource = new ListBackedRecordSource(referenceRecordSource, matchingReferenceRecords);
-//                Collection<Record> l1Matchups = getMatchups(maConfig, ProgressMonitor.NULL, matchingReferenceRecordSource, inputProduct);
+                NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordSource.getHeader(), matchingReferenceRecords);
+                namedRecordSources.add(matchingReferenceRecordSource);
+
+                namedRecordSources.add(getMatchups("L1_", maConfig, ProgressMonitor.NULL, matchingReferenceRecordSource, inputProduct));
 
 
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
@@ -182,15 +181,16 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         ProductFormatter.copyAndClose(inputStream, outputStream, context);
                     }
 
-//                    Product product = ProductIO.readProduct(namedOutput.getFile());
-//                    if (product != null) {
-//                        try {
-//                            context.progress();
-//                            getMatchups(maConfig, extractionPM, matchingReferenceRecordSource, product);
-//                        } catch (Exception e) {
-//                            throw new RuntimeException("Failed to retrieve input records.", e);
-//                        }
-//                    }
+                    Product l1DiffProduct = ProductIO.readProduct(namedOutput.getFile());
+                    if (l1DiffProduct != null) {
+                        try {
+                            context.progress();
+                            String prefix = namedOutput.getName()+ "_";
+                            namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, l1DiffProduct));
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to retrieve input records.", e);
+                        }
+                    }
 
                     l2ProcessorAdapter.closeInputProduct();
                     LOG.info("Processing to Level 2: " + l1DiffFile);
@@ -204,89 +204,45 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         LOG.info("Processed product is null!");
                         context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                         return;
+                    } else {
+                        try {
+                            context.progress();
+                            String prefix = "L2_" + namedOutput.getName()+ "_";
+                            namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, processedProduct));
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to retrieve input records.", e);
+                        }
                     }
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
                     }
                 }
+                MergedRecordSource mergedRecordSource = new MergedRecordSource(namedRecordSources);
+                logAttributeNames(mergedRecordSource);
 
-//
-//                // Actually wrong name for processed products, but we need the field "source_name" in the export data table
-//                product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
-//
-//                context.progress();
-//                long productOpenTime = (now() - t0);
-//                LOG.info(String.format("%s opened product %s, took %s sec",
-//                                       context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
-//
-//                t0 = now();
-//
-//                extractionPM.beginTask("Extraction", matchingReferenceRecords.size() * 2);
-//                ProductRecordSource productRecordSource;
-//                Iterable<Record> extractedRecords;
-//                try {
-//                    //re-create referenceRecordSource to read from the beginning (TODO could be improved)
-//                    referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
-//                    productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
-//                    extractedRecords = productRecordSource.getRecords();
-//                    context.progress();
-//                } catch (Exception e) {
-//                    throw new RuntimeException("Failed to retrieve input records.", e);
-//                }
-//
-//                long recordReadTime = (now() - t0);
-//                LOG.info(String.format("%s read input records from %s, took %s sec",
-//                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(),
-//                                       recordReadTime / 1E3));
-//                logAttributeNames(productRecordSource);
-//
-//                Header header = productRecordSource.getHeader();
-//                Rectangle inputRect = l2ProcessorAdapter.getInputRectangle();
-//                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
-//                RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-//                RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-//                RecordSelector recordSelector = productRecordSource.createRecordSelector();
-//
-//                t0 = now();
-//                Collection<Record> aggregatedRecords = new ArrayList<Record>();
-//                int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-//                for (Record extractedRecord : extractedRecords) {
-//                    Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
-//                    Record aggregatedRecord = recordAggregator.transform(shiftedRecord);
-//                    String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
-//                    if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
-//                        aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;
-//                    }
-//                    aggregatedRecords.add(aggregatedRecord);
-//                    extractionPM.worked(1);
-//                }
-//
-//                Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
-//                int numMatchUps = 0;
-//                for (Record selectedRecord : selectedRecords) {
-//                    context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
-//                                  new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
-//                    context.progress();
-//                    extractionPM.worked(1);
-//                }
-//
-//                long recordWriteTime = (now() - t0);
-//                LOG.info(String.format("%s found %s match-ups, took %s sec",
-//                                       context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
-//                if (numMatchUps > 0) {
-//                    // write header
-//                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
-//                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
-//                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
-//                } else {
-//                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
-//                }
+                int numMatchUps = 0;
+                Iterable<Record> records = mergedRecordSource.getRecords();
+                for (Record selectedRecord : records) {
+                    context.write(new Text(String.format("%s_%06d", inputProduct.getName(), ++numMatchUps)),
+                                  new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
+                    context.progress();
+                    extractionPM.worked(1);
+                }
+
+                if (numMatchUps > 0) {
+                    // write header
+                    Header header = mergedRecordSource.getHeader();
+                    context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products with match-ups").increment(1);
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Number of match-ups").increment(numMatchUps);
+                } else {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
+                }
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
             }
 
-            t0 = now();
             context.progress();
         } finally {
             extractionPM.done();
@@ -294,18 +250,9 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             l2ProcessorAdapter.dispose();
         }
 
-        long productCloseTime = (now() - t0);
-        LOG.info(String.format("%s closed input product, took %s sec",
-                               context.getTaskAttemptID(), productCloseTime / 1E3));
-
-        // write final log entry for runtime measurements
-        long mapperTotalTime = (now() - mapperStartTime);
-        LOG.info(String.format("%s stops processing of split %s after %s sec",
-                               context.getTaskAttemptID(), context.getInputSplit(), mapperTotalTime / 1E3));
-
     }
 
-    private Collection<Record> getMatchups(MAConfig maConfig, ProgressMonitor extractionPM, RecordSource matchingReferenceRecordSource, Product product) {
+    private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, RecordSource matchingReferenceRecordSource, Product product) {
         ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
         Iterable<Record> extractedRecords;
         try {
@@ -315,13 +262,13 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         }
         Header header = productRecordSource.getHeader();
         RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-        Collection<Record> aggregatedRecords = new ArrayList<Record>();
+        List<Record> aggregatedRecords = new ArrayList<Record>();
         for (Record extractedRecord : extractedRecords) {
             Record aggregatedRecord = recordAggregator.transform(extractedRecord);
             aggregatedRecords.add(aggregatedRecord);
             extractionPM.worked(1);
         }
-        return aggregatedRecords;
+        return new NamedRecordSource(prefix, header, aggregatedRecords);
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
@@ -337,42 +284,12 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         return new FilteredRecordSource(referenceRecordSource, new GeometryRecordFilter(regionGeometry));
     }
 
-    private void logAttributeNames(ProductRecordSource productRecordSource) {
+    private void logAttributeNames(RecordSource productRecordSource) {
         String[] attributeNames = productRecordSource.getHeader().getAttributeNames();
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < attributeNames.length; i++) {
             sb.append(String.format("  attributeNames[%d] = \"%s\"\n", i, attributeNames[i]));
         }
         LOG.info("Attribute names:\n" + sb);
-    }
-
-    private static long now() {
-        return System.currentTimeMillis();
-    }
-
-    private static class ListBackedRecordSource implements RecordSource {
-
-        private final RecordSource referenceRecordSource;
-        private final List<Record> matchingReferenceRecords;
-
-        public ListBackedRecordSource(RecordSource referenceRecordSource, List<Record> matchingReferenceRecords) {
-            this.referenceRecordSource = referenceRecordSource;
-            this.matchingReferenceRecords = matchingReferenceRecords;
-        }
-
-        @Override
-        public Header getHeader() {
-            return referenceRecordSource.getHeader();
-        }
-
-        @Override
-        public Iterable<Record> getRecords() throws Exception {
-            return matchingReferenceRecords;
-        }
-
-        @Override
-        public String getTimeAndLocationColumnDescription() {
-            return referenceRecordSource.getTimeAndLocationColumnDescription();
-        }
     }
 }
