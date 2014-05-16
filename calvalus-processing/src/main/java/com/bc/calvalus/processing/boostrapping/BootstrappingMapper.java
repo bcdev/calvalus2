@@ -40,7 +40,8 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, IntW
 
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
         Path inputPath = new Path(conf.get(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY));
-        File inputFile = processorAdapter.copyFileToLocal(inputPath);
+        processorAdapter.copyFileToLocal(inputPath);
+        File inputFile = processorAdapter.getInputFile();
         String[] outFiles = processorAdapter.processInput(ProgressMonitor.NULL,
                                                          null,
                                                          inputPath,

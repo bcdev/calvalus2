@@ -50,7 +50,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     private final File cwd;
     private final String parameterSuffix;
     private String[] outputFilesNames;
-    private String inputFileName;
     private boolean skipProcessing = false;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
@@ -95,7 +94,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setName(processLogName).
                     setHandler(keywordHandler).
                     start();
-            inputFileName = keywordHandler.getInputFile();
+            setInputfile(new File(keywordHandler.getInputFile()));
             skipProcessing = keywordHandler.skipProcessing();
         }
     }
@@ -108,30 +107,25 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
 
-        Rectangle inputRectangle = getInputRectangle();
         Path inputPath = getInputPath();
-        File inputFile;
-        if (inputFileName != null) {
-            inputFile = new File(inputFileName);
-        } else {
-            inputFile = copyFileToLocal(inputPath);
+        File inputFile = getInputFile();
+        if (inputFile == null) {
+            copyFileToLocal(inputPath);
+            inputFile = getInputFile();
         }
         Rectangle productRect = null;
+        Rectangle inputRectangle = getInputRectangle();
         if (inputRectangle != null) {
             Product inputProduct = getInputProduct();
             productRect = new Rectangle(0, 0, inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
         }
 
-        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect);
+        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
         return outputFilesNames.length;
     }
 
     public File getCurrentWorkingDir() {
         return cwd;
-    }
-
-    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle) throws IOException {
-        return processInput(pm, inputRectangle, inputPath, inputFile, productRectangle, null);
     }
 
     public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {

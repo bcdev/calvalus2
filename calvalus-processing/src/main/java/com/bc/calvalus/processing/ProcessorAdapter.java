@@ -20,7 +20,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.ceres.core.Assert;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -93,10 +92,10 @@ public abstract class ProcessorAdapter {
     private final Configuration conf;
     private final InputSplit inputSplit;
 
-    private File localInputFile;
     private Product inputProduct;
     private Rectangle inputRectangle;
     private Rectangle roiRectangle;
+    private File inputFile;
 
     public ProcessorAdapter(MapContext mapContext) {
         this.mapContext = mapContext;
@@ -200,7 +199,7 @@ public abstract class ProcessorAdapter {
      *
      * @return The processed product
      */
-    public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
+    public Product getProcessedProduct(ProgressMonitor pm) throws IOException {
         Product processedProduct = openProcessedProduct();
         if (processedProduct == null) {
             Rectangle sourceRectangle = getInputRectangle();
@@ -282,8 +281,15 @@ public abstract class ProcessorAdapter {
     private Product openInputProduct() throws IOException {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-
-        return readProduct(getInputPath(), inputFormat);
+        if (inputFile != null) {
+            if (inputFormat != null) {
+                return ProductIO.readProduct(inputFile, inputFormat);
+            } else {
+                return ProductIO.readProduct(inputFile);
+            }
+        } else {
+            return readProduct(getInputPath(), inputFormat);
+        }
     }
 
     /**
@@ -315,7 +321,8 @@ public abstract class ProcessorAdapter {
                     if (canHandle(readerPlugIn, ImageInputStream.class)) {
                         input = openImageInputStream(inputPath);
                     } else if (canHandle(readerPlugIn, File.class)) {
-                        input = copyFileToLocal(inputPath);
+                        copyFileToLocal(inputPath);
+                        input = getInputFile();
                     }
 
                     if (input != null) {
@@ -329,7 +336,8 @@ public abstract class ProcessorAdapter {
                 ProductReader productReader = ProductIO.getProductReaderForInput(input);
                 if (productReader == null) {
                     // try a local file copy
-                    input = copyFileToLocal(inputPath);
+                    copyFileToLocal(inputPath);
+                    input = getInputFile();
                     productReader = ProductIO.getProductReaderForInput(input);
                     if (productReader == null) {
                         throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
@@ -370,20 +378,26 @@ public abstract class ProcessorAdapter {
      *
      * @param inputPath The path to the file in the HDFS.
      *
-     * @return the local file that contains the copy.
-     *
      * @throws IOException
      */
-    public File copyFileToLocal(Path inputPath) throws IOException {
-        if (localInputFile == null) {
+    public void copyFileToLocal(Path inputPath) throws IOException {
+        if (inputFile == null) {
             getLogger().info(String.format("Copying to local product file"));
-            localInputFile = new File(".", inputPath.getName());
-            if (!localInputFile.exists()) {
+            inputFile = new File(".", inputPath.getName());
+            if (!inputFile.exists()) {
                 FileSystem fs = inputPath.getFileSystem(conf);
-                FileUtil.copy(fs, inputPath, localInputFile, false, conf);
+                FileUtil.copy(fs, inputPath, inputFile, false, conf);
             }
         }
-        return localInputFile;
+    }
+
+
+    public void setInputfile(File inputFile) {
+        this.inputFile = inputFile;
+    }
+
+    public File getInputFile() {
+        return inputFile;
     }
 
     protected Object openImageInputStream(Path inputPath) throws IOException {
@@ -398,6 +412,10 @@ public abstract class ProcessorAdapter {
      * All products opened or processed by this adapter are disposed as well.
      */
     public void dispose() {
+        closeInputProduct();
+    }
+
+    public void closeInputProduct() {
         if (inputProduct != null) {
             inputProduct.dispose();
             inputProduct = null;

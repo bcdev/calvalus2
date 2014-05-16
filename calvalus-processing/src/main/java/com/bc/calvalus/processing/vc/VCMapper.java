@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.calvalus.processing.ma.DefaultHeader;
 import com.bc.calvalus.processing.ma.FilteredRecordSource;
 import com.bc.calvalus.processing.ma.GeometryRecordFilter;
 import com.bc.calvalus.processing.ma.Header;
@@ -34,8 +33,6 @@ import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.PixelTimeProvider;
 import com.bc.calvalus.processing.ma.ProductRecordSource;
 import com.bc.calvalus.processing.ma.Record;
-import com.bc.calvalus.processing.ma.RecordFilter;
-import com.bc.calvalus.processing.ma.RecordSelector;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordTransformer;
 import com.bc.calvalus.processing.ma.RecordWritable;
@@ -46,13 +43,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
 import java.awt.geom.Area;
@@ -114,7 +108,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {
             Path inputPath = l2ProcessorAdapter.getInputPath();
-            File l1LocalFile = l2ProcessorAdapter.copyFileToLocal(inputPath);
+            l2ProcessorAdapter.copyFileToLocal(inputPath);
+            File l1LocalFile = l2ProcessorAdapter.getInputFile();
             Product inputProduct = l2ProcessorAdapter.getInputProduct();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
@@ -151,6 +146,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     ProductFormatter.copyAndClose(inputStream, outputStream, context);
                 }
 
+//                RecordSource matchingReferenceRecordSource = new ListBackedRecordSource(referenceRecordSource, matchingReferenceRecords);
+//                Collection<Record> l1Matchups = getMatchups(maConfig, ProgressMonitor.NULL, matchingReferenceRecordSource, inputProduct);
+
+
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
                 KeywordHandler keywordHandler = differentiationProcessorAdapter.process(ProgressMonitor.NULL,
                                                                                         null,
@@ -164,57 +163,54 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without differentiations").increment(1);
                     return;
                 }
-//                RecordSource matchingReferenceRecordSource = new ListBackedRecordSource(referenceRecordSource, matchingReferenceRecords);
+                Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
+                                                    inputProduct.getSceneRasterHeight());
+                Rectangle maRectangle = area.getBounds();
+                maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
+                Rectangle processingRectangle = fullScene.intersection(maRectangle);
+                LOG.info("processing rectangle: " + processingRectangle);
+                l2ProcessorAdapter.setProcessingRectangle(processingRectangle);
+
                 for (KeywordHandler.NamedOutput namedOutput : namedOutputs) {
                     context.progress();
 
+                    File l1DiffFile = new File(namedOutput.getFile());
                     if (jobConfig.getBoolean("calvalus.vc.outputL1Diff", false)) {
-                        File file = new File(namedOutput.getFile());
-                        System.out.println("Saving l1-diff product = " + file.getName());
-                        InputStream inputStream = new BufferedInputStream(new FileInputStream(file));
-                        OutputStream outputStream = ProductFormatter.createOutputStream(context, file.getName());
+                        System.out.println("Saving l1-diff product = " + l1DiffFile.getName());
+                        InputStream inputStream = new BufferedInputStream(new FileInputStream(l1DiffFile));
+                        OutputStream outputStream = ProductFormatter.createOutputStream(context, l1DiffFile.getName());
                         ProductFormatter.copyAndClose(inputStream, outputStream, context);
                     }
 
 //                    Product product = ProductIO.readProduct(namedOutput.getFile());
 //                    if (product != null) {
 //                        try {
-//                            ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
-//                            Iterable<Record> extractedRecords = productRecordSource.getRecords();
 //                            context.progress();
-//                            Header header = productRecordSource.getHeader();
-//                            RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-//                            Collection<Record> aggregatedRecords = new ArrayList<Record>();
-//                            for (Record extractedRecord : extractedRecords) {
-//                                Record aggregatedRecord = recordAggregator.transform(extractedRecord);
-//                                aggregatedRecords.add(aggregatedRecord);
-//                                extractionPM.worked(1);
-//                            }
+//                            getMatchups(maConfig, extractionPM, matchingReferenceRecordSource, product);
 //                        } catch (Exception e) {
 //                            throw new RuntimeException("Failed to retrieve input records.", e);
 //                        }
 //                    }
+
+                    l2ProcessorAdapter.closeInputProduct();
+                    LOG.info("Processing to Level 2: " + l1DiffFile);
+                    l2ProcessorAdapter.setInputfile(l1DiffFile);
+                    int numProducts = l2ProcessorAdapter.processSourceProduct(pm);
+                    Product processedProduct = null;
+                    if (numProducts > 0) {
+                        processedProduct = l2ProcessorAdapter.openProcessedProduct();
+                    }
+                    if (processedProduct == null) {
+                        LOG.info("Processed product is null!");
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
+                        return;
+                    }
+                    if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
+                        // TODO handle operators and graphs
+                        l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
+                    }
                 }
 
-
-//                if (!pullProcessing) {
-//                    Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
-//                                                        inputProduct.getSceneRasterHeight());
-//                    Rectangle maRectangle = area.getBounds();
-//                    maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
-//                    Rectangle processingRectangle = fullScene.intersection(maRectangle);
-//                    LOG.info("processing rectangle: " + processingRectangle);
-//                    l2ProcessorAdapter.setProcessingRectangle(processingRectangle);
-//                }
-//                Product product = l2ProcessorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
-//                if (product == null) {
-//                    LOG.info("Processed product is null!");
-//                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
-//                    return;
-//                }
-//                if (maConfig.getSaveProcessedProducts()) {
-//                    l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
-//                }
 //
 //                // Actually wrong name for processed products, but we need the field "source_name" in the export data table
 //                product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
@@ -307,6 +303,25 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s stops processing of split %s after %s sec",
                                context.getTaskAttemptID(), context.getInputSplit(), mapperTotalTime / 1E3));
 
+    }
+
+    private Collection<Record> getMatchups(MAConfig maConfig, ProgressMonitor extractionPM, RecordSource matchingReferenceRecordSource, Product product) {
+        ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
+        Iterable<Record> extractedRecords;
+        try {
+            extractedRecords = productRecordSource.getRecords();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract records.", e);
+        }
+        Header header = productRecordSource.getHeader();
+        RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+        Collection<Record> aggregatedRecords = new ArrayList<Record>();
+        for (Record extractedRecord : extractedRecords) {
+            Record aggregatedRecord = recordAggregator.transform(extractedRecord);
+            aggregatedRecords.add(aggregatedRecord);
+            extractionPM.worked(1);
+        }
+        return aggregatedRecords;
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
