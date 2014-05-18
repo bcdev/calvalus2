@@ -121,7 +121,7 @@
                     <execution>
                         <configuration>
                             <extraJvmArgs>-Xmx850M -Xss100M</extraJvmArgs>
-                            <localWorkers>1</localWorkers>
+                            <!-- <localWorkers>2</localWorkers> -->
                         </configuration>
                         <phase>prepare-package</phase>
                         <goals>
