@@ -1,0 +1,77 @@
+#!/bin/bash
+
+inputFile="$inputFile"
+inFileName="$inputFile.name"
+inputPathParent="$inputPath.parent"
+
+#[[
+
+#for debugging
+#set -x
+
+set -e
+set -m
+
+outFile=${inFileName}-l2gen.hdf
+
+export OCSSWROOT=./seadas-7.0/seadas-7.0
+L1BGEN_BIN=${OCSSWROOT}/run/scripts/modis_L1B.py
+source $OCSSWROOT/OCSSW_bash.env
+
+# testing compression
+l1aFile=$inFileName
+if [[ $inFileName =~ gz$ ]]; then
+  echo "gunzip"
+  gunzip $inFileName
+  l1aFile=${inFileName%.gz}
+elif [[ $inFileName =~ bz2$ ]]; then
+  echo "bunzip2"
+  bunzip2 $inFileName
+  l1aFile=${inFileName%.bz2}
+fi
+echo "L1A file $l1aFile"
+
+geoFile=${l1aFile%L1A_LAC}GEO
+echo "GEO file $geoFile"
+
+# MODIS needs geofile
+echo "testting in same directory ${inputPathParent}/${geoFile}*"
+geoPath=`hadoop fs -ls ${inputPathParent}/${geoFile}*|awk '{ print $8 }'`
+if [ "$geoPath" != "" ]; then
+  echo "copy to cwd: $geoPath -> $geoFile"
+  hadoop fs -copyToLocal $geoPath $geoFile
+else
+  pdate="${l1aFile:1:7}"
+  pyear=${pdate%???}
+  pday=${pdate#$pyear}
+  productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y/%m/%d")
+
+  echo "testting in MODISA_GEO directory /calvalus/eodata/MODISA_GEO/v1/${productDate}/${geoFile}*"
+  geoPath=`hadoop fs -ls /calvalus/eodata/MODISA_GEO/v1/${productDate}/${geoFile}*|awk '{ print $8 }'`
+  if [ "$geoPath" != "" ]; then
+    echo "copy to cwd: $geoPath -> $geoFile"
+    hadoop fs -copyToLocal $geoPath $geoFile
+  else
+    echo failed to find GEO file
+    exit 1
+  fi
+fi
+l1bFile=${l1aFile%L1A_LAC}L1B_LAC
+
+function handle_progress() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ scan\:\ +([0-9]+)\ +out\ of\ +([0-9]+)\ + ]]; then
+    a1=${BASH_REMATCH[1]}
+    a2=${BASH_REMATCH[2]}
+    progress=$(echo "scale=3; ${a1} / ${a2}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" $progress
+  fi
+}
+
+set -o pipefail
+echo ${L1BGEN_BIN} ${l1aFile} ${geoFile}
+${L1BGEN_BIN} --verbose ${l1aFile} ${geoFile} | while read x ; do handle_progress "$x" ; done
+
+echo CALVALUS_OUTPUT_PRODUCT ${l1bFile}
+]]#
