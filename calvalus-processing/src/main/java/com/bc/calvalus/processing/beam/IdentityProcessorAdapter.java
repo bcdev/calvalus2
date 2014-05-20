@@ -140,7 +140,7 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
         final SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);
         op.setRegion(srcProductRect);
-        op.setCopyMetadata(false);
+        op.setCopyMetadata(true);
         Product subsetProduct = op.getTargetProduct();
         getLogger().info(String.format("Created Subset product width = %d height = %d",
                                        subsetProduct.getSceneRasterWidth(),
