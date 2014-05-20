@@ -13,8 +13,8 @@
     <properties>
         <hadoop.version>2.4.0</hadoop.version>
         <calvalus.version>2.0-SNAPSHOT</calvalus.version>
-        <beam.version>5.0</beam.version>
-        <ceres.version>0.14</ceres.version>
+        <beam.version>4.11.1-SNAPSHOT</beam.version>
+        <ceres.version>0.13.3-SNAPSHOT</ceres.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -232,7 +232,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>5.0</version>
+                <version>1.5.2</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
@@ -251,7 +251,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>5.0</version>
+                <version>1.1.3-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
@@ -278,7 +278,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>5.0</version>
+                <version>1.3-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>

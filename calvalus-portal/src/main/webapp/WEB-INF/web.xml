@@ -16,7 +16,7 @@
     </context-param>
 
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
-
+<!--
     <servlet>
         <servlet-name>stagingServlet</servlet-name>
         <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
@@ -38,7 +38,7 @@
         </init-param>
         <load-on-startup>1</load-on-startup>
     </servlet>
-
+-->
 
     <!-- Backend servlet -->
 
@@ -67,12 +67,12 @@
         <servlet-name>downloadServlet</servlet-name>
         <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
     </servlet>
-
+<!--
     <servlet-mapping>
         <servlet-name>stagingServlet</servlet-name>
         <url-pattern>/staging/*</url-pattern>
     </servlet-mapping>
-
+-->
     <servlet-mapping>
         <servlet-name>backendServlet</servlet-name>
         <url-pattern>/calvalus/backend</url-pattern>
