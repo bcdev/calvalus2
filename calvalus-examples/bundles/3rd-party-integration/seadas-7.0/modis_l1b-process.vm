@@ -73,5 +73,12 @@ set -o pipefail
 echo ${L1BGEN_BIN} ${l1aFile} ${geoFile}
 ${L1BGEN_BIN} --verbose ${l1aFile} ${geoFile} | while read x ; do handle_progress "$x" ; done
 
-echo CALVALUS_OUTPUT_PRODUCT ${l1bFile}
+pdate="${l1aFile:1:7}"
+pyear=${pdate%???}
+pday=${pdate#$pyear}
+productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y/%m/%d")
+mkdir -pv ${productDate}
+mv -v ${l1bFile} ${productDate}/${l1bFile}
+
+echo CALVALUS_OUTPUT_PRODUCT ${productDate}/${l1bFile}
 ]]#
