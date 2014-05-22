@@ -77,8 +77,6 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public static final String EXCLUSION_REASON_EXPRESSION = "RECORD_EXPRESSION";
-
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
@@ -93,15 +91,14 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s starts processing of split %s", context.getTaskAttemptID(), context.getInputSplit()));
 
         RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
-
         ProcessorAdapter l2ProcessorAdapter = ProcessorFactory.createAdapter(context);
-        boolean pullProcessing = l2ProcessorAdapter.supportsPullProcessing();
-        final int progressForProcessing = pullProcessing ? 20 : 80;
-        final int progressForSaving = maConfig.getSaveProcessedProducts() ? (pullProcessing ? 80 : 20) : 0;
-        final int progressForExtraction = pullProcessing ? 80 : 20;
+
+        final int progressForFindingMatchingReferences = 5 + 5;
+        final int progressForDifferentiation = 10;
+        final int progressForProcessing = 85;
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Match-Up analysis", progressForProcessing + progressForSaving + progressForExtraction);
-        ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
+        pm.beginTask("Vicarious Calibration", progressForFindingMatchingReferences + progressForDifferentiation + progressForProcessing);
+
         try {
             List<NamedRecordSource> namedRecordSources = new ArrayList<NamedRecordSource>();
             Path inputPath = l2ProcessorAdapter.getInputPath();
@@ -134,6 +131,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     System.out.println("-- at pixelPos = " + pixelPos);
                 }
             }
+            pm.worked(5);
 
             if (!area.isEmpty()) {
                 if (jobConfig.getBoolean("calvalus.vc.outputL1", false)) {
@@ -146,11 +144,13 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordSource.getHeader(), matchingReferenceRecords);
                 namedRecordSources.add(matchingReferenceRecordSource);
 
-                namedRecordSources.add(getMatchups("L1_", maConfig, ProgressMonitor.NULL, matchingReferenceRecordSource, inputProduct));
+                ProgressMonitor l1ExtractionPM = SubProgressMonitor.create(pm, 5);
+                namedRecordSources.add(getMatchups("L1_", maConfig, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
 
 
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
-                KeywordHandler keywordHandler = differentiationProcessorAdapter.process(ProgressMonitor.NULL,
+                ProgressMonitor differentiationPM = SubProgressMonitor.create(pm, progressForDifferentiation);
+                KeywordHandler keywordHandler = differentiationProcessorAdapter.process(differentiationPM,
                                                                                         null,
                                                                                         inputPath,
                                                                                         l1LocalFile,
@@ -170,6 +170,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 LOG.info("processing rectangle: " + processingRectangle);
                 l2ProcessorAdapter.setProcessingRectangle(processingRectangle);
 
+                ProgressMonitor mainLoopPM = SubProgressMonitor.create(pm, progressForProcessing);
+                mainLoopPM.beginTask("Level 2", namedOutputs.length * (1 + 5 + 30 + 5 +1));
                 for (KeywordHandler.NamedOutput namedOutput : namedOutputs) {
                     context.progress();
 
@@ -180,12 +182,14 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         OutputStream outputStream = ProductFormatter.createOutputStream(context, l1DiffFile.getName());
                         ProductFormatter.copyAndClose(inputStream, outputStream, context);
                     }
+                    mainLoopPM.worked(1);
 
                     Product l1DiffProduct = ProductIO.readProduct(namedOutput.getFile());
                     if (l1DiffProduct != null) {
                         try {
                             context.progress();
                             String prefix = namedOutput.getName()+ "_";
+                            ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
                             namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, l1DiffProduct));
                         } catch (Exception e) {
                             throw new RuntimeException("Failed to retrieve input records.", e);
@@ -195,7 +199,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     l2ProcessorAdapter.closeInputProduct();
                     LOG.info("Processing to Level 2: " + l1DiffFile);
                     l2ProcessorAdapter.setInputfile(l1DiffFile);
-                    int numProducts = l2ProcessorAdapter.processSourceProduct(pm);
+                    ProgressMonitor processingPM = SubProgressMonitor.create(mainLoopPM, 30);
+                    int numProducts = l2ProcessorAdapter.processSourceProduct(processingPM);
                     Product processedProduct = null;
                     if (numProducts > 0) {
                         processedProduct = l2ProcessorAdapter.openProcessedProduct();
@@ -208,6 +213,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         try {
                             context.progress();
                             String prefix = "L2_" + namedOutput.getName()+ "_";
+                            ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
                             namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, processedProduct));
                         } catch (Exception e) {
                             throw new RuntimeException("Failed to retrieve input records.", e);
@@ -215,9 +221,11 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     }
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
-                        l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
+                        l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 1));
                     }
                 }
+                mainLoopPM.done();
+
                 MergedRecordSource mergedRecordSource = new MergedRecordSource(namedRecordSources);
                 logAttributeNames(mergedRecordSource);
 
@@ -227,7 +235,6 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     context.write(new Text(String.format("%s_%06d", inputProduct.getName(), ++numMatchUps)),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
-                    extractionPM.worked(1);
                 }
 
                 if (numMatchUps > 0) {
@@ -245,7 +252,6 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
             context.progress();
         } finally {
-            extractionPM.done();
             pm.done();
             l2ProcessorAdapter.dispose();
         }

@@ -244,6 +244,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                         setHandler(keywordHandler).
                         start();
             } else {
+                pm.beginTask("saving", 1);
                 MapContext mapContext = getMapContext();
                 for (String outputFileName : outputFilesNames) {
                     InputStream inputStream = new BufferedInputStream(
@@ -251,6 +252,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
                     ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
                 }
+                pm.done();
             }
         }
     }
