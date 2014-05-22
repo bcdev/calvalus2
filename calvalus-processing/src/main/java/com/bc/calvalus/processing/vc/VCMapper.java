@@ -221,7 +221,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     }
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
-                        l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 1));
+                        l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                     }
                 }
                 mainLoopPM.done();
