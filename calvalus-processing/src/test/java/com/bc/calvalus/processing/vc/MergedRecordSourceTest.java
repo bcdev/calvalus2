@@ -40,8 +40,8 @@ public class MergedRecordSourceTest {
     public void setUp() throws Exception {
         headerA = new TestHeader("1", "2", "*3");
         headerB = new TestHeader("a", "b", "c");
-        Record recordA = new DefaultRecord(null, null, new Object[]{21, 42, 63}, new Object[]{"good"});
-        Record recordB = new DefaultRecord(null, null, new Object[]{3, 6, 9}, new Object[]{"bad"});
+        Record recordA = new DefaultRecord(null, null, new Object[]{21, 42, 63}, new Object[]{"Annotation_A"});
+        Record recordB = new DefaultRecord(null, null, new Object[]{3, 6, 9}, new Object[]{"Annotation_B"});
 
         sourceA = new NamedRecordSource("A", headerA, Arrays.asList(recordA));
         sourceB = new NamedRecordSource("B", headerB, Arrays.asList(recordB));
@@ -72,7 +72,7 @@ public class MergedRecordSourceTest {
         assertNotNull(record);
         Object[] exptectedValues = {21, 42, 63};
         assertArrayEquals(exptectedValues, record.getAttributeValues());
-        Object[] exptectedAnno = {"good"};
+        Object[] exptectedAnno = {"Annotation_A"};
         assertArrayEquals(exptectedAnno, record.getAnnotationValues());
     }
 
@@ -98,7 +98,7 @@ public class MergedRecordSourceTest {
         assertNotNull(record);
         Object[] expectedValues = {21, 42, 63, 3, 6, 9};
         assertArrayEquals(expectedValues, record.getAttributeValues());
-        Object[] exptectedAnno = {"good", "bad"};
+        Object[] exptectedAnno = {"Annotation_A", "Annotation_B"};
         assertArrayEquals(exptectedAnno, record.getAnnotationValues());
     }
 }

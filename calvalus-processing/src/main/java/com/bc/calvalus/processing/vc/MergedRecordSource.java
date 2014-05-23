@@ -49,7 +49,6 @@ public class MergedRecordSource implements RecordSource {
         String[] attributeNames = getAttributeNames(namedRecordSources);
         String[] annotationNames = getAnnotationNames(namedRecordSources);
         header = new DefaultHeader(false, false, attributeNames, annotationNames);
-
     }
 
     @Override
