@@ -100,7 +100,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         pm.beginTask("Vicarious Calibration", progressForFindingMatchingReferences + progressForDifferentiation + progressForProcessing);
 
         try {
-            List<NamedRecordSource> namedRecordSources = new ArrayList<NamedRecordSource>();
+            // find matching reference Records
             Path inputPath = l2ProcessorAdapter.getInputPath();
             l2ProcessorAdapter.copyFileToLocal(inputPath);
             File l1LocalFile = l2ProcessorAdapter.getInputFile();
@@ -134,20 +134,20 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             pm.worked(5);
 
             if (!area.isEmpty()) {
-                if (jobConfig.getBoolean("calvalus.vc.outputL1", false)) {
-                    System.out.println("Saving l1 product = " + l1LocalFile.getName());
-                    InputStream inputStream = new BufferedInputStream(new FileInputStream(l1LocalFile));
-                    OutputStream outputStream = ProductFormatter.createOutputStream(context, l1LocalFile.getName());
-                    ProductFormatter.copyAndClose(inputStream, outputStream, context);
-                }
+                List<NamedRecordSource> namedRecordSources = new ArrayList<NamedRecordSource>();
 
+                // save Level 1 product
+                saveLevel1Product(l1LocalFile, context);
+
+                // add in-situ records
                 NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordSource.getHeader(), matchingReferenceRecords);
                 namedRecordSources.add(matchingReferenceRecordSource);
 
+                // extract Level 1 match-ups
                 ProgressMonitor l1ExtractionPM = SubProgressMonitor.create(pm, 5);
                 namedRecordSources.add(getMatchups("L1_", maConfig, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
 
-
+                // Differentiation processing
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
                 ProgressMonitor differentiationPM = SubProgressMonitor.create(pm, progressForDifferentiation);
                 KeywordHandler keywordHandler = differentiationProcessorAdapter.process(differentiationPM,
@@ -170,55 +170,43 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 LOG.info("processing rectangle: " + processingRectangle);
                 l2ProcessorAdapter.setProcessingRectangle(processingRectangle);
 
+                // handle all product produced by the differentiation processor
                 ProgressMonitor mainLoopPM = SubProgressMonitor.create(pm, progressForProcessing);
                 mainLoopPM.beginTask("Level 2", namedOutputs.length * (1 + 5 + 30 + 5 +1));
                 for (KeywordHandler.NamedOutput namedOutput : namedOutputs) {
                     context.progress();
 
-                    File l1DiffFile = new File(namedOutput.getFile());
-                    if (jobConfig.getBoolean("calvalus.vc.outputL1Diff", false)) {
-                        System.out.println("Saving l1-diff product = " + l1DiffFile.getName());
-                        InputStream inputStream = new BufferedInputStream(new FileInputStream(l1DiffFile));
-                        OutputStream outputStream = ProductFormatter.createOutputStream(context, l1DiffFile.getName());
-                        ProductFormatter.copyAndClose(inputStream, outputStream, context);
-                    }
+                    // save differentiation product
+                    File l1DiffFile = saveDifferentiationProduct(namedOutput, context);
                     mainLoopPM.worked(1);
 
                     Product l1DiffProduct = ProductIO.readProduct(namedOutput.getFile());
-                    if (l1DiffProduct != null) {
-                        try {
-                            context.progress();
-                            String prefix = namedOutput.getName()+ "_";
-                            ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
-                            namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, l1DiffProduct));
-                        } catch (Exception e) {
-                            throw new RuntimeException("Failed to retrieve input records.", e);
-                        }
-                    }
 
-                    l2ProcessorAdapter.closeInputProduct();
-                    LOG.info("Processing to Level 2: " + l1DiffFile);
-                    l2ProcessorAdapter.setInputfile(l1DiffFile);
-                    ProgressMonitor processingPM = SubProgressMonitor.create(mainLoopPM, 30);
-                    int numProducts = l2ProcessorAdapter.processSourceProduct(processingPM);
-                    Product processedProduct = null;
-                    if (numProducts > 0) {
-                        processedProduct = l2ProcessorAdapter.openProcessedProduct();
-                    }
-                    if (processedProduct == null) {
-                        LOG.info("Processed product is null!");
-                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
+                    // extract differentiation match-ups
+                    String diffPrefix = namedOutput.getName() + "_";
+                    NamedRecordSource differentiationMatchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l1DiffProduct, diffPrefix);
+                    if (differentiationMatchups == null) {
                         return;
                     } else {
-                        try {
-                            context.progress();
-                            String prefix = "L2_" + namedOutput.getName()+ "_";
-                            ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
-                            namedRecordSources.add(getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, processedProduct));
-                        } catch (Exception e) {
-                            throw new RuntimeException("Failed to retrieve input records.", e);
-                        }
+                        namedRecordSources.add(differentiationMatchups);
                     }
+
+                    //  Level 2 processing
+                    LOG.info("Processing to Level 2: " + l1DiffFile);
+                    l2ProcessorAdapter.closeInputProduct();
+                    l2ProcessorAdapter.setInputfile(l1DiffFile);
+                    l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
+                    Product l2Product = l2ProcessorAdapter.openProcessedProduct();
+
+                    // extract Level 2 match-ups
+                    String l2Prefix = "L2_" + namedOutput.getName()+ "_";
+                    NamedRecordSource l2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                    if (l2Matchups == null) {
+                        return;
+                    } else {
+                        namedRecordSources.add(l2Matchups);
+                    }
+
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
@@ -229,11 +217,13 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 MergedRecordSource mergedRecordSource = new MergedRecordSource(namedRecordSources);
                 logAttributeNames(mergedRecordSource);
 
+                // write merged records
                 int numMatchUps = 0;
                 Iterable<Record> records = mergedRecordSource.getRecords();
                 for (Record selectedRecord : records) {
-                    context.write(new Text(String.format("%s_%06d", inputProduct.getName(), ++numMatchUps)),
-                                  new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
+                    Text key = new Text(String.format("%s_%06d", inputProduct.getName(), ++numMatchUps));
+                    RecordWritable value = new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues());
+                    context.write(key, value);
                     context.progress();
                 }
 
@@ -249,13 +239,50 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without match-ups").increment(1);
             }
-
             context.progress();
         } finally {
             pm.done();
             l2ProcessorAdapter.dispose();
         }
 
+    }
+
+    private NamedRecordSource extractMatchups(Context context, MAConfig maConfig, NamedRecordSource matchingReferenceRecordSource, ProgressMonitor mainLoopPM, Product product, String prefix) {
+        if (product == null) {
+            LOG.info("Product is null: " +  prefix);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
+        } else {
+            try {
+                context.progress();
+                ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
+                return getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, product);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to retrieve records from product: " + prefix, e);
+            }
+        }
+        return null;
+    }
+
+    private void saveLevel1Product(File l1LocalFile, Context context) throws IOException {
+        if (context.getConfiguration().getBoolean("calvalus.vc.outputL1", false)) {
+            System.out.println("Saving l1 product = " + l1LocalFile.getName());
+            saveProduct(context, l1LocalFile);
+        }
+    }
+
+    private File saveDifferentiationProduct(KeywordHandler.NamedOutput namedOutput, Context context) throws IOException {
+        File l1DiffFile = new File(namedOutput.getFile());
+        if (context.getConfiguration().getBoolean("calvalus.vc.outputL1Diff", false)) {
+            System.out.println("Saving l1-diff product = " + l1DiffFile.getName());
+            saveProduct(context, l1DiffFile);
+        }
+        return l1DiffFile;
+    }
+
+    private void saveProduct(Context context, File l1DiffFile) throws IOException {
+        InputStream inputStream = new BufferedInputStream(new FileInputStream(l1DiffFile));
+        OutputStream outputStream = ProductFormatter.createOutputStream(context, l1DiffFile.getName());
+        ProductFormatter.copyAndClose(inputStream, outputStream, context);
     }
 
     private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
