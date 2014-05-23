@@ -259,7 +259,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     }
 
     private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
-        extractionPM.beginTask("Extarct Matchups", matchingReferenceRecordSource.getNumRecords());
+        extractionPM.beginTask("Extract Matchups", matchingReferenceRecordSource.getNumRecords());
         try {
             ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
             Iterable<Record> extractedRecords;
