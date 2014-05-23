@@ -258,23 +258,28 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     }
 
-    private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, RecordSource matchingReferenceRecordSource, Product product) {
-        ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
-        Iterable<Record> extractedRecords;
+    private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
+        extractionPM.beginTask("Extarct Matchups", matchingReferenceRecordSource.getNumRecords());
         try {
-            extractedRecords = productRecordSource.getRecords();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to extract records.", e);
+            ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
+            Iterable<Record> extractedRecords;
+            try {
+                extractedRecords = productRecordSource.getRecords();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to extract records.", e);
+            }
+            Header header = productRecordSource.getHeader();
+            RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+            List<Record> aggregatedRecords = new ArrayList<Record>();
+            for (Record extractedRecord : extractedRecords) {
+                Record aggregatedRecord = recordAggregator.transform(extractedRecord);
+                aggregatedRecords.add(aggregatedRecord);
+                extractionPM.worked(1);
+            }
+            return new NamedRecordSource(prefix, header, aggregatedRecords);
+        } finally {
+            extractionPM.done();
         }
-        Header header = productRecordSource.getHeader();
-        RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-        List<Record> aggregatedRecords = new ArrayList<Record>();
-        for (Record extractedRecord : extractedRecords) {
-            Record aggregatedRecord = recordAggregator.transform(extractedRecord);
-            aggregatedRecords.add(aggregatedRecord);
-            extractionPM.worked(1);
-        }
-        return new NamedRecordSource(prefix, header, aggregatedRecords);
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {

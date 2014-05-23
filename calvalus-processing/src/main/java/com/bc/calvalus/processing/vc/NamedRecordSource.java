@@ -45,6 +45,10 @@ public class NamedRecordSource implements RecordSource {
         return name;
     }
 
+    public int getNumRecords() {
+        return records.size();
+    }
+
     @Override
     public Header getHeader() {
         return header;
