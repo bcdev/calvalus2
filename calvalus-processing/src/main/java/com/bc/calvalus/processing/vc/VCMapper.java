@@ -105,10 +105,11 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             l2ProcessorAdapter.copyFileToLocal(inputPath);
             File l1LocalFile = l2ProcessorAdapter.getInputFile();
             Product inputProduct = l2ProcessorAdapter.getInputProduct();
+            Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
-                                                                     referenceRecordSource.getHeader().hasTime());
+                                                                     referenceRecordHeader.hasTime());
             Iterable<Record> referenceRecords;
             try {
                 referenceRecords = referenceRecordSource.getRecords();
@@ -140,7 +141,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 saveLevel1Product(l1LocalFile, context);
 
                 // add in-situ records
-                NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordSource.getHeader(), matchingReferenceRecords);
+                NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordHeader, matchingReferenceRecords);
                 namedRecordSources.add(matchingReferenceRecordSource);
 
                 // extract Level 1 match-ups
@@ -172,7 +173,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 // handle all product produced by the differentiation processor
                 ProgressMonitor mainLoopPM = SubProgressMonitor.create(pm, progressForProcessing);
-                mainLoopPM.beginTask("Level 2", namedOutputs.length * (1 + 5 + 30 + 5 +1));
+                mainLoopPM.beginTask("Level 2", (namedOutputs.length + 1) * (1 + 5 + 30 + 5 +1));
                 for (KeywordHandler.NamedOutput namedOutput : namedOutputs) {
                     context.progress();
 
@@ -211,6 +212,26 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                     }
+                }
+                //  Level 2 processing of primary product
+                LOG.info("Processing to Level 2: " + l1LocalFile);
+                l2ProcessorAdapter.closeInputProduct();
+                l2ProcessorAdapter.setInputfile(l1LocalFile);
+                l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
+                Product l2Product = l2ProcessorAdapter.openProcessedProduct();
+
+                // extract Level 2 match-ups
+                String l2Prefix = "L2_";
+                NamedRecordSource l2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                if (l2Matchups == null) {
+                    return;
+                } else {
+                    namedRecordSources.add(l2Matchups);
+                }
+
+                if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
+                    // TODO handle operators and graphs
+                    l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                 }
                 mainLoopPM.done();
 
