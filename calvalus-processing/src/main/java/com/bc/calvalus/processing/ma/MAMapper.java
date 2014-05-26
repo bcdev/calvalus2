@@ -188,10 +188,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
                 int numMatchUps = 0;
                 for (Record selectedRecord : selectedRecords) {
-                    context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
+                    context.write(new Text(String.format("%06d_%s", selectedRecord.getId(), product.getName())),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
                     extractionPM.worked(1);
+                    numMatchUps++;
                 }
 
                 long recordWriteTime = (now() - t0);

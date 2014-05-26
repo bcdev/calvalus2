@@ -241,10 +241,11 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 int numMatchUps = 0;
                 Iterable<Record> records = mergedRecordSource.getRecords();
                 for (Record selectedRecord : records) {
-                    Text key = new Text(String.format("%s_%06d", inputProduct.getName(), ++numMatchUps));
+                    Text key = new Text(String.format("%06d_%s", selectedRecord.getId(), inputProduct.getName()));
                     RecordWritable value = new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues());
                     context.write(key, value);
                     context.progress();
+                    numMatchUps++;
                 }
 
                 if (numMatchUps > 0) {
