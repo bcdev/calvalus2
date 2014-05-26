@@ -72,7 +72,7 @@ public class OverlappingRecordSelectorTest {
 
     private void mockPixelPosRecord(ProductRecordSource.PixelPosRecordFactory recordFactory, int recordIndex, PixelPos pixelPos,
                                     int timeDiffInMinutes) {
-        DefaultRecord record = new DefaultRecord(new GeoPos(recordIndex, -1), new Date(), new Object[0]);
+        DefaultRecord record = new DefaultRecord(0, new GeoPos(recordIndex, -1), new Date(), new Object[0]);
         records.add(record);
         OngoingStubbing<ProductRecordSource.PixelPosRecord> ongoingStubbing = Mockito.when(recordFactory.create(record));
         ongoingStubbing.thenReturn(new ProductRecordSource.PixelPosRecord(pixelPos, record, timeDiffInMinutes * 60 * 1000));

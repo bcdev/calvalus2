@@ -120,8 +120,12 @@ public class MergedRecordSource implements RecordSource {
                 System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
                 attributeDestPos += srcAttributes.length;
             }
-            Record record = baseL2Source.next();
-            return new DefaultRecord(null, null, attributeValues, record.getAnnotationValues());
+            Record l2Record = baseL2Source.next();
+            return new DefaultRecord(l2Record.getId(),
+                                     l2Record.getLocation(),
+                                     l2Record.getTime(),
+                                     attributeValues,
+                                     l2Record.getAnnotationValues());
         }
 
         @Override

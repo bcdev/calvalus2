@@ -41,7 +41,6 @@ public class PlacemarkRecordSource implements RecordSource {
     public PlacemarkRecordSource(Reader reader) {
         this.header = new DefaultHeader(true, false, ATTRIBUTE_NAMES);
         this.reader = reader;
-
     }
 
     @Override
@@ -53,8 +52,9 @@ public class PlacemarkRecordSource implements RecordSource {
     public Iterable<Record> getRecords() throws Exception {
         List<Placemark> placemarks = PlacemarkIO.readPlacemarks(reader, null, PinDescriptor.getInstance());
         List<Record> records = new ArrayList<Record>(placemarks.size());
+        int recordId = 0;
         for (Placemark placemark : placemarks) {
-            records.add(new PlacemarkRecord(placemark));
+            records.add(new PlacemarkRecord(placemark, recordId++));
         }
         return records;
     }
@@ -89,9 +89,16 @@ public class PlacemarkRecordSource implements RecordSource {
     private final class PlacemarkRecord implements Record {
 
         private final Placemark placemark;
+        private final int recordId;
 
-        public PlacemarkRecord(Placemark placemark) {
+        public PlacemarkRecord(Placemark placemark, int recordId) {
             this.placemark = placemark;
+            this.recordId = recordId;
+        }
+
+        @Override
+        public int getId() {
+            return recordId;
         }
 
         @Override

@@ -212,7 +212,7 @@ public class CsvRecordSource implements RecordSource {
                 time = csvLineReader.extractTime(values, csvLineReader.getLineNumber());
             }
 
-            return new DefaultRecord(location, time, values);
+            return new DefaultRecord(csvLineReader.getLineNumber(), location, time, values);
         }
 
     }

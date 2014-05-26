@@ -201,7 +201,11 @@ public class PixelExtractor {
             values[index++] = floatSamples;
         }
 
-        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values, new Object[]{exclusionReason});
+        return new DefaultRecord(inputRecord.getId(),
+                                 inputRecord.getLocation(),
+                                 inputRecord.getTime(),
+                                 values,
+                                 new Object[]{exclusionReason});
     }
 
     private Header createHeader(Header inputHeader) {

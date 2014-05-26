@@ -50,10 +50,10 @@ public class ProductRecordSourceTest {
         config.setMacroPixelSize(1);
 
         RecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                     new TestRecord(new GeoPos(1, 0)),
-                                                     new TestRecord(new GeoPos(1, 1)),
-                                                     new TestRecord(new GeoPos(0, 0)),
-                                                     new TestRecord(new GeoPos(0, 1)));
+                                                     new TestRecord(0, new GeoPos(1, 0)),
+                                                     new TestRecord(1, new GeoPos(1, 1)),
+                                                     new TestRecord(2, new GeoPos(0, 0)),
+                                                     new TestRecord(3, new GeoPos(0, 1)));
 
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         int n = 0;
@@ -69,9 +69,9 @@ public class ProductRecordSourceTest {
     public void testThatRecordsAreNotGeneratedForOutlyingCoordinates() throws Exception {
         // same test, but this time using the iterator
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(-1, -1)),
-                                                            new TestRecord(new GeoPos(-1, 2)),
-                                                            new TestRecord(new GeoPos(-3, -1)));
+                                                            new TestRecord(0, new GeoPos(-1, -1)),
+                                                            new TestRecord(1, new GeoPos(-1, 2)),
+                                                            new TestRecord(2, new GeoPos(-3, -1)));
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
@@ -86,13 +86,13 @@ public class ProductRecordSourceTest {
     @Test
     public void testTheIteratorForSourceRecordsThatAreInAndOutOfProductBoundaries() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(1, 0)),// in
-                                                            new TestRecord(new GeoPos(-1, 2)),   // out
-                                                            new TestRecord(new GeoPos(1, 1)), // in
-                                                            new TestRecord(new GeoPos(-1, -1)), // out
-                                                            new TestRecord(new GeoPos(0, 0)), // in
-                                                            new TestRecord(new GeoPos(0, 1)), // in
-                                                            new TestRecord(new GeoPos(-3, -1))); // out
+                                                            new TestRecord(0, new GeoPos(1, 0)),// in
+                                                            new TestRecord(1, new GeoPos(-1, 2)),   // out
+                                                            new TestRecord(2, new GeoPos(1, 1)), // in
+                                                            new TestRecord(3, new GeoPos(-1, -1)), // out
+                                                            new TestRecord(4, new GeoPos(0, 0)), // in
+                                                            new TestRecord(5, new GeoPos(0, 1)), // in
+                                                            new TestRecord(6, new GeoPos(-3, -1))); // out
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
@@ -107,11 +107,11 @@ public class ProductRecordSourceTest {
     @Test
     public void testThatInputSortingWorks() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(0.0F, 0.0F)),
-                                                            new TestRecord(new GeoPos(0.0F, 1.0F)),
-                                                            new TestRecord(new GeoPos(1.0F, 0.0F)),
-                                                            new TestRecord(new GeoPos(0.5F, 0.5F)),
-                                                            new TestRecord(new GeoPos(1.0F, 1.0F)));
+                                                            new TestRecord(0, new GeoPos(0.0F, 0.0F)),
+                                                            new TestRecord(1, new GeoPos(0.0F, 1.0F)),
+                                                            new TestRecord(2, new GeoPos(1.0F, 0.0F)),
+                                                            new TestRecord(3, new GeoPos(0.5F, 0.5F)),
+                                                            new TestRecord(4, new GeoPos(1.0F, 1.0F)));
 
         final int PIXEL_Y = 3;
 
@@ -284,7 +284,7 @@ public class ProductRecordSourceTest {
         config.setGoodPixelExpression("b1 == 0");
 
         ProductRecordSource output = createProductRecordSource(2, 3, new DefaultRecordSource(new DefaultHeader(true, false, "lat", "lon"),
-                                                                                             new TestRecord(new GeoPos(1.0F, 0.0F))), config);
+                                                                                             new TestRecord(0, new GeoPos(1.0F, 0.0F))), config);
 
         assertNotNull(output.getHeader());
         assertTrue(output.getHeader().hasLocation());
@@ -524,10 +524,17 @@ public class ProductRecordSourceTest {
 
     protected static class TestRecord implements Record {
 
+        private final int recordId;
         GeoPos coordinate;
 
-        private TestRecord(GeoPos coordinate) {
+        private TestRecord(int recordId, GeoPos coordinate) {
+            this.recordId = recordId;
             this.coordinate = new GeoPos(coordinate);
+        }
+
+        @Override
+        public int getId() {
+            return recordId;
         }
 
         @Override

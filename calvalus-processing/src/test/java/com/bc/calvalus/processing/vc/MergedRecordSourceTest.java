@@ -42,9 +42,9 @@ public class MergedRecordSourceTest {
     public void setUp() throws Exception {
         headerA = new TestHeader("1", "2", "*3");
         headerB = new TestHeader("a", "b", "c");
-        Record recordA = new DefaultRecord(null, null, new Object[]{21, 42, 63}, new Object[]{"Annotation_A"});
-        Record recordB = new DefaultRecord(null, null, new Object[]{3, 6, 9}, new Object[]{"Annotation_B"});
-        Record recordL2 = new DefaultRecord(null, null, new Object[]{1, 2, 3}, new Object[]{"Annotation_L2"});
+        Record recordA = new DefaultRecord(1, null, null, new Object[]{21, 42, 63}, new Object[]{"Annotation_A"});
+        Record recordB = new DefaultRecord(2, null, null, new Object[]{3, 6, 9}, new Object[]{"Annotation_B"});
+        Record recordL2 = new DefaultRecord(3, null, null, new Object[]{1, 2, 3}, new Object[]{"Annotation_L2"});
 
         sourceA = new NamedRecordSource("A", headerA, Arrays.asList(recordA));
         sourceB = new NamedRecordSource("B", headerB, Arrays.asList(recordB));

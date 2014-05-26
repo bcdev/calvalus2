@@ -13,20 +13,27 @@ import java.util.Date;
  */
 public class DefaultRecord implements Record {
 
+    private final int recordId;
     private final GeoPos location;
     private final Date time;
     private final Object[] attributeValues;
     private final Object[] annotationValues;
 
-    public DefaultRecord(GeoPos location, Date time, Object[] attributeValues) {
-        this(location, time, attributeValues, new Object[]{""});
+    public DefaultRecord(int recordId, GeoPos location, Date time, Object[] attributeValues) {
+        this(recordId, location, time, attributeValues, new Object[]{""});
     }
 
-    public DefaultRecord(GeoPos location, Date time, Object[] attributeValues, Object[] annotationValues) {
+    public DefaultRecord(int recordId, GeoPos location, Date time, Object[] attributeValues, Object[] annotationValues) {
+        this.recordId = recordId;
         this.location = location;
         this.time = time;
         this.attributeValues = attributeValues;
         this.annotationValues = annotationValues;
+    }
+
+    @Override
+    public int getId() {
+        return recordId;
     }
 
     @Override
