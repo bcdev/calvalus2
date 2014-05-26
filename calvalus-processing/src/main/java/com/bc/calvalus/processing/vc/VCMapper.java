@@ -173,7 +173,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 // handle all product produced by the differentiation processor
                 ProgressMonitor mainLoopPM = SubProgressMonitor.create(pm, progressForProcessing);
-                mainLoopPM.beginTask("Level 2", (namedOutputs.length + 1) * (1 + 5 + 30 + 5 +1));
+                mainLoopPM.beginTask("Level 2", namedOutputs.length * (1 + 5 + 30 + 5 + 1) + (30 + 5 + 1));
                 for (KeywordHandler.NamedOutput namedOutput : namedOutputs) {
                     context.progress();
 
@@ -222,11 +222,9 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 // extract Level 2 match-ups
                 String l2Prefix = "L2_";
-                NamedRecordSource l2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
-                if (l2Matchups == null) {
+                NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                if (baseL2Matchups == null) {
                     return;
-                } else {
-                    namedRecordSources.add(l2Matchups);
                 }
 
                 if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
@@ -235,7 +233,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
                 mainLoopPM.done();
 
-                MergedRecordSource mergedRecordSource = new MergedRecordSource(namedRecordSources);
+                MergedRecordSource mergedRecordSource = new MergedRecordSource(baseL2Matchups, namedRecordSources);
                 logAttributeNames(mergedRecordSource);
 
                 // write merged records
@@ -307,6 +305,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     }
 
     private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
+        System.out.println("prefix = " + prefix);
         extractionPM.beginTask("Extract Matchups", matchingReferenceRecordSource.getNumRecords());
         try {
             ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
@@ -321,9 +320,11 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             List<Record> aggregatedRecords = new ArrayList<Record>();
             for (Record extractedRecord : extractedRecords) {
                 Record aggregatedRecord = recordAggregator.transform(extractedRecord);
+                System.out.println("aggregatedRecord = " + aggregatedRecord);
                 aggregatedRecords.add(aggregatedRecord);
                 extractionPM.worked(1);
             }
+            System.out.println("aggregatedRecords.size=" + aggregatedRecords.size());
             return new NamedRecordSource(prefix, header, aggregatedRecords);
         } finally {
             extractionPM.done();

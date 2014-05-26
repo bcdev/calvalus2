@@ -24,7 +24,6 @@ import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.ceres.core.Assert;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,18 +36,15 @@ public class MergedRecordSource implements RecordSource {
 
     private final Header header;
     private final List<NamedRecordSource> namedRecordSources;
+    private final NamedRecordSource baseL2RecordSource;
 
-    public MergedRecordSource(NamedRecordSource... namedRecordSources) {
-        this(Arrays.asList(namedRecordSources));
-    }
-
-    public MergedRecordSource(List<NamedRecordSource> namedRecordSources) {
+    public MergedRecordSource(NamedRecordSource baseL2RecordSource, List<NamedRecordSource> namedRecordSources) {
+        this.baseL2RecordSource = baseL2RecordSource;
         Assert.notNull(namedRecordSources, "namedRecordSources != null");
         Assert.argument(namedRecordSources.size() > 0, "namedRecordSources.length > 0");
         this.namedRecordSources = namedRecordSources;
         String[] attributeNames = getAttributeNames(namedRecordSources);
-        String[] annotationNames = getAnnotationNames(namedRecordSources);
-        header = new DefaultHeader(false, false, attributeNames, annotationNames);
+        header = new DefaultHeader(false, false, attributeNames, baseL2RecordSource.getHeader().getAnnotationNames());
     }
 
     @Override
@@ -83,36 +79,25 @@ public class MergedRecordSource implements RecordSource {
         return attributeNames.toArray(new String[attributeNames.size()]);
     }
 
-    private static String[] getAnnotationNames(List<NamedRecordSource> namedRecordSources) {
-        List<String> annotationNames = new ArrayList<String>();
-        for (NamedRecordSource namedRecordSource : namedRecordSources) {
-            String name = namedRecordSource.getName();
-            for (String aName : namedRecordSource.getHeader().getAnnotationNames()) {
-                annotationNames.add(name + aName);
-            }
-        }
-        return annotationNames.toArray(new String[annotationNames.size()]);
-    }
-
-
     private class MergedIterable implements Iterable<Record> {
         @Override
         public Iterator<Record> iterator() {
-            return new MergedIterator(namedRecordSources,
-                                      header.getAttributeNames().length,
-                                      header.getAnnotationNames().length);
+            return new MergedIterator(baseL2RecordSource,
+                                      namedRecordSources,
+                                      header.getAttributeNames().length
+            );
         }
     }
 
     private static class MergedIterator implements Iterator<Record> {
 
+        private final Iterator<Record> baseL2Source;
         private final List<Iterator<Record>> sources;
         private final int numAttributes;
-        private final int numAnnotations;
 
-        private MergedIterator(List<NamedRecordSource> namedRecordSources, int numAttributes, int numAnnotations) {
+        private MergedIterator(NamedRecordSource baseL2Source, List<NamedRecordSource> namedRecordSources, int numAttributes) {
+            this.baseL2Source = baseL2Source.getRecords().iterator();
             this.numAttributes = numAttributes;
-            this.numAnnotations = numAnnotations;
             sources = new ArrayList<Iterator<Record>>(namedRecordSources.size());
             for (NamedRecordSource namedRecordSource : namedRecordSources) {
                 sources.add(namedRecordSource.getRecords().iterator());
@@ -127,21 +112,16 @@ public class MergedRecordSource implements RecordSource {
         @Override
         public Record next() {
             Object[] attributeValues = new Object[numAttributes];
-            Object[] annotationValues = new Object[numAnnotations];
             int attributeDestPos = 0;
-            int annotationDestPos = 0;
             for (Iterator<Record> source : sources) {
                 Record record = source.next();
 
-                Object[] src = record.getAttributeValues();
-                System.arraycopy(src, 0, attributeValues, attributeDestPos, src.length);
-                attributeDestPos += src.length;
-
-                src = record.getAnnotationValues();
-                System.arraycopy(src, 0, annotationValues, annotationDestPos, src.length);
-                annotationDestPos += src.length;
+                Object[] srcAttributes = record.getAttributeValues();
+                System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
+                attributeDestPos += srcAttributes.length;
             }
-            return new DefaultRecord(null, null, attributeValues, annotationValues);
+            Record record = baseL2Source.next();
+            return new DefaultRecord(null, null, attributeValues, record.getAnnotationValues());
         }
 
         @Override
