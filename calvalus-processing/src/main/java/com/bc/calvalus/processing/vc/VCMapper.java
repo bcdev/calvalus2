@@ -233,7 +233,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
                 mainLoopPM.done();
 
-                MergedRecordSource mergedRecordSource = new MergedRecordSource(baseL2Matchups, namedRecordSources);
+                MergedRecordSource mergedRecordSource = new MergedRecordSource(matchingReferenceRecordSource, baseL2Matchups, namedRecordSources);
                 logAttributeNames(mergedRecordSource);
 
                 // write merged records

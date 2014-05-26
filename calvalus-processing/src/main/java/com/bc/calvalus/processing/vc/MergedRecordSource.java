@@ -24,8 +24,9 @@ import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.ceres.core.Assert;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
 
@@ -35,16 +36,24 @@ import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PR
 public class MergedRecordSource implements RecordSource {
 
     private final Header header;
-    private final List<NamedRecordSource> namedRecordSources;
-    private final NamedRecordSource baseL2RecordSource;
+    private final List<NamedRecordSource> namedRecords;
+    private final NamedRecordSource referenceRecords;
+    private final NamedRecordSource baseL2Records;
 
-    public MergedRecordSource(NamedRecordSource baseL2RecordSource, List<NamedRecordSource> namedRecordSources) {
-        this.baseL2RecordSource = baseL2RecordSource;
-        Assert.notNull(namedRecordSources, "namedRecordSources != null");
-        Assert.argument(namedRecordSources.size() > 0, "namedRecordSources.length > 0");
-        this.namedRecordSources = namedRecordSources;
-        String[] attributeNames = getAttributeNames(namedRecordSources);
-        header = new DefaultHeader(false, false, attributeNames, baseL2RecordSource.getHeader().getAnnotationNames());
+    public MergedRecordSource(NamedRecordSource referenceRecords, NamedRecordSource baseL2Records, List<NamedRecordSource> namedRecords) {
+        Assert.notNull(referenceRecords, "referenceRecords != null");
+        Assert.notNull(baseL2Records, "baseL2Records != null");
+        Assert.notNull(namedRecords, "namedRecords != null");
+        Assert.argument(namedRecords.size() > 0, "namedRecords.length > 0");
+
+        this.referenceRecords = referenceRecords;
+        this.baseL2Records = baseL2Records;
+        this.namedRecords = namedRecords;
+
+        List<NamedRecordSource> headerSources = new ArrayList<NamedRecordSource>(namedRecords.size() + 1);
+        headerSources.addAll(namedRecords);
+        headerSources.add(baseL2Records);
+        this.header = new DefaultHeader(false, false, getAttributeNames(headerSources), baseL2Records.getHeader().getAnnotationNames());
     }
 
     @Override
@@ -54,7 +63,45 @@ public class MergedRecordSource implements RecordSource {
 
     @Override
     public Iterable<Record> getRecords() {
-        return new MergedIterable();
+        Map<Integer, List<Record>> recordsMap = new HashMap<Integer, List<Record>>(referenceRecords.getNumRecords());
+        for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
+            recordsMap.put(referenceRecordsRecord.getId(), new ArrayList<Record>(namedRecords.size() + 1));
+        }
+        for (NamedRecordSource namedRecordSource : namedRecords) {
+            for (Record record : namedRecordSource.getRecords()) {
+                recordsMap.get(record.getId()).add(record);
+            }
+        }
+
+        Map<Integer, Record> baseL2Map = new HashMap<Integer, Record>(referenceRecords.getNumRecords());
+        for (Record record : baseL2Records.getRecords()) {
+            baseL2Map.put(record.getId(), record);
+        }
+        int numAttributes = header.getAttributeNames().length;
+        List<Record> mergedRecords = new ArrayList<Record>(referenceRecords.getNumRecords());
+
+        for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
+            int id = referenceRecordsRecord.getId();
+
+            Object[] attributeValues = new Object[numAttributes];
+            int attributeDestPos = 0;
+            List<Record> recordList = recordsMap.get(id);
+            for (Record record : recordList) {
+                Object[] srcAttributes = record.getAttributeValues();
+                System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
+                attributeDestPos += srcAttributes.length;
+            }
+            Record l2Record = baseL2Map.get(id);
+            Object[] srcAttributes = l2Record.getAttributeValues();
+            System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
+
+            mergedRecords.add(new DefaultRecord(referenceRecordsRecord.getId(),
+                                                referenceRecordsRecord.getLocation(),
+                                                referenceRecordsRecord.getTime(),
+                                                attributeValues,
+                                                l2Record.getAnnotationValues()));
+        }
+        return mergedRecords;
     }
 
     @Override
@@ -77,60 +124,5 @@ public class MergedRecordSource implements RecordSource {
             }
         }
         return attributeNames.toArray(new String[attributeNames.size()]);
-    }
-
-    private class MergedIterable implements Iterable<Record> {
-        @Override
-        public Iterator<Record> iterator() {
-            return new MergedIterator(baseL2RecordSource,
-                                      namedRecordSources,
-                                      header.getAttributeNames().length
-            );
-        }
-    }
-
-    private static class MergedIterator implements Iterator<Record> {
-
-        private final Iterator<Record> baseL2Source;
-        private final List<Iterator<Record>> sources;
-        private final int numAttributes;
-
-        private MergedIterator(NamedRecordSource baseL2Source, List<NamedRecordSource> namedRecordSources, int numAttributes) {
-            this.baseL2Source = baseL2Source.getRecords().iterator();
-            this.numAttributes = numAttributes;
-            sources = new ArrayList<Iterator<Record>>(namedRecordSources.size());
-            for (NamedRecordSource namedRecordSource : namedRecordSources) {
-                sources.add(namedRecordSource.getRecords().iterator());
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return sources.get(0).hasNext();
-        }
-
-        @Override
-        public Record next() {
-            Object[] attributeValues = new Object[numAttributes];
-            int attributeDestPos = 0;
-            for (Iterator<Record> source : sources) {
-                Record record = source.next();
-
-                Object[] srcAttributes = record.getAttributeValues();
-                System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
-                attributeDestPos += srcAttributes.length;
-            }
-            Record l2Record = baseL2Source.next();
-            return new DefaultRecord(l2Record.getId(),
-                                     l2Record.getLocation(),
-                                     l2Record.getTime(),
-                                     attributeValues,
-                                     l2Record.getAnnotationValues());
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
     }
 }

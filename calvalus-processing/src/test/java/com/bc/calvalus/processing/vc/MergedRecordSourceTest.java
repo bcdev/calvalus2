@@ -32,71 +32,89 @@ import static org.junit.Assert.*;
 
 public class MergedRecordSourceTest {
 
-    private Header headerA;
-    private Header headerB;
+    private NamedRecordSource insitu;
     private NamedRecordSource sourceA;
     private NamedRecordSource sourceB;
     private NamedRecordSource level2;
 
     @Before
     public void setUp() throws Exception {
-        headerA = new TestHeader("1", "2", "*3");
-        headerB = new TestHeader("a", "b", "c");
-        Record recordA = new DefaultRecord(1, null, null, new Object[]{21, 42, 63}, new Object[]{"Annotation_A"});
-        Record recordB = new DefaultRecord(2, null, null, new Object[]{3, 6, 9}, new Object[]{"Annotation_B"});
-        Record recordL2 = new DefaultRecord(3, null, null, new Object[]{1, 2, 3}, new Object[]{"Annotation_L2"});
+        Header headerA = new TestHeader("1", "2", "*3");
+        Header headerB = new TestHeader("a", "b", "c");
+        Record insitu_1 = new DefaultRecord(1, null, null, new Object[]{42});
+        Record insitu_2 = new DefaultRecord(2, null, null, new Object[]{43});
+        Record recordA_1 = new DefaultRecord(1, null, null, new Object[]{21.1, 42.1, 63.1}, new Object[]{"Annotation_A"});
+        Record recordA_2 = new DefaultRecord(2, null, null, new Object[]{21.2, 42.2, 63.2}, new Object[]{"Annotation_A"});
+        Record recordB_1 = new DefaultRecord(2, null, null, new Object[]{3.2, 6.2, 9.2}, new Object[]{"Annotation_B"});
+        Record recordB_2 = new DefaultRecord(1, null, null, new Object[]{3.1, 6.1, 9.1}, new Object[]{"Annotation_B"});
+        Record recordL2_1 = new DefaultRecord(1, null, null, new Object[]{1.1, 2.1, 3.1}, new Object[]{"Annotation_L2"});
+        Record recordL2_2 = new DefaultRecord(2, null, null, new Object[]{1.2, 2.2, 3.2}, new Object[]{"Annotation_L2"});
 
-        sourceA = new NamedRecordSource("A", headerA, Arrays.asList(recordA));
-        sourceB = new NamedRecordSource("B", headerB, Arrays.asList(recordB));
-        level2 = new NamedRecordSource("L2", headerB, Arrays.asList(recordL2));
+        insitu = new NamedRecordSource("insitu", headerA, Arrays.asList(insitu_1, insitu_2));
+        sourceA = new NamedRecordSource("A", headerA, Arrays.asList(recordA_1, recordA_2));
+        sourceB = new NamedRecordSource("B", headerB, Arrays.asList(recordB_1, recordB_2));
+        level2 = new NamedRecordSource("L2", headerB, Arrays.asList(recordL2_1, recordL2_2));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testMergeZero() throws Exception {
-        new MergedRecordSource(level2, Collections.<NamedRecordSource>emptyList());
+        new MergedRecordSource(insitu, level2, Collections.<NamedRecordSource>emptyList());
     }
 
     @Test
     public void testMergeOne() throws Exception {
-        MergedRecordSource merged = new MergedRecordSource(level2, Arrays.asList(sourceA));
+        MergedRecordSource merged = new MergedRecordSource(insitu, level2, Arrays.asList(sourceA));
 
         Header header = merged.getHeader();
         assertNotNull(header);
         String[] attributeNames = header.getAttributeNames();
         assertNotNull(attributeNames);
-        assertEquals(headerA.getAttributeNames().length, attributeNames.length);
-        assertArrayEquals(new String[]{"A1", "A2", "*A3"}, attributeNames);
+        assertEquals(6, attributeNames.length);
+        assertArrayEquals(new String[]{"A1", "A2", "*A3", "L2a", "L2b", "L2c"}, attributeNames);
         assertArrayEquals(new String[]{DefaultHeader.ANNOTATION_EXCLUSION_REASON}, header.getAnnotationNames());
 
         Iterator<Record> iterator = merged.getRecords().iterator();
         assertTrue(iterator.hasNext());
-        Record record = iterator.next();
+        Record record1 = iterator.next();
+        assertTrue(iterator.hasNext());
+        Record record2 = iterator.next();
         assertFalse(iterator.hasNext());
 
-        assertNotNull(record);
-        assertArrayEquals(new Object[]{21, 42, 63}, record.getAttributeValues());
-        assertArrayEquals(new Object[]{"Annotation_L2"}, record.getAnnotationValues());
+        assertNotNull(record1);
+        assertArrayEquals(new Object[]{21.1, 42.1, 63.1, 1.1, 2.1, 3.1}, record1.getAttributeValues());
+        assertArrayEquals(new Object[]{"Annotation_L2"}, record1.getAnnotationValues());
+
+        assertNotNull(record2);
+        assertArrayEquals(new Object[]{21.2, 42.2, 63.2, 1.2, 2.2, 3.2}, record2.getAttributeValues());
+        assertArrayEquals(new Object[]{"Annotation_L2"}, record2.getAnnotationValues());
     }
 
     @Test
     public void testMergeTwo() throws Exception {
-        MergedRecordSource merged = new MergedRecordSource(level2, Arrays.asList(sourceA, sourceB));
+        MergedRecordSource merged = new MergedRecordSource(insitu, level2, Arrays.asList(sourceA, sourceB));
 
         Header header = merged.getHeader();
         assertNotNull(header);
         String[] attributeNames = header.getAttributeNames();
         assertNotNull(attributeNames);
-        assertEquals(headerA.getAttributeNames().length + headerB.getAttributeNames().length, attributeNames.length);
-        assertArrayEquals(new String[]{"A1", "A2", "*A3", "Ba", "Bb", "Bc"}, attributeNames);
+        assertEquals(9, attributeNames.length);
+        assertArrayEquals(new String[]{"A1", "A2", "*A3", "Ba", "Bb", "Bc", "L2a", "L2b", "L2c"}, attributeNames);
         assertArrayEquals(new String[]{DefaultHeader.ANNOTATION_EXCLUSION_REASON}, header.getAnnotationNames());
 
         Iterator<Record> iterator = merged.getRecords().iterator();
         assertTrue(iterator.hasNext());
-        Record record = iterator.next();
+        Record record1 = iterator.next();
+        assertTrue(iterator.hasNext());
+        Record record2 = iterator.next();
         assertFalse(iterator.hasNext());
 
-        assertNotNull(record);
-        assertArrayEquals(new Object[]{21, 42, 63, 3, 6, 9}, record.getAttributeValues());
-        assertArrayEquals(new Object[]{"Annotation_L2"}, record.getAnnotationValues());
+        assertNotNull(record1);
+        assertArrayEquals(new Object[]{21.1, 42.1, 63.1, 3.1, 6.1, 9.1, 1.1, 2.1, 3.1}, record1.getAttributeValues());
+        assertArrayEquals(new Object[]{"Annotation_L2"}, record1.getAnnotationValues());
+
+        assertNotNull(record2);
+        assertArrayEquals(new Object[]{21.2, 42.2, 63.2, 3.2, 6.2, 9.2, 1.2, 2.2, 3.2}, record2.getAttributeValues());
+        assertArrayEquals(new Object[]{"Annotation_L2"}, record2.getAnnotationValues());
+
     }
 }
