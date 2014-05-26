@@ -60,7 +60,7 @@ public class DefaultRecord implements Record {
     public String toString() {
         return "DefaultRecord{" +
                "id=" + id +
-               "location=" + location +
+               ", location=" + location +
                ", time=" + time +
                ", values=" + Arrays.asList(attributeValues) +
                '}';
