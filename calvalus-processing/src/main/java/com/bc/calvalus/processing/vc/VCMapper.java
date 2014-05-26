@@ -182,6 +182,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     mainLoopPM.worked(1);
 
                     Product l1DiffProduct = ProductIO.readProduct(namedOutput.getFile());
+                    ProcessorAdapter.fixProductTimeOrder(l1DiffProduct);
 
                     // extract differentiation match-ups
                     String diffPrefix = namedOutput.getName() + "_";

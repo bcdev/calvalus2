@@ -20,16 +20,12 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
-import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -78,6 +74,8 @@ public class BeamOperatorAdapter extends IdentityProcessorAdapter {
                                            targetProduct.getSceneRasterHeight()));
             if (hasInvalidStartAndStopTime(targetProduct)) {
                 copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+            } else {
+                fixProductTimeOrder(targetProduct);
             }
         } finally {
             pm.done();

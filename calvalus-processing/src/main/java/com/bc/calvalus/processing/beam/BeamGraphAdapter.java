@@ -118,6 +118,8 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                                        targetProduct.getSceneRasterHeight()));
         if (hasInvalidStartAndStopTime(targetProduct)) {
             copySceneRasterStartAndStopTime(getInputProduct(), targetProduct, null);
+        } else {
+            fixProductTimeOrder(targetProduct);
         }
         return 1;
     }

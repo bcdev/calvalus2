@@ -151,9 +151,7 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
-     *
      * @return The number of processed products.
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
@@ -172,7 +170,6 @@ public abstract class ProcessorAdapter {
      * Saves the processed products onto HDFS.
      *
      * @param pm A progress monitor
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public abstract void saveProcessedProducts(ProgressMonitor pm) throws IOException;
@@ -196,7 +193,6 @@ public abstract class ProcessorAdapter {
      * Convenient method that returns the processed product and does all the necessary steps.
      *
      * @param pm A progress monitor
-     *
      * @return The processed product
      */
     public Product getProcessedProduct(ProgressMonitor pm) throws IOException {
@@ -253,7 +249,8 @@ public abstract class ProcessorAdapter {
         if (inputRectangle == null) {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             Geometry regionGeometry = JobUtils.createGeometry(geometryWkt);
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,inputSplit) {
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,
+                                                                                         inputSplit) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();
@@ -268,12 +265,12 @@ public abstract class ProcessorAdapter {
      * Return the input product.
      *
      * @return The input product
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product getInputProduct() throws IOException {
         if (inputProduct == null) {
             inputProduct = openInputProduct();
+            fixProductTimeOrder(inputProduct);
         }
         return inputProduct;
     }
@@ -297,9 +294,7 @@ public abstract class ProcessorAdapter {
      *
      * @param inputPath   The input path
      * @param inputFormat The input format, may be {@code null}. If {@code null}, the file format will be detected.
-     *
      * @return The product The product read.
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     protected Product readProduct(Path inputPath, String inputFormat) throws IOException {
@@ -377,7 +372,6 @@ public abstract class ProcessorAdapter {
      * Copies the file given to the local input directory for access as a ordinary {@code File}.
      *
      * @param inputPath The path to the file in the HDFS.
-     *
      * @throws IOException
      */
     public void copyFileToLocal(Path inputPath) throws IOException {
@@ -422,6 +416,15 @@ public abstract class ProcessorAdapter {
         }
     }
 
+    public static void fixProductTimeOrder(Product product) {
+        final ProductData.UTC startTime = product.getStartTime();
+        final ProductData.UTC endTime = product.getEndTime();
+        if (startTime != null && endTime != null && endTime.getMJD() < startTime.getMJD()) {
+            product.setStartTime(endTime);
+            product.setEndTime(startTime);
+        }
+    }
+
     public static boolean hasInvalidStartAndStopTime(Product product) {
         ProductData.UTC startTime = product.getStartTime();
         ProductData.UTC endTime = product.getEndTime();
@@ -435,7 +438,7 @@ public abstract class ProcessorAdapter {
     }
 
     public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
-                                                Rectangle inputRectangle) {
+                                                       Rectangle inputRectangle) {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         final ProductData.UTC stopTime = sourceProduct.getEndTime();
         boolean fullHeight = sourceProduct.getSceneRasterHeight() == targetProduct.getSceneRasterHeight();
