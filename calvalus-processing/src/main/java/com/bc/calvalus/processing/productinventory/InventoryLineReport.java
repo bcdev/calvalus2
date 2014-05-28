@@ -69,7 +69,7 @@ public class InventoryLineReport {
     }
 
     private static String getURL(String year, String res, String level) {
-        return String.format("hdfs://node69:9000/calvalus/projects/lc/%s-%s/inventory-%s/part-r-00000", year, res, level);
+        return String.format("hdfs://master00:9000/calvalus/projects/lc/%s-%s/inventory-%s/part-r-00000", year, res, level);
     }
 
     private static ProductInventory createInventory(String inventoryPath) throws IOException {

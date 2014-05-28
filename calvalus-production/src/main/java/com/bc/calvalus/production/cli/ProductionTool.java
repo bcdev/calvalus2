@@ -123,14 +123,14 @@ public class ProductionTool {
 
         Map<String, String> defaultConfig = new HashMap<String, String>();
         defaultConfig.put("production.db.type", "memory");
-        //defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://node69:9000");
-        defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://node69:9000");
-        //defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "node69:9001");
+        //defaultConfig.put("calvalus.hadoop.fs.default.name", "hdfs://master00:9000");
+        defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://master00:9000");
+        //defaultConfig.put("calvalus.hadoop.mapred.job.tracker", "master00:9001");
         defaultConfig.put("calvalus.hadoop.mapreduce.framework.name", "yarn");
-        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "node69");
-        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "node69:9001");
-        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "node69:9002");
-        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "node69:9003");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "master00");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "master00:9001");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "master00:9002");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "master00:9003");
 
         // TODO (mz, 2012-02-06) get these defaults from the server
         //defaultConfig.put("calvalus.hadoop.dfs.block.size", "2147483136");

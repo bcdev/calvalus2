@@ -126,7 +126,7 @@
         </web-resource-collection>
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
-            <role-name>calvalus-user</role-name>
+            <role-name>calvalus</role-name>
         </auth-constraint>
     </security-constraint>
 
@@ -142,7 +142,7 @@
 
     <!-- Security roles referenced by this web application -->
     <security-role>
-        <role-name>calvalus-user</role-name>
+        <role-name>calvalus</role-name>
     </security-role>
 
 </web-app>
