@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>2.0b411</version>
     </parent>
 
     <artifactId>calvalus-exchange</artifactId>

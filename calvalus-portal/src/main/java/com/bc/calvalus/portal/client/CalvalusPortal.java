@@ -120,8 +120,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
-                backendService.isUserInRole("calvalus-user", new UserRolesCallback("calvalus-user"));
-                backendService.isUserInRole("cc-user", new UserRolesCallback("cc-user"));
+                backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
+                backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
             }
         };
         // load all the libs for use in the maps
@@ -473,10 +473,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         @Override
         public void onSuccess(Boolean value) {
-            if ("calvalus-user".equals(role)) {
+            if ("calvalus".equals(role)) {
                 isCalvalusUser = value;
                 GWT.log("User role " + role + " is " + value);
-            } else if ("cc-user".equals(role)) {
+            } else if ("coastcolour".equals(role)) {
                 isCcUser = value;
                 GWT.log("User role " + role + " is " + value);
             } else {

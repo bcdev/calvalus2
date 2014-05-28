@@ -68,8 +68,16 @@ public class InventoryLineReport {
         return lines;
     }
 
+    // /calvalus/inventory/MER_FRS_1P/v2013/2002/part-r-00000
+    // /calvalus/inventory/MER_RR__1P/r03/2002/part-r-00000
     private static String getURL(String year, String res, String level) {
-        return String.format("hdfs://node69:9000/calvalus/projects/lc/%s-%s/inventory-%s/part-r-00000", year, res, level);
+        String typeAndVersion;
+        if ("rr".equals(res)) {
+            typeAndVersion = "MER_RR__1P/r03";
+        } else {
+            typeAndVersion = "MER_FRS_1P/v2013";
+        }
+        return String.format("hdfs://master00:9000/calvalus/inventory/%s/%s/part-r-00000", typeAndVersion, year);
     }
 
     private static ProductInventory createInventory(String inventoryPath) throws IOException {
