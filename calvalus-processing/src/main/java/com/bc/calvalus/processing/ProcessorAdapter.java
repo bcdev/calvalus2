@@ -270,7 +270,6 @@ public abstract class ProcessorAdapter {
     public Product getInputProduct() throws IOException {
         if (inputProduct == null) {
             inputProduct = openInputProduct();
-            fixProductTimeOrder(inputProduct);
         }
         return inputProduct;
     }
@@ -413,15 +412,6 @@ public abstract class ProcessorAdapter {
         if (inputProduct != null) {
             inputProduct.dispose();
             inputProduct = null;
-        }
-    }
-
-    public static void fixProductTimeOrder(Product product) {
-        final ProductData.UTC startTime = product.getStartTime();
-        final ProductData.UTC endTime = product.getEndTime();
-        if (startTime != null && endTime != null && endTime.getMJD() < startTime.getMJD()) {
-            product.setStartTime(endTime);
-            product.setEndTime(startTime);
         }
     }
 

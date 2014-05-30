@@ -31,6 +31,8 @@ public class PixelPosProvider {
     private final Product product;
     private final PixelTimeProvider pixelTimeProvider;
     private final long maxTimeDifference; // Note: time in ms (NOT h)
+    private final long productStartTime;
+    private final long productEndTime;
     // todo make this a parameter
     private int allowedPixelDisplacement;
 
@@ -44,6 +46,19 @@ public class PixelPosProvider {
             this.maxTimeDifference = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
         } else {
             this.maxTimeDifference = 0L;
+        }
+        if (testTime()) {
+            long endTime = product.getEndTime().getAsDate().getTime();
+            long startTime = product.getStartTime().getAsDate().getTime();
+            if (startTime <= endTime) {
+                productStartTime = startTime;
+                productEndTime = endTime;
+            } else {
+                productStartTime = startTime;
+                productEndTime = endTime;
+            }
+        } else {
+            productStartTime = productEndTime = 0L;
         }
         allowedPixelDisplacement = 5;
     }
@@ -64,12 +79,12 @@ public class PixelPosProvider {
         if (testTime()) {
 
             long minReferenceTime = getMinReferenceTime(referenceRecord);
-            if (minReferenceTime > product.getEndTime().getAsDate().getTime()) {
+            if (minReferenceTime > productEndTime) {
                 return null;
             }
 
             long maxReferenceTime = getMaxReferenceTime(referenceRecord);
-            if (maxReferenceTime < product.getStartTime().getAsDate().getTime()) {
+            if (maxReferenceTime < productStartTime) {
                 return null;
             }
 

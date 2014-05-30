@@ -198,8 +198,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 // When processing with MEGS and input rectangle the start time is invalid.
                 // Therefor we have to adjust it here.
                 copySceneRasterStartAndStopTime(getInputProduct(), product, getInputRectangle());
-            } else {
-                fixProductTimeOrder(product);
             }
             return product;
         }
