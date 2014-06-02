@@ -100,6 +100,7 @@
     </dependencies>
 
     <build>
+        <finalName>calvalus-portal</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
