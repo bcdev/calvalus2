@@ -37,7 +37,7 @@ public class MAConfigTest {
     public void testFromXmlSetsDefaults() throws Exception {
         MAConfig maConfig = MAConfig.fromXml("<parameters/>");
 
-        assertEquals("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi", maConfig.getRecordSourceSpiClassName());
+        assertEquals(null, maConfig.getRecordSourceSpiClassName());
         assertEquals(null, maConfig.getRecordSourceUrl());
         assertEquals(1.5, maConfig.getFilteredMeanCoeff(), 1E-6);
         assertEquals(5, maConfig.getMacroPixelSize());

@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -148,7 +147,7 @@ public class MAMapperTest {
                 Object[] args = invocation.getArguments();
                 Text key = (Text) args[0];
                 RecordWritable value = (RecordWritable) args[1];
-                if (key.toString().startsWith("MER_RR__1P_TEST")) {
+                if (key.toString().endsWith("MER_RR__1P_TEST")) {
                     collectedMatchups.add(value);
                 }
                 return null;
