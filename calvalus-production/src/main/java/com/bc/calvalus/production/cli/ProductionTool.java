@@ -27,11 +27,13 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.jdom.JDOMException;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +80,7 @@ public class ProductionTool {
     private static final String BUNDLE_SEPARATOR = "-->";
 
     private static final String TOOL_NAME = "cpt";
+    private static final String SYSTEM_USER_NAME = "hadoop";
     private static final Options TOOL_OPTIONS = createCommandlineOptions();
 
     private boolean errors;
@@ -98,12 +101,12 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
-                || commandLine.hasOption("uninstall")
-                || commandLine.hasOption("install")
-                || commandLine.hasOption("kill")
-                || commandLine.hasOption("copy")
-                || commandLine.hasOption("ingestion")
-                || commandLine.hasOption("help");
+                                  || commandLine.hasOption("uninstall")
+                                  || commandLine.hasOption("install")
+                                  || commandLine.hasOption("kill")
+                                  || commandLine.hasOption("copy")
+                                  || commandLine.hasOption("ingestion")
+                                  || commandLine.hasOption("help");
         List argList = commandLine.getArgList();
         if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
@@ -149,7 +152,7 @@ public class ProductionTool {
             say("Configuration loaded.");
 
             if (commandLine.hasOption("ingestion")) {
-                IngestionTool.handleIngestionCommand(commandLine, commandLine.getOptionValues("ingestion"), getHDFS(config));
+                IngestionTool.handleIngestionCommand(commandLine, commandLine.getOptionValues("ingestion"), getHDFS(SYSTEM_USER_NAME, config));
                 return;
             }
 
@@ -340,7 +343,7 @@ public class ProductionTool {
         }
     }
 
-    private void deployBundleFiles(String[] deployArgs, Map<String, String> config) {
+    private void deployBundleFiles(String[] deployArgs, final Map<String, String> config) {
         final String bundleName;
         final Path[] sourcePaths;
         if (deployArgs.length == 1) {
@@ -363,7 +366,7 @@ public class ProductionTool {
             ensureLocalPathsExist(sourcePaths);
         }
         try {
-            FileSystem fs = getHDFS(config);
+            FileSystem fs = getHDFS(SYSTEM_USER_NAME, config);
             copy(sourcePaths, fs, getQualifiedBundlePath(fs, bundleName));
         } catch (IOException e) {
             exit("Error: Failed to deploy one or more bundle files", 22, e);
@@ -404,20 +407,19 @@ public class ProductionTool {
     }
 
     private void installBundles0(Path[] sourcePaths, Map<String, String> config) throws IOException {
-        Configuration hadoopConfig = getHadoopConf(config);
-        FileSystem hdfs = FileSystem.get(hadoopConfig);
+        FileSystem hdfs = getHDFS(SYSTEM_USER_NAME, config);
         say("Installing " + sourcePaths.length + " bundle(s) in '" + getQualifiedSoftwareHome(hdfs) + "'...");
         for (Path sourcePath : sourcePaths) {
             String bundleName = getBundleName(sourcePath);
             Path bundlePath = getQualifiedBundlePath(hdfs, bundleName);
             uninstallBundle(hdfs, bundlePath, false);
-            installBundle(sourcePath, hdfs, bundlePath, hadoopConfig);
+            installBundle(sourcePath, hdfs, bundlePath, hdfs.getConf());
         }
         say(sourcePaths.length + " bundles installed.");
     }
 
     private void uninstallBundles0(String[] bundleNames, Map<String, String> config) throws IOException {
-        FileSystem hdfs = getHDFS(config);
+        FileSystem hdfs = getHDFS(SYSTEM_USER_NAME, config);
         say("Uninstalling " + bundleNames.length + " bundle(s) from '" + getQualifiedSoftwareHome(hdfs) + "'...");
         for (String bundleName : bundleNames) {
             Path bundlePath = getQualifiedBundlePath(hdfs, bundleName);
@@ -444,14 +446,23 @@ public class ProductionTool {
         }
     }
 
-    private FileSystem getHDFS(Map<String, String> config) throws IOException {
-        Configuration hadoopConfig = getHadoopConf(config);
-        return FileSystem.get(hadoopConfig);
+    private FileSystem getHDFS(String username, final Map<String, String> config) throws IOException {
+        UserGroupInformation hadoop = UserGroupInformation.createRemoteUser(username);
+        try {
+            return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {
+                @Override
+                public FileSystem run() throws Exception {
+                    Configuration hadoopConfig = getHadoopConf(config);
+                    return FileSystem.get(hadoopConfig);
+                }
+            });
+        } catch (InterruptedException e) {
+            throw new IOException("Interrupted:", e);
+        }
     }
 
-
     private void copyToHDFS(Path[] sourcePaths, Path destinationPath, Map<String, String> config) throws IOException {
-        copy(sourcePaths, getHDFS(config), destinationPath);
+        copy(sourcePaths, getHDFS(getUserName(), config), destinationPath);
     }
 
     private void copy(Path[] sourcePaths, FileSystem fs, Path destinationPath) throws IOException {
@@ -525,7 +536,7 @@ public class ProductionTool {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp(TOOL_NAME + " [OPTION]... REQUEST",
                                 "\nThe Calvalus production tool submits a production REQUEST to a Calvalus production system. REQUEST must be a plain text XML file " +
-                                        "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
+                                "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
                                 TOOL_OPTIONS,
                                 "", false);
     }
@@ -577,7 +588,7 @@ public class ProductionTool {
                                   .withArgName("FILES")
                                   .withDescription(
                                           "Copies FILES to '/calvalus/home/<user>' before any request is executed." +
-                                                  "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
+                                          "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("deploy")
@@ -585,25 +596,25 @@ public class ProductionTool {
                                   .withArgName("FILES-->BUNDLE")
                                   .withDescription(
                                           "Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
-                                                  "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
-                                                  "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
-                                                  "Alternatively a list of files and as last argument the bundle name can be given.")
+                                          "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
+                                          "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
+                                          "Alternatively a list of files and as last argument the bundle name can be given.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("install")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
-                                                           "on Calvalus before any request is executed." +
-                                                           "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
+                                                   "on Calvalus before any request is executed." +
+                                                   "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("uninstall")
                                   .hasArgs()
                                   .withArgName("BUNDLES")
                                   .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
-                                                           "from Calvalus before any request is executed." +
-                                                           "Use character ',' to separate multiple entries in BUNDLES.")
+                                                   "from Calvalus before any request is executed." +
+                                                   "Use character ',' to separate multiple entries in BUNDLES.")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("kill")
