@@ -232,7 +232,7 @@ public class ProductionRequestTest {
         assertEquals("<parameters>\n" +
                      "  <productionType>test</productionType>\n" +
                      "  <userName>dummy</userName>\n" +
-                     "  <productionParameters>\n" +
+                     "  <productionParameters class=\"java.util.HashMap\">\n" +
                      "    <maxDate>2002-04-06</maxDate>\n" +
                      "    <minDate>2001-02-03</minDate>\n" +
                      "  </productionParameters>\n" +
@@ -244,7 +244,7 @@ public class ProductionRequestTest {
         ProductionRequest productionRequest = ProductionRequest.fromXml("<parameters>\n" +
                                                                         "  <productionType>test</productionType>\n" +
                                                                         "  <userName>dummy</userName>\n" +
-                                                                        "  <productionParameters>\n" +
+                                                                        "  <productionParameters class=\"java.util.HashMap\">\n" +
                                                                         "    <maxDate>2002-04-06</maxDate>\n" +
                                                                         "    <minDate>2001-02-03</minDate>\n" +
                                                                         "  </productionParameters>\n" +
