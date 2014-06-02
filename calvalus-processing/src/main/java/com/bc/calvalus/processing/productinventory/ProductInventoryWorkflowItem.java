@@ -33,9 +33,9 @@ import java.io.IOException;
  */
 public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
 
-    public ProductInventoryWorkflowItem(HadoopProcessingService processingService, String jobName,
+    public ProductInventoryWorkflowItem(HadoopProcessingService processingService, String username, String jobName,
                                         Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

@@ -27,9 +27,10 @@ public class TestProductionType implements ProductionType {
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
+        String userName = productionRequest.getUserName();
         productionCount++;
-        Workflow.Parallel workflow = new Workflow.Parallel(new MyWorkflowItem("job_" + productionCount + "_1"),
-                                                           new MyWorkflowItem("job_" + productionCount + "_2"));
+        Workflow.Parallel workflow = new Workflow.Parallel(new MyWorkflowItem(userName, "job_" + productionCount + "_1"),
+                                                           new MyWorkflowItem(userName, "job_" + productionCount + "_2"));
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production("id_" + productionCount,
                               "name_" + productionCount,
@@ -67,8 +68,11 @@ public class TestProductionType implements ProductionType {
      */
     public class MyWorkflowItem extends TestWorkflowItem<String> {
 
-        MyWorkflowItem(String id) {
+        private final String userName;
+
+        MyWorkflowItem(String userName, String id) {
             super(id);
+            this.userName = userName;
         }
 
         @Override
@@ -79,7 +83,7 @@ public class TestProductionType implements ProductionType {
         @Override
         public void kill() throws WorkflowException {
             try {
-                processingService.killJob(getJobId());
+                processingService.killJob(userName, getJobId());
             } catch (Exception e) {
                 throw new WorkflowException(e);
             }

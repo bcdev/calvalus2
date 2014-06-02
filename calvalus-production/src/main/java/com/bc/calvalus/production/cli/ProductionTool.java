@@ -268,9 +268,10 @@ public class ProductionTool {
 
     private void observeStagingStatus(ProductionService productionService, Production production) throws
             InterruptedException {
+        String userName = production.getProductionRequest().getUserName();
         while (!production.getStagingStatus().isDone()) {
             Thread.sleep(500);
-            productionService.updateStatuses();
+            productionService.updateStatuses(userName);
             ProcessStatus stagingStatus = production.getStagingStatus();
             say(String.format("Staging status: state=%s, progress=%s, message='%s'",
                               stagingStatus.getState(),
@@ -289,9 +290,10 @@ public class ProductionTool {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 
+        String userName = production.getProductionRequest().getUserName();
         while (!production.getProcessingStatus().getState().isDone()) {
             Thread.sleep(5000);
-            productionService.updateStatuses();
+            productionService.updateStatuses(userName);
             ProcessStatus processingStatus = production.getProcessingStatus();
             say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
                               processingStatus.getState(),

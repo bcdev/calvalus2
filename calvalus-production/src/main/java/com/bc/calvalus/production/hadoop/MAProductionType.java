@@ -17,6 +17,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -67,7 +68,8 @@ public class MAProductionType extends HadoopProductionType {
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                         regionGeometry != null ? regionGeometry.toString() : "");
-        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionName, maJobConfig);
+        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                         productionName, maJobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
@@ -81,9 +83,9 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 

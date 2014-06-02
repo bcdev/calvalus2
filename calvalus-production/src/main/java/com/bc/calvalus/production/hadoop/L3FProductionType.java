@@ -15,6 +15,8 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 
+import java.io.IOException;
+
 /**
  * A production type used for formatting one or more Level-3 products.
  *
@@ -61,6 +63,7 @@ public class L3FProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
         WorkflowItem workflow = new L3FormatWorkflowItem(getProcessingService(),
+                                                         productionRequest.getUserName(),
                                                          productionName + " Format", jobConfig);
 
 
@@ -72,7 +75,8 @@ public class L3FProductionType extends HadoopProductionType {
             qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-            WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionName + " RGB", qlJobConfig);
+            WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                     productionName + " RGB", qlJobConfig);
             workflow = new Workflow.Sequential(workflow, qlItem);
         }
 
@@ -88,9 +92,9 @@ public class L3FProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 }

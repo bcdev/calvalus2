@@ -34,8 +34,8 @@ import java.io.IOException;
  */
 public class L3WorkflowItem extends HadoopWorkflowItem {
 
-    public L3WorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public L3WorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getMinDate() {

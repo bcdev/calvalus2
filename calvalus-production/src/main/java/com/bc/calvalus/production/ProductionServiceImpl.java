@@ -72,18 +72,18 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public ProductSet[] getProductSets(String filter) throws ProductionException {
+    public ProductSet[] getProductSets(String userName, String filter) throws ProductionException {
         try {
-            return inventoryService.getProductSets(filter);
+            return inventoryService.getProductSets(userName, filter);
         } catch (Exception e) {
             throw new ProductionException(e);
         }
     }
 
     @Override
-    public BundleDescriptor[] getBundles(BundleFilter filter) throws ProductionException {
+    public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws ProductionException {
         try {
-            return processingService.getBundles(filter);
+            return processingService.getBundles(username, filter);
         } catch (Exception e) {
             throw new ProductionException("Failed to load list of processors.", e);
         }
@@ -268,9 +268,9 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
-    public void updateStatuses() {
+    public void updateStatuses(String username) {
         try {
-            processingService.updateStatuses();
+            processingService.updateStatuses(username);
         } catch (Exception e) {
             logger.warning("Failed to update job statuses: " + e.getMessage());
         }
@@ -336,7 +336,7 @@ public class ProductionServiceImpl implements ProductionService {
     public String[] listUserFiles(String userName, String dirPath) throws ProductionException {
         try {
             String glob = getUserGlob(userName, dirPath);
-            return inventoryService.globPaths(Arrays.asList(glob));
+            return inventoryService.globPaths(userName, Arrays.asList(glob));
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -345,7 +345,7 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     public OutputStream addUserFile(String userName, String path) throws ProductionException {
         try {
-            return inventoryService.addFile(getUserPath(userName, path));
+            return inventoryService.addFile(userName, getUserPath(userName, path));
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -354,7 +354,7 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     public boolean removeUserFile(String userName, String path) throws ProductionException {
         try {
-            return inventoryService.removeFile(getUserPath(userName, path));
+            return inventoryService.removeFile(userName, getUserPath(userName, path));
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -363,15 +363,19 @@ public class ProductionServiceImpl implements ProductionService {
     @Override
     public boolean removeUserDirectory(String userName, String path) throws ProductionException {
         try {
-            return inventoryService.removeDirectory(getUserPath(userName, path));
+            return inventoryService.removeDirectory(userName, getUserPath(userName, path));
         } catch (IOException e) {
             throw new ProductionException(e);
         }
     }
 
     @Override
-    public String getQualifiedUserPath(String userName, String path) {
-        return inventoryService.getQualifiedPath(getUserPath(userName, path));
+    public String getQualifiedUserPath(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.getQualifiedPath(userName, getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
     }
 
     private String getUserGlob(String userName, String dirPath) {

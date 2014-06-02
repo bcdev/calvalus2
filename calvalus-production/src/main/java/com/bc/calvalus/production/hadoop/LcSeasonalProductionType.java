@@ -82,7 +82,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             groundResultion = "1000m";
         }
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (!successfullyCompleted(mainOutputDir)) {
+        if (!successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
@@ -95,9 +95,10 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.set("mapred.job.priority", "NORMAL");
-            sequence.add(new MosaicSeasonalWorkflowItem(getProcessingService(), productionName + " SR", jobConfigSr));
+            sequence.add(new MosaicSeasonalWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                        productionName + " SR", jobConfigSr));
         }
-        if (!successfullyCompleted(ncOutputDir)) {
+        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);
@@ -109,7 +110,8 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                          productionName + " Format",
                                                           jobConfigFormat));
         }
 

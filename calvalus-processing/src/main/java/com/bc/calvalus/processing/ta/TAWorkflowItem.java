@@ -45,8 +45,8 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
 
     static Logger LOGGER = CalvalusLogger.getLogger();
 
-    public TAWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public TAWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {

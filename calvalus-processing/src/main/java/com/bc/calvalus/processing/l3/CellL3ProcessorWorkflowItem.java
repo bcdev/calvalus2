@@ -22,8 +22,8 @@ import java.util.Map;
  */
 public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
 
-    public CellL3ProcessorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public CellL3ProcessorWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {

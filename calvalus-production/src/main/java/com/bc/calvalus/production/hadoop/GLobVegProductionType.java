@@ -79,7 +79,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
         Workflow.Sequential sequence = new Workflow.Sequential();
 
-        if (!successfullyCompleted(partsOutputDir)) {
+        if (!successfullyCompleted(productionRequest.getUserName(), partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
 
@@ -102,9 +102,10 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
             jobConfig.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfig.set("mapred.job.priority", "NORMAL");
-            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " L3", jobConfig));
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                productionName + " L3", jobConfig));
         }
-        if (!successfullyCompleted(ncOutputDir)) {
+        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
@@ -122,7 +123,8 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
             jobConfig.set("mapred.job.priority", "HIGH");
             sequence.add(
-                    new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format", jobConfig));
+                    new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                     productionName + " Format", jobConfig));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);

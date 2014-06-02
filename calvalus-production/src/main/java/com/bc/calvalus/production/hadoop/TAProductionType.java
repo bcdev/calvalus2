@@ -18,6 +18,7 @@ import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -111,9 +112,9 @@ public class TAProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new TAStaging(production,
-                             getProcessingService().getJobClient().getConf(),
+                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                              getStagingService().getStagingDir());
     }
 
@@ -136,7 +137,7 @@ public class TAProductionType extends HadoopProductionType {
         l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
         l3JobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
-        return new L3WorkflowItem(getProcessingService(), l3JobName, l3JobConfig);
+        return new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), l3JobName, l3JobConfig);
     }
 
     private TAWorkflowItem createTaWorkflowItem(ProductionRequest productionRequest, String productionName, String l3ConfigXml, TAConfig taConfig, List<DateRange> dateRanges, StringBuffer l3OutputDirs, String taOutputDir) throws ProductionException {
@@ -159,6 +160,6 @@ public class TAProductionType extends HadoopProductionType {
         taJobConfig.set("numRegions", String.valueOf(taConfig.getRegions().length));
         taJobConfig.set("mapred.reduce.tasks", String.valueOf(Math.min(taConfig.getRegions().length, 64)));
 
-        return new TAWorkflowItem(getProcessingService(), taJobName, taJobConfig);
+        return new TAWorkflowItem(getProcessingService(), productionRequest.getUserName(), taJobName, taJobConfig);
     }
 }

@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.InputPathResolver;
@@ -12,6 +13,7 @@ import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -63,18 +65,20 @@ public class PatternBasedInputFormat extends InputFormat {
 
             List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
-            FileSystem fs = FileSystem.get(configuration);
-            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(fs, "eodata");
+            FileSystem fileSystem = FileSystem.get(configuration);
+            JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(configuration));
+            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
 
             ProductInventory productInventory = ProductInventory.createInventory(configuration);
             List<InputSplit> splits = new ArrayList<InputSplit>(1000);
             for (DateRange dateRange : dateRanges) {
-                FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService,
+                FileStatus[] fileStatuses = getFileStatuses(fileSystem,
+                                                            hdfsInventoryService,
                                                             inputPathPatterns,
                                                             dateRange.getStartDate(),
                                                             dateRange.getStopDate(),
                                                             regionName);
-                createSplits(fs, productInventory, fileStatuses, splits);
+                createSplits(fileSystem, productInventory, fileStatuses, splits);
             }
             LOG.info("Total files to process : " + splits.size());
             return splits;
@@ -133,14 +137,15 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    private static FileStatus[] getFileStatuses(HdfsInventoryService inventoryService, String inputPathPatterns,
+    private static FileStatus[] getFileStatuses(FileSystem fileSystem,
+                                                HdfsInventoryService inventoryService, String inputPathPatterns,
                                                 Date minDate, Date maxDate, String regionName) throws IOException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns);
+        return inventoryService.globFileStatuses(fileSystem, inputPatterns);
     }
 
     /**
@@ -149,7 +154,7 @@ public class PatternBasedInputFormat extends InputFormat {
     @Override
     public RecordReader<NullWritable, NullWritable> createRecordReader(InputSplit split,
                                                                        TaskAttemptContext context) throws IOException,
-                                                                                                          InterruptedException {
+            InterruptedException {
         return new NoRecordReader();
     }
 }

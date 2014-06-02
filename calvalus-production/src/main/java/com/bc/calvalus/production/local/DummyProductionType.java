@@ -34,6 +34,7 @@ class DummyProductionType implements ProductionType {
         if (name == null) {
             name = "Doing something";
         }
+        final String userName = productionRequest.getUserName();
 
         Workflow.Sequential sequential = new Workflow.Sequential();
         sequential.add(new AbstractWorkflowItem() {
@@ -48,7 +49,7 @@ class DummyProductionType implements ProductionType {
             @Override
             public void kill() throws WorkflowException {
                 try {
-                    processingService.killJob(jobId);
+                    processingService.killJob(userName, jobId);
                 } catch (IOException e) {
                     throw new WorkflowException("Failed to kill job: " + e.getMessage(), e);
                 }

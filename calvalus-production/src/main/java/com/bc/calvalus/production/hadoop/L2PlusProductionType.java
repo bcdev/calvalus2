@@ -36,6 +36,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -144,9 +145,9 @@ public class L2PlusProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 
@@ -193,7 +194,8 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS,
                             productionRequest.getString("quicklooks", "false"));
 
-        return new L2FormattingWorkflowItem(getProcessingService(), productionName, formatJobConfig);
+        return new L2FormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                            productionName, formatJobConfig);
     }
 
     private HadoopWorkflowItem createProcessingItem(String productionId, String productionName,
@@ -227,7 +229,8 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT);
 
-        HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                       productionName, l2JobConfig);
         l2Item.addWorkflowStatusListener(new ProductSetSaver(l2Item, productSet, outputDir));
         return l2Item;
     }

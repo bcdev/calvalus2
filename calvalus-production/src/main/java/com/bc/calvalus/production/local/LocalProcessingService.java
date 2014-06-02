@@ -32,7 +32,7 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
+    public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
         return bundleDescriptors;
     }
 
@@ -42,7 +42,7 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public void updateStatuses() throws IOException {
+    public void updateStatuses(String username) throws IOException {
         Set<Map.Entry<String, Job>> entries = jobs.entrySet();
         synchronized (jobStatuses) {
             for (Map.Entry<String, Job> entry : entries) {
@@ -70,7 +70,7 @@ class LocalProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public synchronized boolean killJob(String jobId) throws IOException {
+    public synchronized boolean killJob(String username, String jobId) throws IOException {
         Job job = jobs.get(jobId);
         if (job != null && !job.isKilled()) {
             job.kill();

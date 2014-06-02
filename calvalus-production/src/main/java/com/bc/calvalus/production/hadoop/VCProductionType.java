@@ -34,6 +34,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -134,9 +135,12 @@ public class VCProductionType extends HadoopProductionType {
         configL2.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
         ///////////////////////////////////////////////////////////////////////////////////////////
-        WorkflowItem workflowL1 = new MAWorkflowItem(getProcessingService(), productionName + " L1", configL1);
-        WorkflowItem workflowL1Perturbation = new MAWorkflowItem(getProcessingService(), productionName + " L1-Perturbation", configL1Perturbation);
-        WorkflowItem workflowL2 = new MAWorkflowItem(getProcessingService(), productionName + " L2", configL2);
+        WorkflowItem workflowL1 = new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                     productionName + " L1", configL1);
+        WorkflowItem workflowL1Perturbation = new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                                 productionName + " L1-Perturbation", configL1Perturbation);
+        WorkflowItem workflowL2 = new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                     productionName + " L2", configL2);
 
         WorkflowItem sequential = new Workflow.Sequential(workflowL1Perturbation, workflowL2);
         WorkflowItem workflow = new Workflow.Parallel(workflowL1, sequential);
@@ -154,9 +158,9 @@ public class VCProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 }

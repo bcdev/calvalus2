@@ -31,8 +31,8 @@ import java.io.IOException;
  */
 public class MRWorkflowItem extends HadoopWorkflowItem {
 
-    public MRWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public MRWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getMinDate() {
