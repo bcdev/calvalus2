@@ -25,14 +25,17 @@ import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.ma.DefaultHeader;
 import com.bc.calvalus.processing.ma.FilteredRecordSource;
 import com.bc.calvalus.processing.ma.GeometryRecordFilter;
 import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.MAConfig;
+import com.bc.calvalus.processing.ma.MAMapper;
 import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.PixelTimeProvider;
 import com.bc.calvalus.processing.ma.ProductRecordSource;
 import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordFilter;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordTransformer;
 import com.bc.calvalus.processing.ma.RecordWritable;
@@ -200,7 +203,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
                     // extract Level 2 match-ups
-                    String l2Prefix = "L2_" + namedOutput.getName()+ "_";
+                    String l2Prefix = "L2_" + namedOutput.getName() + "_";
                     NamedRecordSource l2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
                     if (l2Matchups == null) {
                         return;
@@ -269,7 +272,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private NamedRecordSource extractMatchups(Context context, MAConfig maConfig, NamedRecordSource matchingReferenceRecordSource, ProgressMonitor mainLoopPM, Product product, String prefix) {
         if (product == null) {
-            LOG.info("Product is null: " +  prefix);
+            LOG.info("Product is null: " + prefix);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
         } else {
             try {
@@ -318,9 +321,26 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
             Header header = productRecordSource.getHeader();
             RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+            RecordFilter recordFilter;
+            if (prefix.equals("L2_")) {
+                // Base Level 2
+                recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
+            } else {
+                recordFilter = new RecordFilter() {
+                    @Override
+                    public boolean accept(Record record) {
+                        return true;
+                    }
+                };
+            }
             List<Record> aggregatedRecords = new ArrayList<Record>();
+            int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
             for (Record extractedRecord : extractedRecords) {
                 Record aggregatedRecord = recordAggregator.transform(extractedRecord);
+                String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
+                if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
+                    aggregatedRecord.getAnnotationValues()[exclusionIndex] = MAMapper.EXCLUSION_REASON_EXPRESSION;
+                }
                 System.out.println("aggregatedRecord = " + aggregatedRecord);
                 aggregatedRecords.add(aggregatedRecord);
                 extractionPM.worked(1);

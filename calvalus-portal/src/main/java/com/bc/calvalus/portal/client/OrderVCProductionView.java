@@ -80,8 +80,6 @@ public class OrderVCProductionView extends OrderProductionView {
 
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
-        maConfigForm.goodPixelExpression.setEnabled(false);
-        maConfigForm.goodRecordExpression.setEnabled(false);
 
         ///////////
         HTMLPanel htmlPanel = new HTMLPanel("<h3>Vicarious-Calibration Output Parameters</h3><hr/>");
