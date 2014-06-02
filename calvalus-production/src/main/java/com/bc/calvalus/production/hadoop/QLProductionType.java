@@ -102,7 +102,8 @@ public class QLProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new QLWorkflowItem(getProcessingService(), productionName, jobConfig);
+        return new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                  productionName, jobConfig);
     }
 
 }

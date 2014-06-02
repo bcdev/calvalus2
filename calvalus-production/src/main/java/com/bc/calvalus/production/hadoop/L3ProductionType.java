@@ -26,6 +26,7 @@ import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -108,7 +109,7 @@ public class L3ProductionType extends HadoopProductionType {
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
-            WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig);
+            WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName + " " + date1Str, jobConfig);
             workflow.add(item);
         }
 
@@ -129,6 +130,7 @@ public class L3ProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
             WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+                                                               productionRequest.getUserName(),
                                                                productionName + " Format", jobConfig);
             workflow = new Workflow.Sequential(workflow, formatItem);
             if (productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
@@ -140,7 +142,8 @@ public class L3ProductionType extends HadoopProductionType {
                 qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
                 qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-                WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionName + " RGB", qlJobConfig);
+                WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                         productionName + " RGB", qlJobConfig);
                 workflow.add(qlItem);
             }
         }
@@ -157,9 +160,9 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 

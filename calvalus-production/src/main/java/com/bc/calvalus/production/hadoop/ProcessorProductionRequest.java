@@ -40,6 +40,7 @@ public class ProcessorProductionRequest {
     private final String processorName;
     private final String processorParameters;
     private final String parameterSuffix;
+    private final String userName;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
         this(productionRequest, "");
@@ -52,6 +53,7 @@ public class ProcessorProductionRequest {
         this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
         this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
         this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS + parameterSuffix, "<parameters/>");
+        this.userName = productionRequest.getUserName();
     }
 
     public String getProcessorName() {
@@ -89,7 +91,7 @@ public class ProcessorProductionRequest {
             filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
-            BundleDescriptor[] bundles = processingService.getBundles(filter);
+            BundleDescriptor[] bundles = processingService.getBundles(userName, filter);
             for (BundleDescriptor bundle : bundles) {
                 if (bundle.getBundleName().equals(processorBundleName) &&
                     bundle.getBundleVersion().equals(processorBundleVersion) &&

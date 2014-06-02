@@ -183,7 +183,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             filter = filter.replace("dummy", getUserName());
         }
         try {
-            ProductSet[] productSets = productionService.getProductSets(filter);
+            ProductSet[] productSets = productionService.getProductSets(getUserName(), filter);
             DtoProductSet[] dtoProductSets = new DtoProductSet[productSets.length];
             for (int i = 0; i < productSets.length; i++) {
                 dtoProductSets[i] = convert(productSets[i]);
@@ -199,9 +199,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         try {
             List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
             final BundleFilter filter = BundleFilter.fromString(filterString);
-            filter.withTheUser(getUserName());
+            String userName = getUserName();
+            filter.withTheUser(userName);
 
-            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(filter);
+            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(userName, filter);
             for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
                 DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
                 dtoProcessorDescriptors.addAll(Arrays.asList(dtoDescriptors));
@@ -280,7 +281,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
-                                                                                         BackendServiceException {
+            BackendServiceException {
         try {
             ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
             return convert(productionResponse);
@@ -624,7 +625,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         final ProductionService productionService = this.productionService;
         if (productionService != null) {
             synchronized (this) {
-                productionService.updateStatuses();
+                productionService.updateStatuses(getUserName());
             }
         }
     }
@@ -634,13 +635,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     public static String getUserName(HttpServletRequest request) {
-        Principal userPrincipal = request.getUserPrincipal();
-        if (userPrincipal != null) {
-            return userPrincipal.getName();
-        }
-        String userName = request.getRemoteUser();
-        if (userName != null) {
-            return userName;
+        if (request != null) {
+            Principal userPrincipal = request.getUserPrincipal();
+            if (userPrincipal != null) {
+                return userPrincipal.getName();
+            }
+            String userName = request.getRemoteUser();
+            if (userName != null) {
+                return userName;
+            }
         }
         return "anonymous";
     }
@@ -648,7 +651,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public boolean isUserInRole(String role) {
         return getThreadLocalRequest().isUserInRole(role) &&
                // and the portal is either generic or destined to this user role ...
-               (! backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
+               (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
                 role.equals(backendConfig.getConfigMap().get("calvalus.portal.userRole")));
     }
 }

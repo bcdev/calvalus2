@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -31,6 +33,9 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
+
+import java.io.IOException;
+import java.util.List;
 
 /**
  * Vicarious Calibration: A production type used for supporting the computation of vicarious calibration coefficients
@@ -92,7 +97,7 @@ public class VCProductionType extends HadoopProductionType {
         pprL2.configureProcessor(jobConfig);
 
 
-        WorkflowItem workflow = new VCWorkflowItem(getProcessingService(), productionName, jobConfig);
+        WorkflowItem workflow = new VCWorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName, jobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
@@ -106,9 +111,9 @@ public class VCProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 }

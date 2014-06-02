@@ -44,12 +44,16 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected static final String NO_DEFAULT = "[[NO_DEFAULT]]";
     private final HadoopProcessingService processingService;
     private final String jobName;
+    private final String userName;
     private final Configuration jobConfig;
     private JobID jobId;
 
     public HadoopWorkflowItem(HadoopProcessingService processingService,
-                              String jobName, Configuration jobConfig) {
+                              String userName,
+                              String jobName,
+                              Configuration jobConfig) {
         this.processingService = processingService;
+        this.userName = userName;
         this.jobName = jobName;
         this.jobConfig = jobConfig;
     }
@@ -59,6 +63,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     }
 
     public abstract String getOutputDir();
+
+    public String getUserName() {
+        return userName;
+    }
 
     public final String getJobName() {
         return jobName;
@@ -86,7 +94,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         try {
             if (jobId != null) {
                 CalvalusLogger.getLogger().fine("Killing Job: " + getJobName() + " - " + jobId.getJtIdentifier());
-                processingService.killJob(jobId);
+                processingService.killJob(userName, jobId);
             }
         } catch (IOException e) {
             throw new WorkflowException("Failed to kill Hadoop job: " + e.getMessage(), e);
@@ -110,9 +118,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     }
 
     private String getDiagnosticFromFirstFailedTask() {
-        JobClient jobClient = processingService.getJobClient();
         org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         try {
+            JobClient jobClient = processingService.getJobClient(userName);
             RunningJob runningJob = jobClient.getJob(downgradeJobId);
             if (runningJob == null) {
                 return null;
@@ -222,7 +230,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         }
         jobConf.setUseNewMapper(true);
         jobConf.setUseNewReducer(true);
-        RunningJob runningJob = processingService.getJobClient().submitJob(jobConf);
+
+        JobClient jobClient = processingService.getJobClient(userName);
+        RunningJob runningJob = jobClient.submitJob(jobConf);
+        Configuration runningConf = runningJob.getConfiguration();
         return runningJob.getID();
     }
 }

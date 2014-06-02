@@ -96,6 +96,6 @@ public class PrevueProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new PrevueWorkflowItem(getProcessingService(), productionName, jobConfig);
+        return new PrevueWorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName, jobConfig);
     }
 }

@@ -17,6 +17,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -62,9 +63,9 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new L2Staging(production,
-                             getProcessingService().getJobClient().getConf(),
+                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                              getStagingService().getStagingDir());
     }
 
@@ -100,7 +101,8 @@ public class L2ProductionType extends HadoopProductionType {
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT);
 
-        L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                           productionName, l2JobConfig);
         l2WorkflowItem.addWorkflowStatusListener(new ProductSetSaver(l2WorkflowItem, productSet, outputDir));
         return l2WorkflowItem;
     }

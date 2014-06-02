@@ -18,6 +18,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Date;
 
 /**
@@ -51,7 +52,13 @@ public class MRProductionType extends HadoopProductionType {
         final Date maxDate = productionRequest.getDate("maxDate");
         final String minDateStr = ProductionRequest.getDateFormat().format(minDate);
         final String maxDateStr = ProductionRequest.getDateFormat().format(maxDate);
-        final String outputDir = getInventoryService().getQualifiedPath(productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
+        final String outputDir;
+        try {
+            outputDir = getInventoryService().getQualifiedPath(productionRequest.getUserName(),
+                                                                            productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
 
         Configuration jobConfig = createJobConfig(productionRequest);
 
@@ -84,7 +91,7 @@ public class MRProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, "[" + minDateStr + ":" + maxDateStr + "]");
 
-        WorkflowItem item = new MRWorkflowItem(getProcessingService(), productionName + " " + minDateStr, jobConfig);
+        WorkflowItem item = new MRWorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName + " " + minDateStr, jobConfig);
         Workflow workflow = new Workflow.Parallel();
         workflow.add(item);
 
@@ -101,9 +108,9 @@ public class MRProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 }

@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -9,13 +10,11 @@ import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.bc.calvalus.staging.Staging;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author Norman Fomferra
@@ -26,10 +25,10 @@ public class HadoopProductionTypeTest {
 
     @Before
     public void setUp() throws Exception {
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         productionType = new HadoopProductionType("X",
                                                   new TestInventoryService(),
-                                                  new HadoopProcessingService(
-                                                          new JobClient(new JobConf())),
+                                                  new HadoopProcessingService(jobClientsMap),
                                                   new TestStagingService()
         ) {
             @Override

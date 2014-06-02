@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
@@ -11,7 +12,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,9 +26,9 @@ public class TAProductionTypeTest {
 
     @Before
     public void setUp() throws Exception {
-        JobClient jobClient = new JobClient(new JobConf());
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         productionType = new TAProductionType(new TestInventoryService(),
-                                              new HadoopProcessingService(jobClient),
+                                              new HadoopProcessingService(jobClientsMap),
                                               new TestStagingService());
     }
 

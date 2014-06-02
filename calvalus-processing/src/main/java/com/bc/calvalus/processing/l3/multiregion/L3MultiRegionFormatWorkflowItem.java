@@ -19,8 +19,8 @@ import java.util.Map;
  */
 public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
 
-    public L3MultiRegionFormatWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public L3MultiRegionFormatWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {

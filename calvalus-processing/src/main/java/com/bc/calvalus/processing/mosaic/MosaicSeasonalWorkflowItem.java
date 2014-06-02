@@ -32,9 +32,9 @@ import java.io.IOException;
  */
 public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicSeasonalWorkflowItem(HadoopProcessingService processingService, String jobName,
+    public MosaicSeasonalWorkflowItem(HadoopProcessingService processingService, String username, String jobName,
                                       Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

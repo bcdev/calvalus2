@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -12,7 +13,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.operator.BinningConfig;
@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
 
 public class L3ProductionTypeTest {
 
@@ -33,9 +32,9 @@ public class L3ProductionTypeTest {
 
     @Before
     public void setUp() throws Exception {
-        JobClient jobClient = new JobClient(new JobConf());
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         productionType = new L3ProductionType(new TestInventoryService(),
-                                              new HadoopProcessingService(jobClient),
+                                              new HadoopProcessingService(jobClientsMap),
                                               new TestStagingService());
     }
 

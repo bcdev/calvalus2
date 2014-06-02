@@ -90,7 +90,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeRR = getDateRangeRR(productionRequest, rrDays);
             if (mainRangeRR != null) {
                 String inputPathRR = productionRequest.getString("inputPathRR");
-                String[] mainInputFilesRR = getInputPaths(getInventoryService(), inputPathRR,
+                String[] mainInputFilesRR = getInputPaths(getInventoryService(), productionRequest.getUserName(),
+                                                          inputPathRR,
                                                           mainRangeRR.getStartDate(), mainRangeRR.getStopDate(), null);
                 if (mainInputFilesRR.length == 0) {
                     String date1Str = ProductionRequest.getDateFormat().format(mainRangeRR.getStartDate());
@@ -106,7 +107,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeFR = getDateRangeFR(productionRequest, rrDays);
             if (mainRangeFR != null) {
                 String inputPathFR = productionRequest.getString("inputPathFR");
-                String[] mainInputFilesFR = getInputPaths(getInventoryService(), inputPathFR,
+                String[] mainInputFilesFR = getInputPaths(getInventoryService(), productionRequest.getUserName(),
+                                                          inputPathFR,
                                                           mainRangeFR.getStartDate(), mainRangeFR.getStopDate(), null);
                 if (mainInputFilesFR.length == 0) {
                     String date1Str = ProductionRequest.getDateFormat().format(mainRangeFR.getStartDate());
@@ -124,7 +126,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc-" + rr);
 
             Workflow.Sequential sequence = new Workflow.Sequential();
-            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 setRequestParameters(productionRequest, jobConfigSr);
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, StringUtils.join(allInputs, ","));
@@ -134,10 +136,11 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
-                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR " + rr, jobConfigSr));
+                sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                    productionName + " SR " + rr, jobConfigSr));
             }
 
-            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
                 String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s--rrdays%s", groundResultion, period,
                                                     rr);
                 Configuration jobConfigFormat = createJobConfig(productionRequest);
@@ -150,8 +153,8 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
                 jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigFormat.set("mapred.job.priority", "HIGH");
-                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format " + rr,
-                                                              jobConfigFormat));
+                sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                              productionName + " Format " + rr, jobConfigFormat));
             }
 
             parallel.add(sequence);
@@ -219,7 +222,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         return new MosaicConfig(type, maskExpr, varNames);
     }
 
-    static String[] getInputPaths(InventoryService inventoryService, String inputPathPattern, Date minDate,
+    static String[] getInputPaths(InventoryService inventoryService, String username, String inputPathPattern, Date minDate,
                                   Date maxDate, String regionName) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
@@ -227,7 +230,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         try {
-            return inventoryService.globPaths(inputPatterns);
+            return inventoryService.globPaths(username, inputPatterns);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }

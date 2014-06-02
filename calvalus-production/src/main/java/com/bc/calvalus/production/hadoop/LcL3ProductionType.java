@@ -103,7 +103,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
 
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(productionRequest.getUserName(), meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
@@ -118,9 +118,10 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
-            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " Cloud", jobConfigCloud));
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                productionName + " Cloud", jobConfigCloud));
         }
-        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
@@ -139,9 +140,10 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
-            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionName + " SR", jobConfigSr));
+            sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                productionName + " SR", jobConfigSr));
         }
-        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);
@@ -158,8 +160,8 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
-            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionName + " Format",
-                                                          jobConfigFormat));
+            sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                          productionName + " Format", jobConfigFormat));
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);

@@ -41,6 +41,8 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 
+import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
+
 /**
  * Servlet to handle log file viewing for productions
  *
@@ -63,12 +65,13 @@ public class HadoopLogServlet extends HttpServlet {
         ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
         try {
             Production production = productionService.getProduction(productionId);
+            final String userName = getUserName(req).toLowerCase();
             ProcessState processState = production.getProcessingStatus().getState();
             WorkflowItem workflow = production.getWorkflow();
             if (processState == ProcessState.ERROR) {
-                handleWorkFlow(workflow, ProcessState.ERROR, resp, TaskCompletionEvent.Status.FAILED);
+                handleWorkFlow(workflow, ProcessState.ERROR, resp, TaskCompletionEvent.Status.FAILED, userName);
             } else if (processState == ProcessState.COMPLETED) {
-                handleWorkFlow(workflow, ProcessState.COMPLETED, resp, TaskCompletionEvent.Status.SUCCEEDED);
+                handleWorkFlow(workflow, ProcessState.COMPLETED, resp, TaskCompletionEvent.Status.SUCCEEDED, userName);
             } else {
                 showErrorPage("Logfile are only supported for ERROR or COMPLETED states", resp);
             }
@@ -77,39 +80,40 @@ public class HadoopLogServlet extends HttpServlet {
         }
     }
 
-    private void handleWorkFlow(WorkflowItem workflow, ProcessState processState, HttpServletResponse resp, TaskCompletionEvent.Status status) throws IOException {
+    private void handleWorkFlow(WorkflowItem workflow, ProcessState processState, HttpServletResponse resp, TaskCompletionEvent.Status status, String userName) throws IOException {
         WorkflowItem[] items = workflow.getItems();
         if (items.length == 0) {
             // the one and only item must be the failed one
-            showLogFor(workflow, resp, status);
+            showLogFor(workflow, resp, status, userName);
         } else {
             for (WorkflowItem workflowItem : items) {
                 if (workflowItem.getStatus().getState() == processState) {
-                    handleWorkFlow(workflowItem, processState, resp, status);
+                    handleWorkFlow(workflowItem, processState, resp, status, userName);
                     return;
                 }
             }
         }
     }
 
-    private void showLogFor(WorkflowItem workflowItem, HttpServletResponse resp, TaskCompletionEvent.Status status) throws IOException {
+    private void showLogFor(WorkflowItem workflowItem, HttpServletResponse resp, TaskCompletionEvent.Status status, String userName) throws IOException {
         if (workflowItem instanceof HadoopWorkflowItem) {
             HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
 
             HadoopProcessingService processingService = hadoopWorkflowItem.getProcessingService();
-            showLogFor(resp, workflowItem, processingService, status);
+            JobClient jobClient = processingService.getJobClient(userName);
+            showLogFor(resp, workflowItem, jobClient, status);
         } else if (workflowItem instanceof ProxyWorkflow) {
             ProxyWorkflow proxyWorkflow = (ProxyWorkflow) workflowItem;
 
             HadoopProcessingService processingService = (HadoopProcessingService) proxyWorkflow.getProcessingService();
-            showLogFor(resp, workflowItem, processingService, TaskCompletionEvent.Status.FAILED);
+            JobClient jobClient = processingService.getJobClient(userName);
+            showLogFor(resp, workflowItem, jobClient, TaskCompletionEvent.Status.FAILED);
         } else {
             showErrorPage("Not able to provide logs.", resp);
         }
     }
 
-    private void showLogFor(HttpServletResponse resp, WorkflowItem hadoopWorkflowItem, HadoopProcessingService processingService, TaskCompletionEvent.Status status) throws IOException {
-        JobClient jobClient = processingService.getJobClient();
+    private void showLogFor(HttpServletResponse resp, WorkflowItem hadoopWorkflowItem, JobClient jobClient, TaskCompletionEvent.Status status) throws IOException {
         Object[] jobIds = hadoopWorkflowItem.getJobIds();
         if(jobIds.length != 1) {
             showErrorPage("found not one jobId, but:" + jobIds.length, resp);

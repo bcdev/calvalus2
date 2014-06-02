@@ -34,8 +34,8 @@ import java.io.IOException;
  */
 public class QLWorkflowItem extends HadoopWorkflowItem {
 
-    public QLWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public QLWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

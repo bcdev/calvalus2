@@ -22,18 +22,20 @@ public interface ProductionService {
      *
      * @throws ProductionException If a service error occurred.
      */
-    ProductSet[] getProductSets(String filter) throws ProductionException;
+    ProductSet[] getProductSets(String userName, String filter) throws ProductionException;
 
     /**
      * Gets all known bundles which match the given filter.
      *
+     *
+     * @param username
      * @param filter A filter to define which bundle is searched for.
      *
      * @return The processors.
      *
      * @throws ProductionException If a service error occurred.
      */
-    BundleDescriptor[] getBundles(BundleFilter filter) throws ProductionException;
+    BundleDescriptor[] getBundles(String username, BundleFilter filter) throws ProductionException;
 
     /**
      * Gets all known productions which match the given filter.
@@ -115,7 +117,7 @@ public interface ProductionService {
     /**
      * A request to retrieve and update the status of all workflows.
      */
-    void updateStatuses();
+    void updateStatuses(String username);
 
     /**
      * Indicates the service will no longer be used.
@@ -130,7 +132,7 @@ public interface ProductionService {
      * Lists files within the user's file space in the inventory.
      *
      * @param userName The name of an authorised user.
-     * @param glob     A glob that may contain
+     * @param glob     A glob that may containMA
      *
      * @return The listing of files.
      *
@@ -182,5 +184,5 @@ public interface ProductionService {
      *
      * @return A fully qualified path to the user file.
      */
-    String getQualifiedUserPath(String userName, String filePath);
+    String getQualifiedUserPath(String userName, String filePath) throws ProductionException;
 }

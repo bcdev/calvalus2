@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.inventory;
 
+import com.bc.calvalus.JobClientsMap;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -40,66 +41,62 @@ import java.util.regex.Pattern;
 public abstract class AbstractInventoryService implements InventoryService {
 
     private static final String USER_FILTER = "user=";
-    private final FileSystem fileSystem;
+    private final JobClientsMap jobClientsMap;
     private String archiveRootDir = "eodata";
 
-    public AbstractInventoryService(FileSystem fileSystem, String archiveRootDir) {
-        this.fileSystem = fileSystem;
+    public AbstractInventoryService(JobClientsMap jobClientsMap, String archiveRootDir) {
+        this.jobClientsMap = jobClientsMap;
         this.archiveRootDir = archiveRootDir;
     }
 
-
-    public FileSystem getFileSystem() {
-        return fileSystem;
-    }
-
     @Override
-    public ProductSet[] getProductSets(String filter) throws Exception {
+    public ProductSet[] getProductSets(String username, String filter) throws Exception {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
         if (filter != null && filter.startsWith(USER_FILTER)) {
             String userName = filter.substring(USER_FILTER.length());
             if (userName.equals("all")) {
-                return loadProcessed("*");
+                return loadProcessed(fileSystem, "*");
             } else {
-                return loadProcessed(userName);
+                return loadProcessed(fileSystem, userName);
             }
         } else {
-            return loadPredefined();
+            return loadPredefined(fileSystem);
         }
     }
 
-    private ProductSet[] loadPredefined() throws IOException {
-        Path databasePath = new Path(getQualifiedPath(archiveRootDir + "/" + ProductSetPersistable.FILENAME + ".new"));
-        if (!getFileSystem().exists(databasePath)) {
-            databasePath = new Path(getQualifiedPath(archiveRootDir + "/" + ProductSetPersistable.FILENAME));
+    private ProductSet[] loadPredefined(FileSystem fileSystem) throws IOException {
+        Path databasePath = makeQualified(fileSystem, archiveRootDir + "/" + ProductSetPersistable.FILENAME + ".new");
+        if (!fileSystem.exists(databasePath)) {
+            databasePath = makeQualified(fileSystem, archiveRootDir + "/" + ProductSetPersistable.FILENAME);
         }
-        if (getFileSystem().exists(databasePath)) {
-            return readProductSets(new Path[]{databasePath});
+        if (fileSystem.exists(databasePath)) {
+            return readProductSets(fileSystem, new Path[]{databasePath});
         }
         return new ProductSet[0];
     }
 
-    private ProductSet[] loadProcessed(String username) throws IOException {
+    private ProductSet[] loadProcessed(FileSystem fileSystem, String username) throws IOException {
         String path = String.format("home/%s/*/%s", username, ProductSetPersistable.FILENAME);
-        Path pathPattern = new Path(getQualifiedPath(path));
-        FileStatus[] fileStatuses = getFileSystem().globStatus(pathPattern);
+        Path pathPattern = makeQualified(fileSystem, path);
+        FileStatus[] fileStatuses = fileSystem.globStatus(pathPattern);
         Path[] paths = FileUtil.stat2Paths(fileStatuses);
-        return readProductSets(paths);
+        return readProductSets(fileSystem, paths);
     }
 
-    private ProductSet[] readProductSets(Path[] paths) throws IOException {
+    private ProductSet[] readProductSets(FileSystem fileSystem, Path[] paths) throws IOException {
         if (paths == null || paths.length == 0) {
             return new ProductSet[0];
         } else {
             List<ProductSet> productSetList = new ArrayList<ProductSet>();
             for (Path path : paths) {
-                productSetList.addAll(readProductSetFile(path));
+                productSetList.addAll(readProductSetFile(fileSystem, path));
             }
             return productSetList.toArray(new ProductSet[productSetList.size()]);
         }
     }
 
-    private List<ProductSet> readProductSetFile(Path path) throws IOException {
-        return readProductSetFromCsv(getFileSystem().open(path));
+    private List<ProductSet> readProductSetFile(FileSystem fileSystem, Path path) throws IOException {
+        return readProductSetFromCsv(fileSystem.open(path));
     }
 
     static List<ProductSet> readProductSetFromCsv(InputStream is) throws IOException {
@@ -128,12 +125,13 @@ public abstract class AbstractInventoryService implements InventoryService {
     protected abstract String getContextPath();
 
     @Override
-    public String[] globPaths(List<String> pathPatterns) throws IOException {
-        Pattern pattern = createPattern(pathPatterns);
+    public String[] globPaths(String username, List<String> pathPatterns) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        Pattern pattern = createPattern(fileSystem, pathPatterns);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        Path qualifiedPath = makeQualified(commonPathPrefix);
+        Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
         List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
-        collectFileStatuses(qualifiedPath, pattern, fileStatuses);
+        collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
         String[] result = new String[fileStatuses.size()];
         for (int i = 0; i < result.length; i++) {
             result[i] = fileStatuses.get(i).getPath().toString();
@@ -142,39 +140,43 @@ public abstract class AbstractInventoryService implements InventoryService {
     }
 
     @Override
-    public String getQualifiedPath(String path) {
-        return makeQualified(path).toString();
+    public String getQualifiedPath(String username, String path) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        return makeQualified(fileSystem, path).toString();
     }
 
     @Override
-    public OutputStream addFile(String path) throws IOException {
-        return getFileSystem().create(makeQualified(path));
+    public OutputStream addFile(String username, String path) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        return fileSystem.create(makeQualified(fileSystem, path));
     }
 
     @Override
-    public boolean removeFile(String path) throws IOException {
-        return getFileSystem().delete(makeQualified(path), false);
+    public boolean removeFile(String username, String path) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        return fileSystem.delete(makeQualified(fileSystem, path), false);
     }
 
     @Override
-    public boolean removeDirectory(String path) throws IOException {
-        return getFileSystem().delete(makeQualified(path), true);
+    public boolean removeDirectory(String username, String path) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        return fileSystem.delete(makeQualified(fileSystem, path), true);
     }
 
-    public FileStatus[] globFileStatuses(List<String> pathPatterns) throws IOException {
-        Pattern pattern = createPattern(pathPatterns);
+    public FileStatus[] globFileStatuses(FileSystem fileSystem, List<String> pathPatterns) throws IOException {
+        Pattern pattern = createPattern(fileSystem, pathPatterns);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        Path qualifiedPath = makeQualified(commonPathPrefix);
-        return collectFileStatuses(qualifiedPath, pattern);
+        Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
+        return collectFileStatuses(fileSystem, qualifiedPath, pattern);
     }
 
-    private Pattern createPattern(List<String> inputRegexs) {
+    private Pattern createPattern(FileSystem fileSystem, List<String> inputRegexs) {
         if (inputRegexs.size() == 0) {
             return null;
         }
         StringBuilder hugePattern = new StringBuilder(inputRegexs.size() * inputRegexs.get(0).length());
         for (String regex : inputRegexs) {
-            Path qualifiedPath = makeQualified(regex);
+            Path qualifiedPath = makeQualified(fileSystem, regex);
             hugePattern.append(qualifiedPath.toString());
             hugePattern.append("|");
         }
@@ -182,7 +184,7 @@ public abstract class AbstractInventoryService implements InventoryService {
         return Pattern.compile(hugePattern.toString());
     }
 
-    protected Path makeQualified(String child) {
+    protected Path makeQualified(FileSystem fileSystem, String child) {
         Path path = new Path(child);
         if (!path.isAbsolute()) {
             path = new Path(getContextPath(), path);
@@ -190,13 +192,13 @@ public abstract class AbstractInventoryService implements InventoryService {
         return fileSystem.makeQualified(path);
     }
 
-    private FileStatus[] collectFileStatuses(Path path, Pattern pattern) throws IOException {
+    private FileStatus[] collectFileStatuses(FileSystem fileSystem, Path path, Pattern pattern) throws IOException {
         List<FileStatus> result = new ArrayList<FileStatus>(1000);
-        collectFileStatuses(path, pattern, result);
+        collectFileStatuses(fileSystem, path, pattern, result);
         return result.toArray(new FileStatus[result.size()]);
     }
 
-    private void collectFileStatuses(Path path, Pattern pattern, List<FileStatus> result) throws IOException {
+    private void collectFileStatuses(FileSystem fileSystem, Path path, Pattern pattern, List<FileStatus> result) throws IOException {
         if (!fileSystem.exists(path)) {
             return;
         }
@@ -212,7 +214,7 @@ public abstract class AbstractInventoryService implements InventoryService {
             String filename = fStat.getPath().getName();
             if (!filename.startsWith("_") && !filename.startsWith(".")) {
                 if (fStat.isDir()) {
-                    collectFileStatuses(fStat.getPath(), pattern, result);
+                    collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
                 } else {
                     String fPath = fStat.getPath().toString();
                     if (matcher != null) {

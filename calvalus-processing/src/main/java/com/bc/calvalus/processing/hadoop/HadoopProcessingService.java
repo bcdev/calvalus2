@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.hadoop;
 
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
@@ -50,31 +51,38 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-1.8-SNAPSHOT";
-    public static final String DEFAULT_BEAM_BUNDLE = "beam-4.11.1-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.0";
+    public static final String DEFAULT_BEAM_BUNDLE = "beam-5.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
 
-    private final JobClient jobClient;
-    private final FileSystem fileSystem;
+    private final JobClientsMap jobClientsMap;
     private final Map<JobID, ProcessStatus> jobStatusMap;
     private final Logger logger;
 
-    public HadoopProcessingService(JobClient jobClient) throws IOException {
-        this.jobClient = jobClient;
-        this.fileSystem = FileSystem.get(jobClient.getConf());
+    public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
+        this.jobClientsMap = jobClientsMap;
         this.jobStatusMap = new WeakHashMap<JobID, ProcessStatus>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
+    public JobClient getJobClients(String username) throws IOException {
+        return jobClientsMap.getJobClient(username);
+    }
+
+    public FileSystem getFileSystem(String username) throws IOException {
+        return jobClientsMap.getFileSystem(username);
+    }
+
     @Override
-    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
+    public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
         ArrayList<BundleDescriptor> descriptors = new ArrayList<BundleDescriptor>();
         String bundleDirName = "*";
         if (filter.getBundleName() != null) {
             bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
         }
         try {
+            FileSystem fileSystem = jobClientsMap.getFileSystem(username);
             if (filter.getNumSupportedProvider() == 0) {
                 logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
@@ -82,16 +90,16 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
                                                              BUNDLE_DESCRIPTOR_XML_FILENAME);
-                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
+                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
-                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
+                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                final String calvalusSoftwarePath = (jobClient.getConf().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
+                final String calvalusSoftwarePath = (jobClientsMap.getJobConf().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
                 String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
-                collectBundleDescriptors(bundleLocationPattern, filter, descriptors);
+                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
         } catch (IOException e) {
             logger.warning(e.getMessage());
@@ -101,7 +109,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
     }
 
-    private void collectBundleDescriptors(String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
+    private void collectBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
         final FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
         if (fileStatuses == null) {
@@ -164,8 +172,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    public final Configuration createJobConfig() {
-        Configuration jobConfig = new Configuration(getJobClient().getConf());
+    public final Configuration createJobConfig(String userName) throws IOException {
+        Configuration jobConfig = new Configuration(getJobClient(userName).getConf());
         initCommonJobConfig(jobConfig);
         return jobConfig;
     }
@@ -193,8 +201,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return new Job(jobConfig, jobName);
     }
 
-    public JobClient getJobClient() {
-        return jobClient;
+    public JobClient getJobClient(String username) throws IOException {
+        return jobClientsMap.getJobClient(username);
     }
 
     @Override
@@ -203,7 +211,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public void updateStatuses() throws IOException {
+    public void updateStatuses(String username) throws IOException {
+        JobClient jobClient = jobClientsMap.getJobClient(username);
         JobStatus[] jobStatuses = jobClient.getAllJobs();
         synchronized (jobStatusMap) {
             if (jobStatuses != null) {
@@ -223,7 +232,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     @Override
-    public boolean killJob(JobID jobId) throws IOException {
+    public boolean killJob(String username, JobID jobId) throws IOException {
+        JobClient jobClient = jobClientsMap.getJobClient(username);
         org.apache.hadoop.mapred.JobID oldJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         RunningJob runningJob = jobClient.getJob(oldJobId);
         if (runningJob != null) {
@@ -236,7 +246,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     @Override
     public void close() throws IOException {
-        jobClient.close();
+        jobClientsMap.close();
     }
 
     /**

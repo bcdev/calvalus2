@@ -97,7 +97,8 @@ public class InventoryProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        return new ProductInventoryWorkflowItem(getProcessingService(), productionName, jobConfig);
+        return new ProductInventoryWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                productionName, jobConfig);
     }
 
 }

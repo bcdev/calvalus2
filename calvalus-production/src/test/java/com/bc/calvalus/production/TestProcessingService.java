@@ -28,12 +28,12 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public BundleDescriptor[] getBundles(BundleFilter filter) throws IOException {
+    public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
         return new BundleDescriptor[0];
     }
 
     @Override
-    public void updateStatuses() throws IOException {
+    public void updateStatuses(String username) throws IOException {
     }
 
     @Override
@@ -47,7 +47,7 @@ public class TestProcessingService implements ProcessingService<String> {
     }
 
     @Override
-    public boolean killJob(String jobId) throws IOException {
+    public boolean killJob(String username, String jobId) throws IOException {
         ProcessStatus processStatus = jobStatusMap.get(jobId);
         if (processStatus == null) {
             return false;

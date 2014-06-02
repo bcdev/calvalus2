@@ -275,7 +275,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         velocityContext.put("system", System.getProperties());
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", "hdfs://master00:9000");
+        conf.set("fs.defaultFS", "hdfs://master00:9000");
         velocityContext.put("configuration", conf);
 
         velocityContext.put("inputPath", new Path("MER_RR__1PNACR20030101_130000_xyz"));

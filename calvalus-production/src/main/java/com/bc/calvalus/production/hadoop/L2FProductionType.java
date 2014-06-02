@@ -127,7 +127,8 @@ public class L2FProductionType extends HadoopProductionType {
                 JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
-        return new L2FormattingWorkflowItem(getProcessingService(), productionName, jobConfig);
+        return new L2FormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                            productionName, jobConfig);
     }
 
 }

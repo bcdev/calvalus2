@@ -30,8 +30,8 @@ import java.io.IOException;
 
 public class GeometryWorkflowItem extends HadoopWorkflowItem {
 
-    public GeometryWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public GeometryWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

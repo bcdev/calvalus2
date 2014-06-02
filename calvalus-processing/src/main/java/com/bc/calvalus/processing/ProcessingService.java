@@ -21,7 +21,7 @@ public interface ProcessingService<JobId> {
      *
      * @throws IOException if an I/O error occurs.
      */
-    BundleDescriptor[] getBundles(BundleFilter filter) throws Exception;
+    BundleDescriptor[] getBundles(String username, BundleFilter filter) throws Exception;
 
     /**
      * @return The format used represent job IDs as plain text.
@@ -46,7 +46,7 @@ public interface ProcessingService<JobId> {
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    boolean killJob(JobId jobId) throws Exception;
+    boolean killJob(String username, JobId jobId) throws Exception;
 
     /**
      * A request to retrieve and update the status of all processes.
@@ -54,7 +54,7 @@ public interface ProcessingService<JobId> {
      *
      * @throws java.io.IOException if an I/O error occurs
      */
-    void updateStatuses() throws Exception;
+    void updateStatuses(String username) throws Exception;
 
     /**
      * Indicates the service will no longer be used.
