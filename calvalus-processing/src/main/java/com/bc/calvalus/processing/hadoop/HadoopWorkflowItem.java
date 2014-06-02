@@ -64,6 +64,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
 
     public abstract String getOutputDir();
 
+    public String getUserName() {
+        return userName;
+    }
+
     public final String getJobName() {
         return jobName;
     }

@@ -66,6 +66,14 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
+    public JobClient getJobClients(String username) throws IOException {
+        return jobClientsMap.getJobClient(username);
+    }
+
+    public FileSystem getFileSystem(String username) throws IOException {
+        return jobClientsMap.getFileSystem(username);
+    }
+
     @Override
     public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
         ArrayList<BundleDescriptor> descriptors = new ArrayList<BundleDescriptor>();
