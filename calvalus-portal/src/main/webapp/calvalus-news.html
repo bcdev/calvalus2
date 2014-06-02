@@ -17,6 +17,20 @@
         <li><b><a href="http://master00:50070/" target="hdfs">http://master00:50070/</a></b> Hadoop HDFS fill and health (internal)</li>
     </ul>
 </font>
+<h4>Migration to Calvalus 2.0</h4>
+<font size="2">
+    The Calvalus software has been upgraded to version 2.0. This version
+    <ul>
+        <li>integrates BEAM 5.0</li>
+        <li>is backwards compatible, processors compiled against BEAM 4 can still be used and deployed</li>
+        <li>uses Hadoop 2 middleware layer</li>
+        <li>adapts to different memory requirements of tasks, supports processors with higher demands for memory</li>
+        <li>supports (BC-internal) nfs access to the HDFS archive, will support access from Windows file system explorers (via Samba)</li>
+        <li>comes with some internal improvements, e.g. new operating system on all nodes, better access control</li>
+    </ul>
+    <p/>
+    2014-05-27</font>
+
 <h4>MERIS FR L1B v2013</h4>
 <font size="2">
     The recently reprocessed dataset of MERIS full resolution (v2013) is available as input.
