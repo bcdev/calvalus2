@@ -41,8 +41,8 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
 
     public static final String DIFFERENTIATION_SUFFIX = ".differentiation";
 
-    public VCWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public VCWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
+        super(processingService, userName, jobName, jobConfig);
     }
 
     @Override

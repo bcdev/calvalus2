@@ -10,7 +10,6 @@
         <version>2.0</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-l2gen</artifactId>
 
     <name>Calvalus l2gen Connector</name>

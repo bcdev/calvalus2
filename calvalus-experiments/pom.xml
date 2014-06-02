@@ -8,9 +8,7 @@
         <version>0.4-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-experiments</artifactId>
-    <version>${calvalus.version}</version>
     <packaging>jar</packaging>
 
     <name>Calvalus Experiments</name>
