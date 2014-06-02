@@ -48,28 +48,24 @@ WAR (for the portal)
 --------------------
 (cd calvalus-portal/target; scp calvalus-portal-2.0.war cvop@bcvm03: )
 ssh cvop@bcvm03
-cd /opt/apache-tomcat-7.0.11/bin/
-./shutdown.sh
+cd /opt/apache-tomcat-7.0.53/
+#./bin/shutdown.sh
 
 # save staging
-cd ../webapps/calvalus/
-mv staging/ ../../temp/
+mv webapps/calvalus/staging/ temp/
 
 # redeploy
-cd ..
-rm -rf calvalus calvalus.war
-rm -rf ../work/Catalina/localhost/calvalus/
-mv /home/cvop/calvalus-portal-2.0.war calvalus.war
+rm -rf webapps/calvalus webapps/calvalus.war
+rm -rf work/Catalina/localhost/calvalus/
+mv /home/cvop/calvalus-portal-2.0.war webapps/calvalus.war
 
 # restart
-cd ../bin/
-./startup.sh
-tail -5f ../logs/catalina.out
+#./bin/startup.sh
+tail -5f logs/catalina.out
 
 # restore staging
-cd ../webapps/calvalus/
-rm -rf staging/
-mv ../../temp/staging .
+rm -rf webapps/calvalus/staging/
+mv temp/staging webapps/calvalus/
 
 ===========================================================================
 CC Portal Software
@@ -78,18 +74,17 @@ CC Portal Software
 (cd calvalus-portal/target; scp -r calvalus-portal-2.0.war www/cc-patch cvop@bcvm03: )
 
 ssh cvop@bcvm03
-cd /opt/apache-tomcat-7.0.11/webapps
+cd /opt/apache-tomcat-7.0.53
 
 # save staging
-mv ccprocessing/staging ../temp/
+sudo umount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
 
 # redeploy
-rm -r ccprocessing.war ccprocessing
-mv /home/cvop/calvalus-portal-2.0.war ccprocessing.war
+rm -r webapps/ccprocessing.war webapps/ccprocessing
+mv /home/cvop/calvalus-portal-2.0.war webapps/ccprocessing.war
 sleep 5
-cp -r /home/cvop/cc-patch/* ccprocessing
+cp -r /home/cvop/cc-patch/* webapps/ccprocessing
 
 # restore staging
-mv ccprocessing/staging ccprocessing/staging.template
-mv ../temp/staging ccprocessing/
+sudo mount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
 
