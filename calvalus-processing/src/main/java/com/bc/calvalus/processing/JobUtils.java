@@ -17,6 +17,8 @@
 package com.bc.calvalus.processing;
 
 
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.WKTReader;
 import org.apache.hadoop.conf.Configuration;
@@ -48,18 +50,16 @@ public class JobUtils {
         }
     }
 
-    public static void clearAndSetOutputDir(String outputDir, Job job) throws IOException {
-        final Path outputPath = clearDir(outputDir, job);
+    public static void clearAndSetOutputDir(String outputDir, Job job, HadoopWorkflowItem hadoopWorkflowItem) throws IOException {
+        HadoopProcessingService processingService = hadoopWorkflowItem.getProcessingService();
+        String userName = hadoopWorkflowItem.getUserName();
+        FileSystem fileSystem = processingService.getFileSystem(userName);
+        final Path outputPath = clearDir(outputDir, fileSystem);
         FileOutputFormat.setOutputPath(job, outputPath);
     }
 
-    public static Path clearDir(String dir, Job job) throws IOException {
-        return clearDir(dir, job.getConfiguration());
-    }
-
-    public static Path clearDir(String dir, Configuration configuration) throws IOException {
+    public static Path clearDir(String dir, FileSystem fileSystem) throws IOException {
         final Path dirPath = new Path(dir);
-        final FileSystem fileSystem = dirPath.getFileSystem(configuration);
         if (fileSystem.exists(dirPath)) {
             fileSystem.delete(dirPath, true);
         }

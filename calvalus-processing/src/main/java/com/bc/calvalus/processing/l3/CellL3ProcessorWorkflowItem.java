@@ -64,7 +64,7 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(L3TemporalBin.class);
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         ProcessorFactory.installProcessorBundle(jobConfig);

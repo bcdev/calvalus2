@@ -96,7 +96,7 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
         ProcessorFactory.installProcessorBundle(jobConfig, DIFFERENTIATION_SUFFIX);
     }

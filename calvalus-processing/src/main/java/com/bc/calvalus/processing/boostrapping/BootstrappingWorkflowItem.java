@@ -77,7 +77,7 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(BoostrappingReducer.class);
         job.setNumReduceTasks(1);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
 

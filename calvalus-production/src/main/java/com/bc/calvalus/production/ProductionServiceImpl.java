@@ -17,6 +17,7 @@ import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.hadoop.fs.FileSystem;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -424,7 +425,9 @@ public class ProductionServiceImpl implements ProductionService {
         if (workflowItem instanceof HadoopWorkflowItem) {
             HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
             try {
-                JobUtils.clearDir(hadoopWorkflowItem.getOutputDir(), hadoopWorkflowItem.getJobConfig());
+                String userName = hadoopWorkflowItem.getUserName();
+                FileSystem fileSystem = hadoopWorkflowItem.getProcessingService().getFileSystem(userName);
+                JobUtils.clearDir(hadoopWorkflowItem.getOutputDir(), fileSystem);
             } catch (IOException e) {
                 logger.log(Level.SEVERE, "Failed to delete output dir " + hadoopWorkflowItem.getOutputDir(), e);
             }

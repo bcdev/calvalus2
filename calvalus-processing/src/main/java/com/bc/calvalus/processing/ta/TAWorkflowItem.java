@@ -26,6 +26,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -85,7 +86,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         FileInputFormat.addInputPaths(job, getInputDir());
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job.setMapperClass(TAMapper.class);
@@ -123,7 +124,9 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
                 try {
                     String[] dirs = getInputDir().split(",");
                     for (String dir : dirs) {
-                        JobUtils.clearDir(dir, job);
+                        HadoopProcessingService processingService = getProcessingService();
+                        FileSystem fileSystem = processingService.getFileSystem(getUserName());
+                        JobUtils.clearDir(dir, fileSystem);
                     }
                 } catch (IOException e) {
                     LOGGER.warning("Failed removing intermediate L3 products " + getInputDir() + ": " + e);

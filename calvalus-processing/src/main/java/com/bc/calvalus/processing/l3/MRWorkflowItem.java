@@ -70,7 +70,7 @@ public class MRWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
 
         Configuration jobConfig = job.getConfiguration();
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
 

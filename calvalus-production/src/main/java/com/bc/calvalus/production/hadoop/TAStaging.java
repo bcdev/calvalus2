@@ -3,7 +3,6 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.ta.TAGraph;
 import com.bc.calvalus.processing.ta.TAPoint;
@@ -219,13 +218,5 @@ class TAStaging extends ProductionStaging {
 
     private File getCsvFile(String regionName) {
         return new File(stagingDir, regionName + ".csv");
-    }
-
-    private void clearInputDir(Configuration configuration, String inputDir) {
-        try {
-            JobUtils.clearDir(inputDir, configuration);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to delete TA output " + inputDir, e);
-        }
     }
 }

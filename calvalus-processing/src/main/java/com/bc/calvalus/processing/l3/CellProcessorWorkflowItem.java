@@ -58,7 +58,7 @@ public class CellProcessorWorkflowItem extends HadoopWorkflowItem {
 
         job.setNumReduceTasks(0);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         ProcessorFactory.installProcessorBundle(jobConfig);

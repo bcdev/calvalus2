@@ -63,7 +63,7 @@ public class GeometryWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(1);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
     }
 
 }

@@ -60,7 +60,7 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
         int numRegions = L3MultiRegionFormatConfig.get(jobConfig).getRegions().length;
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, numRegions));
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
 
         ProcessorFactory.installProcessorBundle(jobConfig);
 
