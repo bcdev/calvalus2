@@ -93,6 +93,7 @@ export DATABASE_DIR=./database
 echo "Generate index.txt and values.txt from modifiers.db"
 ${PACKAGE_DIR}/index modifiers.db modifiers.db index.txt value.txt
 echo "Run the actual Megs executable"
+set -o pipefail
 ${PACKAGE_DIR}/level2 | while read x ; do handle_progress "$x" ; done
 
 
