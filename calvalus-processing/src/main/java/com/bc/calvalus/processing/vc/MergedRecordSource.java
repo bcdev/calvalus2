@@ -84,25 +84,21 @@ public class MergedRecordSource implements RecordSource {
 
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
             int id = referenceRecordsRecord.getId();
-            int commonDataArrayLength = 0;
+            int commonDataArrayLength = -1;
             Object[] attributeValues = new Object[numAttributes];
             int attributeDestPos = 0;
+            boolean dropThisRecord = false;
             Map<String, Record> records = recordsMap.get(id);
             for (NamedRecordSource namedRecordSource : namedRecords) {
                 Record record = records.get(namedRecordSource.getName());
                 Object[] srcAttributes;
                 if (record != null) {
                     srcAttributes = record.getAttributeValues();
-                    if (commonDataArrayLength == 0) {
-                        for (Object attributeValue : srcAttributes) {
-                            if (attributeValue instanceof AggregatedNumber) {
-                                AggregatedNumber value = (AggregatedNumber) attributeValue;
-                                if (value.data != null) {
-                                    commonDataArrayLength = value.data.length;
-                                    break;
-                                }
-                            }
-                        }
+                    int dataArrayLength = getCommonDataArrayLength(srcAttributes);
+                    if (commonDataArrayLength == -1) {
+                        commonDataArrayLength = dataArrayLength;
+                    } else if (commonDataArrayLength != dataArrayLength) {
+                        dropThisRecord = true;
                     }
                 } else {
                     srcAttributes = getEmptySrcAttributes(namedRecordSource.getHeader(), commonDataArrayLength);
@@ -115,6 +111,10 @@ public class MergedRecordSource implements RecordSource {
             Object[] srcAttributes;
             if (l2Record != null) {
                 srcAttributes = l2Record.getAttributeValues();
+                int dataArrayLength = getCommonDataArrayLength(srcAttributes);
+                if (commonDataArrayLength != dataArrayLength) {
+                    dropThisRecord = true;
+                }
                 annotationValues = l2Record.getAnnotationValues();
             } else {
                 srcAttributes = getEmptySrcAttributes(baseL2Records.getHeader(), commonDataArrayLength);
@@ -122,13 +122,27 @@ public class MergedRecordSource implements RecordSource {
             }
             System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
 
-            mergedRecords.add(new DefaultRecord(referenceRecordsRecord.getId(),
-                                                referenceRecordsRecord.getLocation(),
-                                                referenceRecordsRecord.getTime(),
-                                                attributeValues,
-                                                annotationValues));
+            if (!dropThisRecord) {
+                mergedRecords.add(new DefaultRecord(referenceRecordsRecord.getId(),
+                                                    referenceRecordsRecord.getLocation(),
+                                                    referenceRecordsRecord.getTime(),
+                                                    attributeValues,
+                                                    annotationValues));
+            }
         }
         return mergedRecords;
+    }
+
+    private int getCommonDataArrayLength(Object[] attributeValues) {
+        for (Object attributeValue : attributeValues) {
+            if (attributeValue instanceof AggregatedNumber) {
+                AggregatedNumber value = (AggregatedNumber) attributeValue;
+                if (value.data != null) {
+                    return value.data.length;
+                }
+            }
+        }
+        return -1;
     }
 
     private Object[] getEmptySrcAttributes(Header header, int commonDataArrayLength) {
