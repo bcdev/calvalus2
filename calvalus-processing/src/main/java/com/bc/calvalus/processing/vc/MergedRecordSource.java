@@ -16,9 +16,11 @@
 
 package com.bc.calvalus.processing.vc;
 
+import com.bc.calvalus.processing.ma.AggregatedNumber;
 import com.bc.calvalus.processing.ma.DefaultHeader;
 import com.bc.calvalus.processing.ma.DefaultRecord;
 import com.bc.calvalus.processing.ma.Header;
+import com.bc.calvalus.processing.ma.PixelExtractor;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.ceres.core.Assert;
@@ -63,13 +65,13 @@ public class MergedRecordSource implements RecordSource {
 
     @Override
     public Iterable<Record> getRecords() {
-        Map<Integer, List<Record>> recordsMap = new HashMap<Integer, List<Record>>(referenceRecords.getNumRecords());
+        Map<Integer, Map<String, Record>> recordsMap = new HashMap<Integer, Map<String, Record>>(referenceRecords.getNumRecords());
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
-            recordsMap.put(referenceRecordsRecord.getId(), new ArrayList<Record>(namedRecords.size() + 1));
+            recordsMap.put(referenceRecordsRecord.getId(), new HashMap<String, Record>(namedRecords.size() + 1));
         }
         for (NamedRecordSource namedRecordSource : namedRecords) {
             for (Record record : namedRecordSource.getRecords()) {
-                recordsMap.get(record.getId()).add(record);
+                recordsMap.get(record.getId()).put(namedRecordSource.getName(), record);
             }
         }
 
@@ -82,26 +84,69 @@ public class MergedRecordSource implements RecordSource {
 
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
             int id = referenceRecordsRecord.getId();
-
+            int commonDataArrayLength = 0;
             Object[] attributeValues = new Object[numAttributes];
             int attributeDestPos = 0;
-            List<Record> recordList = recordsMap.get(id);
-            for (Record record : recordList) {
-                Object[] srcAttributes = record.getAttributeValues();
+            Map<String, Record> records = recordsMap.get(id);
+            for (NamedRecordSource namedRecordSource : namedRecords) {
+                Record record = records.get(namedRecordSource.getName());
+                Object[] srcAttributes;
+                if (record != null) {
+                    srcAttributes = record.getAttributeValues();
+                    if (commonDataArrayLength == 0) {
+                        for (Object attributeValue : srcAttributes) {
+                            if (attributeValue instanceof AggregatedNumber) {
+                                AggregatedNumber value = (AggregatedNumber) attributeValue;
+                                if (value.data != null) {
+                                    commonDataArrayLength = value.data.length;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    srcAttributes = getEmptySrcAttributes(namedRecordSource.getHeader(), commonDataArrayLength);
+                }
                 System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
                 attributeDestPos += srcAttributes.length;
             }
             Record l2Record = baseL2Map.get(id);
-            Object[] srcAttributes = l2Record.getAttributeValues();
+            Object[] annotationValues;
+            Object[] srcAttributes;
+            if (l2Record != null) {
+                srcAttributes = l2Record.getAttributeValues();
+                annotationValues = l2Record.getAnnotationValues();
+            } else {
+                srcAttributes = getEmptySrcAttributes(baseL2Records.getHeader(), commonDataArrayLength);
+                annotationValues = new String[]{"BASE_L2_MISSING"};
+            }
             System.arraycopy(srcAttributes, 0, attributeValues, attributeDestPos, srcAttributes.length);
 
             mergedRecords.add(new DefaultRecord(referenceRecordsRecord.getId(),
                                                 referenceRecordsRecord.getLocation(),
                                                 referenceRecordsRecord.getTime(),
                                                 attributeValues,
-                                                l2Record.getAnnotationValues()));
+                                                annotationValues));
         }
         return mergedRecords;
+    }
+
+    private Object[] getEmptySrcAttributes(Header header, int commonDataArrayLength) {
+        String[] attributeNames = header.getAttributeNames();
+        Object[] srcAttributes;
+        srcAttributes = new Object[attributeNames.length];
+        for (int i = 0; i < attributeNames.length; i++) {
+            String attributeName = attributeNames[i];
+            if (attributeName.startsWith(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX)) {
+
+                srcAttributes[i] = new AggregatedNumber(0, 0, 0,
+                                                        Double.NaN, Double.NaN, Double.NaN, Double.NaN,
+                                                        new float[commonDataArrayLength]);
+            } else {
+                srcAttributes[i] = "";
+            }
+        }
+        return srcAttributes;
     }
 
     @Override
