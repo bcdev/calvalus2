@@ -81,7 +81,7 @@ class TAStaging extends ProductionStaging {
         final ProductionRequest productionRequest = production.getProductionRequest();
         final String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
         BinningConfig binningConfig = BinningConfig.fromXml(l3ConfigXml);
-        final BinManager binManager = HadoopBinManager.createBinningContext(binningConfig, null).getBinManager();
+        final BinManager binManager = HadoopBinManager.createBinningContext(binningConfig, null, null).getBinManager();
 
         final List<String> outputFeatureNames = new ArrayList<String>();
         final int aggregatorCount = binManager.getAggregatorCount();

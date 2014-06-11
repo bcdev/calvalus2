@@ -25,6 +25,7 @@ import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.DataPeriod;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -33,6 +34,7 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.SpatialBinner;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -59,7 +61,20 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        BinningContext binningContext = HadoopBinManager.createBinningContext(conf, regionGeometry);
+
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        /*
+        TODO implement this to deal with the data-day correctly, needs some changes in:
+        TODO - L3ProductionType
+        TODO - TAProductionType
+        TODO - L3WorkflowItem
+
+        ProductData.UTC startUtc = null;
+        Double periodDuration = null;
+        DataPeriod dataPeriod = BinningConfig.createDataPeriod(startUtc, periodDuration, binningConfig.getMinDataHour());
+        */
+        DataPeriod dataPeriod = null;
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
@@ -74,7 +89,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
-                                                                  binningContext.getSuperSampling(),
                                                                   addedBands,
                                                                   SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {

@@ -33,11 +33,11 @@ public class HadoopBinManager extends BinManager {
     }
 
     @Override
-     public L3TemporalBin createTemporalBin(long binIndex) {
-         final L3TemporalBin temporalBin = new L3TemporalBin(binIndex, getTemporalFeatureCount());
-         initTemporalBin(temporalBin);
-         return temporalBin;
-     }
+    public L3TemporalBin createTemporalBin(long binIndex) {
+        final L3TemporalBin temporalBin = new L3TemporalBin(binIndex, getTemporalFeatureCount());
+        initTemporalBin(temporalBin);
+        return temporalBin;
+    }
 
     @Override
     public L3TemporalBin createOutputBin(long binIndex) {
@@ -61,25 +61,19 @@ public class HadoopBinManager extends BinManager {
         }
     }
 
-    public static BinningContext createBinningContext(BinningConfig binningConfig, Geometry regionGeometry) {
-         VariableContext variableContext = binningConfig.createVariableContext();
-         Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
-         HadoopBinManager binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
+    public static BinningContext createBinningContext(BinningConfig binningConfig, DataPeriod dataPeriod, Geometry regionGeometry) {
+        VariableContext variableContext = binningConfig.createVariableContext();
+        Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
+        HadoopBinManager binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
         PlanetaryGrid planetaryGrid = binningConfig.createPlanetaryGrid();
         Integer superSampling = binningConfig.getSuperSampling();
-        DataPeriod dataPeriod = BinningConfig.createDataPeriod(binningConfig.getStartDate(),
-                                                               binningConfig.getPeriodDuration(),
-                                                               binningConfig.getMinDataHour());
-        return new BinningContextImpl(planetaryGrid,
-                                       binManager,
-                                       binningConfig.getCompositingType(),
-                                       superSampling != null ? superSampling : 1,
-                                       dataPeriod,
-                                       regionGeometry);
-     }
 
-    public static BinningContext createBinningContext(Configuration config, Geometry regionGeometry) {
-        BinningConfig binningConfig = getBinningConfig(config);
-        return createBinningContext(binningConfig, regionGeometry);
+
+        return new BinningContextImpl(planetaryGrid,
+                                      binManager,
+                                      binningConfig.getCompositingType(),
+                                      superSampling != null ? superSampling : 1,
+                                      dataPeriod,
+                                      regionGeometry);
     }
 }

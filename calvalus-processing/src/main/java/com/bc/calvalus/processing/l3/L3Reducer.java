@@ -77,7 +77,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         BinningConfig binningConfig = getL3Config(conf);
 
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, regionGeometry);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, regionGeometry);
         temporalBinner = new TemporalBinner(binningContext);
         cellChain = new CellProcessorChain(binningContext);
         conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, binningContext.getBinManager().getResultFeatureNames());

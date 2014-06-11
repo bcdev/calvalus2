@@ -18,7 +18,7 @@
                 <include>com.bc.calvalus:calvalus-commons</include>
                 <include>com.bc.calvalus:calvalus-inventory</include>
                 <include>com.bc.calvalus:calvalus-processing</include>
-                <include>org.esa.beam:beam-binning2</include>
+                <include>org.esa.beam:beam-binning</include>
                 <include>jfree:jfreechart</include>
                 <include>jfree:jcommon</include>
             </includes>

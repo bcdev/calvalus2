@@ -212,8 +212,8 @@
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
-                <artifactId>beam-binning2</artifactId>
-                <version>0.8.4-SNAPSHOT</version>
+                <artifactId>beam-binning</artifactId>
+                <version>${beam.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.beam</groupId>

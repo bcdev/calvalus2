@@ -58,7 +58,7 @@ public class TAFormatter {
     public int format(File outputFile, BinningConfig binningConfig, String hadoopJobOutputDir) throws Exception {
 
         partsDir = new Path(hadoopJobOutputDir);
-        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
         final BinManager binManager = binningContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {

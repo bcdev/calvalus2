@@ -53,7 +53,8 @@ public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, L
         }
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
-        BinningContext binningContext = HadoopBinManager.createBinningContext(conf, null);
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
         binManager = binningContext.getBinManager();
 
         String[] featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);

@@ -30,6 +30,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.beam.binning.Aggregator;
 import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.BufferedWriter;
@@ -178,7 +179,8 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        BinningContext binningContext = HadoopBinManager.createBinningContext(conf, null);
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
         binManager = binningContext.getBinManager();
         outputFeatureNames = new ArrayList<String>();
         for (int i = 0; i < binManager.getAggregatorCount(); i++) {
