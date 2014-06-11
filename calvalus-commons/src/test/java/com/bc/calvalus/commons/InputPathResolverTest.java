@@ -124,6 +124,16 @@ public class InputPathResolverTest {
         assertEquals("/foo/MER_RR__1P\\p{Upper}+20050103*.N1", pathGlobs.get(2));
     }
 
+    @Test
+    public void testContainsDateVariables() throws Exception {
+        assertFalse(InputPathResolver.containsDateVariables(""));
+        assertFalse(InputPathResolver.containsDateVariables("foo"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}/${MM}/${dd}/.*.N1"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}/${MM}/.*.N1"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}.*.N1"));
+
+    }
+
     private Date date(String dateAsString) throws ParseException {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);

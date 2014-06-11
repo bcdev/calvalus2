@@ -119,4 +119,10 @@ public class InputPathResolver {
         inputPathResolver.setRegionName(regionName);
         return inputPathResolver.resolve(inputPathPattern);
     }
+
+    public static boolean containsDateVariables(String pattern) {
+        return pattern.contains("${yyyy}") ||
+                pattern.contains("${MM}") ||
+                pattern.contains("${dd}");
+    }
 }

@@ -71,15 +71,26 @@ public class PatternBasedInputFormat extends InputFormat {
 
             ProductInventory productInventory = ProductInventory.createInventory(configuration);
             List<InputSplit> splits = new ArrayList<InputSplit>(1000);
-            for (DateRange dateRange : dateRanges) {
+            if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
+                for (DateRange dateRange : dateRanges) {
+                    FileStatus[] fileStatuses = getFileStatuses(fileSystem,
+                                                                hdfsInventoryService,
+                                                                inputPathPatterns,
+                                                                dateRange.getStartDate(),
+                                                                dateRange.getStopDate(),
+                                                                regionName);
+                    createSplits(fileSystem, productInventory, fileStatuses, splits);
+                }
+            } else {
                 FileStatus[] fileStatuses = getFileStatuses(fileSystem,
                                                             hdfsInventoryService,
                                                             inputPathPatterns,
-                                                            dateRange.getStartDate(),
-                                                            dateRange.getStopDate(),
+                                                            null,
+                                                            null,
                                                             regionName);
                 createSplits(fileSystem, productInventory, fileStatuses, splits);
             }
+
             LOG.info("Total files to process : " + splits.size());
             return splits;
         } catch (IOException e) {
