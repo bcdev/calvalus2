@@ -24,7 +24,6 @@ import org.esa.beam.binning.CompositingType;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.aggregators.AggregatorAverage;
-import org.esa.beam.binning.aggregators.AggregatorAverageML;
 import org.esa.beam.binning.aggregators.AggregatorMinMax;
 import org.esa.beam.binning.aggregators.AggregatorOnMaxSet;
 import org.esa.beam.binning.cellprocessor.FeatureSelection;
@@ -101,9 +100,9 @@ public class BinningConfigTest {
         BinManager binManager = binningConfig.createBinningContext(null, null, null).getBinManager();
         assertEquals(6, binManager.getAggregatorCount());
         assertEquals(AggregatorAverage.class, binManager.getAggregator(0).getClass());
-        assertEquals(AggregatorAverageML.class, binManager.getAggregator(1).getClass());
-        assertEquals(AggregatorAverageML.class, binManager.getAggregator(2).getClass());
-        assertEquals(AggregatorAverageML.class, binManager.getAggregator(3).getClass());
+        assertEquals(AggregatorAverage.class, binManager.getAggregator(1).getClass());
+        assertEquals(AggregatorAverage.class, binManager.getAggregator(2).getClass());
+        assertEquals(AggregatorAverage.class, binManager.getAggregator(3).getClass());
         assertEquals(AggregatorOnMaxSet.class, binManager.getAggregator(4).getClass());
         assertEquals(AggregatorMinMax.class, binManager.getAggregator(5).getClass());
     }

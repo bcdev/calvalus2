@@ -28,7 +28,7 @@ done by the cool folks at Brockmann-Consult.
         </outputVariable>
         <outputVariable>
             <name>chl_conc</name>
-            <defaultAggregator>AVG_ML</defaultAggregator>
+            <defaultAggregator>AVG</defaultAggregator>
             <defaultWeightCoeff>0.5</defaultWeightCoeff>
         </outputVariable>
     </outputVariables>

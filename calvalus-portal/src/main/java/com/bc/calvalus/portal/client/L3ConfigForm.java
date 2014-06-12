@@ -474,7 +474,6 @@ public class L3ConfigForm extends Composite {
 
         List<String> valueList = Arrays.asList(
                 "AVG",
-                "AVG_ML",
                 "MIN_MAX",
                 "PERCENTILE_2",
                 "PERCENTILE_5",

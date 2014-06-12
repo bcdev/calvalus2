@@ -13,20 +13,21 @@
             <varName>tsm</varName>
         </aggregator>
         <aggregator>
-            <type>AVG_ML</type>
+            <type>AVG</type>
             <varName>algal1</varName>
         </aggregator>
         <aggregator>
-            <type>AVG_ML</type>
+            <type>AVG</type>
             <varName>algal2</varName>
         </aggregator>
         <aggregator>
-            <type>AVG_ML</type>
+            <type>AVG</type>
             <varName>chl</varName>
         </aggregator>
         <aggregator>
             <type>ON_MAX_SET</type>
-            <varNames>ndvi,reflec_3,reflec_7,reflec_8</varNames>
+            <onMaxVarName>ndvi</onMaxVarName>
+            <setVarNames>reflec_3,reflec_7,reflec_8</setVarNames>
         </aggregator>
         <aggregator>
             <type>MIN_MAX</type>

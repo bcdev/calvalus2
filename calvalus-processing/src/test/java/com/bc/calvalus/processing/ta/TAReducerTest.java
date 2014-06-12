@@ -24,7 +24,7 @@ import com.bc.ceres.binding.PropertySet;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.aggregators.AggregatorAverageML;
+import org.esa.beam.binning.aggregators.AggregatorAverage;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,11 +75,11 @@ public class TAReducerTest {
 
         float[] featureValues = temporalBin.getFeatureValues();
         assertEquals(3, featureValues.length);
-        assertEquals(0.2f + 0.4f + 0.6f, featureValues[0], 1e-5f);
-        assertEquals(0.15f + 0.25f + 0.35f, featureValues[1], 1e-5f);
-        assertEquals(sqrt(10) + sqrt(7) + sqrt(6), featureValues[2], 1e-5f);
+        assertEquals(8.4f, featureValues[0], 1e-5f);
+        assertEquals(5.35f, featureValues[1], 1e-5f);
+        assertEquals(23f, featureValues[2], 1e-5f);
 
-        assertEquals("TAPoint{regionName=northsea, startDate=2010-01-01, stopDate=2010-01-10, temporalBin=L3TemporalBin{index=-1, numObs=23, numPasses=7, featureValues=[1.2, 0.75, 8.257519]}}", taPoint.toString());
+        assertEquals("TAPoint{regionName=northsea, startDate=2010-01-01, stopDate=2010-01-10, temporalBin=L3TemporalBin{index=-1, numObs=23, numPasses=7, featureValues=[8.400001, 5.35, 23.0]}}", taPoint.toString());
     }
 
     private L3TemporalBin createTBin(int numPasses, int numObs, float... values) {
@@ -107,13 +107,10 @@ public class TAReducerTest {
         binningConfig.setNumRows(2160);
         binningConfig.setSuperSampling(1); // unused
         binningConfig.setMaskExpr(""); // unused
-        AggregatorConfig aggConf = new AggregatorAverageML.Descriptor().createConfig();
+        AggregatorConfig aggConf = new AggregatorAverage.Descriptor().createConfig();
         PropertySet aggProperties = aggConf.asPropertySet();
         aggProperties.setValue("varName", "chl_conc");
-        aggProperties.setValue("weightCoeff", 0.5);
-//        aggConf.setVarName("chl_conc");
-//        aggConf.setWeightCoeff(0.5);
-//        aggConf.setFillValue(Float.NaN);
+        aggProperties.setValue("weightCoeff", 1.0);
         binningConfig.setAggregatorConfigs(aggConf);
         return binningConfig;
     }
