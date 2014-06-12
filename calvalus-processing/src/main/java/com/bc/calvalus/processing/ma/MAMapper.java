@@ -89,6 +89,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {
             Product inputProduct = processorAdapter.getInputProduct();
+            long productOpenTime = (now() - t0);
+            LOG.info(String.format("%s opened input product %s, took %s sec",
+                                   context.getTaskAttemptID(), inputProduct.getName(), productOpenTime / 1E3));
+
+            t0 = now();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
@@ -103,19 +108,24 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             int macroPixelSize = maConfig.getMacroPixelSize();
 
             int numReferenceRecords = 0;
+            int numMatchingReferenceRecords = 0;
             for (Record record : records) {
                 numReferenceRecords++;
                 PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
                 if (pixelPos != null) {
+                    numMatchingReferenceRecords++;
                     Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
                                                         (int) pixelPos.y - macroPixelSize / 2,
                                                         macroPixelSize, macroPixelSize);
                     area.add(new Area(rectangle));
                 }
             }
+            long referencePixelTime = (now() - t0);
+            LOG.info(String.format("tested %s reference records, found %s matches, took %s sec",
+                                   numReferenceRecords, numMatchingReferenceRecords, referencePixelTime / 1E3));
 
             if (!area.isEmpty()) {
-
+                t0 = now();
                 if (!pullProcessing) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
@@ -139,13 +149,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
                 context.progress();
-                long productOpenTime = (now() - t0);
-                LOG.info(String.format("%s opened product %s, took %s sec",
-                                       context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
+                productOpenTime = (now() - t0);
+                LOG.info(String.format("opened processed product %s, took %s sec", product.getName(), productOpenTime / 1E3));
 
                 t0 = now();
-
-                extractionPM.beginTask("Extraction", numReferenceRecords*2);
+                extractionPM.beginTask("Extraction", numMatchingReferenceRecords * 2);
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecords;
                 try {
@@ -159,8 +167,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
 
                 long recordReadTime = (now() - t0);
-                LOG.info(String.format("%s read input records from %s, took %s sec",
-                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(),
+                LOG.info(String.format("read input records from %s, took %s sec",
+                                       maConfig.getRecordSourceUrl(),
                                        recordReadTime / 1E3));
                 logAttributeNames(productRecordSource);
 
@@ -196,8 +204,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
 
                 long recordWriteTime = (now() - t0);
-                LOG.info(String.format("%s found %s match-ups, took %s sec",
-                                       context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
+                LOG.info(String.format("found %s match-ups, took %s sec", numMatchUps, recordWriteTime / 1E3));
                 if (numMatchUps > 0) {
                     // write header
                     context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
@@ -219,8 +226,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         }
 
         long productCloseTime = (now() - t0);
-        LOG.info(String.format("%s closed input product, took %s sec",
-                               context.getTaskAttemptID(), productCloseTime / 1E3));
+        LOG.info(String.format("closed input product, took %s sec", productCloseTime / 1E3));
 
         // write final log entry for runtime measurements
         long mapperTotalTime = (now() - mapperStartTime);
