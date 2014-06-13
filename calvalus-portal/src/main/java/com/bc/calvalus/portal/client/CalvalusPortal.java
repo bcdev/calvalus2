@@ -215,6 +215,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     new OrderFreshmonProductionView(this),
                     new BootstrappingView(this),
                     new OrderVCProductionView(this),
+                    new OrderMACProductionView(this),
                     new ManageRegionsView(this),
                     new ManageBundleView(this),
                     manageProductionsView,

@@ -273,14 +273,18 @@ public class L2ConfigForm extends Composite {
     }
 
     public Map<String, String> getValueMap() {
+        return getValueMap("");
+    }
+
+    public Map<String, String> getValueMap(String suffix) {
         Map<String, String> parameters = new HashMap<String, String>();
         DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, processorDescriptor.getBundleName());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, processorDescriptor.getBundleVersion());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, processorDescriptor.getBundleLocation());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME, processorDescriptor.getExecutableName());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS, getProcessorParameters());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME + suffix, processorDescriptor.getBundleName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + suffix, processorDescriptor.getBundleVersion());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + suffix, processorDescriptor.getBundleLocation());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME + suffix, processorDescriptor.getExecutableName());
+            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + suffix, getProcessorParameters());
         }
         return parameters;
     }

@@ -18,13 +18,13 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -32,9 +32,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo view that lets users submit a new Vicarious-Calibration production.
+ * View that lets users submit a new Vicarious-Calibration production.
  *
- * @author Norman
+ * @author MarcoZ
  */
 public class OrderVCProductionView extends OrderProductionView {
     public static final String ID = OrderVCProductionView.class.getName();
@@ -49,6 +49,8 @@ public class OrderVCProductionView extends OrderProductionView {
     private final CheckBox vcOutputL1Diff;
     private final CheckBox vcOutputL2;
     private OutputParametersForm outputParametersForm;
+    private TextBox goodPixelExpression;
+    private TextBox goodRecordExpression;
 
     private Widget widget;
 
@@ -68,22 +70,29 @@ public class OrderVCProductionView extends OrderProductionView {
         differentiationConfigForm.parametersLabel.setText("Differentiation Parameters");
 
         l2ConfigForm = new L2ConfigForm(portalContext, true);
-        l2ConfigForm.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
-            }
-        });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         maConfigForm = new MAConfigForm(portalContext);
-        maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+        maConfigForm.expressionTable.setVisible(false);
 
         ///////////
         HTMLPanel htmlPanel = new HTMLPanel("<h3>Vicarious-Calibration Output Parameters</h3><hr/>");
         htmlPanel.setWidth("62em");
+
+        goodPixelExpression = new TextBox();
+        goodRecordExpression = new TextBox();
+        goodPixelExpression.setWidth("36em");
+        goodRecordExpression.setWidth("36em");
+
+        Panel pixelPanel = new HorizontalPanel();
+        pixelPanel.add(new Label("Un-differentiated Level 2 Good-pixel expression:"));
+        pixelPanel.add(goodPixelExpression);
+
+        Panel recordPanel = new HorizontalPanel();
+        recordPanel.add(new Label("Un-differentiated Level 2 Good-record expression:"));
+        recordPanel.add(goodRecordExpression);
 
         vcOutputL1 = new CheckBox("Output L1 Products");
         vcOutputL1Diff = new CheckBox("Output L1 Differentiation Products");
@@ -92,6 +101,9 @@ public class OrderVCProductionView extends OrderProductionView {
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setSpacing(4);
         verticalPanel.add(htmlPanel);
+        verticalPanel.add(pixelPanel);
+        verticalPanel.add(recordPanel);
+        verticalPanel.add(new HTML("<br/>"));
         verticalPanel.add(vcOutputL1);
         verticalPanel.add(vcOutputL1Diff);
         verticalPanel.add(vcOutputL2);
@@ -163,14 +175,7 @@ public class OrderVCProductionView extends OrderProductionView {
 
     public Map<String, String> getDifferentiationValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        DtoProcessorDescriptor processorDescriptor = differentiationConfigForm.getSelectedProcessorDescriptor();
-        if (processorDescriptor != null) {
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleName());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleVersion());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + DIFFERENTIATION_SUFFIX, processorDescriptor.getBundleLocation());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_NAME + DIFFERENTIATION_SUFFIX, processorDescriptor.getExecutableName());
-            parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + DIFFERENTIATION_SUFFIX, differentiationConfigForm.getProcessorParameters());
-        }
+        parameters.putAll(differentiationConfigForm.getValueMap(DIFFERENTIATION_SUFFIX));
         parameters.put("calvalus.vc.outputL1", vcOutputL1.getValue().toString());
         parameters.put("calvalus.vc.outputL1Diff", vcOutputL1Diff.getValue().toString());
         parameters.put("calvalus.vc.outputL2", vcOutputL2.getValue().toString());
@@ -183,7 +188,12 @@ public class OrderVCProductionView extends OrderProductionView {
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(getDifferentiationValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
+
         parameters.putAll(maConfigForm.getValueMap());
+        // overwrite with local values
+        parameters.put("goodPixelExpression", goodPixelExpression.getText());
+        parameters.put("goodRecordExpression", goodRecordExpression.getText());
+
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");

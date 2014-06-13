@@ -86,7 +86,7 @@
                 </g:HTMLPanel>
             </g:HorizontalPanel>
 
-            <g:HTMLPanel>
+            <g:HTMLPanel ui:field="expressionTable">
                 <table cellspacing="2">
                     <tr>
                         <td>

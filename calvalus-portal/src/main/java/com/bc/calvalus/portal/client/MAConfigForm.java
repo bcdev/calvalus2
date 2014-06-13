@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -19,6 +18,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
@@ -71,6 +71,8 @@ public class MAConfigForm extends Composite {
     TextBox goodPixelExpression;
     @UiField
     TextBox goodRecordExpression;
+    @UiField
+    HTMLPanel expressionTable;
 
 
     public MAConfigForm(final PortalContext portalContext) {
@@ -186,9 +188,6 @@ public class MAConfigForm extends Composite {
                 Dialog.error("Failed", "Failed to view " + recordSource + ": " + caught.getMessage());
             }
         });
-    }
-
-    public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
     }
 
     public void validateForm() throws ValidationException {
