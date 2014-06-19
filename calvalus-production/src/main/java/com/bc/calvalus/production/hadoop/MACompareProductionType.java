@@ -111,6 +111,7 @@ public class MACompareProductionType extends HadoopProductionType {
         macJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, macInputs.toArray(new String[macInputs.size()]));
         macJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         macJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+        macJobConfig.set("calvalus.ma.identifiers", allIdentifierString);
 
         WorkflowItem maCompareWorkflow = new MACompareWorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName + " compare", macJobConfig);
         Workflow.Sequential workflow = new Workflow.Sequential(maWorkflows, maCompareWorkflow);

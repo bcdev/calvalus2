@@ -50,6 +50,7 @@ public class MACompareWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_MA_PARAMETERS, NO_DEFAULT},
+                {"calvalus.ma.identifiers", NO_DEFAULT},
         };
     }
 
