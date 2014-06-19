@@ -28,6 +28,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.bc.calvalus.processing.ma.PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX;
+
 /**
  * @author MarcoZ
  */
@@ -62,11 +64,16 @@ public class MACompareMapper extends Mapper<Text, RecordWritable, MAKey, Indexed
             Object[] attributeValues = record.getAttributeValues();
             Object[] newAttributeNames = new Object[attributeValues.length];
             for (int i = 0; i < attributeValues.length; i++) {
-                newAttributeNames[i] = identifier + "_" + attributeValues[i];
+                String attributeName = (String) attributeValues[i];
+                if (attributeName.startsWith(ATTRIB_NAME_AGGREG_PREFIX)) {
+                    newAttributeNames[i] = ATTRIB_NAME_AGGREG_PREFIX + identifier + "_" + attributeName.substring(ATTRIB_NAME_AGGREG_PREFIX.length());
+                } else {
+                    newAttributeNames[i] = identifier + "_" + attributeName;
+                }
             }
             IndexedRecordWritable indexedRecord = new IndexedRecordWritable(identifierIndex,
-                                                                       newAttributeNames,
-                                                                       record.getAnnotationValues());
+                                                                            newAttributeNames,
+                                                                            record.getAnnotationValues());
 
             maKey.setReferenceId(MAKey.HEADER_KEY);
             maKey.setProductName("");
@@ -79,8 +86,8 @@ public class MACompareMapper extends Mapper<Text, RecordWritable, MAKey, Indexed
             maKey.setProductName(split[1]);
 
             IndexedRecordWritable indexedRecord = new IndexedRecordWritable(identifierIndex,
-                                                                       record.getAttributeValues(),
-                                                                       record.getAnnotationValues());
+                                                                            record.getAttributeValues(),
+                                                                            record.getAnnotationValues());
             context.write(maKey, indexedRecord);
         }
     }
