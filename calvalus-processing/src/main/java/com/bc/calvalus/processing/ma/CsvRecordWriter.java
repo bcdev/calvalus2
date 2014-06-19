@@ -32,6 +32,10 @@ public class CsvRecordWriter implements RecordProcessor {
     private final DateFormat dateFormat;
     private int exclusionIndex;
 
+    public CsvRecordWriter(Writer recordsAllWriter, Writer recordsAggWriter) {
+        this(recordsAllWriter, recordsAggWriter, null, null);
+    }
+
     public CsvRecordWriter(Writer recordsAllWriter, Writer recordsAggWriter, Writer labeledAllRecordsWriter, Writer labeledAggRecordsWriter) {
         this.recordsAllWriter = recordsAllWriter;
         this.recordsAggWriter = recordsAggWriter;
@@ -50,17 +54,21 @@ public class CsvRecordWriter implements RecordProcessor {
 
         recordsAllWriter.write(allHeader);
         recordsAllWriter.write("\n");
-        labeledAllRecordsWriter.write(allHeader);
-        labeledAllRecordsWriter.write(separatorChar);
-        labeledAllRecordsWriter.write(annotationHeader);
-        labeledAllRecordsWriter.write("\n");
+        if (labeledAllRecordsWriter != null) {
+            labeledAllRecordsWriter.write(allHeader);
+            labeledAllRecordsWriter.write(separatorChar);
+            labeledAllRecordsWriter.write(annotationHeader);
+            labeledAllRecordsWriter.write("\n");
+        }
 
         recordsAggWriter.write(aggHeader);
         recordsAggWriter.write("\n");
-        labeledAggRecordsWriter.write(aggHeader);
-        labeledAggRecordsWriter.write(separatorChar);
-        labeledAggRecordsWriter.write(annotationHeader);
-        labeledAggRecordsWriter.write("\n");
+        if (labeledAggRecordsWriter != null) {
+            labeledAggRecordsWriter.write(aggHeader);
+            labeledAggRecordsWriter.write(separatorChar);
+            labeledAggRecordsWriter.write(annotationHeader);
+            labeledAggRecordsWriter.write("\n");
+        }
 
         exclusionIndex = Arrays.asList(annotationNames).indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
     }
@@ -79,29 +87,39 @@ public class CsvRecordWriter implements RecordProcessor {
                 if (reason.isEmpty()) {
                     recordsAllWriter.write(line + "\n");
                 }
-                labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+                if (labeledAllRecordsWriter != null) {
+                    labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+                }
             }
         } else {
             String line = dataRecordToString(attributeValues, false, -1);
             if (reason.isEmpty()) {
                 recordsAllWriter.write(line + "\n");
             }
-            labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+            if (labeledAllRecordsWriter != null) {
+                labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+            }
         }
 
         String line = dataRecordToString(attributeValues, true, -1);
         if (reason.isEmpty()) {
             recordsAggWriter.write(line + "\n");
         }
-        labeledAggRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+        if (labeledAggRecordsWriter != null) {
+            labeledAggRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+        }
     }
 
     @Override
     public void finalizeRecordProcessing() throws IOException {
         recordsAllWriter.close();
         recordsAggWriter.close();
-        labeledAllRecordsWriter.close();
-        labeledAggRecordsWriter.close();
+        if (labeledAllRecordsWriter != null) {
+            labeledAllRecordsWriter.close();
+        }
+        if (labeledAggRecordsWriter != null) {
+            labeledAggRecordsWriter.close();
+        }
     }
 
     public static String toString(Object[] values) {

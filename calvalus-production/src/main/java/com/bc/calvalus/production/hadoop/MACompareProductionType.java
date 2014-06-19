@@ -18,11 +18,13 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.MAWorkflowItem;
+import com.bc.calvalus.processing.ma.compare.MACompareWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -35,11 +37,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Match-up comparison: A production type used for generating match-ups
- *                      between multiple Level1/Level2 products and in-situ data including comparison of them.
+ * between multiple Level1/Level2 products and in-situ data including comparison of them.
  *
  * @author MarcoZ
  */
@@ -69,9 +72,14 @@ public class MACompareProductionType extends HadoopProductionType {
 
         String allIdentifierString = productionRequest.getString("allIdentifiers");
         String[] allIdentifiers = allIdentifierString.split(",");
-        String outputDir = getOutputPath(productionRequest, productionId, "");
+        String outputDirMa = getOutputPath(productionRequest, productionId, "-ma");
 
-        Workflow workflow = new Workflow.Parallel();
+        MAConfig maConfig = getMAConfig(productionRequest);
+
+
+        Workflow maWorkflows = new Workflow.Parallel();
+        List<String> macInputs = new ArrayList<String>();
+        macInputs.add(maConfig.getRecordSourceUrl());
         for (String identifier : allIdentifiers) {
             Configuration maJobConfig = createJobConfig(productionRequest);
             String suffix = "." + identifier;
@@ -80,21 +88,32 @@ public class MACompareProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, maJobConfig);
             processorProductionRequest.configureProcessor(maJobConfig);
 
-            String maParametersXml = getMAConfigXmlSpecial(productionRequest, suffix);
+            maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression" + suffix, ""));
+            maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression" + suffix, ""));
 
             List<DateRange> dateRanges = productionRequest.getDateRanges();
             maJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             maJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             maJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
-            maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir + "/" + identifier);
-            maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
+            String maDir = outputDirMa + "/" + identifier;
+            maJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, maDir);
+            macInputs.add(maDir + "/part-r-00000");
+            maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
             maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                             regionGeometry != null ? regionGeometry.toString() : "");
-            workflow.add(new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                                                             productionName, maJobConfig));
+            maWorkflows.add(new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                               productionName + " " + identifier, maJobConfig));
         }
-        // TODO match-up merging/comparison
+        String outputDir = getOutputPath(productionRequest, productionId, "");
+        Configuration macJobConfig = createJobConfig(productionRequest);
+
+        macJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, macInputs.toArray(new String[macInputs.size()]));
+        macJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        macJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+
+        WorkflowItem maCompareWorkflow = new MACompareWorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName + " compare", macJobConfig);
+        Workflow.Sequential workflow = new Workflow.Sequential(maWorkflows, maCompareWorkflow);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
@@ -109,27 +128,22 @@ public class MACompareProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        //TODO copy sub-directories, too
         return new CopyStaging(production,
                                getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 
-    static String getMAConfigXmlSpecial(ProductionRequest productionRequest, String suffix) throws ProductionException {
+    static MAConfig getMAConfig(ProductionRequest productionRequest) throws ProductionException {
         String maParametersXml = productionRequest.getString("calvalus.ma.parameters", null);
         if (maParametersXml == null) {
-            MAConfig maConfig = MAProductionType.getMAConfig(productionRequest);
-            maConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression" + suffix, ""));
-            maConfig.setGoodRecordExpression(productionRequest.getString("goodRecordExpression" + suffix, ""));
-            maParametersXml = maConfig.toXml();
+            return MAProductionType.getMAConfig(productionRequest);
         } else {
             // Check MA XML before sending it to Hadoop
             try {
-                MAConfig.fromXml(maParametersXml);
+                return MAConfig.fromXml(maParametersXml);
             } catch (BindingException e) {
                 throw new ProductionException("Illegal match-up configuration: " + e.getMessage(), e);
             }
         }
-        return maParametersXml;
     }
 }
