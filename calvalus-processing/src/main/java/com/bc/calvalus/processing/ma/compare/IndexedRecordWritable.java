@@ -29,11 +29,9 @@ import java.io.IOException;
 public class IndexedRecordWritable extends RecordWritable {
 
     private IntWritable identifierIndex;
-    private RecordWritable recordWritable;
 
     public IndexedRecordWritable() {
         identifierIndex = new IntWritable();
-        recordWritable = new RecordWritable();
     }
 
     public IndexedRecordWritable(int identifierIndex, Object[] newAttributeNames, Object[] annotationValues) {
@@ -48,12 +46,12 @@ public class IndexedRecordWritable extends RecordWritable {
     @Override
     public void write(DataOutput out) throws IOException {
         identifierIndex.write(out);
-        recordWritable.write(out);
+        super.write(out);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         identifierIndex.readFields(in);
-        recordWritable.readFields(in);
+        super.readFields(in);
     }
 }
