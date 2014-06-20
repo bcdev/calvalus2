@@ -36,6 +36,8 @@ public class RecordMergerTest {
     private TracingRecordProcessor rpIBQp1;
     private TracingRecordProcessor rpIBQp2;
     private List<IndexedRecordWritable> headerValues;
+    private String[] insituAttributeNames;
+    private Object[] insituAttributeValues;
 
     @Before
     public void setUp() throws Exception {
@@ -46,12 +48,10 @@ public class RecordMergerTest {
         String[] identifier = new String[]{"p1", "p2"};
         recordMerger = new RecordMerger(identifier, rpAll, rpCBQ, rpIBQp1, rpIBQp2);
 
+        insituAttributeNames = new String[]{"a", "b"};
+        insituAttributeValues = new Integer[]{1, 2};
+
         headerValues = new ArrayList<IndexedRecordWritable>();
-        headerValues.add(new IndexedRecordWritable(
-                -1,
-                new String[]{"insitu_a", "insitu_b"},
-                new String[]{DefaultHeader.ANNOTATION_EXCLUSION_REASON}
-        ));
         headerValues.add(new IndexedRecordWritable(
                 0,
                 new String[]{"p1_m", "p1_n"},
@@ -66,7 +66,7 @@ public class RecordMergerTest {
 
     @Test
     public void processHeader() throws Exception {
-        recordMerger.processHeader(headerValues);
+        recordMerger.processHeader(insituAttributeNames, headerValues);
         String[] expected = {"insitu_a", "insitu_b", "p1_m", "p1_n", "p2_o", "p2_q"};
         assertArrayEquals(expected, rpAll.headerAttributes.toArray());
         assertArrayEquals(expected, rpCBQ.headerAttributes.toArray());
@@ -84,11 +84,11 @@ public class RecordMergerTest {
     public void processAllGood() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        data.add(new IndexedRecordWritable(
-                -1,
-                new Integer[]{1, 2},
-                new String[]{""}
-        ));
+        //data.add(new IndexedRecordWritable(
+        //        -1,
+        //        new Integer[]{1, 2},
+        //        new String[]{""}
+        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -100,8 +100,8 @@ public class RecordMergerTest {
                 new String[]{""}
         ));
 
-        recordMerger.processHeader(headerValues);
-        recordMerger.processData(data);
+        recordMerger.processHeader(insituAttributeNames, headerValues);
+        recordMerger.processData(insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, 11, 12, 21, 22};
         assertArrayEquals(expectedInts, rpAll.dataAttributes.toArray());
@@ -120,18 +120,18 @@ public class RecordMergerTest {
     public void processOneMissing() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        data.add(new IndexedRecordWritable(
-                -1,
-                new Integer[]{1, 2},
-                new String[]{""}
-        ));
+        //data.add(new IndexedRecordWritable(
+        //        -1,
+        //        new Integer[]{1, 2},
+        //        new String[]{""}
+        //));
         data.add(new IndexedRecordWritable(
                 1,
                 new Integer[]{21, 22},
                 new String[]{""}
         ));
-        recordMerger.processHeader(headerValues);
-        recordMerger.processData(data);
+        recordMerger.processHeader(insituAttributeNames, headerValues);
+        recordMerger.processData(insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, null, null, 21, 22};
         assertEquals(6, rpAll.dataAttributes.size());
@@ -154,11 +154,11 @@ public class RecordMergerTest {
     public void processOneBad() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        data.add(new IndexedRecordWritable(
-                -1,
-                new Integer[]{1, 2},
-                new String[]{""}
-        ));
+        //data.add(new IndexedRecordWritable(
+        //        -1,
+        //        new Integer[]{1, 2},
+        //        new String[]{""}
+        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -169,8 +169,8 @@ public class RecordMergerTest {
                 new Integer[]{21, 22},
                 new String[]{""}
         ));
-        recordMerger.processHeader(headerValues);
-        recordMerger.processData(data);
+        recordMerger.processHeader(insituAttributeNames, headerValues);
+        recordMerger.processData(insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, null, null, 21, 22};
         assertEquals(6, rpAll.dataAttributes.size());
@@ -193,11 +193,11 @@ public class RecordMergerTest {
     public void processAllBad() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        data.add(new IndexedRecordWritable(
-                -1,
-                new Integer[]{1, 2},
-                new String[]{""}
-        ));
+        //data.add(new IndexedRecordWritable(
+        //        -1,
+        //        new Integer[]{1, 2},
+        //        new String[]{""}
+        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -208,8 +208,8 @@ public class RecordMergerTest {
                 new Integer[]{21, 22},
                 new String[]{"worse"}
         ));
-        recordMerger.processHeader(headerValues);
-        recordMerger.processData(data);
+        recordMerger.processHeader(insituAttributeNames, headerValues);
+        recordMerger.processData(insituAttributeValues, data);
 
         assertEquals(0, rpAll.dataAttributes.size());
         assertEquals(0, rpCBQ.dataAttributes.size());
@@ -226,13 +226,13 @@ public class RecordMergerTest {
     public void processAllMissing() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        data.add(new IndexedRecordWritable(
-                -1,
-                new Integer[]{1, 2},
-                new String[]{""}
-        ));
-        recordMerger.processHeader(headerValues);
-        recordMerger.processData(data);
+        //data.add(new IndexedRecordWritable(
+        //        -1,
+        //        new Integer[]{1, 2},
+        //        new String[]{""}
+        //));
+        recordMerger.processHeader(insituAttributeNames, headerValues);
+        recordMerger.processData(insituAttributeValues, data);
 
         assertEquals(0, rpAll.dataAttributes.size());
         assertEquals(0, rpCBQ.dataAttributes.size());

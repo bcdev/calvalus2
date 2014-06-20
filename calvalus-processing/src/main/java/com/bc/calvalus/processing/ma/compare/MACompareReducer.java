@@ -17,6 +17,10 @@
 package com.bc.calvalus.processing.ma.compare;
 
 import com.bc.calvalus.processing.ma.CsvRecordWriter;
+import com.bc.calvalus.processing.ma.Header;
+import com.bc.calvalus.processing.ma.MAConfig;
+import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
@@ -25,14 +29,30 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.util.Iterator;
 
 public class MACompareReducer extends Reducer<MAKey, IndexedRecordWritable, NullWritable, NullWritable> {
 
     private RecordMerger recordMerger;
+    private Header referenceHeader;
+    private Iterator<Record> referenceRecords;
+    private int currentReferenceId;
+    private Record currentReferenceRecord;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
+
+        MAConfig maConfig = MAConfig.get(context.getConfiguration());
+        try {
+            RecordSource referenceRecordSource = maConfig.createRecordSource();
+            referenceHeader = referenceRecordSource.getHeader();
+            referenceRecords = referenceRecordSource.getRecords().iterator();
+            currentReferenceId = -999;
+            currentReferenceRecord = null;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
 
         String[] identifier = conf.getStrings("calvalus.ma.identifiers");
 
@@ -56,10 +76,15 @@ public class MACompareReducer extends Reducer<MAKey, IndexedRecordWritable, Null
 
     @Override
     protected void reduce(MAKey key, Iterable<IndexedRecordWritable> records, Context context) throws IOException, InterruptedException {
-        if (key.getReferenceId() == MAKey.HEADER_KEY) {
-            recordMerger.processHeader(records);
+        int keyReferenceId = key.getReferenceId();
+        if (keyReferenceId == MAKey.HEADER_KEY) {
+            recordMerger.processHeader(referenceHeader.getAttributeNames(), records);
         } else {
-            recordMerger.processData(records);
+            while (currentReferenceId < keyReferenceId && referenceRecords.hasNext()) {
+                currentReferenceRecord = referenceRecords.next();
+                currentReferenceId = currentReferenceRecord.getId();
+            }
+            recordMerger.processData(currentReferenceRecord.getAttributeValues(), records);
         }
     }
 

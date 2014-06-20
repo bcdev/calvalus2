@@ -75,11 +75,10 @@ public class MACompareProductionType extends HadoopProductionType {
         String outputDirMa = getOutputPath(productionRequest, productionId, "-ma");
 
         MAConfig maConfig = getMAConfig(productionRequest);
-
+        maConfig.setCopyInput(false);
 
         Workflow maWorkflows = new Workflow.Parallel();
         List<String> macInputs = new ArrayList<String>();
-        macInputs.add(maConfig.getRecordSourceUrl());
         for (String identifier : allIdentifiers) {
             Configuration maJobConfig = createJobConfig(productionRequest);
             String suffix = "." + identifier;

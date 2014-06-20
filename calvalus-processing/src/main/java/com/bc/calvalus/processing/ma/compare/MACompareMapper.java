@@ -43,17 +43,10 @@ public class MACompareMapper extends Mapper<Text, RecordWritable, MAKey, Indexed
     protected void setup(Context context) throws IOException, InterruptedException {
         FileSplit fileSplit = (FileSplit) context.getInputSplit();
         Path path = fileSplit.getPath();
-        if (path.getName().equals("part-r-00000")) {
-            // output from MAReducer
-            identifier = path.getParent().getName();
-            Configuration conf = context.getConfiguration();
-            List<String> identifiers = Arrays.asList(conf.getStrings("calvalus.ma.identifiers"));
-            identifierIndex = identifiers.indexOf(identifier);
-        } else {
-            // reference data
-            identifier = "insitu";
-            identifierIndex = MAKey.INSITU_IDENTIFIER;
-        }
+        identifier = path.getParent().getName();
+        Configuration conf = context.getConfiguration();
+        List<String> identifiers = Arrays.asList(conf.getStrings("calvalus.ma.identifiers"));
+        identifierIndex = identifiers.indexOf(identifier);
         maKey = new MAKey();
         maKey.setIdentifierOrder(identifierIndex);
     }

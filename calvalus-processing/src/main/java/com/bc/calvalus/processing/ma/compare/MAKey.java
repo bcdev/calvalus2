@@ -31,7 +31,6 @@ import java.io.IOException;
 public class MAKey implements WritableComparable<MAKey> {
 
     static final int HEADER_KEY = -1;
-    static final int INSITU_IDENTIFIER = -1;
 
     private IntWritable referenceId; //header = -1
     private Text productName;

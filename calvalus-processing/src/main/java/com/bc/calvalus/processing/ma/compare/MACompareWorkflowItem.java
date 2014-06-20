@@ -23,6 +23,7 @@ import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 
 import java.io.IOException;
 
@@ -57,7 +58,7 @@ public class MACompareWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected void configureJob(Job job) throws IOException {
         FileInputFormat.addInputPaths(job, getInputFiles());
-        job.setInputFormatClass(MACompareInputFormat.class);
+        job.setInputFormatClass(SequenceFileInputFormat.class);
 
         job.setMapperClass(MACompareMapper.class);
         job.setMapOutputKeyClass(MAKey.class);

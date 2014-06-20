@@ -46,20 +46,25 @@ public class RecordMerger {
         this.startAttributeIndex = new int[identifiers.length + 1];
     }
 
-    void processHeader(Iterable<IndexedRecordWritable> records) throws IOException {
-        List<Object> attributeValueList = new ArrayList<Object>();
-        int index = 0;
+    void processHeader(String[] insituAttributeNames, Iterable<IndexedRecordWritable> records) throws IOException {
+        List<Object> attributeNameList = new ArrayList<Object>();
         startAttributeIndex[0] = 0;
+        numAttributes[0] = insituAttributeNames.length;
+        startAttributeIndex[1] = startAttributeIndex[0] + insituAttributeNames.length;
+        for (String insituAttributeName : insituAttributeNames) {
+            attributeNameList.add("insitu_" + insituAttributeName);
+        }
+        int index = 1;
         for (IndexedRecordWritable recordWritable : records) {
-            Object[] attributeValues = recordWritable.getAttributeValues();
-            numAttributes[index] = attributeValues.length;
+            Object[] attributeNames = recordWritable.getAttributeValues();
+            numAttributes[index] = attributeNames.length;
             index++;
             if (index < startAttributeIndex.length) {
-                startAttributeIndex[index] = startAttributeIndex[index - 1] + attributeValues.length;
+                startAttributeIndex[index] = startAttributeIndex[index - 1] + attributeNames.length;
             }
-            Collections.addAll(attributeValueList, attributeValues);
+            Collections.addAll(attributeNameList, attributeNames);
         }
-        Object[] attributeValues = attributeValueList.toArray(new Object[attributeValueList.size()]);
+        Object[] attributeValues = attributeNameList.toArray(new Object[attributeNameList.size()]);
 
         numAttributeValues = startAttributeIndex[numAttributes.length - 1] + numAttributes[numAttributes.length - 1];
 
@@ -70,16 +75,22 @@ public class RecordMerger {
         }
     }
 
-    void processData(Iterable<IndexedRecordWritable> records) throws IOException {
+    void processData(Object[] insituAttributeValues, Iterable<IndexedRecordWritable> records) throws IOException {
         Object[] mergedAttributeValues = new Object[numAttributeValues];
+
+        System.arraycopy(insituAttributeValues, 0, mergedAttributeValues, startAttributeIndex[0],
+                         insituAttributeValues.length);
+
         boolean[] isRecordGood = new boolean[identifiers.length];
+
         boolean containsGoodRecord = false;
         for (IndexedRecordWritable recordWritable : records) {
             int identifierIndex = recordWritable.getIdentifierIndex() + 1;
             Object[] attributeValues = recordWritable.getAttributeValues();
             Object[] annotationValues = recordWritable.getAnnotationValues();
             if (annotationValues.length == 0 || !(annotationValues[0] instanceof String) || ((String) annotationValues[0]).isEmpty()) {
-                System.arraycopy(attributeValues, 0, mergedAttributeValues, startAttributeIndex[identifierIndex], attributeValues.length);
+                System.arraycopy(attributeValues, 0, mergedAttributeValues, startAttributeIndex[identifierIndex],
+                                 attributeValues.length);
                 if (identifierIndex > 0) {
                     isRecordGood[identifierIndex - 1] = true;
                     containsGoodRecord = true;
