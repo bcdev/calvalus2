@@ -25,6 +25,8 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.esa.beam.dataio.dimap.DimapProductHelpers;
 import org.esa.beam.framework.dataio.AbstractProductReader;
+import org.esa.beam.framework.dataio.IllegalFileFormatException;
+import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.PixelGeoCoding;
@@ -53,22 +55,28 @@ import java.util.Map;
 
 public class StreamingProductReader extends AbstractProductReader {
 
-    private final Path path;
-    private final Configuration configuration;
+    private Path path;
+    private Configuration configuration;
     private Map<String, Long> keyIndex;
 
     private SequenceFile.Reader reader;
     private int sliceHeight;
     private Document dom;
 
-    public StreamingProductReader(Path path, Configuration configuration) {
-        super(null);    // TODO  use a ProductReaderPluigin
-        this.path = path;
-        this.configuration = configuration;
+    public StreamingProductReader(ProductReaderPlugIn readerPlugIn) {
+        super(readerPlugIn);
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
+        Object input = getInput();
+        if (input instanceof StreamingProductReaderPlugin.PathConfiguration) {
+            StreamingProductReaderPlugin.PathConfiguration pathConfiguration = (StreamingProductReaderPlugin.PathConfiguration) input;
+            this.path = pathConfiguration.getPath();
+            this.configuration = pathConfiguration.getConfiguration();
+        } else {
+            throw new IllegalFileFormatException("input is not of the correct type.");
+        }
         FileSystem fileSystem = path.getFileSystem(configuration);
         reader = new SequenceFile.Reader(fileSystem, path, configuration);
         Product product = readHeader();

@@ -18,6 +18,7 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
+import com.bc.calvalus.processing.beam.StreamingProductReaderPlugin;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
@@ -303,8 +304,9 @@ public abstract class ProcessorAdapter {
         Configuration configuration = getConfiguration();
         Product product = null;
         if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
-            StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
-            product = reader.readProductNodes(null, null);
+            StreamingProductReader reader = new StreamingProductReader(new StreamingProductReaderPlugin());
+            StreamingProductReaderPlugin.PathConfiguration pathConfiguration = new StreamingProductReaderPlugin.PathConfiguration(inputPath, configuration);
+            product = reader.readProductNodes(pathConfiguration, null);
             getLogger().info(String.format("Opened using StreamingProductReader"));
         } else {
             if (inputFormat != null) {

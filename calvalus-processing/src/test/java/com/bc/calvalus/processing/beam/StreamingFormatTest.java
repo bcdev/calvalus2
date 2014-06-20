@@ -117,9 +117,10 @@ public class StreamingFormatTest {
     }
 
     private void testThatProductIsCorrect(Product sourceProduct, Path productPath) throws IOException {
-        StreamingProductReader streamingProductReader = new StreamingProductReader(productPath, configuration);
+        StreamingProductReader reader = new StreamingProductReader(new StreamingProductReaderPlugin());
+        StreamingProductReaderPlugin.PathConfiguration pathConfiguration = new StreamingProductReaderPlugin.PathConfiguration(productPath, configuration);
         try {
-            Product targetProduct = streamingProductReader.readProductNodes(null, null);
+            Product targetProduct = reader.readProductNodes(pathConfiguration, null);
             try {
                 assertEquals(sourceProduct.getName(), targetProduct.getName());
                 assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
@@ -145,7 +146,7 @@ public class StreamingFormatTest {
                 }
             }
         } finally {
-            streamingProductReader.close();
+            reader.close();
         }
     }
 

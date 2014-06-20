@@ -4,7 +4,7 @@ package com.bc.calvalus.processing.analysis;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.beam.StreamingProductReaderPlugin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Counter;
@@ -15,8 +15,6 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -67,8 +65,9 @@ public class QLMapperMain {
         if (args.length >= 1) {
             pathString = args[0];
             if (pathString.endsWith("seq")) {
-                final StreamingProductReader reader = new StreamingProductReader(new Path(pathString), configuration);
-                inputProduct = reader.readProductNodes(null, null);
+                StreamingProductReader reader = new StreamingProductReader(new StreamingProductReaderPlugin());
+                StreamingProductReaderPlugin.PathConfiguration pathConfiguration = new StreamingProductReaderPlugin.PathConfiguration(new Path(pathString), configuration);
+                inputProduct = reader.readProductNodes(pathConfiguration, null);
             } else {
                 inputProduct = ProductIO.readProduct(pathString);
             }
