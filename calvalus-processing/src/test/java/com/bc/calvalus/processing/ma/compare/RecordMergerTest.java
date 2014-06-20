@@ -84,11 +84,6 @@ public class RecordMergerTest {
     public void processAllGood() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        //data.add(new IndexedRecordWritable(
-        //        -1,
-        //        new Integer[]{1, 2},
-        //        new String[]{""}
-        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -120,11 +115,6 @@ public class RecordMergerTest {
     public void processOneMissing() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        //data.add(new IndexedRecordWritable(
-        //        -1,
-        //        new Integer[]{1, 2},
-        //        new String[]{""}
-        //));
         data.add(new IndexedRecordWritable(
                 1,
                 new Integer[]{21, 22},
@@ -154,11 +144,6 @@ public class RecordMergerTest {
     public void processOneBad() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        //data.add(new IndexedRecordWritable(
-        //        -1,
-        //        new Integer[]{1, 2},
-        //        new String[]{""}
-        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -193,11 +178,6 @@ public class RecordMergerTest {
     public void processAllBad() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        //data.add(new IndexedRecordWritable(
-        //        -1,
-        //        new Integer[]{1, 2},
-        //        new String[]{""}
-        //));
         data.add(new IndexedRecordWritable(
                 0,
                 new Integer[]{11, 12},
@@ -226,11 +206,6 @@ public class RecordMergerTest {
     public void processAllMissing() throws Exception {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
-        //data.add(new IndexedRecordWritable(
-        //        -1,
-        //        new Integer[]{1, 2},
-        //        new String[]{""}
-        //));
         recordMerger.processHeader(insituAttributeNames, headerValues);
         recordMerger.processData(insituAttributeValues, data);
 
