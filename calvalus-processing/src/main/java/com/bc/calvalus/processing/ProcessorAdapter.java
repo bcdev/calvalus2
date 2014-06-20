@@ -257,6 +257,7 @@ public abstract class ProcessorAdapter {
                 }
             };
             inputRectangle = calculator.computeRect();
+            LOG.info("computed inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
     }
