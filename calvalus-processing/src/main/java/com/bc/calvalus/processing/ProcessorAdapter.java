@@ -318,8 +318,7 @@ public abstract class ProcessorAdapter {
                     if (canHandle(readerPlugIn, ImageInputStream.class)) {
                         input = openImageInputStream(inputPath);
                     } else if (canHandle(readerPlugIn, File.class)) {
-                        copyFileToLocal(inputPath);
-                        input = getInputFile();
+                        input = copyFileToLocal(inputPath);
                     }
 
                     if (input != null) {
@@ -333,8 +332,7 @@ public abstract class ProcessorAdapter {
                 ProductReader productReader = ProductIO.getProductReaderForInput(input);
                 if (productReader == null) {
                     // try a local file copy
-                    copyFileToLocal(inputPath);
-                    input = getInputFile();
+                    input = copyFileToLocal(inputPath);
                     productReader = ProductIO.getProductReaderForInput(input);
                     if (productReader == null) {
                         throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
@@ -376,19 +374,18 @@ public abstract class ProcessorAdapter {
      * @param inputPath The path to the file in the HDFS.
      * @throws IOException
      */
-    public void copyFileToLocal(Path inputPath) throws IOException {
-        if (inputFile == null) {
-            getLogger().info(String.format("Copying to local product file"));
-            inputFile = new File(".", inputPath.getName());
-            if (!inputFile.exists()) {
-                FileSystem fs = inputPath.getFileSystem(conf);
-                FileUtil.copy(fs, inputPath, inputFile, false, conf);
-            }
+    public File copyFileToLocal(Path inputPath) throws IOException {
+        getLogger().info(String.format("Copying to local product file"));
+        File localFile = new File(".", inputPath.getName());
+        if (!localFile.exists()) {
+            FileSystem fs = inputPath.getFileSystem(conf);
+            FileUtil.copy(fs, inputPath, localFile, false, conf);
         }
+        return localFile;
     }
 
 
-    public void setInputfile(File inputFile) {
+    public void setInputFile(File inputFile) {
         this.inputFile = inputFile;
     }
 

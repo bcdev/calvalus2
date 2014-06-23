@@ -94,7 +94,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setName(processLogName).
                     setHandler(keywordHandler).
                     start();
-            setInputfile(new File(keywordHandler.getInputFile()));
+            setInputFile(new File(keywordHandler.getInputFile()));
             skipProcessing = keywordHandler.skipProcessing();
         }
     }
@@ -110,8 +110,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
         if (inputFile == null) {
-            copyFileToLocal(inputPath);
-            inputFile = getInputFile();
+            inputFile = copyFileToLocal(inputPath);
+            setInputFile(inputFile);
         }
         Rectangle productRect = null;
         Rectangle inputRectangle = getInputRectangle();

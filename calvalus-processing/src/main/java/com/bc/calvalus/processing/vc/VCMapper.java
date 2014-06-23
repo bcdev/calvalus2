@@ -105,8 +105,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         try {
             // find matching reference Records
             Path inputPath = l2ProcessorAdapter.getInputPath();
-            l2ProcessorAdapter.copyFileToLocal(inputPath);
-            File l1LocalFile = l2ProcessorAdapter.getInputFile();
+            File l1LocalFile = l2ProcessorAdapter.copyFileToLocal(inputPath);
+            l2ProcessorAdapter.setInputFile(l1LocalFile);
             Product inputProduct = l2ProcessorAdapter.getInputProduct();
             Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
@@ -198,7 +198,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     //  Level 2 processing
                     LOG.info("Processing to Level 2: " + l1DiffFile);
                     l2ProcessorAdapter.closeInputProduct();
-                    l2ProcessorAdapter.setInputfile(l1DiffFile);
+                    l2ProcessorAdapter.setInputFile(l1DiffFile);
                     l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
                     Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
@@ -219,7 +219,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 //  Level 2 processing of primary product
                 LOG.info("Processing to Level 2: " + l1LocalFile);
                 l2ProcessorAdapter.closeInputProduct();
-                l2ProcessorAdapter.setInputfile(l1LocalFile);
+                l2ProcessorAdapter.setInputFile(l1LocalFile);
                 l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
                 Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
