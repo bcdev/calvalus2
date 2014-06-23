@@ -53,7 +53,7 @@ public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{"SEQ"};
+        return new String[]{"HADOOP-STREAMING"};
     }
 
     @Override
