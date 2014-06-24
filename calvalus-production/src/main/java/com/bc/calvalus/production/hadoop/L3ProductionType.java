@@ -113,7 +113,7 @@ public class L3ProductionType extends HadoopProductionType {
             workflow.add(item);
         }
 
-        if (outputFormat != null) {
+        if (outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ")) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
             setRequestParameters(productionRequest, jobConfig);
