@@ -108,7 +108,7 @@ public class MAConfig implements XmlConvertible {
      * Instances of this class are used to create {@link RecordSource} objects which are in turn used to
      * provide {@link Record}s.
      */
-    @Parameter(defaultValue = "com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi")
+    @Parameter
     private String recordSourceSpiClassName;
 
     /**
