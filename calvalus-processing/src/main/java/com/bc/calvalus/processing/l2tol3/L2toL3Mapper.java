@@ -45,6 +45,7 @@ import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -81,7 +82,9 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         DataPeriod dataPeriod = BinningConfig.createDataPeriod(startUtc, periodDuration, binningConfig.getMinDataHour());
         */
         DataPeriod dataPeriod = null;
-        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig,
+                                                                              dataPeriod,
+                                                                              regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
         Path l3Path = new Path(conf.get("calvalus.l2tol3.l3path"));
@@ -103,7 +106,25 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
         pm.beginTask("Level 3", progressForProcessing + progressForBinning);
         try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
+            Product product = null;
+            Rectangle inputRectangle = processorAdapter.getInputRectangle();
+            if (inputRectangle == null || !inputRectangle.isEmpty()) {
+                if (inputRectangle != null) {
+                    // force full product with to get correct 'X' values
+                    Product inputProduct = processorAdapter.getInputProduct();
+                    inputRectangle = new Rectangle(0,
+                                                   inputRectangle.y,
+                                                   inputProduct.getSceneRasterWidth(),
+                                                   inputRectangle.height);
+                    processorAdapter.setInputRectangle(inputRectangle);
+                }
+                processorAdapter.prepareProcessing();
+                ProgressMonitor processingPM = SubProgressMonitor.create(pm, progressForProcessing);
+                if (processorAdapter.processSourceProduct(processingPM) > 0) {
+                    product = processorAdapter.openProcessedProduct();
+                }
+            }
+
             if (product != null) {
                 HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
@@ -131,9 +152,10 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
             LOG.log(Level.SEVERE, m, exception);
         }
         // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), processorAdapter.getInputPath(),
-                                      spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+        LOG.info(MessageFormat.format(
+                "Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
+                context.getTaskAttemptID(), processorAdapter.getInputPath(),
+                spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
     }
 
     private Map<Long, float[]> readL3MeanValues(Path l3Path, Configuration conf) throws IOException {

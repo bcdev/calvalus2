@@ -223,6 +223,10 @@ public abstract class ProcessorAdapter {
         inputRectangle = null;
     }
 
+    public void setInputRectangle(Rectangle inputRectangle) {
+        this.inputRectangle = inputRectangle;
+    }
+
     /**
      * Return the path to the input product.
      *

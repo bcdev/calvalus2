@@ -21,6 +21,7 @@ import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.support.ObservationImpl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class RatioCalculator {
     private final int[] associatedMeanL3Index;
 
     public RatioCalculator(VariableContext variableContext, String[] l3MeanFeatureNames) {
+        System.out.println("l3MeanFeatureNames = " + Arrays.toString(l3MeanFeatureNames));
         int observationCount = variableContext.getVariableCount();
         boolean[] isRatioVariable = getRatioVariables(variableContext, l3MeanFeatureNames);
         associatedMeanL3Index = new int[observationCount];
@@ -56,7 +58,10 @@ public class RatioCalculator {
             float l2Value = l2Observation.get(i);
             if (associatedMeanL3Index[i] != -1) {
                 float meanValue = meanL3FeatureValues[associatedMeanL3Index[i]];
+                System.out.println("l2Value = " + l2Value);
+                System.out.println("meanValue = " + meanValue);
                 newObservationValues[i] = l2Value / meanValue;
+                System.out.println("newObservationValues[i] = " + newObservationValues[i]);
             } else {
                 newObservationValues[i] = l2Value;
             }

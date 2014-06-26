@@ -22,3 +22,4 @@ com.bc.calvalus.production.hadoop.BootstrappingProductionType$Spi
 com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
 com.bc.calvalus.production.hadoop.MRProductionType$Spi
 com.bc.calvalus.production.hadoop.MACompareProductionType$Spi
+com.bc.calvalus.production.hadoop.L2toL3ProductionType$Spi
