@@ -233,8 +233,8 @@ public class ProductionRequestTest {
                      "  <productionType>test</productionType>\n" +
                      "  <userName>dummy</userName>\n" +
                      "  <productionParameters class=\"java.util.HashMap\">\n" +
-                     "    <maxDate>2002-04-06</maxDate>\n" +
                      "    <minDate>2001-02-03</minDate>\n" +
+                     "    <maxDate>2002-04-06</maxDate>\n" +
                      "  </productionParameters>\n" +
                      "</parameters>", xmlString);
     }
