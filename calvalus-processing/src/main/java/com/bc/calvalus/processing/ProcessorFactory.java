@@ -89,11 +89,13 @@ public class ProcessorFactory {
                 // check for bundle to include, install it
                 try {
                     Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
-                    BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
-                    if (bundleDescriptor.getIncludeBundle() != null) {
-                        final Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
-                        HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
-                        addBundleArchives(includeBundlePath, fs, conf);
+                    if (fs.exists(bundleDesc)) {
+                        BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
+                        if (bundleDescriptor.getIncludeBundle() != null) {
+                            Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
+                            HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
+                            addBundleArchives(includeBundlePath, fs, conf);
+                        }
                     }
                 } catch (Exception ex) {
                     logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
