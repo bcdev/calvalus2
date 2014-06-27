@@ -110,9 +110,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
             l3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                        regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-            System.out.println("date1Str = " + date1Str);
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
-            System.out.println("date2Str = " + date2Str);
             l3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             l3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
@@ -158,7 +156,6 @@ public class L2toL3ProductionType extends HadoopProductionType {
                            regionGeometry != null ? regionGeometry.toString() : "");
 
             String centerDateStr = ProductionRequest.getDateFormat().format(centerDate);
-            System.out.println("centerDateStr = " + centerDateStr);
             l2tol3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
             l2tol3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);
 
@@ -204,9 +201,9 @@ public class L2toL3ProductionType extends HadoopProductionType {
     static Date getCenterDate(DateRange dateRange) {
         Calendar calendar = ProductData.UTC.createCalendar();
         long timeDiff = dateRange.getStopDate().getTime() - dateRange.getStartDate().getTime();
-        int timeDiffSeconds = (int) timeDiff / 1000;
+        int timeDiffSecondsHalf = (int) timeDiff / 2000;
         calendar.setTime(dateRange.getStartDate());
-        calendar.add(Calendar.SECOND, timeDiffSeconds);
+        calendar.add(Calendar.SECOND, timeDiffSecondsHalf);
         return calendar.getTime();
     }
 
