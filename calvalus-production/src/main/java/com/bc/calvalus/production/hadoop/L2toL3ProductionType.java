@@ -166,26 +166,26 @@ public class L2toL3ProductionType extends HadoopProductionType {
         }
 
         // TODO here only while debugging
-        if (outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ")) {
-            Configuration jobConfig = createJobConfig(productionRequest);
-            setDefaultProcessorParameters(processorProductionRequest, jobConfig);
-            setRequestParameters(productionRequest, jobConfig);
-            processorProductionRequest.configureProcessor(jobConfig);
-
-
-            jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3OutputDirs);
-            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
-
-            String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
-                    JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
-            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
-
-            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                                                               productionRequest.getUserName(),
-                                                               productionName + " Format", jobConfig);
-            workflow = new Workflow.Sequential(workflow, formatItem);
-        }
+//        if (outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ")) {
+//            Configuration jobConfig = createJobConfig(productionRequest);
+//            setDefaultProcessorParameters(processorProductionRequest, jobConfig);
+//            setRequestParameters(productionRequest, jobConfig);
+//            processorProductionRequest.configureProcessor(jobConfig);
+//
+//
+//            jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3OutputDirs);
+//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
+//
+//            String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
+//                    JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
+//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
+//
+//            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+//                                                               productionRequest.getUserName(),
+//                                                               productionName + " Format", jobConfig);
+//            workflow = new Workflow.Sequential(workflow, formatItem);
+//        }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
