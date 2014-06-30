@@ -93,11 +93,9 @@ public class SpatialBinComparator extends SpatialBinner {
             observationCounter++;
             Long l3BinIndex = planetaryGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
             int xAxisValue = (int) observation.get(xAxisIndex);
-            System.out.println("xAxisValue = " + xAxisValue);
 
             SpatialBin xAxisBin = activeBinMap.get(xAxisValue);
             if (xAxisBin == null) {
-                System.out.println(" --> create");
                 xAxisBin = binManager.createSpatialBin(xAxisValue);
                 activeBinMap.put(xAxisValue, xAxisBin);
             }
