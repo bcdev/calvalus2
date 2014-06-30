@@ -54,8 +54,8 @@ java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.1-SNAPSH
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.1
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.1
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.2-SNAPSHOT1
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.2-SNAPSHOT
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0
 
