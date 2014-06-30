@@ -41,14 +41,16 @@ import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimatio
  */
 public class L3ConfigForm extends Composite {
 
+    private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
+    private static final DtoProcessorVariable[] MER_L1B;
+
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
     private DynamicSelectionCell variableNameCell;
     private LatLngBounds regionBounds;
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
-    private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
-    private static final DtoProcessorVariable[] MER_L1B;
+    private final List<String> aggregatorNameList;
 
     static {
         MER_L1B = new DtoProcessorVariable[15];
@@ -107,9 +109,26 @@ public class L3ConfigForm extends Composite {
     private Date maxDate;
 
     public L3ConfigForm() {
+        this(Arrays.asList(
+                "AVG",
+                "MIN_MAX",
+                "PERCENTILE_2",
+                "PERCENTILE_5",
+                "PERCENTILE_10",
+                "PERCENTILE_25",
+                "PERCENTILE_50",
+                "PERCENTILE_75",
+                "PERCENTILE_90",
+                "PERCENTILE_95",
+                "PERCENTILE_98"
+        ));
+    }
+
+    public L3ConfigForm(List<String> aggregatorNameList) {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
         variableNames = new ArrayList<String>();
         variableProvider = new ListDataProvider<Variable>();
+        this.aggregatorNameList = aggregatorNameList;
 
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
@@ -222,9 +241,9 @@ public class L3ConfigForm extends Composite {
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
             periodCount.setValue(getPeriodCount(minDate,
-                    maxDate,
-                    steppingPeriodLength.getValue(),
-                    compositingPeriodLength.getValue()));
+                                                maxDate,
+                                                steppingPeriodLength.getValue(),
+                                                compositingPeriodLength.getValue()));
         } else {
             periodCount.setValue(0);
         }
@@ -311,7 +330,7 @@ public class L3ConfigForm extends Composite {
                                                compositingP <= steppingP;
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
-                    "Compositing period length must be >= 1 and less or equal to than period");
+                                          "Compositing period length must be >= 1 and less or equal to than period");
         }
 
         boolean resolutionValid = resolution.getValue() != null && resolution.getValue() > 0.0;
@@ -472,21 +491,7 @@ public class L3ConfigForm extends Composite {
 
     private Column<Variable, String> createAggregatorColumn() {
 
-        List<String> valueList = Arrays.asList(
-                "AVG",
-                "MIN_MAX",
-                "PERCENTILE_2",
-                "PERCENTILE_5",
-                "PERCENTILE_10",
-                "PERCENTILE_25",
-                "PERCENTILE_50",
-                "PERCENTILE_75",
-                "PERCENTILE_90",
-                "PERCENTILE_95",
-                "PERCENTILE_98"
-        );
-
-        SelectionCell aggregatorCell = new SelectionCell(valueList);
+        SelectionCell aggregatorCell = new SelectionCell(aggregatorNameList);
         Column<Variable, String> aggregatorColumn = new Column<Variable, String>(aggregatorCell) {
             @Override
             public String getValue(Variable variable) {

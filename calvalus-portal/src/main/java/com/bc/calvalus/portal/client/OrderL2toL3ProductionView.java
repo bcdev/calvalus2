@@ -19,22 +19,23 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Demo view that lets users submit a new production of a trend-analysis report.
+ * Demo view that lets users submit a new L2-to-L3 production.
  *
  * @author Norman
  */
-public class OrderTAProductionView extends OrderProductionView {
+public class OrderL2toL3ProductionView extends OrderProductionView {
 
-    public static final String ID = OrderTAProductionView.class.getName();
+    public static final String ID = OrderL2toL3ProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
@@ -44,7 +45,7 @@ public class OrderTAProductionView extends OrderProductionView {
 
     private Widget widget;
 
-    public OrderTAProductionView(PortalContext portalContext) {
+    public OrderL2toL3ProductionView(PortalContext portalContext) {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
@@ -57,8 +58,9 @@ public class OrderTAProductionView extends OrderProductionView {
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
-        productSetFilterForm.temporalFilterByDateRange.setValue(false);
-        productSetFilterForm.temporalFilterOff.setValue(true, true);
+        productSetFilterForm.temporalFilterByDateList.setValue(false);
+        productSetFilterForm.temporalFilterOff.setValue(false, true);
+        productSetFilterForm.temporalFilterOff.setEnabled(false);
         productSetFilterForm.temporalFilterByDateList.setEnabled(false);
 
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
@@ -81,12 +83,12 @@ public class OrderTAProductionView extends OrderProductionView {
             }
         });
 
-        l3ConfigForm = new L3ConfigForm();
+        l3ConfigForm = new L3ConfigForm(Arrays.asList("AVG"));
         l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
         l3ConfigForm.resolution.setEnabled(false);
         l3ConfigForm.superSampling.setEnabled(false);
-        l3ConfigForm.steppingPeriodLength.setValue(32);
-        l3ConfigForm.compositingPeriodLength.setValue(4);
+        l3ConfigForm.steppingPeriodLength.setValue(15);
+        l3ConfigForm.compositingPeriodLength.setValue(15);
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
@@ -101,7 +103,10 @@ public class OrderTAProductionView extends OrderProductionView {
         panel.add(l2ConfigForm);
         panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
-        panel.add(new HTML("<br/>"));
+        //panel.add(new HTML("<br/>"));
+        Anchor l3Help = new Anchor("Show Help");
+        panel.add(l3Help);
+        HelpSystem.addClickHandler(l3Help, "l2tol3Processing");
         panel.add(createOrderPanel());
 
         this.widget = panel;
@@ -131,12 +136,12 @@ public class OrderTAProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "Trend Analysis";
+        return "L2 to L3 Comparison";
     }
 
     @Override
     protected String getProductionType() {
-        return "TA";
+        return "L2toL3";
     }
 
     @Override
