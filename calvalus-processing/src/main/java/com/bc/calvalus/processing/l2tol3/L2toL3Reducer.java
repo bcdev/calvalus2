@@ -53,7 +53,7 @@ public class L2toL3Reducer extends Reducer<LongWritable, L3SpatialBin, NullWrita
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         writer = new OutputStreamWriter(TaskOutputStreamFactory.createOutputStream(context, filename));
-        writer.write("x\t" + arrayToString(featureNames) + "\n");
+        writer.write("x\tnumPasses\tnumObs\t" + arrayToString(featureNames) + "\n");
     }
 
     @Override
@@ -62,7 +62,10 @@ public class L2toL3Reducer extends Reducer<LongWritable, L3SpatialBin, NullWrita
         TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
         temporalBin = temporalBinner.computeOutput(idx, temporalBin);
 
-        writer.write(binIndex.get() + "\t" + arrayToString(temporalBin.getFeatureValues()) +  "\n");
+        int numPasses = temporalBin.getNumPasses();
+        int numObs = temporalBin.getNumObs();
+        float[] featureValues = temporalBin.getFeatureValues();
+        writer.write(binIndex.get() + "\t" + numPasses + "\t" + numObs + "\t" + arrayToString(featureValues) +  "\n");
         context.progress();
     }
 
