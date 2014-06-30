@@ -68,7 +68,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Level-3 ", productionRequest);
+        String defaultProductionName = createProductionName("L2-to-L3 ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
