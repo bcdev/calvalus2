@@ -20,6 +20,7 @@ import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -36,6 +37,7 @@ import java.util.Map;
 public class OrderL2toL3ProductionView extends OrderProductionView {
 
     public static final String ID = OrderL2toL3ProductionView.class.getName();
+    private final CheckBox outputMeanL3Products;
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
@@ -93,6 +95,9 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         outputParametersForm = new OutputParametersForm();
+        outputMeanL3Products = new CheckBox("Output mean Level-3 products.");
+        outputMeanL3Products.setValue(false);
+        outputParametersForm.productRelatedPanel.add(outputMeanL3Products);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 
@@ -174,6 +179,7 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
+        parameters.put("outputMeanL3", outputMeanL3Products.getValue().toString());
         parameters.put("autoStaging", "true");
         return parameters;
     }

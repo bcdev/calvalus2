@@ -80,20 +80,35 @@ public class L2toL3ProductionType extends HadoopProductionType {
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
 
-        String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
-        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
-                JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
-        String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
+        String l3ConfigXmlStep1 = L3ProductionType.getL3ConfigXml(productionRequest);
+        String l3ConfigXmlStep2;
 
-        String[] l3OutputDirs = new String[dateRanges.size()];
+        try {
+            BinningConfig binningConfig = BinningConfig.fromXml(l3ConfigXmlStep1);
+            VariableConfig[] variableConfigs = binningConfig.getVariableConfigs();
+            VariableConfig xaxisVariable = new VariableConfig("xaxis", "X");
+            if (variableConfigs != null && variableConfigs.length > 0) {
+                VariableConfig[] variableConfigsWithXaxis = new VariableConfig[variableConfigs.length + 1];
+                variableConfigsWithXaxis[0] = xaxisVariable;
+                System.arraycopy(variableConfigs, 0, variableConfigsWithXaxis, 1, variableConfigs.length);
+                binningConfig.setVariableConfigs(variableConfigsWithXaxis);
+            } else {
+                binningConfig.setVariableConfigs(xaxisVariable);
+            }
+            l3ConfigXmlStep2 = binningConfig.toXml();
+        } catch (BindingException e) {
+            throw new ProductionException(e);
+        }
+        String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
+        String[] l3MeanOutputDirs = new String[dateRanges.size()];
 
         Workflow workflow = new Workflow.Parallel();
         workflow.setSustainable(false);
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
 
-            String singleRangeOutputDirA = getOutputPath(productionRequest, productionId, "-L3a-" + (i + 1));
-            l3OutputDirs[i] = singleRangeOutputDirA;
+            String singleRangeOutputDirMean = getOutputPath(productionRequest, productionId, "-L3-mean-" + (i + 1));
+            l3MeanOutputDirs[i] = singleRangeOutputDirMean;
 
             Configuration l3Conf = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, l3Conf);
@@ -104,9 +119,9 @@ public class L2toL3ProductionType extends HadoopProductionType {
             l3Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             l3Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 
-            l3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDirA);
+            l3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDirMean);
 
-            l3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            l3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep1);
             l3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                        regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
@@ -120,7 +135,6 @@ public class L2toL3ProductionType extends HadoopProductionType {
             WorkflowItem l3workflow = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l3Conf);
 
 
-
             Configuration l2tol3Conf = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, l2tol3Conf);
             setRequestParameters(productionRequest, l2tol3Conf);
@@ -131,27 +145,12 @@ public class L2toL3ProductionType extends HadoopProductionType {
             l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, centerRange.toString());
-            l2tol3Conf.set("calvalus.l2tol3.l3path", singleRangeOutputDirA + "/part-r-00000");
+            l2tol3Conf.set("calvalus.l2tol3.l3path", singleRangeOutputDirMean + "/part-r-00000");
 
             l2tol3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-            try {
-                BinningConfig binningConfig = BinningConfig.fromXml(l3ConfigXml);
-                VariableConfig[] variableConfigs = binningConfig.getVariableConfigs();
-                VariableConfig xaxisVariable = new VariableConfig("xaxis", "X");
-                if (variableConfigs != null && variableConfigs.length > 0) {
-                    VariableConfig[] variableConfigsWithXaxis = new VariableConfig[variableConfigs.length + 1];
-                    variableConfigsWithXaxis[0] = xaxisVariable;
-                    System.arraycopy(variableConfigs, 0, variableConfigsWithXaxis, 1, variableConfigs.length);
-                    binningConfig.setVariableConfigs(variableConfigsWithXaxis);
-                } else {
-                    binningConfig.setVariableConfigs(xaxisVariable);
-                }
-                l3ConfigXml = binningConfig.toXml();
-            } catch (BindingException e) {
-                throw new ProductionException(e);
-            }
-            l2tol3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+
+            l2tol3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
             l2tol3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                            regionGeometry != null ? regionGeometry.toString() : "");
 
@@ -165,27 +164,19 @@ public class L2toL3ProductionType extends HadoopProductionType {
             workflow.add(new Workflow.Sequential(l3workflow, l2Tol3Workflow));
         }
 
-        // TODO here only while debugging
-//        if (outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ")) {
-//            Configuration jobConfig = createJobConfig(productionRequest);
-//            setDefaultProcessorParameters(processorProductionRequest, jobConfig);
-//            setRequestParameters(productionRequest, jobConfig);
-//            processorProductionRequest.configureProcessor(jobConfig);
-//
-//
-//            jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3OutputDirs);
-//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
-//
-//            String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
-//                    JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
-//            jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
-//
-//            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-//                                                               productionRequest.getUserName(),
-//                                                               productionName + " Format", jobConfig);
-//            workflow = new Workflow.Sequential(workflow, formatItem);
-//        }
+        if (productionRequest.getBoolean("outputMeanL3")) {
+            Configuration formatJobConfig = createJobConfig(productionRequest);
+
+            formatJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3MeanOutputDirs);
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF");
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "None");
+
+            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+                                                               productionRequest.getUserName(),
+                                                               productionName + " Format", formatJobConfig);
+            workflow = new Workflow.Sequential(workflow, formatItem);
+        }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
