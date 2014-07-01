@@ -52,7 +52,8 @@ public class SpatialBinComparator extends SpatialBinner {
 
     /**
      * Constructs a spatial binner.
-     *  @param binningContext The binning context.
+     *
+     * @param binningContext The binning context.
      * @param consumer       The consumer that receives the spatial bins processed from observations.
      * @param l3MeanValues
      */
@@ -92,7 +93,8 @@ public class SpatialBinComparator extends SpatialBinner {
         for (Observation observation : observations) {
             observationCounter++;
             Long l3BinIndex = planetaryGrid.getBinIndex(observation.getLatitude(), observation.getLongitude());
-            int xAxisValue = (int) observation.get(xAxisIndex);
+            float xaxisFloat = observation.get(xAxisIndex);
+            int xAxisValue = (int) xaxisFloat;
 
             SpatialBin xAxisBin = activeBinMap.get(xAxisValue);
             if (xAxisBin == null) {
