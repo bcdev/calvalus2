@@ -326,11 +326,10 @@ public class L3ConfigForm extends Composite {
 
         Integer compositingP = compositingPeriodLength.getValue();
         boolean compositingPeriodLengthValid = compositingP != null &&
-                                               (compositingP >= 1 || compositingP == -7 || compositingP == -30) &&
-                                               compositingP <= steppingP;
+                                               (compositingP >= 1 || compositingP == -7 || compositingP == -30);
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
-                                          "Compositing period length must be >= 1 and less or equal to than period");
+                                          "Compositing period length must be >= 1");
         }
 
         boolean resolutionValid = resolution.getValue() != null && resolution.getValue() > 0.0;

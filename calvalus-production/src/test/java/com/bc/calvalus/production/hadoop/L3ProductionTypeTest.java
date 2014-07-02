@@ -148,6 +148,78 @@ public class L3ProductionTypeTest {
 
     }
 
+    @Test
+    public void testGetDatePairList_Monthly() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
+                                                                    "minDate", "2010-06-15",
+                                                                    "maxDate", "2010-08-15",
+                                                                    "periodLength", "-30");
+
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        assertEquals(1, dateRangeList.size());
+        assertEquals("2010-07-01", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-07-31", asString(dateRangeList.get(0).getStopDate()));
+
+        productionRequest = new ProductionRequest("L3", "ewa",
+                                                  "minDate", "2010-06-15",
+                                                  "maxDate", "2010-08-15",
+                                                  "periodLength", "-30",
+                                                  "compositingPeriodLength", "5");
+
+        dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        assertEquals(2, dateRangeList.size());
+        assertEquals("2010-07-01", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-07-05", asString(dateRangeList.get(0).getStopDate()));
+
+        assertEquals("2010-08-01", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-08-05", asString(dateRangeList.get(1).getStopDate()));
+
+        // is this the expected result ???
+        productionRequest = new ProductionRequest("L3", "ewa",
+                                                  "minDate", "2010-01-01",
+                                                  "maxDate", "2010-12-31",
+                                                  "periodLength", "100",
+                                                  "compositingPeriodLength", "-30");
+
+        dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        assertEquals(4, dateRangeList.size());
+        assertEquals("2010-01-01", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-01-31", asString(dateRangeList.get(0).getStopDate()));
+
+        assertEquals("2010-04-11", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-05-10", asString(dateRangeList.get(1).getStopDate()));
+
+        assertEquals("2010-07-20", asString(dateRangeList.get(2).getStartDate()));
+        assertEquals("2010-08-19", asString(dateRangeList.get(2).getStopDate()));
+
+        assertEquals("2010-10-28", asString(dateRangeList.get(3).getStartDate()));
+        assertEquals("2010-11-27", asString(dateRangeList.get(3).getStopDate()));
+    }
+
+    @Test
+    public void testGetDatePairList_OverlappingPeriods() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
+                                                                    "minDate", "2010-06-15",
+                                                                    "maxDate", "2010-06-22",
+                                                                    "periodLength", "1",
+                                                                    "compositingPeriodLength", "5");
+
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        assertEquals(4, dateRangeList.size());
+        assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-06-19", asString(dateRangeList.get(0).getStopDate()));
+
+        assertEquals("2010-06-16", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-06-20", asString(dateRangeList.get(1).getStopDate()));
+
+        assertEquals("2010-06-17", asString(dateRangeList.get(2).getStartDate()));
+        assertEquals("2010-06-21", asString(dateRangeList.get(2).getStopDate()));
+
+        assertEquals("2010-06-18", asString(dateRangeList.get(3).getStartDate()));
+        assertEquals("2010-06-22", asString(dateRangeList.get(3).getStopDate()));
+    }
+
+
     private static String asString(Date date) {
         return ProductionRequest.getDateFormat().format(date);
     }
