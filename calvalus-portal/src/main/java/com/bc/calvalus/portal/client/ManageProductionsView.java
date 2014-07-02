@@ -52,7 +52,7 @@ public class ManageProductionsView extends PortalView {
     private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
     private static final String MERCI_URL = "http://calvalus-merci:8080/merci/";
     private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
-            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+                                            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
     private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a><br><a href=\"" + MERCI_URL + "\" target=\"_blank\">Calvalus-Catalogue</a></small>";
 
     static final String RESTART = "Restart";
@@ -454,7 +454,7 @@ public class ManageProductionsView extends PortalView {
         if (production.isAutoStaging()) {
             if (isProcessingCompleted(production)) {
                 if (isStagingRunning(production) ||
-                        isStagingScheduled(production)) {
+                    isStagingScheduled(production)) {
                     return StageType.NO_STAGING;
                 } else if (isNotSuccessfulStaged(production)) {
                     return StageType.STAGE;
@@ -477,8 +477,8 @@ public class ManageProductionsView extends PortalView {
         }
 
         if (isStagingScheduled(production) ||
-                isStagingRunning(production) ||
-                isStagingCompleted(production)) {
+            isStagingRunning(production) ||
+            isStagingCompleted(production)) {
             if (hasAdditionalStagingPaths(production)) {
                 return StageType.MULTI_STAGE;
             }
@@ -510,7 +510,7 @@ public class ManageProductionsView extends PortalView {
 
     private static boolean isNotSuccessfulStaged(DtoProduction production) {
         return production.getStagingStatus().getState() == DtoProcessState.CANCELLED
-                || production.getStagingStatus().getState() == DtoProcessState.ERROR;
+               || production.getStagingStatus().getState() == DtoProcessState.ERROR;
     }
 
     private static boolean hasAdditionalStagingPaths(DtoProduction production) {
@@ -519,8 +519,8 @@ public class ManageProductionsView extends PortalView {
 
     static String getDownloadText(DtoProduction production) {
         if (production.getDownloadPath() != null
-                && production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
-                && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
+            && production.getProcessingStatus().getState() == DtoProcessState.COMPLETED
+            && production.getStagingStatus().getState() == DtoProcessState.COMPLETED) {
             return DOWNLOAD;
         }
 
@@ -533,7 +533,7 @@ public class ManageProductionsView extends PortalView {
             return null;
         }
         if (production.getProcessingStatus().isDone()
-                && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
+            && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
             return RESTART;
         } else {
             return CANCEL;
@@ -567,8 +567,38 @@ public class ManageProductionsView extends PortalView {
     }
 
     private void restartProduction(DtoProduction production) {
-        // todo - implement 'Restart'
-        Dialog.error("Not Implemented", "Sorry, 'Restart' has not been implemented yet.");
+        final BackendServiceAsync backendService = getPortal().getBackendService();
+
+        AsyncCallback<DtoProductionRequest> callback = new AsyncCallback<DtoProductionRequest>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.info(production.getId(), "No production request available.");
+            }
+
+            @Override
+            public void onSuccess(DtoProductionRequest request) {
+                if (request != null) {
+                    final DialogBox submitDialog = OrderProductionView.createSubmitProductionDialog();
+                    submitDialog.center();
+
+                    backendService.orderProduction(request, new AsyncCallback<DtoProductionResponse>() {
+                        public void onSuccess(final DtoProductionResponse response) {
+                            submitDialog.hide();
+                        }
+
+                        public void onFailure(Throwable failure) {
+                            submitDialog.hide();
+                            failure.printStackTrace(System.err);
+                            Dialog.error("Server-side Production Error", failure.getMessage());
+                        }
+                    });
+
+                } else {
+                    Dialog.info(production.getId(), "No production request available.");
+                }
+            }
+        };
+        backendService.getProductionRequest(production.getId(), callback);
     }
 
     private void downloadProduction(DtoProduction production) {
@@ -607,9 +637,9 @@ public class ManageProductionsView extends PortalView {
 
     private void cancelProduction(DtoProduction production) {
         boolean confirm = Window.confirm("Production " + production.getId() + " will be cancelled.\n" +
-                "This operation cannot be undone.\n" +
-                "\n" +
-                "Do you wish to continue?");
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -635,10 +665,10 @@ public class ManageProductionsView extends PortalView {
         }
 
         boolean confirm = Window.confirm(toDeleteList.size() + " production(s) will be deleted and\n" +
-                "associated files will be removed from server.\n" +
-                "This operation cannot be undone.\n" +
-                "\n" +
-                "Do you wish to continue?");
+                                         "associated files will be removed from server.\n" +
+                                         "This operation cannot be undone.\n" +
+                                         "\n" +
+                                         "Do you wish to continue?");
         if (!confirm) {
             return;
         }
@@ -746,7 +776,7 @@ public class ManageProductionsView extends PortalView {
         SafeHtmlBuilder htmlBuilder = new SafeHtmlBuilder();
         htmlBuilder.appendHtmlConstant("<b>Be careful!</b></br>");
         htmlBuilder.appendHtmlConstant("If you activate another staging than the default it is most likely that the " +
-                "result is immediately published and publicly available.</br>");
+                                       "result is immediately published and publicly available.</br>");
         htmlBuilder.appendHtmlConstant("<hr>");
         htmlBuilder.appendHtmlConstant("</br>");
         dialogContent.add(new HTML(htmlBuilder.toSafeHtml()));
