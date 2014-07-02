@@ -566,7 +566,7 @@ public class ManageProductionsView extends PortalView {
         getPortal().getProductionsUpdateTimer().cancel();
     }
 
-    private void restartProduction(DtoProduction production) {
+    private void restartProduction(final DtoProduction production) {
         final BackendServiceAsync backendService = getPortal().getBackendService();
 
         AsyncCallback<DtoProductionRequest> callback = new AsyncCallback<DtoProductionRequest>() {
@@ -576,7 +576,7 @@ public class ManageProductionsView extends PortalView {
             }
 
             @Override
-            public void onSuccess(DtoProductionRequest request) {
+            public void onSuccess(final DtoProductionRequest request) {
                 if (request != null) {
                     final DialogBox submitDialog = OrderProductionView.createSubmitProductionDialog();
                     submitDialog.center();
