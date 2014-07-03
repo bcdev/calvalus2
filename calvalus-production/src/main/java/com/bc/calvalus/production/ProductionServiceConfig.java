@@ -99,7 +99,8 @@ public class ProductionServiceConfig {
         defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.address", "master00:10200");
         defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.webapp.address", "master00:19888");
 
-
+        defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.command-opts", "-Xmx512M -Djava.awt.headless=true");
+        defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.resource.mb", "512");
         return defaultConfig;
     }
 }
