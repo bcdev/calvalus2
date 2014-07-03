@@ -83,9 +83,10 @@ public class BackendConfig {
     }
 
     private static Map<String, String> loadConfig(ServletContext servletContext) {
+        Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         File configFile = getConfigFile(servletContext);
         try {
-            return ProductionServiceConfig.loadConfig(configFile, null);
+            return ProductionServiceConfig.loadConfig(configFile, defaultConfig);
         } catch (IOException e) {
             servletContext.log("I/O problem while reading Calvalus configuration file " + configFile, e);
             return Collections.emptyMap();

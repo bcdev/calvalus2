@@ -54,7 +54,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.2-SNAPSHOT";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-5.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
-    private static final boolean DEBUG = Boolean.getBoolean("calvalus.debug");
 
     private final JobClientsMap jobClientsMap;
     private final Map<JobID, ProcessStatus> jobStatusMap;
@@ -173,28 +172,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     public final Configuration createJobConfig(String userName) throws IOException {
-        Configuration jobConfig = new Configuration(getJobClient(userName).getConf());
-        initCommonJobConfig(jobConfig);
-        return jobConfig;
-    }
-
-    protected void initCommonJobConfig(Configuration jobConfig) {
-        // Make user hadoop owns the outputs, required by "fuse"
-        jobConfig.set("hadoop.job.ugi", "hadoop,hadoop");
-
-        jobConfig.setBoolean("mapred.map.tasks.speculative.execution", false);
-        jobConfig.setBoolean("mapred.reduce.tasks.speculative.execution", false);
-        jobConfig.setBoolean("mapred.used.genericoptionsparser", true);
-
-        if (DEBUG) {
-            // For debugging uncomment following line:
-            jobConfig.set("mapred.child.java.opts",
-                          "-Xmx1024M -Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8009");
-        } else {
-            // Set VM maximum heap size
-            jobConfig.set("mapred.child.java.opts",
-                          "-Xmx1024M");
-        }
+        return new Configuration(getJobClient(userName).getConf());
     }
 
     public Job createJob(String jobName, Configuration jobConfig) throws IOException {
