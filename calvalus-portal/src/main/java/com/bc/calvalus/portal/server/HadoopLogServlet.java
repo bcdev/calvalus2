@@ -35,6 +35,7 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskAttemptID;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.api.records.ApplicationId;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
@@ -55,6 +56,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.security.PrivilegedExceptionAction;
 
 import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
 
@@ -156,27 +158,39 @@ public class HadoopLogServlet extends HttpServlet {
                         // TODO in case of status == failed --> check if task has really failed.
 //                        displayTaskLogs(event.getTaskAttemptId(), event.getTaskTrackerHttp(), resp);
 
-
-                        String appOwner = userName;
-                        StringBuilder appSB = new StringBuilder("application");
-                        String appIdStr = jobId.appendTo(appSB).toString();
-
-                        ApplicationId appId = null;
+                        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
                         try {
-                            appId = ConverterUtils.toApplicationId(appIdStr);
-                        } catch (Exception e) {
-                            System.err.println("Invalid ApplicationId specified");
-                            return;
-                        }
-                        int resultCode = dumpAllContainersLogs(appId, appOwner, resp.getOutputStream(), conf);
-                        if (resultCode != 0) {
-                            showErrorPage("Failed to open Logfile.", resp);
+                            remoteUser.doAs(new PrivilegedExceptionAction<Integer>() {
+                                @Override
+                                public Integer run() throws Exception {
+                                    String appOwner = userName;
+                                    StringBuilder appSB = new StringBuilder("application");
+                                    String appIdStr = jobId.appendTo(appSB).toString();
+
+                                    ApplicationId appId = null;
+                                    try {
+                                        appId = ConverterUtils.toApplicationId(appIdStr);
+                                    } catch (Exception e) {
+                                        System.err.println("Invalid ApplicationId specified: " + appIdStr);
+                                        return -1;
+                                    }
+                                    int resultCode = dumpAllContainersLogs(appId, appOwner, resp.getOutputStream(), conf);
+                                    if (resultCode != 0) {
+                                        showErrorPage("Failed to open Logfile.", resp);
+                                        return -1;
+                                    }
+                                    return 0;
+                                }
+                            });
+                        } catch (InterruptedException e) {
+                            throw new IOException(e);
                         }
                         return;
                     }
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             showErrorPage("I/O error", resp);
         }
     }
