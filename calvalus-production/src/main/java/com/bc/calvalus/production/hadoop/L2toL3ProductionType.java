@@ -164,7 +164,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
             workflow.add(new Workflow.Sequential(l3workflow, l2Tol3Workflow));
         }
 
-        if (productionRequest.getBoolean("outputMeanL3")) {
+        if (productionRequest.getBoolean("outputMeanL3", false)) {
             Configuration formatJobConfig = createJobConfig(productionRequest);
 
             formatJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3MeanOutputDirs);
