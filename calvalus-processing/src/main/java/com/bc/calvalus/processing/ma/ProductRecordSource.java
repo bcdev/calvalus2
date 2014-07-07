@@ -114,7 +114,8 @@ public class ProductRecordSource implements RecordSource {
             try {
                 recordFilter = ExpressionRecordFilter.create(header, goodRecordExpression);
             } catch (ParseException e) {
-                throw new IllegalStateException("Illegal configuration: goodRecordExpression is invalid: " + e.getMessage(), e);
+                String msg = "Illegal configuration: goodRecordExpression '" + goodRecordExpression + "' is invalid: " + e.getMessage();
+                throw new IllegalStateException(msg, e);
             }
             return recordFilter;
         } else {
