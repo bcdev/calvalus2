@@ -88,6 +88,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
         maConfig.setCopyInput(false); // insitu data is merge separately
+        final MAConfig maConfigWithoutExpression = getMaConfigWithoutExpressions(jobConfig);
+
         final Geometry regionGeometry = JobUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         // write initial log entry for runtime measurements
@@ -149,7 +151,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 // extract Level 1 match-ups
                 ProgressMonitor l1ExtractionPM = SubProgressMonitor.create(pm, 5);
-                namedRecordSources.add(getMatchups("L1_", maConfig, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
+                namedRecordSources.add(getMatchups("L1_", maConfigWithoutExpression, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
 
                 // Differentiation processing
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
@@ -188,7 +190,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                     // extract differentiation match-ups
                     String diffPrefix = namedOutput.getName() + "_";
-                    NamedRecordSource differentiationMatchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l1DiffProduct, diffPrefix);
+                    NamedRecordSource differentiationMatchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l1DiffProduct, diffPrefix);
                     if (differentiationMatchups == null) {
                         return;
                     } else {
@@ -204,7 +206,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                     // extract Level 2 match-ups
                     String l2Prefix = "L2_" + namedOutput.getName() + "_";
-                    NamedRecordSource l2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
                     if (l2Matchups == null) {
                         return;
                     } else {
@@ -267,7 +269,14 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             pm.done();
             l2ProcessorAdapter.dispose();
         }
+    }
 
+    private static MAConfig getMaConfigWithoutExpressions(Configuration conf) {
+        MAConfig maConfig = MAConfig.get(conf);
+        maConfig.setCopyInput(false);// insitu data is merge separately
+        maConfig.setGoodPixelExpression("");
+        maConfig.setGoodRecordExpression("");
+        return maConfig;
     }
 
     private NamedRecordSource extractMatchups(Context context, MAConfig maConfig, NamedRecordSource matchingReferenceRecordSource, ProgressMonitor mainLoopPM, Product product, String prefix) {
@@ -309,7 +318,6 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     }
 
     private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
-        System.out.println("prefix = " + prefix);
         extractionPM.beginTask("Extract Matchups", matchingReferenceRecordSource.getNumRecords());
         try {
             ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
@@ -321,18 +329,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
             Header header = productRecordSource.getHeader();
             RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-            RecordFilter recordFilter;
-            if (prefix.equals("L2_")) {
-                // Base Level 2
-                recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-            } else {
-                recordFilter = new RecordFilter() {
-                    @Override
-                    public boolean accept(Record record) {
-                        return true;
-                    }
-                };
-            }
+            RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
             List<Record> aggregatedRecords = new ArrayList<Record>();
             int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
             for (Record extractedRecord : extractedRecords) {
