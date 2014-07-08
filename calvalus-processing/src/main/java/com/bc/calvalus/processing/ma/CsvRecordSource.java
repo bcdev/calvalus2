@@ -176,10 +176,10 @@ public class CsvRecordSource implements RecordSource {
             }
 
             if (getHeader().getAttributeNames().length != textValues.length) {
-                System.out.println("different number of columns " + textValues.length
-                                           + " instead of " + getHeader().getAttributeNames().length
-                                           + " in line " + csvLineReader.getLineNumber() +
-                                           " of point data file");
+                throw new IllegalArgumentException("different number of columns " + textValues.length
+                                                   + " instead of " + getHeader().getAttributeNames().length
+                                                   + " in line " + csvLineReader.getLineNumber() +
+                                                   " of point data file");
             }
 
             final Object[] values = toObjects(textValues, attributeTypes);
