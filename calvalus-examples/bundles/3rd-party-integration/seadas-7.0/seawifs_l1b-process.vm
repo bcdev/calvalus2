@@ -1,0 +1,44 @@
+#!/bin/bash
+
+inFileName="$inputFile.name"
+
+#[[
+
+#for debugging
+#set -x
+
+set -e
+set -m
+
+export OCSSWROOT=./seadas-7.0/seadas-7.0
+L1BGEN_BIN=${OCSSWROOT}/run/bin/linux_64/l1bgen
+source $OCSSWROOT/OCSSW_bash.env
+
+# testing compression
+l1aFile=$inFileName
+if [[ $inFileName =~ gz$ ]]; then
+  echo "gunzip"
+  gunzip $inFileName
+  l1aFile=${inFileName%.gz}
+elif [[ $inFileName =~ bz2$ ]]; then
+  echo "bunzip2"
+  bunzip2 $inFileName
+  l1aFile=${inFileName%.bz2}
+fi
+echo "L1A file $l1aFile"
+
+l1bFile=${l1aFile%L1A_GAC}L1B_LAC
+
+# progress not neede takes only some seconds
+echo ${L1BGEN_BIN} ifile=${l1aFile} ofile=${l1bFile}
+${L1BGEN_BIN} ifile=${l1aFile} ofile=${l1bFile}
+
+pdate="${l1aFile:1:7}"
+pyear=${pdate%???}
+pday=${pdate#$pyear}
+productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y/%m/%d")
+mkdir -pv ${productDate}
+mv -v ${l1bFile} ${productDate}/${l1bFile}
+
+echo CALVALUS_OUTPUT_PRODUCT ${productDate}/${l1bFile}
+]]#

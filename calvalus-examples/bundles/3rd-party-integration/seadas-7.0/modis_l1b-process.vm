@@ -1,6 +1,5 @@
 #!/bin/bash
 
-inputFile="$inputFile"
 inFileName="$inputFile.name"
 inputPathParent="$inputPath.parent"
 
@@ -11,8 +10,6 @@ inputPathParent="$inputPath.parent"
 
 set -e
 set -m
-
-outFile=${inFileName}-l2gen.hdf
 
 export OCSSWROOT=./seadas-7.0/seadas-7.0
 L1BGEN_BIN=${OCSSWROOT}/run/scripts/modis_L1B.py
