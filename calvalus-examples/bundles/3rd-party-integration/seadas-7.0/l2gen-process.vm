@@ -7,6 +7,15 @@ geoFileName=$inputPath.name.replace("L1B_LAC","GEO*")
 
 #[[
 
+########################################################################
+#BC
+DIR_AUX_ERA='hdfs://master00:9000/calvalus/auxiliary/era_interim'
+DIR_AUX_NCEP='hdfs://master00:9000/calvalus/auxiliary/seadas/anc'
+#PML
+#DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
+#DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+########################################################################
+
 #for debugging
 #set -x
 
@@ -103,7 +112,6 @@ d5=`date -d @$s -u +%Y%j`
 s6=$(($s + 43200))
 d6=`date -d @$s6 -u +%Y%j`
 
-ANC_ROOT=/calvalus/auxiliary/seadas/anc
 function get_anc() {
   local label=$1
   local year_doy=$2
@@ -111,10 +119,18 @@ function get_anc() {
   echo "get_nac ${label} ${year_doy}"
 
   while [ "$3" != "" ]; do
-    echo "testting $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}"
-    path=`hadoop fs -ls $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}|awk '{ print $8 }'`
-    if [ "$path" != "" ]; then
-     break
+    testpath=${DIR_AUX_NCEP}/${year_doy:0:4}/${year_doy:4:3}/${3}
+    echo "testting ${testpath}"
+    if [[ ${testpath} == hdfs* ]]; then
+      path=`hadoop fs -ls ${testpath}|awk '{ print $8 }'`
+      if [ "$path" != "" ]; then
+        break
+      fi
+    else
+      if [ -f ${testpath} ];
+        path=${testpath}
+        break
+      fi
     fi
     shift
   done
@@ -122,10 +138,14 @@ function get_anc() {
     echo "No auxdata found for type:${label} date:${year_doy} found"
     exit 1
   fi
-  local workfile=`basename $path`
-  if [ ! -e ${workfile} ]; then
-    echo "copy to cwd as ${workfile}"
-    hadoop fs -copyToLocal $path .
+  if [[ ${testpath} == hdfs* ]]; then
+    workfile=`basename $path`
+    if [ ! -e ${workfile} ]; then
+      echo "copy to cwd as ${workfile}"
+      hadoop fs -copyToLocal $path .
+    fi
+  else
+    workfile=$path
   fi
   echo "$label=${workfile}" >> parameters.anc
 }
