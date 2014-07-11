@@ -39,7 +39,6 @@ public class ProcessorProductionRequest {
     private final String processorBundleLocation;
     private final String processorName;
     private final String processorParameters;
-    private final String parameterSuffix;
     private final String userName;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
@@ -47,7 +46,6 @@ public class ProcessorProductionRequest {
     }
 
     public ProcessorProductionRequest(ProductionRequest productionRequest, String parameterSuffix) {
-        this.parameterSuffix = parameterSuffix;
         this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME+ parameterSuffix, null);
         this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION + parameterSuffix, null);
         this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
@@ -72,6 +70,10 @@ public class ProcessorProductionRequest {
     }
 
     public void configureProcessor(Configuration jobConfig) {
+        configureProcessor(jobConfig, "");
+    }
+
+    public void configureProcessor(Configuration jobConfig, String parameterSuffix) {
         if (processorName != null) {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);

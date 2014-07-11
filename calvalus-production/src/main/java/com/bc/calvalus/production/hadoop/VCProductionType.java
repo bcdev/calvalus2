@@ -89,7 +89,7 @@ public class VCProductionType extends HadoopProductionType {
                                                                                        VCWorkflowItem.DIFFERENTIATION_SUFFIX);
         setDefaultProcessorParameters(pprDifferentiation, jobConfig);
         setRequestParameters(productionRequest, jobConfig);
-        pprDifferentiation.configureProcessor(jobConfig);
+        pprDifferentiation.configureProcessor(jobConfig, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
 
         ProcessorProductionRequest pprL2 = new ProcessorProductionRequest(productionRequest);
         setDefaultProcessorParameters(pprL2, jobConfig);
