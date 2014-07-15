@@ -1,6 +1,8 @@
 Preparation
 -----------
-Ensure no jobs are running which have been started from the portal (user == cvop)
+Before restarting the portal server and/or deploying new software it should should be ensured
+that there is no running job started by a user from one of the portals (default/cc). Unfortunately
+there is no better way as to look closely at the running jobs in the Hadoop administration interface.
 
 Building
 --------
