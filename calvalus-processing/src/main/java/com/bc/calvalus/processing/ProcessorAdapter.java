@@ -32,6 +32,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
@@ -181,7 +182,51 @@ public abstract class ProcessorAdapter {
      *
      * @return The output path of the output product.
      */
-    public abstract Path getOutputPath() throws IOException;
+    public abstract Path getOutputProductPath() throws IOException;
+
+    protected Path getOutputDirectoryPath() throws IOException {
+        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+        return appendDatePart(outputPath);
+    }
+
+    protected Path getWorkOutputDirectoryPath() throws IOException {
+        try {
+            Path workOutputPath = FileOutputFormat.getWorkOutputPath(getMapContext());
+            return appendDatePart(workOutputPath);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+    }
+
+    Path appendDatePart(Path path) {
+        if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_PRESERVE_DATE_TREE, false)) {
+            String datePart = getDatePart(getInputPath());
+            if (datePart != null) {
+                path = new Path(path, datePart);
+            }
+        }
+        return path;
+    }
+
+    /**
+     * @param inputProductPath the path to the input product
+     * @return the "year/month/day" part of the inputProductPath,
+     * returns {@null}, if the input product path contains no date part
+     */
+    static String getDatePart(Path inputProductPath) {
+        Path day = inputProductPath.getParent();
+        if (day != null && !day.getName().isEmpty()) {
+            Path month = day.getParent();
+            if (month != null && !month.getName().isEmpty()) {
+                Path year = month.getParent();
+                if (year != null && !year.getName().isEmpty()) {
+                    return year.getName() + "/" + month.getName() + "/" + day.getName();
+                }
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Return {code true}, if the processor adapter supports on-demand processing of distinct regions.

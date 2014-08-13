@@ -158,9 +158,9 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", processingParameters);
 
-        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         velocityContext.put("inputPath", inputPath);
-        velocityContext.put("outputPath", outputPath);
+        velocityContext.put("outputPath", getOutputDirectoryPath());
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
         velocityContext.put("GlobalFunctions", new GlobalsFunctions(getLogger()));
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);

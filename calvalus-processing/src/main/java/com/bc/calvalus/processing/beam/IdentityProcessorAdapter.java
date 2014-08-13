@@ -49,12 +49,8 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public boolean canSkipInputProduct() throws IOException {
-        FileSystem fileSystem = FileSystem.get(getConfiguration());
-        String inputFilename = getInputPath().getName();
-        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
-        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
-        Path outputProductPath = new Path(outputPath, outputFilename);
-        return fileSystem.exists(outputProductPath);
+        Path outputProductPath = new Path(getOutputDirectoryPath(), getOutputProductFilename());
+        return FileSystem.get(getConfiguration()).exists(outputProductPath);
     }
 
     @Override
@@ -84,8 +80,8 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public Path getOutputPath() throws IOException {
-        return getWorkOutputPath();
+    public Path getOutputProductPath() throws IOException {
+        return getWorkOutputProductPath();
     }
 
     @Override
@@ -108,21 +104,19 @@ public class IdentityProcessorAdapter extends ProcessorAdapter {
         if (preferredTileSize != null) {
             tileHeight = preferredTileSize.height;
         }
-        Path workOutputProductPath = getWorkOutputPath();
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(), getMapContext(),
+        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(),
+                                                                                   getMapContext(),
                                                                                    pm);
-        streamingProductWriter.writeProduct(product, workOutputProductPath, tileHeight);
+        streamingProductWriter.writeProduct(product, getWorkOutputProductPath(), tileHeight);
     }
 
-    private Path getWorkOutputPath() throws IOException {
-        String inputFilename = getInputPath().getName();
-        String outputFilename = "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
+    private Path getWorkOutputProductPath() throws IOException {
+        return new Path(getWorkOutputDirectoryPath(), getOutputProductFilename());
+    }
 
-        try {
-            return new Path(FileOutputFormat.getWorkOutputPath(getMapContext()), outputFilename);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
+    protected String getOutputProductFilename() {
+        String inputFilename = getInputPath().getName();
+        return "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
     }
 
     protected Product createSubset() throws IOException {

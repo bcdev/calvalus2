@@ -22,9 +22,9 @@ import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
@@ -77,9 +77,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
         Path inputPath = getInputPath();
-        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+        Path outputPath = getOutputDirectoryPath();
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
@@ -154,7 +155,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         velocityContext.put("productRectangle", productRectangle);
 
-        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
+        velocityContext.put("outputPath", getOutputDirectoryPath());
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
         if (velocityProps != null) {
             for (Map.Entry<String, String> entry : velocityProps.entrySet()) {
@@ -222,8 +224,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
             velocityContext.put("outputFileNames", outputFilesNames);
-            Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+            Path outputPath = getOutputDirectoryPath();
             velocityContext.put("outputPath", outputPath);
+            velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
             scriptGenerator.addScriptResources(conf, parameterSuffix);
             if (scriptGenerator.hasStepScript()) {
@@ -247,10 +250,10 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 pm.beginTask("saving", 1);
                 MapContext mapContext = getMapContext();
                 for (String outputFileName : outputFilesNames) {
-                    InputStream inputStream = new BufferedInputStream(
-                            new FileInputStream(new File(cwd, outputFileName)));
-                    OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
-                    ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
+                    InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                    Path workPath = new Path(getWorkOutputDirectoryPath(), outputFileName);
+                    OutputStream os = FileSystem.get(conf).create(workPath, (short) 1);
+                    ProductFormatter.copyAndClose(is, os, mapContext);
                 }
                 pm.done();
             }
@@ -258,14 +261,9 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public Path getOutputPath() throws IOException {
+    public Path getOutputProductPath() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
-            try {
-                Path workOutputPath = FileOutputFormat.getWorkOutputPath(getMapContext());
-                return new Path(workOutputPath, outputFilesNames[0]);
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
+            return new Path(getWorkOutputDirectoryPath(), outputFilesNames[0]);
         }
         return null;
     }

@@ -117,7 +117,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                         processMetadata(context,
                                         processorAdapter.getInputPath().toString(),
                                         processorAdapter.getInputProduct(),
-                                        processorAdapter.getOutputPath().toString(),
+                                        processorAdapter.getOutputProductPath().toString(),
                                         processorAdapter.openProcessedProduct());
                     }
                 } else {
