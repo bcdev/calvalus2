@@ -36,13 +36,13 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class IdentityProcessorAdapter extends ProcessorAdapter {
+public class SubsetProcessorAdapter extends ProcessorAdapter {
 
     private static final int DEFAULT_TILE_HEIGHT = 64;
 
     private Product subsetProduct;
 
-    public IdentityProcessorAdapter(MapContext mapContext) {
+    public SubsetProcessorAdapter(MapContext mapContext) {
         super(mapContext);
         GpfUtils.init(mapContext.getConfiguration());
     }

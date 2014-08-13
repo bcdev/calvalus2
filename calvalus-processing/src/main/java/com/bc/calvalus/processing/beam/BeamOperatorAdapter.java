@@ -36,7 +36,7 @@ import java.util.Map;
  *
  * @author MarcoZ
  */
-public class BeamOperatorAdapter extends IdentityProcessorAdapter {
+public class BeamOperatorAdapter extends SubsetProcessorAdapter {
 
     private Product targetProduct;
 

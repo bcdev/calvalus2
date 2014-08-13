@@ -18,7 +18,7 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.beam.BeamGraphAdapter;
 import com.bc.calvalus.processing.beam.BeamOperatorAdapter;
-import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
+import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.core.ProgressMonitor;
@@ -58,7 +58,7 @@ public class ProcessorFactory {
             case EXEC:
                 return new ExecutableProcessorAdapter(mapContext);
             case NONE:
-                return new IdentityProcessorAdapter(mapContext);
+                return new SubsetProcessorAdapter(mapContext);
 
         }
         throw new IllegalArgumentException("Unknown processor type.");
