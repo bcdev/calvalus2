@@ -45,6 +45,7 @@ public class ProcessorFactory {
     public static final String CALVALUS_L2_PROCESSOR_FILES = "calvalus.l2.scriptFiles";
     private static final String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
     private static final Logger logger = Logger.getLogger("com.bc.calvalus");
+
     enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
@@ -138,7 +139,7 @@ public class ProcessorFactory {
         if (bundleLocation != null) {
             bundlePath = new Path(bundleLocation);
         } else {
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE+ parameterSuffix);
+            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
         }
         if (fs.exists(bundlePath)) {
@@ -186,7 +187,8 @@ public class ProcessorFactory {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
-                return path.getName().startsWith(processorName + "-") && !isArchive(path);
+                String filename = path.getName();
+                return (filename.startsWith("common-") || filename.startsWith(processorName + "-")) && !isArchive(path);
             }
         });
         String[] processorFiles = new String[processorStatuses.length];

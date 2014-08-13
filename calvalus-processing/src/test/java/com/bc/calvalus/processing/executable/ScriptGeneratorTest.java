@@ -37,6 +37,8 @@ public class ScriptGeneratorTest {
 
         assertEquals("should-process-cmdline", ScriptGenerator.createProcessedResourceName("l2gen-should-process-cmdline.vm", "l2gen"));
         assertEquals("should-process.py", ScriptGenerator.createProcessedResourceName("l2gen-should-process.py", "l2gen"));
+
+        assertEquals("routines.py", ScriptGenerator.createProcessedResourceName("common-routines.py", "foo"));
     }
 
     @Test

@@ -65,6 +65,7 @@ public class ScriptGenerator {
         abstract boolean shouldWriteResource(String resourceName);
 
     }
+
     private static final String VM_SUFFIX = ".vm";
     private final ResourceEngine resourceEngine;
     private final Step step;
@@ -148,6 +149,14 @@ public class ScriptGenerator {
     }
 
     static String createProcessedResourceName(String name, String executable) {
+        if (name.startsWith("common-")) {
+            return createProcessedResourceNameImpl(name, "common");
+        } else {
+            return createProcessedResourceNameImpl(name, executable);
+        }
+    }
+
+    private static String createProcessedResourceNameImpl(String name, String executable) {
         name = name.substring(executable.length() + 1); // strip executable name from the front
         if (name.endsWith(VM_SUFFIX)) {
             name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end
