@@ -95,8 +95,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setName(processLogName).
                     setHandler(keywordHandler).
                     start();
-            setInputFile(new File(keywordHandler.getInputFile()));
             skipProcessing = keywordHandler.skipProcessing();
+            String inputFile = keywordHandler.getInputFile();
+            if (inputFile != null) {
+                setInputFile(new File(inputFile));
+            }
         }
     }
 
