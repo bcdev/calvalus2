@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+inputPath="$1"
+outputPath="$2"
+
+l1aFileName=${inputPath##*/}
+l1bFileName=${l1aFileName%.L1*}.L1B_LAC
+
+if hadoop fs -ls ${outputPath}/${l1bFileName}; then
+  # output exist
+  echo CALVALUS_SKIP_PROCESSING yes
+fi
+
