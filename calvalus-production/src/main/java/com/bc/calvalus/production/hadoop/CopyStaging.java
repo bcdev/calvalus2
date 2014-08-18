@@ -29,6 +29,9 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
 /**
@@ -72,10 +75,23 @@ class CopyStaging extends ProductionStaging {
                 FileStatus fileStatus = fileStatuses[i];
                 Path path = fileStatus.getPath();
                 LOG.info("copying: " + path);
-                FileUtil.copy(fileSystem,
-                              path,
-                              new File(stagingDir, path.getName()),
-                              false, hadoopConfiguration);
+                int attemptNo = 0;
+                boolean copySuccess = false;
+                while (!copySuccess && attemptNo < 3) {
+                    File dst = new File(stagingDir, path.getName());
+                    try {
+                        FileUtil.copy(fileSystem, path, dst, false, hadoopConfiguration);
+                        copySuccess = true;
+                    } catch (IOException ioe) {
+                        String msg = String.format("Attempt(%d) Problem while staging: %s: %s", attemptNo, path, ioe.getMessage());
+                        LogRecord logRecord = new LogRecord(Level.FINE, msg);
+                        logRecord.setThrown(ioe);
+                        LOG.log(logRecord);
+                        if (dst.exists()) {
+                            dst.delete();
+                        }
+                    }
+                }
                 totalFilesSize += fileStatus.getLen();
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / fileStatuses.length, path.getName()));
             }
