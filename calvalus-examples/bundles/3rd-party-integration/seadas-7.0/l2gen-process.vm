@@ -1,9 +1,8 @@
 #!/bin/bash
 
-inputFile="$inputFile"
 inFileName="$inputFile.name"
-inputPathParent="$inputPath.parent"
-geoFileName=$inputPath.name.replace("L1B_LAC","GEO")
+inputPath="$inputPath"
+
 
 #[[
 
@@ -173,30 +172,8 @@ echo "ofile=${outFile}" >> parameters.anc
 
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
-
-  if [ ! -e ${geoFileName} ]; then
-    echo "testting GEO in same directory ${inputPathParent}/${geoFileName}*"
-    geoPath=`hadoop fs -ls ${inputPathParent}/${geoFileName}*|awk '{ print $8 }'`
-    if [ "$geoPath" != "" ]; then
-      echo "copy to cwd: $geoPath -> $geoFileName"
-      hadoop fs -copyToLocal $geoPath $geoFileName
-    else
-      pdate="${inFileName:1:7}"
-      pyear=${pdate%???}
-      pday=${pdate#$pyear}
-      productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y/%m/%d")
-
-      echo "testting GEO in MODISA_GEO directory /calvalus/eodata/MODISA_GEO/v1/${productDate}/${geoFileName}*"
-      geoPath=`hadoop fs -ls /calvalus/eodata/MODISA_GEO/v1/${productDate}/${geoFileName}*|awk '{ print $8 }'`
-      if [ "$geoPath" != "" ]; then
-        echo "copy to cwd: $geoPath -> ${geoFileName}"
-        hadoop fs -copyToLocal $geoPath $geoFileName
-      else
-        echo failed to find GEO file
-        exit 1
-      fi
-    fi
-  fi
+  ./getGEO.sh ${inputPath}
+  geoFileName=${inFileName%.L1B*}.GEO
   echo "geofile=${geoFileName}" >> parameters.anc
 fi
 

@@ -48,7 +48,7 @@ inputPath=$1
 filename=$(filename ${inputPath})
 granulename=$(granulename ${filename})
 
-# test same directory
+# test same path
 # test /calvalus/eodata/MODISA_GEO/v1/${productDate}/${geoFile}*"
 # test PML
 #    geopaths = [
@@ -60,6 +60,9 @@ granulename=$(granulename ${filename})
 #      the_date.strftime("/data/datasets/operational/aqua_modis/level1a-geo/nasa_obpg-seadas7.0.1/swath/0d/%Y/%m/%d/A%Y%j" + time + ".GEO")
 #    ]
 
+if [ -f ${granule}.GEO ]; then
+  exit 0;
+fi
 if from_hdfs $(parentdir ${inputPath}) ${granulename}; then
   exit 0
 fi
