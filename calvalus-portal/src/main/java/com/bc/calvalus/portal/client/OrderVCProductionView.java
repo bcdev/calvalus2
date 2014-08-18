@@ -116,7 +116,7 @@ public class OrderVCProductionView extends OrderProductionView {
         verticalPanel.add(vcOutputL1Diff);
         verticalPanel.add(vcOutputL2);
         verticalPanel.add(new HTML("<br/>"));
-        verticalPanel.add(allowedFailure);
+        verticalPanel.add(allowedFailurePanel);
 
         HorizontalPanel vcPanel = new HorizontalPanel();
         vcPanel.setSpacing(16);
