@@ -65,8 +65,10 @@ public class OrderMACProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
 
         l2MaForms = new L2MaConfigForm[NUM_PROCESSORS];
+        boolean selectionMandatory = false;
         for (int i = 0; i < l2MaForms.length; i++) {
-            l2MaForms[i] = new L2MaConfigForm(portalContext);
+            l2MaForms[i] = new L2MaConfigForm(portalContext, selectionMandatory);
+            selectionMandatory = true;
             if (i >= 2) {
                 l2MaForms[i].enabledCheckbox.setValue(false, true);
             }
@@ -135,7 +137,7 @@ public class OrderMACProductionView extends OrderProductionView {
             List<String> allIdentifiers = new ArrayList<String>(l2MaForms.length);
             for (L2MaConfigForm l2MaForm : l2MaForms) {
                 if (l2MaForm.enabledCheckbox.getValue()) {
-                    String identifier = l2MaForm.processorIdentifier.getValue();
+                    String identifier = l2MaForm.getProcessorIdentifierSafe();
                     if (allIdentifiers.contains(identifier)) {
                         throw new ValidationException(l2MaForm.processorIdentifier, "The processor identifiers must be unique.");
                     }
@@ -164,7 +166,7 @@ public class OrderMACProductionView extends OrderProductionView {
         String allIdentifiers = "";
         for (L2MaConfigForm form : l2MaForms) {
             if (form.enabledCheckbox.getValue()) {
-                String identifier = form.processorIdentifier.getValue();
+                String identifier = form.getProcessorIdentifierSafe();
                 String suffix = "." + identifier;
                 parameters.putAll(form.l2ConfigForm.getValueMap(suffix));
                 parameters.put("goodPixelExpression" + suffix, form.goodPixelExpression.getText());
@@ -194,7 +196,7 @@ public class OrderMACProductionView extends OrderProductionView {
         private final TextBox goodPixelExpression;
         private final TextBox goodRecordExpression;
 
-        private L2MaConfigForm(PortalContext portalContext) {
+        private L2MaConfigForm(PortalContext portalContext, boolean selectionMandatory) {
 
             enabledCheckbox = new CheckBox("Enabled");
             enabledCheckbox.setValue(true);
@@ -212,7 +214,7 @@ public class OrderMACProductionView extends OrderProductionView {
             });
 
             processorIdentifier = new TextBox();
-            l2ConfigForm = new L2ConfigForm(portalContext, true);
+            l2ConfigForm = new L2ConfigForm(portalContext, selectionMandatory);
             goodPixelExpression = new TextBox();
             goodRecordExpression = new TextBox();
 
@@ -253,6 +255,15 @@ public class OrderMACProductionView extends OrderProductionView {
                 }
                 l2ConfigForm.validateForm();
             }
+        }
+
+        public String getProcessorIdentifierSafe() {
+            String value = processorIdentifier.getValue().trim();
+            value = value.replaceAll("\\s+",""); // whitepace
+            value = value.replaceAll("<","_"); // XML
+            value = value.replaceAll(">","_"); // XML
+            value = value.replaceAll("&","_"); // XML
+            return value;
         }
     }
 }
