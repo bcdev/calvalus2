@@ -22,6 +22,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -40,19 +41,20 @@ public class OrderVCProductionView extends OrderProductionView {
     public static final String ID = OrderVCProductionView.class.getName();
     private static final String DIFFERENTIATION_SUFFIX = ".differentiation";
 
-    private ProductSetSelectionForm productSetSelectionForm;
-    private ProductSetFilterForm productSetFilterForm;
-    private L2ConfigForm differentiationConfigForm;
-    private L2ConfigForm l2ConfigForm;
-    private MAConfigForm maConfigForm;
+    private final ProductSetSelectionForm productSetSelectionForm;
+    private final ProductSetFilterForm productSetFilterForm;
+    private final L2ConfigForm differentiationConfigForm;
+    private final L2ConfigForm l2ConfigForm;
+    private final MAConfigForm maConfigForm;
     private final CheckBox vcOutputL1;
     private final CheckBox vcOutputL1Diff;
     private final CheckBox vcOutputL2;
-    private OutputParametersForm outputParametersForm;
-    private TextBox goodPixelExpression;
-    private TextBox goodRecordExpression;
+    private final IntegerBox allowedFailure;
+    private final OutputParametersForm outputParametersForm;
+    private final TextBox goodPixelExpression;
+    private final TextBox goodRecordExpression;
 
-    private Widget widget;
+    private final Widget widget;
 
     public OrderVCProductionView(PortalContext portalContext) {
         super(portalContext);
@@ -94,6 +96,12 @@ public class OrderVCProductionView extends OrderProductionView {
         recordPanel.add(new Label("Un-differentiated Level 2 Good-record expression:"));
         recordPanel.add(goodRecordExpression);
 
+        allowedFailure = new IntegerBox();
+        allowedFailure.setValue(5);
+        Panel allowedFailurePanel = new HorizontalPanel();
+        allowedFailurePanel.add(new Label("Percentage of allowed failing products:"));
+        allowedFailurePanel.add(allowedFailure);
+
         vcOutputL1 = new CheckBox("Output L1 Products");
         vcOutputL1Diff = new CheckBox("Output L1 Differentiation Products");
         vcOutputL2 = new CheckBox("Output L2 Products");
@@ -107,6 +115,8 @@ public class OrderVCProductionView extends OrderProductionView {
         verticalPanel.add(vcOutputL1);
         verticalPanel.add(vcOutputL1Diff);
         verticalPanel.add(vcOutputL2);
+        verticalPanel.add(new HTML("<br/>"));
+        verticalPanel.add(allowedFailure);
 
         HorizontalPanel vcPanel = new HorizontalPanel();
         vcPanel.setSpacing(16);
@@ -166,6 +176,10 @@ public class OrderVCProductionView extends OrderProductionView {
             differentiationConfigForm.validateForm();
             l2ConfigForm.validateForm();
             maConfigForm.validateForm();
+            Integer failures = allowedFailure.getValue();
+            if (!(failures != null && failures >= 0  && failures <= 100)) {
+                throw new ValidationException(allowedFailure, "Allowed failures must be between 0 and 100");
+            }
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -193,6 +207,7 @@ public class OrderVCProductionView extends OrderProductionView {
         // overwrite with local values
         parameters.put("goodPixelExpression", goodPixelExpression.getText());
         parameters.put("goodRecordExpression", goodRecordExpression.getText());
+        parameters.put("calvalus.hadoop.mapreduce.map.failures.maxpercent", allowedFailure.getValue().toString());
 
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
