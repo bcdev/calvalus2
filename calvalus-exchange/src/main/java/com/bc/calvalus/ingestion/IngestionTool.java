@@ -1,16 +1,9 @@
 package com.bc.calvalus.ingestion;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.PosixParser;
-import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
-import org.apache.hadoop.util.Tool;
-import org.apache.hadoop.util.ToolRunner;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,50 +29,20 @@ import java.util.regex.Pattern;
  *    hadoop --config ${configDir} jar ${jobJar} com.bc.calvalus.ingestion.IngestionTool ( ${sourceDir} | ${sourceFiles} ) [-producttype=${productType}] [-revision=${revision}] [-replication=${replication}] [-blocksize=${blocksize}]
  * </pre>
  */
-public class IngestionTool extends Configured implements Tool {
+public class IngestionTool {
 
     public static final String DEFAULT_PRODUCT_TYPE = "MER_RR__1P";
     public static final String DEFAULT_REVISION = "r03";
     //static final String DEFAULT_PATTERN = "<type>.*\.N1";
 
-    private static Options options;
     public static final SimpleDateFormat YEAR_MONTH_DAY_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
     public static final SimpleDateFormat YEAR_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyyyDDD");
     public static final SimpleDateFormat YEAR2_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyDDD");
 
     static {
-        options = new Options();
-        options.addOption("p", "producttype", true, "product type of uploaded files, defaults to " + DEFAULT_PRODUCT_TYPE);
-        options.addOption("r", "revision", true, "revision of uploaded files, defaults to " + DEFAULT_REVISION);
-        options.addOption("c", "replication", true, "replication factor of uploaded files, defaults to Hadoop default");
-        options.addOption("b", "blocksize", true, "block size in MB for uploaded files, defaults to file size");
-        options.addOption("f", "filenamepattern", true, "regular expression matching filenames, defaults to 'type.*\\.N1'");
-        options.addOption("v", "verify", false, "verify existence and size to avoid double copying, defaults to false");
-
         YEAR_MONTH_DAY_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         YEAR_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         YEAR2_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
-
-    public static void main(String[] args) throws Exception {
-        System.exit(ToolRunner.run(new IngestionTool(), args));
-    }
-
-    @Override
-    public int run(String[] args) throws Exception {
-        // parse command line arguments
-        CommandLineParser commandLineParser = new PosixParser();
-        final CommandLine commandLine = commandLineParser.parse(options, args);
-        try {
-            FileSystem hdfs = FileSystem.get(getConf());
-            return handleIngestionCommand(commandLine, commandLine.getArgs(), hdfs);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("ingest.sh", options);
-            return 1;
-        }
     }
 
     public static int handleIngestionCommand(CommandLine commandLine, String[] files, FileSystem hdfs) throws IOException {
