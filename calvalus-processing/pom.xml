@@ -81,18 +81,6 @@
             <version>1.5.2</version>
         </dependency>
 
-        <!-- Saxon -->
-
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon-dom</artifactId>
-        </dependency>
-
         <!-- Apache cli command line parser -->
 
         <dependency>

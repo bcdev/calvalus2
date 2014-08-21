@@ -456,20 +456,6 @@
                 </exclusions>
             </dependency>
 
-            <!-- Saxon 8.8 -->
-
-            <dependency>
-                <groupId>net.sf.saxon</groupId>
-                <artifactId>saxon</artifactId>
-                <version>8.8.0.7</version>
-            </dependency>
-
-            <dependency>
-                <groupId>net.sf.saxon</groupId>
-                <artifactId>saxon-dom</artifactId>
-                <version>8.8.0.7</version>
-            </dependency>
-
             <!-- Apache cli command line parser -->
 
             <dependency>
