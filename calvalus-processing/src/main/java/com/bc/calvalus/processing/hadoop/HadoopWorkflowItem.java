@@ -233,7 +233,6 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
 
         JobClient jobClient = processingService.getJobClient(userName);
         RunningJob runningJob = jobClient.submitJob(jobConf);
-        Configuration runningConf = runningJob.getConfiguration();
         return runningJob.getID();
     }
 }
