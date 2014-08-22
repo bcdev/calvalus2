@@ -40,6 +40,7 @@ import org.esa.beam.util.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -172,6 +173,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     private List<Quicklooks.QLConfig> getValidQlConfigs(Configuration conf) {
         Quicklooks.QLConfig[] allQlConfigs = Quicklooks.get(conf);
         String[] bandNames = conf.getStrings(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
+        if (bandNames == null) {
+            return Arrays.asList(allQlConfigs);
+        }
         List<Quicklooks.QLConfig> qlConfigList = new ArrayList<Quicklooks.QLConfig>(bandNames.length);
         for (String bandName : bandNames) {
             Quicklooks.QLConfig qlConfig = getQuicklookConfig(allQlConfigs, bandName);
