@@ -100,12 +100,12 @@
          <dependency>
              <groupId>org.esa.beam</groupId>
              <artifactId>beam-spot-vgt-reader</artifactId>
-             <version>5.0</version>
+             <version>[5.0,5.1-SNAPSHOT)</version>
          </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-landsat-reader</artifactId>
-            <version>5.0</version>
+            <version>[5.0,5.1-SNAPSHOT)</version>
         </dependency>
 
         <dependency>
