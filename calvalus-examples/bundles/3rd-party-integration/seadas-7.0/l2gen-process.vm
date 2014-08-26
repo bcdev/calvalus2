@@ -173,7 +173,7 @@ echo "ofile=${outFile}" >> parameters.anc
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
   ./getGEO.sh ${inputPath}
-  geoFileName=${inFileName%.L1B*}.GEO
+  geoFileName=${inFileName:0:14}.GEO
   echo "geofile=${geoFileName}" >> parameters.anc
 fi
 
