@@ -167,7 +167,7 @@ get_ozone "ozone3" $d6
 get_anc "sstfile" $d5 "?${d5}_SST_*"
 
 
-echo "ifile=${inputFile}" >> parameters.anc
+echo "ifile=${inFileName}" >> parameters.anc
 echo "ofile=${outFile}" >> parameters.anc
 
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
