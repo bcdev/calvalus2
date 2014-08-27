@@ -18,7 +18,7 @@ function parentdir {
 # A2003029000500.L1B_LAC -> A2003029000500
 # A2003029000500.L1A_LAC.bz2 -> A2003029000500
 function granulename {
-  echo ${1%.L1*}
+  echo ${1:0:14}
 }
 
 # A2003029000500  -> 2003/01/29
