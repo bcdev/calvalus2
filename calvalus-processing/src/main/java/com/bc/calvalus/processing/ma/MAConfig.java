@@ -34,6 +34,25 @@ import java.util.ServiceLoader;
  */
 public class MAConfig implements XmlConvertible {
 
+
+    public static class VariableMapping {
+        private final String reference;
+        private final String satellite;
+
+        public VariableMapping(String reference, String satellite) {
+            this.reference = reference;
+            this.satellite = satellite;
+        }
+
+        public String getReference() {
+            return reference;
+        }
+
+        public String getSatellite() {
+            return satellite;
+        }
+    }
+
     /**
      * If {@code copyInput = true}, all fields of an input (reference) record will be
      * copied into a corresponding output record.
@@ -124,6 +143,9 @@ public class MAConfig implements XmlConvertible {
      */
     @Parameter(defaultValue = "false")
     private boolean saveProcessedProducts;
+
+    @Parameter(itemAlias = "variableMapping")
+    private VariableMapping[] variableMappings;
 
     // The following have been discussed but not yet decided.
 
@@ -310,5 +332,13 @@ public class MAConfig implements XmlConvertible {
 
     public void setSaveProcessedProducts(boolean saveProcessedProducts) {
         this.saveProcessedProducts = saveProcessedProducts;
+    }
+
+    public VariableMapping[] getVariableMappings() {
+        return variableMappings != null ? variableMappings : new VariableMapping[0];
+    }
+
+    public void setVariableMappings(VariableMapping[] variableMappings) {
+        this.variableMappings = variableMappings;
     }
 }

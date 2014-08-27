@@ -51,7 +51,8 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
 
-        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName());
+        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName(),
+                                                                                   maConfig.getVariableMappings());
 
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
                 new CsvRecordWriter(createWriter(context, "records-all.txt"),
