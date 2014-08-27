@@ -36,8 +36,14 @@ public class MAConfig implements XmlConvertible {
 
 
     public static class VariableMapping {
-        private final String reference;
-        private final String satellite;
+        @Parameter
+        private String reference;
+        @Parameter
+        private String satellite;
+
+        // empty constructor for XML serialization
+        public VariableMapping() {
+        }
 
         public VariableMapping(String reference, String satellite) {
             this.reference = reference;
