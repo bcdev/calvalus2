@@ -11,8 +11,10 @@ inputPath="$inputPath"
 DIR_AUX_ERA='hdfs://master00:9000/calvalus/auxiliary/era_interim'
 DIR_AUX_NCEP='hdfs://master00:9000/calvalus/auxiliary/seadas/anc'
 #PML
-#DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
-#DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
+  DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+fi
 ########################################################################
 
 #for debugging
@@ -116,7 +118,7 @@ function get_anc() {
   local year_doy=$2
 
   echo "get_nac ${label} ${year_doy}"
-
+  local path=""
   while [ "$3" != "" ]; do
     testpath=${DIR_AUX_NCEP}/${year_doy:0:4}/${year_doy:4:3}/${3}
     echo "testting ${testpath}"
@@ -126,8 +128,13 @@ function get_anc() {
         break
       fi
     else
-      if [ -f ${testpath} ]; then
-        path=${testpath}
+      for aFile in ${testpath}; do
+        if [ -f ${aFile} ]; then
+          path=${aFile}
+          break
+        fi
+      done
+      if [ "${path}" != "" ]; then
         break
       fi
     fi
@@ -154,7 +161,7 @@ function get_ozone() {
 }
 
 
-get_anc "icefile" $d5 "?${d5}00_SEAICE_*"
+get_anc "icefile" $d5 "?${d5}00_SEAICE_NSIDC_*"
 
 get_anc "met1" $d1 "S${d1}_NCEP.MET" "N${d1}_MET_NCEPN_6h.hdf"
 get_anc "met2" $d2 "S${d2}_NCEP.MET" "N${d2}_MET_NCEPN_6h.hdf"
