@@ -88,11 +88,11 @@ public class L2PlusProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", null);
 
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        boolean isFormattingRequired = processorDescriptor != null &&
-                                       processorDescriptor.getFormatting() != ProcessorDescriptor.FormattingType.IMPLICIT;
+        boolean isFormattingImplicit = processorDescriptor != null &&
+                                       processorDescriptor.getFormatting() == ProcessorDescriptor.FormattingType.IMPLICIT;
         boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
 
-        if (isFormattingRequired && isFormattingRequested) {
+        if (isFormattingRequested && !isFormattingImplicit) {
             String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
             globalOutputDir = formattingOutputDir;
 
