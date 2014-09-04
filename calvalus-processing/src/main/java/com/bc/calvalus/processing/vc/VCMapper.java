@@ -289,7 +289,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
                 return getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, product);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to retrieve records from product: " + prefix, e);
+                throw new RuntimeException("Failed to retrieve records from product: " + prefix + ".\n" + e.getMessage(), e);
             }
         }
         return null;
