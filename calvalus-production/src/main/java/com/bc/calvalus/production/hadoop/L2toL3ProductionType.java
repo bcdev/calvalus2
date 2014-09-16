@@ -22,6 +22,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.processing.l2tol3.L2toL3WorkflowItem;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
@@ -39,6 +40,7 @@ import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -75,10 +77,12 @@ public class L2toL3ProductionType extends HadoopProductionType {
         if (dateRanges.size() == 0) {
             throw new ProductionException("No time ranges specified.");
         }
+        DateFormat dateFormat = ProductionRequest.getDateFormat();
 
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+        String effectiveRegionGeometry = regionGeometry != null ? regionGeometry.toString() : "";
 
         String l3ConfigXmlStep1 = L3ProductionType.getL3ConfigXml(productionRequest);
         String l3ConfigXmlStep2;
@@ -99,94 +103,114 @@ public class L2toL3ProductionType extends HadoopProductionType {
         } catch (BindingException e) {
             throw new ProductionException(e);
         }
-        String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
+        String baseOutputPath = getOutputPath(productionRequest, productionId, "");
         String[] l3MeanOutputDirs = new String[dateRanges.size()];
 
-        Workflow workflow = new Workflow.Parallel();
-        workflow.setSustainable(false);
+        String l2OutputDir = baseOutputPath + "/L2";
+
+        Configuration l2Conf = createJobConfig(productionRequest);
+        setDefaultProcessorParameters(processorProductionRequest, l2Conf);
+        setRequestParameters(productionRequest, l2Conf);
+        processorProductionRequest.configureProcessor(l2Conf);
+
+        l2Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        l2Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+        DateRange maxDateRange = new DateRange(dateRanges.get(0).getStartDate(), dateRanges.get(dateRanges.size() - 1).getStopDate());
+        l2Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, maxDateRange.toString());
+        l2Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
+        l2Conf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
+
+        l2Conf.setBoolean(JobConfigNames.CALVALUS_OUTPUT_PRESERVE_DATE_TREE, true);
+        l2Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l2OutputDir);
+
+        String wfL2Name = String.format("%s (L2)", productionName);
+        WorkflowItem l2workflow = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfL2Name, l2Conf);
+        Workflow sequential = new Workflow.Sequential();
+        sequential.add(l2workflow);
+
+        String l3InputDirPattern = l2OutputDir + "/${yyyy}/${MM}/${dd}/.*\\.(N1|nc|hdf|seq)$";
+
+        Workflow parallel = new Workflow.Parallel();
+        parallel.setSustainable(false);
         for (int i = 0; i < dateRanges.size(); i++) {
             DateRange dateRange = dateRanges.get(i);
 
-            String singleRangeOutputDirMean = getOutputPath(productionRequest, productionId, "-L3-mean-" + (i + 1));
+            String singleRangeOutputDirMean = baseOutputPath + "/L3-mean-" + (i + 1);
             l3MeanOutputDirs[i] = singleRangeOutputDirMean;
 
             Configuration l3Conf = createJobConfig(productionRequest);
-            setDefaultProcessorParameters(processorProductionRequest, l3Conf);
             setRequestParameters(productionRequest, l3Conf);
-            processorProductionRequest.configureProcessor(l3Conf);
 
-            l3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            l3Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            l3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, l3InputDirPattern);
             l3Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
+            l3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
+            l3Conf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
 
             l3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDirMean);
 
             l3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep1);
-            l3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                       regionGeometry != null ? regionGeometry.toString() : "");
-            String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
-            String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
+            l3Conf.setInt(JobConfigNames.CALVALUS_L3_REDUCERS, 1);
+
+
+            String date1Str = dateFormat.format(dateRange.getStartDate());
+            String date2Str = dateFormat.format(dateRange.getStopDate());
             l3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             l3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
-            l3Conf.setInt(JobConfigNames.CALVALUS_L3_REDUCERS, 1);
-
-            String wfName = productionName + " " + date1Str + " (L3)";
+            String wfName = String.format("%s (L3mean %s:%s)", productionName, date1Str, date2Str);
             WorkflowItem l3workflow = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l3Conf);
 
-
             Configuration l2tol3Conf = createJobConfig(productionRequest);
-            setDefaultProcessorParameters(processorProductionRequest, l2tol3Conf);
             setRequestParameters(productionRequest, l2tol3Conf);
-            processorProductionRequest.configureProcessor(l2tol3Conf);
 
             Date centerDate = getCenterDate(dateRange);
             DateRange centerRange = new DateRange(centerDate, centerDate);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, l3InputDirPattern);
             l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, centerRange.toString());
+            l2tol3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
+            l2tol3Conf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
+
+            l2tol3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, baseOutputPath);
+
             l2tol3Conf.set("calvalus.l2tol3.l3path", singleRangeOutputDirMean + "/part-r-00000");
-
-            l2tol3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
-
-
             l2tol3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                           regionGeometry != null ? regionGeometry.toString() : "");
 
-            String centerDateStr = ProductionRequest.getDateFormat().format(centerDate);
+            String centerDateStr = dateFormat.format(centerDate);
             l2tol3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
             l2tol3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);
 
-            wfName = productionName + " " + date1Str + " (L2-to-L3)";
+            wfName = String.format("%s (L2-to-L3 %s<=>%s:%s)", productionName, centerDateStr, date1Str, date2Str);
             WorkflowItem l2Tol3Workflow = new L2toL3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l2tol3Conf);
 
-            workflow.add(new Workflow.Sequential(l3workflow, l2Tol3Workflow));
+            parallel.add(new Workflow.Sequential(l3workflow, l2Tol3Workflow));
         }
+        sequential.add(parallel);
 
         if (productionRequest.getBoolean("outputMeanL3", false)) {
             Configuration formatJobConfig = createJobConfig(productionRequest);
 
             formatJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3MeanOutputDirs);
-            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, baseOutputPath);
             formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF");
             formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "None");
 
-            WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                                                               productionRequest.getUserName(),
-                                                               productionName + " Format", formatJobConfig);
-            workflow = new Workflow.Sequential(workflow, formatItem);
+            String wfName = String.format("%s (Format)", productionName);
+            WorkflowItem l3Format = new L3FormatWorkflowItem(getProcessingService(),
+                                                             productionRequest.getUserName(),
+                                                             wfName,
+                                                             formatJobConfig);
+            sequential.add(l3Format);
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
                               productionName,
-                              outputDir,
+                              baseOutputPath,
                               stagingDir,
                               autoStaging,
                               productionRequest,
-                              workflow);
+                              sequential);
     }
 
     static Date getCenterDate(DateRange dateRange) {

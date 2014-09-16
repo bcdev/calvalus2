@@ -45,7 +45,6 @@ import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 
-import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.HashMap;
@@ -87,17 +86,17 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
                                                                               regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
-        Path l3Path = new Path(conf.get("calvalus.l2tol3.l3path"));
+        Path l3MeanPath = new Path(conf.get("calvalus.l2tol3.l3path"));
 
         Map<String, String> metadata;
-        Path inputDirectory = l3Path.getParent();
+        Path inputDirectory = l3MeanPath.getParent();
         metadata = ProcessingMetadata.read(inputDirectory, conf);
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
         String[] l3MeanFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         RatioCalculator ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames);
 
-        Map<Long, float[]> l3MeanValues = readL3MeanValues(l3Path, conf);
-        final SpatialBinner spatialBinComparator = new SpatialBinComparator(binningContext, spatialBinEmitter,
+        Map<Long, float[]> l3MeanValues = readL3MeanValues(l3MeanPath, conf);
+        final SpatialBinner spatialBinner = new SpatialBinComparator(binningContext, spatialBinEmitter,
                                                                             l3MeanValues, ratioCalculator);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
@@ -106,29 +105,11 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
         pm.beginTask("Level 3", progressForProcessing + progressForBinning);
         try {
-            Product product = null;
-            Rectangle inputRectangle = processorAdapter.getInputRectangle();
-            if (inputRectangle == null || !inputRectangle.isEmpty()) {
-                if (inputRectangle != null) {
-                    // force full product with to get correct 'X' values
-                    Product inputProduct = processorAdapter.getInputProduct();
-                    inputRectangle = new Rectangle(0,
-                                                   inputRectangle.y,
-                                                   inputProduct.getSceneRasterWidth(),
-                                                   inputRectangle.height);
-                    processorAdapter.setInputRectangle(inputRectangle);
-                }
-                processorAdapter.prepareProcessing();
-                ProgressMonitor processingPM = SubProgressMonitor.create(pm, progressForProcessing);
-                if (processorAdapter.processSourceProduct(processingPM) > 0) {
-                    product = processorAdapter.openProcessedProduct();
-                }
-            }
-
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
                 HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
                 long numObs = SpatialProductBinner.processProduct(product,
-                                                                  spatialBinComparator,
+                                                                  spatialBinner,
                                                                   addedBands,
                                                                   SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {
@@ -146,7 +127,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
             processorAdapter.dispose();
         }
 
-        final Exception[] exceptions = spatialBinComparator.getExceptions();
+        final Exception[] exceptions = spatialBinner.getExceptions();
         for (Exception exception : exceptions) {
             String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
             LOG.log(Level.SEVERE, m, exception);

@@ -30,6 +30,7 @@ public interface JobConfigNames {
     String CALVALUS_INPUT_REGION_NAME = "calvalus.input.regionName";
     String CALVALUS_INPUT_MIN_WIDTH = "calvalus.input.minWidth";
     String CALVALUS_INPUT_MIN_HEIGHT = "calvalus.input.minHeight";
+    String CALVALUS_INPUT_FULL_SWATH = "calvalus.input.fullSwath";
     String CALVALUS_INPUT_FORMAT = "calvalus.input.format";
     String CALVALUS_INPUT_INVENTORY = "calvalus.input.productInventory";
 
