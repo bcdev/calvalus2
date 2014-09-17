@@ -182,10 +182,15 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, formattingOutputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
-        Geometry regionGeom = productionRequest.getRegionGeometry(null);
-        formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                            regionGeom != null ? regionGeom.toString() : "");
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
+
+        String outputCRS = productionRequest.getString("outputCRS", "");
+        if (!outputCRS.isEmpty()) {
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, outputCRS);
+            // only do a subset when reprojecting as well
+            Geometry regionGeom = productionRequest.getRegionGeometry(null);
+            formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                                regionGeom != null ? regionGeom.toString() : "");
+        }
         if (productionRequest.getString("replaceNanValue", null) != null) {
             formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE,
                                 String.valueOf(productionRequest.getDouble("replaceNanValue", 0.0)));
