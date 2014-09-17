@@ -49,8 +49,6 @@ public class BootstrappingProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
-//        jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
-
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
