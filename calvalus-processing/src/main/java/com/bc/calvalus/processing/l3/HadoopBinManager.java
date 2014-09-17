@@ -13,6 +13,10 @@ import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.VariableContext;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.support.BinningContextImpl;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.util.StringUtils;
+
+import java.text.ParseException;
 
 /**
  * Overrides the default implementation in order to create instances of {@link L3SpatialBin} and {@link L3TemporalBin}.
@@ -20,6 +24,9 @@ import org.esa.beam.binning.support.BinningContextImpl;
  * @author Norman Fomferra
  */
 public class HadoopBinManager extends BinManager {
+
+    public static final String DATE_INPUT_PATTERN = "yyyy-MM-dd";
+    public static final String DATETIME_INPUT_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     public HadoopBinManager(VariableContext variableContext, CellProcessorConfig postProcessorConfig, Aggregator... aggregators) {
         super(variableContext, postProcessorConfig, aggregators);
@@ -52,7 +59,8 @@ public class HadoopBinManager extends BinManager {
     public static BinningConfig getBinningConfig(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
         if (xml == null) {
-            throw new IllegalArgumentException("Missing L3 Binning configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+            throw new IllegalArgumentException(
+                    "Missing L3 Binning configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
         }
         try {
             return BinningConfig.fromXml(xml);
@@ -64,7 +72,8 @@ public class HadoopBinManager extends BinManager {
     public static BinningContext createBinningContext(BinningConfig binningConfig, DataPeriod dataPeriod, Geometry regionGeometry) {
         VariableContext variableContext = binningConfig.createVariableContext();
         Aggregator[] aggregators = binningConfig.createAggregators(variableContext);
-        HadoopBinManager binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(), aggregators);
+        HadoopBinManager binManager = new HadoopBinManager(variableContext, binningConfig.getPostProcessorConfig(),
+                                                           aggregators);
         PlanetaryGrid planetaryGrid = binningConfig.createPlanetaryGrid();
         Integer superSampling = binningConfig.getSuperSampling();
 
@@ -76,4 +85,34 @@ public class HadoopBinManager extends BinManager {
                                       dataPeriod,
                                       regionGeometry);
     }
+
+    public static ProductData.UTC parseStartDateUtc(String date) {
+        try {
+            if (date.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")) {
+                return org.esa.beam.framework.datamodel.ProductData.UTC.parse(date, DATETIME_INPUT_PATTERN);
+            } else {
+                return org.esa.beam.framework.datamodel.ProductData.UTC.parse(date, DATE_INPUT_PATTERN);
+            }
+        } catch (ParseException e) {
+            String msg = String.format("Error while parsing start date parameter '%s': %s", date,
+                                       e.getMessage());
+            throw new IllegalArgumentException(msg, e);
+        }
+    }
+
+    public static DataPeriod createDataPeriod(Configuration conf, Double minDataHour) {
+        ProductData.UTC startUtc = null;
+        Double periodDuration = null;
+
+        String startUtcString = conf.get(JobConfigNames.CALVALUS_L3_START_UTC);
+        if (StringUtils.isNotNullAndNotEmpty(startUtcString)) {
+            startUtc = parseStartDateUtc(startUtcString);
+        }
+        String periodDurationString = conf.get(JobConfigNames.CALVALUS_L3_PERIOD_DURATION);
+        if (StringUtils.isNotNullAndNotEmpty(startUtcString)) {
+            periodDuration = Double.parseDouble(periodDurationString);
+        }
+        return BinningConfig.createDataPeriod(startUtc, periodDuration, minDataHour);
+    }
+
 }

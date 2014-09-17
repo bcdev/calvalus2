@@ -59,6 +59,8 @@ public interface JobConfigNames {
     String CALVALUS_PROJECT_NAME = "calvalus.project.name";
 
     String CALVALUS_L3_PARAMETERS = "calvalus.l3.parameters";
+    String CALVALUS_L3_START_UTC = "calvalus.l3.startUtc";
+    String CALVALUS_L3_PERIOD_DURATION = "calvalus.l3.periodDuration";
     String CALVALUS_L3_FEATURE_NAMES = "calvalus.l3.featureNames";
     String CALVALUS_L3_FORMAT_PARAMETERS = "calvalus.l3.format.parameters";
     String CALVALUS_CELL_PARAMETERS = "calvalus.cell.parameters";
