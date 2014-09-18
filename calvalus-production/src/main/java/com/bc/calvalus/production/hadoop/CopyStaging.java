@@ -90,6 +90,8 @@ class CopyStaging extends ProductionStaging {
                         if (dst.exists()) {
                             dst.delete();
                         }
+                    } finally {
+                        attemptNo++;
                     }
                 }
                 totalFilesSize += fileStatus.getLen();
