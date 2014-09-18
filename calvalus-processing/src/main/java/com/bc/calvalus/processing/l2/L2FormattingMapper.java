@@ -136,7 +136,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
     private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
                                      Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
-                                                                                                       IOException {
+            IOException {
         Map<String, Object> bandSubsetParameter = createBandSubsetParameter(targetProduct, jobConfig);
         if (!bandSubsetParameter.isEmpty()) {
             targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
@@ -212,11 +212,14 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     }
 
     private Map<String, Object> createSpatialSubsetParameter(Configuration jobConfig) {
+        boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS));
+
         String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
 
         Map<String, Object> subsetParams = new HashMap<String, Object>();
-        if (hasGeometry) {
+        if (hasGeometry && hasCrsWkt) {
+            // only subset a second time, if a reprojection has happened
             subsetParams.put("geoRegion", regionGeometry);
         }
         return subsetParams;
