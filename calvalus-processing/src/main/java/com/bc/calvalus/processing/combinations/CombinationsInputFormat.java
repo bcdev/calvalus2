@@ -61,7 +61,8 @@ public class CombinationsInputFormat extends InputFormat<NullWritable, NullWrita
 
         private void recurse(String[] combination, int index) {
             CombinationsConfig.Variable variable = variables[index];
-            if (variable.getLoopLocation().equals("task")) {
+            String loopLocation = variable.getLoopLocation();
+            if (loopLocation != null && loopLocation.equalsIgnoreCase("task")) {
                 String value = StringUtils.arrayToString(variable.getValues());
                 String[] combinationCopy = Arrays.copyOf(combination, combination.length);
                 combinationCopy[index] = value;

@@ -49,7 +49,7 @@ public class CombinationsMapper extends Mapper<NullWritable, NullWritable, NullW
                                                           velocityProps);
 
         if (outFiles != null && outFiles.length > 0) {
-            processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
+            processorAdapter.saveProcessedProductFiles(outFiles, ProgressMonitor.NULL);
         }
     }
 }
