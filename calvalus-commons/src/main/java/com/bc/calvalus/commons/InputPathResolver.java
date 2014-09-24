@@ -91,6 +91,7 @@ public class InputPathResolver {
                     String glob = pattern.replace("${yyyy}", String.format("%tY", calendar));
                     glob = glob.replace("${MM}", String.format("%tm", calendar));
                     glob = glob.replace("${dd}", String.format("%td", calendar));
+                    glob = glob.replace("${DDD}", String.format("%tj", calendar));
                     if (!globSet.contains(glob)) {
                         globSet.add(glob);
                         globList.add(glob);
