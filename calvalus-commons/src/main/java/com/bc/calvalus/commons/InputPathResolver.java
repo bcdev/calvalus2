@@ -34,6 +34,7 @@ import java.util.TimeZone;
  * <li>{@code ${yyyy}} - the (sensing) year of a product file</li>
  * <li>{@code ${MM}} - the (sensing) month of a product file</li>
  * <li>{@code ${dd}} - the (sensing) day of a product file</li>
+ * <li>{@code ${DDD}} - the (sensing) DayOfYear of a product file</li>
  * </ol>
  *
  * @author MarcoZ
@@ -102,6 +103,7 @@ public class InputPathResolver {
                 String glob = pattern.replace("${yyyy}", ".*");
                 glob = glob.replace("${MM}", ".*");
                 glob = glob.replace("${dd}", ".*");
+                glob = glob.replace("${DDD}", ".*");
                 globList.add(glob);
             }
         }
