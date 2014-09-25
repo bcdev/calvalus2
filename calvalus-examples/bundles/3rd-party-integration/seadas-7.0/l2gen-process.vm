@@ -26,8 +26,10 @@ set -m
 outFile=${inFileName}-l2gen.hdf
 
 export OCSSWROOT=./seadas-7.0/seadas-7.0
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  export OCSSWROOT=/users/rsg/rsgcode/operational/linux-x86_64/third_party/opt/seadas/V7.0.1/ocssw
+fi
 L2GEN_BIN=${OCSSWROOT}/run/bin/linux_64/l2gen
-
 source $OCSSWROOT/OCSSW_bash.env
 
 # append newline to parameters.anc
@@ -180,7 +182,7 @@ echo "ofile=${outFile}" >> parameters.anc
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
   ./getGEO.sh ${inputPath}
-  geoFileName=${inFileName:0:14}.GEO
+      geoFileName=${inFileName:0:14}.GEO
   echo "geofile=${geoFileName}" >> parameters.anc
 fi
 
@@ -201,6 +203,7 @@ function handle_progress() {
   fi
 }
 
+ulimit -s unlimited
 set -o pipefail
 echo ${L2GEN_BIN} par=parameters.anc
 ${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done

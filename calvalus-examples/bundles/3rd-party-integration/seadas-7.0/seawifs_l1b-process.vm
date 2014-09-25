@@ -11,6 +11,9 @@ set -e
 set -m
 
 export OCSSWROOT=./seadas-7.0/seadas-7.0
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  export OCSSWROOT=/users/rsg/rsgcode/operational/linux-x86_64/third_party/opt/seadas/V7.0.1/ocssw
+fi
 L1BGEN_BIN=${OCSSWROOT}/run/bin/linux_64/l1bgen
 source $OCSSWROOT/OCSSW_bash.env
 
@@ -26,19 +29,24 @@ elif [[ $inFileName =~ bz2$ ]]; then
   l1aFile=${inFileName%.bz2}
 fi
 echo "L1A file $l1aFile"
+l1bFile=${l1aFile/L1A/L1B}
 
-l1bFile=${l1aFile%L1A_GAC}L1B_LAC
+# append newline to parameters.anc
+touch parameters.anc
+echo >> parameters.anc
 
-# progress not neede takes only some seconds
-echo ${L1BGEN_BIN} ifile=${l1aFile} ofile=${l1bFile}
-${L1BGEN_BIN} ifile=${l1aFile} ofile=${l1bFile}
+echo "ifile=${l1aFile}" >> parameters.anc
+echo "ofile=${l1bFile}" >> parameters.anc
 
-pdate="${l1aFile:1:7}"
-pyear=${pdate%???}
-pday=${pdate#$pyear}
-productDate=$(date -d "${pyear}-01-01 +${pday} days -1 day" "+%Y/%m/%d")
-mkdir -pv ${productDate}
-mv -v ${l1bFile} ${productDate}/${l1bFile}
+# for debugging purpose
+echo "=========parameters.anc========="
+cat parameters.anc
+echo "=========parameters.anc========="
 
-echo CALVALUS_OUTPUT_PRODUCT ${productDate}/${l1bFile}
+ulimit -s unlimited
+# progress not needed, takes only some seconds
+echo ${L1BGEN_BIN} par=parameters.anc
+${L1BGEN_BIN} par=parameters.anc
+
+echo CALVALUS_OUTPUT_PRODUCT ${l1bFile}
 ]]#

@@ -26,7 +26,7 @@ fi
 echo "L1A file $l1aFile"
 
 geoFile=${l1aFile%L1A_LAC}GEO
-l1bFile=${l1aFile%L1A_LAC}L1B_LAC
+l1bFile=${l1aFile/L1A/L1B}
 
 ./getGEO.sh ${inputPath}
 
@@ -45,6 +45,7 @@ export OCSSWROOT=./seadas-7.0/seadas-7.0
 L1BGEN_BIN=${OCSSWROOT}/run/scripts/modis_L1B.py
 source $OCSSWROOT/OCSSW_bash.env
 
+ulimit -s unlimited
 set -o pipefail
 echo ${L1BGEN_BIN} ${l1aFile} ${geoFile}
 ${L1BGEN_BIN} --verbose ${l1aFile} ${geoFile} | while read x ; do handle_progress "$x" ; done
