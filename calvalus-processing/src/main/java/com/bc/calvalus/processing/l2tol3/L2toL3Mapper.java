@@ -26,6 +26,7 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
+import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -39,14 +40,17 @@ import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.DataPeriod;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
-import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +96,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
             ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames, l3MeanValues);
         }
 
-        final SpatialBinner spatialBinner = new SpatialBinComparator(binningContext, spatialBinEmitter, ratioCalculator);
+        L2toL3SpatialBinner spatialBinner = null;
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
@@ -102,12 +106,28 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
+                int productWidth = product.getSceneRasterWidth();
+                spatialBinner = new L2toL3SpatialBinner(binningContext, spatialBinEmitter, ratioCalculator, productWidth);
                 HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   addedBands,
                                                                   SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {
+                    if (ratioCalculator != null) {
+                        // only do this once
+                        double asymmetry = spatialBinner.getAsymmetrySum() / numObs;
+                        ProductData.UTC startTime = product.getStartTime();
+                        int doy = -1;
+                        if (startTime != null) {
+                            doy = startTime.getAsCalendar().get(Calendar.DAY_OF_YEAR);
+                        }
+                        String filename = product.getName() + ".asymmetry.csv";
+                        try (Writer writer = new OutputStreamWriter(TaskOutputStreamFactory.createOutputStream(context, filename))) {
+                            writer.write("numObs\tdoy\tasymmetry\n");
+                            writer.write(numObs + "\t" + doy + "\t" + asymmetry + "\n");
+                        }
+                    }
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
                 } else {
@@ -121,11 +141,12 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
             pm.done();
             processorAdapter.dispose();
         }
-
-        final Exception[] exceptions = spatialBinner.getExceptions();
-        for (Exception exception : exceptions) {
-            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
-            LOG.log(Level.SEVERE, m, exception);
+        if (spatialBinner != null) {
+            final Exception[] exceptions = spatialBinner.getExceptions();
+            for (Exception exception : exceptions) {
+                String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
+                LOG.log(Level.SEVERE, m, exception);
+            }
         }
         // write final log entry for runtime measurements
         LOG.info(MessageFormat.format(

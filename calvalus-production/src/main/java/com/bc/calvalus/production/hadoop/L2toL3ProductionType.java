@@ -187,7 +187,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
 
             l2tol3RealtivConf.set("calvalus.l2tol3.l3path", singleRangeOutputDirMean + "/part-r-00000");
             l2tol3RealtivConf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
-            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "relative_mean");
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "relative-mean");
 
             l2tol3RealtivConf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
             l2tol3RealtivConf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);

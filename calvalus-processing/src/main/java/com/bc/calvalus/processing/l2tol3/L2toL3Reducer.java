@@ -86,7 +86,7 @@ public class L2toL3Reducer extends Reducer<LongWritable, L3SpatialBin, NullWrita
         conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, featureNames);
 
         String prefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX);
-        filename = prefix + "-" + conf.get(JobConfigNames.CALVALUS_MIN_DATE) + ".csv";
+        filename = prefix + "_" + conf.get(JobConfigNames.CALVALUS_MIN_DATE) + ".csv";
     }
 
     @Override

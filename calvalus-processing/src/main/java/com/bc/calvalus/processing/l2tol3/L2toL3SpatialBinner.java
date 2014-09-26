@@ -36,18 +36,19 @@ import java.util.TreeMap;
  *
  * @author Norman Fomferra
  */
-public class SpatialBinComparator extends SpatialBinner {
+public class L2toL3SpatialBinner extends SpatialBinner {
 
     private final PlanetaryGrid planetaryGrid;
     private final BinManager binManager;
     private final SpatialBinConsumer consumer;
+    private final int xAxisIndex;
+    private final RatioCalculator ratioCalculator;
+    private final int productWidth;
 
     // State variables
     private final Map<Integer, SpatialBin> activeBinMap;
     private final ArrayList<Exception> exceptions;
-    private final int xAxisIndex;
-
-    private final RatioCalculator ratioCalculator;
+    private double asymmetrySum;
 
     /**
      * Constructs a spatial binner.
@@ -55,14 +56,16 @@ public class SpatialBinComparator extends SpatialBinner {
      * @param binningContext The binning context.
      * @param consumer       The consumer that receives the spatial bins processed from observations.
      */
-    public SpatialBinComparator(BinningContext binningContext, SpatialBinConsumer consumer, RatioCalculator ratioCalculator) {
+    public L2toL3SpatialBinner(BinningContext binningContext, SpatialBinConsumer consumer, RatioCalculator ratioCalculator, int productWidth) {
         super(binningContext, consumer);
         this.ratioCalculator = ratioCalculator;
+        this.productWidth = productWidth;
         this.planetaryGrid = binningContext.getPlanetaryGrid();
         this.binManager = binningContext.getBinManager();
         this.consumer = consumer;
         this.activeBinMap = new TreeMap<>();
         this.exceptions = new ArrayList<>();
+        this.asymmetrySum = 0;
 
         xAxisIndex = binningContext.getVariableContext().getVariableIndex("xaxis");
         if (xAxisIndex == -1) {
@@ -101,6 +104,7 @@ public class SpatialBinComparator extends SpatialBinner {
             Observation usedObservation = observation;
             if (ratioCalculator != null) {
                 usedObservation = ratioCalculator.calculateRatio(l3BinIndex, observation);
+                asymmetrySum += xAxisValue - productWidth / 2f;
             }
             binManager.aggregateSpatialBin(usedObservation, xAxisBin);
         }
@@ -128,5 +132,9 @@ public class SpatialBinComparator extends SpatialBinner {
         } catch (Exception e) {
             exceptions.add(e);
         }
+    }
+
+    public double getAsymmetrySum() {
+        return asymmetrySum;
     }
 }
