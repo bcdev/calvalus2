@@ -21,6 +21,9 @@ import org.esa.beam.binning.support.ObservationImpl;
 import org.esa.beam.binning.support.VariableContextImpl;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.junit.Assert.*;
 
 public class RatioCalculatorTest {
@@ -33,12 +36,15 @@ public class RatioCalculatorTest {
 
         String[] l3FeatureNames = new String[]{"radiance_1_mean"};
 
-        RatioCalculator ratioCalculator = new RatioCalculator(l2VariableContext, l3FeatureNames);
+        final long l3BinIndex = 42L;
+        float[] meanL3Values = {5f};
+        Map<Long, float[]> l3MeanValueMap = new HashMap<>();
+        l3MeanValueMap.put(l3BinIndex, meanL3Values);
+        RatioCalculator ratioCalculator = new RatioCalculator(l2VariableContext, l3FeatureNames, l3MeanValueMap);
 
         Observation l2Observation = new ObservationImpl(0, 0, 0, 10f, 20f);
-        float[] meanL3Values = {5f};
 
-        Observation observation = ratioCalculator.calculateRatio(meanL3Values, l2Observation);
+        Observation observation = ratioCalculator.calculateRatio(l3BinIndex, l2Observation);
         assertNotNull(observation);
         assertEquals(l2Observation.size(), observation.size());
         assertEquals(10f, observation.get(0), 1e-5); // xaxis
@@ -58,12 +64,16 @@ public class RatioCalculatorTest {
                 "radiance_2_mean", "radiance_2_sigma",
                 "radiance_3_mean", "radiance_3_sigma"};
 
-        RatioCalculator ratioCalculator = new RatioCalculator(l2VariableContext, l3FeatureNames);
+        final long l3BinIndex = 42L;
+        float[] meanL3Values = {2f, 3f, 5f, 3, 10f, 3f};
+        Map<Long, float[]> l3MeanValueMap = new HashMap<>();
+        l3MeanValueMap.put(l3BinIndex, meanL3Values);
+
+        RatioCalculator ratioCalculator = new RatioCalculator(l2VariableContext, l3FeatureNames, l3MeanValueMap);
 
         Observation l2Observation = new ObservationImpl(0, 0, 0, 10f, 20f, 30f, 40f);
-        float[] meanL3Values = {2f, 3f, 5f, 3, 10f, 3f};
 
-        Observation observation = ratioCalculator.calculateRatio(meanL3Values, l2Observation);
+        Observation observation = ratioCalculator.calculateRatio(l3BinIndex, l2Observation);
         assertNotNull(observation);
         assertEquals(l2Observation.size(), observation.size());
         assertEquals(10f, observation.get(0), 1e-5); // xaxis

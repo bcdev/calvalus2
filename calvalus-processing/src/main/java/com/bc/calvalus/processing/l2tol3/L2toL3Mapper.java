@@ -76,18 +76,23 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
                                                                               regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
-        Path l3MeanPath = new Path(conf.get("calvalus.l2tol3.l3path"));
+        RatioCalculator ratioCalculator = null;
+        String l3MeanString = conf.get("calvalus.l2tol3.l3path");
+        if (l3MeanString != null) {
 
-        Map<String, String> metadata;
-        Path inputDirectory = l3MeanPath.getParent();
-        metadata = ProcessingMetadata.read(inputDirectory, conf);
-        ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-        String[] l3MeanFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
-        RatioCalculator ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames);
+            Path l3MeanPath = new Path(l3MeanString);
 
-        Map<Long, float[]> l3MeanValues = readL3MeanValues(l3MeanPath, conf);
-        final SpatialBinner spatialBinner = new SpatialBinComparator(binningContext, spatialBinEmitter,
-                                                                            l3MeanValues, ratioCalculator);
+            Map<String, String> metadata;
+            Path inputDirectory = l3MeanPath.getParent();
+            metadata = ProcessingMetadata.read(inputDirectory, conf);
+            ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+            String[] l3MeanFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
+            Map<Long, float[]> l3MeanValues = readL3MeanValues(l3MeanPath, conf);
+
+            ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames, l3MeanValues);
+        }
+
+        final SpatialBinner spatialBinner = new SpatialBinComparator(binningContext, spatialBinEmitter, ratioCalculator);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
@@ -97,7 +102,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
-                HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
+                HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   addedBands,

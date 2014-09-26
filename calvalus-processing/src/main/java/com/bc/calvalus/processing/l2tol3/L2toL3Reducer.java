@@ -84,7 +84,9 @@ public class L2toL3Reducer extends Reducer<LongWritable, L3SpatialBin, NullWrita
         temporalBinner = new TemporalBinner(binningContext);
         featureNames = binningContext.getBinManager().getResultFeatureNames();
         conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, featureNames);
-        filename = "l2-to-l3-" + conf.get(JobConfigNames.CALVALUS_MIN_DATE) + ".csv";
+
+        String prefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX);
+        filename = prefix + "-" + conf.get(JobConfigNames.CALVALUS_MIN_DATE) + ".csv";
     }
 
     @Override

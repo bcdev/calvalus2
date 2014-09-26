@@ -33,8 +33,10 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -99,6 +101,13 @@ public class L2toL3ProductionType extends HadoopProductionType {
             } else {
                 binningConfig.setVariableConfigs(xaxisVariable);
             }
+            AggregatorConfig[] aggregatorConfigs = binningConfig.getAggregatorConfigs();
+            for (AggregatorConfig aggregatorConfig : aggregatorConfigs) {
+                PropertySet propertySet = aggregatorConfig.asPropertySet();
+                if (propertySet.isPropertyDefined("outputCounts")) {
+                    propertySet.setValue("outputCounts", true);
+                }
+            }
             l3ConfigXmlStep2 = binningConfig.toXml();
         } catch (BindingException e) {
             throw new ProductionException(e);
@@ -160,29 +169,54 @@ public class L2toL3ProductionType extends HadoopProductionType {
             String wfName = String.format("%s (L3mean %s:%s)", productionName, date1Str, date2Str);
             WorkflowItem l3workflow = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l3Conf);
 
-            Configuration l2tol3Conf = createJobConfig(productionRequest);
-            setRequestParameters(productionRequest, l2tol3Conf);
-
+            //////////////////////////////////////////////////////////////////////////
             Date centerDate = getCenterDate(dateRange);
             DateRange centerRange = new DateRange(centerDate, centerDate);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, l3InputDirPattern);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, centerRange.toString());
-            l2tol3Conf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
-            l2tol3Conf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
-
-            l2tol3Conf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, baseOutputPath);
-
-            l2tol3Conf.set("calvalus.l2tol3.l3path", singleRangeOutputDirMean + "/part-r-00000");
-            l2tol3Conf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
-
             String centerDateStr = dateFormat.format(centerDate);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
-            l2tol3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);
+            //////////////////////////////////////////////////////////////////////////
 
-            wfName = String.format("%s (L2-to-L3 %s<=>%s:%s)", productionName, centerDateStr, date1Str, date2Str);
-            WorkflowItem l2Tol3Workflow = new L2toL3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l2tol3Conf);
+            Configuration l2tol3RealtivConf = createJobConfig(productionRequest);
+            setRequestParameters(productionRequest, l2tol3RealtivConf);
 
-            parallel.add(new Workflow.Sequential(l3workflow, l2Tol3Workflow));
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, l3InputDirPattern);
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, centerRange.toString());
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
+            l2tol3RealtivConf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
+
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, baseOutputPath);
+
+            l2tol3RealtivConf.set("calvalus.l2tol3.l3path", singleRangeOutputDirMean + "/part-r-00000");
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "relative_mean");
+
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
+            l2tol3RealtivConf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);
+
+            wfName = String.format("%s (L2-to-L3-rel %s)", productionName, centerDateStr);
+            WorkflowItem l2Tol3RelWorkflow = new L2toL3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l2tol3RealtivConf);
+
+            //////////////////////////////////////////////////////////////////////////
+
+            Configuration l2tol3AbsConf = createJobConfig(productionRequest);
+            setRequestParameters(productionRequest, l2tol3AbsConf);
+
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, l3InputDirPattern);
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, centerRange.toString());
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, effectiveRegionGeometry);
+            l2tol3AbsConf.setBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, true);
+
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_OUTPUT_DIR, baseOutputPath);
+
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXmlStep2);
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "mean");
+
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_MIN_DATE, centerDateStr);
+            l2tol3AbsConf.set(JobConfigNames.CALVALUS_MAX_DATE, centerDateStr);
+
+            wfName = String.format("%s (L2mean %s)", productionName, centerDateStr);
+            WorkflowItem l2Tol3AbsWorkflow = new L2toL3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l2tol3AbsConf);
+
+            parallel.add(new Workflow.Sequential(l3workflow, l2Tol3RelWorkflow, l2Tol3AbsWorkflow));
         }
         sequential.add(parallel);
 
