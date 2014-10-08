@@ -3,7 +3,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.boostrapping.BootstrappingWorkflowItem;
+import com.bc.calvalus.processing.combinations.CombinationsWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -16,31 +16,30 @@ import org.apache.hadoop.conf.Configuration;
 import java.io.IOException;
 
 /**
- * Boostrapping.
+ * Combinations.
  *
  * @author MarcoZ
- * @author MarcoP
  */
-public class BootstrappingProductionType extends HadoopProductionType {
+public class CombinationsProductionType extends HadoopProductionType {
 
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
         public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new BootstrappingProductionType(inventory, processing, staging);
+            return new CombinationsProductionType(inventory, processing, staging);
         }
     }
 
-    BootstrappingProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                                StagingService stagingService) {
-        super("Bootstrapping", inventoryService, processingService, stagingService);
+    CombinationsProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                               StagingService stagingService) {
+        super("Combinations", inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("Bootstrapping ", productionRequest);
+        String defaultProductionName = createProductionName("Combinations ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
@@ -52,8 +51,10 @@ public class BootstrappingProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        WorkflowItem workflowItem = new BootstrappingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                                                                  productionName, jobConfig);
+        WorkflowItem workflowItem = new CombinationsWorkflowItem(getProcessingService(),
+                                                                 productionRequest.getUserName(),
+                                                                 productionName,
+                                                                 jobConfig);
 
         return new Production(productionId,
                               productionName,
@@ -66,8 +67,9 @@ public class BootstrappingProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
+        String userName = production.getProductionRequest().getUserName();
         return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+                               getProcessingService().getJobClient(userName).getConf(),
                                getStagingService().getStagingDir());
     }
 

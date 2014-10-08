@@ -18,6 +18,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -118,7 +119,30 @@ public class MAProductionType extends HadoopProductionType {
         maConfig.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
         maConfig.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
         maConfig.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
+        maConfig.setVariableMappings(parseVariableMappings(productionRequest.getString("variableMappings", null)));
         return maConfig;
+    }
+
+    static MAConfig.VariableMapping[] parseVariableMappings(String variableMappingsString) {
+        if ( StringUtils.isNullOrEmpty(variableMappingsString)) {
+            return null;
+        }
+        String[] mappings = variableMappingsString.split(",");
+        List<MAConfig.VariableMapping> mappingList = new ArrayList<>(mappings.length);
+        for (String mapping : mappings) {
+            String[] refSat = mapping.split("=");
+            if (refSat.length == 2) {
+                String ref = refSat[0].trim();
+                String sat = refSat[1].trim();
+                if (!ref.isEmpty() && !sat.isEmpty()) {
+                    mappingList.add(new MAConfig.VariableMapping(ref, sat));
+                }
+            }
+        }
+        if (mappingList.isEmpty()) {
+            return null;
+        }
+        return mappingList.toArray(new MAConfig.VariableMapping[mappingList.size()]);
     }
 
 }

@@ -26,6 +26,7 @@ import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
+import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -39,15 +40,17 @@ import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.DataPeriod;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
-import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
-import java.awt.Rectangle;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.MessageFormat;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,34 +74,29 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-        /*
-        TODO implement this to deal with the data-day correctly, needs some changes in:
-        TODO - L3ProductionType
-        TODO - TAProductionType
-        TODO - L3WorkflowItem
-
-        ProductData.UTC startUtc = null;
-        Double periodDuration = null;
-        DataPeriod dataPeriod = BinningConfig.createDataPeriod(startUtc, periodDuration, binningConfig.getMinDataHour());
-        */
-        DataPeriod dataPeriod = null;
+        DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig,
                                                                               dataPeriod,
                                                                               regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
 
-        Path l3Path = new Path(conf.get("calvalus.l2tol3.l3path"));
+        RatioCalculator ratioCalculator = null;
+        String l3MeanString = conf.get("calvalus.l2tol3.l3path");
+        if (l3MeanString != null) {
 
-        Map<String, String> metadata;
-        Path inputDirectory = l3Path.getParent();
-        metadata = ProcessingMetadata.read(inputDirectory, conf);
-        ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-        String[] l3MeanFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
-        RatioCalculator ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames);
+            Path l3MeanPath = new Path(l3MeanString);
 
-        Map<Long, float[]> l3MeanValues = readL3MeanValues(l3Path, conf);
-        final SpatialBinner spatialBinComparator = new SpatialBinComparator(binningContext, spatialBinEmitter,
-                                                                            l3MeanValues, ratioCalculator);
+            Map<String, String> metadata;
+            Path inputDirectory = l3MeanPath.getParent();
+            metadata = ProcessingMetadata.read(inputDirectory, conf);
+            ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+            String[] l3MeanFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
+            Map<Long, float[]> l3MeanValues = readL3MeanValues(l3MeanPath, conf);
+
+            ratioCalculator = new RatioCalculator(binningContext.getVariableContext(), l3MeanFeatureNames, l3MeanValues);
+        }
+
+        L2toL3SpatialBinner spatialBinner = null;
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
@@ -106,32 +104,30 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
         pm.beginTask("Level 3", progressForProcessing + progressForBinning);
         try {
-            Product product = null;
-            Rectangle inputRectangle = processorAdapter.getInputRectangle();
-            if (inputRectangle == null || !inputRectangle.isEmpty()) {
-                if (inputRectangle != null) {
-                    // force full product with to get correct 'X' values
-                    Product inputProduct = processorAdapter.getInputProduct();
-                    inputRectangle = new Rectangle(0,
-                                                   inputRectangle.y,
-                                                   inputProduct.getSceneRasterWidth(),
-                                                   inputRectangle.height);
-                    processorAdapter.setInputRectangle(inputRectangle);
-                }
-                processorAdapter.prepareProcessing();
-                ProgressMonitor processingPM = SubProgressMonitor.create(pm, progressForProcessing);
-                if (processorAdapter.processSourceProduct(processingPM) > 0) {
-                    product = processorAdapter.openProcessedProduct();
-                }
-            }
-
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
-                HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
+                int productWidth = product.getSceneRasterWidth();
+                spatialBinner = new L2toL3SpatialBinner(binningContext, spatialBinEmitter, ratioCalculator, productWidth);
+                HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs = SpatialProductBinner.processProduct(product,
-                                                                  spatialBinComparator,
+                                                                  spatialBinner,
                                                                   addedBands,
                                                                   SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {
+                    if (ratioCalculator != null) {
+                        // only do this once
+                        double asymmetry = spatialBinner.getAsymmetrySum() / numObs;
+                        ProductData.UTC startTime = product.getStartTime();
+                        int doy = -1;
+                        if (startTime != null) {
+                            doy = startTime.getAsCalendar().get(Calendar.DAY_OF_YEAR);
+                        }
+                        String filename = product.getName() + ".asymmetry.csv";
+                        try (Writer writer = new OutputStreamWriter(TaskOutputStreamFactory.createOutputStream(context, filename))) {
+                            writer.write("numObs\tdoy\tasymmetry\n");
+                            writer.write(numObs + "\t" + doy + "\t" + asymmetry + "\n");
+                        }
+                    }
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
                 } else {
@@ -145,11 +141,12 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
             pm.done();
             processorAdapter.dispose();
         }
-
-        final Exception[] exceptions = spatialBinComparator.getExceptions();
-        for (Exception exception : exceptions) {
-            String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
-            LOG.log(Level.SEVERE, m, exception);
+        if (spatialBinner != null) {
+            final Exception[] exceptions = spatialBinner.getExceptions();
+            for (Exception exception : exceptions) {
+                String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
+                LOG.log(Level.SEVERE, m, exception);
+            }
         }
         // write final log entry for runtime measurements
         LOG.info(MessageFormat.format(

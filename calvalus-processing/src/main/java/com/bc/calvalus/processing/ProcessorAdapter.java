@@ -268,10 +268,6 @@ public abstract class ProcessorAdapter {
         inputRectangle = null;
     }
 
-    public void setInputRectangle(Rectangle inputRectangle) {
-        this.inputRectangle = inputRectangle;
-    }
-
     /**
      * Return the path to the input product.
      *
@@ -298,9 +294,12 @@ public abstract class ProcessorAdapter {
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
             Geometry regionGeometry = JobUtils.createGeometry(geometryWkt);
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,
-                                                                                         inputSplit) {
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
+                                                                                         roiRectangle,
+                                                                                         inputSplit,
+                                                                                         fullSwath) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();

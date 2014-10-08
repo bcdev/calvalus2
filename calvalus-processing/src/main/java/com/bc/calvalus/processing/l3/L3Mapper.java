@@ -63,17 +63,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-        /*
-        TODO implement this to deal with the data-day correctly, needs some changes in:
-        TODO - L3ProductionType
-        TODO - TAProductionType
-        TODO - L3WorkflowItem
 
-        ProductData.UTC startUtc = null;
-        Double periodDuration = null;
-        DataPeriod dataPeriod = BinningConfig.createDataPeriod(startUtc, periodDuration, binningConfig.getMinDataHour());
-        */
-        DataPeriod dataPeriod = null;
+        DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
+
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);

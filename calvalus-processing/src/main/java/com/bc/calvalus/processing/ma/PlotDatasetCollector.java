@@ -15,14 +15,16 @@ import java.util.Map;
 public class PlotDatasetCollector implements RecordProcessor {
 
     private final String groupAttributeName;
+    private final MAConfig.VariableMapping[] variableMappings;
     private Map<String, PlotDataset> plotDatasetMap;
     private List<PlotDataset> plotDatasets;
     private int groupAttributeIndex;
     private List<VariablePair> variablePairs;
     private int exclusionIndex;
 
-    public PlotDatasetCollector(String groupAttributeName) {
+    public PlotDatasetCollector(String groupAttributeName, MAConfig.VariableMapping... variableMappings) {
         this.groupAttributeName = groupAttributeName;
+        this.variableMappings = variableMappings;
     }
 
     public int getGroupAttributeIndex() {
@@ -49,7 +51,7 @@ public class PlotDatasetCollector implements RecordProcessor {
             throw new IllegalStateException("Header record seen twice.");
         }
         this.groupAttributeIndex = findIndex(attributeNames, groupAttributeName);
-        this.variablePairs = findVariablePairs(attributeNames);
+        this.variablePairs = findVariablePairs(attributeNames, variableMappings);
         this.plotDatasetMap = new HashMap<String, PlotDataset>();
         this.plotDatasets = new ArrayList<PlotDataset>();
         this.exclusionIndex = Arrays.asList(annotationNames).indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
@@ -167,19 +169,23 @@ public class PlotDatasetCollector implements RecordProcessor {
         return attributeIndex;
     }
 
-    private static List<VariablePair> findVariablePairs(Object[] headerValues) {
+    private static List<VariablePair> findVariablePairs(Object[] headerValues, MAConfig.VariableMapping[] variableMappings) {
         ArrayList<VariablePair> variablePairs = new ArrayList<VariablePair>();
         for (int i = 0; i < headerValues.length - 1; i++) {
             VariablePair pair = findPair(headerValues, i);
             if (pair != null) {
                 variablePairs.add(pair);
+            } else {
+                pair = findPairWithMapping(headerValues, i, variableMappings);
+                if (pair != null) {
+                    variablePairs.add(pair);
+                }
             }
         }
         return variablePairs;
     }
 
     private static VariablePair findPair(Object[] headerValues, int i) {
-        VariablePair pair = null;
         String headerName1 = headerValues[i].toString();
         for (int j = i + 1; j < headerValues.length; j++) {
             String headerName2 = headerValues[j].toString();
@@ -195,8 +201,31 @@ public class PlotDatasetCollector implements RecordProcessor {
                 return new VariablePair(headerName1, i, headerName2.substring(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX.length()), j);
             }
         }
+        return null;
+    }
 
-        return pair;
+    private static VariablePair findPairWithMapping(Object[] headerValues, int i, MAConfig.VariableMapping[] variableMappings) {
+        String refHeaderName1 = headerValues[i].toString();
+        String satHeaderName = null;
+        for (MAConfig.VariableMapping variableMapping : variableMappings) {
+            if (refHeaderName1.equals(variableMapping.getReference())) {
+                satHeaderName = variableMapping.getSatellite();
+            }
+        }
+        if (satHeaderName != null) {
+            String aggSatHeaderName1 = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + satHeaderName;
+            for (int j = i + 1; j < headerValues.length; j++) {
+                String headerName2 = headerValues[j].toString();
+                if (satHeaderName.equals(headerName2)) {
+                    return new VariablePair(refHeaderName1, i, headerName2, j);
+                }
+                if (aggSatHeaderName1.equalsIgnoreCase(headerName2)) {
+                    return new VariablePair(refHeaderName1, i, headerName2.substring(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX.length()), j);
+                }
+            }
+        }
+
+        return null;
     }
 
     public static class PlotDataset {

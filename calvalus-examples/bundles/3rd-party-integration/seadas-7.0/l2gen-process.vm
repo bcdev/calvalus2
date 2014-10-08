@@ -11,8 +11,10 @@ inputPath="$inputPath"
 DIR_AUX_ERA='hdfs://master00:9000/calvalus/auxiliary/era_interim'
 DIR_AUX_NCEP='hdfs://master00:9000/calvalus/auxiliary/seadas/anc'
 #PML
-#DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
-#DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
+  DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+fi
 ########################################################################
 
 #for debugging
@@ -24,8 +26,10 @@ set -m
 outFile=${inFileName}-l2gen.hdf
 
 export OCSSWROOT=./seadas-7.0/seadas-7.0
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  export OCSSWROOT=/users/rsg/rsgcode/operational/linux-x86_64/third_party/opt/seadas/V7.0.1/ocssw
+fi
 L2GEN_BIN=${OCSSWROOT}/run/bin/linux_64/l2gen
-
 source $OCSSWROOT/OCSSW_bash.env
 
 # append newline to parameters.anc
@@ -116,7 +120,7 @@ function get_anc() {
   local year_doy=$2
 
   echo "get_nac ${label} ${year_doy}"
-
+  local path=""
   while [ "$3" != "" ]; do
     testpath=${DIR_AUX_NCEP}/${year_doy:0:4}/${year_doy:4:3}/${3}
     echo "testting ${testpath}"
@@ -126,8 +130,13 @@ function get_anc() {
         break
       fi
     else
-      if [ -f ${testpath} ]; then
-        path=${testpath}
+      for aFile in ${testpath}; do
+        if [ -f ${aFile} ]; then
+          path=${aFile}
+          break
+        fi
+      done
+      if [ "${path}" != "" ]; then
         break
       fi
     fi
@@ -154,7 +163,7 @@ function get_ozone() {
 }
 
 
-get_anc "icefile" $d5 "?${d5}00_SEAICE_*"
+get_anc "icefile" $d5 "?${d5}00_SEAICE_NSIDC_*"
 
 get_anc "met1" $d1 "S${d1}_NCEP.MET" "N${d1}_MET_NCEPN_6h.hdf"
 get_anc "met2" $d2 "S${d2}_NCEP.MET" "N${d2}_MET_NCEPN_6h.hdf"
@@ -167,13 +176,13 @@ get_ozone "ozone3" $d6
 get_anc "sstfile" $d5 "?${d5}_SST_*"
 
 
-echo "ifile=${inputFile}" >> parameters.anc
+echo "ifile=${inFileName}" >> parameters.anc
 echo "ofile=${outFile}" >> parameters.anc
 
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
   ./getGEO.sh ${inputPath}
-  geoFileName=${inFileName%.L1B*}.GEO
+      geoFileName=${inFileName:0:14}.GEO
   echo "geofile=${geoFileName}" >> parameters.anc
 fi
 
@@ -194,6 +203,7 @@ function handle_progress() {
   fi
 }
 
+ulimit -s unlimited
 set -o pipefail
 echo ${L2GEN_BIN} par=parameters.anc
 ${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done

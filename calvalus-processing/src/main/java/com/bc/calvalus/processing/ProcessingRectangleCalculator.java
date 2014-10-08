@@ -20,14 +20,17 @@ import java.util.logging.Logger;
 abstract class ProcessingRectangleCalculator {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+
     private final Geometry regionGeometry;
     private final Rectangle roiRectangle;
     private final InputSplit inputSplit;
+    private final boolean fullSwath;
 
-    public ProcessingRectangleCalculator(Geometry regionGeometry, Rectangle roiRectangle, InputSplit inputSplit) {
+    public ProcessingRectangleCalculator(Geometry regionGeometry, Rectangle roiRectangle, InputSplit inputSplit, boolean fullSwath) {
         this.regionGeometry = regionGeometry;
         this.roiRectangle = roiRectangle;
         this.inputSplit = inputSplit;
+        this.fullSwath = fullSwath;
     }
 
     abstract Product getProduct() throws IOException;
@@ -46,8 +49,13 @@ abstract class ProcessingRectangleCalculator {
         Rectangle geometryRect = getGeometryAsRectangle(regionGeometry);
         Rectangle productSplitRect = getProductSplitAsRectangle();
 
-        Rectangle pixelRegion = intersectionSafe(geometryRect, productSplitRect);
-        return intersectionSafe(pixelRegion, roiRectangle);
+        Rectangle pixelRectangle = intersectionSafe(geometryRect, productSplitRect);
+        pixelRectangle = intersectionSafe(pixelRectangle, roiRectangle);
+        if (fullSwath && pixelRectangle != null) {
+            final int productWidth = getProduct().getSceneRasterWidth();
+            pixelRectangle = new Rectangle(0, pixelRectangle.y, productWidth, pixelRectangle.height);
+        }
+        return pixelRectangle;
     }
 
     /**

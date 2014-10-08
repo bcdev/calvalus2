@@ -36,36 +36,36 @@ import java.util.TreeMap;
  *
  * @author Norman Fomferra
  */
-public class SpatialBinComparator extends SpatialBinner {
+public class L2toL3SpatialBinner extends SpatialBinner {
 
     private final PlanetaryGrid planetaryGrid;
     private final BinManager binManager;
     private final SpatialBinConsumer consumer;
+    private final int xAxisIndex;
+    private final RatioCalculator ratioCalculator;
+    private final int productWidth;
 
     // State variables
     private final Map<Integer, SpatialBin> activeBinMap;
     private final ArrayList<Exception> exceptions;
-    private final int xAxisIndex;
-
-    private final Map<Long, float[]> l3MeanValues;
-    private final RatioCalculator ratioCalculator;
+    private double asymmetrySum;
 
     /**
      * Constructs a spatial binner.
      *
      * @param binningContext The binning context.
      * @param consumer       The consumer that receives the spatial bins processed from observations.
-     * @param l3MeanValues
      */
-    public SpatialBinComparator(BinningContext binningContext, SpatialBinConsumer consumer, Map<Long, float[]> l3MeanValues, RatioCalculator ratioCalculator) {
+    public L2toL3SpatialBinner(BinningContext binningContext, SpatialBinConsumer consumer, RatioCalculator ratioCalculator, int productWidth) {
         super(binningContext, consumer);
         this.ratioCalculator = ratioCalculator;
+        this.productWidth = productWidth;
         this.planetaryGrid = binningContext.getPlanetaryGrid();
         this.binManager = binningContext.getBinManager();
         this.consumer = consumer;
-        this.l3MeanValues = l3MeanValues;
-        this.activeBinMap = new TreeMap<Integer, SpatialBin>();
-        this.exceptions = new ArrayList<Exception>();
+        this.activeBinMap = new TreeMap<>();
+        this.exceptions = new ArrayList<>();
+        this.asymmetrySum = 0;
 
         xAxisIndex = binningContext.getVariableContext().getVariableIndex("xaxis");
         if (xAxisIndex == -1) {
@@ -101,8 +101,12 @@ public class SpatialBinComparator extends SpatialBinner {
                 xAxisBin = binManager.createSpatialBin(xAxisValue);
                 activeBinMap.put(xAxisValue, xAxisBin);
             }
-            Observation ratioObservation = ratioCalculator.calculateRatio(l3MeanValues.get(l3BinIndex), observation);
-            binManager.aggregateSpatialBin(ratioObservation, xAxisBin);
+            Observation usedObservation = observation;
+            if (ratioCalculator != null) {
+                usedObservation = ratioCalculator.calculateRatio(l3BinIndex, observation);
+                asymmetrySum += xAxisValue - productWidth / 2f;
+            }
+            binManager.aggregateSpatialBin(usedObservation, xAxisBin);
         }
         return observationCounter;
     }
@@ -119,7 +123,7 @@ public class SpatialBinComparator extends SpatialBinner {
     }
 
     private void emitSliceBins(Map<Integer, SpatialBin> binMap) {
-        List<SpatialBin> bins = new ArrayList<SpatialBin>(binMap.values());
+        List<SpatialBin> bins = new ArrayList<>(binMap.values());
         for (SpatialBin bin : bins) {
             binManager.completeSpatialBin(bin);
         }
@@ -128,5 +132,9 @@ public class SpatialBinComparator extends SpatialBinner {
         } catch (Exception e) {
             exceptions.add(e);
         }
+    }
+
+    public double getAsymmetrySum() {
+        return asymmetrySum;
     }
 }

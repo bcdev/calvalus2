@@ -168,5 +168,13 @@ public class AbstractInventoryServiceTest {
         assertTrue("foo/abc".matches(regex));
         assertFalse("foo/_abc".matches(regex));
         assertFalse("foo/.abc".matches(regex));
+
+        regex = ".*\\.(N1|nc|hdf|seq)$";
+        assertTrue("MER.N1".matches(regex));
+        assertTrue("MER.hdf".matches(regex));
+        assertTrue("MER.nc".matches(regex));
+        assertTrue("MER.seq".matches(regex));
+        assertTrue("MER.seq".matches(regex));
+        assertFalse("MER.seq.index".matches(regex));
     }
 }

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -e
+
+p1=$parameter1
+p2=$parameter2
+
+echo "p1 = ${p1}"
+echo "p2 = ${p2}"
+
+outputFile="Combination_example_p1${p1}_p2${p2}"
+echo "p1 = ${p1}" >> ${outputFile}
+echo "p2 = ${p2}" >> ${outputFile}
+
+echo CALVALUS_OUTPUT_PRODUCT ${outputFile}

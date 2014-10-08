@@ -213,53 +213,56 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
+            saveProcessedProductFiles(outputFilesNames, pm);
+        }
+    }
 
-            Configuration conf = getConfiguration();
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
-            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
-            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
+    public void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
+        Configuration conf = getConfiguration();
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
-            ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
-            VelocityContext velocityContext = scriptGenerator.getVelocityContext();
-            velocityContext.put("system", System.getProperties());
-            velocityContext.put("configuration", conf);
-            velocityContext.put("parameterText", processorParameters);
-            velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
+        ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
+        VelocityContext velocityContext = scriptGenerator.getVelocityContext();
+        velocityContext.put("system", System.getProperties());
+        velocityContext.put("configuration", conf);
+        velocityContext.put("parameterText", processorParameters);
+        velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
-            velocityContext.put("outputFileNames", outputFilesNames);
-            Path outputPath = getOutputDirectoryPath();
-            velocityContext.put("outputPath", outputPath);
-            velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
+        velocityContext.put("outputFileNames", outputFilesNames);
+        Path outputPath = getOutputDirectoryPath();
+        velocityContext.put("outputPath", outputPath);
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
-            scriptGenerator.addScriptResources(conf, parameterSuffix);
-            if (scriptGenerator.hasStepScript()) {
-                scriptGenerator.writeScriptFiles(cwd);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
+        if (scriptGenerator.hasStepScript()) {
+            scriptGenerator.writeScriptFiles(cwd);
 
-                String[] cmdArray = new String[outputFilesNames.length + 2];
-                cmdArray[0] = "./finalize";
-                System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
-                cmdArray[cmdArray.length - 1] = outputPath.toString();
+            String[] cmdArray = new String[outputFilesNames.length + 2];
+            cmdArray[0] = "./finalize";
+            System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
+            cmdArray[cmdArray.length - 1] = outputPath.toString();
 
-                Process process = Runtime.getRuntime().exec(cmdArray);
-                String processLogName = bundle + "-" + executable + "-finalize";
-                KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
+            Process process = Runtime.getRuntime().exec(cmdArray);
+            String processLogName = bundle + "-" + executable + "-finalize";
+            KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
-                new ProcessObserver(process).
-                        setName(processLogName).
-                        setProgressMonitor(pm).
-                        setHandler(keywordHandler).
-                        start();
-            } else {
-                pm.beginTask("saving", 1);
-                MapContext mapContext = getMapContext();
-                for (String outputFileName : outputFilesNames) {
-                    InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
-                    Path workPath = new Path(getWorkOutputDirectoryPath(), outputFileName);
-                    OutputStream os = FileSystem.get(conf).create(workPath, (short) 1);
-                    ProductFormatter.copyAndClose(is, os, mapContext);
-                }
-                pm.done();
+            new ProcessObserver(process).
+                    setName(processLogName).
+                    setProgressMonitor(pm).
+                    setHandler(keywordHandler).
+                    start();
+        } else {
+            pm.beginTask("saving", 1);
+            MapContext mapContext = getMapContext();
+            for (String outputFileName : outputFilesNames) {
+                InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                Path workPath = new Path(getWorkOutputDirectoryPath(), outputFileName);
+                OutputStream os = FileSystem.get(conf).create(workPath, (short) 1);
+                ProductFormatter.copyAndClose(is, os, mapContext);
             }
+            pm.done();
         }
     }
 

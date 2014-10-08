@@ -124,7 +124,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             Area area = new Area();
             int macroPixelSize = maConfig.getMacroPixelSize();
 
-            List<Record> matchingReferenceRecords = new ArrayList<Record>();
+            List<Record> matchingReferenceRecords = new ArrayList<>();
             for (Record referenceRecord : referenceRecords) {
                 PixelPos pixelPos = pixelPosProvider.getPixelPos(referenceRecord);
                 if (pixelPos != null) {
@@ -140,7 +140,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             pm.worked(5);
 
             if (!area.isEmpty()) {
-                List<NamedRecordSource> namedRecordSources = new ArrayList<NamedRecordSource>();
+                List<NamedRecordSource> namedRecordSources = new ArrayList<>();
 
                 // save Level 1 product
                 saveLevel1Product(l1LocalFile, context);
@@ -152,6 +152,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 // extract Level 1 match-ups
                 ProgressMonitor l1ExtractionPM = SubProgressMonitor.create(pm, 5);
                 namedRecordSources.add(getMatchups("L1_", maConfigWithoutExpression, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
+
+                Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+                String productName = inputProduct.getName();
+                inputProduct.dispose();
 
                 // Differentiation processing
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
@@ -168,8 +172,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Products without differentiations").increment(1);
                     return;
                 }
-                Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
-                                                    inputProduct.getSceneRasterHeight());
+
                 Rectangle maRectangle = area.getBounds();
                 maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
                 Rectangle processingRectangle = fullScene.intersection(maRectangle);
@@ -196,17 +199,20 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     } else {
                         namedRecordSources.add(differentiationMatchups);
                     }
+                    if (l1DiffProduct != null) {
+                        l1DiffProduct.dispose();
+                    }
 
                     //  Level 2 processing
                     LOG.info("Processing to Level 2: " + l1DiffFile);
                     l2ProcessorAdapter.closeInputProduct();
                     l2ProcessorAdapter.setInputFile(l1DiffFile);
                     l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
-                    Product l2Product = l2ProcessorAdapter.openProcessedProduct();
+                    Product l2DiffProduct = l2ProcessorAdapter.openProcessedProduct();
 
                     // extract Level 2 match-ups
                     String l2Prefix = "L2_" + namedOutput.getName() + "_";
-                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l2DiffProduct, l2Prefix);
                     if (l2Matchups == null) {
                         return;
                     } else {
@@ -216,6 +222,9 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
+                    }
+                    if (l2DiffProduct != null) {
+                        l2DiffProduct.dispose();
                     }
                 }
                 //  Level 2 processing of primary product
@@ -236,6 +245,9 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     // TODO handle operators and graphs
                     l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                 }
+                if (l2Product != null) {
+                    l2Product.dispose();
+                }
                 mainLoopPM.done();
 
                 MergedRecordSource mergedRecordSource = new MergedRecordSource(matchingReferenceRecordSource, baseL2Matchups, namedRecordSources);
@@ -245,7 +257,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 int numMatchUps = 0;
                 Iterable<Record> records = mergedRecordSource.getRecords();
                 for (Record selectedRecord : records) {
-                    Text key = new Text(String.format("%06d_%s", selectedRecord.getId(), inputProduct.getName()));
+                    Text key = new Text(String.format("%06d_%s", selectedRecord.getId(), productName));
                     RecordWritable value = new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues());
                     context.write(key, value);
                     context.progress();
@@ -289,7 +301,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
                 return getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, product);
             } catch (Exception e) {
-                throw new RuntimeException("Failed to retrieve records from product: " + prefix, e);
+                throw new RuntimeException("Failed to retrieve records from product: " + prefix + ".\n" + e.getMessage(), e);
             }
         }
         return null;
@@ -330,7 +342,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             Header header = productRecordSource.getHeader();
             RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
             RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-            List<Record> aggregatedRecords = new ArrayList<Record>();
+            List<Record> aggregatedRecords = new ArrayList<>();
             int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
             for (Record extractedRecord : extractedRecords) {
                 Record aggregatedRecord = recordAggregator.transform(extractedRecord);

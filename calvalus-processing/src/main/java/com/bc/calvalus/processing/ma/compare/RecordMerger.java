@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ma.compare;
 
+import com.bc.calvalus.processing.ma.AggregatedNumber;
 import com.bc.calvalus.processing.ma.RecordProcessor;
 import com.bc.ceres.core.Assert;
 
@@ -47,7 +48,7 @@ public class RecordMerger {
     }
 
     void processHeader(String[] insituAttributeNames, Iterable<IndexedRecordWritable> records) throws IOException {
-        List<Object> attributeNameList = new ArrayList<Object>();
+        List<Object> attributeNameList = new ArrayList<>();
         startAttributeIndex[0] = 0;
         numAttributes[0] = insituAttributeNames.length;
         startAttributeIndex[1] = startAttributeIndex[0] + insituAttributeNames.length;
@@ -84,11 +85,22 @@ public class RecordMerger {
         boolean[] isRecordGood = new boolean[identifiers.length];
 
         boolean containsGoodRecord = false;
+        int commonDataArrayLength = -1;
+        boolean recordWithVaryingArrayLengths = false;
         for (IndexedRecordWritable recordWritable : records) {
             int identifierIndex = recordWritable.getIdentifierIndex() + 1;
             Object[] attributeValues = recordWritable.getAttributeValues();
             Object[] annotationValues = recordWritable.getAnnotationValues();
-            if (annotationValues.length == 0 || !(annotationValues[0] instanceof String) || ((String) annotationValues[0]).isEmpty()) {
+
+            int dataArrayLength = getCommonDataArrayLength(attributeValues);
+            if (commonDataArrayLength == -1) {
+                commonDataArrayLength = dataArrayLength;
+            } else if (commonDataArrayLength != dataArrayLength) {
+                recordWithVaryingArrayLengths = true;
+            }
+
+            boolean goodRecord = annotationValues.length == 0 || !(annotationValues[0] instanceof String) || ((String) annotationValues[0]).isEmpty();
+            if (goodRecord) {
                 System.arraycopy(attributeValues, 0, mergedAttributeValues, startAttributeIndex[identifierIndex],
                                  attributeValues.length);
                 if (identifierIndex > 0) {
@@ -98,7 +110,7 @@ public class RecordMerger {
             }
         }
 
-        if (containsGoodRecord) {
+        if (containsGoodRecord && !recordWithVaryingArrayLengths) {
             boolean allRecordsGood = true;
             all.processDataRecord(mergedAttributeValues, ANNOTATION_VALUES);
             for (int i = 0; i < individuals.length; i++) {
@@ -112,6 +124,18 @@ public class RecordMerger {
                 common.processDataRecord(mergedAttributeValues, ANNOTATION_VALUES);
             }
         }
+    }
+
+    private int getCommonDataArrayLength(Object[] attributeValues) {
+        for (Object attributeValue : attributeValues) {
+            if (attributeValue instanceof AggregatedNumber) {
+                AggregatedNumber value = (AggregatedNumber) attributeValue;
+                if (value.data != null) {
+                    return value.data.length;
+                }
+            }
+        }
+        return -1;
     }
 
     public void finalizeRecordProcessing() throws IOException {

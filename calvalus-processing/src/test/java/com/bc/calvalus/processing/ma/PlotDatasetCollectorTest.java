@@ -28,7 +28,7 @@ public class PlotDatasetCollectorTest {
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
         collector.processHeaderRecord(new Object[]{
                 "ID", "LAT", "LON", "DATE", "SITE",
-                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "*tsm"
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "tsm"
         }, new Object[]{""});
         PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
 
@@ -43,6 +43,31 @@ public class PlotDatasetCollectorTest {
         assertEquals("TSM", variablePairs[1].referenceAttributeName);
         assertEquals(7, variablePairs[1].referenceAttributeIndex);
         assertEquals("tsm", variablePairs[1].satelliteAttributeName);
+        assertEquals(13, variablePairs[1].satelliteAttributeIndex);
+    }
+
+    @Test
+    public void testThatVariablePairsAreUseFromParameter() throws Exception {
+        MAConfig.VariableMapping chlMapping = new MAConfig.VariableMapping("CHL", "chlor");
+        MAConfig.VariableMapping tsmMapping = new MAConfig.VariableMapping("TSM", "ttssmm");
+        PlotDatasetCollector collector = new PlotDatasetCollector("SITE", chlMapping, tsmMapping);
+        collector.processHeaderRecord(new Object[]{
+                "ID", "LAT", "LON", "DATE", "SITE",
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chlor", "*algal", "ttssmm"
+        }, new Object[]{""});
+        PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
+
+        assertNotNull(variablePairs);
+        assertEquals(2, variablePairs.length);
+
+        assertEquals("CHL", variablePairs[0].referenceAttributeName);
+        assertEquals(5, variablePairs[0].referenceAttributeIndex);
+        assertEquals("chlor", variablePairs[0].satelliteAttributeName);
+        assertEquals(11, variablePairs[0].satelliteAttributeIndex);
+
+        assertEquals("TSM", variablePairs[1].referenceAttributeName);
+        assertEquals(7, variablePairs[1].referenceAttributeIndex);
+        assertEquals("ttssmm", variablePairs[1].satelliteAttributeName);
         assertEquals(13, variablePairs[1].satelliteAttributeIndex);
     }
 
