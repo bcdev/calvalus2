@@ -43,6 +43,13 @@ java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.1-SNAPS
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.1-SNAPSHOT-diversity
 
 
+Personal debugging
+------------------
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-mz test.xml
+
+
 pfa-fex
 -------
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.1-SNAPSHOT-fex
