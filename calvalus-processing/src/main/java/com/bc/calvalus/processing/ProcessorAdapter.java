@@ -17,29 +17,20 @@
 package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.beam.StreamingProductReaderPlugin;
-import com.bc.calvalus.processing.hadoop.FSImageInputStream;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
-import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
@@ -334,104 +325,9 @@ public abstract class ProcessorAdapter {
                 return ProductIO.readProduct(inputFile);
             }
         } else {
-            return readProduct(getInputPath(), inputFormat);
+            return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
         }
     }
-
-    /**
-     * Reads a product from the distributed file system.
-     *
-     * @param inputPath   The input path
-     * @param inputFormat The input format, may be {@code null}. If {@code null}, the file format will be detected.
-     * @return The product The product read.
-     * @throws java.io.IOException If an I/O error occurs
-     */
-    protected Product readProduct(Path inputPath, String inputFormat) throws IOException {
-        getLogger().info(String.format("Opening product from path = '%s'", inputPath.toString()));
-
-        Configuration configuration = getConfiguration();
-        Product product = null;
-        if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
-            StreamingProductReader reader = new StreamingProductReader(new StreamingProductReaderPlugin());
-            StreamingProductReaderPlugin.PathConfiguration pathConfiguration = new StreamingProductReaderPlugin.PathConfiguration(inputPath, configuration);
-            product = reader.readProductNodes(pathConfiguration, null);
-            getLogger().info(String.format("Opened using StreamingProductReader"));
-        } else {
-            if (inputFormat != null) {
-                // if inputFormat is given, use it
-                ProductReader productReader = ProductIO.getProductReader(inputFormat);
-                if (productReader != null) {
-                    ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
-                    Object input = null;
-                    if (canHandle(readerPlugIn, ImageInputStream.class)) {
-                        input = openImageInputStream(inputPath);
-                    } else if (canHandle(readerPlugIn, File.class)) {
-                        input = copyFileToLocal(inputPath);
-                    }
-
-                    if (input != null) {
-                        product = productReader.readProductNodes(input, null);
-                    }
-                }
-            } else {
-                // no inputFormat, use autodetection
-                // first try a fast,direct ImageInputStream
-                Object input = openImageInputStream(inputPath);
-                ProductReader productReader = ProductIO.getProductReaderForInput(input);
-                if (productReader == null) {
-                    // try a local file copy
-                    input = copyFileToLocal(inputPath);
-                    productReader = ProductIO.getProductReaderForInput(input);
-                    if (productReader == null) {
-                        throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
-                    }
-                }
-                product = productReader.readProductNodes(input, null);
-            }
-        }
-        if (product == null) {
-            throw new IOException(
-                    String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(),
-                                  inputFormat));
-        }
-        getLogger().info(String.format("Opened product width = %d height = %d",
-                                       product.getSceneRasterWidth(),
-                                       product.getSceneRasterHeight()));
-        ProductReader productReader = product.getProductReader();
-        if (productReader != null) {
-            getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
-        }
-        return product;
-    }
-
-    private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
-        if (readerPlugIn != null) {
-            Class<?>[] inputTypes = readerPlugIn.getInputTypes();
-            for (Class<?> inputType : inputTypes) {
-                if (inputType.isAssignableFrom(inputClass)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Copies the file given to the local input directory for access as a ordinary {@code File}.
-     *
-     * @param inputPath The path to the file in the HDFS.
-     * @throws IOException
-     */
-    public File copyFileToLocal(Path inputPath) throws IOException {
-        getLogger().info(String.format("Copying to local product file"));
-        File localFile = new File(".", inputPath.getName());
-        if (!localFile.exists()) {
-            FileSystem fs = inputPath.getFileSystem(conf);
-            FileUtil.copy(fs, inputPath, localFile, false, conf);
-        }
-        return localFile;
-    }
-
 
     public void setInputFile(File inputFile) {
         this.inputFile = inputFile;
@@ -439,13 +335,6 @@ public abstract class ProcessorAdapter {
 
     public File getInputFile() {
         return inputFile;
-    }
-
-    protected Object openImageInputStream(Path inputPath) throws IOException {
-        FileSystem fs = inputPath.getFileSystem(conf);
-        final FileStatus status = fs.getFileStatus(inputPath);
-        final FSDataInputStream in = fs.open(inputPath);
-        return new FSImageInputStream(in, status.getLen());
     }
 
     /**

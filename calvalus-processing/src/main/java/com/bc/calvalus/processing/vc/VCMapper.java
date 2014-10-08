@@ -43,7 +43,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -106,10 +105,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         try {
             // find matching reference Records
-            Path inputPath = l2ProcessorAdapter.getInputPath();
-            File l1LocalFile = l2ProcessorAdapter.copyFileToLocal(inputPath);
-            l2ProcessorAdapter.setInputFile(l1LocalFile);
             Product inputProduct = l2ProcessorAdapter.getInputProduct();
+            File l1LocalFile = inputProduct.getFileLocation();
+            l2ProcessorAdapter.setInputFile(l1LocalFile);
+
             Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
@@ -162,7 +161,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 ProgressMonitor differentiationPM = SubProgressMonitor.create(pm, progressForDifferentiation);
                 KeywordHandler keywordHandler = differentiationProcessorAdapter.process(differentiationPM,
                                                                                         null,
-                                                                                        inputPath,
+                                                                                        null,
                                                                                         l1LocalFile,
                                                                                         null,
                                                                                         null);
@@ -199,9 +198,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     } else {
                         namedRecordSources.add(differentiationMatchups);
                     }
-                    if (l1DiffProduct != null) {
-                        l1DiffProduct.dispose();
-                    }
+                    l1DiffProduct.dispose();
 
                     //  Level 2 processing
                     LOG.info("Processing to Level 2: " + l1DiffFile);

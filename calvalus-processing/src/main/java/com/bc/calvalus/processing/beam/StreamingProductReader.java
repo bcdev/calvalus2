@@ -63,15 +63,15 @@ public class StreamingProductReader extends AbstractProductReader {
     private int sliceHeight;
     private Document dom;
 
-    public StreamingProductReader(ProductReaderPlugIn readerPlugIn) {
+    StreamingProductReader(ProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
         Object input = getInput();
-        if (input instanceof StreamingProductReaderPlugin.PathConfiguration) {
-            StreamingProductReaderPlugin.PathConfiguration pathConfiguration = (StreamingProductReaderPlugin.PathConfiguration) input;
+        if (input instanceof PathConfiguration) {
+            PathConfiguration pathConfiguration = (PathConfiguration) input;
             this.path = pathConfiguration.getPath();
             this.configuration = pathConfiguration.getConfiguration();
         } else {

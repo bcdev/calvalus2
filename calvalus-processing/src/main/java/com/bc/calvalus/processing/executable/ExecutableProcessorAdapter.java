@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
@@ -114,7 +115,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
         if (inputFile == null) {
-            inputFile = copyFileToLocal(inputPath);
+            inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
             setInputFile(inputFile);
         }
         Rectangle productRect = null;

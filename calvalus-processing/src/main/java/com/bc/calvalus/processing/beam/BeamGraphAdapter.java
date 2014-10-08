@@ -90,7 +90,7 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
                 String sourceId = headerSource.getName();
                 String sourceFilePath = headerSource.getLocation();
 
-                Product product = readProduct(new Path(sourceFilePath), null);
+                Product product =  CalvalusProductIO.readProduct(new Path(sourceFilePath), getConfiguration(), null);
                 sourceProducts.setSourceProduct(sourceId, product);
             }
             graphContext = new GraphContext(graph, sourceProducts);

@@ -99,12 +99,9 @@ public class StreamingFormatTest {
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         Map<String, Long> writtenIndex = streamingProductIndex.readIndex();
 
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration);
         Map<String, Long> buildIndex;
-        try {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration)) {
             buildIndex = StreamingProductIndex.buildIndex(reader);
-        } finally {
-            reader.close();
         }
         assertNotNull(buildIndex);
         assertEquals(buildIndex.size(), writtenIndex.size());
@@ -117,42 +114,35 @@ public class StreamingFormatTest {
     }
 
     private void testThatProductIsCorrect(Product sourceProduct, Path productPath) throws IOException {
-        StreamingProductReader reader = new StreamingProductReader(new StreamingProductReaderPlugin());
-        StreamingProductReaderPlugin.PathConfiguration pathConfiguration = new StreamingProductReaderPlugin.PathConfiguration(productPath, configuration);
+        Product targetProduct = CalvalusProductIO.readProduct(productPath, configuration, StreamingProductReaderPlugin.FORMAT_NAME);
         try {
-            Product targetProduct = reader.readProductNodes(pathConfiguration, null);
-            try {
-                assertEquals(sourceProduct.getName(), targetProduct.getName());
-                assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
+            assertEquals(sourceProduct.getName(), targetProduct.getName());
+            assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
 
-                // check that tie-point data is equal
-                ProductData.Float srcTP0 = (ProductData.Float) sourceProduct.getTiePointGridAt(0).getData();
-                ProductData.Float targetTP0 = (ProductData.Float) targetProduct.getTiePointGridAt(0).getData();
-                assertArrayEquals(srcTP0.getArray(), targetTP0.getArray(), 1e-5f);
+            // check that tie-point data is equal
+            ProductData.Float srcTP0 = (ProductData.Float) sourceProduct.getTiePointGridAt(0).getData();
+            ProductData.Float targetTP0 = (ProductData.Float) targetProduct.getTiePointGridAt(0).getData();
+            assertArrayEquals(srcTP0.getArray(), targetTP0.getArray(), 1e-5f);
 
-                // check that band data is equal
-                Raster srcData = sourceProduct.getBandAt(0).getSourceImage().getData();
-                Raster targetData = targetProduct.getBandAt(0).getSourceImage().getData();
-                for (int y = 0; y < sourceProduct.getSceneRasterHeight(); y++) {
-                    for (int x = 0; x < sourceProduct.getSceneRasterWidth(); x++) {
-                        float srcSample = srcData.getSampleFloat(x, y, 0);
-                        float targetSample = targetData.getSampleFloat(x, y, 0);
-                        assertEquals("[x" + "," + y + "]", srcSample, targetSample, 1e-5f);
-                    }
-                }
-            } finally {
-                if (targetProduct != null) {
-                    targetProduct.dispose();
+            // check that band data is equal
+            Raster srcData = sourceProduct.getBandAt(0).getSourceImage().getData();
+            Raster targetData = targetProduct.getBandAt(0).getSourceImage().getData();
+            for (int y = 0; y < sourceProduct.getSceneRasterHeight(); y++) {
+                for (int x = 0; x < sourceProduct.getSceneRasterWidth(); x++) {
+                    float srcSample = srcData.getSampleFloat(x, y, 0);
+                    float targetSample = targetData.getSampleFloat(x, y, 0);
+                    assertEquals("[x" + "," + y + "]", srcSample, targetSample, 1e-5f);
                 }
             }
         } finally {
-            reader.close();
+            if (targetProduct != null) {
+                targetProduct.dispose();
+            }
         }
     }
 
     private void testThatProductSequenceFileIsCorrect(Path productPath, int numKeys) throws IOException {
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration);
-        try {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration)) {
             assertSame(Text.class, reader.getKeyClass());
             assertSame(ByteArrayWritable.class, reader.getValueClass());
 
@@ -173,8 +163,6 @@ public class StreamingFormatTest {
             }
 
             assertEquals(numKeys, keyList.size());
-        } finally {
-            reader.close();
         }
     }
 

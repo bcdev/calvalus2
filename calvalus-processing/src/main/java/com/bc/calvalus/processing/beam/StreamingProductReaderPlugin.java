@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.processing.beam;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
@@ -29,6 +27,8 @@ import java.util.Locale;
  * A plugin for the StreamingProductReader
  */
 public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
+
+    public static final String FORMAT_NAME = "HADOOP-STREAMING";
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
@@ -53,12 +53,12 @@ public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{"HADOOP-STREAMING"};
+        return new String[]{FORMAT_NAME};
     }
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[]{"seq"};
+        return new String[]{".seq"};
     }
 
     @Override
@@ -71,21 +71,4 @@ public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
-    public static class PathConfiguration {
-        private final Path path;
-        private final Configuration configuration;
-
-        public PathConfiguration(Path path, Configuration configuration) {
-            this.path = path;
-            this.configuration = configuration;
-        }
-
-        public Path getPath() {
-            return path;
-        }
-
-        public Configuration getConfiguration() {
-            return configuration;
-        }
-    }
 }

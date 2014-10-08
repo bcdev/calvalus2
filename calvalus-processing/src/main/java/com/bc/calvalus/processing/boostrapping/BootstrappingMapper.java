@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.boostrapping;
 
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -40,7 +41,7 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, IntW
 
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
         Path inputPath = new Path(conf.get(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY));
-        File inputFile =  processorAdapter.copyFileToLocal(inputPath);
+        File inputFile =  CalvalusProductIO.copyFileToLocal(inputPath, conf);
         String[] outFiles = processorAdapter.processInput(ProgressMonitor.NULL,
                                                          null,
                                                          inputPath,
