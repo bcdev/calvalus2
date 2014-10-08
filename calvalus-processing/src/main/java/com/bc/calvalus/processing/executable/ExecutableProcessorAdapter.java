@@ -50,6 +50,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     private final File cwd;
     private final String parameterSuffix;
+    private final boolean debugScriptGenerator;
     private String[] outputFilesNames;
     private boolean skipProcessing = false;
 
@@ -61,6 +62,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         super(mapContext);
         this.parameterSuffix = parameterSuffix;
         this.cwd = new File(".");
+        this.debugScriptGenerator = mapContext.getConfiguration().getBoolean("calvalus.l2.debugScriptGenerator", false);
     }
 
     @Override
@@ -85,7 +87,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
-            scriptGenerator.writeScriptFiles(cwd);
+            scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
@@ -172,7 +174,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (!scriptGenerator.hasStepScript()) {
             throw new RuntimeException("No script for step 'process' available.");
         }
-        scriptGenerator.writeScriptFiles(cwd);
+        scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
@@ -238,7 +240,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
-            scriptGenerator.writeScriptFiles(cwd);
+            scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
             String[] cmdArray = new String[outputFilesNames.length + 2];
             cmdArray[0] = "./finalize";

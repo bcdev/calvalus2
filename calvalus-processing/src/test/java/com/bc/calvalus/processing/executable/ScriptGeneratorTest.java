@@ -86,7 +86,7 @@ public class ScriptGeneratorTest {
         TracingScriptGenerator scriptGenerator = new TracingScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script.vm", "This is the $variable content"));
-        scriptGenerator.writeScriptFiles(new File("."));
+        scriptGenerator.writeScriptFiles(new File("."), false);
 
         assertEquals(1, scriptGenerator.fileNames.size());
         assertEquals(1, scriptGenerator.resources.size());
@@ -103,7 +103,7 @@ public class ScriptGeneratorTest {
         TracingScriptGenerator scriptGenerator = new TracingScriptGenerator("foo");
         scriptGenerator.getVelocityContext().put("variable", "calvalus");
         scriptGenerator.addResource(new StringResource("foo-script", "This is the $variable content"));
-        scriptGenerator.writeScriptFiles(new File("."));
+        scriptGenerator.writeScriptFiles(new File("."), false);
 
         assertEquals(1, scriptGenerator.fileNames.size());
         assertEquals(1, scriptGenerator.resources.size());
@@ -119,7 +119,7 @@ public class ScriptGeneratorTest {
         scriptGenerator.addResource(new StringResource("foo-process.vm", "This is the process script"));
         scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
         scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
-        scriptGenerator.writeScriptFiles(new File("."));
+        scriptGenerator.writeScriptFiles(new File("."), false);
 
         assertEquals(1, scriptGenerator.fileNames.size());
         assertEquals(1, scriptGenerator.resources.size());
@@ -135,7 +135,7 @@ public class ScriptGeneratorTest {
         scriptGenerator.addResource(new StringResource("foo-process.vm", "This is the process script"));
         scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
         scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
-        scriptGenerator.writeScriptFiles(new File("."));
+        scriptGenerator.writeScriptFiles(new File("."), false);
 
         assertEquals(2, scriptGenerator.fileNames.size());
         assertEquals(2, scriptGenerator.resources.size());
@@ -157,7 +157,7 @@ public class ScriptGeneratorTest {
         scriptGenerator.addResource(new StringResource("foo-finalize.vm", "This is the finalize script"));
         scriptGenerator.addResource(new StringResource("foo-misc.txt", "misc data"));
 
-        scriptGenerator.writeScriptFiles(new File("."));
+        scriptGenerator.writeScriptFiles(new File("."), false);
 
         assertEquals(1, scriptGenerator.fileNames.size());
         assertEquals(1, scriptGenerator.resources.size());
@@ -167,8 +167,8 @@ public class ScriptGeneratorTest {
     }
 
     private static class TracingScriptGenerator extends ScriptGenerator {
-        List<String> fileNames = new ArrayList<String>();
-        List<Resource> resources = new ArrayList<Resource>();
+        List<String> fileNames = new ArrayList<>();
+        List<Resource> resources = new ArrayList<>();
 
         public TracingScriptGenerator(String executableName) {
             this(ScriptGenerator.Step.PROCESS, executableName);
@@ -179,7 +179,7 @@ public class ScriptGeneratorTest {
         }
 
         @Override
-        void writeScript(File scriptFile, Resource resource) throws IOException {
+        void writeScript(File scriptFile, Resource resource, boolean debug) throws IOException {
             fileNames.add(scriptFile.getName());
             resources.add(resource);
         }
