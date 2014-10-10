@@ -106,11 +106,13 @@ public class PixelExtractor {
 
         Point2D extractionPos = i2oTransform.transform(originalPixelPos, null);
         PixelPos extractionPixelPos = new PixelPos((float) extractionPos.getX(), (float) extractionPos.getY());
+        Rectangle productRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
 
         if (!product.containsPixel(extractionPixelPos)) {
             return null;
         }
-        final Rectangle macroPixelRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight()).intersection(
+
+        final Rectangle macroPixelRect = productRect.intersection(
                 new Rectangle((int) extractionPixelPos.x - macroPixelSize / 2,
                               (int) extractionPixelPos.y - macroPixelSize / 2,
                               macroPixelSize, macroPixelSize));

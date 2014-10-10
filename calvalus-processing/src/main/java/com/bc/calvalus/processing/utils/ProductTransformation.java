@@ -54,7 +54,7 @@ public class ProductTransformation {
     }
 
     static Rectangle parseSubset(String input, Rectangle productRectangle) {
-        Pattern p = Pattern.compile("subset\\s+(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+).*");
+        Pattern p = Pattern.compile("subset\\s+([\\d\\.]+)\\s*,\\s*([\\d\\.]+)\\s*,\\s*([\\d\\.]+)\\s*,\\s*([\\d\\.]+).*");
         Matcher m = p.matcher(input);
         if (m.matches()) {
             String xString = m.group(1);
