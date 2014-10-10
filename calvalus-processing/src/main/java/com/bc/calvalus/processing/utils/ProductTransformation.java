@@ -61,11 +61,11 @@ public class ProductTransformation {
             String yString = m.group(2);
             String wString = m.group(3);
             String hString = m.group(4);
-            int x = Integer.parseInt(xString);
-            int y = Integer.parseInt(yString);
-            int w = Integer.parseInt(wString);
-            int h = Integer.parseInt(hString);
-            return new Rectangle(x, y, w ,h);
+            int x = Double.valueOf(xString).intValue();
+            int y = Double.valueOf(yString).intValue();
+            int w = Double.valueOf(wString).intValue();
+            int h = Double.valueOf(hString).intValue();
+            return new Rectangle(x, y, w, h);
         }
         return productRectangle;
     }

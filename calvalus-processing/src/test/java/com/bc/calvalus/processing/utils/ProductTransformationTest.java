@@ -116,7 +116,7 @@ public class ProductTransformationTest {
     public void testParseSubset() throws Exception {
         Rectangle productRectangle = new Rectangle(30, 40);
 
-        Rectangle subsetRect = ProductTransformation.parseSubset("subset 2,3,4,5 flipX flipY", productRectangle);
+        Rectangle subsetRect = ProductTransformation.parseSubset("subset 2.0,3,4.0,5 flipX flipY", productRectangle);
         assertEquals(new Rectangle(2, 3, 4, 5), subsetRect);
 
         subsetRect = ProductTransformation.parseSubset("subset 21, 32   , 46 , 567", productRectangle);
