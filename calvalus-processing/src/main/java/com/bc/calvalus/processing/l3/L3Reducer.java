@@ -48,25 +48,42 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     private TemporalBinner temporalBinner;
     private CellProcessorChain cellChain;
     private boolean computeOutput;
+    private StringBuffer outputMetadata = new StringBuffer();
 
     @Override
     protected void reduce(LongWritable binIndex, Iterable<L3SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
         final long idx = binIndex.get();
-        TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
+        if (idx == L3SpatialBin.METADATA_MAGIC_NUMBER) {
+            for (L3SpatialBin metadataBin : spatialBins) {
+                String inputMetadata = metadataBin.getMetadata();
+                // TODO merge inputMetadata into outputMetadata
+                if (outputMetadata.length() > 0) {
+                    outputMetadata.append("\n");
+                }
+                outputMetadata.append(inputMetadata);
+            }
+        } else {
+            TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
 
-        if (computeOutput) {
-            temporalBin = temporalBinner.computeOutput(idx, temporalBin);
-            temporalBin = cellChain.process(temporalBin);
+            if (computeOutput) {
+                temporalBin = temporalBinner.computeOutput(idx, temporalBin);
+                temporalBin = cellChain.process(temporalBin);
+            }
+            context.write(binIndex, (L3TemporalBin) temporalBin);
         }
-
-        context.write(binIndex, (L3TemporalBin) temporalBin);
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
-        Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-        ProcessingMetadata.write(workOutputPath, conf, metadata);
+        if (outputMetadata.length() > 0) {
+            Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+            // TODO convert outputMetadata to string, add L3 step
+            String history = outputMetadata.toString();
+            metadata.put(JobConfigNames.PROCESSING_HISTORY, history);
+            ProcessingMetadata.write(workOutputPath, conf, metadata);
+            outputMetadata.setLength(0); // TODO is this sufficient in case of re-use
+        }
     }
 
     @Override

@@ -44,12 +44,18 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     @Override
     public int getPartition(LongWritable binIndex, L3SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
-        int row = planetaryGrid.getRowIndex(idx);
-        int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
-        if (partition < 0) {
-            partition = 0;
-        } else if (partition >= numPartitions) {
-            partition = numPartitions - 1;
+        int partition;
+        // for metadata contributions
+        if (idx < 0) {
+             partition = 0;
+        } else {
+            int row = planetaryGrid.getRowIndex(idx);
+            partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
+            if (partition < 0) {
+                partition = 0;
+            } else if (partition >= numPartitions) {
+                partition = numPartitions - 1;
+            }
         }
         return partition;
     }

@@ -69,6 +69,7 @@ public interface JobConfigNames {
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
+    String PROCESSING_HISTORY = "processing_history";
 
     public static final String[] LEVEL3_METADATA_KEYS = {
             JobConfigNames.CALVALUS_MIN_DATE,
@@ -76,7 +77,8 @@ public interface JobConfigNames {
             JobConfigNames.CALVALUS_REGION_GEOMETRY,
             JobConfigNames.CALVALUS_INPUT_REGION_NAME,
             JobConfigNames.CALVALUS_L3_PARAMETERS,
-            JobConfigNames.CALVALUS_L3_FEATURE_NAMES
+            JobConfigNames.CALVALUS_L3_FEATURE_NAMES,
+            JobConfigNames.PROCESSING_HISTORY
     };
 
     String CALVALUS_MIN_DATE = "calvalus.minDate";

@@ -37,6 +37,7 @@ import org.esa.beam.binning.SpatialBinner;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -86,9 +87,18 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
+                    //
+                    final MetadataElement metadataRoot = product.getMetadataRoot();
+                    final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
+                    // TODO serialise processing graph
+                    final String metadataString = "foo " + processorAdapter.getInputPath();
+                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metadataString));
+
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
                 }
+
+
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
                 LOG.info("Product not used");
