@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
@@ -32,6 +33,7 @@ import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.binning.cellprocessor.CellProcessorChain;
 import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.beam.framework.datamodel.MetadataElement;
 
 import java.io.IOException;
 import java.util.Map;
@@ -55,12 +57,11 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         final long idx = binIndex.get();
         if (idx == L3SpatialBin.METADATA_MAGIC_NUMBER) {
             for (L3SpatialBin metadataBin : spatialBins) {
-                String inputMetadata = metadataBin.getMetadata();
-                // TODO merge inputMetadata into outputMetadata
-                if (outputMetadata.length() > 0) {
-                    outputMetadata.append("\n");
-                }
-                outputMetadata.append(inputMetadata);
+                final String metadataXml= metadataBin.getMetadata();
+                final MetadataSerializer metadataSerializer = new MetadataSerializer();
+                final MetadataElement metadataElement = metadataSerializer.fromXml(metadataXml);
+                // @todo 1 tb/tb integrate MetadataAggregator here 2014-10-10
+
             }
         } else {
             TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
@@ -77,11 +78,16 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     protected void cleanup(Context context) throws IOException, InterruptedException {
         if (outputMetadata.length() > 0) {
             Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            // @todo 1 tb/tb check, which parameter are collected, reduce to the meaningful set, i.e. L3 processing params, remove jars! 2014-10-10
             Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-            // TODO convert outputMetadata to string, add L3 step
+
+            // @todo 1 tb/tb get from MetadataAggregator here 2014-10-10
             String history = outputMetadata.toString();
+            // @todo 1 tb/tb serialize aggregated MetadataElement to XML and write to metadata-file (will be read in later) 2014-10-10
             metadata.put(JobConfigNames.PROCESSING_HISTORY, history);
             ProcessingMetadata.write(workOutputPath, conf, metadata);
+
+            // @todo 1 tb/tb what to do in case of reducer-re-utilisation??? 2014-10-10
             outputMetadata.setLength(0); // TODO is this sufficient in case of re-use
         }
     }

@@ -99,8 +99,9 @@ public class L3Formatter {
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_OUTPUT_DIR);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_USER);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_REQUEST);
+
+        // @todo 1 tb/tb de-serialize aggregated Metadata to MetadataElement and attach 2014-10-10
         addConfigElementToMetadataElement(element, JobConfigNames.PROCESSING_HISTORY);
-        addConfigElementToMetadataElement(element, "mapred.job.classpath.files", ',');
         return element;
     }
 

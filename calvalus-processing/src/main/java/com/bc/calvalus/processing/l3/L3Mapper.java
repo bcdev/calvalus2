@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -90,9 +91,9 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                     //
                     final MetadataElement metadataRoot = product.getMetadataRoot();
                     final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
-                    // TODO serialise processing graph
-                    final String metadataString = "foo " + processorAdapter.getInputPath();
-                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metadataString));
+                    final MetadataSerializer metadataSerializer = new MetadataSerializer();
+                    final String metaXml = metadataSerializer.toXml(processingGraph);
+                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
 
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
