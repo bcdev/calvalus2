@@ -52,7 +52,7 @@ public class MergedRecordSource implements RecordSource {
         this.baseL2Records = baseL2Records;
         this.namedRecords = namedRecords;
 
-        List<NamedRecordSource> headerSources = new ArrayList<NamedRecordSource>(namedRecords.size() + 1);
+        List<NamedRecordSource> headerSources = new ArrayList<>(namedRecords.size() + 1);
         headerSources.addAll(namedRecords);
         headerSources.add(baseL2Records);
         this.header = new DefaultHeader(false, false, getAttributeNames(headerSources), baseL2Records.getHeader().getAnnotationNames());
@@ -65,9 +65,9 @@ public class MergedRecordSource implements RecordSource {
 
     @Override
     public Iterable<Record> getRecords() {
-        Map<Integer, Map<String, Record>> recordsMap = new HashMap<Integer, Map<String, Record>>(referenceRecords.getNumRecords());
+        Map<Integer, Map<String, Record>> recordsMap = new HashMap<>(referenceRecords.getNumRecords());
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
-            recordsMap.put(referenceRecordsRecord.getId(), new HashMap<String, Record>(namedRecords.size() + 1));
+            recordsMap.put(referenceRecordsRecord.getId(), new HashMap<>(namedRecords.size() + 1));
         }
         for (NamedRecordSource namedRecordSource : namedRecords) {
             for (Record record : namedRecordSource.getRecords()) {
@@ -75,12 +75,12 @@ public class MergedRecordSource implements RecordSource {
             }
         }
 
-        Map<Integer, Record> baseL2Map = new HashMap<Integer, Record>(referenceRecords.getNumRecords());
+        Map<Integer, Record> baseL2Map = new HashMap<>(referenceRecords.getNumRecords());
         for (Record record : baseL2Records.getRecords()) {
             baseL2Map.put(record.getId(), record);
         }
         int numAttributes = header.getAttributeNames().length;
-        List<Record> mergedRecords = new ArrayList<Record>(referenceRecords.getNumRecords());
+        List<Record> mergedRecords = new ArrayList<>(referenceRecords.getNumRecords());
 
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
             int id = referenceRecordsRecord.getId();
@@ -169,7 +169,7 @@ public class MergedRecordSource implements RecordSource {
     }
 
     private static String[] getAttributeNames(List<NamedRecordSource> namedRecordSources) {
-        List<String> attributeNames = new ArrayList<String>();
+        List<String> attributeNames = new ArrayList<>();
         for (NamedRecordSource namedRecordSource : namedRecordSources) {
             String name = namedRecordSource.getName();
             for (String attributeName : namedRecordSource.getHeader().getAttributeNames()) {

@@ -47,10 +47,10 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -78,6 +78,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final AffineTransform IDENTITY = new AffineTransform();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -114,43 +115,35 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
                                                                      referenceRecordHeader.hasTime());
-            Iterable<Record> referenceRecords;
             try {
-                referenceRecords = referenceRecordSource.getRecords();
+                pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-            Area area = new Area();
-            int macroPixelSize = maConfig.getMacroPixelSize();
 
-            List<Record> matchingReferenceRecords = new ArrayList<>();
-            for (Record referenceRecord : referenceRecords) {
-                PixelPos pixelPos = pixelPosProvider.getPixelPos(referenceRecord);
-                if (pixelPos != null) {
-                    Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
-                                                        (int) pixelPos.y - macroPixelSize / 2,
-                                                        macroPixelSize, macroPixelSize);
-                    area.add(new Area(rectangle));
-                    matchingReferenceRecords.add(referenceRecord);
-                    System.out.println("found matching reference = " + referenceRecord);
-                    System.out.println("-- at pixelPos = " + pixelPos);
-                }
-            }
+            List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
+            Area pixelArea = pixelPosProvider.getPixelArea();
+
             pm.worked(5);
 
-            if (!area.isEmpty()) {
+            if (!pixelArea.isEmpty()) {
                 List<NamedRecordSource> namedRecordSources = new ArrayList<>();
 
                 // save Level 1 product
                 saveLevel1Product(l1LocalFile, context);
 
                 // add in-situ records
+
+                List<Record> matchingReferenceRecords = new ArrayList<>(pixelPosRecords.size());
+                for (PixelPosProvider.PixelPosRecord pixelPosRecord : pixelPosRecords) {
+                    matchingReferenceRecords.add(pixelPosRecord.getRecord());
+                }
                 NamedRecordSource matchingReferenceRecordSource = new NamedRecordSource("insitu_", referenceRecordHeader, matchingReferenceRecords);
                 namedRecordSources.add(matchingReferenceRecordSource);
 
                 // extract Level 1 match-ups
                 ProgressMonitor l1ExtractionPM = SubProgressMonitor.create(pm, 5);
-                namedRecordSources.add(getMatchups("L1_", maConfigWithoutExpression, l1ExtractionPM, matchingReferenceRecordSource, inputProduct));
+                namedRecordSources.add(getMatchups("L1_", maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords, inputProduct, IDENTITY));
 
                 Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
                 String productName = inputProduct.getName();
@@ -172,7 +165,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     return;
                 }
 
-                Rectangle maRectangle = area.getBounds();
+                Rectangle maRectangle = pixelArea.getBounds();
                 maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
                 Rectangle processingRectangle = fullScene.intersection(maRectangle);
                 LOG.info("processing rectangle: " + processingRectangle);
@@ -192,7 +185,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                     // extract differentiation match-ups
                     String diffPrefix = namedOutput.getName() + "_";
-                    NamedRecordSource differentiationMatchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l1DiffProduct, diffPrefix);
+                    NamedRecordSource differentiationMatchups = extractMatchups(context, maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords, l1DiffProduct, diffPrefix, IDENTITY);
+                    mainLoopPM.worked(5);
                     if (differentiationMatchups == null) {
                         return;
                     } else {
@@ -208,8 +202,25 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     Product l2DiffProduct = l2ProcessorAdapter.openProcessedProduct();
 
                     // extract Level 2 match-ups
+                    AffineTransform i2oTransform = l2ProcessorAdapter.getInput2OutputTransform();
+                    if (i2oTransform == null) {
+                        i2oTransform = new AffineTransform();
+                        referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
+                        pixelPosProvider = new PixelPosProvider(l2DiffProduct,
+                                                                PixelTimeProvider.create(l2DiffProduct),
+                                                                maConfigWithoutExpression.getMaxTimeDifference(),
+                                                                referenceRecordHeader.hasTime());
+
+                        try {
+                            pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to retrieve input records.", e);
+                        }
+                        pixelPosRecords = pixelPosProvider.getPixelPosRecords();
+                    }
                     String l2Prefix = "L2_" + namedOutput.getName() + "_";
-                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, matchingReferenceRecordSource, mainLoopPM, l2DiffProduct, l2Prefix);
+                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords, l2DiffProduct, l2Prefix, i2oTransform);
+                    mainLoopPM.worked(5);
                     if (l2Matchups == null) {
                         return;
                     } else {
@@ -219,6 +230,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
+                    } else {
+                        mainLoopPM.worked(1);
                     }
                     if (l2DiffProduct != null) {
                         l2DiffProduct.dispose();
@@ -232,8 +245,25 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
                 // extract Level 2 match-ups
+                AffineTransform i2oTransform = l2ProcessorAdapter.getInput2OutputTransform();
+                if (i2oTransform == null) {
+                    i2oTransform = new AffineTransform();
+                    referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
+                    pixelPosProvider = new PixelPosProvider(l2Product,
+                                                            PixelTimeProvider.create(l2Product),
+                                                            maConfigWithoutExpression.getMaxTimeDifference(),
+                                                            referenceRecordHeader.hasTime());
+
+                    try {
+                        pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                    } catch (Exception e) {
+                        throw new RuntimeException("Failed to retrieve input records.", e);
+                    }
+                    pixelPosRecords = pixelPosProvider.getPixelPosRecords();
+                }
                 String l2Prefix = "L2_";
-                NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, matchingReferenceRecordSource, mainLoopPM, l2Product, l2Prefix);
+                NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, referenceRecordHeader, pixelPosRecords, l2Product, l2Prefix, i2oTransform);
+                mainLoopPM.worked(5);
                 if (baseL2Matchups == null) {
                     return;
                 }
@@ -241,6 +271,8 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
                     // TODO handle operators and graphs
                     l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
+                } else {
+                    mainLoopPM.worked(1);
                 }
                 if (l2Product != null) {
                     l2Product.dispose();
@@ -288,15 +320,20 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         return maConfig;
     }
 
-    private NamedRecordSource extractMatchups(Context context, MAConfig maConfig, NamedRecordSource matchingReferenceRecordSource, ProgressMonitor mainLoopPM, Product product, String prefix) {
+    private NamedRecordSource extractMatchups(Context context,
+                                              MAConfig maConfig,
+                                              Header referenceRecordHeader,
+                                              Iterable<PixelPosProvider.PixelPosRecord> pixelPosRecords,
+                                              Product product,
+                                              String prefix,
+                                              AffineTransform i2oTransform) {
         if (product == null) {
             LOG.info("Product is null: " + prefix);
             context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
         } else {
             try {
                 context.progress();
-                ProgressMonitor extractionPM = SubProgressMonitor.create(mainLoopPM, 5);
-                return getMatchups(prefix, maConfig, extractionPM, matchingReferenceRecordSource, product);
+                return getMatchups(prefix, maConfig, referenceRecordHeader, pixelPosRecords, product, i2oTransform);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve records from product: " + prefix + ".\n" + e.getMessage(), e);
             }
@@ -326,36 +363,36 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         ProductFormatter.copyAndClose(inputStream, outputStream, context);
     }
 
-    private NamedRecordSource getMatchups(String prefix, MAConfig maConfig, ProgressMonitor extractionPM, NamedRecordSource matchingReferenceRecordSource, Product product) {
-        extractionPM.beginTask("Extract Matchups", matchingReferenceRecordSource.getNumRecords());
+    private NamedRecordSource getMatchups(String prefix,
+                                          MAConfig maConfig,
+                                          Header referenceRecordHeader,
+                                          Iterable<PixelPosProvider.PixelPosRecord> pixelPosRecords,
+                                          Product product,
+                                          AffineTransform i2oTransform) {
+
+        ProductRecordSource productRecordSource = new ProductRecordSource(product, referenceRecordHeader, pixelPosRecords, maConfig, i2oTransform);
+        Iterable<Record> extractedRecords;
         try {
-            ProductRecordSource productRecordSource = new ProductRecordSource(product, matchingReferenceRecordSource, maConfig);
-            Iterable<Record> extractedRecords;
-            try {
-                extractedRecords = productRecordSource.getRecords();
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to extract records.", e);
-            }
-            Header header = productRecordSource.getHeader();
-            RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-            RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-            List<Record> aggregatedRecords = new ArrayList<>();
-            int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-            for (Record extractedRecord : extractedRecords) {
-                Record aggregatedRecord = recordAggregator.transform(extractedRecord);
-                String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
-                if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
-                    aggregatedRecord.getAnnotationValues()[exclusionIndex] = MAMapper.EXCLUSION_REASON_EXPRESSION;
-                }
-                System.out.println("aggregatedRecord = " + aggregatedRecord);
-                aggregatedRecords.add(aggregatedRecord);
-                extractionPM.worked(1);
-            }
-            System.out.println("aggregatedRecords.size=" + aggregatedRecords.size());
-            return new NamedRecordSource(prefix, header, aggregatedRecords);
-        } finally {
-            extractionPM.done();
+            extractedRecords = productRecordSource.getRecords();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to extract records.", e);
         }
+        Header header = productRecordSource.getHeader();
+        RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+        RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
+        List<Record> aggregatedRecords = new ArrayList<>();
+        int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
+        for (Record extractedRecord : extractedRecords) {
+            Record aggregatedRecord = recordAggregator.transform(extractedRecord);
+            String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
+            if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
+                aggregatedRecord.getAnnotationValues()[exclusionIndex] = MAMapper.EXCLUSION_REASON_EXPRESSION;
+            }
+            System.out.println("aggregatedRecord = " + aggregatedRecord);
+            aggregatedRecords.add(aggregatedRecord);
+        }
+        System.out.println("aggregatedRecords.size=" + aggregatedRecords.size());
+        return new NamedRecordSource(prefix, header, aggregatedRecords);
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {

@@ -24,13 +24,13 @@ public class OverlappingRecordSelectorTest {
 
     @Before
     public void setUp() throws Exception {
-        records = new ArrayList<Record>();
+        records = new ArrayList<>();
     }
 
     @Test
     public void testSelection() throws Exception {
         int macroPixelSize = 3;
-        ProductRecordSource.PixelPosRecordFactory recordFactory = Mockito.mock(ProductRecordSource.PixelPosRecordFactory.class);
+        PixelPosProvider.PixelPosRecordFactory recordFactory = Mockito.mock(PixelPosProvider.PixelPosRecordFactory.class);
         OverlappingRecordSelector selector = new OverlappingRecordSelector(macroPixelSize, recordFactory, new TestHeader());
 
         mockPixelPosRecord(recordFactory, 0, new PixelPos(10, 11), 10); // keep this one
@@ -70,12 +70,12 @@ public class OverlappingRecordSelectorTest {
         assertEquals(expectedReason, actualReason);
     }
 
-    private void mockPixelPosRecord(ProductRecordSource.PixelPosRecordFactory recordFactory, int recordIndex, PixelPos pixelPos,
+    private void mockPixelPosRecord(PixelPosProvider.PixelPosRecordFactory recordFactory, int recordIndex, PixelPos pixelPos,
                                     int timeDiffInMinutes) {
         DefaultRecord record = new DefaultRecord(0, new GeoPos(recordIndex, -1), new Date(), new Object[0]);
         records.add(record);
-        OngoingStubbing<ProductRecordSource.PixelPosRecord> ongoingStubbing = Mockito.when(recordFactory.create(record));
-        ongoingStubbing.thenReturn(new ProductRecordSource.PixelPosRecord(pixelPos, record, timeDiffInMinutes * 60 * 1000));
+        OngoingStubbing<PixelPosProvider.PixelPosRecord> ongoingStubbing = Mockito.when(recordFactory.create(record));
+        ongoingStubbing.thenReturn(new PixelPosProvider.PixelPosRecord(pixelPos, record, timeDiffInMinutes * 60 * 1000));
     }
 
 

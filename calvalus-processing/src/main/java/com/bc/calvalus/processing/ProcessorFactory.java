@@ -32,6 +32,7 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -229,6 +230,7 @@ public class ProcessorFactory {
             Product inputProduct = processorAdapter.getInputProduct();
             Rectangle referenceDataRoi = null; // calculated by client
             processorAdapter.setProcessingRectangle(referenceDataRoi);
+            AffineTransform transform = processorAdapter.getInput2OutputTransform();
 
             Product product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
             // do something with the processed product

@@ -21,7 +21,13 @@ import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
+import java.awt.Rectangle;
+import java.awt.geom.Area;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Provides a {@code PixelPos} for a given {@code Record}, if possible.
@@ -34,7 +40,10 @@ public class PixelPosProvider {
     private final long productStartTime;
     private final long productEndTime;
     // todo make this a parameter
-    private int allowedPixelDisplacement;
+    private final int allowedPixelDisplacement;
+
+    private List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
+    private Area pixelArea;
 
 
     public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
@@ -67,7 +76,6 @@ public class PixelPosProvider {
      * Gets the temporally and spatially valid pixel position.
      *
      * @param referenceRecord The reference record
-     *
      * @return The pixel position, or {@code null} if no such exist.
      */
     public PixelPos getPixelPos(Record referenceRecord) {
@@ -146,4 +154,138 @@ public class PixelPosProvider {
         return time.getTime() + maxTimeDifference;
     }
 
+    private List<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
+        ArrayList<PixelPosRecord> pixelPosList = new ArrayList<>(128);
+        for (Record inputRecord : inputRecords) {
+            final PixelPos pixelPos = getPixelPos(inputRecord);
+            if (pixelPos != null) {
+                pixelPosList.add(new PixelPosRecord(pixelPos, inputRecord));
+            }
+        }
+        PixelPosRecord[] records = pixelPosList.toArray(new PixelPosRecord[pixelPosList.size()]);
+        Arrays.sort(records, new YXComparator());
+        return Arrays.asList(records);
+    }
+
+    public void computePixelPosRecords(Iterable<Record> referenceRecords, int macroPixelSize) {
+        pixelPosRecords = getInputRecordsSortedByPixelYX(referenceRecords);
+        pixelArea = new Area();
+
+        for (PixelPosProvider.PixelPosRecord pixelPosRecord : pixelPosRecords) {
+            PixelPos pixelPos = pixelPosRecord.getPixelPos();
+            Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
+                                                (int) pixelPos.y - macroPixelSize / 2,
+                                                macroPixelSize, macroPixelSize);
+            pixelArea.add(new Area(rectangle));
+        }
+    }
+
+    public List<PixelPosRecord> getPixelPosRecords() {
+        return pixelPosRecords;
+    }
+
+    public Area getPixelArea() {
+        return pixelArea;
+    }
+
+    static class YXComparator implements Comparator<PixelPosRecord> {
+
+        @Override
+        public int compare(PixelPosRecord o1, PixelPosRecord o2) {
+            // because in the code we get the pixel-pos by the geo-pos it can happen that pixels on the same line are
+            // wrongly sorted because of the little difference in y-direction.
+            // that's the reason why we compare y-position only as integer
+            int y1 = (int) o1.pixelPos.y;
+            int y2 = (int) o2.pixelPos.y;
+            if (y1 < y2) {
+                return -2;
+            } else if (y1 > y2) {
+                return 2;
+            }
+            float x1 = o1.pixelPos.x;
+            float x2 = o2.pixelPos.x;
+            if (x1 < x2) {
+                return -1;
+            } else if (x1 > x2) {
+                return 1;
+            }
+            return 0;
+        }
+    }
+
+    static class PixelPosRecordFactory {
+
+        private final int xAttributeIndex;
+        private final int yAttributeIndex;
+        private final int timeAttributeIndex;
+
+        PixelPosRecordFactory(Header header) {
+            xAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
+            yAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
+            timeAttributeIndex = header.getAttributeIndex(ProductRecordSource.PIXEL_TIME_ATT_NAME);
+        }
+
+        PixelPosRecord create(Record record) {
+            Object[] attributeValues = record.getAttributeValues();
+            int xPos = 0;
+            int yPos = 0;
+            if (attributeValues[xAttributeIndex] instanceof AggregatedNumber &&
+                attributeValues[yAttributeIndex] instanceof AggregatedNumber) {
+                float[] xAttributeValue = ((AggregatedNumber) attributeValues[xAttributeIndex]).data;
+                float[] yAttributeValue = ((AggregatedNumber) attributeValues[yAttributeIndex]).data;
+                xPos = (int) xAttributeValue[xAttributeValue.length / 2];
+                yPos = (int) yAttributeValue[yAttributeValue.length / 2];
+            } else if (attributeValues[xAttributeIndex] instanceof Integer &&
+                       attributeValues[yAttributeIndex] instanceof Integer) {
+                xPos = (Integer) attributeValues[xAttributeIndex];
+                yPos = (Integer) attributeValues[yAttributeIndex];
+            }
+            // can be null !!!!
+            Date eoTime = (Date) attributeValues[timeAttributeIndex];
+            Date insituTime = record.getTime();
+            long timeDiff = -1;
+            if (insituTime != null && eoTime != null) {
+                timeDiff = Math.abs(insituTime.getTime() - eoTime.getTime());
+            }
+            return new PixelPosRecord(new PixelPos(xPos, yPos), record, timeDiff);
+        }
+    }
+
+    public static class PixelPosRecord {
+
+        private final PixelPos pixelPos;
+        private final Record record;
+        private final long timeDiff;
+
+        PixelPosRecord(PixelPos pixelPos, Record record) {
+            this(pixelPos, record, -1);
+        }
+
+        PixelPosRecord(PixelPos pixelPos, Record record, long timeDiff) {
+            this.record = record;
+            this.pixelPos = pixelPos;
+            this.timeDiff = timeDiff;
+        }
+
+        public PixelPos getPixelPos() {
+            return pixelPos;
+        }
+
+        public long getTimeDifference() {
+            return timeDiff;
+        }
+
+        public Record getRecord() {
+            return record;
+        }
+
+        @Override
+        public String toString() {
+            return "PixelPosRecord{" +
+                   "pixelPos=" + pixelPos +
+                   ", record=" + record +
+                   ", timeDiff=" + timeDiff +
+                   '}';
+        }
+    }
 }

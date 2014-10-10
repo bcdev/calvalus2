@@ -17,11 +17,11 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.io.FileUtils;
@@ -130,6 +130,8 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         if (srcProductRect.isEmpty()) {
             throw new IllegalStateException("Can not create an empty subset.");
         }
+        ProductTransformation productTransformation = new ProductTransformation(srcProductRect, false, false);
+        setInput2OutputTransform(productTransformation.getTransform());
 
         final SubsetOp op = new SubsetOp();
         op.setSourceProduct(product);

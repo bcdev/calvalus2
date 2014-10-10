@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +33,7 @@ import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,7 +70,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public void prepareProcessing() throws IOException {
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE+ parameterSuffix);
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
@@ -124,7 +126,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Rectangle inputRectangle = getInputRectangle();
         if (inputRectangle != null) {
             Product inputProduct = getInputProduct();
-            productRect = new Rectangle(0, 0, inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+            productRect = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
         }
 
         outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
@@ -137,6 +139,19 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         KeywordHandler keywordHandler = process(pm, inputRectangle, inputPath, inputFile, productRectangle, velocityProps);
+
+        String productTransformation = keywordHandler.getProductTransformation();
+        if (productTransformation != null) {
+            System.out.println("productTransformation = " + productTransformation);
+            if (productRectangle == null) {
+                Product inputProduct = getInputProduct();
+                productRectangle = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+            }
+            ProductTransformation pTrans = ProductTransformation.parse(productTransformation, productRectangle);
+            AffineTransform transform = pTrans.getTransform();
+            System.out.println("transform = " + transform);
+            setInput2OutputTransform(transform);
+        }
 
         return keywordHandler.getOutputFiles();
     }

@@ -32,6 +32,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -89,6 +90,7 @@ public abstract class ProcessorAdapter {
     private Rectangle inputRectangle;
     private Rectangle roiRectangle;
     private File inputFile;
+    private AffineTransform input2OutputTransform;
 
     public ProcessorAdapter(MapContext mapContext) {
         this.mapContext = mapContext;
@@ -300,6 +302,14 @@ public abstract class ProcessorAdapter {
             LOG.info("computed inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
+    }
+
+    public AffineTransform getInput2OutputTransform() {
+        return input2OutputTransform;
+    }
+
+    public void setInput2OutputTransform(AffineTransform input2OutputTransform) {
+        this.input2OutputTransform = input2OutputTransform;
     }
 
     /**

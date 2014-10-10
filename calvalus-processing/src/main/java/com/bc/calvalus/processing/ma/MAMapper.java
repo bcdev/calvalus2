@@ -31,15 +31,16 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -74,7 +75,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
                                context.getTaskAttemptID(), split, (MiB / 2 + split.getLength()) / MiB));
 
-        RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
 
         long t0;
 
@@ -94,43 +94,32 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                    context.getTaskAttemptID(), inputProduct.getName(), productOpenTime / 1E3));
 
             t0 = now();
+            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+            Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
-                                                                     referenceRecordSource.getHeader().hasTime());
-            Iterable<Record> records;
+                                                                     referenceRecordHeader.hasTime());
+
             try {
-                records = referenceRecordSource.getRecords();
+                pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-            Area area = new Area();
-            int macroPixelSize = maConfig.getMacroPixelSize();
+            List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
+            Area pixelArea = pixelPosProvider.getPixelArea();
 
-            int numReferenceRecords = 0;
-            int numMatchingReferenceRecords = 0;
-            for (Record record : records) {
-                numReferenceRecords++;
-                PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
-                if (pixelPos != null) {
-                    numMatchingReferenceRecords++;
-                    Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
-                                                        (int) pixelPos.y - macroPixelSize / 2,
-                                                        macroPixelSize, macroPixelSize);
-                    area.add(new Area(rectangle));
-                }
-            }
             long referencePixelTime = (now() - t0);
-            LOG.info(String.format("tested %s reference records, found %s matches, took %s sec",
-                                   numReferenceRecords, numMatchingReferenceRecords, referencePixelTime / 1E3));
+            LOG.info(String.format("tested reference records, found %s matches, took %s sec",
+                                   pixelPosRecords.size(), referencePixelTime / 1E3));
 
-            if (!area.isEmpty()) {
+            if (!pixelArea.isEmpty()) {
                 t0 = now();
                 if (!pullProcessing) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
-                    Rectangle maRectangle = area.getBounds();
-                    maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
+                    Rectangle maRectangle = pixelArea.getBounds();
+                    maRectangle.grow(20, 20); // grow relevant pixelArea to have a bit surrounding product content
                     Rectangle processingRectangle = fullScene.intersection(maRectangle);
                     LOG.info("processing rectangle: " + processingRectangle);
                     processorAdapter.setProcessingRectangle(processingRectangle);
@@ -153,13 +142,27 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 LOG.info(String.format("opened processed product %s, took %s sec", product.getName(), productOpenTime / 1E3));
 
                 t0 = now();
-                extractionPM.beginTask("Extraction", numMatchingReferenceRecords * 2);
+                extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecords;
                 try {
-                    //re-create referenceRecordSource to read from the beginning (TODO could be improved)
-                    referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
-                    productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
+                    AffineTransform transform = processorAdapter.getInput2OutputTransform();
+                    if (transform == null) {
+                        transform = new AffineTransform();
+                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+                        pixelPosProvider = new PixelPosProvider(product,
+                                                                PixelTimeProvider.create(product),
+                                                                maConfig.getMaxTimeDifference(),
+                                                                referenceRecordHeader.hasTime());
+
+                        try {
+                            pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to retrieve input records.", e);
+                        }
+                        pixelPosRecords = pixelPosProvider.getPixelPosRecords();
+                    }
+                    productRecordSource = new ProductRecordSource(product, referenceRecordHeader, pixelPosRecords, maConfig, transform);
                     extractedRecords = productRecordSource.getRecords();
                     context.progress();
                 } catch (Exception e) {
@@ -173,8 +176,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 logAttributeNames(productRecordSource);
 
                 Header header = productRecordSource.getHeader();
-                Rectangle inputRect = processorAdapter.getInputRectangle();
-                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
                 RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
                 RecordSelector recordSelector = productRecordSource.createRecordSelector();
@@ -183,8 +184,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Collection<Record> aggregatedRecords = new ArrayList<Record>();
                 int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                 for (Record extractedRecord : extractedRecords) {
-                    Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
-                    Record aggregatedRecord = recordAggregator.transform(shiftedRecord);
+                    Record aggregatedRecord = recordAggregator.transform(extractedRecord);
                     String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
                     if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
                         aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;

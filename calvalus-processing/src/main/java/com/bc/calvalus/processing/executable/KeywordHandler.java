@@ -35,27 +35,35 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
     private final static String INPUT_PRODUCT_REGEX = "CALVALUS_INPUT_PRODUCT (.+)$";
     private final static String OUTPUT_PRODUCT_REGEX = "CALVALUS_OUTPUT_PRODUCT (.+)$";
     private final static String NAMED_OUTPUT_PRODUCT_REGEX = "CALVALUS_NAMED_OUTPUT_PRODUCT\\s+(\\S+)\\s+(\\S+)$";
+    private final static String PRODUCT_TRANSFORMATION = "CALVALUS_PRODUCT_TRANSFORMATION (.+)$";
+
     private final String programName;
     private final MapContext mapContext;
+
     private final Pattern progressPattern;
     private final Pattern outputProductPattern;
     private final Pattern namedOutputProductPattern;
     private final Pattern inputProductPattern;
+    private final Pattern productTransformationPattern;
+
     private final List<String> outputFiles;
     private final List<NamedOutput> namedOutputFiles;
     private String inputFile = null;
-
     private int lastScan = 0;
     private boolean skipProcessing = false;
+    private String productTransformation = null;
 
 
     KeywordHandler(String programName, MapContext mapContext) {
         this.programName = programName;
         this.mapContext = mapContext;
+
         this.progressPattern = Pattern.compile(PROGRESS_REGEX);
         this.outputProductPattern = Pattern.compile(OUTPUT_PRODUCT_REGEX);
         this.namedOutputProductPattern = Pattern.compile(NAMED_OUTPUT_PRODUCT_REGEX);
         this.inputProductPattern = Pattern.compile(INPUT_PRODUCT_REGEX);
+        this.productTransformationPattern = Pattern.compile(PRODUCT_TRANSFORMATION);
+
         this.outputFiles = new ArrayList<String>();
         this.namedOutputFiles = new ArrayList<NamedOutput>();
     }
@@ -101,6 +109,11 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
                 String file = namedOutputProductMatcher.group(2).trim();
                 namedOutputFiles.add(new NamedOutput(name, file));
             }
+            Matcher productTransformationMatcher = productTransformationPattern.matcher(line);
+            if (productTransformationMatcher.find()) {
+                productTransformation = productTransformationMatcher.group(1).trim();
+                return;
+            }
         }
     }
 
@@ -133,6 +146,10 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
 
     public boolean skipProcessing() {
         return skipProcessing;
+    }
+
+    public String getProductTransformation() {
+        return productTransformation;
     }
 
     public static class NamedOutput {
