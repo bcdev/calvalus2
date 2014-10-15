@@ -52,7 +52,6 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     private TemporalBinner temporalBinner;
     private CellProcessorChain cellChain;
     private boolean computeOutput;
-    private StringBuffer outputMetadata = new StringBuffer();
     private MetadataAggregator metadataAggregator;
     private MetadataSerializer metadataSerializer;
 
@@ -79,16 +78,17 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        if (outputMetadata.length() > 0) {
-            final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
-
+        // only write this file in the first reducer
+        final int partition = context.getTaskAttemptID().getTaskID().getId();
+        if (partition == 0) {
             // @todo 1 tb/tb check, which parameter are collected, reduce to the meaningful set, i.e. L3 processing params, remove jars! 2014-10-10
             final Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
             final MetadataElement aggregatedMetadata = metadataAggregator.getMetadata();
             final String aggregatedMetadataXml = metadataSerializer.toXml(aggregatedMetadata);
-
             metadata.put(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
+
+            final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
             ProcessingMetadata.write(workOutputPath, conf, metadata);
         }
     }
@@ -102,7 +102,6 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         final String metadataAggregatorName = binningConfig.getMetadataAggregatorName();
         metadataAggregator = MetadataAggregatorFactory.create(metadataAggregatorName);
         metadataSerializer = new MetadataSerializer();
-
 
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, regionGeometry);
