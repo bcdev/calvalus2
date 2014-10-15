@@ -104,7 +104,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             try {
                 pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
             } catch (Exception e) {
-                throw new RuntimeException("Failed to retrieve input records.", e);
+                throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
             }
             List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
             Area pixelArea = pixelPosProvider.getPixelArea();
@@ -158,7 +158,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         try {
                             pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
                         } catch (Exception e) {
-                            throw new RuntimeException("Failed to retrieve input records.", e);
+                            throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
                         }
                         pixelPosRecords = pixelPosProvider.getPixelPosRecords();
                     }
@@ -166,7 +166,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     extractedRecords = productRecordSource.getRecords();
                     context.progress();
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to retrieve input records.", e);
+                    throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
                 }
 
                 long recordReadTime = (now() - t0);
