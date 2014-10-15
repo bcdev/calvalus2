@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -43,7 +44,9 @@ public class L3Formatter {
     private final Configuration configuration;
     private final PlanetaryGrid planetaryGrid;
     private final String[] featureNames;
+    private final MetadataSerializer metadataSerializer;
     private FormatterConfig formatterConfig;
+
 
     public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
@@ -63,6 +66,7 @@ public class L3Formatter {
         formatterConfig.setOutputFile(outputFile);
         formatterConfig.setOutputFormat(outputFormat);
 
+        metadataSerializer = new MetadataSerializer();
     }
 
     public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
@@ -74,12 +78,13 @@ public class L3Formatter {
                 regionGeometry,
                 startTime,
                 endTime,
-                createConfigurationMetadataElement(regionName, regionWKT)
+                createConfigurationMetadataElement(regionName, regionWKT),
+                createInputsMetadataElement()
         );
     }
 
     private MetadataElement createConfigurationMetadataElement(String regionName, String regionWKT) {
-        MetadataElement element = new MetadataElement("calvalus.configuration");
+        final MetadataElement element = new MetadataElement("calvalus.configuration");
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_DIR, ',');
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_FORMAT);
@@ -100,9 +105,12 @@ public class L3Formatter {
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_USER);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_REQUEST);
 
-        // @todo 1 tb/tb de-serialize aggregated Metadata to MetadataElement and attach 2014-10-10
-        addConfigElementToMetadataElement(element, JobConfigNames.PROCESSING_HISTORY);
         return element;
+    }
+
+    private MetadataElement createInputsMetadataElement() {
+        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
+        return metadataSerializer.fromXml(processingHistoryXml);
     }
 
     private void addConfigElementToMetadataElement(MetadataElement parent, String name, char sep) {

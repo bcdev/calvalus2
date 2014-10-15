@@ -33,6 +33,8 @@ import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.binning.cellprocessor.CellProcessorChain;
 import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.beam.binning.operator.metadata.MetadataAggregator;
+import org.esa.beam.binning.operator.metadata.MetadataAggregatorFactory;
 import org.esa.beam.framework.datamodel.MetadataElement;
 
 import java.io.IOException;
@@ -51,17 +53,18 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     private CellProcessorChain cellChain;
     private boolean computeOutput;
     private StringBuffer outputMetadata = new StringBuffer();
+    private MetadataAggregator metadataAggregator;
+    private MetadataSerializer metadataSerializer;
 
     @Override
     protected void reduce(LongWritable binIndex, Iterable<L3SpatialBin> spatialBins, Context context) throws IOException, InterruptedException {
         final long idx = binIndex.get();
         if (idx == L3SpatialBin.METADATA_MAGIC_NUMBER) {
-            for (L3SpatialBin metadataBin : spatialBins) {
-                final String metadataXml= metadataBin.getMetadata();
-                final MetadataSerializer metadataSerializer = new MetadataSerializer();
-                final MetadataElement metadataElement = metadataSerializer.fromXml(metadataXml);
-                // @todo 1 tb/tb integrate MetadataAggregator here 2014-10-10
 
+            for (L3SpatialBin metadataBin : spatialBins) {
+                final String metadataXml = metadataBin.getMetadata();
+                final MetadataElement metadataElement = metadataSerializer.fromXml(metadataXml);
+                metadataAggregator.aggregateMetadata(metadataElement);
             }
         } else {
             TemporalBin temporalBin = temporalBinner.processSpatialBins(idx, spatialBins);
@@ -77,18 +80,16 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         if (outputMetadata.length() > 0) {
-            Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+
             // @todo 1 tb/tb check, which parameter are collected, reduce to the meaningful set, i.e. L3 processing params, remove jars! 2014-10-10
-            Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
+            final Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
-            // @todo 1 tb/tb get from MetadataAggregator here 2014-10-10
-            String history = outputMetadata.toString();
-            // @todo 1 tb/tb serialize aggregated MetadataElement to XML and write to metadata-file (will be read in later) 2014-10-10
-            metadata.put(JobConfigNames.PROCESSING_HISTORY, history);
+            final MetadataElement aggregatedMetadata = metadataAggregator.getMetadata();
+            final String aggregatedMetadataXml = metadataSerializer.toXml(aggregatedMetadata);
+
+            metadata.put(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
             ProcessingMetadata.write(workOutputPath, conf, metadata);
-
-            // @todo 1 tb/tb what to do in case of reducer-re-utilisation??? 2014-10-10
-            outputMetadata.setLength(0); // TODO is this sufficient in case of re-use
         }
     }
 
@@ -97,7 +98,11 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         this.conf = conf;
         computeOutput = conf.getBoolean(JobConfigNames.CALVALUS_L3_COMPUTE_OUTPUTS, true);
 
-        BinningConfig binningConfig = getL3Config(conf);
+        final BinningConfig binningConfig = getL3Config(conf);
+        final String metadataAggregatorName = binningConfig.getMetadataAggregatorName();
+        metadataAggregator = MetadataAggregatorFactory.create(metadataAggregatorName);
+        metadataSerializer = new MetadataSerializer();
+
 
         Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, regionGeometry);
