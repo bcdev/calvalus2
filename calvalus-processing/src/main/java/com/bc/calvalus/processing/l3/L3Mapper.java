@@ -80,7 +80,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
-                HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
+                HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   addedBands,
@@ -89,10 +89,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
                     //
-                    final MetadataElement metadataRoot = product.getMetadataRoot();
-                    final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
-                    final MetadataSerializer metadataSerializer = new MetadataSerializer();
-                    final String metaXml = metadataSerializer.toXml(processingGraph);
+                    final String metaXml = extractProcessingGraphXml(product);
                     context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
 
                 } else {
@@ -118,6 +115,13 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         LOG.info(MessageFormat.format("Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
                                       context.getTaskAttemptID(), processorAdapter.getInputPath(),
                                       spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+    }
+
+    static String extractProcessingGraphXml(Product product) {
+        final MetadataElement metadataRoot = product.getMetadataRoot();
+        final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
+        final MetadataSerializer metadataSerializer = new MetadataSerializer();
+        return metadataSerializer.toXml(processingGraph);
     }
 
     private static class SpatialBinEmitter implements SpatialBinConsumer {
