@@ -58,6 +58,19 @@
             <artifactId>beam-envisat-reader</artifactId>
         </dependency>
 
+        <!--  pfa fex -->
+
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-core</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.pfa</groupId>
+            <artifactId>pfa-database</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
         <!--  Hadoop -->
 
 <!--

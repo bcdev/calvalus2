@@ -23,4 +23,5 @@ com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
 com.bc.calvalus.production.hadoop.MRProductionType$Spi
 com.bc.calvalus.production.hadoop.MACompareProductionType$Spi
 com.bc.calvalus.production.hadoop.L2toL3ProductionType$Spi
+com.bc.calvalus.production.hadoop.FexProductionType$Spi
 com.bc.calvalus.production.hadoop.CombinationsProductionType$Spi
