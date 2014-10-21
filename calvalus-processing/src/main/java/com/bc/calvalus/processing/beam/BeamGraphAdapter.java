@@ -15,6 +15,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
@@ -29,6 +30,7 @@ import org.esa.beam.framework.gpf.graph.HeaderTarget;
 import org.esa.beam.framework.gpf.graph.Node;
 import org.esa.beam.framework.gpf.graph.NodeContext;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -85,13 +87,22 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
             }
             Header header = graph.getHeader();
             List<HeaderSource> sources = header.getSources();
+            Path inputPath = getInputPath();
             Operator sourceProducts = new SourceProductContainerOperator();
             for (HeaderSource headerSource : sources) {
                 String sourceId = headerSource.getName();
-                String sourceFilePath = headerSource.getLocation();
+                Path sourcePath = new Path(headerSource.getLocation());
 
-                Product product =  CalvalusProductIO.readProduct(new Path(sourceFilePath), getConfiguration(), null);
-                sourceProducts.setSourceProduct(sourceId, product);
+                File inputFile = getInputFile();
+                Product sourceProduct;
+                if (sourcePath.equals(inputPath) && inputFile != null) {
+                    // if inputFile is set and path is the inputPath us the (local)file instead
+                    System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
+                    sourceProduct = ProductIO.readProduct(inputFile);
+                } else {
+                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), null);
+                }
+                sourceProducts.setSourceProduct(sourceId, sourceProduct);
             }
             graphContext = new GraphContext(graph, sourceProducts);
             HeaderTarget target = header.getTarget();
