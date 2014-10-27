@@ -42,8 +42,8 @@ public class PixelPosProvider {
     // todo make this a parameter
     private final int allowedPixelDisplacement;
 
-    private List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
-    private Area pixelArea;
+//    private List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
+//    private Area pixelArea;
 
 
     public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
@@ -167,10 +167,12 @@ public class PixelPosProvider {
         return Arrays.asList(records);
     }
 
-    public void computePixelPosRecords(Iterable<Record> referenceRecords, int macroPixelSize) {
-        pixelPosRecords = getInputRecordsSortedByPixelYX(referenceRecords);
-        pixelArea = new Area();
+    public List<PixelPosRecord> computePixelPosRecords(Iterable<Record> referenceRecords) {
+        return getInputRecordsSortedByPixelYX(referenceRecords);
+    }
 
+    public static Area computePixelArea(List<PixelPosRecord> pixelPosRecords, int macroPixelSize) {
+        Area pixelArea = new Area();
         for (PixelPosProvider.PixelPosRecord pixelPosRecord : pixelPosRecords) {
             PixelPos pixelPos = pixelPosRecord.getPixelPos();
             Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
@@ -178,13 +180,6 @@ public class PixelPosProvider {
                                                 macroPixelSize, macroPixelSize);
             pixelArea.add(new Area(rectangle));
         }
-    }
-
-    public List<PixelPosRecord> getPixelPosRecords() {
-        return pixelPosRecords;
-    }
-
-    public Area getPixelArea() {
         return pixelArea;
     }
 

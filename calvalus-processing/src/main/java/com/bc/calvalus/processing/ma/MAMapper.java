@@ -100,14 +100,14 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
                                                                      referenceRecordHeader.hasTime());
-
+            List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
             try {
-                pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
             }
-            List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
-            Area pixelArea = pixelPosProvider.getPixelArea();
+
+            Area pixelArea = pixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
 
             long referencePixelTime = (now() - t0);
             LOG.info(String.format("tested reference records, found %s matches, took %s sec",
@@ -124,8 +124,8 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     LOG.info("processing rectangle: " + processingRectangle);
                     processorAdapter.setProcessingRectangle(processingRectangle);
                 }
-                Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
-                if (product == null) {
+                Product processedProduct = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
+                if (processedProduct == null) {
                     LOG.info("Processed product is null!");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                     return;
@@ -135,11 +135,11 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 }
 
                 // Actually wrong name for processed products, but we need the field "source_name" in the export data table
-                product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
+                processedProduct.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
                 context.progress();
                 productOpenTime = (now() - t0);
-                LOG.info(String.format("opened processed product %s, took %s sec", product.getName(), productOpenTime / 1E3));
+                LOG.info(String.format("opened processed product %s, took %s sec", processedProduct.getName(), productOpenTime / 1E3));
 
                 t0 = now();
                 extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
@@ -150,19 +150,18 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     if (transform == null) {
                         transform = new AffineTransform();
                         referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
-                        pixelPosProvider = new PixelPosProvider(product,
-                                                                PixelTimeProvider.create(product),
+                        pixelPosProvider = new PixelPosProvider(processedProduct,
+                                                                PixelTimeProvider.create(processedProduct),
                                                                 maConfig.getMaxTimeDifference(),
                                                                 referenceRecordHeader.hasTime());
 
                         try {
-                            pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
                         } catch (Exception e) {
                             throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
                         }
-                        pixelPosRecords = pixelPosProvider.getPixelPosRecords();
                     }
-                    productRecordSource = new ProductRecordSource(product, referenceRecordHeader, pixelPosRecords, maConfig, transform);
+                    productRecordSource = new ProductRecordSource(processedProduct, referenceRecordHeader, pixelPosRecords, maConfig, transform);
                     extractedRecords = productRecordSource.getRecords();
                     context.progress();
                 } catch (Exception e) {
@@ -196,7 +195,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
                 int numMatchUps = 0;
                 for (Record selectedRecord : selectedRecords) {
-                    context.write(new Text(String.format("%06d_%s", selectedRecord.getId(), product.getName())),
+                    context.write(new Text(String.format("%06d_%s", selectedRecord.getId(), processedProduct.getName())),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
                     extractionPM.worked(1);

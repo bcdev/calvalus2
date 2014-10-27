@@ -115,14 +115,13 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
                                                                      referenceRecordHeader.hasTime());
+            List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
             try {
-                pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-
-            List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
-            Area pixelArea = pixelPosProvider.getPixelArea();
+            Area pixelArea = pixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
 
             pm.worked(5);
 
@@ -212,11 +211,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                                 referenceRecordHeader.hasTime());
 
                         try {
-                            pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
                         } catch (Exception e) {
                             throw new RuntimeException("Failed to retrieve input records.", e);
                         }
-                        pixelPosRecords = pixelPosProvider.getPixelPosRecords();
                     }
                     String l2Prefix = "L2_" + namedOutput.getName() + "_";
                     NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords, l2DiffProduct, l2Prefix, i2oTransform);
@@ -255,11 +253,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                                             referenceRecordHeader.hasTime());
 
                     try {
-                        pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords(), maConfig.getMacroPixelSize());
+                        pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to retrieve input records.", e);
                     }
-                    pixelPosRecords = pixelPosProvider.getPixelPosRecords();
                 }
                 String l2Prefix = "L2_";
                 NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, referenceRecordHeader, pixelPosRecords, l2Product, l2Prefix, i2oTransform);
