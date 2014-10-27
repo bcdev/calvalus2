@@ -175,7 +175,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 logAttributeNames(productRecordSource);
 
                 Header header = productRecordSource.getHeader();
-                RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+                RecordTransformer recordAggregator = RecordAggregator.createAggregator(header, maConfig.getFilteredMeanCoeff());
                 RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
                 RecordSelector recordSelector = productRecordSource.createRecordSelector();
 

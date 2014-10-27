@@ -91,12 +91,6 @@ public class ProductRecordSource implements RecordSource {
         return "BEAM product format";
     }
 
-    public static RecordTransformer createAggregator(Header header, MAConfig config) {
-        String pixelMaskAttributeName = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + PIXEL_MASK_ATT_NAME;
-        final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(pixelMaskAttributeName);
-        return new RecordAggregator(pixelMaskAttributeIndex, config.getFilteredMeanCoeff());
-    }
-
     public static RecordFilter createRecordFilter(Header header, MAConfig config) {
         if (shallApplyGoodRecordExpression(config)) {
             final String goodRecordExpression = config.getGoodRecordExpression();

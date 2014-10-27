@@ -35,6 +35,7 @@ import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.PixelTimeProvider;
 import com.bc.calvalus.processing.ma.ProductRecordSource;
 import com.bc.calvalus.processing.ma.Record;
+import com.bc.calvalus.processing.ma.RecordAggregator;
 import com.bc.calvalus.processing.ma.RecordFilter;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordTransformer;
@@ -375,7 +376,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             throw new RuntimeException("Failed to extract records.", e);
         }
         Header header = productRecordSource.getHeader();
-        RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
+        RecordTransformer recordAggregator = RecordAggregator.createAggregator(header, maConfig.getFilteredMeanCoeff());
         RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
         List<Record> aggregatedRecords = new ArrayList<>();
         int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);

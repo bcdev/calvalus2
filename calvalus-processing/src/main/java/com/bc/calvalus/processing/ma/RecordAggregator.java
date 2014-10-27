@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 
 /**
  * Converts even int[] into floating point values, not at least to symbolize NaN
@@ -10,6 +11,12 @@ public class RecordAggregator implements RecordTransformer {
 
     private final int maskAttributeIndex;
     private final double filteredMeanCoeff;
+
+    public static RecordTransformer createAggregator(Header header, double filteredMeanCoeff) {
+        String pixelMaskAttributeName = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX +ProductRecordSource.PIXEL_MASK_ATT_NAME;
+        final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(pixelMaskAttributeName);
+        return new RecordAggregator(pixelMaskAttributeIndex, filteredMeanCoeff);
+    }
 
     public RecordAggregator(int maskAttributeIndex, double filteredMeanCoeff) {
         this.maskAttributeIndex = maskAttributeIndex;
