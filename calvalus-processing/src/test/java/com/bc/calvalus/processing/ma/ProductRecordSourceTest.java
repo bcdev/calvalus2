@@ -454,12 +454,12 @@ public class ProductRecordSourceTest {
                                                                  config.getMaxTimeDifference(),
                                                                  referenceRecordHeader.hasTime());
 
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
         try {
-            pixelPosProvider.computePixelPosRecords(input.getRecords(), config.getMacroPixelSize());
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(input.getRecords());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
-        List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
         assertEquals(1, pixelPosRecords.size());
         assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
 
@@ -528,12 +528,12 @@ public class ProductRecordSourceTest {
                                                                  config.getMaxTimeDifference(),
                                                                  referenceRecordHeader.hasTime());
 
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
         try {
-            pixelPosProvider.computePixelPosRecords(input.getRecords(), config.getMacroPixelSize());
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(input.getRecords());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
-        List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
         assertEquals(1, pixelPosRecords.size());
         assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
 
@@ -620,12 +620,12 @@ public class ProductRecordSourceTest {
                                                                  maConfig.getMaxTimeDifference(),
                                                                  referenceRecordHeader.hasTime());
 
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
         try {
-            pixelPosProvider.computePixelPosRecords(referenceRecords.getRecords(), maConfig.getMacroPixelSize());
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecords.getRecords());
         } catch (Exception e) {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
-        List<PixelPosProvider.PixelPosRecord> pixelPosRecords = pixelPosProvider.getPixelPosRecords();
 
         return new ProductRecordSource(product, referenceRecordHeader, pixelPosRecords, maConfig, tranform);
     }
