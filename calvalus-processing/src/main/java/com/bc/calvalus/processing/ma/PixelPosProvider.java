@@ -42,9 +42,6 @@ public class PixelPosProvider {
     // todo make this a parameter
     private final int allowedPixelDisplacement;
 
-//    private List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
-//    private Area pixelArea;
-
 
     public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
                             boolean hasReferenceTime) {
@@ -73,16 +70,13 @@ public class PixelPosProvider {
     }
 
     /**
-     * Gets the temporally and spatially valid pixel position.
+     * Gets the temporally and spatially valid pixel position and time.
+     * Wraps it in a pixel pos record
      *
      * @param referenceRecord The reference record
      * @return The pixel position, or {@code null} if no such exist.
      */
-    public PixelPos getPixelPos(Record referenceRecord) {
-        return getTemporallyAndSpatiallyValidPixelPos(referenceRecord);
-    }
-
-    public PixelPos getTemporallyAndSpatiallyValidPixelPos(Record referenceRecord) {
+    private PixelPosRecord getPixelPosRecord(Record referenceRecord) {
 
         if (testTime()) {
 
@@ -100,13 +94,17 @@ public class PixelPosProvider {
             if (pixelPos != null) {
                 long pixelTime = pixelTimeProvider.getTime(pixelPos).getTime();
                 if (pixelTime >= minReferenceTime && pixelTime <= maxReferenceTime) {
-                    return pixelPos;
+                    return new PixelPosRecord(pixelPos, referenceRecord, pixelTime);
                 }
             }
         } else {
             PixelPos pixelPos = getSpatiallyValidPixelPos(referenceRecord);
             if (pixelPos != null) {
-                return pixelPos;
+                long pixelTime = -1;
+                if (pixelTimeProvider != null) {
+                    pixelTime = pixelTimeProvider.getTime(pixelPos).getTime();
+                }
+                return new PixelPosRecord(pixelPos, referenceRecord, pixelTime);
             }
         }
         return null;
@@ -157,9 +155,9 @@ public class PixelPosProvider {
     private List<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
         ArrayList<PixelPosRecord> pixelPosList = new ArrayList<>(128);
         for (Record inputRecord : inputRecords) {
-            final PixelPos pixelPos = getPixelPos(inputRecord);
-            if (pixelPos != null) {
-                pixelPosList.add(new PixelPosRecord(pixelPos, inputRecord));
+            final PixelPosRecord pixelPosRecord = getPixelPosRecord(inputRecord);
+            if (pixelPosRecord != null) {
+                pixelPosList.add(pixelPosRecord);
             }
         }
         PixelPosRecord[] records = pixelPosList.toArray(new PixelPosRecord[pixelPosList.size()]);
@@ -212,28 +210,42 @@ public class PixelPosProvider {
 
         private final PixelPos pixelPos;
         private final Record record;
-        private final long timeDiff;
+        private final long referenceTime;
+        private final long eoTime;
 
-        PixelPosRecord(PixelPos pixelPos, Record record) {
-            this(pixelPos, record, -1);
+        PixelPosRecord(PixelPos pixelPos, Record record, Date eoTime) {
+            this(pixelPos, record, eoTime != null ? eoTime.getTime() : -1);
         }
 
-        PixelPosRecord(PixelPos pixelPos, Record record, long timeDiff) {
+        PixelPosRecord(PixelPos pixelPos, Record record, long eoTime) {
             this.record = record;
             this.pixelPos = pixelPos;
-            this.timeDiff = timeDiff;
+            this.referenceTime = record.getTime() != null ? record.getTime().getTime(): -1;
+            this.eoTime = eoTime;
         }
 
         public PixelPos getPixelPos() {
             return pixelPos;
         }
 
-        public long getTimeDifference() {
-            return timeDiff;
+        public long getReferenceTime() {
+            return referenceTime;
+        }
+
+        public long getEoTime() {
+            return eoTime;
         }
 
         public Record getRecord() {
             return record;
+        }
+
+        public long getTimeDifference() {
+            long timeDiff = -1;
+            if (referenceTime != -1 && eoTime != -1) {
+                timeDiff = Math.abs(referenceTime - eoTime);
+            }
+            return timeDiff;
         }
 
         @Override
@@ -241,7 +253,8 @@ public class PixelPosProvider {
             return "PixelPosRecord{" +
                    "pixelPos=" + pixelPos +
                    ", record=" + record +
-                   ", timeDiff=" + timeDiff +
+                   ", referenceTime=" + referenceTime +
+                   ", eoTime=" + eoTime +
                    '}';
         }
     }

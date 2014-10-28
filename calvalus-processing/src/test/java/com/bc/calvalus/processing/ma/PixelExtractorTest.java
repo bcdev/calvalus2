@@ -1,9 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.Product;
 import org.junit.Test;
-
-import java.awt.geom.AffineTransform;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -12,12 +9,6 @@ import static org.junit.Assert.assertArrayEquals;
  * @author Norman
  */
 public class PixelExtractorTest {
-
-    @Test(expected = NullPointerException.class)
-    public void testExtractDoesNotAcceptNullRecord() throws Exception {
-        PixelExtractor extractor = new PixelExtractor(new TestHeader(), new Product("A", "B", 2, 2), 1, null, null, true, new AffineTransform());
-        extractor.extract(null);
-    }
 
     @Test
     public void testFlipIntArray() throws Exception {
