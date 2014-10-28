@@ -54,7 +54,15 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
             }
         } else {
             dataOutput.writeInt(METADATA_MAGIC_NUMBER);
-            dataOutput.writeUTF(metadata);
+            int chunkSize = 65535 / 3;  // UTF may blow up the string to trice the size in bytes
+            int noOfChunks = (metadata.length() + 1) / chunkSize;
+            dataOutput.writeInt(noOfChunks);
+            int chunkStart = 0;
+            for (int i=0; i<noOfChunks; ++i) {
+                int chunkStop = Math.min((i+1)*chunkSize, metadata.length());
+                dataOutput.writeUTF(metadata.substring(chunkStart, chunkStop));
+                chunkStart = chunkStop;
+            }
         }
 
      }
@@ -63,15 +71,20 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
          // // Note, we don't serialise the index, because it is usually the MapReduce key
          setNumObs(dataInput.readInt());
          if (getNumObs() != METADATA_MAGIC_NUMBER) {
-            final int numFeatures = dataInput.readInt();
-            if (getFeatureValues() == null || getFeatureValues().length != numFeatures) {
-                setNumFeatures(numFeatures);
-            }
-            for (int i = 0; i < numFeatures; i++) {
-                getFeatureValues()[i] = dataInput.readFloat();
-            }
+             final int numFeatures = dataInput.readInt();
+             if (getFeatureValues() == null || getFeatureValues().length != numFeatures) {
+                 setNumFeatures(numFeatures);
+             }
+             for (int i = 0; i < numFeatures; i++) {
+                 getFeatureValues()[i] = dataInput.readFloat();
+             }
          } else {
-            metadata = dataInput.readUTF();
+             int noOfChunks = dataInput.readInt();
+             StringBuffer accu = new StringBuffer();
+             for (int i=0; i<noOfChunks; ++i) {
+                 accu.append(dataInput.readUTF());
+             }
+             metadata = accu.toString();
          }
      }
 
@@ -80,7 +93,7 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
      }
 
      public static SpatialBin read(long index, DataInput dataInput) throws IOException {
-         SpatialBin bin = new SpatialBin();
+         L3SpatialBin bin = new L3SpatialBin();
          bin.setIndex(index);
          bin.readFields(dataInput);
          return bin;
