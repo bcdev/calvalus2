@@ -68,7 +68,7 @@ public class RecordWritableTest {
     @Test
     public void testToString() throws Exception {
 
-        RecordWritable recordWritable = new RecordWritable(inputValues, new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+        RecordWritable recordWritable = new RecordWritable(inputValues, new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
 
         assertEquals("" +
                      "Benguela\t" +

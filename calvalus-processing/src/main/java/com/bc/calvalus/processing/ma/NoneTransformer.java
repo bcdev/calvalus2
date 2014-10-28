@@ -16,6 +16,12 @@
 
 package com.bc.calvalus.processing.ma;
 
-public interface RecordTransformer {
-    Iterable<Record> transform(Iterable<Record> records);
+/**
+* A transformer that passed the input unchanged as output
+*/
+class NoneTransformer implements RecordTransformer {
+    @Override
+    public Iterable<Record> transform(Iterable<Record> records) {
+        return records;
+    }
 }

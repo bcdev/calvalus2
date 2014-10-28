@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 /**
  * @author Marco Peters
  */
-public class OverlappingRecordSelectorTest {
+public class OverlappingRecordTransformTest {
 
     private static final int EXCLUSION_REASON_INDEX = 0;
 
@@ -31,7 +31,7 @@ public class OverlappingRecordSelectorTest {
     public void testSelection() throws Exception {
         int macroPixelSize = 3;
         PixelPosProvider.PixelPosRecordFactory recordFactory = Mockito.mock(PixelPosProvider.PixelPosRecordFactory.class);
-        OverlappingRecordSelector selector = new OverlappingRecordSelector(macroPixelSize, recordFactory, new TestHeader());
+        OverlappingRecordTransform selector = new OverlappingRecordTransform(macroPixelSize, recordFactory, new TestHeader());
 
         mockPixelPosRecord(recordFactory, 0, new PixelPos(10, 11), 10); // keep this one
         mockPixelPosRecord(recordFactory, 1, new PixelPos(100, 11), 10);
@@ -48,20 +48,20 @@ public class OverlappingRecordSelectorTest {
         mockPixelPosRecord(recordFactory, 10, new PixelPos(11, 21), 5);
 
 
-        List<Record> selectedRecords = (List<Record>) selector.select(records);
+        List<Record> selectedRecords = (List<Record>) selector.transform(records);
 
         assertEquals(11, selectedRecords.size());
         assertRecord(0, "", selectedRecords.get(0));
-        assertRecord(1, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(1));
-        assertRecord(2, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(2));
+        assertRecord(1, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(1));
+        assertRecord(2, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(2));
         assertRecord(3, "", selectedRecords.get(3));
-        assertRecord(4, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(4));
-        assertRecord(5, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(5));
-        assertRecord(6, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(6));
-        assertRecord(7, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(7));
-        assertRecord(8, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(8));
+        assertRecord(4, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(4));
+        assertRecord(5, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(5));
+        assertRecord(6, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(6));
+        assertRecord(7, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(7));
+        assertRecord(8, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(8));
         assertRecord(9, "", selectedRecords.get(9));
-        assertRecord(10, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(10));
+        assertRecord(10, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING, selectedRecords.get(10));
     }
 
     private static void assertRecord(int srcIndex, String expectedReason, Record record) {

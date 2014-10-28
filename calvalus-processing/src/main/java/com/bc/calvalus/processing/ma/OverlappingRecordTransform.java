@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
- * A {@link RecordSelector selector} implementation to get rid of overlapping match-ups.
+ * A {@link com.bc.calvalus.processing.ma.RecordTransformer transformer} implementation to get rid of overlapping match-ups.
  *
  * @author Marco Peters
  */
-class OverlappingRecordSelector implements RecordSelector {
+class OverlappingRecordTransform implements RecordTransformer {
 
     static final String EXCLUSION_REASON_OVERLAPPING = "OVERLAPPING";
 
@@ -18,7 +18,16 @@ class OverlappingRecordSelector implements RecordSelector {
     private int macroPixelSize;
     private final int exclusionIndex;
 
-    OverlappingRecordSelector(int macroPixelSize, PixelPosProvider.PixelPosRecordFactory pixelPosRecordFactory, Header header) {
+    public static RecordTransformer create(Header header, int macroPixelSize, boolean filterOverlapping) {
+            if (filterOverlapping) {
+                PixelPosProvider.PixelPosRecordFactory factory = new PixelPosProvider.PixelPosRecordFactory(header);
+                return new OverlappingRecordTransform(macroPixelSize, factory, header);
+            } else {
+                return new NoneTransformer();
+            }
+        }
+
+    OverlappingRecordTransform(int macroPixelSize, PixelPosProvider.PixelPosRecordFactory pixelPosRecordFactory, Header header) {
         this.macroPixelSize = macroPixelSize;
         this.pixelPosRecordFactory = pixelPosRecordFactory;
         workRecords = new ArrayList<>();
@@ -27,7 +36,7 @@ class OverlappingRecordSelector implements RecordSelector {
     }
 
     @Override
-    public Iterable<Record> select(Iterable<Record> records) {
+    public Iterable<Record> transform(Iterable<Record> records) {
         for (Record record : records) {
             String reason = (String) record.getAnnotationValues()[exclusionIndex];
             if (!reason.isEmpty()) {

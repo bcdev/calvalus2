@@ -38,8 +38,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -55,7 +54,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int MiB = 1024 * 1024;
-    public static final String EXCLUSION_REASON_EXPRESSION = "RECORD_EXPRESSION";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -107,7 +105,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
             }
 
-            Area pixelArea = pixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
+            Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
 
             long referencePixelTime = (now() - t0);
             LOG.info(String.format("tested reference records, found %s matches, took %s sec",
@@ -144,7 +142,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 t0 = now();
                 extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
                 ProductRecordSource productRecordSource;
-                Iterable<Record> extractedRecords;
+                Iterable<Record> extractedRecordSource;
                 try {
                     AffineTransform transform = processorAdapter.getInput2OutputTransform();
                     if (transform == null) {
@@ -162,7 +160,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         }
                     }
                     productRecordSource = new ProductRecordSource(processedProduct, referenceRecordHeader, pixelPosRecords, maConfig, transform);
-                    extractedRecords = productRecordSource.getRecords();
+                    extractedRecordSource = productRecordSource.getRecords();
                     context.progress();
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
@@ -174,27 +172,19 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                        recordReadTime / 1E3));
                 logAttributeNames(productRecordSource);
 
-                Header header = productRecordSource.getHeader();
-                RecordTransformer recordAggregator = RecordAggregator.createAggregator(header, maConfig.getFilteredMeanCoeff());
-                RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-                RecordSelector recordSelector = productRecordSource.createRecordSelector();
-
                 t0 = now();
-                Collection<Record> aggregatedRecords = new ArrayList<Record>();
-                int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-                for (Record extractedRecord : extractedRecords) {
-                    Record aggregatedRecord = recordAggregator.transform(extractedRecord);
-                    String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
-                    if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
-                        aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;
-                    }
-                    aggregatedRecords.add(aggregatedRecord);
-                    extractionPM.worked(1);
-                }
+                Header header = productRecordSource.getHeader();
+                RecordTransformer aggregator = RecordAggregator.create(header, maConfig.getFilteredMeanCoeff());
+                RecordTransformer expressionFilter = RecordFilterTransformer.createExpressionFilter(header, maConfig.getGoodRecordExpression());
+                RecordTransformer overlappingFilter = OverlappingRecordTransform.create(header, maConfig.getMacroPixelSize(), maConfig.getFilterOverlapping());
 
-                Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
+                Iterable<Record> extractedRecords = monitorProgress(extractedRecordSource, extractionPM);
+                Iterable<Record> aggregatedRecords = aggregator.transform(extractedRecords);
+                Iterable<Record> expressionFilteredRecords = expressionFilter.transform(aggregatedRecords);
+                Iterable<Record> overlappingFilteredRecords = overlappingFilter.transform(expressionFilteredRecords);
+
                 int numMatchUps = 0;
-                for (Record selectedRecord : selectedRecords) {
+                for (Record selectedRecord : overlappingFilteredRecords) {
                     context.write(new Text(String.format("%06d_%s", selectedRecord.getId(), processedProduct.getName())),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
@@ -258,5 +248,35 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static long now() {
         return System.currentTimeMillis();
+    }
+
+    private static Iterable<Record> monitorProgress(Iterable<Record> recordIterable, ProgressMonitor pm) {
+        return new Iterable<Record>() {
+            @Override
+            public Iterator<Record> iterator() {
+                return new RecIt(recordIterable.iterator(), pm);
+            }
+        };
+    }
+
+    private static class RecIt extends RecordIterator {
+
+        private final Iterator<Record> inputIt;
+        private final ProgressMonitor pm;
+
+        private RecIt(Iterator<Record> inputIt, ProgressMonitor pm) {
+            this.inputIt = inputIt;
+            this.pm = pm;
+        }
+
+        @Override
+        protected Record getNextRecord() {
+            if (inputIt.hasNext()) {
+                Record next = inputIt.next();
+                pm.worked(1);
+                return next;
+            }
+            return null;
+        }
     }
 }

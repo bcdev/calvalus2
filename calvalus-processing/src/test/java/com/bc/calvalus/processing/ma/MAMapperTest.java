@@ -70,8 +70,8 @@ public class MAMapperTest {
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
-        testMatchUp(collectedMatchUps, 1, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
-        testMatchUp(collectedMatchUps, 2, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 1, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 2, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING);
         testMatchUp(collectedMatchUps, 3);
         testMatchUp(collectedMatchUps, 4);
         testMatchUp(collectedMatchUps, 5);

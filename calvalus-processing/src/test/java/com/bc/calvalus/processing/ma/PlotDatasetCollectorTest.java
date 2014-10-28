@@ -78,7 +78,7 @@ public class PlotDatasetCollectorTest {
         collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"}, new Object[]{"ExclusionReason"});
         collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41}, new Object[]{""});
         collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.1, 0.11}, new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+        collector.processDataRecord(new Object[]{"Benguela", 0.1, 0.11}, new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
         collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27}, new Object[]{""});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();

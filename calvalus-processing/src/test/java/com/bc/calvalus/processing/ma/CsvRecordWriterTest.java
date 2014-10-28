@@ -33,10 +33,10 @@ public class CsvRecordWriterTest {
 
         writer.processHeaderRecord(createDataHeader("CHL"), new Object[]{"ExclusionReason"});
         writer.processDataRecord(createDataRecord1(0.7), new Object[]{""});
-        writer.processDataRecord(createDataRecord2(2.2), new Object[]{MAMapper.EXCLUSION_REASON_EXPRESSION});
+        writer.processDataRecord(createDataRecord2(2.2), new Object[]{RecordFilterTransformer.EXCLUSION_REASON_EXPRESSION});
         writer.processDataRecord(createDataRecord2(0.3), new Object[]{""});
         writer.processDataRecord(createDataRecord3(1.4), new Object[]{""});
-        writer.processDataRecord(createDataRecord3(4.5), new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+        writer.processDataRecord(createDataRecord3(4.5), new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
         writer.processDataRecord(createDataRecord4(Double.NaN), new Object[]{""});
         writer.processDataRecord(createDataRecord4(null), new Object[]{""});
         writer.finalizeRecordProcessing();
@@ -90,7 +90,7 @@ public class CsvRecordWriterTest {
         writer.processDataRecord(createDataRecord1(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 0.7, 0.01)), new Object[]{""});
         writer.processDataRecord(createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)), new Object[]{""});
         writer.processDataRecord(createDataRecord2(new AggregatedNumber(2, 3, 1, 0.0, 1.0, 0.3, 0.02)),
-                                 new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+                                 new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
         writer.processDataRecord(createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.03)), new Object[]{""});
         writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)), new Object[]{""});
         writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0)),
@@ -145,7 +145,7 @@ public class CsvRecordWriterTest {
                                                                            new float[]{0.29F, 0.3F, 0.31F})), new Object[]{""});
         writer.processDataRecord(createDataRecord2(new AggregatedNumber(5, 5, 5, 24.0, 42.0, 0.42, 0.042,
                                                                            new float[]{42.0F, 0.42F, 0.042F})),
-                                 new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
+                                 new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
         writer.processDataRecord(createDataRecord3(new AggregatedNumber(3, 3, 0, 0.0, 1.0, 1.4, 0.01,
                                                                            new float[]{1.39F, 1.4F, 1.41F})), new Object[]{""});
         writer.processDataRecord(createDataRecord4(new AggregatedNumber(0, 0, 0, 0.0, 0.0, Double.NaN, 0.0,

@@ -25,18 +25,16 @@ import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.calvalus.processing.ma.DefaultHeader;
 import com.bc.calvalus.processing.ma.FilteredRecordSource;
 import com.bc.calvalus.processing.ma.GeometryRecordFilter;
 import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.MAConfig;
-import com.bc.calvalus.processing.ma.MAMapper;
 import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.PixelTimeProvider;
 import com.bc.calvalus.processing.ma.ProductRecordSource;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordAggregator;
-import com.bc.calvalus.processing.ma.RecordFilter;
+import com.bc.calvalus.processing.ma.RecordFilterTransformer;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.ma.RecordTransformer;
 import com.bc.calvalus.processing.ma.RecordWritable;
@@ -122,7 +120,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
             }
-            Area pixelArea = pixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
+            Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
 
             pm.worked(5);
 
@@ -376,21 +374,18 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             throw new RuntimeException("Failed to extract records.", e);
         }
         Header header = productRecordSource.getHeader();
-        RecordTransformer recordAggregator = RecordAggregator.createAggregator(header, maConfig.getFilteredMeanCoeff());
-        RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-        List<Record> aggregatedRecords = new ArrayList<>();
-        int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-        for (Record extractedRecord : extractedRecords) {
-            Record aggregatedRecord = recordAggregator.transform(extractedRecord);
-            String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
-            if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
-                aggregatedRecord.getAnnotationValues()[exclusionIndex] = MAMapper.EXCLUSION_REASON_EXPRESSION;
-            }
-            System.out.println("aggregatedRecord = " + aggregatedRecord);
-            aggregatedRecords.add(aggregatedRecord);
+
+        RecordTransformer aggregator = RecordAggregator.create(header, maConfig.getFilteredMeanCoeff());
+        RecordTransformer expressionFilter = RecordFilterTransformer.createExpressionFilter(header, maConfig.getGoodRecordExpression());
+
+        Iterable<Record> aggregatedRecords = aggregator.transform(extractedRecords);
+        Iterable<Record> expressionFilteredRecords = expressionFilter.transform(aggregatedRecords);
+
+        List<Record> records = new ArrayList<>();
+        for (Record rec : expressionFilteredRecords) {
+            records.add(rec);
         }
-        System.out.println("aggregatedRecords.size=" + aggregatedRecords.size());
-        return new NamedRecordSource(prefix, header, aggregatedRecords);
+        return new NamedRecordSource(prefix, header, records);
     }
 
     private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {

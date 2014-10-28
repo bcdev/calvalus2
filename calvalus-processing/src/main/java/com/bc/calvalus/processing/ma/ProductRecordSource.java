@@ -91,46 +91,6 @@ public class ProductRecordSource implements RecordSource {
         return "BEAM product format";
     }
 
-    public static RecordFilter createRecordFilter(Header header, MAConfig config) {
-        if (shallApplyGoodRecordExpression(config)) {
-            final String goodRecordExpression = config.getGoodRecordExpression();
-            final RecordFilter recordFilter;
-            try {
-                recordFilter = ExpressionRecordFilter.create(header, goodRecordExpression);
-            } catch (ParseException e) {
-                String msg = "Illegal configuration: goodRecordExpression '" + goodRecordExpression + "' is invalid: " + e.getMessage();
-                throw new IllegalStateException(msg, e);
-            }
-            return recordFilter;
-        } else {
-            return new RecordFilter() {
-                @Override
-                public boolean accept(Record record) {
-                    return true;
-                }
-            };
-        }
-    }
-
-    public RecordSelector createRecordSelector() {
-        if (config.getFilterOverlapping()) {
-            PixelPosProvider.PixelPosRecordFactory pixelPosRecordFactory = new PixelPosProvider.PixelPosRecordFactory(getHeader());
-            return new OverlappingRecordSelector(config.getMacroPixelSize(), pixelPosRecordFactory, getHeader());
-        } else {
-            return new RecordSelector() {
-                @Override
-                public Iterable<Record> select(Iterable<Record> aggregatedRecords) {
-                    return aggregatedRecords;
-                }
-            };
-        }
-    }
-
-    private static boolean shallApplyGoodRecordExpression(MAConfig config) {
-        String goodRecordExpression = config.getGoodRecordExpression();
-        return goodRecordExpression != null && !goodRecordExpression.isEmpty();
-    }
-
     private static boolean shallApplyTimeCriterion(MAConfig config) {
         Double maxTimeDifference = config.getMaxTimeDifference();
         return maxTimeDifference != null && maxTimeDifference > 0;
