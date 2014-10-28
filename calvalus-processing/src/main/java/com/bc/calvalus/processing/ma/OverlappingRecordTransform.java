@@ -1,6 +1,9 @@
 package com.bc.calvalus.processing.ma;
 
+import org.esa.beam.framework.datamodel.PixelPos;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -12,7 +15,7 @@ class OverlappingRecordTransform implements RecordTransformer {
 
     static final String EXCLUSION_REASON_OVERLAPPING = "OVERLAPPING";
 
-    private final PixelPosProvider.PixelPosRecordFactory pixelPosRecordFactory;
+    private final PixelPosRecordFactory pixelPosRecordFactory;
     private ArrayList<PixelPosProvider.PixelPosRecord> workRecords;
     private ArrayList<Record> selectedRecords;
     private int macroPixelSize;
@@ -20,14 +23,14 @@ class OverlappingRecordTransform implements RecordTransformer {
 
     public static RecordTransformer create(Header header, int macroPixelSize, boolean filterOverlapping) {
             if (filterOverlapping) {
-                PixelPosProvider.PixelPosRecordFactory factory = new PixelPosProvider.PixelPosRecordFactory(header);
+                PixelPosRecordFactory factory = new PixelPosRecordFactory(header);
                 return new OverlappingRecordTransform(macroPixelSize, factory, header);
             } else {
                 return new NoneTransformer();
             }
         }
 
-    OverlappingRecordTransform(int macroPixelSize, PixelPosProvider.PixelPosRecordFactory pixelPosRecordFactory, Header header) {
+    OverlappingRecordTransform(int macroPixelSize, PixelPosRecordFactory pixelPosRecordFactory, Header header) {
         this.macroPixelSize = macroPixelSize;
         this.pixelPosRecordFactory = pixelPosRecordFactory;
         workRecords = new ArrayList<>();
@@ -89,5 +92,42 @@ class OverlappingRecordTransform implements RecordTransformer {
         return yDist < macroPixelSize && xDist < macroPixelSize;
     }
 
+    static class PixelPosRecordFactory {
+
+        private final int xAttributeIndex;
+        private final int yAttributeIndex;
+        private final int timeAttributeIndex;
+
+        PixelPosRecordFactory(Header header) {
+            xAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_X_ATT_NAME);
+            yAttributeIndex = header.getAttributeIndex(PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX + ProductRecordSource.PIXEL_Y_ATT_NAME);
+            timeAttributeIndex = header.getAttributeIndex(ProductRecordSource.PIXEL_TIME_ATT_NAME);
+        }
+
+        PixelPosProvider.PixelPosRecord create(Record record) {
+            Object[] attributeValues = record.getAttributeValues();
+            int xPos = 0;
+            int yPos = 0;
+            if (attributeValues[xAttributeIndex] instanceof AggregatedNumber &&
+                attributeValues[yAttributeIndex] instanceof AggregatedNumber) {
+                float[] xAttributeValue = ((AggregatedNumber) attributeValues[xAttributeIndex]).data;
+                float[] yAttributeValue = ((AggregatedNumber) attributeValues[yAttributeIndex]).data;
+                xPos = (int) xAttributeValue[xAttributeValue.length / 2];
+                yPos = (int) yAttributeValue[yAttributeValue.length / 2];
+            } else if (attributeValues[xAttributeIndex] instanceof Integer &&
+                       attributeValues[yAttributeIndex] instanceof Integer) {
+                xPos = (Integer) attributeValues[xAttributeIndex];
+                yPos = (Integer) attributeValues[yAttributeIndex];
+            }
+            // can be null !!!!
+            Date eoTime = (Date) attributeValues[timeAttributeIndex];
+            Date insituTime = record.getTime();
+            long timeDiff = -1;
+            if (insituTime != null && eoTime != null) {
+                timeDiff = Math.abs(insituTime.getTime() - eoTime.getTime());
+            }
+            return new PixelPosProvider.PixelPosRecord(new PixelPos(xPos, yPos), record, timeDiff);
+        }
+    }
 
 }
