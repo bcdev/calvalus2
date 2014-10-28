@@ -304,7 +304,7 @@ public class ProductRecordSourceTest {
 
         assertNotNull(output.getHeader());
         assertTrue(output.getHeader().hasLocation());
-        assertTrue(output.getHeader().hasTime());   // pixel_time in attributes
+        assertFalse(output.getHeader().hasTime());
         assertNotNull(output.getHeader().getAttributeNames());
 
         Iterable<Record> records = output.getRecords();

@@ -1,13 +1,13 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import com.bc.jexp.ParseException;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 
 /**
@@ -30,7 +30,6 @@ public class ProductRecordSource implements RecordSource {
     private final Iterable<PixelPosProvider.PixelPosRecord> pixelPosRecords;
     private final boolean empty;
     private final PixelExtractor pixelExtractor;
-    private final MAConfig config;
 
     public ProductRecordSource(Product product,
                                Header referenceRecordHeader,
@@ -51,14 +50,12 @@ public class ProductRecordSource implements RecordSource {
 
         this.pixelPosRecords = pixelPosRecords;
         this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(referenceRecordHeader);
-        this.config = config;
 
         pixelExtractor = new PixelExtractor(referenceRecordHeader,
                                             product,
-                                            this.config.getMacroPixelSize(),
-                                            this.config.getGoodPixelExpression(),
-                                            this.config.getMaxTimeDifference(),
-                                            this.config.getCopyInput(),
+                                            config.getMacroPixelSize(),
+                                            config.getGoodPixelExpression(),
+                                            config.getCopyInput(),
                                             transform);
     }
 
@@ -136,7 +133,14 @@ public class ProductRecordSource implements RecordSource {
 
         @Override
         protected Record getRecord(PixelPosProvider.PixelPosRecord input) throws IOException {
-            return pixelExtractor.extract(input.getRecord(), input.getPixelPos());
+            Record referenceRecord = input.getRecord();
+            PixelPos originalPixelPos = input.getPixelPos();
+            long eoTime = input.getEoTime();
+            Date originalPixelTime = null;
+            if (eoTime != -1) {
+                originalPixelTime = new Date(eoTime);
+            }
+            return pixelExtractor.extract(referenceRecord, originalPixelPos, originalPixelTime);
         }
     }
 

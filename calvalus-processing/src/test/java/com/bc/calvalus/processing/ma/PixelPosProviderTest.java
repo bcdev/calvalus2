@@ -16,20 +16,11 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -38,16 +29,17 @@ public class PixelPosProviderTest {
 
     @Test
     public void testYXComparator() throws Exception {
+        Record dummyRecord = RecordUtils.create(42.0);
         PixelPosProvider.YXComparator comparator = new PixelPosProvider.YXComparator();
         List<PixelPosProvider.PixelPosRecord> list = new ArrayList<>();
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(10, 0), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(12, 0), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(1, 6), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(16, 3), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(1, 3), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(4, 0), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(130, 23.498f), null));
-        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(125, 23.501f), null));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(10, 0), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(12, 0), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(1, 6), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(16, 3), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(1, 3), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(4, 0), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(130, 23.498f), dummyRecord, -1L));
+        list.add(new PixelPosProvider.PixelPosRecord(new PixelPos(125, 23.501f), dummyRecord, -1L));
 
         Collections.sort(list, comparator);
         assertEquals(new PixelPos(4, 0), list.get(0).getPixelPos());

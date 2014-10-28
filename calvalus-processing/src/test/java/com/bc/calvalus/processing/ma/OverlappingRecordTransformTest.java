@@ -31,7 +31,8 @@ public class OverlappingRecordTransformTest {
     public void testSelection() throws Exception {
         int macroPixelSize = 3;
         OverlappingRecordTransform.PixelPosRecordFactory recordFactory = Mockito.mock(OverlappingRecordTransform.PixelPosRecordFactory.class);
-        OverlappingRecordTransform selector = new OverlappingRecordTransform(macroPixelSize, recordFactory, new TestHeader());
+        Header header = new TestHeader();
+        OverlappingRecordTransform selector = new OverlappingRecordTransform(macroPixelSize, recordFactory, header);
 
         mockPixelPosRecord(recordFactory, 0, new PixelPos(10, 11), 10); // keep this one
         mockPixelPosRecord(recordFactory, 1, new PixelPos(100, 11), 10);
@@ -72,7 +73,7 @@ public class OverlappingRecordTransformTest {
 
     private void mockPixelPosRecord(OverlappingRecordTransform.PixelPosRecordFactory recordFactory, int recordIndex, PixelPos pixelPos,
                                     int timeDiffInMinutes) {
-        DefaultRecord record = new DefaultRecord(0, new GeoPos(recordIndex, -1), new Date(), new Object[0]);
+        DefaultRecord record = new DefaultRecord(0, new GeoPos(recordIndex, -1), new Date(0L), new Object[0]);
         records.add(record);
         OngoingStubbing<PixelPosProvider.PixelPosRecord> ongoingStubbing = Mockito.when(recordFactory.create(record));
         ongoingStubbing.thenReturn(new PixelPosProvider.PixelPosRecord(pixelPos, record, timeDiffInMinutes * 60 * 1000));

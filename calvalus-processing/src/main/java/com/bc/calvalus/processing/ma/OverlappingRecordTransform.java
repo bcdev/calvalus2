@@ -121,12 +121,7 @@ class OverlappingRecordTransform implements RecordTransformer {
             }
             // can be null !!!!
             Date eoTime = (Date) attributeValues[timeAttributeIndex];
-            Date insituTime = record.getTime();
-            long timeDiff = -1;
-            if (insituTime != null && eoTime != null) {
-                timeDiff = Math.abs(insituTime.getTime() - eoTime.getTime());
-            }
-            return new PixelPosProvider.PixelPosRecord(new PixelPos(xPos, yPos), record, timeDiff);
+            return new PixelPosProvider.PixelPosRecord(new PixelPos(xPos, yPos), record, eoTime);
         }
     }
 

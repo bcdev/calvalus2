@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -18,6 +17,7 @@ import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * Generates an output record from a {@link Product} using an input reference record.
@@ -36,16 +36,13 @@ public class PixelExtractor {
     private final AffineTransform i2oTransform;
     private final AffineTransform o2iTransform;
     private final Mask pixelMask;
-    private final PixelTimeProvider pixelTimeProvider;
     private final int macroPixelSize;
     private final boolean copyInput;
-    private final PixelPosProvider pixelPosProvider;
 
     public PixelExtractor(Header inputHeader,
                           Product product,
                           int macroPixelSize,
                           String goodPixelMaskExpression,
-                          Double maxTimeDifference,
                           boolean copyInput,
                           AffineTransform i2oTransform) {
         this.product = product;
@@ -61,9 +58,6 @@ public class PixelExtractor {
             this.pixelMask = null;
         }
         this.macroPixelSize = macroPixelSize;
-        this.pixelTimeProvider = PixelTimeProvider.create(product);
-        this.pixelPosProvider = new PixelPosProvider(product, pixelTimeProvider, maxTimeDifference, inputHeader.hasTime());
-
         this.copyInput = copyInput;
 
         // Important note: createHeader() is dependent on a number of field values,
@@ -81,28 +75,12 @@ public class PixelExtractor {
     /**
      * Extracts an output record.
      *
-     * @param inputRecord The input record.
-     * @return The output record or {@code null}, if a certain inclusion criterion is not met.
-     * @throws java.io.IOException If any I/O error occurs
-     */
-    public Record extract(Record inputRecord) throws IOException {
-        Assert.notNull(inputRecord, "inputRecord");
-        final PixelPos pixelPos = pixelPosProvider.getTemporallyAndSpatiallyValidPixelPos(inputRecord);
-        if (pixelPos != null) {
-            return extract(inputRecord, pixelPos);
-        }
-        return null;
-    }
-
-    /**
-     * Extracts an output record.
-     *
      * @param inputRecord      The input record.
      * @param originalPixelPos The validated original (Level 1) pixel pos.
      * @return The output record or {@code null}, if a certain inclusion criterion is not met.
      * @throws java.io.IOException If an I/O error occurs
      */
-    public Record extract(Record inputRecord, PixelPos originalPixelPos) throws IOException {
+    public Record extract(Record inputRecord, PixelPos originalPixelPos, Date originalPixelTime) throws IOException {
 
         Point2D extractionPos = i2oTransform.transform(originalPixelPos, null);
         PixelPos extractionPixelPos = new PixelPos((float) extractionPos.getX(), (float) extractionPos.getY());
@@ -190,7 +168,7 @@ public class PixelExtractor {
         // field "source_name"
         values[index++] = product.getName();
         // field "pixel_time"
-        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(extractionPixelPos) : null;
+        values[index++] = originalPixelTime;
         // field "pixel_x"
         values[index++] = flipIntArray(pixelXPositions, width, height, flipX, flipY);
         // field "pixel_y"
@@ -344,19 +322,9 @@ public class PixelExtractor {
             attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + tiePointGridName);
         }
 
-        return new DefaultHeader(true,
-                                 pixelTimeProvider != null,
+        return new DefaultHeader(inputHeader.hasLocation(),
+                                 inputHeader.hasTime(),
                                  attributeNames.toArray(new String[attributeNames.size()]));
-    }
-
-    /**
-     * Gets the temporally and spatially valid pixel position.
-     *
-     * @param referenceRecord The reference record
-     * @return The pixel position, or {@code null} if no such exist.
-     */
-    public PixelPos getPixelPos(Record referenceRecord) {
-        return pixelPosProvider.getPixelPos(referenceRecord);
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {
