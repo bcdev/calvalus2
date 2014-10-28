@@ -55,7 +55,7 @@ public final class L3SpatialBin extends SpatialBin implements Writable {
         } else {
             dataOutput.writeInt(METADATA_MAGIC_NUMBER);
             int chunkSize = 65535 / 3;  // UTF may blow up the string to trice the size in bytes
-            int noOfChunks = (metadata.length() + 1) / chunkSize;
+            int noOfChunks = (metadata.length() + chunkSize - 1) / chunkSize;
             dataOutput.writeInt(noOfChunks);
             int chunkStart = 0;
             for (int i=0; i<noOfChunks; ++i) {

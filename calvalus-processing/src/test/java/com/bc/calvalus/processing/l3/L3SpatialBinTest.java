@@ -30,8 +30,8 @@ public class L3SpatialBinTest {
 
     @Test
     public void testMetadataExchange() throws IOException {
-        StringBuffer accu = new StringBuffer(65535);
-        for (int i=0; i<65535; ++i) {
+        StringBuffer accu = new StringBuffer(65000);
+        for (int i=0; i<65000; ++i) {
             accu.append('m');
         }
         String metadata = accu.toString();
