@@ -19,9 +19,9 @@ package com.bc.calvalus.processing.l2;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.analysis.Quicklooks;
-import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -57,10 +57,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
-        // todo - replace by an IdentityAdapter or something similar
-        ProcessorAdapter processorAdapter = new SubsetProcessorAdapter(context);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Level 2 format", 100);
+
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 20 : 80;
+        final int progressForSaving = processorAdapter.supportsPullProcessing() ? 80 : 20;
+        pm.beginTask("Level 2 format", 100 + 20);
         try {
             Configuration jobConfig = context.getConfiguration();
             Path inputPath = processorAdapter.getInputPath();
@@ -82,7 +84,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 }
                 LOG.info("process missing: target product does not exist");
             }
-            Product targetProduct = processorAdapter.getInputProduct();
+            Product targetProduct = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
 
             if (!isProductEmpty(context, targetProduct)) {
                 targetProduct = doReprojection(jobConfig, targetProduct);
@@ -90,7 +92,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 if (!spatialSubsetParameter.isEmpty()) {
                     targetProduct = GPF.createProduct("Subset", spatialSubsetParameter, targetProduct);
                 }
-                ProcessorAdapter.copySceneRasterStartAndStopTime(processorAdapter.getInputProduct(), targetProduct, null);
+                if (ProcessorAdapter.hasInvalidStartAndStopTime(targetProduct)) {
+                    ProcessorAdapter.copySceneRasterStartAndStopTime(processorAdapter.getInputProduct(), targetProduct, null);
+                }
 
                 try {
                     context.setStatus("Quicklooks");
@@ -105,7 +109,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
                     context.setStatus("Writing");
                     targetProduct = writeProductFile(targetProduct, productFormatter, context, jobConfig,
-                                                     outputFormat, pm);
+                                                     outputFormat, SubProgressMonitor.create(pm, progressForSaving));
                     pm.worked(10);
 
                     context.setStatus("Metadata");
@@ -145,8 +149,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         File productFile = productFormatter.createTemporaryProductFile();
         LOG.info("Start writing product to file: " + productFile.getName());
 
-        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false,
-                               SubProgressMonitor.create(pm, 80));
+        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         LOG.info("Finished writing product.");
 
         context.setStatus("Copying");
