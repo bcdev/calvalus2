@@ -27,6 +27,7 @@ import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.binning.operator.FormatterConfig;
+import org.esa.beam.binning.operator.metadata.GlobalMetadata;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -45,11 +46,12 @@ public class L3Formatter {
     private final PlanetaryGrid planetaryGrid;
     private final String[] featureNames;
     private final MetadataSerializer metadataSerializer;
+    private final BinningConfig binningConfig;
     private FormatterConfig formatterConfig;
 
 
     public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
-        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        binningConfig = HadoopBinManager.getBinningConfig(conf);
         planetaryGrid = binningConfig.createPlanetaryGrid();
         this.startTime = parseTime(dateStart);
         this.endTime = parseTime(dateStop);
@@ -71,6 +73,7 @@ public class L3Formatter {
 
     public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
+        final MetadataElement processingGraphMetadata = getProcessingGraphMetadata(regionName, regionWKT);
         Formatter.format(planetaryGrid,
                 temporalBinSource,
                 featureNames,
@@ -78,12 +81,20 @@ public class L3Formatter {
                 regionGeometry,
                 startTime,
                 endTime,
-                createConfigurationMetadataElement(regionName, regionWKT),
-                createInputsMetadataElement()
-        );
+                processingGraphMetadata);
     }
 
-    private MetadataElement createConfigurationMetadataElement(String regionName, String regionWKT) {
+    private MetadataElement getProcessingGraphMetadata(String regionName, String regionWKT) {
+        GlobalMetadata globalMetadata = GlobalMetadata.create(binningConfig);
+        final MetadataElement processingGraphMetadata = globalMetadata.asMetadataElement();
+        processingGraphMetadata.addElement(createCalvalusMetadataElement(regionName, regionWKT));
+
+        final MetadataElement node_0 = processingGraphMetadata.getElement("node.0");
+        node_0.addElement(createInputsMetadataElement());
+        return processingGraphMetadata;
+    }
+
+    private MetadataElement createCalvalusMetadataElement(String regionName, String regionWKT) {
         final MetadataElement element = new MetadataElement("calvalus.configuration");
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_DIR, ',');
@@ -98,13 +109,8 @@ public class L3Formatter {
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_OPERATOR);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_PARAMETERS);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L3_PARAMETERS);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MA_PARAMETERS);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_TA_PARAMETERS);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_OUTPUT_DIR);
         addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_USER);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_REQUEST);
-
         return element;
     }
 

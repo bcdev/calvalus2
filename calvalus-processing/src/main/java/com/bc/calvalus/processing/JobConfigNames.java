@@ -86,7 +86,6 @@ public interface JobConfigNames {
     String CALVALUS_REGION_GEOMETRY = "calvalus.regionGeometry";
     String CALVALUS_USER = "calvalus.user";
     String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";
-    String CALVALUS_REQUEST = "calvalus.request";
     String CALVALUS_PROCESS_ALL = "calvalus.processAll";
 
     /**
