@@ -110,12 +110,13 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             l2ProcessorAdapter.setInputFile(l1LocalFile);
 
             Header referenceRecordHeader = referenceRecordSource.getHeader();
-            PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
-                                                                     PixelTimeProvider.create(inputProduct),
-                                                                     maConfig.getMaxTimeDifference(),
-                                                                     referenceRecordHeader.hasTime());
+
             List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
             try {
+                PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
+                                                                                     PixelTimeProvider.create(inputProduct),
+                                                                                     maConfig.getMaxTimeDifference(),
+                                                                                     referenceRecordHeader.hasTime());
                 pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
             } catch (Exception e) {
                 throw new RuntimeException("Failed to retrieve input records.", e);
@@ -200,23 +201,24 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     Product l2DiffProduct = l2ProcessorAdapter.openProcessedProduct();
 
                     // extract Level 2 match-ups
-                    AffineTransform i2oTransform = l2ProcessorAdapter.getInput2OutputTransform();
-                    if (i2oTransform == null) {
-                        i2oTransform = new AffineTransform();
+                    List<PixelPosProvider.PixelPosRecord> pixelPosRecords4L2 = pixelPosRecords;
+                    AffineTransform i2oTransform4L2 = l2ProcessorAdapter.getInput2OutputTransform();
+                    if (i2oTransform4L2 == null) {
+                        i2oTransform4L2 = new AffineTransform();
                         referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
-                        pixelPosProvider = new PixelPosProvider(l2DiffProduct,
-                                                                PixelTimeProvider.create(l2DiffProduct),
-                                                                maConfigWithoutExpression.getMaxTimeDifference(),
-                                                                referenceRecordHeader.hasTime());
 
                         try {
-                            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
+                            PixelPosProvider pixelPosProvider = new PixelPosProvider(l2DiffProduct,
+                                                                                     PixelTimeProvider.create(l2DiffProduct),
+                                                                                     maConfigWithoutExpression.getMaxTimeDifference(),
+                                                                                     referenceRecordHeader.hasTime());
+                            pixelPosRecords4L2 = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
                         } catch (Exception e) {
                             throw new RuntimeException("Failed to retrieve input records.", e);
                         }
                     }
                     String l2Prefix = "L2_" + namedOutput.getName() + "_";
-                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords, l2DiffProduct, l2Prefix, i2oTransform);
+                    NamedRecordSource l2Matchups = extractMatchups(context, maConfigWithoutExpression, referenceRecordHeader, pixelPosRecords4L2, l2DiffProduct, l2Prefix, i2oTransform4L2);
                     mainLoopPM.worked(5);
                     if (l2Matchups == null) {
                         return;
@@ -242,23 +244,24 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
                 // extract Level 2 match-ups
-                AffineTransform i2oTransform = l2ProcessorAdapter.getInput2OutputTransform();
-                if (i2oTransform == null) {
-                    i2oTransform = new AffineTransform();
+                List<PixelPosProvider.PixelPosRecord> pixelPosRecords4L2 = pixelPosRecords;
+                AffineTransform i2oTransform4L2 = l2ProcessorAdapter.getInput2OutputTransform();
+                if (i2oTransform4L2 == null) {
+                    i2oTransform4L2 = new AffineTransform();
                     referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
-                    pixelPosProvider = new PixelPosProvider(l2Product,
-                                                            PixelTimeProvider.create(l2Product),
-                                                            maConfigWithoutExpression.getMaxTimeDifference(),
-                                                            referenceRecordHeader.hasTime());
 
                     try {
-                        pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
+                        PixelPosProvider pixelPosProvider = new PixelPosProvider(l2Product,
+                                                                                 PixelTimeProvider.create(l2Product),
+                                                                                 maConfigWithoutExpression.getMaxTimeDifference(),
+                                                                                 referenceRecordHeader.hasTime());
+                        pixelPosRecords4L2 = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
                     } catch (Exception e) {
                         throw new RuntimeException("Failed to retrieve input records.", e);
                     }
                 }
                 String l2Prefix = "L2_";
-                NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, referenceRecordHeader, pixelPosRecords, l2Product, l2Prefix, i2oTransform);
+                NamedRecordSource baseL2Matchups = extractMatchups(context, maConfig, referenceRecordHeader, pixelPosRecords4L2, l2Product, l2Prefix, i2oTransform4L2);
                 mainLoopPM.worked(5);
                 if (baseL2Matchups == null) {
                     return;
