@@ -27,11 +27,8 @@ import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.binning.operator.FormatterConfig;
-import org.esa.beam.binning.operator.metadata.GlobalMetadata;
-import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.StringUtils;
 
 import java.text.ParseException;
 
@@ -73,7 +70,9 @@ public class L3Formatter {
 
     public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
-        final MetadataElement processingGraphMetadata = getProcessingGraphMetadata(regionName, regionWKT);
+        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
+        final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
+        // TODO maybe replace region information in metadata if overwritten in formatting request
         Formatter.format(planetaryGrid,
                 temporalBinSource,
                 featureNames,
@@ -84,65 +83,7 @@ public class L3Formatter {
                 processingGraphMetadata);
     }
 
-    private MetadataElement getProcessingGraphMetadata(String regionName, String regionWKT) {
-        GlobalMetadata globalMetadata = GlobalMetadata.create(binningConfig);
-        final MetadataElement processingGraphMetadata = globalMetadata.asMetadataElement();
-        processingGraphMetadata.addElement(createCalvalusMetadataElement(regionName, regionWKT));
-
-        final MetadataElement node_0 = processingGraphMetadata.getElement("node.0");
-        node_0.addElement(createInputsMetadataElement());
-        return processingGraphMetadata;
-    }
-
-    private MetadataElement createCalvalusMetadataElement(String regionName, String regionWKT) {
-        final MetadataElement element = new MetadataElement("calvalus.configuration");
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_PRODUCTION_TYPE);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_DIR, ',');
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_FORMAT);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MIN_DATE);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_MAX_DATE);
-        addElementToMetadataElement(element, JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
-        addElementToMetadataElement(element, JobConfigNames.CALVALUS_REGION_GEOMETRY, regionWKT);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_CALVALUS_BUNDLE);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_BEAM_BUNDLE);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_OPERATOR);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_L2_PARAMETERS);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_OUTPUT_DIR);
-        addConfigElementToMetadataElement(element, JobConfigNames.CALVALUS_USER);
-        return element;
-    }
-
-    private MetadataElement createInputsMetadataElement() {
-        final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
-        return metadataSerializer.fromXml(processingHistoryXml);
-    }
-
-    private void addConfigElementToMetadataElement(MetadataElement parent, String name, char sep) {
-        String value = configuration.get(name);
-        if (value != null) {
-            String[] valueSplits = StringUtils.split(value, new char[]{sep}, true);
-            MetadataElement inputPathsElement = new MetadataElement(name);
-            for (int i = 0; i < valueSplits.length; i++) {
-                inputPathsElement.addAttribute(
-                        new MetadataAttribute(name + "." + i, ProductData.createInstance(valueSplits[i]), true));
-            }
-            parent.addElement(inputPathsElement);
-        }
-    }
-
-    private void addConfigElementToMetadataElement(MetadataElement parent, String name) {
-        addElementToMetadataElement(parent, name, configuration.get(name));
-    }
-
-    private void addElementToMetadataElement(MetadataElement parent, String name, String value) {
-        if (value != null) {
-            parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
-        }
-    }
-
-    public static ProductData.UTC parseTime(String timeString) {
+    private static ProductData.UTC parseTime(String timeString) {
         try {
             return ProductData.UTC.parse(timeString, "yyyy-MM-dd");
         } catch (ParseException e) {

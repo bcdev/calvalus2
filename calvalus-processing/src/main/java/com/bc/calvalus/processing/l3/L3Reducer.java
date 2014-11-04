@@ -33,12 +33,18 @@ import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinner;
 import org.esa.beam.binning.cellprocessor.CellProcessorChain;
 import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.beam.binning.operator.metadata.GlobalMetadata;
 import org.esa.beam.binning.operator.metadata.MetadataAggregator;
 import org.esa.beam.binning.operator.metadata.MetadataAggregatorFactory;
+import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Reduces list of spatial bins to a temporal bin.
@@ -47,6 +53,12 @@ import java.util.Map;
  * @author Marco Zuehlke
  */
 public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable, L3TemporalBin> implements Configurable {
+
+    private static final String DATETIME_OUTPUT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+    private static final SimpleDateFormat DATETIME_OUTPUT_FORMAT = new SimpleDateFormat(DATETIME_OUTPUT_PATTERN);
+    static {
+        DATETIME_OUTPUT_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+    }
 
     private Configuration conf;
     private TemporalBinner temporalBinner;
@@ -81,16 +93,18 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         // only write this file in the first reducer
         final int partition = context.getTaskAttemptID().getTaskID().getId();
         if (partition == 0) {
-            // @todo 1 tb/tb check, which parameter are collected, reduce to the meaningful set, i.e. L3 processing params, remove jars! 2014-10-10
             final Map<String, String> metadata = ProcessingMetadata.config2metadata(conf, JobConfigNames.LEVEL3_METADATA_KEYS);
-
-            final MetadataElement aggregatedMetadata = metadataAggregator.getMetadata();
-            final String aggregatedMetadataXml = metadataSerializer.toXml(aggregatedMetadata);
+            final MetadataElement processingGraphMetadata = createL3Metadata();
+            final String aggregatedMetadataXml = metadataSerializer.toXml(processingGraphMetadata);
             metadata.put(JobConfigNames.PROCESSING_HISTORY, aggregatedMetadataXml);
-
             final Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
             ProcessingMetadata.write(workOutputPath, conf, metadata);
         }
+    }
+
+    @Override
+    public Configuration getConf() {
+        return conf;
     }
 
     @Override
@@ -110,6 +124,24 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         conf.setStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, binningContext.getBinManager().getResultFeatureNames());
     }
 
+    private MetadataElement createL3Metadata() {
+        final String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
+        final String regionWKT = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        final BinningConfig binningConfig = getL3Config(conf);
+        final MetadataElement sourcesMetadata = metadataAggregator.getMetadata();
+
+        final GlobalMetadata globalMetadata = GlobalMetadata.create(binningConfig);
+        final MetadataElement processingGraphMetadata = globalMetadata.asMetadataElement();
+        final MetadataElement node_0 = processingGraphMetadata.getElement("node.0");
+        final MetadataElement parameters = node_0.getElement("parameters");
+
+        addCalvalusMetadata(node_0);
+        addCalvalusParameters(parameters, regionName, regionWKT);
+        node_0.addElement(sourcesMetadata);
+
+        return processingGraphMetadata;
+    }
+
     private BinningConfig getL3Config(Configuration conf) {
         String cellL3Conf = conf.get(JobConfigNames.CALVALUS_CELL_PARAMETERS);
         String stdL3Conf = conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS);
@@ -126,8 +158,25 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         }
     }
 
-    @Override
-    public Configuration getConf() {
-        return conf;
+    private void addCalvalusMetadata(MetadataElement element) {
+        addAttributeToMetadataElement(element, "operator", conf.get(JobConfigNames.CALVALUS_PRODUCTION_TYPE));
+        addAttributeToMetadataElement(element, "calvalusVersion", conf.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE));
+        addAttributeToMetadataElement(element, "beamVersion", conf.get(JobConfigNames.CALVALUS_BEAM_BUNDLE));
+        addAttributeToMetadataElement(element, "user", conf.get(JobConfigNames.CALVALUS_USER));
+        addAttributeToMetadataElement(element, "processingTime", DATETIME_OUTPUT_FORMAT.format(new Date()));
     }
+
+    private void addCalvalusParameters(MetadataElement element, String regionName, String regionWKT) {
+        addAttributeToMetadataElement(element, "aggregation_period_start", conf.get(JobConfigNames.CALVALUS_MIN_DATE));
+        addAttributeToMetadataElement(element, "aggregation_period_end", conf.get(JobConfigNames.CALVALUS_MAX_DATE));
+        addAttributeToMetadataElement(element, "region_name", regionName);
+        addAttributeToMetadataElement(element, "region", regionWKT);
+    }
+
+    private void addAttributeToMetadataElement(MetadataElement parent, String name, String value) {
+        if (value != null) {
+            parent.addAttribute(new MetadataAttribute(name, ProductData.createInstance(value), true));
+        }
+    }
+
 }
