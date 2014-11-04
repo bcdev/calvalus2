@@ -50,7 +50,7 @@ import java.util.Map;
  * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
  * be one or more of the following:
  *  -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
- *                         production. Defaults to 'beam-5.0'.
+ *                         production. Defaults to 'beam-5.0.1'.
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
