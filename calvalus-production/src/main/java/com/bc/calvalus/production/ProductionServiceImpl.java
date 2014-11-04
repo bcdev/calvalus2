@@ -130,8 +130,11 @@ public class ProductionServiceImpl implements ProductionService {
             if (production != null) {
                 try {
                     if (production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                        && production.getStagingStatus().getState() == ProcessState.UNKNOWN
-                        && productionStagingsMap.get(production.getId()) == null) {
+                        && ((production.getStagingStatus().getState() == ProcessState.UNKNOWN
+                             && productionStagingsMap.get(production.getId()) == null))
+                            || production.getStagingStatus().getState() == ProcessState.ERROR
+                            || production.getStagingStatus().getState() == ProcessState.CANCELLED)
+                    {
                         stageProductionResults(production);
                     }
                     count++;
