@@ -39,7 +39,7 @@
   </table>
   <hr>
   <p>This is the <a href="http://www.coastcolour.org/">CoastColour</a> on-demand processing system, developed by <a href="http://www.brockmann-consult.de/" class="href">Brockmann Consult GmbH</a>.</p>
-  <p>Calvalus version 2.2 (built 05-11-2014), &#169; 2014 Brockmann Consult GmbH</p>
+  <p>Calvalus version 2.3-SNAPSHOT (built 05-11-2014), &#169; 2014 Brockmann Consult GmbH</p>
 
 </body>
 </html>
