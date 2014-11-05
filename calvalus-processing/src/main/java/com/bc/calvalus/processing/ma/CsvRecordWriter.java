@@ -22,6 +22,7 @@ public class CsvRecordWriter implements RecordProcessor {
     static final String SUFFIX_MEAN = "_mean";
     static final String SUFFIX_SIGMA = "_sigma";
     static final String SUFFIX_N = "_n";
+    private static final String CALVALUS_ID = "CALVALUS_ID";
 
     private final Writer recordsAllWriter;
     private final Writer recordsAggWriter;
@@ -52,18 +53,28 @@ public class CsvRecordWriter implements RecordProcessor {
         String allHeader = attributeNamesToString(attributeNames, false);
         String aggHeader = attributeNamesToString(attributeNames, true);
 
+        recordsAllWriter.write(CALVALUS_ID);
+        recordsAllWriter.write(separatorChar);
         recordsAllWriter.write(allHeader);
         recordsAllWriter.write("\n");
+
         if (labeledAllRecordsWriter != null) {
+            labeledAllRecordsWriter.write(CALVALUS_ID);
+            labeledAllRecordsWriter.write(separatorChar);
             labeledAllRecordsWriter.write(allHeader);
             labeledAllRecordsWriter.write(separatorChar);
             labeledAllRecordsWriter.write(annotationHeader);
             labeledAllRecordsWriter.write("\n");
         }
 
+        recordsAggWriter.write(CALVALUS_ID);
+        recordsAggWriter.write(separatorChar);
         recordsAggWriter.write(aggHeader);
         recordsAggWriter.write("\n");
+
         if (labeledAggRecordsWriter != null) {
+            labeledAggRecordsWriter.write(CALVALUS_ID);
+            labeledAggRecordsWriter.write(separatorChar);
             labeledAggRecordsWriter.write(aggHeader);
             labeledAggRecordsWriter.write(separatorChar);
             labeledAggRecordsWriter.write(annotationHeader);
@@ -74,7 +85,7 @@ public class CsvRecordWriter implements RecordProcessor {
     }
 
     @Override
-    public void processDataRecord(Object[] attributeValues, Object[] annotationValues) throws IOException {
+    public void processDataRecord(String key, Object[] attributeValues, Object[] annotationValues) throws IOException {
         int length = getCommonDataArrayLength(attributeValues);
         String reason = "";
         if (exclusionIndex >= 0) {
@@ -83,30 +94,30 @@ public class CsvRecordWriter implements RecordProcessor {
         String annotationLine = dataRecordToString(annotationValues, false, -1);
         if (length > 0) {
             for (int i = 0; i < length; i++) {
-                String line = dataRecordToString(attributeValues, false, i);
+                String line =  dataRecordToString(attributeValues, false, i);
                 if (reason.isEmpty()) {
-                    recordsAllWriter.write(line + "\n");
+                    recordsAllWriter.write(key + separatorChar + line + "\n");
                 }
                 if (labeledAllRecordsWriter != null) {
-                    labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+                    labeledAllRecordsWriter.write(key + separatorChar + line + separatorChar + annotationLine + "\n");
                 }
             }
         } else {
             String line = dataRecordToString(attributeValues, false, -1);
             if (reason.isEmpty()) {
-                recordsAllWriter.write(line + "\n");
+                recordsAllWriter.write(key + separatorChar + line + "\n");
             }
             if (labeledAllRecordsWriter != null) {
-                labeledAllRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+                labeledAllRecordsWriter.write(key + separatorChar + line + separatorChar + annotationLine + "\n");
             }
         }
 
         String line = dataRecordToString(attributeValues, true, -1);
         if (reason.isEmpty()) {
-            recordsAggWriter.write(line + "\n");
+            recordsAggWriter.write(key + separatorChar + line + "\n");
         }
         if (labeledAggRecordsWriter != null) {
-            labeledAggRecordsWriter.write(line + separatorChar + annotationLine + "\n");
+            labeledAggRecordsWriter.write(key + separatorChar + line + separatorChar + annotationLine + "\n");
         }
     }
 

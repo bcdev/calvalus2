@@ -76,7 +76,7 @@ public class RecordMerger {
         }
     }
 
-    void processData(Object[] insituAttributeValues, Iterable<IndexedRecordWritable> records) throws IOException {
+    void processData(String key, Object[] insituAttributeValues, Iterable<IndexedRecordWritable> records) throws IOException {
         Object[] mergedAttributeValues = new Object[numAttributeValues];
 
         System.arraycopy(insituAttributeValues, 0, mergedAttributeValues, startAttributeIndex[0],
@@ -112,16 +112,16 @@ public class RecordMerger {
 
         if (containsGoodRecord && !recordWithVaryingArrayLengths) {
             boolean allRecordsGood = true;
-            all.processDataRecord(mergedAttributeValues, ANNOTATION_VALUES);
+            all.processDataRecord(key, mergedAttributeValues, ANNOTATION_VALUES);
             for (int i = 0; i < individuals.length; i++) {
                 if (isRecordGood[i]) {
-                    individuals[i].processDataRecord(mergedAttributeValues, ANNOTATION_VALUES);
+                    individuals[i].processDataRecord(key, mergedAttributeValues, ANNOTATION_VALUES);
                 } else {
                     allRecordsGood = false;
                 }
             }
             if (allRecordsGood) {
-                common.processDataRecord(mergedAttributeValues, ANNOTATION_VALUES);
+                common.processDataRecord(key, mergedAttributeValues, ANNOTATION_VALUES);
             }
         }
     }

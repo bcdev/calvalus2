@@ -11,7 +11,7 @@ public interface RecordProcessor {
 
     void processHeaderRecord(Object[] attributeNames, Object[] annotationNames) throws IOException;
 
-    void processDataRecord(Object[] recordValues, Object[] annotationValues) throws IOException;
+    void processDataRecord(String key, Object[] recordValues, Object[] annotationValues) throws IOException;
 
     void finalizeRecordProcessing() throws IOException;
 }

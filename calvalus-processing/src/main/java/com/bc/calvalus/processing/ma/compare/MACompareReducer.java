@@ -84,7 +84,8 @@ public class MACompareReducer extends Reducer<MAKey, IndexedRecordWritable, Null
                 currentReferenceRecord = referenceRecords.next();
                 currentReferenceId = currentReferenceRecord.getId();
             }
-            recordMerger.processData(currentReferenceRecord.getAttributeValues(), records);
+            String textKey = String.format("%06d_%s", keyReferenceId, key.getProductName());
+            recordMerger.processData(textKey, currentReferenceRecord.getAttributeValues(), records);
         }
     }
 

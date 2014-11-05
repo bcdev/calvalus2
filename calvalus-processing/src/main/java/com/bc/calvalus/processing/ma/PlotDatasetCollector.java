@@ -58,7 +58,7 @@ public class PlotDatasetCollector implements RecordProcessor {
     }
 
     @Override
-    public void processDataRecord(Object[] recordValues, Object[] annotationValues) throws IOException {
+    public void processDataRecord(String key, Object[] recordValues, Object[] annotationValues) throws IOException {
         if (!hasHeaderBeenSeen()) {
             throw new IllegalStateException("Data record seen before header record.");
         }

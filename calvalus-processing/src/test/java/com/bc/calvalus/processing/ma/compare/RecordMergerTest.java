@@ -96,7 +96,7 @@ public class RecordMergerTest {
         ));
 
         recordMerger.processHeader(insituAttributeNames, headerValues);
-        recordMerger.processData(insituAttributeValues, data);
+        recordMerger.processData("key", insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, 11, 12, 21, 22};
         assertArrayEquals(expectedInts, rpAll.dataAttributes.toArray());
@@ -121,7 +121,7 @@ public class RecordMergerTest {
                 new String[]{""}
         ));
         recordMerger.processHeader(insituAttributeNames, headerValues);
-        recordMerger.processData(insituAttributeValues, data);
+        recordMerger.processData("key", insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, null, null, 21, 22};
         assertEquals(6, rpAll.dataAttributes.size());
@@ -155,7 +155,7 @@ public class RecordMergerTest {
                 new String[]{""}
         ));
         recordMerger.processHeader(insituAttributeNames, headerValues);
-        recordMerger.processData(insituAttributeValues, data);
+        recordMerger.processData("key", insituAttributeValues, data);
 
         Integer[] expectedInts = {1, 2, null, null, 21, 22};
         assertEquals(6, rpAll.dataAttributes.size());
@@ -189,7 +189,7 @@ public class RecordMergerTest {
                 new String[]{"worse"}
         ));
         recordMerger.processHeader(insituAttributeNames, headerValues);
-        recordMerger.processData(insituAttributeValues, data);
+        recordMerger.processData("key", insituAttributeValues, data);
 
         assertEquals(0, rpAll.dataAttributes.size());
         assertEquals(0, rpCBQ.dataAttributes.size());
@@ -207,7 +207,7 @@ public class RecordMergerTest {
         List<IndexedRecordWritable> data;
         data = new ArrayList<IndexedRecordWritable>();
         recordMerger.processHeader(insituAttributeNames, headerValues);
-        recordMerger.processData(insituAttributeValues, data);
+        recordMerger.processData("key", insituAttributeValues, data);
 
         assertEquals(0, rpAll.dataAttributes.size());
         assertEquals(0, rpCBQ.dataAttributes.size());
@@ -235,7 +235,7 @@ public class RecordMergerTest {
         }
 
         @Override
-        public void processDataRecord(Object[] recordValues, Object[] annotationValues) throws IOException {
+        public void processDataRecord(String key, Object[] recordValues, Object[] annotationValues) throws IOException {
             Collections.addAll(dataAttributes, recordValues);
             Collections.addAll(dataAnnotations, annotationValues);
         }
