@@ -163,7 +163,6 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         addAttributeToMetadataElement(element, "calvalusVersion", conf.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE));
         addAttributeToMetadataElement(element, "beamVersion", conf.get(JobConfigNames.CALVALUS_BEAM_BUNDLE));
         addAttributeToMetadataElement(element, "user", conf.get(JobConfigNames.CALVALUS_USER));
-        addAttributeToMetadataElement(element, "processingTime", DATETIME_OUTPUT_FORMAT.format(new Date()));
     }
 
     private void addCalvalusParameters(MetadataElement element, String regionName, String regionWKT) {
