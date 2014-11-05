@@ -1,0 +1,21 @@
+productionType: MA
+calvalus.processor.package: beam-meris-radiometry
+calvalus.processor.version: 1.0-SNAPSHOT
+calvalus.input.format: BEAM-DIMAP
+calvalus.output.dir: hdfs://master00:9000/calvalus/outputs/meris-l2beam-99
+calvalus.input:
+ - hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_011806_000026382028_00332_12410_0000.N1
+ - hdfs://master00:9000/calvalus/eodata/MER_RR__1P/r03/2004/07/15/MER_RR__1PRACR20040715_021806_000026382028_00332_12410_0000.N1
+calvalus.l2.operator: Meris.CorrectRadiometry
+calvalus.l2.parameters: |
+  <parameters>
+    <doSmile>true</doSmile>
+    <reproVersion>AUTO_DETECT</reproVersion>
+  </parameters>
+regionWKT:
+calvalus.output.compression:
+calvalus.plainText.parameter: |
+  <parameters>
+  This is a multiline
+  Textfield
+  </parameters>
