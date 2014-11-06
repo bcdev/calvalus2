@@ -72,7 +72,7 @@
 -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-client</artifactId>
+            <artifactId>hadoop-core</artifactId>
         </dependency>
 
         <dependency>

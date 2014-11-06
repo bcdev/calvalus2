@@ -27,7 +27,7 @@ public class RecordAggregator implements RecordTransformer {
     }
 
     @Override
-    public Iterable<Record> transform(Iterable<Record> recordIterable) {
+    public Iterable<Record> transform(final Iterable<Record> recordIterable) {
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {

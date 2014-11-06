@@ -470,7 +470,7 @@ public class ProductionTool {
 
     private Configuration getHadoopConf(Map<String, String> config) {
         Configuration hadoopConfig = new Configuration();
-        hadoopConfig.set("fs.defaultFS", config.get("calvalus.hadoop.fs.defaultFS"));
+        hadoopConfig.set("fs.default.name", config.get("calvalus.hadoop.fs.default.name"));
         return hadoopConfig;
     }
 

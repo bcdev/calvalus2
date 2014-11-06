@@ -250,7 +250,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         return System.currentTimeMillis();
     }
 
-    private static Iterable<Record> monitorProgress(Iterable<Record> recordIterable, ProgressMonitor pm) {
+    private static Iterable<Record> monitorProgress(final Iterable<Record> recordIterable, final ProgressMonitor pm) {
         return new Iterable<Record>() {
             @Override
             public Iterator<Record> iterator() {

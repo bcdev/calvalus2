@@ -34,15 +34,16 @@ import static org.junit.Assert.*;
 public class ProductRecordSourceTest {
 
     public static final int EXCLUSION_REASON_INDEX = 0;
+    private static final List<PixelPosProvider.PixelPosRecord> EMPTY_LIST = Collections.emptyList();
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg1CannotBeNull() throws Exception {
-        new ProductRecordSource(null, new DefaultHeader(true, true, "foo"), Collections.emptyList(), new MAConfig(), new AffineTransform());
+        new ProductRecordSource(null, new DefaultHeader(true, true, "foo"), EMPTY_LIST, new MAConfig(), new AffineTransform());
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg2CannotBeNull() throws Exception {
-        new ProductRecordSource(new Product("a", "b", 4, 4), null, Collections.emptyList(), new MAConfig(), new AffineTransform());
+        new ProductRecordSource(new Product("a", "b", 4, 4), null, EMPTY_LIST, new MAConfig(), new AffineTransform());
     }
 
     @Test(expected = NullPointerException.class)
@@ -52,12 +53,12 @@ public class ProductRecordSourceTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg4CannotBeNull() throws Exception {
-        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), Collections.emptyList(), null, new AffineTransform());
+        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), EMPTY_LIST, null, new AffineTransform());
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg5CannotBeNull() throws Exception {
-        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), Collections.emptyList(), new MAConfig(), null);
+        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), EMPTY_LIST, new MAConfig(), null);
     }
 
     @Test

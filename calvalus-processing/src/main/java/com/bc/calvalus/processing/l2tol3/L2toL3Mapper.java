@@ -156,7 +156,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
     }
 
     private Map<Long, float[]> readL3MeanValues(Path l3Path, Configuration conf) throws IOException {
-        SequenceFile.Reader reader = new SequenceFile.Reader(conf, SequenceFile.Reader.file(l3Path));
+        SequenceFile.Reader reader = new SequenceFile.Reader(l3Path.getFileSystem(conf), l3Path, conf);
         LongWritable index = new LongWritable();
         L3TemporalBin l3TemporalBin = new L3TemporalBin();
         Map<Long, float[]> map = new HashMap<>();

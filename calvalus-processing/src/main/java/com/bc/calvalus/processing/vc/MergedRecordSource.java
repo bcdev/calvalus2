@@ -67,7 +67,7 @@ public class MergedRecordSource implements RecordSource {
     public Iterable<Record> getRecords() {
         Map<Integer, Map<String, Record>> recordsMap = new HashMap<>(referenceRecords.getNumRecords());
         for (Record referenceRecordsRecord : referenceRecords.getRecords()) {
-            recordsMap.put(referenceRecordsRecord.getId(), new HashMap<>(namedRecords.size() + 1));
+            recordsMap.put(referenceRecordsRecord.getId(), new HashMap<String, Record>(namedRecords.size() + 1));
         }
         for (NamedRecordSource namedRecordSource : namedRecords) {
             for (Record record : namedRecordSource.getRecords()) {

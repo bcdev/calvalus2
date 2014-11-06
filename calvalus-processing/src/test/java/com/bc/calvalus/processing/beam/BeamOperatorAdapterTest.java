@@ -23,7 +23,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
-import org.apache.hadoop.mapreduce.task.MapContextImpl;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -82,7 +81,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, "0");
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "InternalTestOp");
         TaskAttemptID taskid = new TaskAttemptID();
-        MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, productSplit);
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, productSplit);
         BeamOperatorAdapter beamOperatorAdapter = new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
@@ -169,7 +168,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
-        MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, inputSplit);
         return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
@@ -189,7 +188,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
-        MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
+        MapContext mapContext = new MapContext(conf, taskid, null, null, null, null, inputSplit);
         return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
