@@ -37,11 +37,13 @@ public class PixelExtractor {
     private final AffineTransform o2iTransform;
     private final Mask pixelMask;
     private final int macroPixelSize;
+    private final boolean onlyExtractComplete;
     private final boolean copyInput;
 
     public PixelExtractor(Header inputHeader,
                           Product product,
                           int macroPixelSize,
+                          boolean onlyExtractComplete,
                           String goodPixelMaskExpression,
                           boolean copyInput,
                           AffineTransform i2oTransform) {
@@ -58,6 +60,7 @@ public class PixelExtractor {
             this.pixelMask = null;
         }
         this.macroPixelSize = macroPixelSize;
+        this.onlyExtractComplete = onlyExtractComplete;
         this.copyInput = copyInput;
 
         // Important note: createHeader() is dependent on a number of field values,
@@ -96,6 +99,9 @@ public class PixelExtractor {
                               macroPixelSize, macroPixelSize));
 
         if (macroPixelRect.isEmpty()) {
+            return null;
+        }
+        if (onlyExtractComplete && (macroPixelRect.width < macroPixelSize || macroPixelRect.height < macroPixelSize)) {
             return null;
         }
         int x0 = macroPixelRect.x;

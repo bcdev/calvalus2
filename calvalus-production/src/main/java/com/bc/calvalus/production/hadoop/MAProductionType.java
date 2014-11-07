@@ -120,6 +120,7 @@ public class MAProductionType extends HadoopProductionType {
         maConfig.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
         maConfig.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
         maConfig.setVariableMappings(parseVariableMappings(productionRequest.getString("variableMappings", null)));
+        maConfig.setOnlyExtractComplete(productionRequest.getBoolean("onlyExtractComplete", true));
         return maConfig;
     }
 
