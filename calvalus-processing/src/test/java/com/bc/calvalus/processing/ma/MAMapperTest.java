@@ -39,6 +39,7 @@ public class MAMapperTest {
         expectedMatchups.add(new float[]{477.0f, 1366.0f, 67.29978f});
         expectedMatchups.add(new float[]{466.0f, 1372.0f, 65.49009f});
         expectedMatchups.add(new float[]{467.0f, 1386.0f, 66.52284f});
+        expectedMatchups.add(new float[]{560.0f, 2128.0f, 67.93459f});
     }
 
 
@@ -46,7 +47,7 @@ public class MAMapperTest {
     public void testMatchUp_WindowSize3() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 3, false);
+        executeMatchup(collectedMatchUps, 3, false, true);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
@@ -59,10 +60,28 @@ public class MAMapperTest {
     }
 
     @Test
+    public void testMatchUp_WindowSize3_extractPartial() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 3, false, false);
+
+        assertEquals(7, collectedMatchUps.size());
+        assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+        assertEquals(3*3, ((AggregatedNumber) collectedMatchUps.get(5).getAttributeValues()[6]).data.length);
+        assertEquals(2*3, ((AggregatedNumber) collectedMatchUps.get(6).getAttributeValues()[6]).data.length);
+    }
+
+    @Test
     public void testMatchUp_WindowSize3_FilterOverlapping() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 3, true);
+        executeMatchup(collectedMatchUps, 3, true, true);
 
 //        for (RecordWritable collectedMatchUp : collectedMatchUps) {
 //            System.out.println("collectedMatchUp = " + collectedMatchUp);
@@ -81,12 +100,12 @@ public class MAMapperTest {
     public void testMatchUp_WindowSize1_FilterOverlapping() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 1, true);
+        executeMatchup(collectedMatchUps, 1, true, true);
 
 //        for (RecordWritable collectedMatchUp : collectedMatchUps) {
 //            System.out.println("collectedMatchUp = " + collectedMatchUp);
 //        }
-        assertEquals(6, collectedMatchUps.size());
+        assertEquals(7, collectedMatchUps.size());
         assertSame(Integer.class, collectedMatchUps.get(0).getAttributeValues()[2].getClass()); // scalar
         testMatchUp(collectedMatchUps, 0);
         testMatchUp(collectedMatchUps, 1);
@@ -94,13 +113,14 @@ public class MAMapperTest {
         testMatchUp(collectedMatchUps, 3);
         testMatchUp(collectedMatchUps, 4);
         testMatchUp(collectedMatchUps, 5);
+        testMatchUp(collectedMatchUps, 6);
     }
 
     @Test
     public void testMatchUp_WindowSize5() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 5, false);
+        executeMatchup(collectedMatchUps, 5, false, true);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(25, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
@@ -131,7 +151,7 @@ public class MAMapperTest {
         assertEquals(expectedReason, actualReason);
     }
 
-    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping) throws Exception {
+    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping, boolean onlyExtractComplete) throws Exception {
         MAMapper mapper = new MAMapper();
 
         Mapper.Context context = Mockito.mock(Mapper.Context.class);
@@ -162,6 +182,7 @@ public class MAMapperTest {
         maConfig.setFilteredMeanCoeff(0.0);
         maConfig.setFilterOverlapping(filterOverlapping);
         maConfig.setMaxTimeDifference(1.0);
+        maConfig.setOnlyExtractComplete(onlyExtractComplete);
 //        maConfig.setCopyInput(true);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());

@@ -65,6 +65,8 @@ public class MAConfigForm extends Composite {
     @UiField
     CheckBox filterOverlapping;
     @UiField
+    CheckBox onlyExtractComplete;
+    @UiField
     TextBox outputGroupName;
 
     @UiField
@@ -84,6 +86,7 @@ public class MAConfigForm extends Composite {
         maxTimeDifference.setValue(3.0);
         filteredMeanCoeff.setValue(1.5);
         filterOverlapping.setValue(false);
+        onlyExtractComplete.setValue(true);
         outputGroupName.setValue("SITE");
 
         HTML description1 = new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
@@ -223,6 +226,7 @@ public class MAConfigForm extends Composite {
         parameters.put("maxTimeDifference", maxTimeDifference.getValue().toString());
         parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
         parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
+        parameters.put("onlyExtractComplete", onlyExtractComplete.getValue().toString());
         parameters.put("outputGroupName", outputGroupName.getText());
         parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
         return parameters;

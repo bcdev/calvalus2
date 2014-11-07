@@ -76,6 +76,13 @@ public class MAConfig implements XmlConvertible {
     private int macroPixelSize;
 
     /**
+     * If {@code onlyExtractComplete = true}, only macro pixels that comprise the complete {@code n x n} area
+     * are extracted.
+     */
+    @Parameter(defaultValue = "true")
+    private boolean onlyExtractComplete;
+
+    /**
      * Maximum time difference in hours between reference and EO pixel.
      * If {@code maxTimeDifference = null}, the criterion will not be used and match-ups are found for all times.
      * The default value is {@code 3.0} hours.
@@ -346,5 +353,13 @@ public class MAConfig implements XmlConvertible {
 
     public void setVariableMappings(VariableMapping[] variableMappings) {
         this.variableMappings = variableMappings;
+    }
+
+    public boolean getOnlyExtractComplete() {
+        return onlyExtractComplete;
+    }
+
+    public void setOnlyExtractComplete(boolean onlyExtractComplete) {
+        this.onlyExtractComplete = onlyExtractComplete;
     }
 }
