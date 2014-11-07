@@ -81,7 +81,8 @@ public class CalvalusProductIO {
                                product.getSceneRasterHeight()));
         ProductReader productReader = product.getProductReader();
         if (productReader != null) {
-            LOG.info(String.format("ReaderPlugin: %s", productReader.toString()));
+            LOG.info(String.format("ProductReader: %s", productReader.toString()));
+            LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
         }
         return product;
     }
