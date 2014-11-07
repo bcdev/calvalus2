@@ -54,6 +54,7 @@ public class ProductRecordSource implements RecordSource {
         pixelExtractor = new PixelExtractor(referenceRecordHeader,
                                             product,
                                             config.getMacroPixelSize(),
+                                            config.getOnlyExtractComplete(),
                                             config.getGoodPixelExpression(),
                                             config.getCopyInput(),
                                             transform);
