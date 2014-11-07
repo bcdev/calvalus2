@@ -32,7 +32,7 @@ import java.util.logging.Logger;
  * The logger for calvalus
  */
 public class CalvalusLogger {
-    
+
     private static final Logger calvalusLogger = createLogger();
 
     public static Logger getLogger() {
@@ -51,6 +51,14 @@ public class CalvalusLogger {
         beamLogger.setUseParentHandlers(false);
         beamLogger.addHandler(handler);
         beamLogger.setLevel(Level.INFO);
+
+        // this work but results in a lof of noice
+//        Logger ceresLogger = Logger.getLogger("ceres");
+//        ceresLogger.setUseParentHandlers(false);
+//        ceresLogger.addHandler(handler);
+//        ceresLogger.setLevel(Level.INFO);
+//        System.setProperty("ceres.logLevel", "INFO");
+//        System.setProperty("ceres.consoleLog", "true");
 
         Logger rootLogger = Logger.getLogger("");
         rootLogger.setUseParentHandlers(false);
