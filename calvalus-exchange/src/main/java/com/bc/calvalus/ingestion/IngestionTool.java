@@ -45,6 +45,9 @@ public class IngestionTool {
         YEAR2_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
+    public static final long MINIMUM_BLOCK_SIZE = 1048576;
+    public static final long MAXIMUM_BLOCK_SIZE = 2147483648L;
+
     public static int handleIngestionCommand(CommandLine commandLine, String[] files, FileSystem hdfs) throws IOException {
         String productType = DEFAULT_PRODUCT_TYPE;
         String revision = DEFAULT_REVISION;
@@ -107,6 +110,11 @@ public class IngestionTool {
             long blockSize;
             if (blockSizeParameter == -1) {
                 blockSize = ((fileSize + checksumSize - 1) / checksumSize) * checksumSize;
+                if (blockSize < MINIMUM_BLOCK_SIZE) {
+                    blockSize = MINIMUM_BLOCK_SIZE;
+                } else if (blockSize > MAXIMUM_BLOCK_SIZE) {
+                    blockSize = MAXIMUM_BLOCK_SIZE;
+                }
             } else {
                 blockSize = ((blockSizeParameter + checksumSize - 1) / checksumSize) * checksumSize;
             }
