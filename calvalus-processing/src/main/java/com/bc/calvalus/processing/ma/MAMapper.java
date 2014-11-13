@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -82,7 +82,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final int progressForProcessing = pullProcessing ? 20 : 80;
         final int progressForSaving = maConfig.getSaveProcessedProducts() ? (pullProcessing ? 80 : 20) : 0;
         final int progressForExtraction = pullProcessing ? 80 : 20;
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Match-Up analysis", progressForProcessing + progressForSaving + progressForExtraction);
         ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {

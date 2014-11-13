@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.analysis.Quicklooks;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -58,7 +58,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
 
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 20 : 80;
         final int progressForSaving = processorAdapter.supportsPullProcessing() ? 80 : 20;

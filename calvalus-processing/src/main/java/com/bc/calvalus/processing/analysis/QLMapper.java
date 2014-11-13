@@ -20,7 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
@@ -103,7 +103,7 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Image generation", 100);
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));

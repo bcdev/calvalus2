@@ -14,12 +14,12 @@ import java.io.IOException;
  */
 public class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
 
-    private ProductSplit productSplit;
+    private ProgressSplit progressSplit;
 
     @Override
     public void initialize(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
-        if (split instanceof ProductSplit) {
-            productSplit = (ProductSplit) split;
+        if (split instanceof ProgressSplit) {
+            progressSplit = (ProgressSplit) split;
         }
     }
 
@@ -40,8 +40,8 @@ public class NoRecordReader extends RecordReader<NullWritable, NullWritable> {
 
     @Override
     public float getProgress() throws IOException, InterruptedException {
-        if (productSplit != null) {
-            return productSplit.getProgress();
+        if (progressSplit != null) {
+            return progressSplit.getProgress();
         } else {
             return 0;
         }

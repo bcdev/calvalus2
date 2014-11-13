@@ -23,7 +23,7 @@ import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.executable.KeywordHandler;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.ma.FilteredRecordSource;
 import com.bc.calvalus.processing.ma.GeometryRecordFilter;
@@ -100,7 +100,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final int progressForFindingMatchingReferences = 5 + 5;
         final int progressForDifferentiation = 10;
         final int progressForProcessing = 85;
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Vicarious Calibration", progressForFindingMatchingReferences + progressForDifferentiation + progressForProcessing);
 
         try {

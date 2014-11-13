@@ -30,7 +30,7 @@ import org.esa.beam.binning.DataPeriod;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -73,7 +73,7 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
         final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
         pm.beginTask("Level 3", progressForProcessing + progressForBinning);

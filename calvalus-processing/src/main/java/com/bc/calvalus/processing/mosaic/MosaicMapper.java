@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.glevel.MultiLevelImage;
@@ -64,7 +64,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         final MosaicConfig mosaicConfig = MosaicConfig.get(jobConfig);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Mosaikking", 100);
         try {
             mosaicGrid = MosaicGrid.create(jobConfig);

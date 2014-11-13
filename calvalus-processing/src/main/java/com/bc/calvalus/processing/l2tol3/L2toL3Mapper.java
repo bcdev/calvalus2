@@ -22,7 +22,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
@@ -99,7 +99,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
         L2toL3SpatialBinner spatialBinner = null;
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
         final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
         pm.beginTask("Level 3", progressForProcessing + progressForBinning);

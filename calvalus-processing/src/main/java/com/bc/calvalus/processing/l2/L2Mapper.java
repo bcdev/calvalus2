@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.metadata.MetadataResourceEngine;
@@ -85,7 +85,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
     public void run(Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
         final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;

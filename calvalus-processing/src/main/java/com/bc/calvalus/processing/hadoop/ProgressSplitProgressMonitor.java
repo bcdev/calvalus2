@@ -17,21 +17,29 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.util.Progressable;
 
 import java.io.IOException;
 
 /**
-* A progress monitor (ab-)uses the {@link ProductSplit} to reports it progress to hadoop.
-*/
-public class ProductSplitProgressMonitor implements ProgressMonitor, Progressable {
+ * A progress monitor (ab-)uses the {@link ProgressSplit} to reports it progress to hadoop.
+ */
+public class ProgressSplitProgressMonitor implements ProgressMonitor, Progressable {
     private float totalWork;
     private final MapContext mapContext;
+    private final ProgressSplit progressSplit;
     private float work;
 
-    public ProductSplitProgressMonitor(MapContext mapContext) {
+    public ProgressSplitProgressMonitor(MapContext mapContext) {
         this.mapContext = mapContext;
+        InputSplit inputSplit = mapContext.getInputSplit();
+        if (inputSplit instanceof ProgressSplit) {
+            progressSplit = (ProgressSplit) inputSplit;
+        } else {
+            this.progressSplit = null;
+        }
     }
 
     @Override
@@ -58,17 +66,18 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
 
     @Override
     public void internalWorked(double deltaWork) {
-        work += deltaWork;
-        ProductSplit productSplit = (ProductSplit) mapContext.getInputSplit();
-        productSplit.setProgress(Math.min(1.0f,  work / totalWork));
-        try {
-            // trigger progress propagation (yes, that's weird but we don't use true input formats
-            // that are responsible for read progress)
-            mapContext.nextKeyValue();
-        } catch (IOException e) {
-            // ignore
-        } catch (InterruptedException e) {
-            // ignore
+        if (progressSplit !=null) {
+            work += deltaWork;
+            progressSplit.setProgress(Math.min(1.0f, work / totalWork));
+            try {
+                // trigger progress propagation (yes, that's weird but we don't use true input formats
+                // that are responsible for read progress)
+                mapContext.nextKeyValue();
+            } catch (IOException e) {
+                // ignore
+            } catch (InterruptedException e) {
+                // ignore
+            }
         }
     }
 
@@ -90,6 +99,4 @@ public class ProductSplitProgressMonitor implements ProgressMonitor, Progressabl
     public void setSubTaskName(String subTaskName) {
         mapContext.setStatus(subTaskName);
     }
-
-
 }

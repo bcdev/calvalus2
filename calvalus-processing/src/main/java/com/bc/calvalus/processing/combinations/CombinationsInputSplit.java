@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.combinations;
 
+import com.bc.calvalus.processing.hadoop.ProgressSplit;
 import com.bc.ceres.core.Assert;
 import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -11,12 +12,13 @@ import java.io.IOException;
 /**
  *
  */
-public class CombinationsInputSplit extends InputSplit implements Writable {
+public class CombinationsInputSplit extends InputSplit implements Writable, ProgressSplit {
 
     private static final String[] EMPTY_ARRAY = new String[0];
 
     private String[] values;
     private String[] hosts = EMPTY_ARRAY;
+    private float progress; // not serialized
 
     // for deserialization
     public CombinationsInputSplit() {
@@ -63,4 +65,15 @@ public class CombinationsInputSplit extends InputSplit implements Writable {
         }
         hosts = EMPTY_ARRAY;
     }
+
+    @Override
+    public void setProgress(float progress) {
+        this.progress = progress;
+    }
+
+    @Override
+    public float getProgress() {
+        return progress;
+    }
+
 }

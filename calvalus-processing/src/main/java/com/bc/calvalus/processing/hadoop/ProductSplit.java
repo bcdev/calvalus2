@@ -29,7 +29,7 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class ProductSplit extends FileSplit {
+public class ProductSplit extends FileSplit implements ProgressSplit {
 
     private int processStartLine;
     private int processLength;
@@ -90,10 +90,12 @@ public class ProductSplit extends FileSplit {
         processLength = in.readInt();
     }
 
+    @Override
     public void setProgress(float progress) {
         this.progress = progress;
     }
 
+    @Override
     public float getProgress() {
         return progress;
     }

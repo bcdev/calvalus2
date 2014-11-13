@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -45,7 +45,7 @@ public class GeometryMapper extends Mapper<NullWritable, NullWritable, Text, Tex
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));

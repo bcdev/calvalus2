@@ -1,7 +1,10 @@
 package com.bc.calvalus.processing.combinations;
 
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.ceres.core.SubProgressMonitor;
+import com.bc.jexp.Term;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -39,9 +42,10 @@ public class CombinationsMapper extends Mapper<NullWritable, NullWritable, NullW
             String name = variableNames.get(i);
             velocityProps.put(name, value);
         }
-
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        pm .beginTask("combinations", 100);
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
-        String[] outFiles = processorAdapter.processInput(ProgressMonitor.NULL,
+        String[] outFiles = processorAdapter.processInput(SubProgressMonitor.create(pm, 95),
                                                           null,
                                                           new Path("dummy"),
                                                           new File("dummy"),
@@ -49,7 +53,8 @@ public class CombinationsMapper extends Mapper<NullWritable, NullWritable, NullW
                                                           velocityProps);
 
         if (outFiles != null && outFiles.length > 0) {
-            processorAdapter.saveProcessedProductFiles(outFiles, ProgressMonitor.NULL);
+            processorAdapter.saveProcessedProductFiles(outFiles, SubProgressMonitor.create(pm, 5));
         }
+        pm.done();
     }
 }
