@@ -230,16 +230,21 @@ echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#
 
 #if ($inputRectangle)
-    # only check for flip in MODIS Aqua and Seawifs files
-    if [[ $inFileName =~ ^[AS][0-9]+ ]]
+    if [[ $inFileName =~ ^S[0-9]+.L1A_MLAC ]]
     then
+      echo "SeaWiFS L1A to L2 no transformation here, use GeoCosing of L2, should be better"
+    else
+      if [[ $inFileName =~ ^[AS][0-9]+ ]]
+      then
+        # only check for flip in MODIS Aqua and Seawifs L1B files
         detected_flip_l2=$(./getFlip.py ${outFile})
         echo "detected_flip_l2 = ${detected_flip_l2}"
         if [[ ${detected_flip_l2} == "flipXY" ]]
         then
-            l2_flip_transform="flipX flipY"
+          l2_flip_transform="flipX flipY"
         fi
+      fi
+      echo "CALVALUS_PRODUCT_TRANSFORMATION  subset $inputRectangle.x, $inputRectangle.y, $inputRectangle.width, $inputRectangle.height ${l2_flip_transform}"
     fi
-    echo "CALVALUS_PRODUCT_TRANSFORMATION  subset $inputRectangle.x, $inputRectangle.y, $inputRectangle.width, $inputRectangle.height ${l2_flip_transform}"
 #end
 
