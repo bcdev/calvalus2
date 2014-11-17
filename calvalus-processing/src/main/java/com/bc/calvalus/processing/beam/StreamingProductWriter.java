@@ -111,7 +111,7 @@ public class StreamingProductWriter {
                                          Text.class,
                                          ByteArrayWritable.class,
                                          1024 * 1024, //buffersize,
-                                         (short) 1, //replication,
+                                         fileSystem.getDefaultReplication(),
                                          fileSystem.getDefaultBlockSize(),
                                          SequenceFile.CompressionType.NONE,
                                          null, // new DefaultCodec(),
