@@ -18,6 +18,7 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -96,6 +97,7 @@ public abstract class ProcessorAdapter {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
+        GpfUtils.init(mapContext.getConfiguration());
     }
 
     protected MapContext getMapContext() {

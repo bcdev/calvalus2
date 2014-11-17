@@ -44,7 +44,6 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
 
     public SubsetProcessorAdapter(MapContext mapContext) {
         super(mapContext);
-        GpfUtils.init(mapContext.getConfiguration());
     }
 
     @Override
