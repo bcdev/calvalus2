@@ -220,7 +220,7 @@ public class ProductFormatter {
         }
         Path workPath = new Path(workOutputPath, filename);
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
-        return fileSystem.create(workPath, (short) 1);
+        return fileSystem.create(workPath);
     }
 
 }
