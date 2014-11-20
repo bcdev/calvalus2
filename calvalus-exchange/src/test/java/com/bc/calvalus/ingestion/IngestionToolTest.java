@@ -33,6 +33,10 @@ public class IngestionToolTest {
     public void testNoPatternDatePath() {
           assertEquals(".", IngestionTool.getDatePath(new File("A2006199xxx.hdf"), "notype", Pattern.compile(".*")));
     }
+    @Test
+    public void testAvhrrDatePath() {
+          assertEquals("1999/07/01", IngestionTool.getDatePath(new File("ao14070199085656_090012.l1b"), "AVHRR_L1B", Pattern.compile(".*")));
+    }
 
     @Test
     public void testArchivePath() {

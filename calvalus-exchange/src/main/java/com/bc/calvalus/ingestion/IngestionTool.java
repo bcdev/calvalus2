@@ -38,11 +38,13 @@ public class IngestionTool {
     public static final SimpleDateFormat YEAR_MONTH_DAY_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
     public static final SimpleDateFormat YEAR_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyyyDDD");
     public static final SimpleDateFormat YEAR2_DAY_OF_YEAR_FORMAT = new SimpleDateFormat("yyDDD");
+    public static final SimpleDateFormat MONTH_DAY_YEAR2_FORMAT = new SimpleDateFormat("MMddyy");
 
     static {
         YEAR_MONTH_DAY_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         YEAR_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         YEAR2_DAY_OF_YEAR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        MONTH_DAY_YEAR2_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     public static final long MINIMUM_BLOCK_SIZE = 1048576;
@@ -250,6 +252,12 @@ public class IngestionTool {
                 return YEAR_MONTH_DAY_FORMAT.format(YEAR_DAY_OF_YEAR_FORMAT.parse(sourceFile.getName().substring(10, 18)));
             } catch (ParseException e) {
                 throw new IllegalArgumentException("file name " + sourceFile.getName() + " does not contain recognised date for SPOT_VGT default pattern");
+            }
+        } else if (productType != null && productType.startsWith("AVHRR")) {
+            try {
+                return YEAR_MONTH_DAY_FORMAT.format(MONTH_DAY_YEAR2_FORMAT.parse(sourceFile.getName().substring(4, 10)));
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("file name " + sourceFile.getName() + " does not contain recognised date for NOAA AVHRR pattern");
             }
         } else if ("MER_RR__1P".equals(productType) || "MER_FRS_1P".equals(productType)) {
             return String.format("%s/%s/%s",
