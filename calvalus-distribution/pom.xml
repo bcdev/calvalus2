@@ -62,10 +62,14 @@
              <groupId>org.esa.beam</groupId>
              <artifactId>beam-binning</artifactId>
          </dependency>
-         <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-envisat-reader</artifactId>
-         </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envisat-reader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-avhrr-reader</artifactId>
+        </dependency>
          <dependency>
              <groupId>org.esa.beam</groupId>
              <artifactId>beam-geotiff</artifactId>
