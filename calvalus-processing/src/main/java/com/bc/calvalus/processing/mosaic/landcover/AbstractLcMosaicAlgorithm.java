@@ -289,7 +289,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         for (int j = 0; j < numSDRBands; j++) { // sdr_error
             final int varIndex = varIndexes[sdrObservationOffset + numSDRBands + 1 + j];
             float sdrErrorMeasurement = samples[varIndex][i];
-            aggregatedSamples[sdrOffset + j][i] += (sdrErrorMeasurement * sdrErrorMeasurement);
+            aggregatedSamples[sdrOffset + j][i] += sdrErrorMeasurement;
         }
     }
 
