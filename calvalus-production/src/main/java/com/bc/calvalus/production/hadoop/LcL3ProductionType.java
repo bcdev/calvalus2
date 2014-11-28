@@ -271,7 +271,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         } else {
             maskExpr = "status == 1 and not nan(" + sdrBandName + ")";
         }
-        String[] varNames = new String[]{"status", sdrBandName};
+        String[] varNames = new String[]{"status", sdrBandName, "ndvi"};
         String type = LcSDR8MosaicAlgorithm.class.getName();
 
         return new MosaicConfig(type, maskExpr, varNames);

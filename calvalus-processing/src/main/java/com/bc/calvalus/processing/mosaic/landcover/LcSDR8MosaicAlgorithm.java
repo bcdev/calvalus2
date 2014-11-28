@@ -35,7 +35,18 @@ import java.util.Arrays;
 public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int STATUS_LAND = 1;
-    private static final int NUM_AGGREGATION_BANDS = 3;
+
+    private static final int SAMPLE_INDEX_STATUS = 0;
+    private static final int SAMPLE_INDEX_SDR8 = 1;
+    private static final int SAMPLE_INDEX_NDVI = 2;
+
+    private static final int AGG_INDEX_COUNT = 0;
+    private static final int AGG_INDEX_SDR_SUM = 1;
+    private static final int AGG_INDEX_SDR_SQSUM = 2;
+    private static final int AGG_INDEX_MAXNDVI = 3;
+    private static final int AGG_INDEX_SDR4MAXNDVI = 4;
+
+    private static final int NUM_AGGREGATION_BANDS = 5;
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
@@ -59,15 +70,25 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            int status = (int) samples[varIndexes[0]][i];
+            int status = (int) samples[varIndexes[SAMPLE_INDEX_STATUS]][i];
             status = StatusRemapper.remapStatus(statusRemapper, status);
             if (status == STATUS_LAND) {
                 // Since we have seen LAND now, accumulate LAND SDRs
-                float sdr = samples[varIndexes[1]][i];
+                float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
+                float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
                 if (!Float.isNaN(sdr)) {
-                    aggregatedSamples[0][i]++;
-                    aggregatedSamples[1][i] += sdr;
-                    aggregatedSamples[2][i] += sdr * sdr;
+                    aggregatedSamples[AGG_INDEX_COUNT][i]++;
+                    aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
+                    aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
+
+                    if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
+                        // first pixel
+                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+                    } else if (ndvi > aggregatedSamples[3][i]) {
+                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+                    }
                 }
             }
         }
@@ -79,17 +100,18 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         float[][] result = new float[1][numElems];
         for (int i = 0; i < numElems; i++) {
             result[0][i] = Float.NaN;
-            float count = aggregatedSamples[0][i];
+            float count = aggregatedSamples[AGG_INDEX_COUNT][i];
             if (count >= 2) {
-                float sdrSum = aggregatedSamples[1][i];
-                float sdrSqrSum = aggregatedSamples[2][i];
+                float sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
+                float sdrSqrSum = aggregatedSamples[AGG_INDEX_SDR_SQSUM][i];
 
                 float sdrMean = sdrSum / count;
                 float sdrSigma = (float) Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
                 float cloudValue2 = sdrSigma / sdrMean;
 
                 if (cloudValue2 > applyFilterThresh) {
-                    float sdrCloudDetector = Math.min(sdrMean * 1.35f, sdrMean + sdrSigma);
+                    float sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
+                    float sdrCloudDetector = Math.min(Math.min(sdrMean * 1.35f, sdrMean + sdrSigma), sdr4MaxNdvi);
                     result[0][i] = sdrCloudDetector;
                 }
                 // if "ndvi" instead of sdr_B3 (spot only)
