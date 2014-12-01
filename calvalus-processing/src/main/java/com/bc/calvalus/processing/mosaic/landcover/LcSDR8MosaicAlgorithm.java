@@ -85,7 +85,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                         // first pixel
                         aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
                         aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
-                    } else if (ndvi > aggregatedSamples[3][i]) {
+                    } else if (ndvi > aggregatedSamples[AGG_INDEX_MAXNDVI][i]) {
                         aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
                         aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
                     }
