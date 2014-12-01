@@ -39,13 +39,13 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int SAMPLE_INDEX_STATUS = 0;
     private static final int SAMPLE_INDEX_SDR8 = 1;
     private static final int SAMPLE_INDEX_NDVI = 2;
+    private static final int NUM_SAMPLE_BANDS = 3;
 
     private static final int AGG_INDEX_COUNT = 0;
     private static final int AGG_INDEX_SDR_SUM = 1;
     private static final int AGG_INDEX_SDR_SQSUM = 2;
     private static final int AGG_INDEX_MAXNDVI = 3;
     private static final int AGG_INDEX_SDR4MAXNDVI = 4;
-
     private static final int NUM_AGGREGATION_BANDS = 5;
 
     private int[] varIndexes;
@@ -169,14 +169,14 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private int[] createVariableIndexes(VariableContext varCtx) {
-        int[] varIndexes = new int[3];
-        varIndexes[0] = getVariableIndex(varCtx, "status");
+        int[] varIndexes = new int[NUM_SAMPLE_BANDS];
+        varIndexes[SAMPLE_INDEX_STATUS] = getVariableIndex(varCtx, "status");
         if (sensor.equals("MERIS")) {
-            varIndexes[1] = getVariableIndex(varCtx, "sdr_8");
+            varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, "sdr_8");
         } else {
-            varIndexes[1] = getVariableIndex(varCtx, "sdr_B3");
+            varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, "sdr_B3");
         }
-        varIndexes[2] = getVariableIndex(varCtx, "ndvi");
+        varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         return varIndexes;
     }
 
