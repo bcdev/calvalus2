@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.beam.StreamingProductReaderPlugin;
+import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
@@ -91,7 +91,7 @@ class L2Staging extends ProductionStaging {
         for (FileStatus seqFile : seqFiles) {
             Path seqProductPath = seqFile.getPath();
 
-            Product product = CalvalusProductIO.readProduct(seqProductPath, hadoopConfiguration, StreamingProductReaderPlugin.FORMAT_NAME);
+            Product product = CalvalusProductIO.readProduct(seqProductPath, hadoopConfiguration, StreamingProductPlugin.FORMAT_NAME);
 
             File tmpDir = new File(stagingDir, "tmp");
             try {

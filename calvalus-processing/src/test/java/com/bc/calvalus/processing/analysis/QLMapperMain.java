@@ -4,7 +4,7 @@ package com.bc.calvalus.processing.analysis;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.beam.StreamingProductReaderPlugin;
+import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Counter;
@@ -65,7 +65,7 @@ public class QLMapperMain {
         if (args.length >= 1) {
             pathString = args[0];
             if (pathString.endsWith("seq")) {
-                inputProduct = CalvalusProductIO.readProduct(new Path(pathString), configuration, StreamingProductReaderPlugin.FORMAT_NAME);
+                inputProduct = CalvalusProductIO.readProduct(new Path(pathString), configuration, StreamingProductPlugin.FORMAT_NAME);
             } else {
                 inputProduct = ProductIO.readProduct(pathString);
             }

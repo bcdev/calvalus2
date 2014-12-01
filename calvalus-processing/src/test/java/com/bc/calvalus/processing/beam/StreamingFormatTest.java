@@ -47,6 +47,7 @@ import static org.junit.Assert.*;
 @RunWith(UnixTestRunner.class)
 public class StreamingFormatTest {
 
+    private static final int TILE_HEIGHT = 64;
     private Configuration configuration;
     private FileSystem fileSystem;
 
@@ -65,12 +66,13 @@ public class StreamingFormatTest {
         System.setProperty("beam.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
         Product sourceProduct = productReader.readProductNodes(testProductFile, null);
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, null, ProgressMonitor.NULL);
+
         Path outputDir = new Path("target/testdata/StreamingProductWriterTest");
         Path productPath = new Path(outputDir, "testWrite.seq");
         try {
             assertFalse(fileSystem.exists(productPath));
-            streamingProductWriter.writeProduct(sourceProduct, productPath, 64);
+            ProgressMonitor pm = ProgressMonitor.NULL;
+            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath, TILE_HEIGHT);
             assertTrue(fileSystem.exists(productPath));
 
             testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct));
@@ -114,7 +116,7 @@ public class StreamingFormatTest {
     }
 
     private void testThatProductIsCorrect(Product sourceProduct, Path productPath) throws IOException {
-        Product targetProduct = CalvalusProductIO.readProduct(productPath, configuration, StreamingProductReaderPlugin.FORMAT_NAME);
+        Product targetProduct = CalvalusProductIO.readProduct(productPath, configuration, StreamingProductPlugin.FORMAT_NAME);
         try {
             assertEquals(sourceProduct.getName(), targetProduct.getName());
             assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
@@ -154,7 +156,7 @@ public class StreamingFormatTest {
             assertTrue(metadatMap.containsKey(new Text("slice.height")));
 
             Text sliceHeigthText = metadatMap.get(new Text("slice.height"));
-            assertEquals("64", sliceHeigthText.toString());
+            assertEquals(Integer.toString(TILE_HEIGHT), sliceHeigthText.toString());
 
             List<String> keyList = new ArrayList<String>();
             Text key = new Text();

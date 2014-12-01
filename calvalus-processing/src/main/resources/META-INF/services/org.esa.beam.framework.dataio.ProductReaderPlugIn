@@ -1,2 +1,2 @@
-com.bc.calvalus.processing.beam.StreamingProductReaderPlugin
+com.bc.calvalus.processing.beam.StreamingProductPlugin
 com.bc.calvalus.processing.beam.ModisL1WithGeoReaderPlugin

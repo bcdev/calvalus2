@@ -102,11 +102,10 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         Dimension preferredTileSize = product.getPreferredTileSize();
         if (preferredTileSize != null) {
             tileHeight = preferredTileSize.height;
+        } else {
+            product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
         }
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(getConfiguration(),
-                                                                                   getMapContext(),
-                                                                                   pm);
-        streamingProductWriter.writeProduct(product, getWorkOutputProductPath(), tileHeight);
+        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
     }
 
     private Path getWorkOutputProductPath() throws IOException {

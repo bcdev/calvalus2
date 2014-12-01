@@ -19,6 +19,8 @@ package com.bc.calvalus.processing.beam;
 import org.esa.beam.framework.dataio.DecodeQualification;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
+import org.esa.beam.framework.dataio.ProductWriter;
+import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 import org.esa.beam.util.io.BeamFileFilter;
 
 import java.util.Locale;
@@ -26,7 +28,7 @@ import java.util.Locale;
 /**
  * A plugin for the StreamingProductReader
  */
-public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
+public class StreamingProductPlugin implements ProductReaderPlugIn, ProductWriterPlugIn {
 
     public static final String FORMAT_NAME = "HADOOP-STREAMING";
 
@@ -71,4 +73,13 @@ public class StreamingProductReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
+    @Override
+    public Class[] getOutputTypes() {
+        return getInputTypes();
+    }
+
+    @Override
+    public ProductWriter createWriterInstance() {
+        return new StreamingProductWriter(this);
+    }
 }
