@@ -16,12 +16,15 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
+import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.TemporalBinSource;
 import org.esa.beam.binning.operator.BinningConfig;
@@ -30,12 +33,20 @@ import org.esa.beam.binning.operator.FormatterConfig;
 import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.ProductData;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.ParseException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * For formatting the results of a BEAM Level 3 Hadoop Job.
  */
 public class L3Formatter {
+
+    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
 
     private final ProductData.UTC startTime;
     private final ProductData.UTC endTime;
@@ -91,4 +102,36 @@ public class L3Formatter {
         }
     }
 
+    public static void write(TaskInputOutputContext context, TemporalBinSource temporalBinSource,
+                             String dateStart, String dateStop,
+                             String regionName, String regionWKT,
+                             String productName ) throws IOException {
+
+        Configuration conf = context.getConfiguration();
+        String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
+        String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
+        ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
+        try {
+            File productFile = productFormatter.createTemporaryProductFile();
+
+            L3Formatter formatter = new L3Formatter(dateStart, dateStop,
+                                                    productFile.getAbsolutePath(),
+                                                    productFormatter.getOutputFormat(),
+                                                    conf);
+            LOG.info("Start formatting product to file: " + productFile.getName());
+            context.setStatus("formatting");
+            formatter.format(temporalBinSource, regionName, regionWKT);
+
+            LOG.info("Finished formatting product.");
+            context.setStatus("copying");
+            productFormatter.compressToHDFS(context, productFile);
+            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Formatting failed.", e);
+            throw new IOException(e);
+        } finally {
+            productFormatter.cleanupTempDir();
+            context.setStatus("");
+        }
+    }
 }
