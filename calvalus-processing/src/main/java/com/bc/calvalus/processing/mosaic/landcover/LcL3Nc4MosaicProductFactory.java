@@ -110,7 +110,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         String spatialResolution = "360".equals(tileSizeParameter) ? "300" : "1000";
         String temporalResolution = "7";  // TODO
         String startTime = COMPACT_DATE_FORMAT.format(minDate);
-        String version = "1.0";
+        String version = configuration.get("calvalus.lc.version", "1.0");
         String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}m-P{2}D-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
                                                   tileName(tileY, tileX), startTime,

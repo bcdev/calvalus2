@@ -89,6 +89,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             groundResultion = "1000m";
             isMeris = false;
         }
+        String outputVersion = productionRequest.getString("calvalus.output.version", "1.0");
 
         String cloudMosaicConfigXml = getCloudMosaicConfig(productionRequest, isMeris).toXml();
         String mainMosaicConfigXml = getMainMosaicConfig(productionRequest, isMeris).toXml();
@@ -115,6 +116,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, cloudMosaicConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigCloud.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
+            jobConfigCloud.set("calvalus.lc.version", outputVersion);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
@@ -137,6 +139,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
             }
             jobConfigSr.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
+            jobConfigSr.set("calvalus.lc.version", outputVersion);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
@@ -158,6 +161,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
             jobConfigFormat.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mainMosaicConfigXml);
             jobConfigFormat.set("calvalus.lc.sensor", isMeris ? "MERIS":"VEGETATION");
+            jobConfigFormat.set("calvalus.lc.version", outputVersion);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
