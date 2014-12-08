@@ -58,7 +58,7 @@ public class L3MultiBandFormatWorkflowItem extends HadoopWorkflowItem {
 
         job.setMapperClass(L3MultiBandFormatMapper.class);
         job.setMapOutputKeyClass(L3MultiRegionBinIndex.class);
-        job.setMapOutputValueClass(FloatWritable.class);
+        job.setMapOutputValueClass(L3MultiBandIndexedValue.class);
 
         job.setPartitionerClass(L3MultiBandFormatPartitioner.class);
         job.setSortComparatorClass(L3MultiRegionSortingComparator.class);

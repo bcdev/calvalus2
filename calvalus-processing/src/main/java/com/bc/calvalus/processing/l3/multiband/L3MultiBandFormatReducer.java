@@ -3,11 +3,8 @@ package com.bc.calvalus.processing.l3.multiband;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Formatter;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionBinIndex;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatConfig;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionTemporalBin;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.beam.binning.TemporalBin;
@@ -20,22 +17,31 @@ import java.util.Iterator;
  * The reducer for for formatting
  * multiple regions of a Binning product at once.
  */
-public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, FloatWritable, NullWritable, NullWritable> implements Configurable {
+public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, L3MultiBandIndexedValue, NullWritable, NullWritable> implements Configurable {
 
     private Configuration conf;
+    private String[] featureNames;
 
     @Override
-    protected void reduce(L3MultiRegionBinIndex key, Iterable<FloatWritable> values, Context context) throws IOException, InterruptedException {
-        writeProduct(context, key.getRegionIndex(), new ReduceTemporalBinSource(key.getBinIndex(), values));
+    protected void reduce(L3MultiRegionBinIndex key, Iterable<L3MultiBandIndexedValue> values, Context context) throws IOException, InterruptedException {
+        String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
+        String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
+        String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
+        // todo - specify common Calvalus L3 productName convention (mz)
+        String bandName = featureNames[key.getRegionIndex()];
+        String productName = String.format("%s_%s_%s_%s", outputPrefix, bandName, dateStart, dateStop);
+        context.getConfiguration().set(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, bandName);
+        L3Formatter.write(context, new ReduceTemporalBinSource(values),
+                          dateStart, dateStop,
+                          null, null,
+                          productName);
     }
 
     private class ReduceTemporalBinSource implements TemporalBinSource {
 
-        private final long key;
-        private final Iterable<FloatWritable> values;
+        private final Iterable<L3MultiBandIndexedValue> values;
 
-        public ReduceTemporalBinSource(long key, Iterable<FloatWritable> values) throws IOException, InterruptedException {
-            this.key = key;
+        public ReduceTemporalBinSource(Iterable<L3MultiBandIndexedValue> values) throws IOException, InterruptedException {
             this.values = values;
         }
 
@@ -46,7 +52,7 @@ public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, Flo
 
         @Override
         public Iterator<TemporalBin> getPart(int index) throws IOException {
-            return new CloningIterator(key, values.iterator());
+            return new CloningIterator(values.iterator());
         }
 
         @Override
@@ -60,11 +66,9 @@ public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, Flo
 
     private static class CloningIterator implements Iterator<TemporalBin> {
 
-        private final long key;
-        Iterator<FloatWritable> delegate;
+        Iterator<L3MultiBandIndexedValue> delegate;
 
-        private CloningIterator(long key, Iterator<FloatWritable> delegate) {
-            this.key = key;
+        private CloningIterator(Iterator<L3MultiBandIndexedValue> delegate) {
             this.delegate = delegate;
         }
 
@@ -75,11 +79,11 @@ public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, Flo
 
         @Override
         public TemporalBin next() {
-            FloatWritable bin = delegate.next();
-            TemporalBin clonedBin = new TemporalBin(key, 1);
+            L3MultiBandIndexedValue bin = delegate.next();
+            TemporalBin clonedBin = new TemporalBin(bin.getIndex(), 1);
             clonedBin.setNumObs(0);
             clonedBin.setNumPasses(0);
-            clonedBin.getFeatureValues()[0] = bin.get();
+            clonedBin.getFeatureValues()[0] = bin.getValue();
             return clonedBin;
         }
 
@@ -88,24 +92,11 @@ public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, Flo
         }
     }
 
-    private void writeProduct(Context context, int bandIndex, TemporalBinSource temporalBinSource) throws IOException {
-        String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
-        String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
-        String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
-
-        // todo - specify common Calvalus L3 productName convention (mz)
-        String productName = String.format("%s_%s_%s_%s", outputPrefix, bandIndex, dateStart, dateStop);
-
-        L3Formatter.write(context, temporalBinSource,
-                          dateStart, dateStop,
-                          null, null,
-                          productName);
-    }
-
 
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
+        this.featureNames = conf.get(JobConfigNames.CALVALUS_L3_FEATURE_NAMES).split(",");
     }
 
     @Override
