@@ -32,6 +32,14 @@ public class L3MultiRegionBinIndex implements WritableComparable {
         return binIndex;
     }
 
+    public void setRegionIndex(int regionIndex) {
+        this.regionIndex = regionIndex;
+    }
+
+    public void setBinIndex(long binIndex) {
+        this.binIndex = binIndex;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         out.writeInt(regionIndex);
