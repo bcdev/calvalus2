@@ -111,10 +111,10 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
             LOG.log(Level.SEVERE, m, exception);
         }
-        // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), processorAdapter.getInputPath(),
-                                      spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+        LOG.info(MessageFormat.format("Finishes processing of {0}  ({1} observations seen, {2} bins produced)",
+                                      processorAdapter.getInputPath(),
+                                      spatialBinEmitter.numObsTotal,
+                                      spatialBinEmitter.numBinsTotal));
     }
 
     static String extractProcessingGraphXml(Product product) {
