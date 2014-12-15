@@ -23,6 +23,7 @@ import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.lib.IdentityReducer;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
@@ -68,7 +69,9 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(Text.class);
 
         job.setNumReduceTasks(1);
-        job.setReducerClass(ProductInventoryReducer.class);
+        if (jobConfig.get(JobConfigNames.CALVALUS_QA_OPERATOR) == null) {
+            job.setReducerClass(ProductInventoryReducer.class);
+        } // else use default IdentityReducer, TODO add legend and compute name of inventory
         job.setOutputFormatClass(TextOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);

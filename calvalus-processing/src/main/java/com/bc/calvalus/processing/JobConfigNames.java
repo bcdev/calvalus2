@@ -54,6 +54,11 @@ public interface JobConfigNames {
     String CALVALUS_L2_BUNDLE_LOCATION = "calvalus.l2.bundleLocation";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
 
+    String CALVALUS_QA_BUNDLE = "calvalus.qa.bundle";
+    String CALVALUS_QA_BUNDLE_LOCATION = "calvalus.qa.bundleLocation";
+    String CALVALUS_QA_OPERATOR = "calvalus.qa.operator";
+    String CALVALUS_QA_PARAMETERS = "calvalus.qa.parameters";
+
     String CALVALUS_METADATA_TEMPLATE = "calvalus.metadata.template";
 
     String CALVALUS_PROJECT_NAME = "calvalus.project.name";

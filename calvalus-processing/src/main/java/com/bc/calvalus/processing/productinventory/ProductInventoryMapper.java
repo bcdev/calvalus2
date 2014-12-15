@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.productinventory;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.ceres.core.ProgressMonitor;
@@ -42,36 +43,71 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final FileSplit split = (FileSplit) context.getInputSplit();
-        // parse request
         Path inputPath = split.getPath();
 
-        if (inputPath.getName().endsWith("N1") && split.getLength() <= 12029L) {
-            report(context, "Input N1 file to small", inputPath);
-            return;
-        }
+        // distinguish the MERIS overlap inventory case from the general one
+        final String operatorName = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_OPERATOR);
+        if (operatorName == null) {
 
-        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        Product product = null;
-        try {
-            product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
-            if (productHasEmptyTiepoints(product)) {
-                report(context, product, false, "Product has empty tie-points", inputPath);
-            } else if (productHasEmptyLatLonLines(product)) {
-                report(context, product, false, "Product has empty lat/lon lines", inputPath);
+            if (inputPath.getName().endsWith("N1") && split.getLength() <= 12029L) {
+                report(context, "Input N1 file to small", inputPath);
+                return;
+            }
+
+            ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+            Product product = null;
+            try {
+                product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
+                if (productHasEmptyTiepoints(product)) {
+                    report(context, product, false, "Product has empty tie-points", inputPath);
+                } else if (productHasEmptyLatLonLines(product)) {
+                    report(context, product, false, "Product has empty lat/lon lines", inputPath);
 // disabled does produce a lot of false positives
 //            } else if (productHasSuspectLines(product)) {
 //                report(context, product, false, "Product has suspect lines", inputPath);
-            } else {
-                report(context, product, true, "Good", inputPath);
+                } else {
+                    report(context, product, true, "Good", inputPath);
+                }
+            } catch (Exception exception) {
+                if (product != null) {
+                    report(context, product, false, "Failed to read product: " + exception.getMessage(), inputPath);
+                } else {
+                    report(context, "Failed to read product: " + exception.getMessage(), inputPath);
+                }
+            } finally {
+                processorAdapter.dispose();
             }
-        } catch (Exception exception) {
-            if (product != null) {
-                report(context, product, false, "Failed to read product: " + exception.getMessage(), inputPath);
-            } else {
-                report(context, "Failed to read product: " + exception.getMessage(), inputPath);
+
+        } else {
+
+            context.getConfiguration().set(JobConfigNames.CALVALUS_L2_OPERATOR, operatorName);
+            final String operatorParameters = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_PARAMETERS);
+            if (operatorParameters != null) {
+                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_PARAMETERS, operatorParameters);
             }
-        } finally {
-            processorAdapter.dispose();
+            final String bundleName = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_BUNDLE);
+            if (bundleName != null) {
+                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_BUNDLE, bundleName);
+            }
+            final String bundleLocation = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_BUNDLE_LOCATION);
+            if (bundleLocation != null) {
+                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, bundleLocation);
+            }
+
+            final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+            Product product = null;
+            try {
+                product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
+                final String record = product.getMetadataRoot().getElement("QA").getAttributeString("record");
+                context.write(new Text(product.getName()), new Text(record));
+            } catch (Exception exception) {
+                exception.printStackTrace();
+                final String record = String.format("%s\tfalse\tFailed to read product: %s",
+                                                    product != null ? product.getName() : inputPath.getName(), exception.getMessage());
+                context.write(new Text(product.getName()), new Text(record));
+            } finally {
+                processorAdapter.dispose();
+            }
         }
     }
 
