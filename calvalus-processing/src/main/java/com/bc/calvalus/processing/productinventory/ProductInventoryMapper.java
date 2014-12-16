@@ -26,6 +26,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -98,7 +99,10 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
             Product product = null;
             try {
                 product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
-                final String record = product.getMetadataRoot().getElement("QA").getAttributeString("record");
+                System.err.println(product.getDisplayName());
+                final MetadataElement metadataRoot = product.getMetadataRoot();
+                final MetadataElement qaElement = metadataRoot.getElement("QA");
+                final String record = qaElement.getAttributeString("record");
                 context.write(new Text(product.getName()), new Text(record));
             } catch (Exception exception) {
                 exception.printStackTrace();
