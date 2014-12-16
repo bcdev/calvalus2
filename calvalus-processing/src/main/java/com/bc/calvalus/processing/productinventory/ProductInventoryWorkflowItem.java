@@ -70,7 +70,7 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(Text.class);
 
         job.setNumReduceTasks(1);
-        if (jobConfig.get(JobConfigNames.CALVALUS_QA_OPERATOR) == null) {
+        if (jobConfig.get(JobConfigNames.CALVALUS_L2_OPERATOR) == null) {
             job.setReducerClass(ProductInventoryReducer.class);
         } // else use default IdentityReducer, TODO add legend and compute name of inventory
         job.setOutputFormatClass(TextOutputFormat.class);

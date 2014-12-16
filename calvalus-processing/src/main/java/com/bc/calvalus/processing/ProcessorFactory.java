@@ -44,13 +44,12 @@ import java.util.logging.Logger;
 public class ProcessorFactory {
 
     public static final String CALVALUS_L2_PROCESSOR_FILES = "calvalus.l2.scriptFiles";
-    private static final String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
     private static final Logger logger = Logger.getLogger("com.bc.calvalus");
 
     enum ProcessorType {OPERATOR, GRAPH, EXEC, NONE}
 
     public static ProcessorAdapter createAdapter(MapContext mapContext) throws IOException {
-        String processorTypeString = mapContext.getConfiguration().get(CALVALUS_L2_PROCESSOR_TYPE, "NONE");
+        String processorTypeString = mapContext.getConfiguration().get(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE, "NONE");
         ProcessorType processorType = ProcessorType.valueOf(processorTypeString);
         switch (processorType) {
             case OPERATOR:
@@ -107,7 +106,7 @@ public class ProcessorFactory {
             }
         }
 
-        conf.set(CALVALUS_L2_PROCESSOR_TYPE + parameterSuffix, processorType.toString());
+        conf.set(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE + parameterSuffix, processorType.toString());
     }
 
     private static ProcessorType detectProcessorType(Path bundlePath, final String executable, FileSystem fs) throws IOException {

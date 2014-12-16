@@ -46,8 +46,9 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         final FileSplit split = (FileSplit) context.getInputSplit();
         Path inputPath = split.getPath();
 
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         // distinguish the MERIS overlap inventory case from the general one
-        final String operatorName = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_OPERATOR);
+        final String operatorName = context.getConfiguration().get(JobConfigNames.CALVALUS_L2_OPERATOR);
         if (operatorName == null) {
 
             if (inputPath.getName().endsWith("N1") && split.getLength() <= 12029L) {
@@ -55,10 +56,9 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
                 return;
             }
 
-            ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
             Product product = null;
             try {
-                product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
+                product = processorAdapter.getInputProduct();
                 if (productHasEmptyTiepoints(product)) {
                     report(context, product, false, "Product has empty tie-points", inputPath);
                 } else if (productHasEmptyLatLonLines(product)) {
@@ -81,25 +81,9 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
 
         } else {
 
-            context.getConfiguration().set(JobConfigNames.CALVALUS_L2_OPERATOR, operatorName);
-            final String operatorParameters = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_PARAMETERS);
-            if (operatorParameters != null) {
-                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_PARAMETERS, operatorParameters);
-            }
-            final String bundleName = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_BUNDLE);
-            if (bundleName != null) {
-                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_BUNDLE, bundleName);
-            }
-            final String bundleLocation = context.getConfiguration().get(JobConfigNames.CALVALUS_QA_BUNDLE_LOCATION);
-            if (bundleLocation != null) {
-                context.getConfiguration().set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, bundleLocation);
-            }
-
-            final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
             Product product = null;
             try {
                 product = processorAdapter.getProcessedProduct(ProgressMonitor.NULL);
-                System.err.println(product.getDisplayName());
                 final MetadataElement metadataRoot = product.getMetadataRoot();
                 final MetadataElement qaElement = metadataRoot.getElement("QA");
                 final String record = qaElement.getAttributeString("record");
