@@ -2,7 +2,7 @@
 
 <!-- The contents of this file will be loaded for Calvalus. -->
 
-<Context>
+<Context allowLinking="true">
     <!--
         The "Parameter" elements will be presented to the application when
         requested by calling ServletContext.getInitParameter().
