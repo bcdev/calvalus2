@@ -19,13 +19,13 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/level3/00_l3_daily-L3-1</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level3/00_l3_daily-L3-1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/level3/01_l3multiregion_daily</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level3/01_l3multiregion_daily</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

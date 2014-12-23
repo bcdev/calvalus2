@@ -132,6 +132,7 @@ public class TAProductionType extends HadoopProductionType {
         l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
         l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l3OutputDir);
+        l3JobConfig.unset(JobConfigNames.CALVALUS_OUTPUT_FORMAT);
         l3JobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
         l3JobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometry != null ? regionGeometry.toString() : "");
         l3JobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);

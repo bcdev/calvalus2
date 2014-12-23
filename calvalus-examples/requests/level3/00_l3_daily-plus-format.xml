@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/level3/00_l3_daily</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level3/00_l3_daily</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -38,7 +38,7 @@
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-04</wps:LiteralData>
+                <wps:LiteralData>2010-03-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -108,13 +108,11 @@
                 <wps:ComplexData>
                     <parameters>
                         <quicklooks>
-                            <configs>
-                                <config>
-                                    <RGBAExpressions>radiance_13_mean,radiance_4_mean,radiance_2_mean,</RGBAExpressions>
-                                    <imageType>jpeg</imageType>
-                                    <overlayURL>hdfs://master00:9000/calvalus/projects/lc/aux/countries_magenta_1800x900.png</overlayURL>
-                                </config>
-                            </configs>
+                            <config>
+                                <RGBAExpressions>radiance_13_mean,radiance_4_mean,radiance_2_mean,</RGBAExpressions>
+                                <imageType>jpeg</imageType>
+                                <overlayURL>hdfs://master00:9000/calvalus/projects/lc/aux/countries_magenta_1800x900.png</overlayURL>
+                            </config>
                         </quicklooks>
                     </parameters>
                 </wps:ComplexData>

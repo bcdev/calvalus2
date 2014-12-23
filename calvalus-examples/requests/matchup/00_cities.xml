@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/matchup/00_extraction</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/matchup/00_extraction</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -45,7 +45,7 @@
         <wps:Input>
             <ows:Identifier>recordSourceUrl</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>hdfs://master00:9000/calvalus/examples/cities.txt</wps:LiteralData>
+                <wps:LiteralData>hdfs://master00:9000/calvalus/projects/example/cities.txt</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
