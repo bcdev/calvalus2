@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/beam-graphs/00_bandmath</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/beam-graphs/00_bandmath</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

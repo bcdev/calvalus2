@@ -12,7 +12,7 @@
         <wps:Input>
             <ows:Identifier>productionName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>example level3 00_l3_daily</wps:LiteralData>
+                <wps:LiteralData>example level3 06_l3_daily-region-with-reducer-format</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/projects/example/level3/00_l3_daily</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level3/06_l3_daily</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -38,13 +38,19 @@
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-01</wps:LiteralData>
+                <wps:LiteralData>2010-03-04</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
             <ows:Identifier>periodLength</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>1</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>regionWKT</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>polygon((-19.94 40.00, 0.00 40.00, 0.00 49.22, 12.99 53.99, 13.06 65.00, 0.00 65.00, 0.0 60.00, -20.00 60.00, -19.94 40.00))</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -98,7 +104,13 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.prefix</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>00_l3_daily</wps:LiteralData>
+                <wps:LiteralData>06_l3_daily</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.l3.reducers</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

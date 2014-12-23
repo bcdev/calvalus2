@@ -75,12 +75,15 @@ public class L3ProductionType extends HadoopProductionType {
         ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
+        Integer numReducers = productionRequest.getInteger(JobConfigNames.CALVALUS_L3_REDUCERS, null);
+        boolean singleReducer = numReducers != null && numReducers == 1;
 
-        String l3ConfigXml = getL3ConfigXml(productionRequest);
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
                 JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
         String outputDir = getOutputPath(productionRequest, productionId, "-L3-output");
+        boolean requiresFormatting = outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ");
 
+        String l3ConfigXml = getL3ConfigXml(productionRequest);
         String[] l3OutputDirs = new String[dateRanges.size()];
 
         Workflow workflow = new Workflow.Parallel();
@@ -109,11 +112,21 @@ public class L3ProductionType extends HadoopProductionType {
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
+
+            if (singleReducer && requiresFormatting) {
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
+
+                // is in fact dependent on the outputFormat TODO unify
+                String outputCompression = productionRequest.getString("outputCompression", productionRequest.getString(
+                        JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz"));
+                jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
+            }
             WorkflowItem item = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), productionName + " " + date1Str, jobConfig);
             workflow.add(item);
         }
 
-        if (outputFormat != null && !outputFormat.equalsIgnoreCase("SEQ")) {
+        boolean hasQuicklookParameters = productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null;
+        if (!singleReducer && requiresFormatting) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
             setRequestParameters(productionRequest, jobConfig);
@@ -133,12 +146,13 @@ public class L3ProductionType extends HadoopProductionType {
                                                                productionRequest.getUserName(),
                                                                productionName + " Format", jobConfig);
             workflow = new Workflow.Sequential(workflow, formatItem);
-            if (productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null) {
+
+            if (hasQuicklookParameters) {
                 Configuration qlJobConfig = createJobConfig(productionRequest);
                 setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
                 setRequestParameters(productionRequest, qlJobConfig);
 
-                qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, outputDir + "/[^_].*");
+                qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, outputDir + "/(?!_.*|part-[rm]-\\d+).*");
                 qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
                 qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
@@ -146,6 +160,22 @@ public class L3ProductionType extends HadoopProductionType {
                                                          productionName + " RGB", qlJobConfig);
                 workflow.add(qlItem);
             }
+        } else if (singleReducer && requiresFormatting && hasQuicklookParameters) {
+            Configuration qlJobConfig = createJobConfig(productionRequest);
+            setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
+            setRequestParameters(productionRequest, qlJobConfig);
+
+            String[] qlInputDirs = new String[l3OutputDirs.length];
+            for (int i = 0; i < qlInputDirs.length; i++) {
+                qlInputDirs[i] = l3OutputDirs[i] + "/(?!_.*|part-[rm]-\\d+).*";
+            }
+            qlJobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, qlInputDirs);
+            qlJobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, outputFormat);
+            qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+
+            WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                     productionName + " RGB", qlJobConfig);
+            workflow = new Workflow.Sequential(workflow, qlItem);
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);

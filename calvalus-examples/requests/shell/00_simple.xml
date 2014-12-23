@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/shell/00_simple</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/shell/00_simple</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 

@@ -166,6 +166,8 @@ public class L2toL3ProductionType extends HadoopProductionType {
             l3Conf.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             l3Conf.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
+            l3Conf.unset(JobConfigNames.CALVALUS_OUTPUT_FORMAT);
+
             String wfName = String.format("%s (L3mean %s:%s)", productionName, date1Str, date2Str);
             WorkflowItem l3workflow = new L3WorkflowItem(getProcessingService(), productionRequest.getUserName(), wfName, l3Conf);
 

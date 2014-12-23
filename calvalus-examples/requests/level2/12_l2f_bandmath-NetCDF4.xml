@@ -19,13 +19,13 @@
         <wps:Input>
             <ows:Identifier>inputPath</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/level2/00_l2_bandmath/L2_of_MER_..._1.*${yyyy}${MM}${dd}.*.seq$</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level2/00_l2_bandmath/L2_of_MER_..._1.*${yyyy}${MM}${dd}.*.seq$</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/examples/level2/02_l2f_bandmath-NetCDF4</wps:LiteralData>
+                <wps:LiteralData>/calvalus/projects/example/level2/02_l2f_bandmath-NetCDF4</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
