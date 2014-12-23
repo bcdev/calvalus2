@@ -66,8 +66,10 @@ public class L3MultiBandFormatWorkflowItem extends HadoopWorkflowItem {
 
         job.setReducerClass(L3MultiBandFormatReducer.class);
 
-        int numBands = jobConfig.get("calvalus.output.bandList").split(", *").length;
+        String bandList = jobConfig.get("calvalus.output.bandList");
+        int numBands = bandList.split(", *").length;
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, numBands));
+        jobConfig.set(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, bandList);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
 
