@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.l3.multiband;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.L3Formatter;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionBinIndex;
-import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.io.NullWritable;
@@ -18,23 +17,21 @@ import java.util.Iterator;
  * The reducer for for formatting
  * multiple regions of a Binning product at once.
  */
-public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, FloatWritable, NullWritable, NullWritable> implements Configurable {
-
-    private Configuration conf;
-    private String[] featureNames;
-
+public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, FloatWritable, NullWritable, NullWritable> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final TemporalBinSource temporalBinSource = new ReduceTemporalBinSource(context);
+        TemporalBinSource temporalBinSource = new ReduceTemporalBinSource(context);
+        Configuration conf = context.getConfiguration();
 
+        String[] featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
         String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
         String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
-        final int partition = context.getTaskAttemptID().getTaskID().getId();
+        int partition = context.getTaskAttemptID().getTaskID().getId();
         String bandName = featureNames[partition];
         String productName = String.format("%s_%s_%s_%s", outputPrefix, bandName, dateStart, dateStop);
-        context.getConfiguration().set(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, bandName);
+        conf.set(JobConfigNames.CALVALUS_L3_FEATURE_NAMES, bandName);
 
 
         L3Formatter.write(context, temporalBinSource,
@@ -103,17 +100,4 @@ public class L3MultiBandFormatReducer extends Reducer<L3MultiRegionBinIndex, Flo
             }
         }
     }
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-        this.featureNames = conf.get(JobConfigNames.CALVALUS_L3_FEATURE_NAMES).split(",");
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
-    }
-
-
 }

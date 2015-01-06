@@ -17,18 +17,7 @@ import java.io.IOException;
  *  For each region that contains the center lat/lon of the
  *  bin cell the bin emitted.
  */
-public class L3MultiBandFormatMapper extends Mapper<LongWritable, L3TemporalBin, L3MultiRegionBinIndex, FloatWritable> implements Configurable {
-    private Configuration conf;
-
-    @Override
-    public void setConf(Configuration conf) {
-        this.conf = conf;
-    }
-
-    @Override
-    public Configuration getConf() {
-        return conf;
-    }
+public class L3MultiBandFormatMapper extends Mapper<LongWritable, L3TemporalBin, L3MultiRegionBinIndex, FloatWritable> {
 
     @Override
     protected void map(LongWritable binIndex, L3TemporalBin temporalBin, Context context) throws IOException, InterruptedException {
