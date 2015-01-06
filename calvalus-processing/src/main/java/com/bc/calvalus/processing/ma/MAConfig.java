@@ -199,7 +199,7 @@ public class MAConfig implements XmlConvertible {
     public static MAConfig get(Configuration conf) {
         String xml = conf.get(JobConfigNames.CALVALUS_MA_PARAMETERS);
         if (xml == null) {
-            throw new IllegalArgumentException("Missing match-up analysis configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+            throw new IllegalArgumentException("Missing match-up analysis configuration '" + JobConfigNames.CALVALUS_MA_PARAMETERS + "'");
         }
         try {
             return fromXml(xml);
