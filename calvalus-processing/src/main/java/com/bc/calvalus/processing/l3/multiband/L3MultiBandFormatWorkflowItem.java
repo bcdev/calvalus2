@@ -7,13 +7,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionBinIndex;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatConfig;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatMapper;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatPartitioner;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatReducer;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionGroupingComparator;
 import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionSortingComparator;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionTemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.FloatWritable;
 import org.apache.hadoop.mapreduce.Job;
@@ -58,11 +52,10 @@ public class L3MultiBandFormatWorkflowItem extends HadoopWorkflowItem {
 
         job.setMapperClass(L3MultiBandFormatMapper.class);
         job.setMapOutputKeyClass(L3MultiRegionBinIndex.class);
-        job.setMapOutputValueClass(L3MultiBandIndexedValue.class);
+        job.setMapOutputValueClass(FloatWritable.class);
 
         job.setPartitionerClass(L3MultiBandFormatPartitioner.class);
         job.setSortComparatorClass(L3MultiRegionSortingComparator.class);
-        job.setGroupingComparatorClass(L3MultiRegionGroupingComparator.class);
 
         job.setReducerClass(L3MultiBandFormatReducer.class);
 
