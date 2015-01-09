@@ -19,11 +19,16 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
+import com.bc.ceres.binding.Converter;
+import com.bc.ceres.binding.ConverterRegistry;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.esa.beam.binning.PlanetaryGrid;
 import org.esa.beam.binning.TemporalBinSource;
@@ -31,6 +36,7 @@ import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.Formatter;
 import org.esa.beam.binning.operator.FormatterConfig;
 import org.esa.beam.framework.datamodel.MetadataElement;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
 import java.io.File;
@@ -58,7 +64,7 @@ public class L3Formatter {
     private FormatterConfig formatterConfig;
 
 
-    public L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
+    private L3Formatter(String dateStart, String dateStop, String outputFile, String outputFormat, Configuration conf) throws BindingException {
         binningConfig = HadoopBinManager.getBinningConfig(conf);
         planetaryGrid = binningConfig.createPlanetaryGrid();
         this.startTime = parseTime(dateStart);
@@ -79,7 +85,7 @@ public class L3Formatter {
         metadataSerializer = new MetadataSerializer();
     }
 
-    public void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
+    private void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
         Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
         final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
         final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
@@ -108,6 +114,7 @@ public class L3Formatter {
                              String productName ) throws IOException {
 
         Configuration conf = context.getConfiguration();
+        ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
         ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
@@ -134,4 +141,34 @@ public class L3Formatter {
             context.setStatus("");
         }
     }
+
+    private static class ProductConverter implements Converter<Product> {
+
+        private final Configuration conf;
+
+        private ProductConverter(Configuration conf) {
+            this.conf = conf;
+        }
+
+        @Override
+         public Class<? extends Product> getValueType() {
+             return Product.class;
+         }
+
+         @Override
+         public Product parse(String text) throws ConversionException {
+             Path path = new Path(text);
+             try {
+                 return CalvalusProductIO.readProduct(path, conf, null);
+             } catch (IOException e) {
+                 throw new ConversionException(e);
+             }
+         }
+
+         @Override
+         public String format(Product value) {
+             throw new IllegalStateException();
+         }
+     }
+
 }
