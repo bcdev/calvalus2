@@ -23,8 +23,11 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -102,10 +105,15 @@ public class ProductionServiceImpl implements ProductionService {
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
-        logger.info("orderProduction:");
-        logger.info("user: " + productionRequest.getUserName());
-        logger.info("type: " + productionRequest.getProductionType());
-        logger.info("parameters: " + productionRequest.getParameters());
+        String user = productionRequest.getUserName();
+        String type = productionRequest.getProductionType();
+        logger.info("orderProduction: " + type + " (for " + user + ")");
+        Map<String, String> parameters = productionRequest.getParameters();
+        List<String> parametersKeys = new ArrayList<>(parameters.keySet());
+        Collections.sort(parametersKeys);
+        for (String key : parametersKeys) {
+            logger.info(key + " = " + parameters.get(key));
+        }
 
         synchronized (this) {
             Production production;
