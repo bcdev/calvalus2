@@ -113,6 +113,11 @@ public class L3ProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
+            Integer superSampling = productionRequest.getInteger("superSampling", 1);
+            if (superSampling > 1) {
+                jobConfig.setBoolean("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", true);
+            }
+
             if (singleReducer && requiresFormatting) {
                 jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
