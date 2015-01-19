@@ -65,16 +65,19 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private boolean productionListFiltered;
     private Boolean isCalvalusUser = null;
     private Boolean isCcUser = null;
+    private Boolean isCalEsa = null;
 
     public boolean withPortalFeature(String featureName) {
         if ("analysistab".equals(featureName)) {
             return isCalvalusUser;
         } else if ("othersets".equals(featureName)) {
-            return isCalvalusUser;
+            return isCalvalusUser || isCalEsa;
         } else if ("catalogue".equals(featureName)) {
             return isCalvalusUser;
         } else if ("unlimitedJobSize".equals(featureName)) {
-            return isCalvalusUser;
+            return isCalvalusUser || isCalEsa;
+        } else if ("coretab".equals(featureName)) {
+            return isCalEsa;
         } else {
             return false;
         }
@@ -120,6 +123,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
+                backendService.isUserInRole("calesa", new UserRolesCallback("calesa"));
                 backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
                 backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
             }
@@ -217,6 +221,17 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     new OrderVCProductionView(this),
                     new OrderMACProductionView(this),
                     new OrderL2toL3ProductionView(this),
+                    new ManageRegionsView(this),
+                    new ManageBundleView(this),
+                    manageProductionsView,
+            };
+        } else if (withPortalFeature("coretab")) {
+            views = new PortalView[]{
+                    //new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+                    new OrderL2ProductionView(this),
+                    new OrderMAProductionView(this),
+                    new OrderL3ProductionView(this),
+                    new OrderTAProductionView(this),
                     new ManageRegionsView(this),
                     new ManageBundleView(this),
                     manageProductionsView,
@@ -480,6 +495,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 GWT.log("User role " + role + " is " + value);
             } else if ("coastcolour".equals(role)) {
                 isCcUser = value;
+                GWT.log("User role " + role + " is " + value);
+            } else if ("calesa".equals(role)) {
+                isCalEsa = value;
                 GWT.log("User role " + role + " is " + value);
             } else {
                 GWT.log("Unknown user role " + role + " is " + value);
