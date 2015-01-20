@@ -103,17 +103,22 @@ public class BackendConfig {
     }
 
     static File getConfigFile(ServletContext servletContext) {
+        servletContext.log("searching Config File");
         String configPath = System.getProperty(PARAM_NAME_CONFIG_FILE);
         if (configPath == null) {
+            servletContext.log(String.format("System property '%s' not set", PARAM_NAME_CONFIG_FILE));
             configPath = servletContext.getInitParameter(PARAM_NAME_CONFIG_FILE);
             if (configPath == null) {
+                servletContext.log(String.format("ServletContext property '%s' not set", PARAM_NAME_CONFIG_FILE));
                 configPath = DEFAULT_PARAM_VALUE_CONFIG_FILE;
                 servletContext.log(String.format("Context parameter '%s' not set, assuming file '%s'", PARAM_NAME_CONFIG_FILE, configPath));
             }
         }
+        servletContext.log(String.format("Config File is '%s'", configPath));
         File configFile = new File(configPath);
         if (!configFile.isAbsolute()) {
             configFile = new File(servletContext.getRealPath("."), configFile.getPath());
+            servletContext.log(String.format("making Config File absolute '%s'", configPath));
         }
         return configFile;
     }
