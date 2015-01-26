@@ -169,8 +169,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
                             tile.getDataElements(x, y, w, h, productData.getElems());
                         }
                         productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
+                        pm.worked(h);
                     }
-                    pm.worked(h);
                 }
             } finally {
                 pm.done();
