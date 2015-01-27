@@ -195,7 +195,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         synchronized (jobStatusMap) {
             if (jobStatuses != null) {
                 for (JobStatus jobStatus : jobStatuses) {
-                    jobStatusMap.put(jobStatus.getJobID(), convertStatus(jobStatus));
+                    org.apache.hadoop.mapred.JobID jobID = jobStatus.getJobID();
+                    jobStatusMap.put(jobID, convertStatus(jobID, jobStatus, jobClient));
                 }
             }
         }
@@ -230,26 +231,50 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     /**
      * Updates the status. This method is called periodically after a fixed delay period.
      *
-     * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
      *
+     * @param jobID
+     * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
+     * @param jobClient
      * @return The process status.
      */
-    static ProcessStatus convertStatus(JobStatus jobStatus) {
-        if (jobStatus != null) {
-            float progress = (9.0F * jobStatus.mapProgress() + jobStatus.reduceProgress()) / 10.0F;
-            if (jobStatus.getRunState() == JobStatus.FAILED) {
-                return new ProcessStatus(ProcessState.ERROR, progress,
-                                         "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
-            } else if (jobStatus.getRunState() == JobStatus.KILLED) {
-                return new ProcessStatus(ProcessState.CANCELLED, progress);
-            } else if (jobStatus.getRunState() == JobStatus.PREP) {
-                return new ProcessStatus(ProcessState.SCHEDULED, progress);
-            } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
-                return new ProcessStatus(ProcessState.RUNNING, progress);
-            } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
-                return new ProcessStatus(ProcessState.COMPLETED, 1.0f);
-            }
+    private ProcessStatus convertStatus(org.apache.hadoop.mapred.JobID jobID, JobStatus jobStatus, JobClient jobClient) {
+        ProcessStatus oldProcessStatus = jobStatusMap.get(jobID);
+        float oldProgress = oldProcessStatus != null ? oldProcessStatus.getProgress() : 0f;
+
+        if (jobStatus.getRunState() == JobStatus.FAILED) {
+            return new ProcessStatus(ProcessState.ERROR, oldProgress,
+                                     "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
+        } else if (jobStatus.getRunState() == JobStatus.KILLED) {
+            return new ProcessStatus(ProcessState.CANCELLED, oldProgress);
+        } else if (jobStatus.getRunState() == JobStatus.PREP) {
+            return new ProcessStatus(ProcessState.SCHEDULED, 0f);
+        } else if (jobStatus.getRunState() == JobStatus.RUNNING) {
+            float progress = getMapReduceProgress(jobStatus, jobClient);
+            return new ProcessStatus(ProcessState.RUNNING, progress);
+        } else if (jobStatus.getRunState() == JobStatus.SUCCEEDED) {
+            return new ProcessStatus(ProcessState.COMPLETED, 1.0f);
+        } else {
+            return ProcessStatus.UNKNOWN;
         }
-        return ProcessStatus.UNKNOWN;
+    }
+
+    private float getMapReduceProgress(JobStatus jobStatus, JobClient jobClient) {
+        try {
+            Job job = jobClient.getClusterHandle().getJob(jobStatus.getJobID());
+            if (job != null) {
+                return calculateProgress(job.getStatus(), job.getNumReduceTasks() > 0);
+            }
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
+        return 0f;
+    }
+
+    static float calculateProgress(org.apache.hadoop.mapreduce.JobStatus jobStatus, boolean hasReducer) {
+        if (hasReducer) {
+            return (9.0F * jobStatus.getMapProgress() + jobStatus.getReduceProgress()) / 10.0F;
+        } else {
+            return jobStatus.getMapProgress();
+        }
     }
 }
