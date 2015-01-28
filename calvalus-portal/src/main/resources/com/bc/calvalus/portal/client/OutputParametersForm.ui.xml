@@ -27,7 +27,7 @@
                     <g:VerticalPanel spacing="2">
                         <g:RadioButton ui:field="processingFormatCluster" name=""
                                        text="Process to Cluster-Internal-Format"/>
-                        <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
+                            <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
                     </g:VerticalPanel>
                 </g:FlowPanel>
                 <g:FlowPanel ui:field="productRelatedPanel">
@@ -98,6 +98,14 @@
                 <g:CheckBox ui:field="autoStaging"
                             text="Perform staging step after successful production"
                             checked="true"/>
+                <g:HTML>
+                    <br/>
+                </g:HTML>
+                <g:HorizontalPanel spacing="2" styleName="{style.centeredHorizontalPanel}">
+                    <g:Label>Percentage of allowed failing products:</g:Label>
+                    <g:IntegerBox ui:field="allowedFailure" visibleLength="4"/>
+                </g:HorizontalPanel>
+
                 <g:CheckBox ui:field="autoDelete"
                             text="Delete production output after successful staging"
                             checked="false"

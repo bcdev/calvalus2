@@ -24,6 +24,7 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -82,6 +83,9 @@ public class OutputParametersForm extends Composite {
     @UiField
     CheckBox autoDelete; // currently unused
 
+    @UiField
+    IntegerBox allowedFailure;
+
     static int radioGroupId;
 
     public OutputParametersForm() {
@@ -112,6 +116,7 @@ public class OutputParametersForm extends Composite {
             }
         });
         setTailoringComponentsEnabled(false);
+        allowedFailure.setValue(0);
     }
 
     public void showFormatSelectionPanel(boolean show) {
@@ -146,6 +151,13 @@ public class OutputParametersForm extends Composite {
                                               "also a CRS must be specified.");
             }
         }
+        Integer allowedFailureValue = allowedFailure.getValue();
+        boolean allowedFailureValid = allowedFailureValue != null
+                && allowedFailureValue >= 0
+                && allowedFailureValue <= 100;
+        if (!allowedFailureValid) {
+            throw new ValidationException(allowedFailure, "Allowed failures must be an integer between 0 and 100");
+        }
     }
 
     public Map<String, String> getValueMap() {
@@ -169,8 +181,7 @@ public class OutputParametersForm extends Composite {
             parameters.put("quicklooks", quicklooks.getValue().toString());
             parameters.put("outputBandList", createBandListString());
         }
-
-
+        parameters.put("calvalus.hadoop.mapreduce.map.failures.maxpercent", allowedFailure.getValue().toString());
         return parameters;
     }
 
