@@ -58,8 +58,6 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
                 if (filename.matches("A\\d{13}\\.L1[AB]_LAC")) {
                     return DecodeQualification.INTENDED;
                 }
-            } else {
-                System.out.println("ModisL1WithGeoReaderPlugin NOT enabled");
             }
         }
         return DecodeQualification.UNABLE;
