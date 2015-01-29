@@ -102,17 +102,21 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             result[0][i] = Float.NaN;
             float count = aggregatedSamples[AGG_INDEX_COUNT][i];
             if (count >= 2) {
-                float sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
-                float sdrSqrSum = aggregatedSamples[AGG_INDEX_SDR_SQSUM][i];
+                double sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
+                double sdrSqrSum = aggregatedSamples[AGG_INDEX_SDR_SQSUM][i];
 
-                float sdrMean = sdrSum / count;
-                float sdrSigma = (float) Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
-                float cloudValue2 = sdrSigma / sdrMean;
+                double sdrMean = sdrSum / count;
+                double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
+                double tau1 = sdrSigma / sdrMean;
 
-                if (cloudValue2 > applyFilterThresh) {
-                    float sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
-                    float sdrCloudDetector = Math.min(Math.min(sdrMean * 1.35f, sdrMean + sdrSigma), sdr4MaxNdvi);
-                    result[0][i] = sdrCloudDetector;
+
+                if (tau1 > applyFilterThresh) {
+                    double tau2 = sdrMean + sdrSigma;
+                    double tau3 = sdrMean * 1.35;
+                    double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
+                    double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
+                    double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
+                    result[0][i] = (float) sdrCloudDetector;
                 }
                 // if "ndvi" instead of sdr_B3 (spot only)
                 //if (cloudValue2 > applyFilterThresh) {
@@ -129,7 +133,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         this.jobConf = jobConf;
         sensor = jobConf.get("calvalus.lc.sensor", "MERIS");
         if (sensor.equals("MERIS")) {
-            applyFilterThresh = 0.2f;
+            applyFilterThresh = 0.075f;
         } else {
             applyFilterThresh = 0.075f;
         }
