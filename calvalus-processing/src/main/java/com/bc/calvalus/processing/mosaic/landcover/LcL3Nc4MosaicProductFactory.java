@@ -124,7 +124,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 //        }
 
         Band band = product.addBand("current_pixel_state", ProductData.TYPE_INT8);
-        band.setNoDataValue(-1);
+        band.setNoDataValue(0);
         band.setNoDataValueUsed(true);
         band.setDescription("LC pixel type mask");
 
