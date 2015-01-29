@@ -51,7 +51,7 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.3-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.3";
     public static final String DEFAULT_BEAM_BUNDLE = "beam-5.0.1";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
 

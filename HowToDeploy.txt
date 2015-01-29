@@ -24,13 +24,13 @@ tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3
 
 for lc-cci
 ----------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-2.3-SNAPSHOT-lc
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-2.3-lc
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-lc
 
 BEAM
 -----
@@ -39,32 +39,37 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 
 for diversity
 -------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT-diversity
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-diversity
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-diversity
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-diversity
 
 
 Personal debugging
 ------------------
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-SNAPSHOT-mz
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-SNAPSHOT-mz
-java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-mz test.xml
+
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-SNAPSHOT-mz
+
+
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-mz --beam beam-SNAPSHOT-mz test.xml
 
 
 pfa-fex
 -------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT-fex
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-fex
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-fex
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-fex
 
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall pfa-0.1-SNAPSHOT
 java -jar calvalus-distribution/target/cpt.jar -e --deploy /home/marcoz/Workspace/pfa/bundle/*.jar pfa-0.1-SNAPSHOT
 
-java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.3-SNAPSHOT-fex /home/marcoz/Workspace/pfa/fex.xml
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.3-fex /home/marcoz/Workspace/pfa/fex.xml
 
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
@@ -76,7 +81,7 @@ cd /opt/apache-tomcat-7.0.53/
 #./bin/shutdown.sh
 
 # save staging
-mv webapps/calvalus/staging/ temp/
+mv webapps/calvalus/staging temp/
 
 # redeploy
 rm -rf webapps/calvalus webapps/calvalus.war
@@ -101,14 +106,19 @@ ssh cvop@bcvm03
 cd /opt/apache-tomcat-7.0.53
 
 # save staging
-sudo umount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
+# sudo umount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
+mv webapps/ccprocessing/staging temp/
+
 
 # redeploy
 rm -r webapps/ccprocessing.war webapps/ccprocessing
 mv /home/cvop/calvalus-portal.war webapps/ccprocessing.war
-sleep 5
+tail -5f logs/catalina.out
 cp -r /home/cvop/cc-patch/* webapps/ccprocessing
 
 # restore staging
-sudo mount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
+# sudo mount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
+rm -rf webapps/ccprocessing/staging/
+mv temp/staging webapps/ccprocessing/
+
 
