@@ -313,6 +313,25 @@
                     </exclusion>
                 </exclusions>
             </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-bigtiff</artifactId>
+                <version>${beam.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-ui</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.esa.beam</groupId>
+                        <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
 
             <!--  Test -->
 

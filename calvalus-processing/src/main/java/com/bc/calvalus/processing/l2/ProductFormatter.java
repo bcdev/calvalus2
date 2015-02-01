@@ -68,6 +68,8 @@ public class ProductFormatter {
             outputFormat = "NetCDF-BEAM"; // use NetCDF with BEAM extensions
         } else if (outputFormat.equals("GeoTIFF")) {
             outputExtension = ".tif";
+        } else if (outputFormat.equals("BigGeoTiff")) {
+            outputExtension = ".tif";
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
