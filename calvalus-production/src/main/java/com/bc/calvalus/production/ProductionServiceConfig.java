@@ -88,6 +88,9 @@ public class ProductionServiceConfig {
         defaultConfig.put("calvalus.hadoop.io.file.buffer.size", "131072");
         defaultConfig.put("calvalus.hadoop.dfs.replication", "1");
 
+        defaultConfig.put("calvalus.hadoop.dfs.client.read.shortcircuit", "true");
+        defaultConfig.put("calvalus.hadoop.dfs.domain.socket.path", "/var/lib/hadoop-hdfs/dn_socket");
+
         defaultConfig.put("calvalus.hadoop.mapreduce.map.speculative", "false");
         defaultConfig.put("calvalus.hadoop.mapreduce.reduce.speculative", "false");
         defaultConfig.put("calvalus.hadoop.mapreduce.client.genericoptionsparser.used", "true");
