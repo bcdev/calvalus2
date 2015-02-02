@@ -24,13 +24,13 @@ tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.4-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.4-SNAPSHOT
 
 for lc-cci
 ----------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-2.3-lc
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-lc
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-2.4-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.4-SNAPSHOT-lc
 
 BEAM
 -----
@@ -39,8 +39,8 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 
 for diversity
 -------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-diversity
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-diversity
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.4-SNAPSHOT-diversity
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.4-SNAPSHOT-diversity
 
 
 Personal debugging
@@ -57,19 +57,19 @@ java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-m
 
 pfa-fex
 -------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-fex
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-fex
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.4-SNAPSHOT-fex
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.4-SNAPSHOT-fex
 
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall pfa-0.1-SNAPSHOT
 java -jar calvalus-distribution/target/cpt.jar -e --deploy /home/marcoz/Workspace/pfa/bundle/*.jar pfa-0.1-SNAPSHOT
 
-java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.3-fex /home/marcoz/Workspace/pfa/fex.xml
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.4-SNAPSHOT-fex /home/marcoz/Workspace/pfa/fex.xml
 
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.4-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.4-SNAPSHOT
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
