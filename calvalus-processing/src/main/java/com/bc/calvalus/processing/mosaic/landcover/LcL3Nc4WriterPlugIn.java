@@ -172,7 +172,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
             variable.addAttribute("valid_min", 0);
             variable.addAttribute("valid_max", 5);
-            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)-1);
+            variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
 
             StringBuffer ancillaryVariables = new StringBuffer("current_pixel_state");
             for (String counter : COUNTER_NAMES) {
