@@ -18,10 +18,10 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.bc.ceres.binding.Converter;
@@ -86,7 +86,7 @@ public class L3Formatter {
     }
 
     private void format(TemporalBinSource temporalBinSource, String regionName, String regionWKT) throws Exception {
-        Geometry regionGeometry = JobUtils.createGeometry(regionWKT);
+        Geometry regionGeometry = GeometryUtils.createGeometry(regionWKT);
         final String processingHistoryXml = configuration.get(JobConfigNames.PROCESSING_HISTORY);
         final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
         // TODO maybe replace region information in metadata if overwritten in formatting request

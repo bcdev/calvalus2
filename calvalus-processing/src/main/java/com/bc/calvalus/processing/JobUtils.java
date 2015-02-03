@@ -19,9 +19,6 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.io.WKTReader;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -35,20 +32,6 @@ import java.io.IOException;
  * @author MarcoZ
  */
 public class JobUtils {
-
-
-
-    public static Geometry createGeometry(String geometryWkt) {
-        if (geometryWkt == null || geometryWkt.isEmpty()) {
-            return null;
-        }
-        final WKTReader wktReader = new WKTReader();
-        try {
-            return wktReader.read(geometryWkt);
-        } catch (com.vividsolutions.jts.io.ParseException e) {
-            throw new IllegalArgumentException("Illegal region geometry: " + geometryWkt, e);
-        }
-    }
 
     public static void clearAndSetOutputDir(String outputDir, Job job, HadoopWorkflowItem hadoopWorkflowItem) throws IOException {
         HadoopProcessingService processingService = hadoopWorkflowItem.getProcessingService();

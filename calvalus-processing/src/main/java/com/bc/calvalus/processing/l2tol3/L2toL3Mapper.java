@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.l2tol3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
@@ -27,6 +26,7 @@ import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -71,7 +71,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());

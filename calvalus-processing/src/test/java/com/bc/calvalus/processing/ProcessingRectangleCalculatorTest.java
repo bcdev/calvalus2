@@ -20,23 +20,13 @@ import org.junit.Test;
 
 import java.awt.Rectangle;
 
-import static com.bc.calvalus.processing.JobUtils.createGeometry;
 import static com.bc.calvalus.processing.ProcessingRectangleCalculator.intersectionSafe;
-import static com.bc.calvalus.processing.ProcessingRectangleCalculator.isGlobalCoverageGeometry;
 import static org.junit.Assert.*;
 
 /**
  * @author Norman
  */
 public class ProcessingRectangleCalculatorTest {
-
-    @Test
-    public void testIsGlobeCoverageGeometry() throws Exception {
-        assertTrue(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))")));
-        assertTrue(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, -180 90, 180 90,  180 -90,  -180 -90))")));
-        assertFalse(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, 180 -90, 180 89, -180 89, -180 -90))")));
-        assertFalse(isGlobalCoverageGeometry(createGeometry("POLYGON((-180 -90, 80 -90, 80 89, -180 89, -180 -90))")));
-    }
 
     @Test
     public void testIntersectionSafe() throws Exception {

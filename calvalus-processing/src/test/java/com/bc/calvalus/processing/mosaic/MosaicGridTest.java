@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.mosaic;
 
 
-import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -23,7 +23,7 @@ public class MosaicGridTest {
         assertEquals(370 * 360, rectangle.width);
         assertEquals(370 * 180, rectangle.height);
 
-        Geometry geometry = JobUtils.createGeometry("polygon((-180 90, -180 80, -170 80, -170 90, -180 90))");
+        Geometry geometry = GeometryUtils.createGeometry("polygon((-180 90, -180 80, -170 80, -170 90, -180 90))");
         rectangle = mosaicGrid.computeBounds(geometry);
         assertNotNull(rectangle);
         assertEquals(0, rectangle.x);
@@ -31,7 +31,7 @@ public class MosaicGridTest {
         assertEquals(370 * 10, rectangle.width);
         assertEquals(370 * 10, rectangle.height);
 
-        geometry = JobUtils.createGeometry("polygon((-179.5 89.5, -179.5 80.5, -170.5 80.5, -170.5 89.5, -179.5 89.5))");
+        geometry = GeometryUtils.createGeometry("polygon((-179.5 89.5, -179.5 80.5, -170.5 80.5, -170.5 89.5, -179.5 89.5))");
         rectangle = mosaicGrid.computeBounds(geometry);
         assertNotNull(rectangle);
         assertEquals(185, rectangle.x);
@@ -85,7 +85,7 @@ public class MosaicGridTest {
         assertEquals(new TileIndexWritable(0, 0, 0, 1), tileIndices[360]);
         assertEquals(new TileIndexWritable(0, 1, 0, 5), tileIndices[5 * 360]);
 
-        geometry = JobUtils.createGeometry("polygon((-2 46, -2 40, 1 40, 1 46, -2 46))");
+        geometry = GeometryUtils.createGeometry("polygon((-2 46, -2 40, 1 40, 1 46, -2 46))");
         tileIndices = mosaicGrid.getTileIndices(geometry);
         assertNotNull(tileIndices);
         assertEquals(3 * 6, tileIndices.length);
@@ -98,7 +98,7 @@ public class MosaicGridTest {
         assertEquals(new TileIndexWritable(35, 9, 179, (90 - 45)), tileIndices[4]);
         assertEquals(new TileIndexWritable(36, 9, 180, (90 - 45)), tileIndices[5]);
 
-        geometry = JobUtils.createGeometry("polygon((-2 46, -2 45, 0 45, 0 40, 1 40, 1 46, -2 46))");
+        geometry = GeometryUtils.createGeometry("polygon((-2 46, -2 45, 0 45, 0 40, 1 40, 1 46, -2 46))");
         tileIndices = mosaicGrid.getTileIndices(geometry);
         assertNotNull(tileIndices);
         assertEquals(8, tileIndices.length);

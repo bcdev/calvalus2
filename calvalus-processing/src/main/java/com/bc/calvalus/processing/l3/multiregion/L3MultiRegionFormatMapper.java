@@ -1,8 +1,8 @@
 package com.bc.calvalus.processing.l3.multiregion;
 
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -73,7 +73,7 @@ public class L3MultiRegionFormatMapper extends Mapper<LongWritable, L3TemporalBi
             // create buffer around given geometry to include also bins that
             // only partially fall into the given geometry
             // work on envelope as the product is rectangular anyways
-            Geometry givenGeometry = JobUtils.createGeometry(regions[i].getRegionWKT());
+            Geometry givenGeometry = GeometryUtils.createGeometry(regions[i].getRegionWKT());
             Envelope envelope = givenGeometry.getEnvelopeInternal();
             double longitudeExtend1 = getLongitudeExtend(envelope.getMinY());
             double longitudeExtend2 = getLongitudeExtend(envelope.getMaxY());

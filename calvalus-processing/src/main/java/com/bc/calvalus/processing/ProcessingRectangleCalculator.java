@@ -2,7 +2,7 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.vividsolutions.jts.geom.Envelope;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.esa.beam.framework.datamodel.Product;
@@ -76,7 +76,7 @@ abstract class ProcessingRectangleCalculator {
     }
 
     Rectangle getGeometryAsRectangle(Geometry regionGeometry) {
-        if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
+        if (!(regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
             try {
                 LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
                 return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
@@ -106,17 +106,5 @@ abstract class ProcessingRectangleCalculator {
         }
     }
 
-    static boolean isGlobalCoverageGeometry(Geometry geometry) {
-        Envelope envelopeInternal = geometry.getEnvelopeInternal();
-        return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
-               && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
-               && eq(envelopeInternal.getMinY(), -90.0, 1E-8)
-               && eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
-    }
-
-    private static boolean eq(double x1, double x2, double eps) {
-        double delta = x1 - x2;
-        return delta > 0 ? delta < eps : -delta < eps;
-    }
 
 }

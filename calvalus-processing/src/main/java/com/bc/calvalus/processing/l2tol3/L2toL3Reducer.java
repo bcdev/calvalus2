@@ -17,10 +17,10 @@
 package com.bc.calvalus.processing.l2tol3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import com.bc.calvalus.processing.ma.TaskOutputStreamFactory;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -79,7 +79,7 @@ public class L2toL3Reducer extends Reducer<LongWritable, L3SpatialBin, NullWrita
         this.conf = conf;
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
 
-        Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, regionGeometry);
         temporalBinner = new TemporalBinner(binningContext);
         featureNames = binningContext.getBinManager().getResultFeatureNames();

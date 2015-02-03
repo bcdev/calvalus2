@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -290,7 +291,7 @@ public abstract class ProcessorAdapter {
         if (inputRectangle == null) {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
-            Geometry regionGeometry = JobUtils.createGeometry(geometryWkt);
+            Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
             ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
                                                                                          roiRectangle,
                                                                                          inputSplit,

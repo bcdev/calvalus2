@@ -17,9 +17,9 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -119,7 +119,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
         binningConfig = getL3Config(conf);
         metadataSerializer = new MetadataSerializer();
 
-        Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, regionGeometry);
         temporalBinner = new TemporalBinner(binningContext);
         cellChain = new CellProcessorChain(binningContext);

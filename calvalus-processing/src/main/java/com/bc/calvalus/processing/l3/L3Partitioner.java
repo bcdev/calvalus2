@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
@@ -66,7 +66,7 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         this.planetaryGrid = binningConfig.createPlanetaryGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
-        Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
+        Geometry roiGeometry = GeometryUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {
             Envelope envelope = roiGeometry.getEnvelopeInternal();
             double minY = envelope.getMinY();
