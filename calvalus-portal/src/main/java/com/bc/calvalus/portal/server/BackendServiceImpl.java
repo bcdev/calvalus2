@@ -95,7 +95,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                        calvalusVersionProperties.get("version"),
                                                        calvalusVersionProperties.get("timestamp"));
 
-    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 2000;
+    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 5000;
 
     private ProductionService productionService;
     private BackendConfig backendConfig;
