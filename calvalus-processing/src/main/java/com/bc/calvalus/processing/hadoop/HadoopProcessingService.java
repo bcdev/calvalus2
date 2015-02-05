@@ -44,7 +44,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
@@ -193,10 +195,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         JobClient jobClient = jobClientsMap.getJobClient(username);
         JobStatus[] jobStatuses = jobClient.getAllJobs();
         synchronized (jobStatusMap) {
-            if (jobStatuses != null) {
+            if (jobStatuses != null && jobStatuses.length > 0) {
+                Set<JobID> allJobs = new HashSet<>(jobStatusMap.keySet());
                 for (JobStatus jobStatus : jobStatuses) {
                     org.apache.hadoop.mapred.JobID jobID = jobStatus.getJobID();
                     jobStatusMap.put(jobID, convertStatus(jobID, jobStatus, jobClient));
+                    allJobs.remove(jobID);
+                }
+                for (JobID jobID : allJobs) {
+                    float progress = jobStatusMap.get(jobID).getProgress();
+                    ProcessStatus processStatus = new ProcessStatus(ProcessState.ERROR, progress, "Hadoop job '" + jobID + "' cancelled by backend");
+                    jobStatusMap.put(jobID, processStatus);
                 }
             }
         }
