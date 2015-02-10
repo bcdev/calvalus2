@@ -151,11 +151,13 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             }
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
-                // If we haven't seen LAND so far, but we had SNOW clear SDRs
+                // If we haven't seen LAND so far,
+                // but we had SNOW, WATER or CLOUD_SHADOW => clear SDRs
                 if (landCount == 0) {
                     int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
                     int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
-                    if (snowCount > 0 || waterCount > 0) {
+                    int shadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+                    if (snowCount > 0 || waterCount > 0 || shadowCount > 0) {
                         clearSDR(i, 0.0f);
                     }
                 }
@@ -167,8 +169,10 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far, accumulate SNOW SDRs
                 if (landCount == 0) {
+                    // if there have been WATER or CLOUD_SHADOW  before => clear SDR
                     int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
-                    if (waterCount > 0) {
+                    int shadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+                    if (waterCount > 0 || shadowCount > 0) {
                         clearSDR(i, 0.0f);
                     }
                     addSdrs(samples, i);
@@ -181,16 +185,32 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     deepWaterCounter[i]++;
                 } else {
                     // shallow water
+                    // only aggregate if, no LAND or SNOW before
                     int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                     int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
                     if (landCount == 0 && snowCount == 0) {
+                        // if there was a CLOUD_SHADOW before => clear SDR
+                        int shadowCount = (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i];
+                        if (shadowCount > 0) {
+                            clearSDR(i, 0.0f);
+                        }
                         addSdrs(samples, i);
                     }
                     aggregatedSamples[STATUS_WATER][i]++;
                 }
-            } else if (status == STATUS_CLOUD || status == STATUS_CLOUD_SHADOW) {
-                // Count CLOUD orCLOUD_SHADOW
-                aggregatedSamples[status][i]++;
+            } else if (status == STATUS_CLOUD) {
+                // Count CLOUD
+                aggregatedSamples[STATUS_CLOUD][i]++;
+            } else if (status == STATUS_CLOUD_SHADOW) {
+                // Count CLOUD_SHADOW
+                int landCount = (int) aggregatedSamples[STATUS_LAND][i];
+                int snowCount = (int) aggregatedSamples[STATUS_SNOW][i];
+                int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
+                if (landCount == 0 && snowCount == 0 && waterCount == 0) {
+                    // only aggregate SDR, if no LAND, WATER or SNOW have been aggregated before
+                    addSdrs(samples, i);
+                }
+                aggregatedSamples[STATUS_CLOUD_SHADOW][i]++;
             }
         }
     }
@@ -218,7 +238,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
 
             aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
-            if ((status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER) && deepWaterCounter[i] == 0) {
+            if ((status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER || status == STATUS_CLOUD_SHADOW) && deepWaterCounter[i] == 0) {
                 wSum = aggregatedSamples[status][i];
             }
             if (wSum != 0f) {
@@ -274,7 +294,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     }
 
     protected void clearSDR(int i, float value) {
-        for (int j = 0; j < numSDRBands + numSDRBands + 1; j++) {
+        for (int j = 0; j < numSDRBands + numSDRBands + 1; j++) {  // sdr + ndvi + sdr_error
             aggregatedSamples[SDR_OFFSET + j][i] = value;
         }
     }
