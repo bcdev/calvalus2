@@ -44,7 +44,7 @@ import java.util.logging.Logger;
  */
 public class PatternBasedInputFormat extends InputFormat {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
+    protected static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
      * Maps each input file to a single (file) split.
@@ -118,7 +118,7 @@ public class PatternBasedInputFormat extends InputFormat {
     }
 
 
-    private void createSplits(FileSystem fs, ProductInventory productInventory,
+    protected void createSplits(FileSystem fs, ProductInventory productInventory,
                               FileStatus[] fileStatuses, List<InputSplit> splits) throws IOException {
         for (FileStatus file : fileStatuses) {
             long fileLength = file.getLen();
