@@ -15,9 +15,6 @@ public class BandTileWritable implements Writable {
 
     public BandTileWritable() {}
 
-    public static final int TILE_HEIGHT = 1800;
-    public static final int TILE_WIDTH = 1800;
-
     float[] tileData;
 
     public float[] getTileData() {
@@ -29,6 +26,7 @@ public class BandTileWritable implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeInt(tileData.length);
         for (float f : tileData) {
             out.writeFloat(f);
         }
@@ -36,10 +34,11 @@ public class BandTileWritable implements Writable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        final int length = in.readInt();
         if (tileData == null) {
-            tileData = new float[TILE_HEIGHT * TILE_WIDTH];
+            tileData = new float[length];
         }
-        for (int i = 0; i < TILE_HEIGHT * TILE_WIDTH; ++i) {
+        for (int i = 0; i < length; ++i) {
             tileData[i] = in.readFloat();
         }
     }

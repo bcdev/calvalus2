@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.l3.seasonal;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -11,6 +12,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.ImageUtils;
@@ -50,6 +52,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         // determine path of some input, weeks
         // /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
         final Configuration conf = context.getConfiguration();
+        final int mosaicHeight;
+        try {
+            mosaicHeight = BinningConfig.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS)).getNumRows();
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+        }
+        final int bandTileHeight = mosaicHeight / 36;  // 64800 / 36 = 1800, 16200 / 36 = 450
+        final int bandTileWidth = bandTileHeight;
         final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
         final Path srRootDir = someTilePath.getParent().getParent().getParent();
         final FileSystem fs = someTilePath.getFileSystem(conf);
@@ -67,7 +77,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
-        final float[][] accu = new float[17][BandTileWritable.TILE_HEIGHT * BandTileWritable.TILE_WIDTH];
+        final float[][] accu = new float[17][bandTileHeight * bandTileWidth];
         // loop over weeks
         for (Date week = start; ! stop.before(week); week = nextWeek(week)) {
 
@@ -116,7 +126,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 for (int r = 0; r < tileHeight; ++r) {
                     for (int c = 0; c < tileWidth; ++c) {
                         final int iSrc = r * tileWidth + c;
-                        final int iDst = (tileMinY + r) * BandTileWritable.TILE_WIDTH + tileMinX + c;
+                        final int iDst = (tileMinY + r) * bandTileWidth + tileMinX + c;
 
                         // aggregate pixel-wise using aggregation rules
                         final int state = (int) bandDataB[0][iSrc];
@@ -150,15 +160,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
 
         // finish aggregation, divide by stateCount
-        for (int r = 0; r < BandTileWritable.TILE_HEIGHT; ++r) {
-            for (int c = 0; c < BandTileWritable.TILE_WIDTH; ++c) {
-                final int i = r * BandTileWritable.TILE_WIDTH + c;
+        for (int r = 0; r < bandTileHeight; ++r) {
+            for (int c = 0; c < bandTileWidth; ++c) {
+                final int i = r * bandTileWidth + c;
                 final float stateCount = accu[1][i];
-                if (stateCount > 0) {
+                //if (stateCount > 0) {
                     for (int b = 3; b < 17; ++b) {
                         accu[b][i] /= stateCount;
                     }
-                }
+                //}
             }
         }
 
@@ -227,8 +237,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             return (int) bandData[2][iSrc];
         } else if (state == 3) {
             return (int) bandData[3][iSrc];
+/* UCL does not count cloud and cloud shadow
         } else if (state == 4) {
             return (int) bandData[4][iSrc];
+*/
         } else if (state == 5) {
             return (int) bandData[5][iSrc];
         } else {
@@ -241,10 +253,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             case 1: return 5;
             case 2: return 4;
             case 3: return 3;
-//            case 5: return 2;
-//            case 4: return 1;
-            case 4: return 2;
-            case 5: return 1;
+            case 5: return 2;
+            case 4: return 1;
+//            case 4: return 2;
+//            case 5: return 1;
             default: return 0;
         }
     }

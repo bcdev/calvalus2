@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.l3.seasonal;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -11,6 +12,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductWriter;
 import org.esa.beam.framework.datamodel.Band;
@@ -75,17 +77,24 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "vegetation_index_mean"
     };
 
-    private final List<float[]> usedTiles = new ArrayList<float[]>(BandTileWritable.TILE_WIDTH);
+    private final List<float[]> usedTiles = new ArrayList<float[]>();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         final Configuration conf = context.getConfiguration();
+        final int mosaicHeight;
+        try {
+            mosaicHeight = BinningConfig.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS)).getNumRows();
+        } catch (BindingException e) {
+            throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+        }
+        final int bandTileHeight = mosaicHeight / 36;  // 64800 / 36 = 1800, 16200 / 36 = 450
+        final int bandTileWidth = bandTileHeight;
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
         final int noOfWeeks = Math.max((int) ((stop.getTime() - start.getTime()) / 86400 / 7 / 1000), 1);
         LOG.info("reducing start=" + DATE_FORMAT.format(start) + " weeks=" + noOfWeeks);
         if (! context.nextKey()) {
-//        if (context.getCurrentKey() == null) {
             return;
         }
         boolean moreTilesAvailable = true;
@@ -95,13 +104,13 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final String outputDirName = conf.get("calvalus.output.dir");
         final Path outputPath = new Path(outputDirName, targetFileName + ".tif");
         final Product dimapOutput = new Product(targetFileName, bandName + " of seasonal composite",
-                                          NUM_TILE_COLUMNS * BandTileWritable.TILE_WIDTH,
-                                          NUM_TILE_ROWS * BandTileWritable.TILE_HEIGHT);
+                                          NUM_TILE_COLUMNS * bandTileWidth,
+                                          NUM_TILE_ROWS * bandTileHeight);
         try {
             dimapOutput.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84,
                                                       dimapOutput.getSceneRasterWidth(), dimapOutput.getSceneRasterHeight(),
                                                       -180.0, 90.0,
-                                                      360.0/NUM_TILE_COLUMNS/BandTileWritable.TILE_WIDTH, 180.0/NUM_TILE_ROWS/BandTileWritable.TILE_HEIGHT,
+                                                      360.0/NUM_TILE_COLUMNS/bandTileWidth, 180.0/NUM_TILE_ROWS/bandTileHeight,
                                                       0.0, 0.0));
         } catch (Exception e) {
             throw new IllegalArgumentException("failed to create CRS geocoding: " + e.getMessage(), e);
@@ -114,23 +123,19 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         ProductData dimapData;
         if (bandNumber == 0) {
             band = dimapOutput.addBand(bandName, ProductData.TYPE_INT8);
-            byteBuffer = new byte[NUM_TILE_COLUMNS * BandTileWritable.TILE_WIDTH];
+            byteBuffer = new byte[NUM_TILE_COLUMNS * bandTileWidth];
             dimapData = ProductData.createInstance(byteBuffer);
         } else if (bandNumber < 3) {
             band = dimapOutput.addBand(bandName, ProductData.TYPE_INT16);
-            shortBuffer = new short[NUM_TILE_COLUMNS * BandTileWritable.TILE_WIDTH];
+            shortBuffer = new short[NUM_TILE_COLUMNS * bandTileWidth];
             dimapData = ProductData.createInstance(shortBuffer);
         } else {
             band = dimapOutput.addBand(bandName, ProductData.TYPE_FLOAT32);
-            floatBuffer = new float[NUM_TILE_COLUMNS * BandTileWritable.TILE_WIDTH];
+            floatBuffer = new float[NUM_TILE_COLUMNS * bandTileWidth];
             dimapData = ProductData.createInstance(floatBuffer);
         }
         // product metadata
 
-/*
-        ProductFormatter formatter = new ProductFormatter(targetFileName, "BEAM-DIMAP", "zip");
-        File tmpDimapFile = formatter.createTemporaryProductFile();
-*/
         final String dimapFileName = targetFileName + ".dim";
         ProductWriter dimapWriter = ProductIO.getProductWriter(ProductIO.DEFAULT_FORMAT_NAME);
         dimapWriter.writeProductNodes(dimapOutput, dimapFileName);
@@ -157,12 +162,12 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             LOG.info(count + " tiles in tile row " + tileRow);
 
             // write lines of tile row to output file
-            for (int r = 0; r < BandTileWritable.TILE_HEIGHT; r++) {
+            for (int r = 0; r < bandTileHeight; r++) {
                 for (int tileColumn = 0; tileColumn < NUM_TILE_COLUMNS; tileColumn++) {
                     if (tiles[tileColumn] != null) {
-                        for (int c = 0; c < BandTileWritable.TILE_WIDTH; c++) {
-                            final int iSrc = r*BandTileWritable.TILE_WIDTH+c;
-                            final int iDst = tileColumn * BandTileWritable.TILE_WIDTH + c;
+                        for (int c = 0; c < bandTileWidth; c++) {
+                            final int iSrc = r*bandTileWidth+c;
+                            final int iDst = tileColumn * bandTileWidth + c;
                             if (bandNumber == 0) {
                                 byteBuffer[iDst] = (byte)tiles[tileColumn][iSrc];
                             } else if (bandNumber < 3) {
@@ -172,8 +177,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                             }
                         }
                     } else {
-                        for (int c = 0; c < BandTileWritable.TILE_WIDTH; c++) {
-                            final int iDst = tileColumn * BandTileWritable.TILE_WIDTH + c;
+                        for (int c = 0; c < bandTileWidth; c++) {
+                            final int iDst = tileColumn * bandTileWidth + c;
                             if (bandNumber == 0) {
                                 byteBuffer[iDst] = 0;
                             } else if (bandNumber < 3) {
@@ -185,8 +190,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                     }
                 }
                 dimapWriter.writeBandRasterData(band,
-                                                0, tileRow * BandTileWritable.TILE_HEIGHT + r,
-                                                NUM_TILE_COLUMNS * BandTileWritable.TILE_WIDTH, 1,
+                                                0, tileRow * bandTileHeight + r,
+                                                NUM_TILE_COLUMNS * bandTileWidth, 1,
                                                 dimapData, ProgressMonitor.NULL);
             }
 
@@ -200,11 +205,6 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         }
 
         dimapOutput.closeIO();
-
-/*
-        LOG.info("copying dimap to " + outputPath);
-        formatter.compressToHDFS(context, tmpDimapFile);
-*/
 
         LOG.info("converting dimap to geotiff ...");
         final Product dimapInput = ProductIO.readProduct(dimapFileName);
@@ -231,7 +231,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
     }
     private float[] copyOf(float[] tileData) {
         if (usedTiles.isEmpty()) {
-            usedTiles.add(new float[BandTileWritable.TILE_WIDTH * BandTileWritable.TILE_HEIGHT]);
+            usedTiles.add(new float[tileData.length]);
         }
         float[] copy = usedTiles.remove(0);
         System.arraycopy(tileData, 0, copy, 0, tileData.length);
