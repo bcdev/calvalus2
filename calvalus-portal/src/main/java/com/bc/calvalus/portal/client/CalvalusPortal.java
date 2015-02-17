@@ -66,18 +66,19 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private Boolean isCalvalusUser = null;
     private Boolean isCcUser = null;
     private Boolean isCalEsa = null;
+    private Boolean isCalOpus = null;
 
     public boolean withPortalFeature(String featureName) {
         if ("analysistab".equals(featureName)) {
             return isCalvalusUser;
         } else if ("othersets".equals(featureName)) {
-            return isCalvalusUser || isCalEsa;
+            return isCalvalusUser || isCalEsa || isCalOpus;
         } else if ("catalogue".equals(featureName)) {
             return isCalvalusUser;
         } else if ("unlimitedJobSize".equals(featureName)) {
-            return isCalvalusUser || isCalEsa;
+            return isCalvalusUser || isCalEsa || isCalOpus;
         } else if ("coretab".equals(featureName)) {
-            return isCalEsa;
+            return isCalEsa || isCalOpus;
         } else {
             return false;
         }
@@ -123,6 +124,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
+                backendService.isUserInRole("eop_file.modify_calopus_b", new UserRolesCallback("eop_file.modify_calopus_b"));
                 backendService.isUserInRole("calesa", new UserRolesCallback("calesa"));
                 backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
                 backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
@@ -498,6 +500,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 GWT.log("User role " + role + " is " + value);
             } else if ("calesa".equals(role)) {
                 isCalEsa = value;
+                GWT.log("User role " + role + " is " + value);
+            } else if ("eop_file.modify_calopus_b".equals(role)) {
+                isCalOpus = value;
                 GWT.log("User role " + role + " is " + value);
             } else {
                 GWT.log("Unknown user role " + role + " is " + value);
