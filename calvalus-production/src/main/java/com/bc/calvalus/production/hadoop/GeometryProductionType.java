@@ -80,7 +80,8 @@ public class GeometryProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
             jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, date2Str);
 
-            workflow.add(new GeometryWorkflowItem(getProcessingService(), productionName + " " + date1Str, jobConfig));
+            workflow.add(new GeometryWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                  productionName + " " + date1Str, jobConfig));
         }
 
         // todo - if autoStaging=true, create sequential workflow and add staging job

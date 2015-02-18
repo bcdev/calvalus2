@@ -214,7 +214,7 @@ public class ManageBundleForm extends Composite {
             fileUploadDialog = new Dialog("File Upload", verticalPanel, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
                 @Override
                 protected void onOk() {
-                    String filename = bundleFileUpload.getFilename();
+                    String filename = fileNameOf(bundleFileUpload.getFilename());
                     if (filename == null || filename.isEmpty()) {
                         Dialog.error("Bundle Upload",
                                      new HTML("No filename selected."),
@@ -251,6 +251,15 @@ public class ManageBundleForm extends Composite {
             fileUploadDialog.hide();
         }
 
+        private String fileNameOf(String path) {
+            if (path == null) {
+                return null;
+            }
+            path = path.substring(path.lastIndexOf('/')+1);
+            path = path.substring(path.lastIndexOf('\\')+1);
+            return path;
+        }
+
 
         private class BundleSubmitHandler implements FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
 
@@ -266,7 +275,7 @@ public class ManageBundleForm extends Composite {
                 updateBundlesList();
                 updateBundleDetails();
                 String resultHTML = submitCompleteEvent.getResults();
-                if (resultHTML.equals(bundleFileUpload.getFilename())) {
+                if (resultHTML.equals(fileNameOf(bundleFileUpload.getFilename()))) {
                     Dialog.info("Bundle Upload", "File successfully uploaded.");
                 } else {
                     Dialog.error("Bundle Upload", "Error while bundle upload.<br/>" + resultHTML);

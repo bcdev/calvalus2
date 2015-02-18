@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+        PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+
+    <display-name>CoastColour Processing On-Demand</display-name>
+    <description>Calvalus Portal for CoastColour on-demand processing</description>
+
+    <!-- Configuration properties for the Calvalus portal -->
+
+    <context-param>
+        <param-name>calvalus.properties</param-name>
+        <param-value>config/calvalus.properties</param-value>
+    </context-param>
+
+    <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
+
+    <servlet>
+        <servlet-name>stagingServlet</servlet-name>
+        <servlet-class>org.apache.catalina.servlets.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>listings</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readonly</param-name>
+            <param-value>true</param-value>
+        </init-param>
+        <init-param>
+            <param-name>readmeFile</param-name>
+            <param-value>/staging/directory-listing-readme.txt</param-value>
+        </init-param>
+        <init-param>
+            <param-name>contextXsltFile</param-name>
+            <param-value>/staging/directory-listing.xsl</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+
+    <!-- Backend servlet -->
+
+    <servlet>
+        <servlet-name>backendServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.BackendServiceImpl</servlet-class>
+    </servlet>
+
+    <!-- File upload & echo servlet -->
+
+    <servlet>
+        <servlet-name>uploadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileUploadServlet</servlet-class>
+    </servlet>
+
+    <!-- Hadoop logfile servlet -->
+
+    <servlet>
+        <servlet-name>hadoopLogServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.HadoopLogServlet</servlet-class>
+    </servlet>
+
+    <!-- File download servlet -->
+
+    <servlet>
+        <servlet-name>downloadServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>stagingServlet</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>backendServlet</servlet-name>
+        <url-pattern>/calvalus/backend</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>uploadServlet</servlet-name>
+        <url-pattern>/calvalus/upload</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+         <servlet-name>hadoopLogServlet</servlet-name>
+         <url-pattern>/calvalus/hadoopLogs</url-pattern>
+     </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>downloadServlet</servlet-name>
+        <url-pattern>/calvalus/download</url-pattern>
+    </servlet-mapping>
+
+    <!-- You can set the default session timeout (in minutes) for all newly   -->
+    <!-- created sessions by modifying the value below.                       -->
+    <session-config>
+        <session-timeout>120</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <!--<welcome-file>calvalus.jsp</welcome-file>-->
+        <welcome-file>about.jsp</welcome-file>
+    </welcome-file-list>
+
+
+    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
+    <security-constraint>
+        <display-name>Calvalus Protected</display-name>
+        <web-resource-collection>
+            <web-resource-name>calvalus-protected</web-resource-name>
+            <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/calvalus.jsp</url-pattern>
+            <url-pattern>/staging</url-pattern>
+            <url-pattern>/staging/*</url-pattern>
+            <url-pattern>/calvalus/backend</url-pattern>
+            <url-pattern>/calvalus/upload</url-pattern>
+            <url-pattern>/calvalus/download</url-pattern>
+            <url-pattern>/calvalus/backend/*</url-pattern>
+            <url-pattern>/calvalus/upload/*</url-pattern>
+            <url-pattern>/calvalus/download/*</url-pattern>
+            <url-pattern>/pub</url-pattern>
+            <url-pattern>/pub/</url-pattern>
+            <url-pattern>/pub/docs</url-pattern>
+            <url-pattern>/pub/docs/</url-pattern>
+            <url-pattern>/pub/docs/Calvalus-TS-1.2-20110321.pdf</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <!-- Anyone with one of the listed roles may access this area -->
+            <role-name>coastcolour</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <!-- Default login configuration uses form-based authentication -->
+    <login-config>
+        <auth-method>FORM</auth-method>
+        <realm-name>Calvalus</realm-name>
+        <form-login-config>
+            <form-login-page>/login.jsp</form-login-page>
+            <form-error-page>/login-failure.jsp</form-error-page>
+        </form-login-config>
+    </login-config>
+
+    <!-- Security roles referenced by this web application -->
+    <security-role>
+        <role-name>coastcolour</role-name>
+    </security-role>
+
+</web-app>

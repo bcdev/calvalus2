@@ -17,29 +17,23 @@
 package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.hadoop.FSImageInputStream;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.ceres.core.Assert;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 
-import javax.imageio.stream.ImageInputStream;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -96,11 +90,14 @@ public abstract class ProcessorAdapter {
     private Product inputProduct;
     private Rectangle inputRectangle;
     private Rectangle roiRectangle;
+    private File inputFile;
+    private AffineTransform input2OutputTransform;
 
     public ProcessorAdapter(MapContext mapContext) {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
+        GpfUtils.init(mapContext.getConfiguration());
     }
 
     protected MapContext getMapContext() {
@@ -151,9 +148,7 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
-     *
      * @return The number of processed products.
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
@@ -172,7 +167,6 @@ public abstract class ProcessorAdapter {
      * Saves the processed products onto HDFS.
      *
      * @param pm A progress monitor
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public abstract void saveProcessedProducts(ProgressMonitor pm) throws IOException;
@@ -183,7 +177,51 @@ public abstract class ProcessorAdapter {
      *
      * @return The output path of the output product.
      */
-    public abstract Path getOutputPath() throws IOException;
+    public abstract Path getOutputProductPath() throws IOException;
+
+    protected Path getOutputDirectoryPath() throws IOException {
+        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+        return appendDatePart(outputPath);
+    }
+
+    protected Path getWorkOutputDirectoryPath() throws IOException {
+        try {
+            Path workOutputPath = FileOutputFormat.getWorkOutputPath(getMapContext());
+            return appendDatePart(workOutputPath);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+    }
+
+    Path appendDatePart(Path path) {
+        if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_PRESERVE_DATE_TREE, false)) {
+            String datePart = getDatePart(getInputPath());
+            if (datePart != null) {
+                path = new Path(path, datePart);
+            }
+        }
+        return path;
+    }
+
+    /**
+     * @param inputProductPath the path to the input product
+     * @return the "year/month/day" part of the inputProductPath,
+     * returns {@null}, if the input product path contains no date part
+     */
+    static String getDatePart(Path inputProductPath) {
+        Path day = inputProductPath.getParent();
+        if (day != null && !day.getName().isEmpty()) {
+            Path month = day.getParent();
+            if (month != null && !month.getName().isEmpty()) {
+                Path year = month.getParent();
+                if (year != null && !year.getName().isEmpty()) {
+                    return year.getName() + "/" + month.getName() + "/" + day.getName();
+                }
+            }
+        }
+        return null;
+    }
+
 
     /**
      * Return {code true}, if the processor adapter supports on-demand processing of distinct regions.
@@ -196,10 +234,9 @@ public abstract class ProcessorAdapter {
      * Convenient method that returns the processed product and does all the necessary steps.
      *
      * @param pm A progress monitor
-     *
      * @return The processed product
      */
-    public Product getProcessedProduct(ProgressMonitor pm) throws IOException { // TODO use pm
+    public Product getProcessedProduct(ProgressMonitor pm) throws IOException {
         Product processedProduct = openProcessedProduct();
         if (processedProduct == null) {
             Rectangle sourceRectangle = getInputRectangle();
@@ -251,25 +288,36 @@ public abstract class ProcessorAdapter {
      */
     public Rectangle getInputRectangle() throws IOException {
         if (inputRectangle == null) {
-            Geometry regionGeometry = JobUtils.createGeometry(
-                    getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry, roiRectangle,
-                                                                                         inputSplit) {
+            String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+            boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
+            Geometry regionGeometry = JobUtils.createGeometry(geometryWkt);
+            ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
+                                                                                         roiRectangle,
+                                                                                         inputSplit,
+                                                                                         fullSwath) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();
                 }
             };
             inputRectangle = calculator.computeRect();
+            LOG.info("computed inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
+    }
+
+    public AffineTransform getInput2OutputTransform() {
+        return input2OutputTransform;
+    }
+
+    public void setInput2OutputTransform(AffineTransform input2OutputTransform) {
+        this.input2OutputTransform = input2OutputTransform;
     }
 
     /**
      * Return the input product.
      *
      * @return The input product
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
     public Product getInputProduct() throws IOException {
@@ -282,113 +330,23 @@ public abstract class ProcessorAdapter {
     private Product openInputProduct() throws IOException {
         Configuration conf = getConfiguration();
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
-
-        return readProduct(getInputPath(), inputFormat);
-    }
-
-    /**
-     * Reads a product from the distributed file system.
-     *
-     * @param inputPath   The input path
-     * @param inputFormat The input format, may be {@code null}. If {@code null}, the file format will be detected.
-     *
-     * @return The product The product read.
-     *
-     * @throws java.io.IOException If an I/O error occurs
-     */
-    protected Product readProduct(Path inputPath, String inputFormat) throws IOException {
-        getLogger().info(String.format("Opening product from path = '%s'", inputPath.toString()));
-
-        Configuration configuration = getConfiguration();
-        Product product = null;
-        if ("HADOOP-STREAMING".equals(inputFormat) || inputPath.getName().toLowerCase().endsWith(".seq")) {
-            StreamingProductReader reader = new StreamingProductReader(inputPath, configuration);
-            product = reader.readProductNodes(null, null);
-            getLogger().info(String.format("Opened using StreamingProductReader"));
-        } else {
+        if (inputFile != null) {
             if (inputFormat != null) {
-                // if inputFormat is given, use it
-                ProductReader productReader = ProductIO.getProductReader(inputFormat);
-                if (productReader != null) {
-                    ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
-                    Object input = null;
-                    if (canHandle(readerPlugIn, ImageInputStream.class)) {
-                        input = openImageInputStream(inputPath);
-                    } else if (canHandle(readerPlugIn, File.class)) {
-                        input = copyFileToLocal(inputPath);
-                    }
-
-                    if (input != null) {
-                        product = productReader.readProductNodes(input, null);
-                    }
-                }
+                return ProductIO.readProduct(inputFile, inputFormat);
             } else {
-                // no inputFormat, use autodetection
-                // first try a fast,direct ImageInputStream
-                Object input = openImageInputStream(inputPath);
-                ProductReader productReader = ProductIO.getProductReaderForInput(input);
-                if (productReader == null) {
-                    // try a local file copy
-                    input = copyFileToLocal(inputPath);
-                    productReader = ProductIO.getProductReaderForInput(input);
-                    if (productReader == null) {
-                        throw new IOException(String.format("No reader found for product: '%s'", inputPath.toString()));
-                    }
-                }
-                product = productReader.readProductNodes(input, null);
+                return ProductIO.readProduct(inputFile);
             }
+        } else {
+            return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
         }
-        if (product == null) {
-            throw new IOException(
-                    String.format("No reader found for product '%s' using input format '%s'", inputPath.toString(),
-                                  inputFormat));
-        }
-        getLogger().info(String.format("Opened product width = %d height = %d",
-                                       product.getSceneRasterWidth(),
-                                       product.getSceneRasterHeight()));
-        ProductReader productReader = product.getProductReader();
-        if (productReader != null) {
-            getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
-        }
-        return product;
     }
 
-    private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
-        if (readerPlugIn != null) {
-            Class<?>[] inputTypes = readerPlugIn.getInputTypes();
-            for (Class<?> inputType : inputTypes) {
-                if (inputType.isAssignableFrom(inputClass)) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    public void setInputFile(File inputFile) {
+        this.inputFile = inputFile;
     }
 
-    /**
-     * Copies the file given to the local input directory for access as a ordinary {@code File}.
-     *
-     * @param inputPath The path to the file in the HDFS.
-     *
-     * @return the local file that contains the copy.
-     *
-     * @throws IOException
-     */
-    public File copyFileToLocal(Path inputPath) throws IOException {
-        getLogger().info(String.format("Copying to local product file"));
-        File localFile = new File(".", inputPath.getName());
-        if (!localFile.exists()) {
-            FileSystem fs = inputPath.getFileSystem(conf);
-            FileUtil.copy(fs, inputPath, localFile, false, conf);
-        }
-        return localFile;
-    }
-
-    protected Object openImageInputStream(Path inputPath) throws IOException {
-        FileSystem fs = inputPath.getFileSystem(conf);
-        final FileStatus status = fs.getFileStatus(inputPath);
-        final FSDataInputStream in = fs.open(inputPath);
-        return new FSImageInputStream(in, status.getLen());
+    public File getInputFile() {
+        return inputFile;
     }
 
     /**
@@ -396,6 +354,10 @@ public abstract class ProcessorAdapter {
      * All products opened or processed by this adapter are disposed as well.
      */
     public void dispose() {
+        closeInputProduct();
+    }
+
+    public void closeInputProduct() {
         if (inputProduct != null) {
             inputProduct.dispose();
             inputProduct = null;
@@ -415,7 +377,7 @@ public abstract class ProcessorAdapter {
     }
 
     public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,
-                                                Rectangle inputRectangle) {
+                                                       Rectangle inputRectangle) {
         final ProductData.UTC startTime = sourceProduct.getStartTime();
         final ProductData.UTC stopTime = sourceProduct.getEndTime();
         boolean fullHeight = sourceProduct.getSceneRasterHeight() == targetProduct.getSceneRasterHeight();

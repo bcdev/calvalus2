@@ -13,6 +13,8 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
 
+import java.io.IOException;
+
 /**
  * Boostrapping.
  *
@@ -47,12 +49,11 @@ public class BootstrappingProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
-//        jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
-
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        WorkflowItem workflowItem = new BootstrappingWorkflowItem(getProcessingService(), productionName, jobConfig);
+        WorkflowItem workflowItem = new BootstrappingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                                  productionName, jobConfig);
 
         return new Production(productionId,
                               productionName,
@@ -64,9 +65,9 @@ public class BootstrappingProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 

@@ -34,8 +34,8 @@ import java.io.IOException;
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 
-    public L2WorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public L2WorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

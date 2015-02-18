@@ -18,5 +18,5 @@ tar czf seadas-7.0.tgz seadas-7.0
 
 # installing / uninstalling
 
-java -jar ~/Projects/BC/Calvados/calvalus/calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar --uninstall seadas-7.0
-java -jar ~/Projects/BC/Calvados/calvalus/calvalus-production/target/calvalus-production-1.7-SNAPSHOT-tool.jar -deploy bundle-descriptor.xml l2gen-p* seadas-7.0.tgz seadas-7.0
+java -jar calvalus-distribution/target/cpt.jar --uninstall seadas-7.0
+java -jar calvalus-distribution/target/cpt.jar -deploy calvalus-examples/bundles/3rd-party-integration/seadas-7.0/* seadas-7.0

@@ -22,11 +22,15 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.maps.client.base.LatLng;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.view.client.ListDataProvider;
 
 import java.util.List;
@@ -41,7 +45,12 @@ public class EditVerticesAction extends AbstractMapAction {
     private static final String TITLE = "Edit vertices";
 
     public EditVerticesAction() {
-        super("E", TITLE);
+        super("E", new Image(((Icons) GWT.create(Icons.class)).getIcon()), TITLE);
+    }
+
+    interface Icons extends ClientBundle {
+        @Source("RegionEdit24.gif")
+        ImageResource getIcon();
     }
 
     @Override

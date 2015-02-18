@@ -19,8 +19,8 @@ import java.util.Map;
  */
 public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
 
-    public L3MultiRegionFormatWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public L3MultiRegionFormatWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {
@@ -60,7 +60,7 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
         int numRegions = L3MultiRegionFormatConfig.get(jobConfig).getRegions().length;
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, numRegions));
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
 
         ProcessorFactory.installProcessorBundle(jobConfig);
 

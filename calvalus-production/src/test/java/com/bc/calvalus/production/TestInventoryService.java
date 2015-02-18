@@ -17,7 +17,7 @@ import java.util.List;
 public class TestInventoryService implements InventoryService {
 
     @Override
-    public ProductSet[] getProductSets(String filter) throws Exception {
+    public ProductSet[] getProductSets(String username, String filter) throws Exception {
         return new ProductSet[]{
                 new ProductSet(null, "ps0", "ps0", null, null, "", null),
                 new ProductSet(null, "ps1", "ps1", null, null, "", null),
@@ -25,7 +25,7 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String[] globPaths(List<String> pathPatterns) {
+    public String[] globPaths(String username, List<String> pathPatterns) {
         String[] inputPathes = new String[pathPatterns.size()];
         for (int i = 0; i < pathPatterns.size(); i++) {
             String inputRegex = pathPatterns.get(i);
@@ -41,7 +41,7 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public String getQualifiedPath(String outputPath) {
+    public String getQualifiedPath(String username, String outputPath) {
         if (!outputPath.startsWith("/")) {
             outputPath = "/calvalus/outputs/" + outputPath;
         }
@@ -49,17 +49,17 @@ public class TestInventoryService implements InventoryService {
     }
 
     @Override
-    public OutputStream addFile(String userPath) throws IOException {
+    public OutputStream addFile(String username, String userPath) throws IOException {
         return null;
     }
 
     @Override
-    public boolean removeFile(String userPath) throws IOException {
+    public boolean removeFile(String username, String userPath) throws IOException {
         return false;
     }
 
     @Override
-    public boolean removeDirectory(String userPath) throws IOException {
+    public boolean removeDirectory(String username, String userPath) throws IOException {
         return false;
     }
 }

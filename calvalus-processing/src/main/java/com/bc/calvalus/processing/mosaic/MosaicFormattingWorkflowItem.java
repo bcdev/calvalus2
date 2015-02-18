@@ -33,9 +33,9 @@ import java.io.IOException;
  */
 public class MosaicFormattingWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String jobName,
+    public MosaicFormattingWorkflowItem(HadoopProcessingService processingService, String username, String jobName,
                                         Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+        super(processingService, username, jobName, jobConfig);
     }
 
     String getInputDir() {

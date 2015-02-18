@@ -3,8 +3,8 @@ package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.StreamingProductReader;
-import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Counter;
@@ -15,7 +15,6 @@ import org.apache.hadoop.mapreduce.OutputCommitter;
 import org.apache.hadoop.mapreduce.RecordWriter;
 import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -66,8 +65,7 @@ public class QLMapperMain {
         if (args.length >= 1) {
             pathString = args[0];
             if (pathString.endsWith("seq")) {
-                final StreamingProductReader reader = new StreamingProductReader(new Path(pathString), configuration);
-                inputProduct = reader.readProductNodes(null, null);
+                inputProduct = CalvalusProductIO.readProduct(new Path(pathString), configuration, StreamingProductPlugin.FORMAT_NAME);
             } else {
                 inputProduct = ProductIO.readProduct(pathString);
             }
@@ -170,6 +168,11 @@ public class QLMapperMain {
             }
 
             @Override
+            public float getProgress() {
+                return 0;
+            }
+
+            @Override
             public void setStatus(String s) {
             }
         };
@@ -185,8 +188,8 @@ public class QLMapperMain {
             }
         };
         final Mapper mapper = new Mapper();
-        return mapper.new Context(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
-                                  statusReporter, inputSplit);
+        return null /* TODO mapper.new MapContextImpl(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
+                                  statusReporter, inputSplit)*/;
     }
 
 

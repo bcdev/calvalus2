@@ -70,7 +70,7 @@ class WpsProductionRequestConverter {
         HashMap<String, String> parameterMap = new HashMap<String, String>();
 
         for (Element inputElement : inputElements) {
-            String parameterName = inputElement.getChildText("Identifier", ows);
+            String parameterName = inputElement.getChildText("Identifier", ows).trim();
 
             Element dataElement = inputElement.getChild("Data", wps);
             String parameterValue = dataElement.getChildText("LiteralData", wps);
@@ -90,6 +90,7 @@ class WpsProductionRequestConverter {
             }
 
             if (parameterValue != null) {
+                parameterValue = parameterValue.trim();
                 if (parameterMap.containsKey(parameterName)) {
                     parameterValue = String.format("%s,%s", parameterMap.get(parameterName), parameterValue);
                 }

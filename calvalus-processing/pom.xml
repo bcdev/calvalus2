@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-processing</artifactId>
@@ -51,7 +51,7 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-binning2</artifactId>
+            <artifactId>beam-binning</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
@@ -60,27 +60,25 @@
 
         <!--  Hadoop -->
 
+<!--
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-mapreduce-client-core</artifactId>
+        </dependency>
+-->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
             <version>1.5.2</version>
-        </dependency>
-
-        <!-- Saxon -->
-
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>net.sf.saxon</groupId>
-            <artifactId>saxon-dom</artifactId>
         </dependency>
 
         <!-- Apache cli command line parser -->
@@ -114,21 +112,4 @@
         </dependency>
 
     </dependencies>
-
-    <!--<build>-->
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<artifactId>maven-assembly-plugin</artifactId>-->
-                <!--<version>2.4</version>-->
-                <!--<configuration>-->
-                    <!--<descriptors>-->
-                        <!--<descriptor>src/main/assembly/beam.xml</descriptor>-->
-                        <!--<descriptor>src/main/assembly/calvalus.xml</descriptor>-->
-                        <!--&lt;!&ndash;<descriptor>src/main/assembly/job.xml</descriptor>&ndash;&gt;-->
-                        <!--&lt;!&ndash;<descriptor>src/main/assembly/client.xml</descriptor>&ndash;&gt;-->
-                    <!--</descriptors>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
-        <!--</plugins>-->
-    <!--</build>-->
 </project>

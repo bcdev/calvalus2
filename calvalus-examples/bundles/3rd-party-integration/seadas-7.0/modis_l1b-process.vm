@@ -1,0 +1,54 @@
+#!/bin/bash
+
+inFileName="$inputFile.name"
+inputPath="$inputPath"
+
+#[[
+
+#for debugging
+#set -x
+
+set -e
+set -m
+
+# unpacking
+l1aFile=$inFileName
+if [[ $inFileName =~ gz$ ]]; then
+  echo "gunzip"
+  gunzip $inFileName
+  l1aFile=${inFileName%.gz}
+elif [[ $inFileName =~ bz2$ ]]; then
+  echo "bunzip2"
+  bunzip2 $inFileName
+  l1aFile=${inFileName%.bz2}
+fi
+
+echo "L1A file $l1aFile"
+
+geoFile=${l1aFile%L1A_LAC}GEO
+l1bFile=${l1aFile/L1A/L1B}
+
+./getGEO.sh ${inputPath}
+
+function handle_progress() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ scan\:\ +([0-9]+)\ +out\ of\ +([0-9]+)\ + ]]; then
+    a1=${BASH_REMATCH[1]}
+    a2=${BASH_REMATCH[2]}
+    progress=$(echo "scale=3; ${a1} / ${a2}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" $progress
+  fi
+}
+
+export OCSSWROOT=./seadas-7.0/seadas-7.0
+L1BGEN_BIN=${OCSSWROOT}/run/scripts/modis_L1B.py
+source $OCSSWROOT/OCSSW_bash.env
+
+ulimit -s unlimited
+set -o pipefail
+echo ${L1BGEN_BIN} ${l1aFile} ${geoFile}
+${L1BGEN_BIN} --verbose ${l1aFile} ${geoFile} | while read x ; do handle_progress "$x" ; done
+
+echo CALVALUS_OUTPUT_PRODUCT ${l1bFile}
+]]#

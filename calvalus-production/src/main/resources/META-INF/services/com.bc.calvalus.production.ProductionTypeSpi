@@ -13,8 +13,15 @@ com.bc.calvalus.production.hadoop.L3FProductionType$Spi
 com.bc.calvalus.production.hadoop.CellL3ProcessorProductionType$Spi
 com.bc.calvalus.production.hadoop.CellProcessorProductionType$Spi
 com.bc.calvalus.production.hadoop.L3MultiRegionFormatProductionType$Spi
+com.bc.calvalus.production.hadoop.L3MultiBandFormatProductionType$Spi
 com.bc.calvalus.production.hadoop.MAProductionType$Spi
+com.bc.calvalus.production.hadoop.VCProductionType$Spi
 com.bc.calvalus.production.hadoop.PrevueProductionType$Spi
 com.bc.calvalus.production.hadoop.L2ProductionType$Spi
 com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
 com.bc.calvalus.production.hadoop.BootstrappingProductionType$Spi
+com.bc.calvalus.production.hadoop.FireL3ProductionType$Spi
+com.bc.calvalus.production.hadoop.MRProductionType$Spi
+com.bc.calvalus.production.hadoop.MACompareProductionType$Spi
+com.bc.calvalus.production.hadoop.L2toL3ProductionType$Spi
+com.bc.calvalus.production.hadoop.CombinationsProductionType$Spi

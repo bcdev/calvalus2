@@ -9,9 +9,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.BinManager;
+import org.esa.beam.binning.BinningContext;
 import org.esa.beam.binning.Observation;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.VariableContext;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.support.ObservationImpl;
 import org.esa.beam.framework.datamodel.ProductData;
 
@@ -51,8 +53,9 @@ public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, L
         }
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
-        L3Config cellL3Config = CellProcessorMapper.getCellL3Config(conf);
-        binManager = cellL3Config.createBinningContext().getBinManager();
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
+        binManager = binningContext.getBinManager();
 
         String[] featureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         ArrayList<String> inputFeatureNames = new ArrayList<String>();

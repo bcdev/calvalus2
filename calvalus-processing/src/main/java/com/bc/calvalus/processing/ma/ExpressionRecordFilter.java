@@ -7,7 +7,7 @@ import com.bc.jexp.Term;
 import com.bc.jexp.impl.ParserImpl;
 
 /**
- * A record filter that uses an expression to decide if a re3cord is accepted or not.
+ * A record filter that uses an expression to decide if a record is accepted or not.
  *
  * @author Norman
  */

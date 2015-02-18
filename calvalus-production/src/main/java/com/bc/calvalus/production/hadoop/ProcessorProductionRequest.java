@@ -39,13 +39,19 @@ public class ProcessorProductionRequest {
     private final String processorBundleLocation;
     private final String processorName;
     private final String processorParameters;
+    private final String userName;
 
     public ProcessorProductionRequest(ProductionRequest productionRequest) {
-        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME, null);
-        this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION, null);
-        this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION, null);
-        this.processorName = productionRequest.getString(PROCESSOR_NAME, null);
-        this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS, "<parameters/>");
+        this(productionRequest, "");
+    }
+
+    public ProcessorProductionRequest(ProductionRequest productionRequest, String parameterSuffix) {
+        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME+ parameterSuffix, null);
+        this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION + parameterSuffix, null);
+        this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
+        this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
+        this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS + parameterSuffix, "<parameters/>");
+        this.userName = productionRequest.getUserName();
     }
 
     public String getProcessorName() {
@@ -64,15 +70,19 @@ public class ProcessorProductionRequest {
     }
 
     public void configureProcessor(Configuration jobConfig) {
+        configureProcessor(jobConfig, "");
+    }
+
+    public void configureProcessor(Configuration jobConfig, String parameterSuffix) {
         if (processorName != null) {
-            jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
-            jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix, processorName);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);
         }
         String processorBundle = getProcessorBundle();
         if (processorBundle != null) {
-            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
+            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix, processorBundle);
             if (processorBundleLocation != null) {
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
+                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION + parameterSuffix, processorBundleLocation);
             }
         }
     }
@@ -83,7 +93,7 @@ public class ProcessorProductionRequest {
             filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
-            BundleDescriptor[] bundles = processingService.getBundles(filter);
+            BundleDescriptor[] bundles = processingService.getBundles(userName, filter);
             for (BundleDescriptor bundle : bundles) {
                 if (bundle.getBundleName().equals(processorBundleName) &&
                     bundle.getBundleVersion().equals(processorBundleVersion) &&

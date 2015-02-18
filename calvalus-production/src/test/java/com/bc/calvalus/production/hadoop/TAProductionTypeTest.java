@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.processing.ta.TAConfig;
 import com.bc.calvalus.processing.ta.TAWorkflowItem;
@@ -10,7 +11,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
-import org.apache.hadoop.mapred.JobClient;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,9 +26,9 @@ public class TAProductionTypeTest {
 
     @Before
     public void setUp() throws Exception {
-        JobClient jobClient = new JobClient(new JobConf());
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         productionType = new TAProductionType(new TestInventoryService(),
-                                              new HadoopProcessingService(jobClient),
+                                              new HadoopProcessingService(jobClientsMap),
                                               new TestStagingService());
     }
 
@@ -41,31 +42,33 @@ public class TAProductionTypeTest {
         assertEquals(true, production.getId().contains("_" + "TA" + "_"));
         assertNotNull(production.getWorkflow());
         assertNotNull(production.getWorkflow().getItems());
-        assertEquals(5, production.getWorkflow().getItems().length);
+        assertEquals(2, production.getWorkflow().getItems().length);
 
         // Note that periodLength=compositingPeriodLength=3
-        testItem(production.getWorkflow().getItems()[0], "2010-06-01", "2010-06-03");
-        testItem(production.getWorkflow().getItems()[1], "2010-06-04", "2010-06-06");
-        testItem(production.getWorkflow().getItems()[2], "2010-06-07", "2010-06-09");
-        testItem(production.getWorkflow().getItems()[3], "2010-06-10", "2010-06-12");
-        testItem(production.getWorkflow().getItems()[4], "2010-06-13", "2010-06-15");
+        testItem(production.getWorkflow().getItems()[0].getItems()[0], "2010-06-01", "2010-06-03");
+        testItem(production.getWorkflow().getItems()[0].getItems()[1], "2010-06-04", "2010-06-06");
+        testItem(production.getWorkflow().getItems()[0].getItems()[2], "2010-06-07", "2010-06-09");
+        testItem(production.getWorkflow().getItems()[0].getItems()[3], "2010-06-10", "2010-06-12");
+        testItem(production.getWorkflow().getItems()[0].getItems()[4], "2010-06-13", "2010-06-15");
+        testTaItem(production.getWorkflow().getItems()[1], "2010-06-01", "2010-06-15", (L3WorkflowItem) production.getWorkflow().getItems()[0].getItems()[0]);
     }
 
     private void testItem(WorkflowItem item1, String date1, String date2) {
-        assertNotNull(item1.getItems());
-        assertEquals(2, item1.getItems().length);
-
-        assertTrue(item1.getItems()[0] instanceof L3WorkflowItem);
-        L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) item1.getItems()[0];
+        assertNotNull(item1);
+        assertTrue(item1 instanceof L3WorkflowItem);
+        L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) item1;
         assertEquals(date1, l3WorkflowItem.getMinDate());
         assertEquals(date2, l3WorkflowItem.getMaxDate());
         assertEquals(true, l3WorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
+    }
 
-        assertTrue(item1.getItems()[1] instanceof TAWorkflowItem);
-        TAWorkflowItem taWorkflowItem = (TAWorkflowItem) item1.getItems()[1];
+    private void testTaItem(WorkflowItem item1, String date1, String date2, L3WorkflowItem l3WorkflowItem) {
+        assertTrue(item1 instanceof TAWorkflowItem);
+        TAWorkflowItem taWorkflowItem = (TAWorkflowItem) item1;
         assertEquals(date1, taWorkflowItem.getMinDate());
         assertEquals(date2, taWorkflowItem.getMaxDate());
-        assertEquals(l3WorkflowItem.getOutputDir(), taWorkflowItem.getInputDir());
+        assertTrue(l3WorkflowItem.getOutputDir() + " is first element of " + taWorkflowItem.getInputDir(),
+                   taWorkflowItem.getInputDir().startsWith(l3WorkflowItem.getOutputDir()));
         assertFalse(l3WorkflowItem.getOutputDir().equals(taWorkflowItem.getOutputDir()));
         assertEquals(true, taWorkflowItem.getOutputDir().startsWith("hdfs://master00:9000/calvalus/outputs/home/ewa/"));
     }
@@ -74,7 +77,10 @@ public class TAProductionTypeTest {
     @Test
     public void testCreateTAConfig() throws ProductionException {
         ProductionRequest productionRequest = createValidTAProductionRequest();
-        TAConfig taConfig = TAProductionType.getTAConfig(productionRequest);
+        String regionName = productionRequest.getString("regionName");
+        Geometry regionGeometry = productionRequest.getRegionGeometry();
+        TAConfig.RegionConfiguration regionConfiguration = new TAConfig.RegionConfiguration(regionName, regionGeometry);
+        TAConfig taConfig = new TAConfig(regionConfiguration);
         assertNotNull(taConfig);
         TAConfig.RegionConfiguration[] taConfigRegions = taConfig.getRegions();
         assertNotNull(taConfigRegions);

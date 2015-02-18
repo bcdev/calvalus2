@@ -36,6 +36,7 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
@@ -87,11 +88,11 @@ public class L2PlusProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", null);
 
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        boolean isFormattingRequired = processorDescriptor != null &&
-                                       processorDescriptor.getFormatting() != ProcessorDescriptor.FormattingType.IMPLICIT;
+        boolean isFormattingImplicit = processorDescriptor != null &&
+                                       processorDescriptor.getFormatting() == ProcessorDescriptor.FormattingType.IMPLICIT;
         boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
 
-        if (isFormattingRequired && isFormattingRequested) {
+        if (isFormattingRequested && !isFormattingImplicit) {
             String formattingOutputDir = getOutputPath(productionRequest, productionId, "-output");
             globalOutputDir = formattingOutputDir;
 
@@ -144,9 +145,9 @@ public class L2PlusProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 
@@ -181,10 +182,15 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, formattingOutputDir);
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, outputFormat);
 
-        Geometry regionGeom = productionRequest.getRegionGeometry(null);
-        formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                            regionGeom != null ? regionGeom.toString() : "");
-        formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, productionRequest.getString("outputCRS", ""));
+
+        String outputCRS = productionRequest.getString("outputCRS", "");
+        if (!outputCRS.isEmpty()) {
+            formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_CRS, outputCRS);
+            // only do a subset when reprojecting as well
+            Geometry regionGeom = productionRequest.getRegionGeometry(null);
+            formatJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
+                                regionGeom != null ? regionGeom.toString() : "");
+        }
         if (productionRequest.getString("replaceNanValue", null) != null) {
             formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACE_NAN_VALUE,
                                 String.valueOf(productionRequest.getDouble("replaceNanValue", 0.0)));
@@ -193,7 +199,8 @@ public class L2PlusProductionType extends HadoopProductionType {
         formatJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_QUICKLOOKS,
                             productionRequest.getString("quicklooks", "false"));
 
-        return new L2FormattingWorkflowItem(getProcessingService(), productionName, formatJobConfig);
+        return new L2FormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                            productionName, formatJobConfig);
     }
 
     private HadoopWorkflowItem createProcessingItem(String productionId, String productionName,
@@ -227,14 +234,17 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT);
 
-        HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionName, l2JobConfig);
+        HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                       productionName, l2JobConfig);
         l2Item.addWorkflowStatusListener(new ProductSetSaver(l2Item, productSet, outputDir));
         return l2Item;
     }
 
     // TODO consider l2Gen output here too; this is only valid for sequential and MERIS files
+    // modified to cope with Landsat8 files; output dirs of processing are always fresh flat dirs containing only the to-be-formatted outputs
     private String createPathPattern(String basePath) {
-        return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
+        //return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
+        return basePath + "/.*.seq$";
     }
 
     private String getResultingProductionType(ProcessorDescriptor processorDescriptor) {

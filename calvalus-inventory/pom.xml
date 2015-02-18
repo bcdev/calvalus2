@@ -7,10 +7,9 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-inventory</artifactId>
 
     <name>Calvalus Inventory and Catalogue</name>
@@ -31,9 +30,15 @@
 
         <!--  Hadoop -->
 
+<!--
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
+            <artifactId>hadoop-common</artifactId>
+        </dependency>
+-->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client</artifactId>
         </dependency>
 
     </dependencies>

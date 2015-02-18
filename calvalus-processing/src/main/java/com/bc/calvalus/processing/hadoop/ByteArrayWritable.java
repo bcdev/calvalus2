@@ -84,4 +84,8 @@ public class ByteArrayWritable extends CompressedWritable {
         writable.readFields(in);
         return writable;
     }
+
+    public String toString() {
+        return "ByteArrayWritable length=" + getLength();
+    }
 }

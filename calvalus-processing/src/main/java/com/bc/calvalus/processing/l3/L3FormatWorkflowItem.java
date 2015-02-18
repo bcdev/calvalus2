@@ -34,8 +34,8 @@ import java.io.IOException;
  */
 public class L3FormatWorkflowItem extends HadoopWorkflowItem {
 
-    public L3FormatWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public L3FormatWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {

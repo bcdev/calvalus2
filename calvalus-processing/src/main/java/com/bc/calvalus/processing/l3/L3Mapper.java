@@ -16,21 +16,29 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
+import com.vividsolutions.jts.geom.Geometry;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.DataPeriod;
 import org.esa.beam.binning.SpatialBin;
 import org.esa.beam.binning.SpatialBinConsumer;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.beam.binning.SpatialBinner;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.SpatialProductBinner;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.MetadataElement;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -53,29 +61,42 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        final L3Config l3Config = L3Config.get(context.getConfiguration());
-        final BinningContext ctx = l3Config.createBinningContext();
+        Configuration conf = context.getConfiguration();
+        Geometry regionGeometry = JobUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+
+        DataPeriod dataPeriod = HadoopBinManager.createDataPeriod(conf, binningConfig.getMinDataHour());
+
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, dataPeriod, regionGeometry);
         final SpatialBinEmitter spatialBinEmitter = new SpatialBinEmitter(context);
-        final SpatialBinner spatialBinner = new SpatialBinner(ctx, spatialBinEmitter);
+        final SpatialBinner spatialBinner = new SpatialBinner(binningContext, spatialBinEmitter);
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Level 3", 100);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;
+        final int progressForBinning = processorAdapter.supportsPullProcessing() ? 90 : 20;
+        pm.beginTask("Level 3", progressForProcessing + progressForBinning);
         try {
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
-                HashMap<Product, List<Band>> addedBands = new HashMap<Product, List<Band>>();
+                HashMap<Product, List<Band>> addedBands = new HashMap<>();
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
-                                                                  l3Config.getSuperSampling(),
                                                                   addedBands,
-                                                                  SubProgressMonitor.create(pm, 50));
+                                                                  SubProgressMonitor.create(pm, progressForBinning));
                 if (numObs > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixels").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Pixel processed").increment(numObs);
+                    //
+                    final String metaXml = extractProcessingGraphXml(product);
+                    context.write(new LongWritable(L3SpatialBin.METADATA_MAGIC_NUMBER), new L3SpatialBin(metaXml));
+
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product without pixels").increment(1);
                 }
+
+
             } else {
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product not used").increment(1);
                 LOG.info("Product not used");
@@ -90,10 +111,17 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             String m = MessageFormat.format("Failed to process input slice of {0}", processorAdapter.getInputPath());
             LOG.log(Level.SEVERE, m, exception);
         }
-        // write final log entry for runtime measurements
-        LOG.info(MessageFormat.format("Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
-                                      context.getTaskAttemptID(), processorAdapter.getInputPath(),
-                                      spatialBinEmitter.numObsTotal, spatialBinEmitter.numBinsTotal));
+        LOG.info(MessageFormat.format("Finishes processing of {0}  ({1} observations seen, {2} bins produced)",
+                                      processorAdapter.getInputPath(),
+                                      spatialBinEmitter.numObsTotal,
+                                      spatialBinEmitter.numBinsTotal));
+    }
+
+    static String extractProcessingGraphXml(Product product) {
+        final MetadataElement metadataRoot = product.getMetadataRoot();
+        final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
+        final MetadataSerializer metadataSerializer = new MetadataSerializer();
+        return metadataSerializer.toXml(processingGraph);
     }
 
     private static class SpatialBinEmitter implements SpatialBinConsumer {

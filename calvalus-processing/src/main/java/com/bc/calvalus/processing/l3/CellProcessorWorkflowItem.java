@@ -21,8 +21,8 @@ import java.util.Map;
  */
 public class CellProcessorWorkflowItem extends HadoopWorkflowItem {
 
-    public CellProcessorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public CellProcessorWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {
@@ -58,7 +58,7 @@ public class CellProcessorWorkflowItem extends HadoopWorkflowItem {
 
         job.setNumReduceTasks(0);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         ProcessorFactory.installProcessorBundle(jobConfig);

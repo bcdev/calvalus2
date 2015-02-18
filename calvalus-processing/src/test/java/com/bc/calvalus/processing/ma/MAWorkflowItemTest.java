@@ -18,9 +18,9 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -36,18 +36,18 @@ public class MAWorkflowItemTest {
 
     @Test
     public void testCreateJob() throws Exception {
-        HadoopProcessingService processingService = new HadoopProcessingService(new JobClient(new JobConf()));
+        HadoopProcessingService processingService = new HadoopProcessingService(new JobClientsMap(new JobConf()));
 
         MAConfig maConfig = new MAConfig();
         maConfig.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
 
         String jobName = "MaTestJob";
-        Configuration jobConfig = processingService.createJobConfig();
+        Configuration jobConfig = processingService.createJobConfig("testuser");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, "file1,file2");
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, "out_004");
         jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
-        MAWorkflowItem maWorkflowItem = new MAWorkflowItem(processingService, jobName, jobConfig);
+        MAWorkflowItem maWorkflowItem = new MAWorkflowItem(processingService, "testuser", jobName, jobConfig);
 
         Job job = new Job(jobConfig);
         maWorkflowItem.configureJob(job);

@@ -43,8 +43,8 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
     public static final int NUM_ITERATIONS_DEFAULT = 10000;
     public static final int ITERATION_PER_NODE_DEFAULT = 100;
 
-    public BootstrappingWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public BootstrappingWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(BoostrappingReducer.class);
         job.setNumReduceTasks(1);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
 

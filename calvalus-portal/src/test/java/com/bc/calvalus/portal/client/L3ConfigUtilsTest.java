@@ -6,7 +6,8 @@ import java.util.Date;
 
 import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
 
-public class L3ConfigUtilsTest  extends TestCase {
+public class L3ConfigUtilsTest extends TestCase {
+
     public void testPeriodCount() throws Exception {
         assertEquals(1, getPeriodCount(new Date(2008, 5, 1),
                                        new Date(2008, 5, 10),
@@ -35,6 +36,18 @@ public class L3ConfigUtilsTest  extends TestCase {
         assertEquals(1, getPeriodCount(new Date(2008, 12, 1),
                                        new Date(2008, 12, 31),
                                        31, 31));
+        // monthly
+        assertEquals(1, getPeriodCount(new Date(2008, 2, 1),
+                                       new Date(2008, 2, 28),
+                                       -30, -30));
+        // overlapping
+        assertEquals(1, getPeriodCount(new Date(2008, 1, 1),
+                                       new Date(2008, 1, 10),
+                                       1, 10));
+        assertEquals(6, getPeriodCount(new Date(2008, 1, 1),
+                                       new Date(2008, 1, 15),
+                                       1, 10));
+
     }
 
     public void testTargetSize() throws Exception {

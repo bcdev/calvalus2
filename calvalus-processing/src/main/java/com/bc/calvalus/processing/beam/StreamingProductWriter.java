@@ -26,6 +26,11 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Progressable;
 import org.esa.beam.dataio.dimap.DimapHeaderWriter;
+import org.esa.beam.framework.dataio.AbstractProductWriter;
+import org.esa.beam.framework.dataio.IllegalFileFormatException;
+import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.dataio.ProductWriter;
+import org.esa.beam.framework.dataio.ProductWriterPlugIn;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -34,76 +39,147 @@ import org.esa.beam.util.ImageUtils;
 
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.Raster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
 
-public class StreamingProductWriter {
+public class StreamingProductWriter extends AbstractProductWriter {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private final Map<String, Long> indexMap;
+    private Path path;
+    private Configuration configuration;
+    private final Progressable progressable = null; // TODO no longer needed ??, progress through pm
+    private SequenceFile.Writer sequnceFileWriter;
+    private int tileHeight;
 
-    private final Configuration configuration;
-    private final Progressable progressable;
-    private final ProgressMonitor progressMonitor;
 
-    public StreamingProductWriter(Configuration configuration, Progressable progressable, ProgressMonitor progressMonitor) {
-        this.configuration = configuration;
-        this.progressable = progressable;
-        this.progressMonitor = progressMonitor;
+    public StreamingProductWriter(ProductWriterPlugIn productWriterPlugIn) {
+        super(productWriterPlugIn);
+        indexMap = new HashMap<>();
     }
 
-    public void writeProduct(Product product, Path outputPath, int tileHeight) throws IOException {
-        Map<String, Long> indexMap = new HashMap<String, Long>();
-
-        SequenceFile.Writer writer = writeHeader(product, outputPath, tileHeight);
-        writeTiePointData(product, writer, indexMap);
-        LOG.info(" written header");
-
-        Band[] bands = product.getBands();
-        int sceneHeight = product.getSceneRasterHeight();
-        int x = 0;
-        int w = product.getSceneRasterWidth();
-        int h = tileHeight;
-        int sliceIndex = 0;
-        progressMonitor.beginTask("Writing", sceneHeight);
-        for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
-            if (y + h > sceneHeight) {
-                h = sceneHeight - y;
-            }
-            for (Band band : bands) {
-                Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
-                boolean directMode = tile.getDataBuffer().getSize() == w * h;
-                ProductData productData;
-                if (directMode) {
-                    productData = ProductData.createInstance(band.getDataType(),
-                                                             ImageUtils.getPrimitiveArray(tile.getDataBuffer()));
-                } else {
-                    productData = ProductData.createInstance(band.getDataType(), w * h);
-                    tile.getDataElements(x, y, w, h, productData.getElems());
-                }
-
-                String key = band.getName() + ":" + sliceIndex;
-                updateIndex(indexMap, key, writer.getLength());
-                writeProductData(writer, key, productData);
-            }
-            progressMonitor.worked(h);
+    @Override
+    protected void writeProductNodesImpl() throws IOException {
+        final Product product = getSourceProduct();
+        Object output = getOutput();
+        if (output instanceof PathConfiguration) {
+            PathConfiguration pathConfiguration = (PathConfiguration) output;
+            path = pathConfiguration.getPath();
+            configuration = pathConfiguration.getConfiguration();
+        } else {
+            throw new IllegalFileFormatException("input is not of the correct type.");
         }
-        writer.close();
-        progressMonitor.done();
+        tileHeight = product.getPreferredTileSize().height;
+        sequnceFileWriter = writeHeader(product, path);
+        writeTiePointData(product, sequnceFileWriter, indexMap);
+        LOG.info(" written header");
+    }
 
-        Path indexPath = StreamingProductIndex.getIndexPath(outputPath);
+    @Override
+    public void writeBandRasterData(Band band, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData productData, ProgressMonitor pm) throws IOException {
+        int sliceIndex = sourceOffsetY / tileHeight;
+        String key = band.getName() + ":" + sliceIndex;
+        updateIndex(indexMap, key, sequnceFileWriter.getLength());
+        writeProductData(sequnceFileWriter, key, productData);
+    }
+
+    @Override
+    public void flush() throws IOException {
+        //noop
+    }
+
+    @Override
+    public void close() throws IOException {
+        sequnceFileWriter.close();
+
+        Path indexPath = StreamingProductIndex.getIndexPath(path);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         streamingProductIndex.writeIndex(indexMap);
     }
 
-    private SequenceFile.Writer writeHeader(Product product, Path outputPath, int tile_height) throws IOException {
-        SequenceFile.Metadata metadata = createMetadata(product, tile_height);
+    @Override
+    public void deleteOutput() throws IOException {
+
+    }
+
+    public static void writeProductInSlices(Configuration configuration,
+                                            ProgressMonitor pm,
+                                            Product product,
+                                            Path path,
+                                            int tileHeight) throws IOException {
+        PathConfiguration output = new PathConfiguration(path, configuration);
+        writeProductInSlices(product, output, StreamingProductPlugin.FORMAT_NAME, tileHeight, pm);
+    }
+
+    public static void writeProductInSlices(Product product, Object output, String format, int tileHeight, ProgressMonitor pm) throws IOException {
+        ProductWriter productWriter = ProductIO.getProductWriter(format);
+        product.setProductWriter(productWriter);
+        productWriter.writeProductNodes(product, output);
+        writeAllBandsInSlices(product, pm, tileHeight);
+        product.closeProductWriter();
+    }
+
+    // TODO for generig writing with full with tiles products and arbritry tiles products
+    // use code like int SpatialProductbinner
+
+    // TODO move to calvalusProductIO
+    private static void writeAllBandsInSlices(Product product, ProgressMonitor pm, int tileHeight) throws IOException {
+        ProductWriter productWriter = product.getProductWriter();
+
+        // for correct progress indication we need to collect
+        // all bands which shall be written to the output
+        ArrayList<Band> bandsToWrite = new ArrayList<Band>();
+        for (int i = 0; i < product.getNumBands(); i++) {
+            Band band = product.getBandAt(i);
+            if (productWriter.shouldWrite(band)) {
+                bandsToWrite.add(band);
+            }
+        }
+
+        if (!bandsToWrite.isEmpty()) {
+            int sceneHeight = product.getSceneRasterHeight();
+            pm.beginTask("Writing bands of product '" + product.getName() + "'...", bandsToWrite.size() * sceneHeight);
+            try {
+
+                int x = 0;
+                int w = product.getSceneRasterWidth();
+                int h = tileHeight;
+                int sliceIndex = 0;
+                for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
+                    if (y + h > sceneHeight) {
+                        h = sceneHeight - y;
+                    }
+                    for (Band band : bandsToWrite) {
+                        Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
+                        boolean directMode = tile.getDataBuffer().getSize() == w * h;
+                        ProductData productData;
+                        if (directMode) {
+                            Object primitiveArray = ImageUtils.getPrimitiveArray(tile.getDataBuffer());
+                            productData = ProductData.createInstance(band.getDataType(), primitiveArray);
+                        } else {
+                            productData = ProductData.createInstance(band.getDataType(), w * h);
+                            tile.getDataElements(x, y, w, h, productData.getElems());
+                        }
+                        productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
+                    }
+                    pm.worked(h);
+                }
+            } finally {
+                pm.done();
+            }
+        }
+    }
+
+    private SequenceFile.Writer writeHeader(Product product, Path outputPath) throws IOException {
+        SequenceFile.Metadata metadata = createMetadata(product, tileHeight);
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         return SequenceFile.createWriter(fileSystem,
                                          configuration,
@@ -111,7 +187,7 @@ public class StreamingProductWriter {
                                          Text.class,
                                          ByteArrayWritable.class,
                                          1024 * 1024, //buffersize,
-                                         (short) 1, //replication,
+                                         fileSystem.getDefaultReplication(),
                                          fileSystem.getDefaultBlockSize(),
                                          SequenceFile.CompressionType.NONE,
                                          null, // new DefaultCodec(),

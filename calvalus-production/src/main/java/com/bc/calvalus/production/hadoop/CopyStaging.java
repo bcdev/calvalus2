@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
@@ -28,6 +29,10 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.util.io.FileUtils;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * The staging job for match-up analysis (MA) results.
@@ -36,7 +41,9 @@ import java.io.File;
  */
 class CopyStaging extends ProductionStaging {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final long GIGABYTE = 1024L * 1024L * 1024L;
+
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
@@ -55,6 +62,7 @@ class CopyStaging extends ProductionStaging {
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
+        LOG.info("staging dir is: " + stagingDir);
 
         Path remoteOutputDir = new Path(production.getOutputPath());
         FileSystem fileSystem = remoteOutputDir.getFileSystem(hadoopConfiguration);
@@ -66,10 +74,26 @@ class CopyStaging extends ProductionStaging {
             for (int i = 0; i < fileStatuses.length; i++) {
                 FileStatus fileStatus = fileStatuses[i];
                 Path path = fileStatus.getPath();
-                FileUtil.copy(fileSystem,
-                              path,
-                              new File(stagingDir, path.getName()),
-                              false, hadoopConfiguration);
+                LOG.info("copying: " + path);
+                int attemptNo = 0;
+                boolean copySuccess = false;
+                while (!copySuccess && attemptNo < 3) {
+                    File dst = new File(stagingDir, path.getName());
+                    try {
+                        FileUtil.copy(fileSystem, path, dst, false, hadoopConfiguration);
+                        copySuccess = true;
+                    } catch (IOException ioe) {
+                        String msg = String.format("Attempt(%d) Problem while staging: %s: %s", attemptNo, path, ioe.getMessage());
+                        LogRecord logRecord = new LogRecord(Level.FINE, msg);
+                        logRecord.setThrown(ioe);
+                        LOG.log(logRecord);
+                        if (dst.exists()) {
+                            dst.delete();
+                        }
+                    } finally {
+                        attemptNo++;
+                    }
+                }
                 totalFilesSize += fileStatus.getLen();
                 production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / fileStatuses.length, path.getName()));
             }

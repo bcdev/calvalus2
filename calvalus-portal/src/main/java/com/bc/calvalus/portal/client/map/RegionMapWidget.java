@@ -29,9 +29,12 @@ import com.google.gwt.maps.client.events.setat.SetAtMapHandler;
 import com.google.gwt.maps.client.mvc.MVCArray;
 import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.maps.client.overlays.PolygonOptions;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellTree;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.ResizeComposite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
@@ -202,6 +205,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
     private void initUi() {
         MapOptions mapOptions = MapOptions.newInstance();
         mapOptions.setCenter(LatLng.newInstance(0.0, 0.0));
+        mapOptions.setZoom(2);
         mapOptions.setDisableDoubleClickZoom(false);
         mapOptions.setScrollWheel(true);
         mapOptions.setMapTypeControl(true);
@@ -223,7 +227,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
         regionPanel.ensureDebugId("regionPanel");
         if (actions.length > 0) {
             regionMapToolbar = new RegionMapToolbar(this);
-            regionPanel.addSouth(regionMapToolbar, 3.5);
+            regionPanel.addSouth(regionMapToolbar, /*3.5*/6.0);
         }
         regionPanel.add(new ScrollPanel(regionCellTree));
 
@@ -407,38 +411,47 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
         }
     }
 
+    interface Icons extends ClientBundle {
+        @ClientBundle.Source("actions/RegionPolygon24.gif")
+        ImageResource getPolygonIcon();
+        @ClientBundle.Source("actions/RegionBBox24.gif")
+        ImageResource getBBoxIcon();
+        @ClientBundle.Source("actions/RegionSelect24.gif")
+        ImageResource getSelectIcon();
+    }
+
+
     public static MapAction[] createDefaultEditingActions() {
-        // todo: use the action constructor that takes an icon image (nf)
         final SelectInteraction selectInteraction = createSelectInteraction();
         DrawingManagerOptions options = DrawingManagerOptions.newInstance();
         options.setDrawingControl(false);
         DrawingManager drawingManager = DrawingManager.newInstance(options);
         drawingManager.setDrawingMode(null);
-        return new MapAction[]{
+        return new MapAction[] {
                 selectInteraction,
-                new InsertPolygonInteraction(drawingManager, new AbstractMapAction("P", "New polygon region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                        regionMap.setCurrentInteraction(selectInteraction);
-                    }
-                }),
-                new InsertBoxInteraction(drawingManager, new AbstractMapAction("B", "New box region") {
-                    @Override
-                    public void run(RegionMap regionMap) {
-                        regionMap.setCurrentInteraction(selectInteraction);
-                    }
-                }),
-                MapAction.SEPARATOR,
-                new EditVerticesAction(),
-                new RenameRegionAction(),
-                new DeleteRegionsAction(),
                 new LocateRegionsAction(),
-                new ShowRegionInfoAction()
+                new ShowRegionInfoAction(),
+                new DeleteRegionsAction(),
+                MapAction.SEPARATOR,
+                new InsertPolygonInteraction(drawingManager, new AbstractMapAction("P", new Image(((Icons) GWT.create(Icons.class)).getPolygonIcon()), "New polygon region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        regionMap.setCurrentInteraction(selectInteraction);
+                    }
+                }),
+                new InsertBoxInteraction(drawingManager, new AbstractMapAction("B", new Image(((Icons) GWT.create(Icons.class)).getBBoxIcon()), "New box region") {
+                    @Override
+                    public void run(RegionMap regionMap) {
+                        regionMap.setCurrentInteraction(selectInteraction);
+                    }
+                }),
+                new EditVerticesAction(),
+                new RenameRegionAction()
         };
     }
 
     private static SelectInteraction createSelectInteraction() {
-        return new SelectInteraction(new AbstractMapAction("S", "Select region") {
+        return new SelectInteraction(new AbstractMapAction("S", new Image(((Icons) GWT.create(Icons.class)).getSelectIcon()), "Select region") {
             @Override
             public void run(RegionMap regionMap) {
             }

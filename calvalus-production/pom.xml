@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-production</artifactId>
@@ -37,6 +37,11 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-exchange</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.14</version>
+          </dependency>
 
         <!-- Used for staging -->
         <dependency>
@@ -66,23 +71,4 @@
         </dependency>
 
     </dependencies>
-
-    <!--<build>-->
-        <!--<plugins>-->
-            <!--<plugin>-->
-                <!--<artifactId>maven-assembly-plugin</artifactId>-->
-                <!--<version>2.2</version>-->
-                <!--<configuration>-->
-                    <!--<descriptors>-->
-                        <!--<descriptor>src/main/assembly/productionTool.xml</descriptor>-->
-                    <!--</descriptors>-->
-                    <!--<archive>-->
-                        <!--<manifest>-->
-                            <!--<mainClass>com.bc.calvalus.production.cli.ProductionTool</mainClass>-->
-                        <!--</manifest>-->
-                    <!--</archive>-->
-                <!--</configuration>-->
-            <!--</plugin>-->
-        <!--</plugins>-->
-    <!--</build>-->
 </project>

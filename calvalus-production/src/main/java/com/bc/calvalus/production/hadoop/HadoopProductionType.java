@@ -107,23 +107,27 @@ public abstract class HadoopProductionType implements ProductionType {
 
     @Override
     public Staging createStaging(Production production) throws ProductionException {
-        Staging staging = createUnsubmittedStaging(production);
         try {
+            Staging staging = createUnsubmittedStaging(production);
             getStagingService().submitStaging(staging);
+            return staging;
         } catch (IOException e) {
             throw new ProductionException(String.format("Failed to order staging for production '%s': %s",
                                                         production.getId(), e.getMessage()), e);
         }
-        return staging;
     }
 
-    protected abstract Staging createUnsubmittedStaging(Production production);
+    protected abstract Staging createUnsubmittedStaging(Production production) throws IOException;
 
-    protected final Configuration createJobConfig(ProductionRequest productionRequest) {
-        Configuration jobConfig = getProcessingService().createJobConfig();
-        jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
-        jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
-        return jobConfig;
+    protected final Configuration createJobConfig(ProductionRequest productionRequest) throws ProductionException {
+        try {
+            Configuration jobConfig = getProcessingService().createJobConfig(productionRequest.getUserName());
+            jobConfig.set(JobConfigNames.CALVALUS_USER, productionRequest.getUserName());
+            jobConfig.set(JobConfigNames.CALVALUS_PRODUCTION_TYPE, productionRequest.getProductionType());
+            return jobConfig;
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
     }
 
     protected final void setDefaultProcessorParameters(ProcessorProductionRequest processorProductionRequest,
@@ -151,12 +155,19 @@ public abstract class HadoopProductionType implements ProductionType {
      *
      * @return the fully qualified output path
      */
-    protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) {
+    protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) throws ProductionException {
         String relDir = productionRequest.getString("outputDir", productionId);
         String defaultDir = String.format("home/%s/%s", productionRequest.getUserName(), relDir);
-        String outputPath = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR,
-                                                        productionRequest.getString("outputPath", defaultDir));
-        return getInventoryService().getQualifiedPath(outputPath + dirSuffix);
+        String outputPath = productionRequest.getString("outputPath", defaultDir);
+        String outputDir = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
+        if (outputDir.endsWith("/")) {
+            outputDir = outputDir.substring(0, outputDir.length()-1);
+        }
+        try {
+            return getInventoryService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
     }
 
     /**
@@ -167,11 +178,11 @@ public abstract class HadoopProductionType implements ProductionType {
      *
      * @return true, if "_SUCCESS" exists
      */
-    protected boolean successfullyCompleted(String outputDir) {
+    protected boolean successfullyCompleted(String username, String outputDir) {
         ArrayList<String> globs = new ArrayList<String>();
         globs.add(outputDir + "/_SUCCESS");
         try {
-            String[] pathes = inventoryService.globPaths(globs);
+            String[] pathes = inventoryService.globPaths(username, globs);
             return pathes.length == 1;
         } catch (IOException e) {
             return false;

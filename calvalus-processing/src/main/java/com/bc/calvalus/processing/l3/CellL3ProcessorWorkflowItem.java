@@ -22,8 +22,8 @@ import java.util.Map;
  */
 public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
 
-    public CellL3ProcessorWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public CellL3ProcessorWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {
@@ -64,7 +64,7 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(L3TemporalBin.class);
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         ProcessorFactory.installProcessorBundle(jobConfig);

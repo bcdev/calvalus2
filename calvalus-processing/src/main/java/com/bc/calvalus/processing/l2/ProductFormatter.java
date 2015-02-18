@@ -164,7 +164,7 @@ public class ProductFormatter {
     }
 
     // copied from Staging
-    static void zip(File sourceDir, OutputStream outputStream, Progressable progressable) throws IOException {
+    public static void zip(File sourceDir, OutputStream outputStream, Progressable progressable) throws IOException {
         if (!sourceDir.exists()) {
             throw new FileNotFoundException(sourceDir.getPath());
         }
@@ -220,7 +220,7 @@ public class ProductFormatter {
         }
         Path workPath = new Path(workOutputPath, filename);
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
-        return fileSystem.create(workPath, (short) 1);
+        return fileSystem.create(workPath);
     }
 
 }

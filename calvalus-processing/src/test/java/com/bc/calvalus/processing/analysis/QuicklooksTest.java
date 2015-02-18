@@ -29,6 +29,7 @@ public class QuicklooksTest {
     public void testReadSingleConfig() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("<quicklooks>\n");
+        sb.append("<configs>\n");
         sb.append("<config>\n");
         sb.append("<subSamplingX>3</subSamplingX>\n");
         sb.append("<subSamplingY>5</subSamplingY>\n");
@@ -42,6 +43,7 @@ public class QuicklooksTest {
         sb.append("<overlayURL>file://C:\\User\\home\\overlay.png</overlayURL>\n");
         sb.append("<maskOverlays>land,cloud,coastline</maskOverlays>\n");
         sb.append("</config>\n");
+        sb.append("</configs>\n");
         sb.append("</quicklooks>\n");
         String xml = sb.toString();
         Quicklooks.QLConfig qlConfig = Quicklooks.fromXml(xml).getConfigs()[0];
@@ -83,6 +85,7 @@ public class QuicklooksTest {
     public void testReadSeveralConfigs() throws Exception {
         StringBuilder sb = new StringBuilder();
         sb.append("<quicklooks>\n");
+        sb.append("<configs>\n");
         sb.append("<config>\n");
         sb.append("<subSamplingX>3</subSamplingX>\n");
         sb.append("<subSamplingY>5</subSamplingY>\n");
@@ -98,6 +101,7 @@ public class QuicklooksTest {
         sb.append("</config>\n");
         sb.append("<config>\n");
         sb.append("</config>\n");
+        sb.append("</configs>\n");
         sb.append("</quicklooks>\n");
         String xml = sb.toString();
 

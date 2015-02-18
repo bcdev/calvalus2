@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -97,7 +98,10 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(l2ConfigForm);
         panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
-        panel.add(new HTML("<br/>"));
+        //panel.add(new HTML("<br/>"));
+        Anchor l3Help = new Anchor("Show Help");
+        panel.add(l3Help);
+        HelpSystem.addClickHandler(l3Help, "l3Processing");
         panel.add(createOrderPanel());
 
         this.widget = panel;
@@ -167,6 +171,17 @@ public class OrderL3ProductionView extends OrderProductionView {
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
+            if (! getPortal().withPortalFeature("unlimitedJobSize")) {
+                try {
+                    final int numPeriods = l3ConfigForm.periodCount.getValue();
+                    final int periodLength = l3ConfigForm.compositingPeriodLength.getValue();
+                    if (numPeriods * periodLength > 365+366) {
+                        throw new ValidationException(productSetFilterForm.numDays, "days to be processed larger than allowed");
+                    }
+                } catch (NumberFormatException e) {
+                    // ignore
+                }
+            }
             return true;
         } catch (ValidationException e) {
             e.handle();

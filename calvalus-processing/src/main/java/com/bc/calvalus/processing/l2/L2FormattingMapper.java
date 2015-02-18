@@ -19,10 +19,10 @@ package com.bc.calvalus.processing.l2;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.analysis.QLMapper;
 import com.bc.calvalus.processing.analysis.Quicklooks;
-import com.bc.calvalus.processing.beam.IdentityProcessorAdapter;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -40,6 +40,7 @@ import org.esa.beam.util.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +57,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
-        // todo - replace by an IdentityAdapter or something similar
-        ProcessorAdapter processorAdapter = new IdentityProcessorAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Level 2 format", 100);
+        ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 20 : 80;
+        final int progressForSaving = processorAdapter.supportsPullProcessing() ? 80 : 20;
+        pm.beginTask("Level 2 format", 100 + 20);
         try {
             Configuration jobConfig = context.getConfiguration();
             Path inputPath = processorAdapter.getInputPath();
@@ -81,7 +84,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 }
                 LOG.info("process missing: target product does not exist");
             }
-            Product targetProduct = processorAdapter.getInputProduct();
+            Product targetProduct = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
 
             if (!isProductEmpty(context, targetProduct)) {
                 targetProduct = doReprojection(jobConfig, targetProduct);
@@ -89,7 +92,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 if (!spatialSubsetParameter.isEmpty()) {
                     targetProduct = GPF.createProduct("Subset", spatialSubsetParameter, targetProduct);
                 }
-                ProcessorAdapter.copySceneRasterStartAndStopTime(processorAdapter.getInputProduct(), targetProduct, null);
+                if (ProcessorAdapter.hasInvalidStartAndStopTime(targetProduct)) {
+                    ProcessorAdapter.copySceneRasterStartAndStopTime(processorAdapter.getInputProduct(), targetProduct, null);
+                }
 
                 try {
                     context.setStatus("Quicklooks");
@@ -104,7 +109,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
                     context.setStatus("Writing");
                     targetProduct = writeProductFile(targetProduct, productFormatter, context, jobConfig,
-                                                     outputFormat, pm);
+                                                     outputFormat, SubProgressMonitor.create(pm, progressForSaving));
                     pm.worked(10);
 
                     context.setStatus("Metadata");
@@ -135,7 +140,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
 
     private Product writeProductFile(Product targetProduct, ProductFormatter productFormatter, Mapper.Context context,
                                      Configuration jobConfig, String outputFormat, ProgressMonitor pm) throws
-                                                                                                       IOException {
+            IOException {
         Map<String, Object> bandSubsetParameter = createBandSubsetParameter(targetProduct, jobConfig);
         if (!bandSubsetParameter.isEmpty()) {
             targetProduct = GPF.createProduct("Subset", bandSubsetParameter, targetProduct);
@@ -144,8 +149,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         File productFile = productFormatter.createTemporaryProductFile();
         LOG.info("Start writing product to file: " + productFile.getName());
 
-        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false,
-                               SubProgressMonitor.create(pm, 80));
+        ProductIO.writeProduct(targetProduct, productFile, outputFormat, false, pm);
         LOG.info("Finished writing product.");
 
         context.setStatus("Copying");
@@ -172,6 +176,9 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     private List<Quicklooks.QLConfig> getValidQlConfigs(Configuration conf) {
         Quicklooks.QLConfig[] allQlConfigs = Quicklooks.get(conf);
         String[] bandNames = conf.getStrings(JobConfigNames.CALVALUS_OUTPUT_BANDLIST);
+        if (bandNames == null) {
+            return Arrays.asList(allQlConfigs);
+        }
         List<Quicklooks.QLConfig> qlConfigList = new ArrayList<Quicklooks.QLConfig>(bandNames.length);
         for (String bandName : bandNames) {
             Quicklooks.QLConfig qlConfig = getQuicklookConfig(allQlConfigs, bandName);
@@ -208,11 +215,14 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     }
 
     private Map<String, Object> createSpatialSubsetParameter(Configuration jobConfig) {
+        boolean hasCrsWkt = StringUtils.isNotNullAndNotEmpty(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_CRS));
+
         String regionGeometry = jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         boolean hasGeometry = StringUtils.isNotNullAndNotEmpty(regionGeometry);
 
         Map<String, Object> subsetParams = new HashMap<String, Object>();
-        if (hasGeometry) {
+        if (hasGeometry && hasCrsWkt) {
+            // only subset a second time, if a reprojection has happened
             subsetParams.put("geoRegion", regionGeometry);
         }
         return subsetParams;

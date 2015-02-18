@@ -39,4 +39,6 @@ public interface PortalContext {
     boolean isProductionListFiltered();
 
     void setProductionListFiltered(boolean filter);
+
+    boolean withPortalFeature(String featureName);
 }

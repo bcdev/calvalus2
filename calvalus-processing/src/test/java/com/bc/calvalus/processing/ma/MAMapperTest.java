@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -38,6 +39,7 @@ public class MAMapperTest {
         expectedMatchups.add(new float[]{477.0f, 1366.0f, 67.29978f});
         expectedMatchups.add(new float[]{466.0f, 1372.0f, 65.49009f});
         expectedMatchups.add(new float[]{467.0f, 1386.0f, 66.52284f});
+        expectedMatchups.add(new float[]{560.0f, 2128.0f, 67.93459f});
     }
 
 
@@ -45,7 +47,7 @@ public class MAMapperTest {
     public void testMatchUp_WindowSize3() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 3, false);
+        executeMatchup(collectedMatchUps, 3, false, true);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
@@ -58,29 +60,67 @@ public class MAMapperTest {
     }
 
     @Test
+    public void testMatchUp_WindowSize3_extractPartial() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 3, false, false);
+
+        assertEquals(7, collectedMatchUps.size());
+        assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+        assertEquals(3*3, ((AggregatedNumber) collectedMatchUps.get(5).getAttributeValues()[6]).data.length);
+        assertEquals(2*3, ((AggregatedNumber) collectedMatchUps.get(6).getAttributeValues()[6]).data.length);
+    }
+
+    @Test
     public void testMatchUp_WindowSize3_FilterOverlapping() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 3, true);
+        executeMatchup(collectedMatchUps, 3, true, true);
 
-        for (RecordWritable collectedMatchUp : collectedMatchUps) {
-            System.out.println("collectedMatchUp = " + collectedMatchUp);
-        }
+//        for (RecordWritable collectedMatchUp : collectedMatchUps) {
+//            System.out.println("collectedMatchUp = " + collectedMatchUp);
+//        }
         assertEquals(6, collectedMatchUps.size());
         assertEquals(9, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
         testMatchUp(collectedMatchUps, 0);
-        testMatchUp(collectedMatchUps, 1, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
-        testMatchUp(collectedMatchUps, 2, OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 1, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING);
+        testMatchUp(collectedMatchUps, 2, OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING);
         testMatchUp(collectedMatchUps, 3);
         testMatchUp(collectedMatchUps, 4);
         testMatchUp(collectedMatchUps, 5);
     }
 
     @Test
+    public void testMatchUp_WindowSize1_FilterOverlapping() throws Exception {
+        final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
+
+        executeMatchup(collectedMatchUps, 1, true, true);
+
+//        for (RecordWritable collectedMatchUp : collectedMatchUps) {
+//            System.out.println("collectedMatchUp = " + collectedMatchUp);
+//        }
+        assertEquals(7, collectedMatchUps.size());
+        assertSame(Integer.class, collectedMatchUps.get(0).getAttributeValues()[2].getClass()); // scalar
+        testMatchUp(collectedMatchUps, 0);
+        testMatchUp(collectedMatchUps, 1);
+        testMatchUp(collectedMatchUps, 2);
+        testMatchUp(collectedMatchUps, 3);
+        testMatchUp(collectedMatchUps, 4);
+        testMatchUp(collectedMatchUps, 5);
+        testMatchUp(collectedMatchUps, 6);
+    }
+
+    @Test
     public void testMatchUp_WindowSize5() throws Exception {
         final List<RecordWritable> collectedMatchUps = new ArrayList<RecordWritable>();
 
-        executeMatchup(collectedMatchUps, 5, false);
+        executeMatchup(collectedMatchUps, 5, false, true);
 
         assertEquals(6, collectedMatchUps.size());
         assertEquals(25, getAggregatedNumber(collectedMatchUps.get(0), 2).data.length);
@@ -111,11 +151,11 @@ public class MAMapperTest {
         assertEquals(expectedReason, actualReason);
     }
 
-    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping) throws Exception {
+    private void executeMatchup(final List<RecordWritable> collectedMatchups, int macroPixelSize, boolean filterOverlapping, boolean onlyExtractComplete) throws Exception {
         MAMapper mapper = new MAMapper();
 
         Mapper.Context context = Mockito.mock(Mapper.Context.class);
-        FileSplit split = Mockito.mock(FileSplit.class);
+        FileSplit split = Mockito.mock(ProductSplit.class);
         URI uri = MAMapperTest.class.getResource("/eodata/MER_RR__1P_TEST.N1").toURI();
         Mockito.when(split.getPath()).thenReturn(new Path(uri));
         Mockito.when(split.getLength()).thenReturn(1024L);
@@ -127,7 +167,7 @@ public class MAMapperTest {
                 Object[] args = invocation.getArguments();
                 Text key = (Text) args[0];
                 RecordWritable value = (RecordWritable) args[1];
-                if (key.toString().startsWith("MER_RR__1P_TEST")) {
+                if (key.toString().endsWith("MER_RR__1P_TEST")) {
                     collectedMatchups.add(value);
                 }
                 return null;
@@ -142,6 +182,7 @@ public class MAMapperTest {
         maConfig.setFilteredMeanCoeff(0.0);
         maConfig.setFilterOverlapping(filterOverlapping);
         maConfig.setMaxTimeDifference(1.0);
+        maConfig.setOnlyExtractComplete(onlyExtractComplete);
 //        maConfig.setCopyInput(true);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
@@ -150,8 +191,15 @@ public class MAMapperTest {
     }
 
     private float getCenterMatchupValue(RecordWritable record, int columnIndex) {
-        float[] data = getAggregatedNumber(record, columnIndex).data;
-        return data[data.length / 2];
+        Object attrValue = record.getAttributeValues()[columnIndex];
+        if (attrValue instanceof AggregatedNumber) {
+            AggregatedNumber aggregatedNumber = (AggregatedNumber) attrValue;
+            float[] data = aggregatedNumber.data;
+            return data[data.length / 2];
+        } else if (attrValue instanceof Number) {
+            return ((Number) attrValue).floatValue();
+        }
+        throw new IllegalArgumentException();
     }
 
     private AggregatedNumber getAggregatedNumber(RecordWritable record, int columnIndex) {

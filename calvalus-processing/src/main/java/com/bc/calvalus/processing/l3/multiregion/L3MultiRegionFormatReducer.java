@@ -1,8 +1,6 @@
 package com.bc.calvalus.processing.l3.multiregion;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.l3.L3Formatter;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
@@ -11,19 +9,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TemporalBinSource;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * The reducer for for formatting
  * multiple regions of a Binning product at once.
  */
 public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L3MultiRegionTemporalBin, NullWritable, NullWritable> implements Configurable {
-    private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
-    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private Configuration conf;
     private L3MultiRegionFormatConfig l3MultiRegionFormatConfig;
@@ -98,34 +91,12 @@ public class L3MultiRegionFormatReducer extends Reducer<L3MultiRegionBinIndex, L
         // todo - specify common Calvalus L3 productName convention (mz)
         String productName = String.format("%s_%s_%s_%s", outputPrefix, region.getName(), dateStart, dateStop);
 
-        String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
-        String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);
-        ProductFormatter productFormatter = new ProductFormatter(productName, format, compression);
-        try {
-            File productFile = productFormatter.createTemporaryProductFile();
-
-            L3Formatter formatter = new L3Formatter(dateStart, dateStop,
-                                                    productFile.getAbsolutePath(),
-                                                    productFormatter.getOutputFormat(),
-                                                    conf);
-            LOG.info("Start formatting product to file: " + productFile.getName());
-            context.setStatus("formatting");
-            formatter.format(temporalBinSource,
-                             region.getName(),
-                             region.getRegionWKT());
-
-            LOG.info("Finished formatting product.");
-            context.setStatus("copying");
-            productFormatter.compressToHDFS(context, productFile);
-            context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product formatted").increment(1);
-        } catch (Exception e) {
-            LOG.log(Level.WARNING, "Formatting failed.", e);
-            throw new IOException(e);
-        } finally {
-            productFormatter.cleanupTempDir();
-            context.setStatus("");
-        }
+        L3Formatter.write(context, temporalBinSource,
+                          dateStart, dateStop,
+                          region.getName(), region.getRegionWKT(),
+                          productName);
     }
+
 
     @Override
     public void setConf(Configuration conf) {

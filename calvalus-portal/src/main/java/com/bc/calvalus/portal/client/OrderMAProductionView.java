@@ -17,17 +17,14 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
- * Demo view that lets users submit a new L3 production.
+ * Demo view that lets users submit a new Match-Up production.
  *
  * @author Norman
  */
@@ -54,29 +51,11 @@ public class OrderMAProductionView extends OrderProductionView {
         });
 
         l2ConfigForm = new L2ConfigForm(portalContext, false);
-        l2ConfigForm.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
-            }
-        });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
-        productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
-            @Override
-            public void temporalFilterChanged(Map<String, String> data) {
-                // ?
-            }
-
-            @Override
-            public void spatialFilterChanged(Map<String, String> data) {
-                // ?
-            }
-        });
 
         maConfigForm = new MAConfigForm(portalContext);
-        maConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
 
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(false);

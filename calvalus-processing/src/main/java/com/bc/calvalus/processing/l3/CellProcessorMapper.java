@@ -15,6 +15,7 @@ import org.esa.beam.binning.CellProcessorDescriptor;
 import org.esa.beam.binning.TemporalBin;
 import org.esa.beam.binning.TypedDescriptorsRegistry;
 import org.esa.beam.binning.WritableVector;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.support.VariableContextImpl;
 
 import java.io.IOException;
@@ -42,8 +43,8 @@ public class CellProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lon
         }
         ProcessingMetadata.metadata2Config(metadata, conf, JobConfigNames.LEVEL3_METADATA_KEYS);
 
-        L3Config l3Config = getCellL3Config(conf);
-        CellProcessorConfig postProcessorConfig = l3Config.getBinningConfig().getPostProcessorConfig();
+        BinningConfig binningConfig = getCellL3Config(conf);
+        CellProcessorConfig postProcessorConfig = binningConfig.getPostProcessorConfig();
 
         String[] inputFeatureNames = conf.getStrings(JobConfigNames.CALVALUS_L3_FEATURE_NAMES);
         cellProcessor = createCellProcessor(postProcessorConfig, inputFeatureNames);
@@ -66,13 +67,13 @@ public class CellProcessorMapper extends Mapper<LongWritable, L3TemporalBin, Lon
         ProcessingMetadata.write(workOutputPath, conf, metadata);
     }
 
-    static L3Config getCellL3Config(Configuration jobConfig) {
+    static BinningConfig getCellL3Config(Configuration jobConfig) {
         String xml = jobConfig.get(JobConfigNames.CALVALUS_CELL_PARAMETERS);
         if (xml == null) {
             throw new IllegalArgumentException("Missing Cell configuration '" + JobConfigNames.CALVALUS_CELL_PARAMETERS + "'");
         }
         try {
-            return L3Config.fromXml(xml);
+            return BinningConfig.fromXml(xml);
         } catch (BindingException e) {
             throw new IllegalArgumentException("Invalid Cell configuration: " + e.getMessage(), e);
         }

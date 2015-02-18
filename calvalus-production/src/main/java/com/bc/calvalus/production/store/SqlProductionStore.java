@@ -227,7 +227,7 @@ public class SqlProductionStore implements ProductionStore {
         if (requestXml != null) {
             try {
                 productionRequest = ProductionRequest.fromXml(requestXml);
-            } catch (BindingException e) {
+            } catch (Exception e) {
                 CalvalusLogger.getLogger().log(Level.WARNING, "Could not retrieve production request from database.",
                                                e);
             }

@@ -3,7 +3,7 @@
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
                 version="2.0">
 
-    <xsl:output method="xhtml" encoding="UTF-8" indent="no"/>
+    <xsl:output method="html" encoding="UTF-8" indent="no"/>
 
     <xsl:template match="listing">
         <html>
@@ -59,7 +59,7 @@
                 </table>
                 <xsl:apply-templates select="readme"/>
                 <hr/>
-                <p class="copyright">Calvalus - Version 1.7-SNAPSHOT, &#169; 2013 Brockmann Consult GmbH</p>
+                <p class="copyright">Calvalus - Version 2.3-SNAPSHOT, &#169; 2014 Brockmann Consult GmbH</p>
             </body>
         </html>
     </xsl:template>

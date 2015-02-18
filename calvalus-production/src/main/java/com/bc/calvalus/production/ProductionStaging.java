@@ -37,7 +37,7 @@ public abstract class ProductionStaging extends Staging {
     }
 
     public static String getSafeFilename(String filename) {
-        return filename.replace("/", "").replace("\\", "");
+        return filename.replace("/", "").replace("\\", "").replace(" ", "_");
     }
 
 }

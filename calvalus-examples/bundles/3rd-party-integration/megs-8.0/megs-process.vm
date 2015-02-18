@@ -1,6 +1,7 @@
 #!/bin/bash
 
 inputFile="$inputFile"
+inputName="$inputFile.name"
 #if ($inputFile.name.startsWith("MER_RR__1"))
     prdInput=l1_rr.prd
     prdOutput=l2_rr.prd
@@ -31,9 +32,12 @@ PACKAGE_DIR=./megs-8.0/megs-8.0
 echo >> modifiers.db
 
 # for debugging purpose
-echo "=================="
-cat modifiers.db
-echo "=================="
+#echo "=================="
+#cat modifiers.db
+#echo "=================="
+
+########################################################################
+echo "linking in auxdata files"
 
 # make the required directories
 mkdir -p files
@@ -63,9 +67,10 @@ for f in fLOV.dat globcolour_config.txt ang_net.net atm_net_back.net atm_net_for
 do
   ln -s "$(readlink -f "${PACKAGE_DIR}/aux_data/resources/$f")" "files/$f"
 done
+########################################################################
 
 # link the input file
-ln -sv "$(readlink -f "${inputFile}")" "files/$prdInput"
+ln -sv "$(readlink -f "${inputFile}")" "files/${prdInput}"
 
 echo "starting progress monitoring ..."
 ./reportprogress.bash &
@@ -74,6 +79,7 @@ trap 'kill %1' EXIT
 echo "calling MEGS ..."
 # call MEGS executable wrapper for automatic cleanup on failure.
 ./${PACKAGE_DIR}/bin/megs.sh
+
 
 # rename result file
 outputfile=`head -1 "files/$prdOutput" | cut -d'=' -f2 | sed s/\"//g`
@@ -89,5 +95,3 @@ echo "CALVALUS_OUTPUT_PRODUCT ${outputfile}"
 #done
 ]]#
 
-
-# TODO directory structure by date

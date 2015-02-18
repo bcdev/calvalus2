@@ -34,8 +34,8 @@ java -jar cpt.jar --help
 
 The remaining step is to install the BEAM and the Calvalus bundle into the HDFS:
 
-java -jar cpt.jar --deploy beam-bundle/*.jar beam-4.11.1
-java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-1.7
+java -jar cpt.jar --deploy beam-bundle/*.jar beam-5.0.1
+java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT
 
 Whereas the name of the BEAM and Calvalus bundle are given in the "calvalus.hadoop.calvalus.calvalus.bundle" and
 the "calvalus.hadoop.calvalus.beam.bundle" configuration property.

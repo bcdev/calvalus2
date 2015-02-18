@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.ceres.core.Assert;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -12,9 +11,13 @@ import org.esa.beam.framework.datamodel.TiePointGrid;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
+import java.awt.geom.Point2D;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * Generates an output record from a {@link Product} using an input reference record.
@@ -30,28 +33,34 @@ public class PixelExtractor {
 
     private final Header header;
     private final Product product;
+    private final AffineTransform i2oTransform;
+    private final AffineTransform o2iTransform;
     private final Mask pixelMask;
-    private final PixelTimeProvider pixelTimeProvider;
     private final int macroPixelSize;
+    private final boolean onlyExtractComplete;
     private final boolean copyInput;
-    private final PixelPosProvider pixelPosProvider;
 
     public PixelExtractor(Header inputHeader,
                           Product product,
                           int macroPixelSize,
+                          boolean onlyExtractComplete,
                           String goodPixelMaskExpression,
-                          Double maxTimeDifference,
-                          boolean copyInput) {
+                          boolean copyInput,
+                          AffineTransform i2oTransform) {
         this.product = product;
+        this.i2oTransform = i2oTransform;
+        try {
+            this.o2iTransform = i2oTransform.createInverse();
+        } catch (NoninvertibleTransformException e) {
+            throw new IllegalArgumentException("failed to invert i2oTransform: " + i2oTransform, e);
+        }
         if (goodPixelMaskExpression != null && !goodPixelMaskExpression.trim().isEmpty()) {
             this.pixelMask = createGoodPixelMask(product, goodPixelMaskExpression);
         } else {
             this.pixelMask = null;
         }
         this.macroPixelSize = macroPixelSize;
-        this.pixelTimeProvider = PixelTimeProvider.create(product);
-        this.pixelPosProvider = new PixelPosProvider(product, pixelTimeProvider, maxTimeDifference, inputHeader.hasTime());
-
+        this.onlyExtractComplete = onlyExtractComplete;
         this.copyInput = copyInput;
 
         // Important note: createHeader() is dependent on a number of field values,
@@ -69,39 +78,32 @@ public class PixelExtractor {
     /**
      * Extracts an output record.
      *
-     * @param inputRecord The input record.
-     *
+     * @param inputRecord      The input record.
+     * @param originalPixelPos The validated original (Level 1) pixel pos.
      * @return The output record or {@code null}, if a certain inclusion criterion is not met.
-     *
-     * @throws java.io.IOException If any I/O error occurs
-     */
-    public Record extract(Record inputRecord) throws IOException {
-        Assert.notNull(inputRecord, "inputRecord");
-        final PixelPos pixelPos = pixelPosProvider.getTemporallyAndSpatiallyValidPixelPos(inputRecord);
-        if (pixelPos != null) {
-            return extract(inputRecord, pixelPos);
-        }
-        return null;
-    }
-
-    /**
-     * Extracts an output record.
-     *
-     * @param inputRecord The input record.
-     * @param pixelPos    The validated pixel pos.
-     *
-     * @return The output record or {@code null}, if a certain inclusion criterion is not met.
-     *
      * @throws java.io.IOException If an I/O error occurs
      */
-    public Record extract(Record inputRecord, PixelPos pixelPos) throws IOException {
+    public Record extract(Record inputRecord, PixelPos originalPixelPos, Date originalPixelTime) throws IOException {
 
-        final Rectangle macroPixelRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight()).intersection(
-                new Rectangle((int) pixelPos.x - macroPixelSize / 2,
-                              (int) pixelPos.y - macroPixelSize / 2,
+        Point2D extractionPos = i2oTransform.transform(originalPixelPos, null);
+        PixelPos extractionPixelPos = new PixelPos((float) extractionPos.getX(), (float) extractionPos.getY());
+        Rectangle productRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
+
+        if (!product.containsPixel(extractionPixelPos)) {
+            return null;
+        }
+
+        final Rectangle macroPixelRect = productRect.intersection(
+                new Rectangle((int) extractionPixelPos.x - macroPixelSize / 2,
+                              (int) extractionPixelPos.y - macroPixelSize / 2,
                               macroPixelSize, macroPixelSize));
 
-
+        if (macroPixelRect.isEmpty()) {
+            return null;
+        }
+        if (onlyExtractComplete && (macroPixelRect.width < macroPixelSize || macroPixelRect.height < macroPixelSize)) {
+            return null;
+        }
         int x0 = macroPixelRect.x;
         int y0 = macroPixelRect.y;
         int width = macroPixelRect.width;
@@ -145,32 +147,45 @@ public class PixelExtractor {
             for (int x = x0; x < x0 + width; x++, i++) {
                 PixelPos pp = new PixelPos(x + 0.5F, y + 0.5F);
                 GeoPos gp = product.getGeoCoding().getGeoPos(pp, null);
-                // todo - compute actual source pixel positions (need offsets here!)  (mz,nf)
-                pixelXPositions[i] = x;
-                pixelYPositions[i] = y;
+                Point2D originalCoordinates = o2iTransform.transform(pp, null);
+                pixelXPositions[i] = (int) originalCoordinates.getX();
+                pixelYPositions[i] = (int) originalCoordinates.getY();
                 pixelLatitudes[i] = gp.lat;
                 pixelLongitudes[i] = gp.lon;
             }
         }
 
+        // check for X/Y flip
+        boolean flipX = false;
+        boolean flipY = false;
+        if (macroPixelSize > 1) {
+            // for flipY, compare two pixels in a row
+            if (pixelXPositions[0] > pixelXPositions[1]) {
+                flipY = true;
+            }
+            // for flipX, compare two pixels in a col
+            if (pixelYPositions[0] > pixelYPositions[width]) {
+                flipX = true;
+            }
+        }
         ////////////////////////////////////
         // 1. derived information
         //
         // field "source_name"
         values[index++] = product.getName();
         // field "pixel_time"
-        values[index++] = pixelTimeProvider != null ? pixelTimeProvider.getTime(pixelPos) : null;
+        values[index++] = originalPixelTime;
         // field "pixel_x"
-        values[index++] = pixelXPositions;
+        values[index++] = flipIntArray(pixelXPositions, width, height, flipX, flipY);
         // field "pixel_y"
-        values[index++] = pixelYPositions;
+        values[index++] = flipIntArray(pixelYPositions, width, height, flipX, flipY);
         // field "pixel_lat"
-        values[index++] = pixelLatitudes;
+        values[index++] = flipFloatArray(pixelLatitudes, width, height, flipX, flipY);
         // field "pixel_lon"
-        values[index++] = pixelLongitudes;
+        values[index++] = flipFloatArray(pixelLongitudes, width, height, flipX, flipY);
         if (maskSamples != null) {
             // field "pixel_mask"
-            values[index++] = maskSamples;
+            values[index++] = flipIntArray(maskSamples, width, height, flipX, flipY);
         }
 
         ////////////////////////////////////
@@ -182,12 +197,12 @@ public class PixelExtractor {
                 if (band.isFloatingPointType()) {
                     final float[] floatSamples = new float[macroPixelRect.width * macroPixelRect.height];
                     band.readPixels(x0, y0, width, height, floatSamples);
-                    values[index++] = floatSamples;
                     maskNaN(band, x0, y0, width, height, floatSamples);
+                    values[index++] = flipFloatArray(floatSamples, width, height, flipX, flipY);
                 } else {
                     final int[] intSamples = new int[macroPixelRect.width * macroPixelRect.height];
                     band.readPixels(x0, y0, width, height, intSamples);
-                    values[index++] = intSamples;
+                    values[index++] = flipIntArray(intSamples, width, height, flipX, flipY);
                 }
             }
         }
@@ -198,10 +213,66 @@ public class PixelExtractor {
         for (TiePointGrid tiePointGrid : product.getTiePointGrids()) {
             final float[] floatSamples = new float[macroPixelRect.width * macroPixelRect.height];
             tiePointGrid.readPixels(x0, y0, width, height, floatSamples);
-            values[index++] = floatSamples;
+            values[index++] = flipFloatArray(floatSamples, width, height, flipX, flipY);
         }
 
-        return new DefaultRecord(inputRecord.getLocation(), inputRecord.getTime(), values, new Object[]{exclusionReason});
+        return new DefaultRecord(inputRecord.getId(),
+                                 inputRecord.getLocation(),
+                                 inputRecord.getTime(),
+                                 values,
+                                 new Object[]{exclusionReason});
+    }
+
+    static int[] flipIntArray(int[] data, int w, int h, boolean flipX, boolean flipY) {
+        if (flipY) {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w / 2; x++) {
+                    int frontIndex = x + y * w;
+                    int backIndex = (y + 1) * w - (x + 1);
+                    int temp = data[frontIndex]; //save from front
+                    data[frontIndex] = data[backIndex]; //back to front
+                    data[backIndex] = temp;//write to back
+                }
+            }
+        }
+        if (flipX) {
+            for (int x = 0; x < w; x++) {
+                for (int y = 0; y < h / 2; y++) {
+                    int topIndex = x + y * w;
+                    int bottomIndex = x + (h - y - 1) * w;
+                    int temp = data[topIndex];
+                    data[topIndex] = data[bottomIndex];
+                    data[bottomIndex] = temp;
+                }
+            }
+        }
+        return data;
+    }
+
+    static float[] flipFloatArray(float[] data, int w, int h, boolean flipX, boolean flipY) {
+        if (flipY) {
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w / 2; x++) {
+                    int frontIndex = x + y * w;
+                    int backIndex = (y + 1) * w - (x + 1);
+                    float temp = data[frontIndex]; //save from front
+                    data[frontIndex] = data[backIndex]; //back to front
+                    data[backIndex] = temp;//write to back
+                }
+            }
+        }
+        if (flipX) {
+            for (int x = 0; x < w; x++) {
+                for (int y = 0; y < h / 2; y++) {
+                    int topIndex = x + y * w;
+                    int bottomIndex = x + (h - y - 1) * w;
+                    float temp = data[topIndex];
+                    data[topIndex] = data[bottomIndex];
+                    data[bottomIndex] = temp;
+                }
+            }
+        }
+        return data;
     }
 
     private Header createHeader(Header inputHeader) {
@@ -257,20 +328,9 @@ public class PixelExtractor {
             attributeNames.add(ATTRIB_NAME_AGGREG_PREFIX + tiePointGridName);
         }
 
-        return new DefaultHeader(true,
-                                 pixelTimeProvider != null,
+        return new DefaultHeader(inputHeader.hasLocation(),
+                                 inputHeader.hasTime(),
                                  attributeNames.toArray(new String[attributeNames.size()]));
-    }
-
-    /**
-     * Gets the temporally and spatially valid pixel position.
-     *
-     * @param referenceRecord The reference record
-     *
-     * @return The pixel position, or {@code null} if no such exist.
-     */
-    public PixelPos getPixelPos(Record referenceRecord) {
-        return pixelPosProvider.getPixelPos(referenceRecord);
     }
 
     private void maskNaN(Band band, int x0, int y0, int width, int height, float[] samples) {

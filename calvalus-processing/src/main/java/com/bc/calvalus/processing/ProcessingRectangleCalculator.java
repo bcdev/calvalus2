@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -9,20 +10,27 @@ import org.esa.beam.gpf.operators.standard.SubsetOp;
 
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 
 /**
  * Computes the rectangle of fo the input product that should be processed.
  */
 abstract class ProcessingRectangleCalculator {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     private final Geometry regionGeometry;
     private final Rectangle roiRectangle;
     private final InputSplit inputSplit;
+    private final boolean fullSwath;
 
-    public ProcessingRectangleCalculator(Geometry regionGeometry, Rectangle roiRectangle, InputSplit inputSplit) {
+    public ProcessingRectangleCalculator(Geometry regionGeometry, Rectangle roiRectangle, InputSplit inputSplit, boolean fullSwath) {
         this.regionGeometry = regionGeometry;
         this.roiRectangle = roiRectangle;
         this.inputSplit = inputSplit;
+        this.fullSwath = fullSwath;
     }
 
     abstract Product getProduct() throws IOException;
@@ -41,8 +49,13 @@ abstract class ProcessingRectangleCalculator {
         Rectangle geometryRect = getGeometryAsRectangle(regionGeometry);
         Rectangle productSplitRect = getProductSplitAsRectangle();
 
-        Rectangle pixelRegion = intersectionSafe(geometryRect, productSplitRect);
-        return intersectionSafe(pixelRegion, roiRectangle);
+        Rectangle pixelRectangle = intersectionSafe(geometryRect, productSplitRect);
+        pixelRectangle = intersectionSafe(pixelRectangle, roiRectangle);
+        if (fullSwath && pixelRectangle != null) {
+            final int productWidth = getProduct().getSceneRasterWidth();
+            pixelRectangle = new Rectangle(0, pixelRectangle.y, productWidth, pixelRectangle.height);
+        }
+        return pixelRectangle;
     }
 
     /**
@@ -65,8 +78,16 @@ abstract class ProcessingRectangleCalculator {
     Rectangle getGeometryAsRectangle(Geometry regionGeometry) {
         if (!(regionGeometry == null || regionGeometry.isEmpty() || isGlobalCoverageGeometry(regionGeometry))) {
             try {
+                LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
                 return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
             } catch (Exception e) {
+                String msg = "Exception from SubsetOp.computePixelRegion: " + e.getMessage();
+                LogRecord lr = new LogRecord(Level.WARNING, msg);
+                lr.setSourceClassName("ProcessingRectangleCalculator");
+                lr.setSourceMethodName("getGeometryAsRectangle");
+                lr.setThrown(e);
+                LOG.log(lr);
+                LOG.warning("ignoring product");
                 // Computation of pixel region could fail (JTS Exception), if the geo-coding of the product is messed up
                 // in this case ignore this product
                 return new Rectangle();
@@ -88,9 +109,9 @@ abstract class ProcessingRectangleCalculator {
     static boolean isGlobalCoverageGeometry(Geometry geometry) {
         Envelope envelopeInternal = geometry.getEnvelopeInternal();
         return eq(envelopeInternal.getMinX(), -180.0, 1E-8)
-                && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
-                && eq(envelopeInternal.getMinY(), -90.0, 1E-8)
-                && eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
+               && eq(envelopeInternal.getMaxX(), 180.0, 1E-8)
+               && eq(envelopeInternal.getMinY(), -90.0, 1E-8)
+               && eq(envelopeInternal.getMaxY(), 90.0, 1E-8);
     }
 
     private static boolean eq(double x1, double x2, double eps) {

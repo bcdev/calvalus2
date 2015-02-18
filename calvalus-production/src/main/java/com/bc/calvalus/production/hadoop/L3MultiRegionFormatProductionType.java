@@ -66,7 +66,8 @@ public class L3MultiRegionFormatProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
 
-        WorkflowItem workflowItem = new L3MultiRegionFormatWorkflowItem(getProcessingService(), productionName, jobConfig);
+        WorkflowItem workflowItem = new L3MultiRegionFormatWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                                        productionName, jobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();

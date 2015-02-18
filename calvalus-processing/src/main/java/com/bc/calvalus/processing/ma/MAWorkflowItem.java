@@ -37,8 +37,8 @@ import java.io.IOException;
  */
 public class MAWorkflowItem extends HadoopWorkflowItem {
 
-    public MAWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public MAWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override
@@ -92,7 +92,7 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         job.setOutputValueClass(RecordWritable.class);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
 

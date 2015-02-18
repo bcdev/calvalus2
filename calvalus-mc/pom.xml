@@ -8,9 +8,7 @@
         <version>0.4-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-mc</artifactId>
-    <version>${calvalus.version}</version>
     <packaging>jar</packaging>
 
     <name>Calvalus Monitoring and Control</name>

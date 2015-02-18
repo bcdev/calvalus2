@@ -35,8 +35,8 @@ import java.io.IOException;
  */
 public class PrevueWorkflowItem extends HadoopWorkflowItem {
 
-    public PrevueWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public PrevueWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override

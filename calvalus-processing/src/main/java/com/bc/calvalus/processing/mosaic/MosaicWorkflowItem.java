@@ -33,8 +33,8 @@ import java.io.IOException;
  */
 public class MosaicWorkflowItem extends HadoopWorkflowItem {
 
-    public MosaicWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public MosaicWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
 
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         ProcessorFactory.installProcessorBundle(jobConfig);
     }
 

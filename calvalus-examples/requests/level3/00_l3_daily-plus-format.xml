@@ -108,11 +108,13 @@
                 <wps:ComplexData>
                     <parameters>
                         <quicklooks>
-                            <config>
-                                <RGBAExpressions>radiance_13_mean,radiance_4_mean,radiance_2_mean,</RGBAExpressions>
-                                <imageType>jpeg</imageType>
-                                <overlayURL>hdfs://master00:9000/calvalus/projects/lc/aux/countries_magenta_1800x900.png</overlayURL>
-                            </config>
+                            <configs>
+                                <config>
+                                    <RGBAExpressions>radiance_13_mean,radiance_4_mean,radiance_2_mean,</RGBAExpressions>
+                                    <imageType>jpeg</imageType>
+                                    <overlayURL>hdfs://master00:9000/calvalus/projects/lc/aux/countries_magenta_1800x900.png</overlayURL>
+                                </config>
+                            </configs>
                         </quicklooks>
                     </parameters>
                 </wps:ComplexData>

@@ -143,6 +143,7 @@ function handle_progress() {
 }
 
 echo ${L2GEN_BIN} par=parameters.anc
+set -o pipefail
 ${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done
 echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#

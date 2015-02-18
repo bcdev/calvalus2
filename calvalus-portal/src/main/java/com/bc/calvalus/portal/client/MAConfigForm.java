@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -19,6 +18,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
@@ -65,12 +65,16 @@ public class MAConfigForm extends Composite {
     @UiField
     CheckBox filterOverlapping;
     @UiField
+    CheckBox onlyExtractComplete;
+    @UiField
     TextBox outputGroupName;
 
     @UiField
     TextBox goodPixelExpression;
     @UiField
     TextBox goodRecordExpression;
+    @UiField
+    HTMLPanel expressionTable;
 
 
     public MAConfigForm(final PortalContext portalContext) {
@@ -82,6 +86,7 @@ public class MAConfigForm extends Composite {
         maxTimeDifference.setValue(3.0);
         filteredMeanCoeff.setValue(1.5);
         filterOverlapping.setValue(false);
+        onlyExtractComplete.setValue(true);
         outputGroupName.setValue("SITE");
 
         HTML description1 = new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
@@ -122,7 +127,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void checkRecordSource(final String recordSource) {
-        portalContext.getBackendService().checkUserRecordSource(recordSource, new AsyncCallback<String>() {
+        portalContext.getBackendService().checkUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
             @Override
             public void onSuccess(String message) {
                 Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
@@ -136,7 +141,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void viewRecordSource(final String recordSource) {
-        portalContext.getBackendService().listUserRecordSource(recordSource, new AsyncCallback<float[]>() {
+        portalContext.getBackendService().listUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<float[]>() {
             @Override
             public void onSuccess(float[] points) {
                 MapOptions mapOptions = MapOptions.newInstance();
@@ -188,28 +193,26 @@ public class MAConfigForm extends Composite {
         });
     }
 
-    public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
-    }
-
     public void validateForm() throws ValidationException {
-        boolean macroPixelSizeValid = macroPixelSize.getValue() >= 1
-                                      && macroPixelSize.getValue() <= 31
-                                      && macroPixelSize.getValue() % 2 == 1;
+        Integer macroPixelSizeValue = macroPixelSize.getValue();
+        boolean macroPixelSizeValid = macroPixelSizeValue != null
+                                      && macroPixelSizeValue >= 1
+                                      && macroPixelSizeValue <= 201
+                                      && macroPixelSizeValue % 2 == 1;
         if (!macroPixelSizeValid) {
-            throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 31");
+            throw new ValidationException(macroPixelSize, "Macro pixel size must be an odd integer between 1 and 201");
         }
-        boolean filteredMeanCoeffValid = filteredMeanCoeff.getValue() >= 0;
+        boolean filteredMeanCoeffValid = filteredMeanCoeff.getValue() != null && filteredMeanCoeff.getValue() >= 0;
         if (!filteredMeanCoeffValid) {
             throw new ValidationException(filteredMeanCoeff, "Filtered mean coefficient must be >= 0 (0 disables this criterion)");
         }
 
-        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() >= 0;
+        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() != null && maxTimeDifference.getValue() >= 0;
         if (!maxTimeDifferenceValid) {
             throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
         }
 
-        boolean recordSourceValid = userManagedContent.getSelectedFilePath() != null;
-        if (!recordSourceValid) {
+        if (userManagedContent.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
         }
     }
@@ -219,10 +222,11 @@ public class MAConfigForm extends Composite {
         parameters.put("copyInput", "true");
         parameters.put("goodPixelExpression", goodPixelExpression.getText());
         parameters.put("goodRecordExpression", goodRecordExpression.getText());
-        parameters.put("macroPixelSize", macroPixelSize.getText());
-        parameters.put("maxTimeDifference", maxTimeDifference.getText());
-        parameters.put("filteredMeanCoeff", filteredMeanCoeff.getText());
-        parameters.put("filterOverlapping", String.valueOf(filterOverlapping.getValue()));
+        parameters.put("macroPixelSize", macroPixelSize.getValue().toString());
+        parameters.put("maxTimeDifference", maxTimeDifference.getValue().toString());
+        parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
+        parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
+        parameters.put("onlyExtractComplete", onlyExtractComplete.getValue().toString());
         parameters.put("outputGroupName", outputGroupName.getText());
         parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
         return parameters;
@@ -234,7 +238,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            checkRecordSource(userManagedContent.getSelectedFilePath());
+            checkRecordSource(userManagedContent.getSelectedFilename());
         }
     }
 
@@ -243,7 +247,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            viewRecordSource(userManagedContent.getSelectedFilePath());
+            viewRecordSource(userManagedContent.getSelectedFilename());
         }
     }
 

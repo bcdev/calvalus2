@@ -13,7 +13,7 @@ import java.awt.Color;
  */
 public class Quicklooks {
 
-    @Parameter(alias = "quicklooks", itemAlias = "config", itemsInlined = true)
+    @Parameter(alias = "quicklooks", itemAlias = "config")
     private QLConfig[] configs;
 
     public QLConfig[] getConfigs() {

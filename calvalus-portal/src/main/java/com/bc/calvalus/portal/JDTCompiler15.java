@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal;
 
 import org.apache.tools.ant.taskdefs.Javac;
+import org.apache.tools.ant.types.Commandline;
 import org.apache.tools.ant.types.Path;
 import org.eclipse.jdt.core.JDTCompilerAdapter;
 
@@ -19,10 +20,10 @@ public class JDTCompiler15 extends JDTCompilerAdapter {
     @Override
     public void setJavac(Javac javacTaskdef) {
         if (javacTaskdef.getTarget() == null) {
-            javacTaskdef.setTarget("1.6"); //make target level to 1.6
+            javacTaskdef.setTarget("1.7"); //make target level to 1.6
         }
         if (javacTaskdef.getSource() == null) {
-            javacTaskdef.setSource("1.6"); //make target level to 1.6
+            javacTaskdef.setSource("1.7"); //make target level to 1.6
         }
         // redirect JSP compile output
         final Path srcPath = javacTaskdef.getSrcdir();
@@ -33,5 +34,12 @@ public class JDTCompiler15 extends JDTCompilerAdapter {
             }
         }
         super.setJavac(javacTaskdef);
+    }
+
+    // This method is responsible for printing the errors/warning.
+    @Override
+    protected void logAndAddFilesToCompile(Commandline cmd) {
+        super.logAndAddFilesToCompile(cmd);
+        System.err.println(cmd.toString());
     }
 }

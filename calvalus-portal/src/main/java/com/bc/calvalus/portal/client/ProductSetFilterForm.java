@@ -255,7 +255,14 @@ public class ProductSetFilterForm extends Composite {
 
         if (temporalFilterByDateRange.getValue()) {
             String startDate = minDate.getTextBox().getText();
+            if (startDate == null || startDate.trim().isEmpty()) {
+                throw new ValidationException(minDate, "Start date must be given.");
+            }
             String endDate = maxDate.getTextBox().getText();
+            if (endDate == null || endDate.trim().isEmpty()) {
+                throw new ValidationException(maxDate, "End date must be given.");
+            }
+
             boolean datesValid = (startDate.compareTo(endDate) <= 0);
             if (!datesValid) {
                 throw new ValidationException(minDate, "Start date must be equal to or before end date.");

@@ -49,14 +49,14 @@ public interface ProductionStore {
     /**
      * Updates this store by changes received from the underlying database.
      *
-     * @throws ProductionException If an eror occured.
+     * @throws ProductionException If an error occurred.
      */
     void update() throws ProductionException;
 
     /**
      * Makes the current state of this store persistent in an underlying database.
      *
-     * @throws ProductionException If an eror occured.
+     * @throws ProductionException If an error occurred.
      */
     void persist() throws ProductionException;
 

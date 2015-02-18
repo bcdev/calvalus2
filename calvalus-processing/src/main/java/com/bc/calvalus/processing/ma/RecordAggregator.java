@@ -1,6 +1,10 @@
 package com.bc.calvalus.processing.ma;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Converts even int[] into floating point values, not at least to symbolize NaN
@@ -11,12 +15,44 @@ public class RecordAggregator implements RecordTransformer {
     private final int maskAttributeIndex;
     private final double filteredMeanCoeff;
 
-    public RecordAggregator(int maskAttributeIndex, double filteredMeanCoeff) {
+    public static RecordTransformer create(Header header, double filteredMeanCoeff) {
+        String pixelMaskAttributeName = PixelExtractor.ATTRIB_NAME_AGGREG_PREFIX +ProductRecordSource.PIXEL_MASK_ATT_NAME;
+        final int pixelMaskAttributeIndex = Arrays.asList(header.getAttributeNames()).indexOf(pixelMaskAttributeName);
+        return new RecordAggregator(pixelMaskAttributeIndex, filteredMeanCoeff);
+    }
+
+    RecordAggregator(int maskAttributeIndex, double filteredMeanCoeff) {
         this.maskAttributeIndex = maskAttributeIndex;
         this.filteredMeanCoeff = filteredMeanCoeff;
     }
 
     @Override
+    public Iterable<Record> transform(Iterable<Record> recordIterable) {
+        return new Iterable<Record>() {
+            @Override
+            public Iterator<Record> iterator() {
+                return new RecIt(recordIterable.iterator());
+            }
+        };
+    }
+
+    private class RecIt extends RecordIterator {
+
+        private final Iterator<Record> inputIt;
+
+        private RecIt(Iterator<Record> inputIt) {
+            this.inputIt = inputIt;
+        }
+
+        @Override
+        protected Record getNextRecord() {
+            if (inputIt.hasNext()) {
+                return transform(inputIt.next());
+            }
+            return null;
+        }
+    }
+
     public Record transform(Record record) {
         final Object[] attributeValues = record.getAttributeValues();
         int length = getCommonArrayValueLength(attributeValues);
@@ -37,7 +73,11 @@ public class RecordAggregator implements RecordTransformer {
             }
             aggregatedValues[valueIndex] = attributeValue;
         }
-        return new DefaultRecord(record.getLocation(), record.getTime(), aggregatedValues, record.getAnnotationValues());
+        return new DefaultRecord(record.getId(),
+                                 record.getLocation(),
+                                 record.getTime(),
+                                 aggregatedValues,
+                                 record.getAnnotationValues());
     }
 
     private int[] getMaskValues(Object[] attributeValues) {
@@ -172,5 +212,4 @@ public class RecordAggregator implements RecordTransformer {
         }
         return commonLength;
     }
-
 }

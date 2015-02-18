@@ -56,11 +56,30 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private Map<String, DtoProduction> productionsMap;
     private Map<String, PortalView> idToViewMap;
     private DeckLayoutPanel viewPanel;
+    private PortalView[] views;
+    private Map<String, Integer> viewTabIndices;
+    private DecoratedTabPanel mainPanel;
     // A timer that periodically retrieves production statuses from server
     private Timer productionsUpdateTimer;
     private RegionMapModel regionMapModel;
     private ManageProductionsView manageProductionsView;
     private boolean productionListFiltered;
+    private Boolean isCalvalusUser = null;
+    private Boolean isCcUser = null;
+
+    public boolean withPortalFeature(String featureName) {
+        if ("analysistab".equals(featureName)) {
+            return isCalvalusUser;
+        } else if ("othersets".equals(featureName)) {
+            return isCalvalusUser;
+        } else if ("catalogue".equals(featureName)) {
+            return isCalvalusUser;
+        } else if ("unlimitedJobSize".equals(featureName)) {
+            return isCalvalusUser;
+        } else {
+            return false;
+        }
+    }
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
@@ -100,8 +119,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 final BundleFilter allUserFilter = new BundleFilter();
                 allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
                 backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
-
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
+
+                GWT.log("checking for user roles asynchronously");
+                backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
+                backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
             }
         };
         // load all the libs for use in the maps
@@ -184,6 +206,31 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         regionMapModel = new RegionMapModelImpl(getRegions());
 
         manageProductionsView = new ManageProductionsView(this);
+//        if (withPortalFeature("analysistab")) {
+//            views = new PortalView[]{
+//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                    new OrderL2ProductionView(this),
+//                    new OrderMAProductionView(this),
+//                    new OrderL3ProductionView(this),
+//                    new OrderTAProductionView(this),
+//                    new OrderFreshmonProductionView(this),
+//                    new BootstrappingView(this),
+//                    new OrderVCProductionView(this),
+//                    new OrderMACProductionView(this),
+//                    new OrderL2toL3ProductionView(this),
+//                    new ManageRegionsView(this),
+//                    new ManageBundleView(this),
+//                    manageProductionsView,
+//            };
+//        } else {
+//            views = new PortalView[]{
+//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                    new OrderL2ProductionView(this),
+//                    new OrderL3ProductionView(this),
+//                    new ManageRegionsView(this),
+//                    manageProductionsView,
+//            };
+//        }
 
         viewPanel = new DeckLayoutPanel();
         viewPanel.setSize("95em", "150em");
@@ -302,7 +349,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return regions != null
                && productSets != null
                && systemProcessors != null && userProcessors != null && allUserProcessors != null
-               && productions != null;
+               && productions != null
+               && isCcUser != null
+               && isCalvalusUser != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -463,6 +512,33 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
             GWT.log("Failed to get productions from server", caught);
+        }
+    }
+
+    private class UserRolesCallback implements AsyncCallback<Boolean> {
+        String role;
+        public UserRolesCallback(String role) {
+            this.role = role;
+        }
+
+        @Override
+        public void onSuccess(Boolean value) {
+            if ("calvalus".equals(role)) {
+                isCalvalusUser = value;
+                GWT.log("User role " + role + " is " + value);
+            } else if ("coastcolour".equals(role)) {
+                isCcUser = value;
+                GWT.log("User role " + role + " is " + value);
+            } else {
+                GWT.log("Unknown user role " + role + " is " + value);
+            }
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            GWT.log("Failed to check for user role " + role + " at server", caught);
         }
     }
 }

@@ -64,6 +64,14 @@
                         </tr>
                         <tr>
                             <td>
+                                <g:Label>Only extract complete Macro pixel:</g:Label>
+                            </td>
+                            <td colspan="2">
+                                <g:CheckBox ui:field='onlyExtractComplete'/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <g:Label>Grouping column:</g:Label>
                             </td>
                             <td colspan="2">
@@ -86,7 +94,7 @@
                 </g:HTMLPanel>
             </g:HorizontalPanel>
 
-            <g:HTMLPanel>
+            <g:HTMLPanel ui:field="expressionTable">
                 <table cellspacing="2">
                     <tr>
                         <td>

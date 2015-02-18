@@ -31,6 +31,7 @@ import org.jfree.chart.renderer.xy.XYErrorRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.function.Function2D;
 import org.jfree.data.function.LineFunction2D;
+import org.jfree.data.time.Day;
 import org.jfree.data.time.Month;
 import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;
@@ -144,6 +145,33 @@ public class TAGraph {
         return chart;
     }
 
+    public JFreeChart createTimeseriesSigmaGraph(String regionName, int featureIndex, int sigmaIndex) {
+
+        String featureName = taResult.getOutputFeatureNames()[featureIndex];
+        List<TAResult.Record> records = taResult.getRecords(regionName);
+
+        XYDataset dataset1 = createTimeseriesDataset(records, featureIndex);
+        YIntervalSeriesCollection dataset2 = createSigmaDataset(records, featureIndex, sigmaIndex);
+
+        DateAxis dateAxis = new DateAxis("Time");
+        dateAxis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        NumberAxis numberAxis = new NumberAxis(featureName);
+
+        XYLineAndShapeRenderer lineRenderer = new XYLineAndShapeRenderer(true, false);
+        lineRenderer.setSeriesPaint(0, Color.BLUE);
+
+        XYErrorRenderer xyerrorrenderer = new XYErrorRenderer();
+        xyerrorrenderer.setBaseLinesVisible(false);
+        xyerrorrenderer.setBaseShapesVisible(false);
+        xyerrorrenderer.setErrorPaint(Color.BLACK);
+
+        XYPlot plot = new XYPlot(dataset1, dateAxis, numberAxis, lineRenderer);
+        plot.setRenderer(1, xyerrorrenderer);
+        plot.setDataset(1, dataset2);
+
+        return new JFreeChart("Timeseries for " + regionName, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
+    }
+
     public static void writeChart(JFreeChart chart, OutputStream outputStream) throws IOException {
         BufferedImage bufferedImage = chart.createBufferedImage(800, 400);
         ImageIO.write(bufferedImage, "PNG", outputStream);
@@ -242,7 +270,9 @@ public class TAGraph {
                 int year = calendar.get(Calendar.YEAR);
                 TimeSeries ts = getTimeSeries(yearlyTimeSeries, year);
                 calendar.set(Calendar.YEAR, 2000);
-                Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //allow also shorter sampling periods than one month, down to one day
+                Day time = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
                 double sample = record.outputVector.get(featureIndex);
                 ts.add(time, sample);
             } catch (ParseException e) {
@@ -276,17 +306,36 @@ public class TAGraph {
             try {
                 Date date = getCenterDate(record);
                 calendar.setTime(date);
-                Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //Month time = new Month(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
+                //allow also shorter sampling periods than one month, down to one day
+                Day time = new Day(calendar.getTime(), ProductData.UTC.UTC_TIME_ZONE, Locale.ENGLISH);
                 double sample = record.outputVector.get(featureIndex);
                 ts.add(time, sample);
             } catch (ParseException e) {
                 e.printStackTrace();  //ignore this record
             }
         }
-        return new TimeSeriesCollection(ts);
+        return new TimeSeriesCollection(ts, ProductData.UTC.UTC_TIME_ZONE);
     }
 
-    private static Date getCenterDate(TAResult.Record record) throws ParseException {
+    private YIntervalSeriesCollection createSigmaDataset(List<TAResult.Record> records, int featureIndex, int sigmaIndex) {
+        YIntervalSeries yintervalseries = new YIntervalSeries("Sigma");
+        for (TAResult.Record record : records) {
+            try {
+                long time = getCenterDate(record).getTime();
+                double mean = record.outputVector.get(featureIndex);
+                double sigma = record.outputVector.get(sigmaIndex);
+                yintervalseries.add(time, mean, mean - sigma, mean + sigma);
+            } catch (ParseException e) {
+                e.printStackTrace();  //ignore this record
+            }
+        }
+        YIntervalSeriesCollection yIntervalSeriesCollection = new YIntervalSeriesCollection();
+        yIntervalSeriesCollection.addSeries(yintervalseries);
+        return yIntervalSeriesCollection;
+    }
+
+    private static synchronized Date getCenterDate(TAResult.Record record) throws ParseException {
         Date date1 = DATE_FORMAT.parse(record.startDate);
         Date date2 = DATE_FORMAT.parse(record.stopDate);
         long t = (date2.getTime() - date1.getTime()) / 2;

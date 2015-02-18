@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -31,15 +31,15 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.io.FileUtils;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -54,7 +54,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int MiB = 1024 * 1024;
-    public static final String EXCLUSION_REASON_EXPRESSION = "RECORD_EXPRESSION";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -74,112 +73,127 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
                                context.getTaskAttemptID(), split, (MiB / 2 + split.getLength()) / MiB));
 
-        RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
 
         long t0;
 
         t0 = now();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
-        pm.beginTask("Match-Up analysis", 100);
+        boolean pullProcessing = processorAdapter.supportsPullProcessing();
+        final int progressForProcessing = pullProcessing ? 20 : 80;
+        final int progressForSaving = maConfig.getSaveProcessedProducts() ? (pullProcessing ? 80 : 20) : 0;
+        final int progressForExtraction = pullProcessing ? 80 : 20;
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
+        pm.beginTask("Match-Up analysis", progressForProcessing + progressForSaving + progressForExtraction);
+        ProgressMonitor extractionPM = SubProgressMonitor.create(pm, progressForExtraction);
         try {
             Product inputProduct = processorAdapter.getInputProduct();
+            long productOpenTime = (now() - t0);
+            LOG.info(String.format("%s opened input product %s, took %s sec",
+                                   context.getTaskAttemptID(), inputProduct.getName(), productOpenTime / 1E3));
+
+            t0 = now();
+            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+            Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
                                                                      maConfig.getMaxTimeDifference(),
-                                                                     referenceRecordSource.getHeader().hasTime());
-            Iterable<Record> records;
+                                                                     referenceRecordHeader.hasTime());
+            List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
             try {
-                records = referenceRecordSource.getRecords();
+                pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
             } catch (Exception e) {
-                throw new RuntimeException("Failed to retrieve input records.", e);
-            }
-            Area area = new Area();
-            int macroPixelSize = maConfig.getMacroPixelSize();
-
-            for (Record record : records) {
-                PixelPos pixelPos = pixelPosProvider.getPixelPos(record);
-                if (pixelPos != null) {
-                    Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
-                                                        (int) pixelPos.y - macroPixelSize / 2,
-                                                        macroPixelSize, macroPixelSize);
-                    area.add(new Area(rectangle));
-                }
+                throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
             }
 
-            if (!area.isEmpty()) {
-                if (!processorAdapter.supportsPullProcessing()) {
+            Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
+
+            long referencePixelTime = (now() - t0);
+            LOG.info(String.format("tested reference records, found %s matches, took %s sec",
+                                   pixelPosRecords.size(), referencePixelTime / 1E3));
+
+            if (!pixelArea.isEmpty()) {
+                t0 = now();
+                if (!pullProcessing) {
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
-                    Rectangle maRectangle = area.getBounds();
-                    maRectangle.grow(20, 20); // grow relevant area to have a bit surrounding product content
-                    processorAdapter.setProcessingRectangle(fullScene.intersection(maRectangle));
+                    Rectangle maRectangle = pixelArea.getBounds();
+                    maRectangle.grow(20, 20); // grow relevant pixelArea to have a bit surrounding product content
+                    Rectangle processingRectangle = fullScene.intersection(maRectangle);
+                    LOG.info("processing rectangle: " + processingRectangle);
+                    processorAdapter.setProcessingRectangle(processingRectangle);
                 }
-                Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
-                if (product == null) {
+                Product processedProduct = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
+                if (processedProduct == null) {
                     LOG.info("Processed product is null!");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Unused products").increment(1);
                     return;
                 }
+                if (maConfig.getSaveProcessedProducts()) {
+                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
+                }
 
                 // Actually wrong name for processed products, but we need the field "source_name" in the export data table
-                product.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
+                processedProduct.setName(FileUtils.getFilenameWithoutExtension(inputPath.getName()));
 
                 context.progress();
-                long productOpenTime = (now() - t0);
-                LOG.info(String.format("%s opened product %s, took %s sec",
-                                       context.getTaskAttemptID(), product.getName(), productOpenTime / 1E3));
+                productOpenTime = (now() - t0);
+                LOG.info(String.format("opened processed product %s, took %s sec", processedProduct.getName(), productOpenTime / 1E3));
 
                 t0 = now();
+                extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
                 ProductRecordSource productRecordSource;
-                Iterable<Record> extractedRecords;
+                Iterable<Record> extractedRecordSource;
                 try {
-                    //re-create referenceRecordSource to read from the beginning (TODO could be improved)
-                    referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
-                    productRecordSource = new ProductRecordSource(product, referenceRecordSource, maConfig);
-                    extractedRecords = productRecordSource.getRecords();
+                    AffineTransform transform = processorAdapter.getInput2OutputTransform();
+                    if (transform == null) {
+                        transform = new AffineTransform();
+                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+                        pixelPosProvider = new PixelPosProvider(processedProduct,
+                                                                PixelTimeProvider.create(processedProduct),
+                                                                maConfig.getMaxTimeDifference(),
+                                                                referenceRecordHeader.hasTime());
+
+                        try {
+                            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecordSource.getRecords());
+                        } catch (Exception e) {
+                            throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
+                        }
+                    }
+                    productRecordSource = new ProductRecordSource(processedProduct, referenceRecordHeader, pixelPosRecords, maConfig, transform);
+                    extractedRecordSource = productRecordSource.getRecords();
                     context.progress();
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to retrieve input records.", e);
+                    throw new RuntimeException("Failed to retrieve input records. " + e.getMessage(), e);
                 }
 
                 long recordReadTime = (now() - t0);
-                LOG.info(String.format("%s read input records from %s, took %s sec",
-                                       context.getTaskAttemptID(), maConfig.getRecordSourceUrl(),
+                LOG.info(String.format("read input records from %s, took %s sec",
+                                       maConfig.getRecordSourceUrl(),
                                        recordReadTime / 1E3));
                 logAttributeNames(productRecordSource);
 
-                Header header = productRecordSource.getHeader();
-                Rectangle inputRect = processorAdapter.getInputRectangle();
-                RecordTransformer productOffsetTransformer = ProductRecordSource.createShiftTransformer(header, inputRect);
-                RecordTransformer recordAggregator = ProductRecordSource.createAggregator(header, maConfig);
-                RecordFilter recordFilter = ProductRecordSource.createRecordFilter(header, maConfig);
-                RecordSelector recordSelector = productRecordSource.createRecordSelector();
-
                 t0 = now();
-                Collection<Record> aggregatedRecords = new ArrayList<Record>();
-                int exclusionIndex = header.getAnnotationIndex(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
-                for (Record extractedRecord : extractedRecords) {
-                    Record shiftedRecord = productOffsetTransformer.transform(extractedRecord);
-                    Record aggregatedRecord = recordAggregator.transform(shiftedRecord);
-                    String reason = (String) aggregatedRecord.getAnnotationValues()[exclusionIndex];
-                    if (reason.isEmpty() && !recordFilter.accept(aggregatedRecord)) {
-                        aggregatedRecord.getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_EXPRESSION;
-                    }
-                    aggregatedRecords.add(aggregatedRecord);
-                }
+                Header header = productRecordSource.getHeader();
+                RecordTransformer aggregator = RecordAggregator.create(header, maConfig.getFilteredMeanCoeff());
+                RecordTransformer expressionFilter = RecordFilterTransformer.createExpressionFilter(header, maConfig.getGoodRecordExpression());
+                RecordTransformer overlappingFilter = OverlappingRecordTransform.create(header, maConfig.getMacroPixelSize(), maConfig.getFilterOverlapping());
 
-                Iterable<Record> selectedRecords = recordSelector.select(aggregatedRecords);
+                Iterable<Record> extractedRecords = monitorProgress(extractedRecordSource, extractionPM);
+                Iterable<Record> aggregatedRecords = aggregator.transform(extractedRecords);
+                Iterable<Record> expressionFilteredRecords = expressionFilter.transform(aggregatedRecords);
+                Iterable<Record> overlappingFilteredRecords = overlappingFilter.transform(expressionFilteredRecords);
+
                 int numMatchUps = 0;
-                for (Record selectedRecord : selectedRecords) {
-                    context.write(new Text(String.format("%s_%06d", product.getName(), ++numMatchUps)),
+                for (Record selectedRecord : overlappingFilteredRecords) {
+                    context.write(new Text(String.format("%06d_%s", selectedRecord.getId(), processedProduct.getName())),
                                   new RecordWritable(selectedRecord.getAttributeValues(), selectedRecord.getAnnotationValues()));
                     context.progress();
+                    extractionPM.worked(1);
+                    numMatchUps++;
                 }
 
                 long recordWriteTime = (now() - t0);
-                LOG.info(String.format("%s found %s match-ups, took %s sec",
-                                       context.getTaskAttemptID(), numMatchUps, recordWriteTime / 1E3));
+                LOG.info(String.format("found %s match-ups, took %s sec", numMatchUps, recordWriteTime / 1E3));
                 if (numMatchUps > 0) {
                     // write header
                     context.write(HEADER_KEY, new RecordWritable(header.getAttributeNames(), header.getAnnotationNames()));
@@ -195,13 +209,13 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             t0 = now();
             context.progress();
         } finally {
+            extractionPM.done();
             pm.done();
             processorAdapter.dispose();
         }
 
         long productCloseTime = (now() - t0);
-        LOG.info(String.format("%s closed input product, took %s sec",
-                               context.getTaskAttemptID(), productCloseTime / 1E3));
+        LOG.info(String.format("closed input product, took %s sec", productCloseTime / 1E3));
 
         // write final log entry for runtime measurements
         long mapperTotalTime = (now() - mapperStartTime);
@@ -234,5 +248,35 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private static long now() {
         return System.currentTimeMillis();
+    }
+
+    private static Iterable<Record> monitorProgress(Iterable<Record> recordIterable, ProgressMonitor pm) {
+        return new Iterable<Record>() {
+            @Override
+            public Iterator<Record> iterator() {
+                return new RecIt(recordIterable.iterator(), pm);
+            }
+        };
+    }
+
+    private static class RecIt extends RecordIterator {
+
+        private final Iterator<Record> inputIt;
+        private final ProgressMonitor pm;
+
+        private RecIt(Iterator<Record> inputIt, ProgressMonitor pm) {
+            this.inputIt = inputIt;
+            this.pm = pm;
+        }
+
+        @Override
+        protected Record getNextRecord() {
+            if (inputIt.hasNext()) {
+                Record next = inputIt.next();
+                pm.worked(1);
+                return next;
+            }
+            return null;
+        }
     }
 }

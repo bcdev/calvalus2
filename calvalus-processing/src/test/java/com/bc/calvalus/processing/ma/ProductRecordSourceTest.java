@@ -1,5 +1,9 @@
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.processing.utils.ProductTransformation;
+import org.esa.beam.framework.dataio.ProductFlipper;
+import org.esa.beam.framework.dataio.ProductSubsetBuilder;
+import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
@@ -10,6 +14,8 @@ import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,17 +37,27 @@ public class ProductRecordSourceTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg1CannotBeNull() throws Exception {
-        new ProductRecordSource(null, createRecordSource(1), new MAConfig());
+        new ProductRecordSource(null, new DefaultHeader(true, true, "foo"), Collections.emptyList(), new MAConfig(), new AffineTransform());
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg2CannotBeNull() throws Exception {
-        new ProductRecordSource(new Product("a", "b", 4, 4), null, new MAConfig());
+        new ProductRecordSource(new Product("a", "b", 4, 4), null, Collections.emptyList(), new MAConfig(), new AffineTransform());
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg3CannotBeNull() throws Exception {
-        new ProductRecordSource(new Product("a", "b", 4, 4), createRecordSource(1), null);
+        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), null, new MAConfig(), new AffineTransform());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructorArg4CannotBeNull() throws Exception {
+        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), Collections.emptyList(), null, new AffineTransform());
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testConstructorArg5CannotBeNull() throws Exception {
+        new ProductRecordSource(new Product("a", "b", 4, 4), new DefaultHeader(true, true, "foo"), Collections.emptyList(), new MAConfig(), null);
     }
 
     @Test
@@ -50,10 +66,10 @@ public class ProductRecordSourceTest {
         config.setMacroPixelSize(1);
 
         RecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                     new TestRecord(new GeoPos(1, 0)),
-                                                     new TestRecord(new GeoPos(1, 1)),
-                                                     new TestRecord(new GeoPos(0, 0)),
-                                                     new TestRecord(new GeoPos(0, 1)));
+                                                     new TestRecord(0, new GeoPos(1, 0)),
+                                                     new TestRecord(1, new GeoPos(1, 1)),
+                                                     new TestRecord(2, new GeoPos(0, 0)),
+                                                     new TestRecord(3, new GeoPos(0, 1)));
 
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         int n = 0;
@@ -69,9 +85,9 @@ public class ProductRecordSourceTest {
     public void testThatRecordsAreNotGeneratedForOutlyingCoordinates() throws Exception {
         // same test, but this time using the iterator
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(-1, -1)),
-                                                            new TestRecord(new GeoPos(-1, 2)),
-                                                            new TestRecord(new GeoPos(-3, -1)));
+                                                            new TestRecord(0, new GeoPos(-1, -1)),
+                                                            new TestRecord(1, new GeoPos(-1, 2)),
+                                                            new TestRecord(2, new GeoPos(-3, -1)));
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
@@ -86,13 +102,13 @@ public class ProductRecordSourceTest {
     @Test
     public void testTheIteratorForSourceRecordsThatAreInAndOutOfProductBoundaries() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(1, 0)),// in
-                                                            new TestRecord(new GeoPos(-1, 2)),   // out
-                                                            new TestRecord(new GeoPos(1, 1)), // in
-                                                            new TestRecord(new GeoPos(-1, -1)), // out
-                                                            new TestRecord(new GeoPos(0, 0)), // in
-                                                            new TestRecord(new GeoPos(0, 1)), // in
-                                                            new TestRecord(new GeoPos(-3, -1))); // out
+                                                            new TestRecord(0, new GeoPos(1, 0)),// in
+                                                            new TestRecord(1, new GeoPos(-1, 2)),   // out
+                                                            new TestRecord(2, new GeoPos(1, 1)), // in
+                                                            new TestRecord(3, new GeoPos(-1, -1)), // out
+                                                            new TestRecord(4, new GeoPos(0, 0)), // in
+                                                            new TestRecord(5, new GeoPos(0, 1)), // in
+                                                            new TestRecord(6, new GeoPos(-3, -1))); // out
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
@@ -107,11 +123,11 @@ public class ProductRecordSourceTest {
     @Test
     public void testThatInputSortingWorks() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
-                                                            new TestRecord(new GeoPos(0.0F, 0.0F)),
-                                                            new TestRecord(new GeoPos(0.0F, 1.0F)),
-                                                            new TestRecord(new GeoPos(1.0F, 0.0F)),
-                                                            new TestRecord(new GeoPos(0.5F, 0.5F)),
-                                                            new TestRecord(new GeoPos(1.0F, 1.0F)));
+                                                            new TestRecord(0, new GeoPos(0.0F, 0.0F)),
+                                                            new TestRecord(1, new GeoPos(0.0F, 1.0F)),
+                                                            new TestRecord(2, new GeoPos(1.0F, 0.0F)),
+                                                            new TestRecord(3, new GeoPos(0.5F, 0.5F)),
+                                                            new TestRecord(4, new GeoPos(1.0F, 1.0F)));
 
         final int PIXEL_Y = 3;
 
@@ -284,11 +300,11 @@ public class ProductRecordSourceTest {
         config.setGoodPixelExpression("b1 == 0");
 
         ProductRecordSource output = createProductRecordSource(2, 3, new DefaultRecordSource(new DefaultHeader(true, false, "lat", "lon"),
-                                                                                             new TestRecord(new GeoPos(1.0F, 0.0F))), config);
+                                                                                             new TestRecord(0, new GeoPos(1.0F, 0.0F))), config);
 
         assertNotNull(output.getHeader());
         assertTrue(output.getHeader().hasLocation());
-        assertTrue(output.getHeader().hasTime());   // pixel_time in attributes
+        assertFalse(output.getHeader().hasTime());
         assertNotNull(output.getHeader().getAttributeNames());
 
         Iterable<Record> records = output.getRecords();
@@ -380,21 +396,177 @@ public class ProductRecordSourceTest {
 
         final int PIXEL_X = 2;
         final int PIXEL_Y = 3;
+        final int B2 = 7;
+
+        Object[] firstAttributeValues = records.get(0).getAttributeValues();
 
         //  "pixel_x" : int[9]
-        Object pixelXValue = records.get(0).getAttributeValues()[PIXEL_X];
+        Object pixelXValue = firstAttributeValues[PIXEL_X];
         assertEquals(int[].class, pixelXValue.getClass());
         int[] actualX = (int[]) pixelXValue;
         assertEquals(9, actualX.length);
+        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
 
         //  "pixel_y" : int[9]
-        Object pixelYValue = records.get(0).getAttributeValues()[PIXEL_Y];
+        Object pixelYValue = firstAttributeValues[PIXEL_Y];
         assertEquals(int[].class, pixelYValue.getClass());
         int[] actualY = (int[]) pixelYValue;
         assertEquals(9, actualY.length);
-
-        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
         assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualY);
+
+        //  "b2" : float[9]
+        Object b2Value = firstAttributeValues[B2];
+        assertEquals(int[].class, b2Value.getClass());
+        int[] actualB2 = (int[]) b2Value;
+        assertEquals(9, actualB2.length);
+        assertArrayEquals(new int[]{0, 0, 0, 1, 1, 1, 2, 2, 2}, actualB2);
+
+    }
+
+    @Test
+    public void test3x3MacroPixelGeneratesFloatArraysWith9ElementsUsingTransformation_subset() throws Exception {
+        MAConfig config = new MAConfig();
+        config.setCopyInput(false);
+        config.setMacroPixelSize(3);
+
+        int w = 2 * 3;
+        int h = 3 * 3;
+
+        // This (lat,lon) corresponds to the center of the middle left pixel of the macro pixel (x=1.5, y=4.5)
+        float lon = 0.0F + 1.0F / (w - 1.0F);
+        float lat = 1.0F - 4.0F / (h - 1.0F);
+
+        RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
+                                                     RecordUtils.create(new GeoPos(lat, lon), null));  // --> center of 2nd macro pixel
+
+        Rectangle subsetRect = new Rectangle(0, 3, w, 6);
+        Product product = createProduct(w, h);
+        ProductSubsetDef subsetDef = new ProductSubsetDef();
+        subsetDef.setRegion(subsetRect);
+        subsetDef.setTreatVirtualBandsAsRealBands(true);
+        Product subset = ProductSubsetBuilder.createProductSubset(product, subsetDef, "subset", "subset");
+
+        AffineTransform transform = new ProductTransformation(subsetRect, false, false).getTransform();
+
+        Header referenceRecordHeader = input.getHeader();
+        PixelPosProvider pixelPosProvider = new PixelPosProvider(product,
+                                                                 PixelTimeProvider.create(product),
+                                                                 config.getMaxTimeDifference(),
+                                                                 referenceRecordHeader.hasTime());
+
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
+        try {
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(input.getRecords());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+        assertEquals(1, pixelPosRecords.size());
+        assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
+
+        ProductRecordSource output = new ProductRecordSource(subset, referenceRecordHeader, pixelPosRecords, config, transform);
+
+        List<Record> records = getRecords(output);
+        assertEquals(1, records.size());
+
+        final int PIXEL_X = 2;
+        final int PIXEL_Y = 3;
+        final int B2 = 7;
+
+        Object[] attributeValues = records.get(0).getAttributeValues();
+        //  "pixel_x" : int[9]
+        Object pixelXValue = attributeValues[PIXEL_X];
+        assertEquals(int[].class, pixelXValue.getClass());
+        int[] actualX = (int[]) pixelXValue;
+        assertEquals(9, actualX.length);
+        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
+
+        //  "pixel_y" : int[9]
+        Object pixelYValue = attributeValues[PIXEL_Y];
+        assertEquals(int[].class, pixelYValue.getClass());
+        int[] actualY = (int[]) pixelYValue;
+        assertEquals(9, actualY.length);
+        assertArrayEquals(new int[]{3, 3, 3, 4, 4, 4, 5, 5, 5}, actualY);
+
+        //  "b2" : int[9]
+        Object b2Value = attributeValues[B2];
+        assertEquals(int[].class, b2Value.getClass());
+        int[] actualB2 = (int[]) b2Value;
+        assertEquals(9, actualB2.length);
+        assertArrayEquals(new int[]{3, 3, 3, 4, 4, 4, 5, 5, 5}, actualB2);
+    }
+
+    @Test
+    public void test3x3MacroPixelGeneratesFloatArraysWith9ElementsUsingTransformation_SubsetAndFlip() throws Exception {
+        MAConfig config = new MAConfig();
+        config.setCopyInput(false);
+        config.setMacroPixelSize(3);
+
+        int w = 2 * 3;
+        int h = 3 * 3;
+
+        // This (lat,lon) corresponds to the center of the middle left pixel of the macro pixel (x=1.5, y=4.5)
+        float lon = 0.0F + 1.0F / (w - 1.0F);
+        float lat = 1.0F - 4.0F / (h - 1.0F);
+
+        RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
+                                                     RecordUtils.create(new GeoPos(lat, lon), null));  // --> center of 2nd macro pixel
+
+        Rectangle subsetRect = new Rectangle(0, 3, w, 6);
+        Product product = createProduct(w, h);
+        ProductSubsetDef subsetDef = new ProductSubsetDef();
+        subsetDef.setRegion(subsetRect);
+        subsetDef.setTreatVirtualBandsAsRealBands(true);
+        Product subset = ProductSubsetBuilder.createProductSubset(product, subsetDef, "subset", "subset");
+
+        Product flippedProduct = ProductFlipper.createFlippedProduct(subset, ProductFlipper.FLIP_BOTH, "flip", "flip");
+
+        AffineTransform transform = new ProductTransformation(subsetRect, true, true).getTransform();
+
+        Header referenceRecordHeader = input.getHeader();
+        PixelPosProvider pixelPosProvider = new PixelPosProvider(product,
+                                                                 PixelTimeProvider.create(product),
+                                                                 config.getMaxTimeDifference(),
+                                                                 referenceRecordHeader.hasTime());
+
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
+        try {
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(input.getRecords());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+        assertEquals(1, pixelPosRecords.size());
+        assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
+
+        ProductRecordSource output = new ProductRecordSource(flippedProduct, referenceRecordHeader, pixelPosRecords, config, transform);
+
+        List<Record> records = getRecords(output);
+        assertEquals(1, records.size());
+
+        final int PIXEL_X = 2;
+        final int PIXEL_Y = 3;
+        final int B2 = 7;
+
+        Object[] attributeValues = records.get(0).getAttributeValues();
+        //  "pixel_x" : int[9]
+        Object pixelXValue = attributeValues[PIXEL_X];
+        assertEquals(int[].class, pixelXValue.getClass());
+        int[] actualX = (int[]) pixelXValue;
+        assertEquals(9, actualX.length);
+        assertArrayEquals(new int[]{0, 1, 2, 0, 1, 2, 0, 1, 2}, actualX);
+
+        //  "pixel_y" : int[9]
+        Object pixelYValue = attributeValues[PIXEL_Y];
+        assertEquals(int[].class, pixelYValue.getClass());
+        int[] actualY = (int[]) pixelYValue;
+        assertEquals(9, actualY.length);
+        assertArrayEquals(new int[]{3, 3, 3, 4, 4, 4, 5, 5, 5}, actualY);
+
+        //  "b2" : int[9]
+        Object b2Value = attributeValues[B2];
+        assertEquals(int[].class, b2Value.getClass());
+        int[] actualB2 = (int[]) b2Value;
+        assertEquals(9, actualB2.length);
+        assertArrayEquals(new int[]{3, 3, 3, 4, 4, 4, 5, 5, 5}, actualB2);
     }
 
     @Test
@@ -432,38 +604,30 @@ public class ProductRecordSourceTest {
         assertEquals(1, records.size());
     }
 
-    @Test
-    public void testYXComparator() throws Exception {
-        ProductRecordSource.YXComparator comparator = new ProductRecordSource.YXComparator();
-        List<ProductRecordSource.PixelPosRecord> list = new ArrayList<ProductRecordSource.PixelPosRecord>();
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(10, 0), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(12, 0), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(1, 6), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(16, 3), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(1, 3), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(4, 0), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(130, 23.498f), null));
-        list.add(new ProductRecordSource.PixelPosRecord(new PixelPos(125, 23.501f), null));
-
-        Collections.sort(list, comparator);
-        assertEquals(new PixelPos(4, 0), list.get(0).pixelPos);
-        assertEquals(new PixelPos(10, 0), list.get(1).pixelPos);
-        assertEquals(new PixelPos(12, 0), list.get(2).pixelPos);
-        assertEquals(new PixelPos(1, 3), list.get(3).pixelPos);
-        assertEquals(new PixelPos(16, 3), list.get(4).pixelPos);
-        assertEquals(new PixelPos(1, 6), list.get(5).pixelPos);
-        assertEquals(new PixelPos(125, 23.501f), list.get(6).pixelPos);
-        assertEquals(new PixelPos(130, 23.498f), list.get(7).pixelPos);
-
-    }
-
     private ProductRecordSource createProductRecordSource(int w, int h, RecordSource input, MAConfig config) {
         Product product = createProduct(w, h);
         return createProductRecordSource(product, input, config);
     }
 
-    private ProductRecordSource createProductRecordSource(Product product, RecordSource input, MAConfig config) {
-        return new ProductRecordSource(product, input, config);
+    private ProductRecordSource createProductRecordSource(Product product, RecordSource referenceRecords, MAConfig maConfig) {
+        return createProductRecordSource(product, referenceRecords, maConfig, new AffineTransform());
+    }
+
+    private ProductRecordSource createProductRecordSource(Product product, RecordSource referenceRecords, MAConfig maConfig, AffineTransform tranform) {
+        Header referenceRecordHeader = referenceRecords.getHeader();
+        PixelPosProvider pixelPosProvider = new PixelPosProvider(product,
+                                                                 PixelTimeProvider.create(product),
+                                                                 maConfig.getMaxTimeDifference(),
+                                                                 referenceRecordHeader.hasTime());
+
+        List<PixelPosProvider.PixelPosRecord> pixelPosRecords;
+        try {
+            pixelPosRecords = pixelPosProvider.computePixelPosRecords(referenceRecords.getRecords());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to retrieve input records.", e);
+        }
+
+        return new ProductRecordSource(product, referenceRecordHeader, pixelPosRecords, maConfig, tranform);
     }
 
     private Product createProduct(int w, int h) {
@@ -506,7 +670,7 @@ public class ProductRecordSourceTest {
 
     private List<Record> getRecords(RecordSource source) throws Exception {
         Iterable<Record> records = source.getRecords();
-        ArrayList<Record> list = new ArrayList<Record>();
+        ArrayList<Record> list = new ArrayList<>();
         for (Record record : records) {
             assertNotNull("Unexpected null record detected.", record);
             list.add(record);
@@ -524,10 +688,17 @@ public class ProductRecordSourceTest {
 
     protected static class TestRecord implements Record {
 
+        private final int recordId;
         GeoPos coordinate;
 
-        private TestRecord(GeoPos coordinate) {
+        private TestRecord(int recordId, GeoPos coordinate) {
+            this.recordId = recordId;
             this.coordinate = new GeoPos(coordinate);
+        }
+
+        @Override
+        public int getId() {
+            return recordId;
         }
 
         @Override

@@ -3,6 +3,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
@@ -15,7 +16,6 @@ import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.io.File;
@@ -38,12 +38,16 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
+        String archiveRootDir = serviceConfiguration.get("calvalus.portal.archiveRootDir");
+        if (archiveRootDir == null) {
+            archiveRootDir = "eodata";
+        }
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
-            JobClient jobClient = new JobClient(jobConf);
-            final InventoryService inventoryService = new HdfsInventoryService(jobClient.getFs());
-            final HadoopProcessingService processingService = new HadoopProcessingService(jobClient);
+            JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
+            final InventoryService inventoryService = new HdfsInventoryService(jobClientsMap, archiveRootDir);
+            final HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap);
             final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {
                 productionStore = new MemoryProductionStore();

@@ -11,15 +11,19 @@ import static java.lang.Math.PI;
  *
  * @author Norman
  */
-public class L3ConfigUtils  {
+public class L3ConfigUtils {
 
     public static int getPeriodCount(Date minDate, Date maxDate, int steppingPeriodDays, int compositingPeriodDays) {
         long millisPerDay = 24L * 60L * 60L * 1000L;
         long deltaMillis = maxDate.getTime() - minDate.getTime() + millisPerDay;
         int deltaDays = (int) (deltaMillis / millisPerDay);
-        int periodCount = deltaDays / steppingPeriodDays;
-        int remainingDays = deltaDays % steppingPeriodDays;
-        if (compositingPeriodDays <= remainingDays) {
+        int periodCount = 0;
+        int remainingDays = deltaDays;
+        while (remainingDays >= Math.abs(compositingPeriodDays)) {
+            periodCount++;
+            remainingDays -= Math.abs(steppingPeriodDays);
+        }
+        if (steppingPeriodDays == -30 && periodCount == 0 && deltaDays >= 28) {
             periodCount++;
         }
         return periodCount;

@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
 import org.esa.beam.binning.PlanetaryGrid;
+import org.esa.beam.binning.operator.BinningConfig;
 
 /**
  * Partitions the bins by their bin index.
@@ -43,12 +44,18 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     @Override
     public int getPartition(LongWritable binIndex, L3SpatialBin spatialBin, int numPartitions) {
         long idx = binIndex.get();
-        int row = planetaryGrid.getRowIndex(idx);
-        int partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
-        if (partition < 0) {
-            partition = 0;
-        } else if (partition >= numPartitions) {
-            partition = numPartitions - 1;
+        int partition;
+        // for metadata contributions
+        if (idx < 0) {
+             partition = 0;
+        } else {
+            int row = planetaryGrid.getRowIndex(idx);
+            partition = ((row - minRowIndex) * numPartitions) / numRowsCovered;
+            if (partition < 0) {
+                partition = 0;
+            } else if (partition >= numPartitions) {
+                partition = numPartitions - 1;
+            }
         }
         return partition;
     }
@@ -56,8 +63,8 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
-        L3Config l3Config = L3Config.get(conf);
-        this.planetaryGrid = l3Config.createPlanetaryGrid();
+        BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
+        this.planetaryGrid = binningConfig.createPlanetaryGrid();
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = JobUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {

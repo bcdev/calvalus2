@@ -17,6 +17,10 @@
     <!-- Other module inherits                                      -->
     <inherits name='com.bc.calvalus.commons.CalvalusCommons'/>
 
+<!--
+    <inherits name="com.google.gwt.logging.Logging"/>
+-->
+
     <!-- Specify the app entry point class.                         -->
     <entry-point class='com.bc.calvalus.portal.client.CalvalusPortal'/>
 

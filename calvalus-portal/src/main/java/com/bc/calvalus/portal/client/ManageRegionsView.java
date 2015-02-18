@@ -50,9 +50,19 @@ public class ManageRegionsView extends PortalView {
         });
 
         HorizontalPanel buttonPanel = new HorizontalPanel();
-        buttonPanel.setWidth("100%");
-        buttonPanel.add(submitButton);
-        buttonPanel.setCellHorizontalAlignment(submitButton, HasHorizontalAlignment.ALIGN_RIGHT);
+        HorizontalPanel buttonPanel1 = new HorizontalPanel();
+        HorizontalPanel buttonPanel2 = new HorizontalPanel();
+        buttonPanel.setSpacing(2);
+        buttonPanel.setWidth("120%");
+        buttonPanel.add(buttonPanel1);
+        buttonPanel.add(buttonPanel2);
+        buttonPanel1.setCellHorizontalAlignment(submitButton, HasHorizontalAlignment.ALIGN_LEFT);
+        buttonPanel1.add(submitButton);
+        buttonPanel2.setCellHorizontalAlignment(submitButton, HasHorizontalAlignment.ALIGN_RIGHT);
+        buttonPanel2.setCellVerticalAlignment(submitButton, HasVerticalAlignment.ALIGN_BOTTOM);
+        Anchor manageRegionsHelp = new Anchor("Show Help");
+        buttonPanel2.add(manageRegionsHelp);
+        HelpSystem.addClickHandler(manageRegionsHelp, "manageRegions");
 
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setSpacing(2);

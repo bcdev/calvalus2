@@ -14,9 +14,11 @@ import java.util.*;
 public class RegionPersistence {
 
     private final String userName;
+    private final File userAppDataDir;
 
-    public RegionPersistence(String userName) {
+    public RegionPersistence(String userName, File userAppDataDir) {
         this.userName = userName;
+        this.userAppDataDir = userAppDataDir;
     }
 
     public DtoRegion[] loadRegions() throws IOException {
@@ -55,8 +57,8 @@ public class RegionPersistence {
         }
     }
 
-    private static File getRegionFile(String user) {
-        return new File(System.getProperty("user.home"), ".calvalus/" + user + "-regions.properties");
+    private File getRegionFile(String user) {
+        return new File(userAppDataDir, user + "-regions.properties");
     }
 
     private String getUserName() {

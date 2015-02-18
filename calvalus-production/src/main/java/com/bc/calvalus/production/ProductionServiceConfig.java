@@ -31,7 +31,12 @@ import java.util.Properties;
  */
 public class ProductionServiceConfig {
 
+    static String appDataDir = null;
+
     public static File getUserAppDataDir() {
+        if (appDataDir != null) {
+            return new File(appDataDir);
+        }
         final String userHome = System.getProperty("user.home");
         return userHome != null ? new File(userHome, ".calvalus") : null;
     }
@@ -49,6 +54,9 @@ public class ProductionServiceConfig {
             }
         }
         overwriteConfigWithProperties(calvalusConfig, System.getProperties(), "calvalus.");
+        // memorise appDataDir if configured (remains null else)
+        appDataDir = calvalusConfig.get("calvalus.portal.appDataDir");
+
         return calvalusConfig;
     }
 
@@ -64,5 +72,35 @@ public class ProductionServiceConfig {
                 calvalusConfig.put(key, value);
             }
         }
+    }
+
+    public static Map<String, String> getCalvalusDefaultConfig() {
+        Map<String, String> defaultConfig = new HashMap<String, String>();
+
+        defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://master00:9000");
+        defaultConfig.put("calvalus.hadoop.mapreduce.framework.name", "yarn");
+        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "master00");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "master00:9001");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "master00:9002");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "master00:9003");
+
+        defaultConfig.put("calvalus.hadoop.dfs.blocksize", "2147483136");
+        defaultConfig.put("calvalus.hadoop.io.file.buffer.size", "131072");
+        defaultConfig.put("calvalus.hadoop.dfs.replication", "1");
+
+        defaultConfig.put("calvalus.hadoop.mapreduce.map.speculative", "false");
+        defaultConfig.put("calvalus.hadoop.mapreduce.reduce.speculative", "false");
+        defaultConfig.put("calvalus.hadoop.mapreduce.client.genericoptionsparser.used", "true");
+
+        defaultConfig.put("calvalus.hadoop.dfs.permissions.superusergroup", "hadoop");
+        defaultConfig.put("calvalus.hadoop.fs.permissions.umask-mode", "002");
+        defaultConfig.put("calvalus.hadoop.yarn.log-aggregation-enable", "true");
+
+        defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.address", "master00:10200");
+        defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.webapp.address", "master00:19888");
+
+        defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.command-opts", "-Xmx512M -Djava.awt.headless=true");
+        defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.resource.mb", "512");
+        return defaultConfig;
     }
 }

@@ -28,7 +28,7 @@ public class PlotDatasetCollectorTest {
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
         collector.processHeaderRecord(new Object[]{
                 "ID", "LAT", "LON", "DATE", "SITE",
-                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "*tsm"
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chl", "*algal", "tsm"
         }, new Object[]{""});
         PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
 
@@ -47,14 +47,39 @@ public class PlotDatasetCollectorTest {
     }
 
     @Test
+    public void testThatVariablePairsAreUseFromParameter() throws Exception {
+        MAConfig.VariableMapping chlMapping = new MAConfig.VariableMapping("CHL", "chlor");
+        MAConfig.VariableMapping tsmMapping = new MAConfig.VariableMapping("TSM", "ttssmm");
+        PlotDatasetCollector collector = new PlotDatasetCollector("SITE", chlMapping, tsmMapping);
+        collector.processHeaderRecord(new Object[]{
+                "ID", "LAT", "LON", "DATE", "SITE",
+                "CHL", "WIND", "TSM", "TEMP", "*pixel_x", "*pixel_y", "*chlor", "*algal", "ttssmm"
+        }, new Object[]{""});
+        PlotDatasetCollector.VariablePair[] variablePairs = collector.getVariablePairs();
+
+        assertNotNull(variablePairs);
+        assertEquals(2, variablePairs.length);
+
+        assertEquals("CHL", variablePairs[0].referenceAttributeName);
+        assertEquals(5, variablePairs[0].referenceAttributeIndex);
+        assertEquals("chlor", variablePairs[0].satelliteAttributeName);
+        assertEquals(11, variablePairs[0].satelliteAttributeIndex);
+
+        assertEquals("TSM", variablePairs[1].referenceAttributeName);
+        assertEquals(7, variablePairs[1].referenceAttributeIndex);
+        assertEquals("ttssmm", variablePairs[1].satelliteAttributeName);
+        assertEquals(13, variablePairs[1].satelliteAttributeIndex);
+    }
+
+    @Test
     public void testThatUngroupedPlotsAreGenerated() throws Exception {
 
         PlotDatasetCollector collector = new PlotDatasetCollector(null);
         collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl"}, new Object[]{"ExclusionReason"});
-        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.1, 0.11}, new Object[]{OverlappingRecordSelector.EXCLUSION_REASON_OVERLAPPING});
-        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27}, new Object[]{""});
+        collector.processDataRecord("key1", new Object[]{"Benguela", 0.4, 0.41}, new Object[]{""});
+        collector.processDataRecord("key2", new Object[]{"Benguela", 0.5, 0.49}, new Object[]{""});
+        collector.processDataRecord("key3", new Object[]{"Benguela", 0.1, 0.11}, new Object[]{OverlappingRecordTransform.EXCLUSION_REASON_OVERLAPPING});
+        collector.processDataRecord("key4", new Object[]{"Benguela", 0.2, 0.27}, new Object[]{""});
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);
@@ -79,13 +104,13 @@ public class PlotDatasetCollectorTest {
 
         PlotDatasetCollector collector = new PlotDatasetCollector("SITE");
         collector.processHeaderRecord(new Object[]{"SITE", "CHL", "chl", "ALGAL", "algal"}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
-        collector.processDataRecord(new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03}, new Object[]{""});  // will be rejected, warning logged
+        collector.processDataRecord("key1", new Object[]{"Benguela", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
+        collector.processDataRecord("key2", new Object[]{"Benguela", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
+        collector.processDataRecord("key3", new Object[]{"Benguela", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
+        collector.processDataRecord("key4", new Object[]{"Boussole", 0.4, 0.41, 0.01, 0.02}, new Object[]{""});
+        collector.processDataRecord("key5", new Object[]{"Boussole", 0.5, 0.49, 0.02, 0.01}, new Object[]{""});
+        collector.processDataRecord("key6", new Object[]{"Boussole", 0.2, 0.27, 0.04, 0.03}, new Object[]{""});
+        collector.processDataRecord("key7", new Object[]{"Boussole", 0.2, 0.27, "invalid", 0.03}, new Object[]{""});  // will be rejected, warning logged
 
         PlotDatasetCollector.PlotDataset[] plotDatasets = collector.getPlotDatasets();
         assertNotNull(plotDatasets);

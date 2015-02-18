@@ -41,14 +41,16 @@ import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimatio
  */
 public class L3ConfigForm extends Composite {
 
+    private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
+    private static final DtoProcessorVariable[] MER_L1B;
+
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
     private DynamicSelectionCell variableNameCell;
     private LatLngBounds regionBounds;
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
-    private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
-    private static final DtoProcessorVariable[] MER_L1B;
+    private final List<String> aggregatorNameList;
 
     static {
         MER_L1B = new DtoProcessorVariable[15];
@@ -100,14 +102,33 @@ public class L3ConfigForm extends Composite {
     Button addVariableButton;
     @UiField
     Button removeVariableButton;
+    @UiField
+    Anchor showL3ParametersHelp;
 
     private Date minDate;
     private Date maxDate;
 
     public L3ConfigForm() {
+        this(Arrays.asList(
+                "AVG",
+                "MIN_MAX",
+                "PERCENTILE_2",
+                "PERCENTILE_5",
+                "PERCENTILE_10",
+                "PERCENTILE_25",
+                "PERCENTILE_50",
+                "PERCENTILE_75",
+                "PERCENTILE_90",
+                "PERCENTILE_95",
+                "PERCENTILE_98"
+        ));
+    }
+
+    public L3ConfigForm(List<String> aggregatorNameList) {
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
         variableNames = new ArrayList<String>();
         variableProvider = new ListDataProvider<Variable>();
+        this.aggregatorNameList = aggregatorNameList;
 
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
@@ -182,6 +203,8 @@ public class L3ConfigForm extends Composite {
         targetHeight.setEnabled(false);
 
         updateSpatialParameters(null);
+
+        HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
 
     private Variable createDefaultVariable() {
@@ -218,9 +241,9 @@ public class L3ConfigForm extends Composite {
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
             periodCount.setValue(getPeriodCount(minDate,
-                    maxDate,
-                    steppingPeriodLength.getValue(),
-                    compositingPeriodLength.getValue()));
+                                                maxDate,
+                                                steppingPeriodLength.getValue(),
+                                                compositingPeriodLength.getValue()));
         } else {
             periodCount.setValue(0);
         }
@@ -290,28 +313,32 @@ public class L3ConfigForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        boolean periodCountValid = periodCount.getValue() >= 1;
+        boolean periodCountValid = periodCount.getValue() != null && periodCount.getValue() >= 1;
         if (!periodCountValid) {
             throw new ValidationException(periodCount, "Period count must be >= 1");
         }
 
-        boolean periodLengthValid = steppingPeriodLength.getValue() >= 1;
+        Integer steppingP = steppingPeriodLength.getValue();
+        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -30);
         if (!periodLengthValid) {
             throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
         }
 
-        boolean compositingPeriodLengthValid = compositingPeriodLength.getValue() >= 1 && compositingPeriodLength.getValue() <= steppingPeriodLength.getValue();
+        Integer compositingP = compositingPeriodLength.getValue();
+        boolean compositingPeriodLengthValid = compositingP != null &&
+                                               (compositingP >= 1 || compositingP == -7 || compositingP == -30);
         if (!compositingPeriodLengthValid) {
             throw new ValidationException(compositingPeriodLength,
-                    "Compositing period length must be >= 1 and less or equal to than period");
+                                          "Compositing period length must be >= 1");
         }
 
-        boolean resolutionValid = resolution.getValue() > 0.0;
+        boolean resolutionValid = resolution.getValue() != null && resolution.getValue() > 0.0;
         if (!resolutionValid) {
             throw new ValidationException(resolution, "Resolution must greater than zero");
         }
 
-        boolean superSamplingValid = superSampling.getValue() >= 1 && superSampling.getValue() <= 9;
+        Integer superSamplingValue = superSampling.getValue();
+        boolean superSamplingValid = superSamplingValue != null && superSamplingValue >= 1 && superSamplingValue <= 9;
         if (!superSamplingValid) {
             throw new ValidationException(superSampling, "Super-sampling must be >= 1 and <= 9");
         }
@@ -379,10 +406,10 @@ public class L3ConfigForm extends Composite {
             parameters.put("expression.count", expressionCount + "");
         }
         parameters.put("maskExpr", maskExpr.getText());
-        parameters.put("periodLength", steppingPeriodLength.getText());
-        parameters.put("compositingPeriodLength", compositingPeriodLength.getText());
-        parameters.put("resolution", resolution.getText());
-        parameters.put("superSampling", superSampling.getText());
+        parameters.put("periodLength", steppingPeriodLength.getValue().toString());
+        parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
+        parameters.put("resolution", resolution.getValue().toString());
+        parameters.put("superSampling", superSampling.getValue().toString());
         return parameters;
     }
 
@@ -463,22 +490,7 @@ public class L3ConfigForm extends Composite {
 
     private Column<Variable, String> createAggregatorColumn() {
 
-        List<String> valueList = Arrays.asList(
-                "AVG",
-                "AVG_ML",
-                "MIN_MAX",
-                "PERCENTILE_2",
-                "PERCENTILE_5",
-                "PERCENTILE_10",
-                "PERCENTILE_25",
-                "PERCENTILE_50",
-                "PERCENTILE_75",
-                "PERCENTILE_90",
-                "PERCENTILE_95",
-                "PERCENTILE_98"
-        );
-
-        SelectionCell aggregatorCell = new SelectionCell(valueList);
+        SelectionCell aggregatorCell = new SelectionCell(aggregatorNameList);
         Column<Variable, String> aggregatorColumn = new Column<Variable, String>(aggregatorCell) {
             @Override
             public String getValue(Variable variable) {

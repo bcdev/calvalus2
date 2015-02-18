@@ -63,14 +63,14 @@ public class ProductSetSelectionForm extends Composite {
     @UiField
     Label productSetRegionName;
     @UiField
-    Anchor showHelp;
+    Anchor showProductSetSelectionHelp;
 
     public ProductSetSelectionForm(PortalContext portal) {
         this(portal, null);
     }
 
-    public ProductSetSelectionForm(PortalContext portal, Filter<DtoProductSet> productSetFilter) {
-        this.portal = portal;
+    public ProductSetSelectionForm(PortalContext portalContext, Filter<DtoProductSet> productSetFilter) {
+        this.portal = portalContext;
         this.productSetFilter = productSetFilter;
 
         initWidget(uiBinder.createAndBindUi(this));
@@ -96,14 +96,19 @@ public class ProductSetSelectionForm extends Composite {
         userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
+                if (portal.withPortalFeature("othersets")) {
+                    allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
+                }
             }
         });
 
+        if (! portal.withPortalFeature("othersets")) {
+            allProductionProductSets.setEnabled(false);
+        }
         updateListBox(portal.getProductSets());
         updateDetailsView();
 
-        HelpSystem.addClickHandler(showHelp, "productSetSelection");
+        HelpSystem.addClickHandler(showProductSetSelectionHelp, "productSetSelection");
     }
 
     private void updateProductSetsListBox() {

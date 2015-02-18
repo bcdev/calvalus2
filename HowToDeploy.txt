@@ -1,6 +1,8 @@
 Preparation
 -----------
-Ensure no jobs are running which have been started from the portal (user == cvop)
+Before restarting the portal server and/or deploying new software it should should be ensured
+that there is no running job started by a user from one of the portals (default/cc). Unfortunately
+there is no better way as to look closely at the running jobs in the Hadoop administration interface.
 
 Building
 --------
@@ -22,53 +24,91 @@ tar czf calvalus-software.tar.gz  calvalus-software
 ===========================================================================
 Calvalus
 --------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT
 
 for lc-cci
 ----------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-1.7-SNAPSHOT-lc
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall  calvalus-2.3-SNAPSHOT-lc
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-lc
 
 BEAM
 -----
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-4.11.1-SNAPSHOT
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-4.11.1-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
+for diversity
+-------------
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT-diversity
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-diversity
+
+
+Personal debugging
+------------------
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-SNAPSHOT-mz
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-SNAPSHOT-mz test.xml
+
+
+pfa-fex
+-------
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT-fex
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT-fex
+
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall pfa-0.1-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy /home/marcoz/Workspace/pfa/bundle/*.jar pfa-0.1-SNAPSHOT
+
+java -jar calvalus-distribution/target/cpt.jar -e --calvalus calvalus-2.3-SNAPSHOT-fex /home/marcoz/Workspace/pfa/fex.xml
 
 ===========================================================================
 Portal Software
 -------------------
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-1.7-portal-20131030
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-1.7-portal-20131030
-java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-4.11.1-portal-20131030
-java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-4.11.1-portal-20131030
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall calvalus-2.3-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar calvalus-2.3-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
 WAR (for the portal)
 --------------------
-(cd calvalus-portal/target; scp calvalus-portal-1.7-SNAPSHOT.war cvop@bcvm03: )
+(cd calvalus-portal/target; scp calvalus-portal.war cvop@bcvm03: )
 ssh cvop@bcvm03
-cd /opt/apache-tomcat-7.0.11/bin/
-./shutdown.sh
+cd /opt/apache-tomcat-7.0.53/
+#./bin/shutdown.sh
 
 # save staging
-cd ../webapps/calvalus/
-mv staging/ ../../temp/
+mv webapps/calvalus/staging/ temp/
 
 # redeploy
-cd ..
-rm -rf calvalus calvalus.war
-rm -rf ../work/Catalina/localhost/calvalus/
-mv /home/cvop/calvalus-portal-1.7-SNAPSHOT.war calvalus.war
+rm -rf webapps/calvalus webapps/calvalus.war
+rm -rf work/Catalina/localhost/calvalus/
+mv /home/cvop/calvalus-portal.war webapps/calvalus.war
 
 # restart
-cd ../bin/
-./startup.sh
-tail -5f ../logs/catalina.out
+#./bin/startup.sh
+tail -5f logs/catalina.out
 
 # restore staging
-cd ../webapps/calvalus/
-rm -rf staging/
-mv ../../temp/staging .
+rm -rf webapps/calvalus/staging/
+mv temp/staging webapps/calvalus/
 
+===========================================================================
+CC Portal Software
+-------------------
+
+(cd calvalus-portal/target; scp -r calvalus-portal.war www/cc-patch cvop@bcvm03: )
+
+ssh cvop@bcvm03
+cd /opt/apache-tomcat-7.0.53
+
+# save staging
+sudo umount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
+
+# redeploy
+rm -r webapps/ccprocessing.war webapps/ccprocessing
+mv /home/cvop/calvalus-portal.war webapps/ccprocessing.war
+sleep 5
+cp -r /home/cvop/cc-patch/* webapps/ccprocessing
+
+# restore staging
+sudo mount /opt/apache-tomcat-7.0.53/webapps/ccprocessing/staging
 

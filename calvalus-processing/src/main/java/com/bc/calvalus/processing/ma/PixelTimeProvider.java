@@ -25,12 +25,12 @@ import java.util.Date;
 /**
 * Provides a time for each pixel position.
 */
-class PixelTimeProvider {
+public class PixelTimeProvider {
 
     private final double startMJD;
     private final double deltaMJD;
 
-    static PixelTimeProvider create(Product product) {
+    public static PixelTimeProvider create(Product product) {
         final ProductData.UTC startTime = product.getStartTime();
         final ProductData.UTC endTime = product.getEndTime();
         final int rasterHeight = product.getSceneRasterHeight();
@@ -42,7 +42,7 @@ class PixelTimeProvider {
         }
     }
 
-    PixelTimeProvider(double startMJD, double deltaMJD) {
+    private PixelTimeProvider(double startMJD, double deltaMJD) {
         this.startMJD = startMJD;
         this.deltaMJD = deltaMJD;
     }

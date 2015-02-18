@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.executable;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.ceres.resource.ReaderResource;
 import com.bc.ceres.resource.Resource;
@@ -35,12 +36,15 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Generates the step to call the executable processor.
  * Evaluates the given templates using Velocity.
  */
 public class ScriptGenerator {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     enum Step {
         PREPARE {
@@ -65,6 +69,7 @@ public class ScriptGenerator {
         abstract boolean shouldWriteResource(String resourceName);
 
     }
+
     private static final String VM_SUFFIX = ".vm";
     private final ResourceEngine resourceEngine;
     private final Step step;
@@ -75,7 +80,7 @@ public class ScriptGenerator {
         this.step = step;
         this.executableName = executableName;
         this.resourceEngine = new ResourceEngine();
-        this.processedResourceNames = new ArrayList<String>();
+        this.processedResourceNames = new ArrayList<>();
     }
 
     public VelocityContext getVelocityContext() {
@@ -98,19 +103,21 @@ public class ScriptGenerator {
         return processedResourceNames.contains(step.toString().toLowerCase());
     }
 
-    public void writeScriptFiles(File cwd) throws IOException {
-        System.out.println("writing files for step = " + step);
+    public void writeScriptFiles(File cwd, boolean debug) throws IOException {
+        if (debug) {
+            LOG.info("writing files for step = " + step);
+        }
         for (String resourceName : processedResourceNames) {
             if (step.shouldWriteResource(resourceName)) {
                 Resource resource = resourceEngine.getResource(resourceName);
                 File scriptFile = new File(cwd, resourceName);
-                writeScript(scriptFile, resource);
+                writeScript(scriptFile, resource, debug);
             }
         }
     }
 
-    public void addScriptResources(Configuration conf) throws IOException {
-        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
+    public void addScriptResources(Configuration conf, String parameterSuffix) throws IOException {
+        Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES + parameterSuffix);
         FileSystem fs = FileSystem.get(conf);
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);
@@ -120,26 +127,24 @@ public class ScriptGenerator {
         }
     }
 
-
-    void writeScript(File scriptFile, Resource resource) throws IOException {
-        System.out.println("writeScript = " + scriptFile.getCanonicalPath());
+    void writeScript(File scriptFile, Resource resource, boolean debug) throws IOException {
+        if (debug) {
+            LOG.info("writeScript = " + scriptFile.getCanonicalPath());
+        }
         if (scriptFile.exists()) {
             boolean deleted = scriptFile.delete();
             if (!deleted) {
                 System.out.println("Failed to delete existing script file");
             }
         }
-        Writer writer = new FileWriter(scriptFile);
-        try {
+        try (Writer writer = new FileWriter(scriptFile)) {
             String resourceContent = resource.getContent();
-            if (resource.getPath().endsWith(VM_SUFFIX)) {
-                System.out.println("===========================================");
-                System.out.println(resourceContent);
-                System.out.println("===========================================");
+            if (debug && resource.getPath().endsWith(VM_SUFFIX)) {
+                LOG.info("===========================================");
+                LOG.info(resourceContent);
+                LOG.info("===========================================");
             }
             writer.write(resourceContent);
-        } finally {
-            writer.close();
         }
         boolean permissionChanged = scriptFile.setExecutable(true);
         if (!permissionChanged) {
@@ -148,6 +153,14 @@ public class ScriptGenerator {
     }
 
     static String createProcessedResourceName(String name, String executable) {
+        if (name.startsWith("common-")) {
+            return createProcessedResourceNameImpl(name, "common");
+        } else {
+            return createProcessedResourceNameImpl(name, executable);
+        }
+    }
+
+    private static String createProcessedResourceNameImpl(String name, String executable) {
         name = name.substring(executable.length() + 1); // strip executable name from the front
         if (name.endsWith(VM_SUFFIX)) {
             name = name.substring(0, name.length() - VM_SUFFIX.length()); // strip .vm from the end

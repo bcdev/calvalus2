@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowStatusEvent;
 import com.bc.calvalus.commons.WorkflowStatusListener;
@@ -25,6 +26,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -33,6 +35,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * A workflow item that outputs a sequence file of {@link TAPoint}s from a L3 output sequence file.
@@ -41,8 +44,10 @@ import java.io.IOException;
  */
 public class TAWorkflowItem extends HadoopWorkflowItem {
 
-    public TAWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    static Logger LOGGER = CalvalusLogger.getLogger();
+
+    public TAWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     public String getInputDir() {
@@ -78,19 +83,21 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected void configureJob(Job job) throws IOException {
 
-        FileInputFormat.addInputPath(job, new Path(getInputDir()));
+        FileInputFormat.addInputPaths(job, getInputDir());
         job.setInputFormatClass(SequenceFileInputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         job.setMapperClass(TAMapper.class);
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(L3TemporalBin.class);
+        job.setMapOutputKeyClass(TAKey.class);
+        job.setMapOutputValueClass(L3TemporalBinWithIndex.class);
+        job.setPartitionerClass(TAPartitioner.class);
+        job.setGroupingComparatorClass(TAKey.TAKeyRegionComparator.class);
+        job.setSortComparatorClass(TAKey.TAKeyComparator.class);
         job.setReducerClass(TAReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(TAPoint.class);
-        job.setNumReduceTasks(1);
 
         // If this item is completed, clear L3 output dir, which is not used anymore
         addWorkflowStatusListener(new InputDirCleaner(job));
@@ -113,10 +120,17 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
         }
 
         private void clearInputDir(Job job) {
-            try {
-                JobUtils.clearDir(getInputDir(), job);
-            } catch (IOException e) {
-                // todo - nf/** 19.04.2011: log error
+            if (! job.getConfiguration().getBoolean(JobConfigNames.CALVALUS_TA_KEEPL3_FLAG, false)) {
+                try {
+                    String[] dirs = getInputDir().split(",");
+                    for (String dir : dirs) {
+                        HadoopProcessingService processingService = getProcessingService();
+                        FileSystem fileSystem = processingService.getFileSystem(getUserName());
+                        JobUtils.clearDir(dir, fileSystem);
+                    }
+                } catch (IOException e) {
+                    LOGGER.warning("Failed removing intermediate L3 products " + getInputDir() + ": " + e);
+                }
             }
         }
     }

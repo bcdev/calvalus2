@@ -17,11 +17,12 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Trend analysis: A production type used for generating a time-series generated from L3 products and a numb er of
- * given regions.
+ * Match-up analysis: A production type used for generating match-ups between Level1/Level2 products and in-situ data.
  *
  * @author MarcoZ
  * @author Norman
@@ -68,7 +69,8 @@ public class MAProductionType extends HadoopProductionType {
         maJobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maParametersXml);
         maJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                         regionGeometry != null ? regionGeometry.toString() : "");
-        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionName, maJobConfig);
+        MAWorkflowItem workflowItem = new MAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                         productionName, maJobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
@@ -82,9 +84,9 @@ public class MAProductionType extends HadoopProductionType {
     }
 
     @Override
-    protected Staging createUnsubmittedStaging(Production production) {
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient().getConf(),
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
                                getStagingService().getStagingDir());
     }
 
@@ -117,7 +119,31 @@ public class MAProductionType extends HadoopProductionType {
         maConfig.setOutputTimeFormat(productionRequest.getString("outputTimeFormat", "yyyy-MM-dd HH:mm:ss"));
         maConfig.setRecordSourceUrl(productionRequest.getString("recordSourceUrl"));
         maConfig.setRecordSourceSpiClassName(productionRequest.getString("recordSourceSpiClassName", null));
+        maConfig.setVariableMappings(parseVariableMappings(productionRequest.getString("variableMappings", null)));
+        maConfig.setOnlyExtractComplete(productionRequest.getBoolean("onlyExtractComplete", true));
         return maConfig;
+    }
+
+    static MAConfig.VariableMapping[] parseVariableMappings(String variableMappingsString) {
+        if ( StringUtils.isNullOrEmpty(variableMappingsString)) {
+            return null;
+        }
+        String[] mappings = variableMappingsString.split(",");
+        List<MAConfig.VariableMapping> mappingList = new ArrayList<>(mappings.length);
+        for (String mapping : mappings) {
+            String[] refSat = mapping.split("=");
+            if (refSat.length == 2) {
+                String ref = refSat[0].trim();
+                String sat = refSat[1].trim();
+                if (!ref.isEmpty() && !sat.isEmpty()) {
+                    mappingList.add(new MAConfig.VariableMapping(ref, sat));
+                }
+            }
+        }
+        if (mappingList.isEmpty()) {
+            return null;
+        }
+        return mappingList.toArray(new MAConfig.VariableMapping[mappingList.size()]);
     }
 
 }

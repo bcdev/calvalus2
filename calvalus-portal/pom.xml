@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-portal</artifactId>
@@ -17,7 +17,7 @@
     <description>The frontend for Calvalus.</description>
 
     <properties>
-        <gwt.version>2.5.1</gwt.version>
+        <gwt.version>2.6.1</gwt.version>
         <maven.build.timestamp.format>dd-MM-yyyy</maven.build.timestamp.format>
         <timestamp>${maven.build.timestamp}</timestamp>
     </properties>
@@ -35,13 +35,12 @@
             <version>${gwt.version}</version>
             <scope>provided</scope>
         </dependency>
-
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-dev</artifactId>
             <version>${gwt.version}</version>
+            <scope>provided</scope>
         </dependency>
-
         <!-- GWT Maps API V3 -->
         <dependency>
             <groupId>com.github.branflake2267</groupId>
@@ -78,7 +77,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <version>2.4</version>
         </dependency>
         <dependency>
             <groupId>commons-fileupload</groupId>
@@ -102,6 +101,7 @@
     </dependencies>
 
     <build>
+        <finalName>calvalus-portal</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
@@ -117,12 +117,14 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>gwt-maven-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>2.6.1</version>
                 <!-- JS is only needed in the package phase, this speeds up testing -->
                 <executions>
                     <execution>
                         <configuration>
                             <extraJvmArgs>-Xmx850M -Xss100M</extraJvmArgs>
+                            <!-- <localWorkers>2</localWorkers> -->
+                            <sourceLevel>1.7</sourceLevel>
                         </configuration>
                         <phase>prepare-package</phase>
                         <goals>
@@ -183,6 +185,22 @@
                             <resources>
                                 <resource>
                                     <directory>src/main/webapp</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <!-- TODO: seems to create the cc-patch dir but does not put it into the war file -->
+                    <execution>
+                        <id>cc-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/cc-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-cc-patch</directory>
                                 </resource>
                             </resources>
                         </configuration>

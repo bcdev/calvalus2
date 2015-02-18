@@ -21,7 +21,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.bc.ceres.metadata.MetadataResourceEngine;
@@ -85,9 +85,11 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
     public void run(Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
-        pm.beginTask("Level 2 processing", 100);
+        final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;
+        final int progressForSaving = processorAdapter.supportsPullProcessing() ? 95 : 5;
+        pm.beginTask("Level 2 processing", progressForProcessing + progressForSaving);
         try {
             processorAdapter.prepareProcessing();
             if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
@@ -105,17 +107,17 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 // process input and write target product
-                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, 50));
+                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, progressForProcessing));
                 if (numProducts > 0) {
                     LOG.info(context.getTaskAttemptID() + " target product created");
-                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, 50));
+                    processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
 
                     if (jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE) != null) {
                         processMetadata(context,
                                         processorAdapter.getInputPath().toString(),
                                         processorAdapter.getInputProduct(),
-                                        processorAdapter.getOutputPath().toString(),
+                                        processorAdapter.getOutputProductPath().toString(),
                                         processorAdapter.openProcessedProduct());
                     }
                 } else {
@@ -146,7 +148,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 VelocityContext vcx = metadataResourceEngine.getVelocityContext();
                 vcx.put("system", System.getProperties());
                 vcx.put("softwareName", "Calvalus");
-                vcx.put("softwareVersion", "1.7-SNAPSHOT");
+                vcx.put("softwareVersion", "2.3-SNAPSHOT");
                 vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
                 File targetFile = new File(targetPath);

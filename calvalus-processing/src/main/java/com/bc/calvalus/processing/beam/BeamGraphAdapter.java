@@ -14,8 +14,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.graph.HeaderTarget;
 import org.esa.beam.framework.gpf.graph.Node;
 import org.esa.beam.framework.gpf.graph.NodeContext;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -52,10 +53,11 @@ import java.util.logging.Logger;
  *
  * @author MarcoZ
  */
-public class BeamGraphAdapter extends IdentityProcessorAdapter {
+public class BeamGraphAdapter extends SubsetProcessorAdapter {
 
     private static final SimpleDateFormat N1_TIME_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
     private static final SimpleDateFormat YMD_DIR_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
+
     static {
         N1_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         YMD_DIR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -85,13 +87,22 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             }
             Header header = graph.getHeader();
             List<HeaderSource> sources = header.getSources();
+            Path inputPath = getInputPath();
             Operator sourceProducts = new SourceProductContainerOperator();
             for (HeaderSource headerSource : sources) {
                 String sourceId = headerSource.getName();
-                String sourceFilePath = headerSource.getLocation();
+                Path sourcePath = new Path(headerSource.getLocation());
 
-                Product product = readProduct(new Path(sourceFilePath), null);
-                sourceProducts.setSourceProduct(sourceId, product);
+                File inputFile = getInputFile();
+                Product sourceProduct;
+                if (sourcePath.equals(inputPath) && inputFile != null) {
+                    // if inputFile is set and path is the inputPath us the (local)file instead
+                    System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
+                    sourceProduct = ProductIO.readProduct(inputFile);
+                } else {
+                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), null);
+                }
+                sourceProducts.setSourceProduct(sourceId, sourceProduct);
             }
             graphContext = new GraphContext(graph, sourceProducts);
             HeaderTarget target = header.getTarget();
@@ -106,6 +117,8 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             targetProduct = targetNodeContext.getTargetProduct();
         } catch (GraphException e) {
             throw new IOException("Error executing Graph: " + e.getMessage(), e);
+        } finally {
+            pm.done();
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             getLogger().info("Skip processing");
@@ -137,6 +150,10 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
             graphContext.dispose();
             graphContext = null;
         }
+        if (targetProduct != null) {
+            targetProduct.dispose();
+            targetProduct = null;
+        }
     }
 
     public Graph createGraph() throws GraphException, IOException {
@@ -156,9 +173,9 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         velocityContext.put("parameterText", processorParameters);
         velocityContext.put("parameters", processingParameters);
 
-        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
         velocityContext.put("inputPath", inputPath);
-        velocityContext.put("outputPath", outputPath);
+        velocityContext.put("outputPath", getOutputDirectoryPath());
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
         velocityContext.put("GlobalFunctions", new GlobalsFunctions(getLogger()));
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
@@ -203,6 +220,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         public Path createPath(String pathString) {
             return new Path(pathString);
         }
+
         // MER_RR__1PRACR20030601_092632_000026422016_00480_06546_0000.N1
         public Path findCoveringN1(String master, String archiveRoot, FileSystem fileSystem) {
             Path result = null;
@@ -210,7 +228,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 final String masterStartString = master.substring(14, 29);
                 final String masterDurationString = master.substring(30, 38);
                 final long masterStart = N1_TIME_FORMAT.parse(masterStartString).getTime();
-                final long masterStop = masterStart + (Long.parseLong("1" + masterDurationString)-100000000) * 1000;
+                final long masterStop = masterStart + (Long.parseLong("1" + masterDurationString) - 100000000) * 1000;
                 logger.info("looking for slave of " + master + " in " + archiveRoot);
                 final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
                 calendar.setTimeInMillis(masterStart);
@@ -219,7 +237,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 final String previousDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
                 calendar.add(Calendar.DAY_OF_MONTH, 2);
                 final String nextDayDir = YMD_DIR_FORMAT.format(calendar.getTime());
-                final FileStatus[] slaveFiles = fileSystem.listStatus(new Path[] {
+                final FileStatus[] slaveFiles = fileSystem.listStatus(new Path[]{
                         new Path(archiveRoot, previousDayDir),
                         new Path(archiveRoot, thisDayDir),
                         new Path(archiveRoot, nextDayDir)
@@ -234,7 +252,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                     final String slaveStartString = slave.substring(14, 29);
                     final String slaveDurationString = slave.substring(30, 38);
                     final long slaveStart = N1_TIME_FORMAT.parse(slaveStartString).getTime();
-                    final long slaveStop = slaveStart + (Long.parseLong("1" + slaveDurationString)-100000000) * 1000;
+                    final long slaveStop = slaveStart + (Long.parseLong("1" + slaveDurationString) - 100000000) * 1000;
                     if (masterStart >= slaveStart && masterStop <= slaveStop) {
                         logger.info("covering slave  " + slave + " found");
                         return slaveFile.getPath();
@@ -244,7 +262,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
                 }
             } catch (ParseException e) {
                 throw new RuntimeException("failed to parse date in " + master, e);
-            }  catch (IOException e) {
+            } catch (IOException e) {
                 throw new RuntimeException("failed to read dirs below " + archiveRoot, e);
             }
             if (result != null) {
@@ -273,7 +291,7 @@ public class BeamGraphAdapter extends IdentityProcessorAdapter {
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         velocityContext.put("system", System.getProperties());
         Configuration conf = new Configuration();
-        conf.set("fs.default.name", "hdfs://master00:9000");
+        conf.set("fs.defaultFS", "hdfs://master00:9000");
         velocityContext.put("configuration", conf);
 
         velocityContext.put("inputPath", new Path("MER_RR__1PNACR20030101_130000_xyz"));

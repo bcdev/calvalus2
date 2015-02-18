@@ -1,11 +1,21 @@
 #!/bin/bash
 
-inputFile="$inputFile"
 inFileName="$inputFile.name"
-inputPathParent="$inputPath.parent"
-geoFileName=$inputPath.name.replace("L1B_LAC","GEO*")
+inputPath="$inputPath"
+
 
 #[[
+
+########################################################################
+#BC
+DIR_AUX_ERA='hdfs://master00:9000/calvalus/auxiliary/era_interim'
+DIR_AUX_NCEP='hdfs://master00:9000/calvalus/auxiliary/seadas/anc'
+#PML
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  DIR_AUX_ERA='/data/datasets/ERA_Interim/level3/era_interim-downloaded_20140430/swath/0d'
+  DIR_AUX_NCEP='/data/datasets/Sensor/modis/ancillary/metoz'
+fi
+########################################################################
 
 #for debugging
 #set -x
@@ -16,30 +26,60 @@ set -m
 outFile=${inFileName}-l2gen.hdf
 
 export OCSSWROOT=./seadas-7.0/seadas-7.0
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  export OCSSWROOT=/users/rsg/rsgcode/operational/linux-x86_64/third_party/opt/seadas/V7.0.1/ocssw
+fi
 L2GEN_BIN=${OCSSWROOT}/run/bin/linux_64/l2gen
-
 source $OCSSWROOT/OCSSW_bash.env
 
 # append newline to parameters.anc
 touch parameters.anc
 echo >> parameters.anc
 
-
 ]]#
 
 #if ($inputRectangle)
 
-#set( $Double = 0.0 )
+# only check for flip in MODIS Aqua and Seawifs files
+if [[ $inFileName =~ ^[AS][0-9]+ ]]
+then
+  PYHDF=./pyhdf
+  if [ -d ${PYHDF} ]; then
+    export LD_LIBRARY_PATH="${PYHDF}/pylib"
+    export PYTHONPATH="${PYHDF}/pyshared"
+  fi
+  detected_flip=$(./getFlip.py ${inFileName})
 
+  echo "detected_flip = ${detected_flip}"
+fi
+
+if [[ ${detected_flip} == "flipXY" ]]
+then
+
+#set( $Double = 0.0 )
+#set( $Dspixl = $productRectangle.width - ( $inputRectangle.x + $inputRectangle.width) + 1 )
+#set( $spixl = $Double.valueOf($Dspixl).intValue() )
+#set( $Depixl = $productRectangle.width - $inputRectangle.x )
+#set( $epixl = $Double.valueOf($Depixl).intValue() )
+#set( $Dsline = $productRectangle.height - ( $inputRectangle.y + $inputRectangle.height) + 1 )
+#set( $sline = $Double.valueOf($Dsline).intValue() )
+#set( $Deline = $productRectangle.height - $inputRectangle.y )
+#set( $eline = $Double.valueOf($Deline).intValue() )
+
+echo "spixl=$spixl" >> parameters.anc
+echo "epixl=$epixl" >> parameters.anc
+echo "sline=$sline" >> parameters.anc
+echo "eline=$eline" >> parameters.anc
+
+else
+
+#set( $Double = 0.0 )
 #set( $Dspixl = $inputRectangle.x + 1 )
 #set( $spixl = $Double.valueOf($Dspixl).intValue() )
-
 #set( $Depixl = $inputRectangle.x + $inputRectangle.width )
 #set( $epixl = $Double.valueOf($Depixl).intValue() )
-
 #set( $Dsline = $inputRectangle.y + 1 )
 #set( $sline = $Double.valueOf($Dsline).intValue() )
-
 #set( $Deline = $inputRectangle.y + $inputRectangle.height )
 #set( $eline = $Double.valueOf($Deline).intValue() )
 
@@ -47,6 +87,8 @@ echo "spixl=$spixl" >> parameters.anc
 echo "epixl=$epixl" >> parameters.anc
 echo "sline=$sline" >> parameters.anc
 echo "eline=$eline" >> parameters.anc
+
+fi
 #end
 
 #[[
@@ -92,18 +134,30 @@ d5=`date -d @$s -u +%Y%j`
 s6=$(($s + 43200))
 d6=`date -d @$s6 -u +%Y%j`
 
-ANC_ROOT=/calvalus/auxiliary/seadas/anc
 function get_anc() {
   local label=$1
   local year_doy=$2
 
   echo "get_nac ${label} ${year_doy}"
-
+  local path=""
   while [ "$3" != "" ]; do
-    echo "testting $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}"
-    path=`hadoop fs -ls $ANC_ROOT/${year_doy:0:4}/${year_doy:4:3}/${3}|awk '{ print $8 }'`
-    if [ "$path" != "" ]; then
-     break
+    testpath=${DIR_AUX_NCEP}/${year_doy:0:4}/${year_doy:4:3}/${3}
+    echo "testting ${testpath}"
+    if [[ ${testpath} == hdfs* ]]; then
+      path=`hadoop fs -ls ${testpath}|awk '{ print $8 }'`
+      if [ "$path" != "" ]; then
+        break
+      fi
+    else
+      for aFile in ${testpath}; do
+        if [ -f ${aFile} ]; then
+          path=${aFile}
+          break
+        fi
+      done
+      if [ "${path}" != "" ]; then
+        break
+      fi
     fi
     shift
   done
@@ -111,10 +165,14 @@ function get_anc() {
     echo "No auxdata found for type:${label} date:${year_doy} found"
     exit 1
   fi
-  local workfile=`basename $path`
-  if [ ! -e ${workfile} ]; then
-    echo "copy to cwd as ${workfile}"
-    hadoop fs -copyToLocal $path .
+  if [[ ${testpath} == hdfs* ]]; then
+    workfile=`basename $path`
+    if [ ! -e ${workfile} ]; then
+      echo "copy to cwd as ${workfile}"
+      hadoop fs -copyToLocal $path .
+    fi
+  else
+    workfile=$path
   fi
   echo "$label=${workfile}" >> parameters.anc
 }
@@ -124,7 +182,7 @@ function get_ozone() {
 }
 
 
-get_anc "icefile" $d5 "?${d5}00_SEAICE_*"
+get_anc "icefile" $d5 "?${d5}00_SEAICE_NSIDC_*"
 
 get_anc "met1" $d1 "S${d1}_NCEP.MET" "N${d1}_MET_NCEPN_6h.hdf"
 get_anc "met2" $d2 "S${d2}_NCEP.MET" "N${d2}_MET_NCEPN_6h.hdf"
@@ -137,22 +195,14 @@ get_ozone "ozone3" $d6
 get_anc "sstfile" $d5 "?${d5}_SST_*"
 
 
-echo "ifile=${inputFile}" >> parameters.anc
+echo "ifile=${inFileName}" >> parameters.anc
 echo "ofile=${outFile}" >> parameters.anc
 
 if [[ $inFileName =~ ^A[0-9]+ ]]; then
   # MODIS needs geofile
-
-  echo "testting ${inputPathParent}/${geoFileName}"
-  geoPath=`hadoop fs -ls ${inputPathParent}/${geoFileName}|awk '{ print $8 }'`
-  if [ "$geoPath" != "" ]; then
-    workfile=`basename $geoPath`
-    if [ ! -e ${workfile} ]; then
-      echo "copy to cwd as ${workfile}"
-      hadoop fs -copyToLocal $geoPath .
-      echo "geofile=${workfile}" >> parameters.anc
-    fi
-  fi
+  ./getGEO.sh ${inputPath}
+      geoFileName=${inFileName:0:14}.GEO
+  echo "geofile=${geoFileName}" >> parameters.anc
 fi
 
 # for debugging purpose
@@ -172,7 +222,29 @@ function handle_progress() {
   fi
 }
 
+ulimit -s unlimited
+set -o pipefail
 echo ${L2GEN_BIN} par=parameters.anc
 ${L2GEN_BIN} par=parameters.anc | while read x ; do handle_progress "$x" ; done
 echo CALVALUS_OUTPUT_PRODUCT ${outFile}
 ]]#
+
+#if ($inputRectangle)
+    if [[ $inFileName =~ ^S[0-9]+.L1A_MLAC ]]
+    then
+      echo "SeaWiFS L1A to L2 no transformation here, use GeoCosing of L2, should be better"
+    else
+      if [[ $inFileName =~ ^[AS][0-9]+ ]]
+      then
+        # only check for flip in MODIS Aqua and Seawifs L1B files
+        detected_flip_l2=$(./getFlip.py ${outFile})
+        echo "detected_flip_l2 = ${detected_flip_l2}"
+        if [[ ${detected_flip_l2} == "flipXY" ]]
+        then
+          l2_flip_transform="flipX flipY"
+        fi
+      fi
+      echo "CALVALUS_PRODUCT_TRANSFORMATION  subset $inputRectangle.x, $inputRectangle.y, $inputRectangle.width, $inputRectangle.height ${l2_flip_transform}"
+    fi
+#end
+

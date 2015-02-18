@@ -47,6 +47,7 @@ import static org.junit.Assert.*;
 @RunWith(UnixTestRunner.class)
 public class StreamingFormatTest {
 
+    private static final int TILE_HEIGHT = 64;
     private Configuration configuration;
     private FileSystem fileSystem;
 
@@ -65,12 +66,13 @@ public class StreamingFormatTest {
         System.setProperty("beam.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
         Product sourceProduct = productReader.readProductNodes(testProductFile, null);
-        StreamingProductWriter streamingProductWriter = new StreamingProductWriter(configuration, null, ProgressMonitor.NULL);
+
         Path outputDir = new Path("target/testdata/StreamingProductWriterTest");
         Path productPath = new Path(outputDir, "testWrite.seq");
         try {
             assertFalse(fileSystem.exists(productPath));
-            streamingProductWriter.writeProduct(sourceProduct, productPath, 64);
+            ProgressMonitor pm = ProgressMonitor.NULL;
+            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath, TILE_HEIGHT);
             assertTrue(fileSystem.exists(productPath));
 
             testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct));
@@ -99,12 +101,9 @@ public class StreamingFormatTest {
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         Map<String, Long> writtenIndex = streamingProductIndex.readIndex();
 
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration);
         Map<String, Long> buildIndex;
-        try {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration)) {
             buildIndex = StreamingProductIndex.buildIndex(reader);
-        } finally {
-            reader.close();
         }
         assertNotNull(buildIndex);
         assertEquals(buildIndex.size(), writtenIndex.size());
@@ -117,41 +116,35 @@ public class StreamingFormatTest {
     }
 
     private void testThatProductIsCorrect(Product sourceProduct, Path productPath) throws IOException {
-        StreamingProductReader streamingProductReader = new StreamingProductReader(productPath, configuration);
+        Product targetProduct = CalvalusProductIO.readProduct(productPath, configuration, StreamingProductPlugin.FORMAT_NAME);
         try {
-            Product targetProduct = streamingProductReader.readProductNodes(null, null);
-            try {
-                assertEquals(sourceProduct.getName(), targetProduct.getName());
-                assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
+            assertEquals(sourceProduct.getName(), targetProduct.getName());
+            assertEquals(sourceProduct.getNumBands(), targetProduct.getNumBands());
 
-                // check that tie-point data is equal
-                ProductData.Float srcTP0 = (ProductData.Float) sourceProduct.getTiePointGridAt(0).getData();
-                ProductData.Float targetTP0 = (ProductData.Float) targetProduct.getTiePointGridAt(0).getData();
-                assertArrayEquals(srcTP0.getArray(), targetTP0.getArray(), 1e-5f);
+            // check that tie-point data is equal
+            ProductData.Float srcTP0 = (ProductData.Float) sourceProduct.getTiePointGridAt(0).getData();
+            ProductData.Float targetTP0 = (ProductData.Float) targetProduct.getTiePointGridAt(0).getData();
+            assertArrayEquals(srcTP0.getArray(), targetTP0.getArray(), 1e-5f);
 
-                // check that band data is equal
-                Raster srcData = sourceProduct.getBandAt(0).getSourceImage().getData();
-                Raster targetData = targetProduct.getBandAt(0).getSourceImage().getData();
-                for (int y = 0; y < sourceProduct.getSceneRasterHeight(); y++) {
-                    for (int x = 0; x < sourceProduct.getSceneRasterWidth(); x++) {
-                        float srcSample = srcData.getSampleFloat(x, y, 0);
-                        float targetSample = targetData.getSampleFloat(x, y, 0);
-                        assertEquals("[x" + "," + y + "]", srcSample, targetSample, 1e-5f);
-                    }
-                }
-            } finally {
-                if (targetProduct != null) {
-                    targetProduct.dispose();
+            // check that band data is equal
+            Raster srcData = sourceProduct.getBandAt(0).getSourceImage().getData();
+            Raster targetData = targetProduct.getBandAt(0).getSourceImage().getData();
+            for (int y = 0; y < sourceProduct.getSceneRasterHeight(); y++) {
+                for (int x = 0; x < sourceProduct.getSceneRasterWidth(); x++) {
+                    float srcSample = srcData.getSampleFloat(x, y, 0);
+                    float targetSample = targetData.getSampleFloat(x, y, 0);
+                    assertEquals("[x" + "," + y + "]", srcSample, targetSample, 1e-5f);
                 }
             }
         } finally {
-            streamingProductReader.close();
+            if (targetProduct != null) {
+                targetProduct.dispose();
+            }
         }
     }
 
     private void testThatProductSequenceFileIsCorrect(Path productPath, int numKeys) throws IOException {
-        SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration);
-        try {
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration)) {
             assertSame(Text.class, reader.getKeyClass());
             assertSame(ByteArrayWritable.class, reader.getValueClass());
 
@@ -163,7 +156,7 @@ public class StreamingFormatTest {
             assertTrue(metadatMap.containsKey(new Text("slice.height")));
 
             Text sliceHeigthText = metadatMap.get(new Text("slice.height"));
-            assertEquals("64", sliceHeigthText.toString());
+            assertEquals(Integer.toString(TILE_HEIGHT), sliceHeigthText.toString());
 
             List<String> keyList = new ArrayList<String>();
             Text key = new Text();
@@ -172,8 +165,6 @@ public class StreamingFormatTest {
             }
 
             assertEquals(numKeys, keyList.size());
-        } finally {
-            reader.close();
         }
     }
 

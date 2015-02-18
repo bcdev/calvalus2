@@ -18,11 +18,14 @@
                 <include>org.esa.beam:beam-gpf</include>
                 <include>org.esa.beam:beam-core</include>
                 <include>org.esa.beam:beam-envisat-reader</include>
+                <include>org.esa.beam:beam-avhrr-reader</include>
                 <include>org.esa.beam:beam-geotiff</include>
                 <include>org.esa.beam:beam-netcdf</include>
                 <include>org.esa.beam:beam-spot-vgt-reader</include>
+                <include>org.esa.beam:beam-landsat-reader</include>
                 <include>gov.nasa.gsfc.seadas:seadas-reader</include>
                 <include>com.bc.ceres:ceres-metadata</include>
+                <include>hsqldb:hsqldb</include>
             </includes>
             <scope>runtime</scope>
             <useTransitiveDependencies>true</useTransitiveDependencies>

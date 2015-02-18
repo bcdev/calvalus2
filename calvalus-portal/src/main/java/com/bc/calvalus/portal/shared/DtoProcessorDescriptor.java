@@ -34,7 +34,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String bundleLocation;
     private String descriptionHtml;
     private String[] inputProductTypes;
-    private boolean isL2Processor;
+    private DtoProcessorCategory processorCategory;
     private String outputProductType;
     private String[] outputFormats;
     private String defaultMaskExpression;
@@ -57,7 +57,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String bundleLocation,
                                   String descriptionHtml,
                                   String[] inputProductTypes,
-                                  boolean isL2Processor,
+                                  DtoProcessorCategory processorCategory,
                                   String outputProductType,
                                   String[] outputFormats,
                                   String formattingType,
@@ -73,7 +73,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.bundleLocation = bundleLocation;
         this.descriptionHtml = descriptionHtml;
         this.inputProductTypes = inputProductTypes;
-        this.isL2Processor = isL2Processor;
+        this.processorCategory = processorCategory;
         this.outputProductType = outputProductType;
         this.outputFormats = outputFormats;
         this.formattingType = formattingType;
@@ -118,8 +118,8 @@ public class DtoProcessorDescriptor implements IsSerializable {
         return inputProductTypes;
     }
 
-    public boolean isL2Processor() {
-        return isL2Processor;
+    public DtoProcessorCategory getProcessorCategory() {
+        return processorCategory;
     }
 
     public String getOutputProductType() {
@@ -144,5 +144,11 @@ public class DtoProcessorDescriptor implements IsSerializable {
 
     public DtoParameterDescriptor[] getParameterDescriptors() {
         return parameterDescriptors;
+    }
+
+    public enum DtoProcessorCategory {
+        LEVEL2,
+        BOOTSTRAPPING,
+        DIFFERENTIATION
     }
 }

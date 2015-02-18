@@ -1,6 +1,7 @@
 #!/bin/bash
 
 inputFile="$inputFile"
+inputName="$inputFile.name"
 #if ($inputFile.name.startsWith("MER_RR__1"))
     prdInput=l1_rr.prd
     prdOutput=l2_rr.prd
@@ -51,7 +52,7 @@ do
 done
 ln -vs "$(readlink -f "${DATABASE_SOURCE_DIR}/database.db")" "database/database.db"
 
-# Prepare symoblic links for ADF files
+# link in the ADF files
 ADF_DIR=${PACKAGE_DIR}/auxdatafiles/megs
 ln -vs "$(readlink -f "${ADF_DIR}/aeroclim/20/aeroclim.20.08.prd")" "files/aeroclim.prd"
 ln -vs "$(readlink -f "${ADF_DIR}/atmosphere/34/atmosphere.34.03.01.prd")" "files/atmosphere.prd"
@@ -65,7 +66,7 @@ ln -vs "$(readlink -f "${ADF_DIR}/lv2conf/43/lv2conf.43.01.03.prd")" "files/lv2c
 ln -vs "$(readlink -f "${ADF_DIR}/vapour/22/vapour.22.00.prd")" "files/vapour.prd"
 ln -vs "$(readlink -f "${ADF_DIR}/vegetation/33/vegetation.33.01.prd")" "files/vegetation.prd"
 
-# link resources files
+# link the Resource files
 RESOURCE_DIR=${PACKAGE_DIR}/resources
 for f in fLOV.dat globcolour_config.txt ang_net.net atm_net_back.net atm_net_for.net wat_net_back.net wat_net_for.net
 do
@@ -92,6 +93,7 @@ export DATABASE_DIR=./database
 echo "Generate index.txt and values.txt from modifiers.db"
 ${PACKAGE_DIR}/index modifiers.db modifiers.db index.txt value.txt
 echo "Run the actual Megs executable"
+set -o pipefail
 ${PACKAGE_DIR}/level2 | while read x ; do handle_progress "$x" ; done
 
 

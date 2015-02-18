@@ -34,6 +34,7 @@ import java.util.TimeZone;
  * <li>{@code ${yyyy}} - the (sensing) year of a product file</li>
  * <li>{@code ${MM}} - the (sensing) month of a product file</li>
  * <li>{@code ${dd}} - the (sensing) day of a product file</li>
+ * <li>{@code ${DDD}} - the (sensing) DayOfYear of a product file</li>
  * </ol>
  *
  * @author MarcoZ
@@ -91,6 +92,7 @@ public class InputPathResolver {
                     String glob = pattern.replace("${yyyy}", String.format("%tY", calendar));
                     glob = glob.replace("${MM}", String.format("%tm", calendar));
                     glob = glob.replace("${dd}", String.format("%td", calendar));
+                    glob = glob.replace("${DDD}", String.format("%tj", calendar));
                     if (!globSet.contains(glob)) {
                         globSet.add(glob);
                         globList.add(glob);
@@ -101,6 +103,7 @@ public class InputPathResolver {
                 String glob = pattern.replace("${yyyy}", ".*");
                 glob = glob.replace("${MM}", ".*");
                 glob = glob.replace("${dd}", ".*");
+                glob = glob.replace("${DDD}", ".*");
                 globList.add(glob);
             }
         }
@@ -118,5 +121,11 @@ public class InputPathResolver {
         inputPathResolver.setMaxDate(maxDate);
         inputPathResolver.setRegionName(regionName);
         return inputPathResolver.resolve(inputPathPattern);
+    }
+
+    public static boolean containsDateVariables(String pattern) {
+        return pattern.contains("${yyyy}") ||
+                pattern.contains("${MM}") ||
+                pattern.contains("${dd}");
     }
 }

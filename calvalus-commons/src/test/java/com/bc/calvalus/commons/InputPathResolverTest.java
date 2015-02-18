@@ -124,6 +124,26 @@ public class InputPathResolverTest {
         assertEquals("/foo/MER_RR__1P\\p{Upper}+20050103*.N1", pathGlobs.get(2));
     }
 
+    @Test
+    public void testContainsDateVariables() throws Exception {
+        assertFalse(InputPathResolver.containsDateVariables(""));
+        assertFalse(InputPathResolver.containsDateVariables("foo"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}/${MM}/${dd}/.*.N1"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}/${MM}/.*.N1"));
+        assertTrue(InputPathResolver.containsDateVariables("/foo/${yyyy}.*.N1"));
+
+    }
+
+    @Test
+    public void testGlobForDayOfYear() throws Exception {
+        List<String> pathGlobs = InputPathResolver.getInputPathPatterns("/foo/MER_RR__1P\\p{Upper}+${yyyy}${DDD}*.N1", date("2005-01-01"), date("2005-01-03"), null);
+        assertNotNull(pathGlobs);
+        assertEquals(3, pathGlobs.size());
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+2005001*.N1", pathGlobs.get(0));
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+2005002*.N1", pathGlobs.get(1));
+        assertEquals("/foo/MER_RR__1P\\p{Upper}+2005003*.N1", pathGlobs.get(2));
+    }
+
     private Date date(String dateAsString) throws ParseException {
         final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
         final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);

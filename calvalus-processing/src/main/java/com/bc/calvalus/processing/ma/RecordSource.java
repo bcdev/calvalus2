@@ -19,5 +19,6 @@ public interface RecordSource {
      */
     Iterable<Record> getRecords() throws Exception;
 
+    //TODO move method to SPI ??
     String getTimeAndLocationColumnDescription();
 }

@@ -149,9 +149,10 @@ public class FileUploadServlet extends HttpServlet {
             }
 
             ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+            String userName = getUserName(req).toLowerCase();
             InputStream in = new BufferedInputStream(item.getInputStream(), 64 * 1024);
             try {
-                OutputStream out = new BufferedOutputStream(productionService.addUserFile(getUserName(req).toLowerCase(), filePath), 64 * 1024);
+                OutputStream out = new BufferedOutputStream(productionService.addUserFile(userName, filePath), 64 * 1024);
                 try {
                     copy(in, out);
                 } finally {

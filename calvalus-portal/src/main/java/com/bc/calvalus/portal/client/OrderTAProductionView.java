@@ -33,6 +33,7 @@ import java.util.Map;
  * @author Norman
  */
 public class OrderTAProductionView extends OrderProductionView {
+
     public static final String ID = OrderTAProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -54,12 +55,12 @@ public class OrderTAProductionView extends OrderProductionView {
             }
         });
 
-
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
         productSetFilterForm.temporalFilterByDateRange.setValue(false);
         productSetFilterForm.temporalFilterOff.setValue(true, true);
         productSetFilterForm.temporalFilterByDateList.setEnabled(false);
+
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
             public void temporalFilterChanged(Map<String, String> data) {
@@ -79,7 +80,6 @@ public class OrderTAProductionView extends OrderProductionView {
                 l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
             }
         });
-
 
         l3ConfigForm = new L3ConfigForm();
         l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());

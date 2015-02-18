@@ -134,6 +134,9 @@ public class OutputParametersForm extends Composite {
 
     public void validateForm() throws ValidationException {
         if (enableTailoring.getValue()) {
+            if (replaceNanValue.getValue() == null) {
+                throw new ValidationException(replaceNanValue, "Value for replacing NaN must be given.");
+            }
             if (bandListBox.getSelectedIndex() == -1) {
                 throw new ValidationException(bandListBox, "Output Parameters: One or more bands must be selected.");
             }
@@ -160,10 +163,10 @@ public class OutputParametersForm extends Composite {
         }
         if (enableTailoring.getValue()) {
             if (replaceNans.getValue()) {
-                parameters.put("replaceNanValue", String.valueOf(replaceNanValue.getValue()));
+                parameters.put("replaceNanValue", replaceNanValue.getValue().toString());
             }
             parameters.put("outputCRS", crsText.getValue());
-            parameters.put("quicklooks", String.valueOf(quicklooks.getValue()));
+            parameters.put("quicklooks", quicklooks.getValue().toString());
             parameters.put("outputBandList", createBandListString());
         }
 

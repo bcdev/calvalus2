@@ -20,16 +20,12 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
-import org.esa.beam.util.io.FileUtils;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -40,7 +36,7 @@ import java.util.Map;
  *
  * @author MarcoZ
  */
-public class BeamOperatorAdapter extends IdentityProcessorAdapter {
+public class BeamOperatorAdapter extends SubsetProcessorAdapter {
 
     private Product targetProduct;
 
@@ -51,32 +47,36 @@ public class BeamOperatorAdapter extends IdentityProcessorAdapter {
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("BEAM Level 2");
-        Configuration conf = getConfiguration();
-        String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        try {
+            Configuration conf = getConfiguration();
+            String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
+            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
-        Product subsetProduct = createSubset();
-        int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
-        int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
-        if (subsetProduct.getSceneRasterWidth() < minWidth &&
-            subsetProduct.getSceneRasterHeight() < minHeight) {
-            String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
-                                "It will be suppressed from the processing.";
-            getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
-                                           subsetProduct.getSceneRasterHeight()));
-            return 0;
-        }
-        targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
-        if (targetProduct == null ||
-            targetProduct.getSceneRasterWidth() == 0 ||
-            targetProduct.getSceneRasterHeight() == 0) {
-            return 0;
-        }
-        getLogger().info(String.format("Processed product width = %d height = %d",
-                                       targetProduct.getSceneRasterWidth(),
-                                       targetProduct.getSceneRasterHeight()));
-        if (hasInvalidStartAndStopTime(targetProduct)) {
-            copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+            Product subsetProduct = createSubset();
+            int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
+            int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
+            if (subsetProduct.getSceneRasterWidth() < minWidth &&
+                subsetProduct.getSceneRasterHeight() < minHeight) {
+                String msgPattern = "The size of the intersection of the product with the region is very small [%d, %d]." +
+                                    "It will be suppressed from the processing.";
+                getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
+                                               subsetProduct.getSceneRasterHeight()));
+                return 0;
+            }
+            targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+            if (targetProduct == null ||
+                targetProduct.getSceneRasterWidth() == 0 ||
+                targetProduct.getSceneRasterHeight() == 0) {
+                return 0;
+            }
+            getLogger().info(String.format("Processed product width = %d height = %d",
+                                           targetProduct.getSceneRasterWidth(),
+                                           targetProduct.getSceneRasterHeight()));
+            if (hasInvalidStartAndStopTime(targetProduct)) {
+                copySceneRasterStartAndStopTime(subsetProduct, targetProduct, null);
+            }
+        } finally {
+            pm.done();
         }
         return 1;
     }

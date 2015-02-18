@@ -1,7 +1,7 @@
 package com.bc.calvalus.inventory.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.AbstractInventoryService;
-import org.apache.hadoop.fs.FileSystem;
 
 /**
  * An inventory service that uses Hadoop's HDFS.
@@ -13,8 +13,8 @@ public class HdfsInventoryService extends AbstractInventoryService {
 
     public static final String CONTEXT_PATH = "/calvalus";
 
-    public HdfsInventoryService(FileSystem fileSystem) {
-        super(fileSystem);
+    public HdfsInventoryService(JobClientsMap jobClientsMap, String archiveRootDir) {
+        super(jobClientsMap, archiveRootDir);
     }
 
     @Override

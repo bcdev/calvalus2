@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.l3.cellstream;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
-import org.esa.beam.binning.operator.BinningOp;
 import org.esa.beam.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
@@ -27,7 +26,7 @@ import java.util.logging.Level;
 public class BeamSparseCellReader extends AbstractNetcdfCellReader {
 
     private static final int DEFAULT_READAHEAD = 1000;
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(BinningOp.DATETIME_PATTERN);
+    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 
     private final String[] featureNames;
     private final int numBins;

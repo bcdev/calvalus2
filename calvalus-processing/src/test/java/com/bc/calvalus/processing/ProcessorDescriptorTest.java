@@ -86,7 +86,7 @@ public class ProcessorDescriptorTest {
         assertNull(outputVariables[0].getDefaultWeightCoeff());
 
         assertEquals("chl_conc", outputVariables[1].getName());
-        assertEquals("AVG_ML", outputVariables[1].getDefaultAggregator());
+        assertEquals("AVG", outputVariables[1].getDefaultAggregator());
         assertEquals("0.5", outputVariables[1].getDefaultWeightCoeff());
 
         Map<String, String> jobConfig = processorDescriptor.getJobConfiguration();

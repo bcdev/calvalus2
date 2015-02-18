@@ -7,10 +7,9 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>1.7-SNAPSHOT</version>
+        <version>2.3-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus-l2gen</artifactId>
 
     <name>Calvalus l2gen Connector</name>

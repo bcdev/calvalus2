@@ -25,13 +25,13 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
-import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,10 +47,10 @@ public class L2ProductionTypeTest {
 
     @Before
     public void setUp() throws Exception {
-        JobClient jobClient = new JobClient(new JobConf());
-        HadoopProcessingService processingService = new HadoopProcessingService(jobClient) {
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
+        HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap) {
             @Override
-            public BundleDescriptor[] getBundles(BundleFilter filter) {
+            public BundleDescriptor[] getBundles(String username, BundleFilter filter) {
                 ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
                 processorDescriptor.setOutputProductType("Generic-L2");
                 return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", "/software/test/system", processorDescriptor)};

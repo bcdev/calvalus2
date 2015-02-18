@@ -48,7 +48,7 @@ public class TAConfig implements XmlConvertible {
     public static TAConfig get(Configuration conf) {
         String xml = conf.get(JobConfigNames.CALVALUS_TA_PARAMETERS);
         if (xml == null) {
-            throw new IllegalArgumentException("Missing trend analysis configuration '" + JobConfigNames.CALVALUS_L3_PARAMETERS + "'");
+            throw new IllegalArgumentException("Missing trend analysis configuration '" + JobConfigNames.CALVALUS_TA_PARAMETERS + "'");
         }
         try {
             return fromXml(xml);

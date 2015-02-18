@@ -18,19 +18,22 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,21 +51,28 @@ import java.util.logging.Level;
 public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     private final File cwd;
+    private final String parameterSuffix;
+    private final boolean debugScriptGenerator;
     private String[] outputFilesNames;
-    private String inputFileName;
     private boolean skipProcessing = false;
 
     public ExecutableProcessorAdapter(MapContext mapContext) {
+        this(mapContext, "");
+    }
+
+    public ExecutableProcessorAdapter(MapContext mapContext, String parameterSuffix) {
         super(mapContext);
+        this.parameterSuffix = parameterSuffix;
         this.cwd = new File(".");
+        this.debugScriptGenerator = mapContext.getConfiguration().getBoolean("calvalus.l2.debugScriptGenerator", false);
     }
 
     @Override
     public void prepareProcessing() throws IOException {
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PREPARE, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -72,13 +82,14 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
         Path inputPath = getInputPath();
-        Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
+        Path outputPath = getOutputDirectoryPath();
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", outputPath);
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
-        scriptGenerator.addScriptResources(conf);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
-            scriptGenerator.writeScriptFiles(cwd);
+            scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
@@ -89,8 +100,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                     setName(processLogName).
                     setHandler(keywordHandler).
                     start();
-            inputFileName = keywordHandler.getInputFile();
             skipProcessing = keywordHandler.skipProcessing();
+            String inputFile = keywordHandler.getInputFile();
+            if (inputFile != null) {
+                setInputFile(new File(inputFile));
+            }
         }
     }
 
@@ -102,16 +116,20 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
 
-        Rectangle inputRectangle = getInputRectangle();
         Path inputPath = getInputPath();
-        File inputFile;
-        if (inputFileName != null) {
-            inputFile = new File(inputFileName);
-        } else {
-            inputFile = copyFileToLocal(inputPath);
+        File inputFile = getInputFile();
+        if (inputFile == null) {
+            inputFile = CalvalusProductIO.copyFileToLocal(inputPath, getConfiguration());
+            setInputFile(inputFile);
+        }
+        Rectangle productRect = null;
+        Rectangle inputRectangle = getInputRectangle();
+        if (inputRectangle != null) {
+            Product inputProduct = getInputProduct();
+            productRect = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
         }
 
-        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile);
+        outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
         return outputFilesNames.length;
     }
 
@@ -119,16 +137,31 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         return cwd;
     }
 
-    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile) throws IOException {
-        return processInput(pm, inputRectangle, inputPath, inputFile, null);
+    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
+        KeywordHandler keywordHandler = process(pm, inputRectangle, inputPath, inputFile, productRectangle, velocityProps);
+
+        String productTransformation = keywordHandler.getProductTransformation();
+        if (productTransformation != null) {
+            System.out.println("productTransformation = " + productTransformation);
+            if (productRectangle == null) {
+                Product inputProduct = getInputProduct();
+                productRectangle = new Rectangle(inputProduct.getSceneRasterWidth(), inputProduct.getSceneRasterHeight());
+            }
+            ProductTransformation pTrans = ProductTransformation.parse(productTransformation, productRectangle);
+            AffineTransform transform = pTrans.getTransform();
+            System.out.println("transform = " + transform);
+            setInput2OutputTransform(transform);
+        }
+
+        return keywordHandler.getOutputFiles();
     }
 
-    public String[] processInput(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Map<String, String> velocityProps) throws IOException {
+    public KeywordHandler process(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS, "");
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, "");
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -140,7 +173,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("inputFile", inputFile);
         velocityContext.put("inputRectangle", inputRectangle);
-        velocityContext.put("outputPath", FileOutputFormat.getOutputPath(getMapContext()));
+
+        velocityContext.put("productRectangle", productRectangle);
+
+        velocityContext.put("outputPath", getOutputDirectoryPath());
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
         if (velocityProps != null) {
             for (Map.Entry<String, String> entry : velocityProps.entrySet()) {
@@ -148,11 +185,11 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             }
         }
 
-        scriptGenerator.addScriptResources(conf);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (!scriptGenerator.hasStepScript()) {
             throw new RuntimeException("No script for step 'process' available.");
         }
-        scriptGenerator.writeScriptFiles(cwd);
+        scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
@@ -164,8 +201,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 setProgressMonitor(pm).
                 setHandler(keywordHandler).
                 start();
-
-        return keywordHandler.getOutputFiles();
+        return keywordHandler;
     }
 
     @Override
@@ -180,7 +216,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
                 getLogger().info(String.format("ReaderPlugin: %s", productReader.toString()));
             }
             if (hasInvalidStartAndStopTime(product)) {
-                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time.");
+                getLogger().log(Level.INFO, "Processed Product has no or invalid start/stop time. Copying from input.");
                 // When processing with Polymere no time information is attached to the product.
                 // When processing with MEGS and input rectangle the start time is invalid.
                 // Therefor we have to adjust it here.
@@ -195,62 +231,63 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
+            saveProcessedProductFiles(outputFilesNames, pm);
+        }
+    }
 
-            Configuration conf = getConfiguration();
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE);
-            String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
-            String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
+    public void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
+        Configuration conf = getConfiguration();
+        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
+        String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
+        String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
-            ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
-            VelocityContext velocityContext = scriptGenerator.getVelocityContext();
-            velocityContext.put("system", System.getProperties());
-            velocityContext.put("configuration", conf);
-            velocityContext.put("parameterText", processorParameters);
-            velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
+        ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
+        VelocityContext velocityContext = scriptGenerator.getVelocityContext();
+        velocityContext.put("system", System.getProperties());
+        velocityContext.put("configuration", conf);
+        velocityContext.put("parameterText", processorParameters);
+        velocityContext.put("parameters", PropertiesHandler.asProperties(processorParameters));
 
-            velocityContext.put("outputFileNames", outputFilesNames);
-            Path outputPath = FileOutputFormat.getOutputPath(getMapContext());
-            velocityContext.put("outputPath", outputPath);
+        velocityContext.put("outputFileNames", outputFilesNames);
+        Path outputPath = getOutputDirectoryPath();
+        velocityContext.put("outputPath", outputPath);
+        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
-            scriptGenerator.addScriptResources(conf);
-            if (scriptGenerator.hasStepScript()) {
-                scriptGenerator.writeScriptFiles(cwd);
+        scriptGenerator.addScriptResources(conf, parameterSuffix);
+        if (scriptGenerator.hasStepScript()) {
+            scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
-                String[] cmdArray = new String[outputFilesNames.length + 2];
-                cmdArray[0] = "./finalize";
-                System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
-                cmdArray[cmdArray.length - 1] = outputPath.toString();
+            String[] cmdArray = new String[outputFilesNames.length + 2];
+            cmdArray[0] = "./finalize";
+            System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);
+            cmdArray[cmdArray.length - 1] = outputPath.toString();
 
-                Process process = Runtime.getRuntime().exec(cmdArray);
-                String processLogName = bundle + "-" + executable + "-finalize";
-                KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
+            Process process = Runtime.getRuntime().exec(cmdArray);
+            String processLogName = bundle + "-" + executable + "-finalize";
+            KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
-                new ProcessObserver(process).
-                        setName(processLogName).
-                        setProgressMonitor(pm).
-                        setHandler(keywordHandler).
-                        start();
-            } else {
-                MapContext mapContext = getMapContext();
-                for (String outputFileName : outputFilesNames) {
-                    InputStream inputStream = new BufferedInputStream(
-                            new FileInputStream(new File(cwd, outputFileName)));
-                    OutputStream outputStream = ProductFormatter.createOutputStream(mapContext, outputFileName);
-                    ProductFormatter.copyAndClose(inputStream, outputStream, mapContext);
-                }
+            new ProcessObserver(process).
+                    setName(processLogName).
+                    setProgressMonitor(pm).
+                    setHandler(keywordHandler).
+                    start();
+        } else {
+            pm.beginTask("saving", 1);
+            MapContext mapContext = getMapContext();
+            for (String outputFileName : outputFilesNames) {
+                InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+                Path workPath = new Path(getWorkOutputDirectoryPath(), outputFileName);
+                OutputStream os = FileSystem.get(conf).create(workPath);
+                ProductFormatter.copyAndClose(is, os, mapContext);
             }
+            pm.done();
         }
     }
 
     @Override
-    public Path getOutputPath() throws IOException {
+    public Path getOutputProductPath() throws IOException {
         if (outputFilesNames != null && outputFilesNames.length > 0) {
-            try {
-                Path workOutputPath = FileOutputFormat.getWorkOutputPath(getMapContext());
-                return new Path(workOutputPath, outputFilesNames[0]);
-            } catch (InterruptedException e) {
-                throw new IOException(e);
-            }
+            return new Path(getWorkOutputDirectoryPath(), outputFilesNames[0]);
         }
         return null;
     }

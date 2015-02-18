@@ -1,5 +1,6 @@
 package com.bc.calvalus.staging;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.core.CanceledException;
 import com.bc.ceres.core.runtime.internal.DirScanner;
 
@@ -11,10 +12,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public abstract class Staging implements Runnable {
+
+    public static Logger LOGGER = CalvalusLogger.getLogger();
 
     private boolean cancelled;
 
@@ -42,8 +46,10 @@ public abstract class Staging implements Runnable {
         }
 
         // Important: First scan, ...
+        LOGGER.info("Scanning " + sourceDir + "  for files to zip ...");
         DirScanner dirScanner = new DirScanner(sourceDir, true, true);
         String[] entryNames = dirScanner.scan();
+        LOGGER.info("Entries found: " + entryNames.length);
         //            ... then create new file (avoid including the new ZIP in the ZIP!)
         if (entryNames.length > 0) {
             ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(targetZipFile)));
@@ -51,6 +57,11 @@ public abstract class Staging implements Runnable {
 
             try {
                 for (String entryName : entryNames) {
+                    // also avoid including zip file if it pre-exists
+                    if (entryName.equals(targetZipFile.getName())) {
+                        continue;
+                    }
+                    LOGGER.info("Adding " + entryName + " to zip ...");
                     ZipEntry zipEntry = new ZipEntry(entryName.replace('\\', '/'));
 
                     File sourceFile = new File(sourceDir, entryName);

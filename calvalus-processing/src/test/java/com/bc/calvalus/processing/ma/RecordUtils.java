@@ -14,7 +14,7 @@ import java.util.Date;
 public class RecordUtils {
 
     public static Record create(Object... values) {
-        return new DefaultRecord(null, null, values);
+        return new DefaultRecord(0, null, null, values);
     }
 
     public static Record create(GeoPos coordinate, Date time, Object... values) {
@@ -28,9 +28,9 @@ public class RecordUtils {
                 list = new ArrayList<Object>(Arrays.asList((Object) time));
             }
             list.addAll(Arrays.asList(values));
-            return new DefaultRecord(coordinate, time, list.toArray(new Object[list.size()]));
+            return new DefaultRecord(0, coordinate, time, list.toArray(new Object[list.size()]));
         } else {
-            return new DefaultRecord(null, null, values);
+            return new DefaultRecord(0, null, null, values);
         }
     }
 

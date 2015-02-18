@@ -64,6 +64,17 @@
                     <name>l2_flags</name>
                 </outputVariable>
             </outputVariables>
+
+            <jobConfig>
+                 <jobParameter>
+                     <name>calvalus.auxdata.modis_geo</name>
+                     <value>'/calvalus/eodata/MODISA_GEO/v1/'yyyy'/'MM'/'dd'/'</value>
+                 </jobParameter>
+                 <jobParameter>
+                     <name>calvalus.hadoop.mapreduce.map.failures.maxpercent</name>
+                     <value>5</value>
+                 </jobParameter>
+             </jobConfig>
         </processorDescriptor>
     </processorDescriptors>
 </bundleDescriptor>

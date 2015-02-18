@@ -12,6 +12,12 @@ import java.util.Date;
 public interface Record {
 
     /**
+     * @return The id of this record,
+     *         must be unique within a single {@link com.bc.calvalus.processing.ma.RecordSource}.
+     */
+    int getId();
+
+    /**
      * @return The location as (lat,lon) point or {@code null} if the location is not available (see {@link Header#hasLocation()}).
      *         The location is usually represented in form of one or more attribute values.
      *         This is the location of the corresponding reference record.

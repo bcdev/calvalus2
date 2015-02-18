@@ -21,7 +21,7 @@ public interface InventoryService {
      *
      * @throws java.io.IOException If an I/O error occurs
      */
-    ProductSet[] getProductSets(String filter) throws Exception;
+    ProductSet[] getProductSets(String username, String filter) throws Exception;
 
     /**
      * Globs the given path pattern list against the inventory service's file system.
@@ -34,14 +34,14 @@ public interface InventoryService {
      *
      * @throws java.io.IOException If an I/O error occurs
      */
-    String[] globPaths(List<String> pathPatterns) throws IOException;
+    String[] globPaths(String username, List<String> pathPatterns) throws IOException;
 
     /**
      * @param path A relative or absolute path.
      *
      * @return A fully qualified URI comprising the filesystem and absolute data output path.
      */
-    String getQualifiedPath(String path);
+    String getQualifiedPath(String username, String path) throws IOException;
 
     /**
      * Adds a file to the inventory (creates necessary directories) and returns an {@link OutputStream output stream} for writing data into it.
@@ -52,7 +52,7 @@ public interface InventoryService {
      *
      * @throws IOException If an I/O error occurs
      */
-    OutputStream addFile(String userPath) throws IOException;
+    OutputStream addFile(String username, String userPath) throws IOException;
 
     /**
      * Deletes the file specified by the given path.
@@ -63,7 +63,7 @@ public interface InventoryService {
      *
      * @throws IOException If an I/O error occurs
      */
-    boolean removeFile(String userPath) throws IOException;
+    boolean removeFile(String username, String userPath) throws IOException;
 
     /**
      * Deletes the directory specified by the given path.
@@ -74,5 +74,5 @@ public interface InventoryService {
      *
      * @throws IOException If an I/O error occurs
      */
-    boolean removeDirectory(String userPath) throws IOException;
+    boolean removeDirectory(String username, String userPath) throws IOException;
 }

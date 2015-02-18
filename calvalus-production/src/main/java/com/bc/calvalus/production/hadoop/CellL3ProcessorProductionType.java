@@ -69,7 +69,8 @@ public class CellL3ProcessorProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
                 JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
 
-        WorkflowItem workflowItem = new CellL3ProcessorWorkflowItem(getProcessingService(), productionName, jobConfig);
+        WorkflowItem workflowItem = new CellL3ProcessorWorkflowItem(getProcessingService(), productionRequest.getUserName(),
+                                                                    productionName, jobConfig);
         if (outputFormat != null) {
             jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
@@ -86,6 +87,7 @@ public class CellL3ProcessorProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
             WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
+                                                               productionRequest.getUserName(),
                                                                productionName + " Format",
                                                                jobConfig);
             workflowItem = new Workflow.Sequential(workflowItem, formatItem);

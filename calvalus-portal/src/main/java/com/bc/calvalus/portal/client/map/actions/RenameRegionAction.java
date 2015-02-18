@@ -4,6 +4,10 @@ import com.bc.calvalus.portal.client.Dialog;
 import com.bc.calvalus.portal.client.map.AbstractMapAction;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
+import com.google.gwt.core.client.GWT;
+import com.google.gwt.resources.client.ClientBundle;
+import com.google.gwt.resources.client.ImageResource;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -18,7 +22,12 @@ public class RenameRegionAction extends AbstractMapAction {
     private static final String TITLE = "Rename Region";
 
     public RenameRegionAction() {
-        super("R", "Rename selected region");
+        super("R", new Image(((Icons) GWT.create(Icons.class)).getIcon()), "Rename selected region");
+    }
+
+    interface Icons extends ClientBundle {
+        @Source("RegionRename24.gif")
+        ImageResource getIcon();
     }
 
     @Override

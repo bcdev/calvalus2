@@ -1,0 +1,97 @@
+#!/bin/bash
+
+inputFile="$inputFile"
+inputName="$inputFile.name"
+#if ($inputFile.name.startsWith("MER_RR__1"))
+    prdInput=l1_rr.prd
+    prdOutput=l2_rr.prd
+#elseif($inputFile.name.startsWith("MER_RRG_1"))
+    prdInput=l1_rrg.prd
+    prdOutput=l2_rrg.prd
+#elseif($inputFile.name.startsWith("MER_FR__1"))
+    prdInput=l1_fr.prd
+    prdOutput=l2_fr.prd
+#elseif($inputFile.name.startsWith("MER_FRS_1"))
+    prdInput=l1_frs.prd
+    prdOutput=l2_frs.prd
+#elseif($inputFile.name.startsWith("MER_FRG_1"))
+    prdInput=l1_frg.prd
+    prdOutput=l2_frg.prd
+#elseif($inputFile.name.startsWith("MER_FSG_1"))
+    prdInput=l1_fsg.prd
+    prdOutput=l2_fsg.prd
+#end
+#[[
+
+set -e
+set -m
+
+PACKAGE_DIR=./megs-8.0/megs-8.0
+
+# append newline to modifiers.db
+echo >> modifiers.db
+
+# for debugging purpose
+#echo "=================="
+#cat modifiers.db
+#echo "=================="
+
+########################################################################
+echo "linking in auxdata files"
+
+# make the required directories
+mkdir -p files
+
+# link in the database files
+for f in $(ls ${PACKAGE_DIR}/aux_data/database/)
+do
+  ln -s "$(readlink -f "${PACKAGE_DIR}/aux_data/database/$f")" "files/$f"
+done
+
+# link in the ADF files
+ADF_DIR=${PACKAGE_DIR}/aux_data/megs
+ln -s "$(readlink -f "$ADF_DIR/aeroclim/20/aeroclim.20.08.prd")" "files/aeroclim.prd"
+ln -s "$(readlink -f "$ADF_DIR/atmosphere/34/atmosphere.34.03.01.prd")" "files/atmosphere.prd"
+ln -s "$(readlink -f "$ADF_DIR/case1/63/case1.63.02.01.prd")" "files/case1.prd"
+ln -s "$(readlink -f "$ADF_DIR/case2/46/case2.46.02.02.prd")" "files/case2.prd"
+ln -s "$(readlink -f "$ADF_DIR/conf_map/20/conf_map.20.00.prd")" "files/conf_map.prd"
+ln -s "$(readlink -f "$ADF_DIR/cloud/41/cloud.41.02.prd")" "files/cloud.prd"
+ln -s "$(readlink -f "$ADF_DIR/landaero/44/landaero.44.03.01.prd")" "files/landaero.prd"
+ln -s "$(readlink -f "$ADF_DIR/oceanaero/42/oceanaero.42.04.03.prd")" "files/oceanaer.prd"
+ln -s "$(readlink -f "$ADF_DIR/lv2conf/43/lv2conf.43.01.03.prd")" "files/lv2conf.prd"
+ln -s "$(readlink -f "$ADF_DIR/vapour/22/vapour.22.00.prd")" "files/vapour.prd"
+ln -s "$(readlink -f "$ADF_DIR/vegetation/33/vegetation.33.01.prd")" "files/vegetation.prd"
+
+# link the Resource files
+for f in fLOV.dat globcolour_config.txt ang_net.net atm_net_back.net atm_net_for.net wat_net_back.net wat_net_for.net
+do
+  ln -s "$(readlink -f "${PACKAGE_DIR}/aux_data/resources/$f")" "files/$f"
+done
+########################################################################
+
+# link the input file
+ln -sv "$(readlink -f "${inputFile}")" "files/${prdInput}"
+
+echo "starting progress monitoring ..."
+./reportprogress.bash &
+trap 'kill %1' EXIT
+
+echo "calling MEGS ..."
+# call MEGS executable wrapper for automatic cleanup on failure.
+./${PACKAGE_DIR}/bin/megs.sh
+
+
+# rename result file
+outputfile=$(basename $inputName N1)MEGS.nc
+mv files/output.nc "${outputfile}"
+echo "CALVALUS_OUTPUT_PRODUCT ${outputfile}"
+
+# for retrieving internal files
+#outFileBase=$(basename ${outputfile} .N1)
+#for baf in files/*.baf
+#do
+#  mv -v $baf ${outFileBase}_$(basename $baf)
+#  echo "CALVALUS_OUTPUT_PRODUCT ${outFileBase}_$(basename $baf)"
+#done
+]]#
+

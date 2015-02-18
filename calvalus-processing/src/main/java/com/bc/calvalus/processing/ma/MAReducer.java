@@ -51,7 +51,8 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         final Configuration jobConfig = context.getConfiguration();
         final MAConfig maConfig = MAConfig.get(jobConfig);
 
-        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName());
+        final PlotDatasetCollector plotDatasetCollector = new PlotDatasetCollector(maConfig.getOutputGroupName(),
+                                                                                   maConfig.getVariableMappings());
 
         final RecordProcessor[] recordProcessors = new RecordProcessor[]{
                 new CsvRecordWriter(createWriter(context, "records-all.txt"),
@@ -92,7 +93,7 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
                     exclusionIndex = annotNames.indexOf(DefaultHeader.ANNOTATION_EXCLUSION_REASON);
                     processHeaderRecord(record, recordProcessors);
                 } else {
-                    processDataRecord(record, recordProcessors);
+                    processDataRecord(key.toString(), record, recordProcessors);
                     totalRecordCount++;
                     if (exclusionIndex >= 0) {
                         String reason = (String) record.getAnnotationValues()[exclusionIndex];
@@ -128,9 +129,9 @@ public class MAReducer extends Reducer<Text, RecordWritable, Text, RecordWritabl
         }
     }
 
-    private void processDataRecord(RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
+    private void processDataRecord(String key, RecordWritable record, RecordProcessor[] recordProcessors) throws IOException {
         for (RecordProcessor recordProcessor : recordProcessors) {
-            recordProcessor.processDataRecord(record.getAttributeValues(), record.getAnnotationValues());
+            recordProcessor.processDataRecord(key, record.getAttributeValues(), record.getAnnotationValues());
         }
     }
 

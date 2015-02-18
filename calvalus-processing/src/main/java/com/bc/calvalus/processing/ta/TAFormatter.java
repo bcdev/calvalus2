@@ -16,10 +16,8 @@
 
 package com.bc.calvalus.processing.ta;
 
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.l3.L3Config;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -28,7 +26,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.BinningContext;
+import org.esa.beam.binning.operator.BinningConfig;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,9 +46,6 @@ public class TAFormatter {
     private static final String PART_FILE_PREFIX = "part-r-";
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private BinningContext binningContext;
-    private File outputFile;
-
     private final Logger logger;
     private final Configuration hadoopConf;
     private Path partsDir;
@@ -57,12 +55,10 @@ public class TAFormatter {
         this.hadoopConf = hadoopConf;
     }
 
-    public int format(File outputFile, L3Config l3Config, String hadoopJobOutputDir) throws Exception {
-
-        this.outputFile = outputFile;
+    public int format(File outputFile, BinningConfig binningConfig, String hadoopJobOutputDir) throws Exception {
 
         partsDir = new Path(hadoopJobOutputDir);
-        binningContext = l3Config.createBinningContext();
+        BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
         final BinManager binManager = binningContext.getBinManager();
         final int aggregatorCount = binManager.getAggregatorCount();
         if (aggregatorCount == 0) {

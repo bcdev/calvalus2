@@ -82,32 +82,37 @@ public abstract class OrderProductionView extends PortalView {
         if (validateForm()) {
             DtoProductionRequest request = getProductionRequest();
 
-            final DialogBox progressBox = new DialogBox();
-            progressBox.ensureDebugId("cwDialogBox");
-            progressBox.setText("Submitting Production Request...");
-            progressBox.setGlassEnabled(true);
-            progressBox.setAnimationEnabled(true);
-            progressBox.setAutoHideEnabled(true);
-            progressBox.setWidget(new HTML("Your production request is currently being processed on the server. After a preparation phase<br/>" +
-                                           "you can observe its processing progress in the <b>Manage Productions</b> tab.<br/>" +
-                                           "Depending on the number of files in the input file set, the preparation phase may take<br/>" +
-                                           "seconds to minutes.<br/>" +
-                                           "<br/>" +
-                                           "This dialog box will then close automatically."));
-            progressBox.center();
+            final DialogBox submitDialog = createSubmitProductionDialog();
+            submitDialog.center();
 
             getPortal().getBackendService().orderProduction(request, new AsyncCallback<DtoProductionResponse>() {
                 public void onSuccess(final DtoProductionResponse response) {
-                    progressBox.hide();
+                    submitDialog.hide();
                     onOrderProductionSuccess();
                 }
 
                 public void onFailure(Throwable caught) {
-                    progressBox.hide();
+                    submitDialog.hide();
                     onOrderProductionFailure(caught);
                 }
             });
         }
+    }
+
+    static DialogBox createSubmitProductionDialog() {
+        final DialogBox submitDialog = new DialogBox();
+        submitDialog.ensureDebugId("cwDialogBox");
+        submitDialog.setText("Submitting Production Request...");
+        submitDialog.setGlassEnabled(true);
+        submitDialog.setAnimationEnabled(true);
+        submitDialog.setAutoHideEnabled(true);
+        submitDialog.setWidget(new HTML("Your production request is currently being processed on the server. After a preparation phase<br/>" +
+                                       "you can observe its processing progress in the <b>Manage Productions</b> tab.<br/>" +
+                                       "Depending on the number of files in the input file set, the preparation phase may take<br/>" +
+                                       "seconds to minutes.<br/>" +
+                                       "<br/>" +
+                                       "This dialog box will then close automatically."));
+        return submitDialog;
     }
 
     /**

@@ -1,0 +1,52 @@
+#!/bin/bash
+
+inFileName="$inputFile.name"
+
+#[[
+
+#for debugging
+#set -x
+
+set -e
+set -m
+
+export OCSSWROOT=./seadas-7.0/seadas-7.0
+if [[ $(hostname -f) =~ ^calvalus ]]; then
+  export OCSSWROOT=/users/rsg/rsgcode/operational/linux-x86_64/third_party/opt/seadas/V7.0.1/ocssw
+fi
+L1BGEN_BIN=${OCSSWROOT}/run/bin/linux_64/l1bgen
+source $OCSSWROOT/OCSSW_bash.env
+
+# testing compression
+l1aFile=$inFileName
+if [[ $inFileName =~ gz$ ]]; then
+  echo "gunzip"
+  gunzip $inFileName
+  l1aFile=${inFileName%.gz}
+elif [[ $inFileName =~ bz2$ ]]; then
+  echo "bunzip2"
+  bunzip2 $inFileName
+  l1aFile=${inFileName%.bz2}
+fi
+echo "L1A file $l1aFile"
+l1bFile=${l1aFile/L1A/L1B}
+
+# append newline to parameters.anc
+touch parameters.anc
+echo >> parameters.anc
+
+echo "ifile=${l1aFile}" >> parameters.anc
+echo "ofile=${l1bFile}" >> parameters.anc
+
+# for debugging purpose
+echo "=========parameters.anc========="
+cat parameters.anc
+echo "=========parameters.anc========="
+
+ulimit -s unlimited
+# progress not needed, takes only some seconds
+echo ${L1BGEN_BIN} par=parameters.anc
+${L1BGEN_BIN} par=parameters.anc
+
+echo CALVALUS_OUTPUT_PRODUCT ${l1bFile}
+]]#

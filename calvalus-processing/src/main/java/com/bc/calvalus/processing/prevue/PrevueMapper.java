@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.prevue;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.hadoop.ProductSplitProgressMonitor;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
@@ -80,7 +80,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         final MAConfig maConfig = MAConfig.get(jobConfig);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        ProgressMonitor pm = new ProductSplitProgressMonitor(context);
+        ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));

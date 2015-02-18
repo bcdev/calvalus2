@@ -33,9 +33,9 @@ import java.io.IOException;
  */
 public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
 
-    public ProductInventoryWorkflowItem(HadoopProcessingService processingService, String jobName,
+    public ProductInventoryWorkflowItem(HadoopProcessingService processingService, String username, String jobName,
                                         Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override
@@ -71,6 +71,6 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(ProductInventoryReducer.class);
         job.setOutputFormatClass(TextOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
     }
 }

@@ -1,27 +1,38 @@
 package com.bc.calvalus.production.hadoop;
 
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.l3.L3Config;
-import com.bc.calvalus.processing.l3.L3WorkflowItem;
-import com.bc.calvalus.processing.ta.*;
+import com.bc.calvalus.processing.l3.HadoopBinManager;
+import com.bc.calvalus.processing.ta.TAGraph;
+import com.bc.calvalus.processing.ta.TAPoint;
+import com.bc.calvalus.processing.ta.TAReport;
+import com.bc.calvalus.processing.ta.TAResult;
+import com.bc.calvalus.processing.ta.TAWorkflowItem;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
+import org.esa.beam.binning.Aggregator;
+import org.esa.beam.binning.BinManager;
 import org.esa.beam.binning.WritableVector;
+import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -30,14 +41,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * The L3 staging job.
+ * The TA staging job.
  *
  * @author Norman
  * @author MarcoZ
+ * @author Martin
  */
 class TAStaging extends ProductionStaging {
 
     public static final Logger LOGGER = Logger.getLogger("com.bc.calvalus");
+    private static final long GIGABYTE = 1024L * 1024L * 1024L;
     private final Configuration hadoopConfiguration;
     private final File stagingDir;
 
@@ -51,80 +64,71 @@ class TAStaging extends ProductionStaging {
 
     @Override
     public void performStaging() throws Throwable {
-        Production production = getProduction();
 
-        FileSystem fs = FileSystem.get(hadoopConfiguration);
+        final Production production = getProduction();
+        float progress = 0f;
+        int index = 0;
+        production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
 
         if (!stagingDir.exists()) {
             stagingDir.mkdirs();
         }
 
-        float progress = 0f;
-        int index = 0;
-        production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
+        final WorkflowItem workflow = production.getWorkflow();
+        final TAWorkflowItem taWorkflowItem = (TAWorkflowItem) workflow.getItems()[workflow.getItems().length - 1];
+        final String inputDir = taWorkflowItem.getOutputDir();
 
-        TAResult taResult = null;
+        final ProductionRequest productionRequest = production.getProductionRequest();
+        final String l3ConfigXml = L3ProductionType.getL3ConfigXml(productionRequest);
+        BinningConfig binningConfig = BinningConfig.fromXml(l3ConfigXml);
+        final BinManager binManager = HadoopBinManager.createBinningContext(binningConfig, null, null).getBinManager();
 
-        WorkflowItem workflow = production.getWorkflow();
-        WorkflowItem[] parallelItems = workflow.getItems();
-        for (WorkflowItem parallelItem : parallelItems) {
+        final List<String> outputFeatureNames = new ArrayList<String>();
+        final int aggregatorCount = binManager.getAggregatorCount();
+        for (int i = 0; i < aggregatorCount; i++) {
+            final Aggregator aggregator = binManager.getAggregator(i);
+            outputFeatureNames.addAll(Arrays.asList(aggregator.getOutputFeatureNames()));
+        }
 
-            if (isCancelled()) {
-                return;
-            }
+        final Text regionDateKey = new Text();
+        final TAPoint taPoint = new TAPoint();
+        final TAResult taResult = new TAResult();
+        taResult.setOutputFeatureNames(outputFeatureNames.toArray(new String[outputFeatureNames.size()]));
 
-            WorkflowItem[] sequentialItems = parallelItem.getItems();
-            L3WorkflowItem l3WorkflowItem = (L3WorkflowItem) sequentialItems[0];
-            TAWorkflowItem taWorkflowItem = (TAWorkflowItem) sequentialItems[1];
-
-            String inputDir = taWorkflowItem.getOutputDir();
-
-
-            L3Config l3Config = l3WorkflowItem.getL3Config();
-            BinManager binManager = l3Config.createBinningContext().getBinManager();
-            if (taResult == null) {
-                taResult = new TAResult();
-                List<String> outputFeatureNames = new ArrayList<String>();
-                int aggregatorCount = binManager.getAggregatorCount();
-                for (int i = 0; i < aggregatorCount; i++) {
-                    Aggregator aggregator = binManager.getAggregator(i);
-                    outputFeatureNames.addAll(Arrays.asList(aggregator.getOutputFeatureNames()));
-                }
-                taResult.setOutputFeatureNames(outputFeatureNames.toArray(new String[outputFeatureNames.size()]));
-            }
-
-            try {
-                SequenceFile.Reader reader = new SequenceFile.Reader(fs, new Path(inputDir, "part-r-00000"), hadoopConfiguration);
+        FileSystem fs = FileSystem.get(hadoopConfiguration);
+        try {
+            final FileStatus[] fileStatuses = fs.globStatus(new Path(inputDir, "part-r-?????"));
+            for (FileStatus file : fileStatuses) {
+                final SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), hadoopConfiguration);
                 try {
-                    Text region = new Text();
-                    TAPoint taPoint = new TAPoint();
-                    while (reader.next(region, taPoint)) {
-                        WritableVector outputVector = binManager.createOutputVector();
+                    while (reader.next(regionDateKey, taPoint)) {
+                        final WritableVector outputVector = binManager.createOutputVector();
                         binManager.computeOutput(taPoint.getTemporalBin(), outputVector);
                         taResult.addRecord(taPoint.getRegionName(), taPoint.getStartDate(), taPoint.getStopDate(), outputVector);
                     }
                 } finally {
                     reader.close();
                 }
-            } catch (IOException e) {
-                production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
-                LOGGER.log(Level.SEVERE, "Failed to read TA output " + inputDir, e);
+                if (isCancelled()) {
+                    return;
+                }
+                index++;
+                progress = 1.0f - (1.0f / (index + 1));
+                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
             }
-
-            clearInputDir(hadoopConfiguration, inputDir);
-
-            index++;
-            progress = (index + 1) / parallelItems.length;
-            production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, progress, ""));
+        } catch (IOException e) {
+            production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
+            LOGGER.log(Level.SEVERE, "Failed to read TA output " + inputDir, e);
         }
-        TAReport taReport = new TAReport(taResult);
-        TAGraph taGraph = new TAGraph(taResult);
-        Set<String> regionNames = taResult.getRegionNames();
-        List<String> imgUrls = new ArrayList<String>();
+
+        final TAReport taReport = new TAReport(taResult);
+        final TAGraph taGraph = new TAGraph(taResult);
+        final Set<String> regionNames = taResult.getRegionNames();
+        final List<String> imgUrls = new ArrayList<String>();
         for (String regionName : regionNames) {
             File regionFile = getCsvFile(regionName);
             try {
-                Writer writer = new OutputStreamWriter(new FileOutputStream(regionFile));
+                final Writer writer = new OutputStreamWriter(new FileOutputStream(regionFile));
                 taReport.writeRegionCsvReport(writer, regionName);
             } catch (IOException e) {
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
@@ -133,30 +137,76 @@ class TAStaging extends ProductionStaging {
 
             File pngFile = null;
             try {
-                String[] outputFeatureNames = taResult.getOutputFeatureNames();
-                for (int featureIndex = 0; featureIndex < outputFeatureNames.length; featureIndex++) {
-                    pngFile = new File(stagingDir, "Yearly_cycle-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                String[] featureNames = taResult.getOutputFeatureNames();
+                for (int featureIndex = 0; featureIndex < featureNames.length; featureIndex++) {
+                    pngFile = new File(stagingDir, "Yearly_cycle-" + regionName + "-" + featureNames[featureIndex] + ".png");
                     JFreeChart chart = taGraph.createYearlyCyclGaph(regionName, featureIndex);
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
 
-                    pngFile = new File(stagingDir, "Timeseries-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
-                    chart = taGraph.createTimeseriesGaph(regionName, featureIndex);
+                    pngFile = new File(stagingDir, "Timelseries-" + regionName + "-" + featureNames[featureIndex] + ".png");
+                    int sigmaIndex = findSigmaFeature(featureNames, featureNames[featureIndex]);
+                    if (sigmaIndex != -1) {
+                        chart = taGraph.createTimeseriesSigmaGraph(regionName, featureIndex, sigmaIndex);
+                    } else {
+                        chart = taGraph.createTimeseriesGaph(regionName, featureIndex);
+                    }
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
 
-                    pngFile = new File(stagingDir, "Anomaly-" + regionName + "-" + outputFeatureNames[featureIndex] + ".png");
+                    pngFile = new File(stagingDir, "Anomaly-" + regionName + "-" + featureNames[featureIndex] + ".png");
                     chart = taGraph.createAnomalyGraph(regionName, featureIndex);
                     TAGraph.writeChart(chart, new FileOutputStream(pngFile));
                     imgUrls.add(pngFile.getName());
+
                 }
             } catch (IOException e) {
                 production.setStagingStatus(new ProcessStatus(ProcessState.ERROR, progress, e.getMessage()));
                 LOGGER.log(Level.SEVERE, "Failed to write TA graph file " + (pngFile != null ? pngFile : ""), e);
             }
         }
+
+        final FileStatus[] fileStatuses = fs.globStatus(new Path(inputDir, "*-timeseries.csv"));
+        long totalFilesSize = 0L;
+        if (fileStatuses != null) {
+            for (int i = 0; i < fileStatuses.length; i++) {
+                FileStatus fileStatus = fileStatuses[i];
+                Path path = fileStatus.getPath();
+                LOGGER.info("Copying " + path.getName() + " to staging area ...");
+                FileUtil.copy(fs,
+                              path,
+                              new File(stagingDir, path.getName()),
+                              false, hadoopConfiguration);
+                totalFilesSize += fileStatus.getLen();
+                production.setStagingStatus(new ProcessStatus(ProcessState.RUNNING, (i + 1.0F) / fileStatuses.length, path.getName()));
+            }
+        }
+        if (totalFilesSize < 2L * GIGABYTE / 2) {
+            String zipFilename = getSafeFilename(production.getName() + ".zip");
+            zip(stagingDir, new File(stagingDir, zipFilename));
+        }
+
         production.setStagingStatus(new ProcessStatus(ProcessState.COMPLETED, 1.0f, ""));
+
+        // handle umlaut in lake names
+        for (int i=0; i<imgUrls.size(); ++i) {
+            imgUrls.set(i, URLEncoder.encode(imgUrls.get(i), "UTF-8"));
+        }
         new ProductionWriter(production, imgUrls.toArray(new String[imgUrls.size()])).write(stagingDir);
+    }
+
+    private int findSigmaFeature(String[] featureNames, String featureName) {
+        int sigmaIndex = -1;
+        if (featureName.endsWith("_mean")) {
+            String sigmaName = featureName.substring(0, featureName.length() - "_mean".length()) + "_sigma";
+            for (int i=0; i<featureNames.length; ++i) {
+                if (featureNames[i].equals(sigmaName)) {
+                    sigmaIndex = i;
+                    break;
+                }
+            }
+        }
+        return sigmaIndex;
     }
 
     @Override
@@ -168,13 +218,5 @@ class TAStaging extends ProductionStaging {
 
     private File getCsvFile(String regionName) {
         return new File(stagingDir, regionName + ".csv");
-    }
-
-    private void clearInputDir(Configuration configuration, String inputDir) {
-        try {
-            JobUtils.clearDir(inputDir, configuration);
-        } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Failed to delete TA output " + inputDir, e);
-        }
     }
 }

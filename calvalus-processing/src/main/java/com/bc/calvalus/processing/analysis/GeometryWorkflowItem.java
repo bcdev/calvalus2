@@ -30,8 +30,8 @@ import java.io.IOException;
 
 public class GeometryWorkflowItem extends HadoopWorkflowItem {
 
-    public GeometryWorkflowItem(HadoopProcessingService processingService, String jobName, Configuration jobConfig) {
-        super(processingService, jobName, jobConfig);
+    public GeometryWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+        super(processingService, username, jobName, jobConfig);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class GeometryWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(1);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job);
+        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
     }
 
 }

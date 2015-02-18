@@ -34,6 +34,31 @@ import java.util.ServiceLoader;
  */
 public class MAConfig implements XmlConvertible {
 
+
+    public static class VariableMapping {
+        @Parameter
+        private String reference;
+        @Parameter
+        private String satellite;
+
+        // empty constructor for XML serialization
+        public VariableMapping() {
+        }
+
+        public VariableMapping(String reference, String satellite) {
+            this.reference = reference;
+            this.satellite = satellite;
+        }
+
+        public String getReference() {
+            return reference;
+        }
+
+        public String getSatellite() {
+            return satellite;
+        }
+    }
+
     /**
      * If {@code copyInput = true}, all fields of an input (reference) record will be
      * copied into a corresponding output record.
@@ -49,6 +74,13 @@ public class MAConfig implements XmlConvertible {
      */
     @Parameter(defaultValue = "5")
     private int macroPixelSize;
+
+    /**
+     * If {@code onlyExtractComplete = true}, only macro pixels that comprise the complete {@code n x n} area
+     * are extracted.
+     */
+    @Parameter(defaultValue = "true")
+    private boolean onlyExtractComplete;
 
     /**
      * Maximum time difference in hours between reference and EO pixel.
@@ -108,7 +140,7 @@ public class MAConfig implements XmlConvertible {
      * Instances of this class are used to create {@link RecordSource} objects which are in turn used to
      * provide {@link Record}s.
      */
-    @Parameter(defaultValue = "com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi")
+    @Parameter
     private String recordSourceSpiClassName;
 
     /**
@@ -117,6 +149,16 @@ public class MAConfig implements XmlConvertible {
      */
     @Parameter
     private String recordSourceUrl;
+
+    /**
+     * If set to {@code true} the product or product parts
+     * that have been processed will be saved.
+     */
+    @Parameter(defaultValue = "false")
+    private boolean saveProcessedProducts;
+
+    @Parameter(itemAlias = "variableMapping")
+    private VariableMapping[] variableMappings;
 
     // The following have been discussed but not yet decided.
 
@@ -295,5 +337,29 @@ public class MAConfig implements XmlConvertible {
 
     public void setFilterOverlapping(boolean filterOverlapping) {
         this.filterOverlapping = filterOverlapping;
+    }
+
+    public boolean getSaveProcessedProducts() {
+        return saveProcessedProducts;
+    }
+
+    public void setSaveProcessedProducts(boolean saveProcessedProducts) {
+        this.saveProcessedProducts = saveProcessedProducts;
+    }
+
+    public VariableMapping[] getVariableMappings() {
+        return variableMappings != null ? variableMappings : new VariableMapping[0];
+    }
+
+    public void setVariableMappings(VariableMapping[] variableMappings) {
+        this.variableMappings = variableMappings;
+    }
+
+    public boolean getOnlyExtractComplete() {
+        return onlyExtractComplete;
+    }
+
+    public void setOnlyExtractComplete(boolean onlyExtractComplete) {
+        this.onlyExtractComplete = onlyExtractComplete;
     }
 }
