@@ -68,6 +68,7 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
         final int clearLandCountIndex = temporalFeatures.indexOf("clear_land_count");
         final int clearSnowIceCountIndex = temporalFeatures.indexOf("clear_snow_ice_count");
         final int clearWaterCountIndex = temporalFeatures.indexOf("clear_water_count");
+        final int cloudShadowCountIndex = temporalFeatures.indexOf("cloud_shadow_count");
         final int sr11MeanIndex = temporalFeatures.indexOf("sr_11_mean");
         final int sr15MeanIndex = temporalFeatures.indexOf("sr_15_mean");
         final int sr11SigmaIndex = temporalFeatures.indexOf("sr_11_sigma");
@@ -104,6 +105,9 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
                             break;
                         case 3:
                             temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[clearSnowIceCountIndex][j]);
+                            break;
+                        case 5:
+                            temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[cloudShadowCountIndex][j]);
                             break;
                         default:
                             temporalData[i][j] = Float.NaN;
