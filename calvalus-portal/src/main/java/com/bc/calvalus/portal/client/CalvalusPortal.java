@@ -20,6 +20,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
+import com.google.gwt.user.client.ui.DecoratedTabPanel;
 import com.google.gwt.user.client.ui.Frame;
 import com.google.gwt.user.client.ui.MenuBar;
 import com.google.gwt.user.client.ui.MenuItem;
@@ -206,6 +207,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         regionMapModel = new RegionMapModelImpl(getRegions());
 
         manageProductionsView = new ManageProductionsView(this);
+        // todo (mp, 18.02.2015)- this code originates from the master and needs to be adapted to the new menu
 //        if (withPortalFeature("analysistab")) {
 //            views = new PortalView[]{
 //                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
