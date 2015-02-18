@@ -311,6 +311,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                && systemProcessors != null && userProcessors != null && allUserProcessors != null
                && productions != null
                && isCcUser != null
+               && isCalEsa != null
+               && isCalOpus != null
                && isCalvalusUser != null;
     }
 
