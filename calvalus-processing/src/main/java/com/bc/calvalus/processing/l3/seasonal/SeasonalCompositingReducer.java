@@ -92,7 +92,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final int bandTileWidth = bandTileHeight;
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
-        final int noOfWeeks = Math.max((int) ((stop.getTime() - start.getTime()) / 86400 / 7 / 1000), 1);
+        final int noOfWeeks = (int) ((stop.getTime() - start.getTime()) / 86400 / 1000 + 1) / 7;
         LOG.info("reducing start=" + DATE_FORMAT.format(start) + " weeks=" + noOfWeeks);
         if (! context.nextKey()) {
             return;
