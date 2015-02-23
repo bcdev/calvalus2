@@ -205,6 +205,21 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>calopus-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/calopus-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-calopus-patch</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
