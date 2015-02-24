@@ -2,9 +2,11 @@
 
 set -m
 set -e
+set -x
 
 inputFile=$1
-outputFile=Simple_copy_of_$(basename ${inputFile})
+prefix='$parameters.get("prefix")'
+outputFile=${prefix}$(basename ${inputFile})
 
 echo CALVALUS_PROGRESS 0.1
 sleep 10

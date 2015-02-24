@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -m
+set -e
+set -x
+
+inputFile=$1
+outputFile=Advanced_copy_of_$(basename ${inputFile})
+
+echo CALVALUS_PROGRESS 0.2
+sleep 10
+
+copyCmd=copy-archive/archive-directory/calvalus-copy
+
+${copyCmd} $inputFile $outputFile
+echo CALVALUS_PROGRESS 1.0
+
+echo CALVALUS_OUTPUT_PRODUCT $outputFile

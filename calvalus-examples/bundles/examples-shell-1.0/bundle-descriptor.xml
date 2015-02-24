@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<bundleDescriptor>
+    <bundleName>examples-shell</bundleName>
+    <bundleVersion>1.0</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <processorName>Simple Shel Example 1 (file copy)</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>simple1</executableName>
+            <outputFormats>default</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml><![CDATA[<p>Performs copy of data products.</p>]]></descriptionHtml>
+        </processorDescriptor>
+
+        <processorDescriptor>
+            <processorName>Simple Shel Example 2 (file copy)</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>simple2</executableName>
+            <outputFormats>default</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml><![CDATA[<p>Performs copy of data products.</p>]]></descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>prefix</name>
+                    <type>string</type>
+                    <description>file name prefix</description>
+                    <defaultValue>A_copy_of_</defaultValue>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </processorDescriptor>
+
+        <processorDescriptor>
+            <processorName>Simple Shel Example 3 (file copy)</processorName>
+            <processorVersion>1.0</processorVersion>
+            <executableName>simple3</executableName>
+            <outputFormats>default</outputFormats>
+            <formatting>IMPLICIT</formatting>
+            <descriptionHtml><![CDATA[<p>Performs copy of data products.</p>]]></descriptionHtml>
+        </processorDescriptor>
+    </processorDescriptors>
+</bundleDescriptor>

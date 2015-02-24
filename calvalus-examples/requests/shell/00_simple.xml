@@ -44,7 +44,7 @@
         <wps:Input>
             <ows:Identifier>processorName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>simple</wps:LiteralData>
+                <wps:LiteralData>simple1</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
