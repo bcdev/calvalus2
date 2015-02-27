@@ -88,7 +88,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
                 LOG.info("Product not used");
             }
-            LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} tiless produced)",
+            LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} tiles produced)",
                                           context.getTaskAttemptID(), processorAdapter.getInputPath(), numTilesProcessed));
         } finally {
             pm.done();

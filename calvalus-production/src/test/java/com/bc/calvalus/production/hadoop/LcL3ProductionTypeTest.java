@@ -19,6 +19,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
+import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import org.junit.Test;
@@ -134,20 +135,17 @@ public class LcL3ProductionTypeTest {
 
     @Test
     public void testGetCloudL3Config() throws Exception {
-        MosaicConfig cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "foo", "bar"), true);
+
+        MosaicConfig cloudL3Config = LcL3SensorConfig.create("FR").getCloudMosaicConfig(null);
         assertEquals("status == 1 and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
-        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "foo", "bar"), false);
+        cloudL3Config = LcL3SensorConfig.create("SPOT").getCloudMosaicConfig(null);
         assertEquals("status == 1 and not nan(sdr_B3)", cloudL3Config.getValidMaskExpression());
 
-        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10"), true);
+        cloudL3Config = LcL3SensorConfig.create("FR").getCloudMosaicConfig("10");
         assertEquals("(status == 1  or status == 10) and not nan(sdr_8)", cloudL3Config.getValidMaskExpression());
 
-        cloudL3Config = LcL3ProductionType.getCloudMosaicConfig(
-                new ProductionRequest("test", "dummy", "calvalus.lc.remapAsLand", "10,11,20"), true);
+        cloudL3Config = LcL3SensorConfig.create("FR").getCloudMosaicConfig("10,11,20");
         assertEquals("(status == 1  or status == 10 or status == 11 or status == 20) and not nan(sdr_8)",
                      cloudL3Config.getValidMaskExpression());
     }

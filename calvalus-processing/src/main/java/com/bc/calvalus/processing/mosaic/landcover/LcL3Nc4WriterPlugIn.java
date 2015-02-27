@@ -85,6 +85,8 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
 
+        private LcL3SensorConfig sensorConfig = null;
+
         @Override
         public void writeProductBody(ProfileWriteContext ctx, Product product) throws IOException {
             String sensor = product.getMetadataRoot().getAttributeString("sensor");
@@ -92,6 +94,9 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             String spatialResolution = product.getMetadataRoot().getAttributeString("spatialResolution");
             String temporalResolution = product.getMetadataRoot().getAttributeString("temporalResolution");
             String version = product.getMetadataRoot().getAttributeString("version");
+            if (sensorConfig == null) {
+                sensorConfig = LcL3SensorConfig.create(sensor, spatialResolution);
+            }
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
             float latMax = 90.0f - 5.0f * tileY;
@@ -100,8 +105,8 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             float lonMax = lonMin + 5.0f;
 
             String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300".equals(spatialResolution) ? "MERIS FR L1B r02" : "MERIS RR L1B r03" : "SPOT VGT P format V1.7";
-            String spatialResolutionDegrees = "300".equals(spatialResolution) ? "0.002778" : "0.011112";
+            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "NOAA AVHRR HRPT L1B";
+            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
@@ -125,7 +130,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             writeable.addGlobalAttribute("platform", platform);
             writeable.addGlobalAttribute("sensor", sensor);
-            writeable.addGlobalAttribute("type", "SR-" + spatialResolution + "m-" + temporalResolution + "d");
+            writeable.addGlobalAttribute("type", "SR-" + spatialResolution + "-" + temporalResolution);
             writeable.addGlobalAttribute("id", product.getName());
             writeable.addGlobalAttribute("tracking_id", UUID.randomUUID().toString());
             writeable.addGlobalAttribute("tile", tileName);
@@ -188,22 +193,11 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
 
             String[] bandNames = product.getBandNames();
-            List<String> srMeanBandNames = new ArrayList<String>(bandNames.length);
-            List<String> srSigmaBandNames = new ArrayList<String>(bandNames.length);
-            for (String bandName : bandNames) {
-                if (bandName.startsWith("sr_")) {
-                    if (bandName.endsWith("_mean")) {
-                        srMeanBandNames.add(bandName);
-                    } else if (bandName.endsWith("_uncertainty")) {
-                        srSigmaBandNames.add(bandName);
-                    }
-                }
-            }
-
+            List<String> srMeanBandNames = sensorConfig.getMeanBandNames();
+            List<String> srSigmaBandNames = sensorConfig.getUncertaintyBandNames();
 
             for (int i=0; i<srMeanBandNames.size(); i++) {
                 String meanBandName = srMeanBandNames.get(i);
-                String sigmaBandName = srSigmaBandNames.get(i);
                 int bandIndex = product.getBand(meanBandName).getSpectralBandIndex();
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
@@ -213,14 +207,17 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute("valid_min", 0.0f);
                 variable.addAttribute("valid_max", 1.0f);
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
-                variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
-                variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + bandIndex);
-                variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
-                variable.addAttribute("wavelength", wavelength);
-                variable.addAttribute("valid_min", 0.0f);
-                variable.addAttribute("valid_max", 1.0f);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
+                if (i < srSigmaBandNames.size()) {
+                    String sigmaBandName = srSigmaBandNames.get(i);
+                    variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
+                    variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+                    variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + bandIndex);
+                    variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
+                    variable.addAttribute("wavelength", wavelength);
+                    variable.addAttribute("valid_min", 0.0f);
+                    variable.addAttribute("valid_max", 1.0f);
+                    variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
+                }
             }
 
             variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);

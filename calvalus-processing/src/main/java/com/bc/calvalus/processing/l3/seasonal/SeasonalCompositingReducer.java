@@ -100,7 +100,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         boolean moreTilesAvailable = true;
         final int bandNumber = context.getCurrentKey().get() >> 16;
         final String bandName = BAND_NAMES[bandNumber];
-        final String targetFileName = String.format("ESACCI-LC-L3-SR-MERIS-300m-P%dW-%s-%s-v1.0", noOfWeeks, bandName, COMPACT_DATE_FORMAT.format(start));
+        final String targetFileName = String.format("ESACCI-LC-L3-SR-MERIS-300m-P%dW-%s-%s-v2.0", noOfWeeks, bandName, COMPACT_DATE_FORMAT.format(start));
         final String outputDirName = conf.get("calvalus.output.dir");
         final Path outputPath = new Path(outputDirName, targetFileName + ".tif");
         final Product dimapOutput = new Product(targetFileName, bandName + " of seasonal composite",

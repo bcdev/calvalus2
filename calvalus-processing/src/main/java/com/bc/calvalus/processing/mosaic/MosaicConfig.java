@@ -43,7 +43,19 @@ public class MosaicConfig implements XmlConvertible {
     @Parameter
     private String[] variableNames;
 
+    @Parameter
+    private String[] virtualVariableNames = null;
+
+    @Parameter
+    private String[] virtualVariableExpr = null;
+
     public MosaicConfig() {
+    }
+
+    public MosaicConfig(String algorithmName, String validMaskExpression, String[] variableNames, String[] virtualVariableNames, String[] virtualVariableExpr) {
+        this(algorithmName, validMaskExpression, variableNames);
+        this.virtualVariableNames = virtualVariableNames;
+        this.virtualVariableExpr = virtualVariableExpr;
     }
 
     public MosaicConfig(String algorithmName, String validMaskExpression, String[] variableNames) {
@@ -113,6 +125,13 @@ public class MosaicConfig implements XmlConvertible {
         if (variableNames != null) {
             for (String variableName : variableNames) {
                 variableContext.defineVariable(variableName);
+            }
+        }
+        if (virtualVariableNames != null && virtualVariableExpr != null) {
+            for (int i = 0; i < virtualVariableNames.length; i++) {
+                String name = virtualVariableNames[i];
+                String expr = virtualVariableExpr[i];
+                variableContext.defineVariable(name, expr);
             }
         }
         return variableContext;

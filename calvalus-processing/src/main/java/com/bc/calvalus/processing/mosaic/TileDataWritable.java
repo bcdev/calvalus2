@@ -75,6 +75,14 @@ public class TileDataWritable extends CompressedWritable {
         }
         this.sampleValues = array2D;
     }
+
+    public String toString() {
+        if (sampleValues != null && sampleValues.length > 0 && sampleValues[0] != null) {
+            return "TileDataWritable(" + sampleValues.length + "," + sampleValues[0].length + ")";
+        } else {
+            return "TileDataWritable(null)";
+        }
+    }
 }
 
 

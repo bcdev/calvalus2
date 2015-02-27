@@ -54,8 +54,8 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private int tileSize;
     private StatusRemapper statusRemapper;
     private Configuration jobConf;
-    private String sensor;
     private float applyFilterThresh;
+    private String temporalCloudBandName;
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) {
@@ -131,12 +131,8 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public void setConf(Configuration jobConf) {
         this.jobConf = jobConf;
-        sensor = jobConf.get("calvalus.lc.sensor", "MERIS");
-        if (sensor.equals("MERIS")) {
-            applyFilterThresh = 0.075f;
-        } else {
-            applyFilterThresh = 0.075f;
-        }
+        temporalCloudBandName = jobConf.get("calvalus.lc.temporalCloudBandName"); // "sdr_8", "sdr_B3", ...
+        applyFilterThresh = Float.parseFloat(jobConf.get("calvalus.lc.temporalCloudFilterThreshold")); // 0.075f
     }
 
     @Override
@@ -175,11 +171,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private int[] createVariableIndexes(VariableContext varCtx) {
         int[] varIndexes = new int[NUM_SAMPLE_BANDS];
         varIndexes[SAMPLE_INDEX_STATUS] = getVariableIndex(varCtx, "status");
-        if (sensor.equals("MERIS")) {
-            varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, "sdr_8");
-        } else {
-            varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, "sdr_B3");
-        }
+        varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, temporalCloudBandName);
         varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         return varIndexes;
     }
