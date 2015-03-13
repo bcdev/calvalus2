@@ -77,6 +77,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+//                Geometry regionGeometry = GeometryUtils.createGeometry("POLYGON ((75 35, 80 35, 80 30, 75 30, 75 35))");
                 numTilesProcessed = processProduct(product, regionGeometry, ctx, context, SubProgressMonitor.create(pm, 50));
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
@@ -88,7 +89,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 context.getCounter(COUNTER_GROUP_NAME, "Input products not-used").increment(1);
                 LOG.info("Product not used");
             }
-            LOG.info(MessageFormat.format("{0} stops processing of {1} after {2} sec ({3} tiles produced)",
+            LOG.info(MessageFormat.format("{0} stops processing of {1} ({2} tiles produced)",
                                           context.getTaskAttemptID(), processorAdapter.getInputPath(), numTilesProcessed));
         } finally {
             pm.done();
@@ -98,12 +99,19 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext, ProgressMonitor pm) throws IOException, InterruptedException {
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
-        if (sourceGeometry == null || sourceGeometry.isEmpty()) {
+        boolean handlePolarProducts = mapContext.getConfiguration().getBoolean("calvalus.mosaic.handlePolarProducts", false);
+
+        if ((sourceGeometry == null || sourceGeometry.isEmpty()) && !handlePolarProducts) {
             LOG.info("Product geometry is empty");
+
             return 0;
         }
         if (regionGeometry != null) {
-            sourceGeometry = regionGeometry.intersection(sourceGeometry);
+            if (sourceGeometry == null) {
+                sourceGeometry = regionGeometry;
+            } else {
+                sourceGeometry = regionGeometry.intersection(sourceGeometry);
+            }
             if (sourceGeometry.isEmpty()) {
                 LOG.info("Product geometry does not intersect region");
                 return 0;
@@ -224,9 +232,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
                 TileDataWritable value = new TileDataWritable(sampleValues);
                 context.write(tileIndex, value);
-                return true;
+            } else {
+                LOG.info("Tile contains NO data: " + tileIndex);
             }
-            return false;
+            return containsData;
         }
 
         private static byte[] getRawMaskData(Raster mask) {
