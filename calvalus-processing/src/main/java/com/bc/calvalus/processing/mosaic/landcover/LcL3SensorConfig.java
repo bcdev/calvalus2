@@ -2,9 +2,6 @@ package com.bc.calvalus.processing.mosaic.landcover;
 
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import org.esa.beam.binning.VariableContext;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.VirtualBand;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -500,7 +497,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "pixel_classif_flags == 0 ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
@@ -526,7 +523,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "pixel_classif_flags == 0 ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
