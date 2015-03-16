@@ -76,8 +76,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 if (product.getGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
-                Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
-//                Geometry regionGeometry = GeometryUtils.createGeometry("POLYGON ((75 35, 80 35, 80 30, 75 30, 75 35))");
+                Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get("calvalus.mosaic.regionGeometry"));
                 numTilesProcessed = processProduct(product, regionGeometry, ctx, context, SubProgressMonitor.create(pm, 50));
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
@@ -117,6 +116,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 return 0;
             }
         }
+        sourceProduct.addBand(new VirtualBand("swath_x",ProductData.TYPE_INT32,
+                                           sourceProduct.getSceneRasterWidth(),
+                                           sourceProduct.getSceneRasterHeight(),"X"));
+        sourceProduct.addBand(new VirtualBand("swath_y",ProductData.TYPE_INT32,
+                                           sourceProduct.getSceneRasterWidth(),
+                                           sourceProduct.getSceneRasterHeight(),"Y"));
+
         Product gridProduct = toPlateCareGrid(sourceProduct);
         for (int i = 0; i < ctx.getVariableCount(); i++) {
             String variableName = ctx.getVariableName(i);

@@ -497,8 +497,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "pixel_classif_flags == 0 ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
-                    "(refl_2 - refl_1) / (refl_2 + refl_1)"
+                    "(swath_x < 250 || swath_x > 1798 || pixel_classif_flags == 0) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",                    "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
             String type = LcSDR8MosaicAlgorithm.class.getName();
@@ -523,7 +522,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "pixel_classif_flags == 0 ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "(swath_x < 250 || swath_x > 1798 || pixel_classif_flags == 0) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
