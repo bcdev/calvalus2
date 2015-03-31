@@ -21,9 +21,14 @@ import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.prep.PreparedGeometry;
+import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.util.ProductUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -35,7 +40,11 @@ import java.awt.Rectangle;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Defines the Grid on which the mosaic-ing is happening.
@@ -157,13 +166,27 @@ public class MosaicGrid {
     }
 
     double tileXToDegree(int tileX) {
-        double degreePerTile = (double) 360 / numTileX;
-        return tileX * degreePerTile - 180.0;
+        final double degreePerTile = (double) 360 / numTileX;
+        final double lon = tileX * degreePerTile - 180.0;
+        return lon;
+    }
+
+    int degreeToTileX(double lon) {
+        final double degreePerTile = (double) 360 / numTileX;
+        final int tileX = (int) (Math.floor(lon + 180.0) / degreePerTile);
+        return tileX;
     }
 
     double tileYToDegree(int tileY) {
         double degreePerTile = (double) 180 / numTileY;
-        return 90 - tileY * degreePerTile;
+        double lat = 90 - tileY * degreePerTile;
+        return lat;
+    }
+
+    int degreeToTileY(double lat) {
+        final double degreePerTile = (double) 180 / numTileY;
+        final int tileY = (int) (Math.floor((lat - 90.0) * -1 / degreePerTile));
+        return tileY;
     }
 
     public Geometry computeProductGeometry(Product product) {
@@ -207,11 +230,10 @@ public class MosaicGrid {
         return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
-    public TileIndexWritable[] getTileIndices(Geometry geometry) {
-        Point[] tilePointIndices = getTilePointIndices(geometry);
-        TileIndexWritable[] tileIndices = new TileIndexWritable[tilePointIndices.length];
-        for (int i = 0; i < tilePointIndices.length; i++) {
-            Point point = tilePointIndices[i];
+    public TileIndexWritable[] getTileIndices(List<Point> tilePointIndices) {
+        TileIndexWritable[] tileIndices = new TileIndexWritable[tilePointIndices.size()];
+        for (int i = 0; i < tilePointIndices.size(); i++) {
+            Point point = tilePointIndices.get(i);
             int macroX = point.x / macroTileSize;
             int macroY = point.y / macroTileSize;
             tileIndices[i] = new TileIndexWritable(macroX, macroY, point.x, point.y);
@@ -219,37 +241,77 @@ public class MosaicGrid {
         return tileIndices;
     }
 
-    Point[] getTilePointIndices(Geometry geometry) {
-        if (geometry == null) {
-            Point[] points = new Point[numTileX * numTileY];
+    List<Point> getTilePointIndicesFromProduct(Product product, Geometry geometry) {
+        GeoCoding geoCoding = product.getGeoCoding();
+        int width = product.getSceneRasterWidth();
+        int height = product.getSceneRasterHeight();
+        PixelPos pixelPos = new PixelPos();
+        GeoPos geoPos = new GeoPos();
 
-            int index = 0;
-            for (int y = 0; y < numTileY; y++) {
-                for (int x = 0; x < numTileX; x++) {
-                    points[index++] = new Point(x, y);
-                }
-            }
-            return points;
-        } else {
-            Rectangle geometryBounds = computeBounds(geometry);
-            Rectangle gridRect = alignToTileGrid(geometryBounds);
-            final int xStart = gridRect.x / tileSize;
-            final int yStart = gridRect.y / tileSize;
-            final int width = gridRect.width / tileSize;
-            final int height = gridRect.height / tileSize;
-            List<Point> points = new ArrayList<Point>(width * height);
-
-            for (int y = yStart; y < yStart + height; y++) {
-                for (int x = xStart; x < xStart + width; x++) {
-                    Geometry tileGeometry = getTileGeometry(x, y);
-                    Geometry intersection = geometry.intersection(tileGeometry);
-                    if (!intersection.isEmpty() && intersection.getDimension() == 2) {
-                        points.add(new Point(x, y));
+        PreparedGeometry pGeom = null;
+        GeometryFactory geoFactory = null;
+        if (geometry != null) {
+            pGeom = PreparedGeometryFactory.prepare(geometry);
+            geoFactory = getGeometryFactory();
+        }
+        Set<Point> pointSet = new HashSet<>();
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                pixelPos.setLocation(x + 0.5f, y + 0.5f);
+                geoCoding.getGeoPos(pixelPos, geoPos);
+                if (geoPos.isValid()) {
+                    if (pGeom == null || pGeom.contains(geoFactory.createPoint(new Coordinate(geoPos.lon, geoPos.lat)))) {
+                        int tileX = degreeToTileX(geoPos.lon);
+                        int tileY = degreeToTileY(geoPos.lat);
+                        pointSet.add(new Point(tileX, tileY));
                     }
                 }
             }
-            return points.toArray(new Point[points.size()]);
         }
+        List<Point> pointList = new ArrayList<>(pointSet);
+        Collections.sort(pointList, new Comparator<Point>() {
+            @Override
+            public int compare(Point p1, Point p2) {
+                int cmp = Integer.compare(p1.x, p2.x);
+                if (cmp == 0) {
+                    cmp = Integer.compare(p1.y, p2.y);
+                }
+                return cmp;
+            }
+        });
+        return pointList;
+    }
+
+    List<Point> getTilePointIndicesFromGeometry(Geometry geometry) {
+        Rectangle geometryBounds = computeBounds(geometry);
+        Rectangle gridRect = alignToTileGrid(geometryBounds);
+        final int xStart = gridRect.x / tileSize;
+        final int yStart = gridRect.y / tileSize;
+        final int width = gridRect.width / tileSize;
+        final int height = gridRect.height / tileSize;
+        List<Point> points = new ArrayList<>(width * height);
+
+        for (int y = yStart; y < yStart + height; y++) {
+            for (int x = xStart; x < xStart + width; x++) {
+                Geometry tileGeometry = getTileGeometry(x, y);
+                Geometry intersection = geometry.intersection(tileGeometry);
+                if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+                    points.add(new Point(x, y));
+                }
+            }
+        }
+        return points;
+    }
+
+    List<Point> getTilePointIndicesGlobal() {
+        List<Point> points = new ArrayList<>(numTileX * numTileY);
+
+        for (int y = 0; y < numTileY; y++) {
+            for (int x = 0; x < numTileX; x++) {
+                points.add(new Point(x, y));
+            }
+        }
+        return points;
     }
 
     public Rectangle getTileRectangle(int tileX, int tileY) {

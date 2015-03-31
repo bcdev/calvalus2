@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -39,12 +38,15 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.logging.Logger;
+
+;
 
 /**
  * Reads an N1 product and emits (tileIndex, tileData) pairs.
@@ -98,24 +100,29 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext, ProgressMonitor pm) throws IOException, InterruptedException {
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
-        boolean handlePolarProducts = mapContext.getConfiguration().getBoolean("calvalus.mosaic.handlePolarProducts", false);
 
-        if ((sourceGeometry == null || sourceGeometry.isEmpty()) && !handlePolarProducts) {
-            LOG.info("Product geometry is empty");
-
-            return 0;
-        }
+        Geometry effectiveGeometry = sourceGeometry;
         if (regionGeometry != null) {
-            if (sourceGeometry == null) {
-                sourceGeometry = regionGeometry;
+            if (sourceGeometry != null) {
+                effectiveGeometry = regionGeometry.intersection(sourceGeometry);
             } else {
-                sourceGeometry = regionGeometry.intersection(sourceGeometry);
+                effectiveGeometry = regionGeometry;
             }
-            if (sourceGeometry.isEmpty()) {
+            if (effectiveGeometry.isEmpty()) {
                 LOG.info("Product geometry does not intersect region");
                 return 0;
             }
         }
+
+        final List<Point> tilePointIndices;
+        if (sourceGeometry == null) {
+            // if no sourceGeometry could have been calculated use other methods to find effective
+            tilePointIndices = mosaicGrid.getTilePointIndicesFromProduct(sourceProduct, effectiveGeometry);
+        } else {
+            tilePointIndices = mosaicGrid.getTilePointIndicesFromGeometry(effectiveGeometry);
+        }
+        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
+
         sourceProduct.addBand(new VirtualBand("swath_x",ProductData.TYPE_INT32,
                                            sourceProduct.getSceneRasterWidth(),
                                            sourceProduct.getSceneRasterHeight(),"X"));
@@ -149,7 +156,8 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         mapContext.progress();
-        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
+
+
         int numTilesTotal = tileIndices.length;
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
