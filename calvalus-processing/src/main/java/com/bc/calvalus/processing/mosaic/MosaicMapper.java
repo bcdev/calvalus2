@@ -162,14 +162,14 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
-        pm.beginTask("Tile processing", tileIndices.length);
+        pm.beginTask("Tile processing", numTilesTotal);
         int tileCounter = 0;
         for (TileIndexWritable tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
             tileCounter++;
-            LOG.info(String.format("Processed %d from %d tiles (%d with data)", tileCounter, tileIndices.length, numTilesTotal));
+            LOG.info(String.format("Processed %d from %d tiles (%d with data)", tileCounter, numTilesTotal, numTilesProcessed));
             pm.worked(1);
         }
         pm.done();
