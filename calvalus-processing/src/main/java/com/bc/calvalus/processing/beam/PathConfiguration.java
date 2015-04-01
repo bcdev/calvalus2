@@ -41,4 +41,11 @@ public class PathConfiguration {
     public Configuration getConfiguration() {
         return configuration;
     }
+
+    @Override
+    public String toString() {
+        return "PathConfiguration{" +
+                "path=" + path +
+                '}';
+    }
 }
