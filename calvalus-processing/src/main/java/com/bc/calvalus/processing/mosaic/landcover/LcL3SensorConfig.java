@@ -428,7 +428,7 @@ public abstract class LcL3SensorConfig {
     public static class LcL3AvhrrConfig extends LcL3SensorConfig {
 
         static final String[] BANDNAMES = new String[] {
-                "refl_1", "refl_2", "refl_3", "bt_4", "bt_5"
+                "refl_1", "refl_2", "bt_3", "bt_4", "bt_5"
         };
         static final float[] WAVELENGTH = new float[] {
             630f, 912f, 3740f, 10800f, 12000f
@@ -512,7 +512,7 @@ public abstract class LcL3SensorConfig {
             maskExpr = "(status == 1 or (status == 2 and not nan(refl_1)) or (status >= 3))";
 
             varNames = new String[]{
-                    "refl_1", "refl_2", "refl_3", "bt_4", "bt_5"
+                    "refl_1", "refl_2", "bt_3", "bt_4", "bt_5"
                     //,"refl_error_1", "refl_error_2", "refl_error_3", "bt_error_4", "bt_error_5"
             };
 
