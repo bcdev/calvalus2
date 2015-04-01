@@ -47,9 +47,10 @@ public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWr
         String dateStart = conf.get(JobConfigNames.CALVALUS_MIN_DATE);
         String dateStop = conf.get(JobConfigNames.CALVALUS_MAX_DATE);
         String outputPrefix = conf.get(JobConfigNames.CALVALUS_OUTPUT_PREFIX, "L3");
+        String outputPostfix = conf.get(JobConfigNames.CALVALUS_OUTPUT_POSTFIX, "");
 
         // todo - specify common Calvalus L3 productName convention (mz)
-        String productName = String.format("%s_%s_%s", outputPrefix, dateStart, dateStop);
+        String productName = String.format("%s_%s_%s%s", outputPrefix, dateStart, dateStop, outputPostfix);
 
         L3Formatter.write(context, temporalBinSource,
                           dateStart, dateStop,

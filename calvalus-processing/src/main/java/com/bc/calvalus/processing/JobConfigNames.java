@@ -43,6 +43,7 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_REGEX = "calvalus.output.regex";
     String CALVALUS_OUTPUT_REPLACEMENT = "calvalus.output.replacement";
     String CALVALUS_OUTPUT_PREFIX = "calvalus.output.prefix";
+    String CALVALUS_OUTPUT_POSTFIX = "calvalus.output.postfix";
     String CALVALUS_OUTPUT_NAMEFORMAT = "calvalus.output.nameformat";
     String CALVALUS_OUTPUT_PRESERVE_DATE_TREE = "calvalus.output.preserveDateTree";
 
@@ -98,8 +99,8 @@ public interface JobConfigNames {
     String TA_WITH_TIMESERIES_PLOT = "withTimeseriesPlot";
     String TA_WITH_AGGREGATED_CSV = "withAggregatedCsv";
     String TA_WITH_PIXEL_CSV = "withPixelCsv";
-    String TA_WITH_L3_OUTPUTS = "withL3Outputs";
 
+    String TA_WITH_L3_OUTPUTS = "withL3Outputs";
     String CALVALUS_TA_SKIPL3_FLAG = "skipL3";
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
 }
