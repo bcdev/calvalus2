@@ -163,10 +163,13 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         int numTilesProcessed = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
         pm.beginTask("Tile processing", tileIndices.length);
+        int tileCounter = 0;
         for (TileIndexWritable tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
+            tileCounter++;
+            LOG.info(String.format("Processed %d from %d tiles (%d with data)", tileCounter, tileIndices.length, numTilesTotal));
             pm.worked(1);
         }
         pm.done();
@@ -232,6 +235,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
         private boolean processTile(TileIndexWritable tileIndex) throws IOException, InterruptedException {
             Raster maskRaster = maskImage.getTile(tileIndex.getTileX(), tileIndex.getTileY());
+            if (maskRaster == null) {
+                LOG.info("Mask raster is null: " + tileIndex);
+                return false;
+            }
             byte[] byteBuffer = getRawMaskData(maskRaster);
             boolean containsData = containsData(byteBuffer);
 
@@ -240,6 +247,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
                     Raster raster = varImages[i].getTile(tileIndex.getTileX(), tileIndex.getTileY());
+                    if (raster == null) {
+                        LOG.info("Image[" + i + "] raster is null: " + tileIndex);
+                        return false;
+                    }
                     float[] samples = sampleValues[i];
                     raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
                 }
