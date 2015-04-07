@@ -46,8 +46,6 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.logging.Logger;
 
-;
-
 /**
  * Reads an N1 product and emits (tileIndex, tileData) pairs.
  *
@@ -83,6 +81,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTilesProcessed);
+
+//                    ProductFormatter productFormatter = new ProductFormatter("parent_of_" + context.getTaskAttemptID().toString(), DimapProductConstants.DIMAP_FORMAT_NAME, "");
+//                    File productFile = productFormatter.createTemporaryProductFile();
+//                    ProductIO.writeProduct(product, productFile, DimapProductConstants.DIMAP_FORMAT_NAME, false, ProgressMonitor.NULL);
+//                    productFormatter.compressToHDFS(context, productFile);
+
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products without tiles").increment(1);
                 }
@@ -213,6 +217,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         repro.setParameter("referencePixelY", y);
         repro.setParameter("width", width);
         repro.setParameter("height", height);
+        repro.setParameter("noDataValue", Double.NaN);
 
         repro.setSourceProduct(sourceProduct);
         return repro.getTargetProduct();
