@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 
 import javax.imageio.stream.ImageInputStream;
@@ -83,6 +84,10 @@ public class CalvalusProductIO {
         if (productReader != null) {
             LOG.info(String.format("ProductReader: %s", productReader.toString()));
             LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
+        }
+        GeoCoding geoCoding = product.getGeoCoding();
+        if (geoCoding != null) {
+            LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
         }
         return product;
     }
