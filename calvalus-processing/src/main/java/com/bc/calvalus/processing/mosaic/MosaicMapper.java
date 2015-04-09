@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -39,11 +38,12 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ImageUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -81,6 +81,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 if (numTilesProcessed > 0L) {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products with tiles").increment(1);
                     context.getCounter(COUNTER_GROUP_NAME, "Tiles emitted").increment(numTilesProcessed);
+
+//                    ProductFormatter productFormatter = new ProductFormatter("parent_of_" + context.getTaskAttemptID().toString(), DimapProductConstants.DIMAP_FORMAT_NAME, "");
+//                    File productFile = productFormatter.createTemporaryProductFile();
+//                    ProductIO.writeProduct(product, productFile, DimapProductConstants.DIMAP_FORMAT_NAME, false, ProgressMonitor.NULL);
+//                    productFormatter.compressToHDFS(context, productFile);
+
                 } else {
                     context.getCounter(COUNTER_GROUP_NAME, "Input products without tiles").increment(1);
                 }
@@ -98,24 +104,29 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
     private int processProduct(Product sourceProduct, Geometry regionGeometry, VariableContext ctx, Context mapContext, ProgressMonitor pm) throws IOException, InterruptedException {
         Geometry sourceGeometry = mosaicGrid.computeProductGeometry(sourceProduct);
-        boolean handlePolarProducts = mapContext.getConfiguration().getBoolean("calvalus.mosaic.handlePolarProducts", false);
 
-        if ((sourceGeometry == null || sourceGeometry.isEmpty()) && !handlePolarProducts) {
-            LOG.info("Product geometry is empty");
-
-            return 0;
-        }
+        Geometry effectiveGeometry = sourceGeometry;
         if (regionGeometry != null) {
-            if (sourceGeometry == null) {
-                sourceGeometry = regionGeometry;
+            if (sourceGeometry != null) {
+                effectiveGeometry = regionGeometry.intersection(sourceGeometry);
             } else {
-                sourceGeometry = regionGeometry.intersection(sourceGeometry);
+                effectiveGeometry = regionGeometry;
             }
-            if (sourceGeometry.isEmpty()) {
+            if (effectiveGeometry.isEmpty()) {
                 LOG.info("Product geometry does not intersect region");
                 return 0;
             }
         }
+
+        final List<Point> tilePointIndices;
+        if (sourceGeometry == null) {
+            // if no sourceGeometry could have been calculated use other methods to find effective
+            tilePointIndices = mosaicGrid.getTilePointIndicesFromProduct(sourceProduct, effectiveGeometry);
+        } else {
+            tilePointIndices = mosaicGrid.getTilePointIndicesFromGeometry(effectiveGeometry);
+        }
+        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
+
         sourceProduct.addBand(new VirtualBand("swath_x",ProductData.TYPE_INT32,
                                            sourceProduct.getSceneRasterWidth(),
                                            sourceProduct.getSceneRasterHeight(),"X"));
@@ -149,16 +160,20 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             varImages[i] = varImage;
         }
         mapContext.progress();
-        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(sourceGeometry);
+
+
         int numTilesTotal = tileIndices.length;
         LOG.info("Product covers #tiles : " + numTilesTotal);
         int numTilesProcessed = 0;
         TileFactory tileFactory = new TileFactory(maskImage, varImages, mapContext, mosaicGrid.getTileSize());
-        pm.beginTask("Tile processing", tileIndices.length);
+        pm.beginTask("Tile processing", numTilesTotal);
+        int tileCounter = 0;
         for (TileIndexWritable tileIndex : tileIndices) {
             if (tileFactory.processTile(tileIndex)) {
                 numTilesProcessed++;
             }
+            tileCounter++;
+            LOG.info(String.format("Processed %d from %d tiles (%d with data)", tileCounter, numTilesTotal, numTilesProcessed));
             pm.worked(1);
         }
         pm.done();
@@ -202,6 +217,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         repro.setParameter("referencePixelY", y);
         repro.setParameter("width", width);
         repro.setParameter("height", height);
+        repro.setParameter("noDataValue", Double.NaN);
 
         repro.setSourceProduct(sourceProduct);
         return repro.getTargetProduct();
@@ -224,6 +240,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
 
         private boolean processTile(TileIndexWritable tileIndex) throws IOException, InterruptedException {
             Raster maskRaster = maskImage.getTile(tileIndex.getTileX(), tileIndex.getTileY());
+            if (maskRaster == null) {
+                LOG.info("Mask raster is null: " + tileIndex);
+                return false;
+            }
             byte[] byteBuffer = getRawMaskData(maskRaster);
             boolean containsData = containsData(byteBuffer);
 
@@ -232,6 +252,10 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
                     Raster raster = varImages[i].getTile(tileIndex.getTileX(), tileIndex.getTileY());
+                    if (raster == null) {
+                        LOG.info("Image[" + i + "] raster is null: " + tileIndex);
+                        return false;
+                    }
                     float[] samples = sampleValues[i];
                     raster.getPixels(raster.getMinX(), raster.getMinY(), raster.getWidth(), raster.getHeight(), samples);
                 }

@@ -27,9 +27,11 @@ import org.apache.hadoop.fs.Path;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 
 import javax.imageio.stream.ImageInputStream;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -66,23 +68,38 @@ public class CalvalusProductIO {
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
-            ImageInputStream imageInputStream = openImageInputStream(pathConf.getPath(), pathConf.getConfiguration());
+            final Path path = pathConf.getPath();
+            final Configuration configuration = pathConf.getConfiguration();
+            ImageInputStream imageInputStream = openImageInputStream(path, configuration);
             product = readProductImpl(imageInputStream, ImageInputStream.class, inputFormat);
             if (product == null) {
-                File localFile = copyFileToLocal(pathConf.getPath(), pathConf.getConfiguration());
+                File localFile;
+                if (path.getFileSystem(configuration).getScheme().equals("file")) {
+                    localFile = new File(path.toUri());
+                } else {
+                    localFile = copyFileToLocal(path, configuration);
+                }
                 product = readProductImpl(localFile, File.class, inputFormat);
             }
         }
         if (product == null) {
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
-        LOG.info(String.format("Opened product width = %d height = %d",
-                               product.getSceneRasterWidth(),
-                               product.getSceneRasterHeight()));
+        LOG.info(String.format("Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
+        Dimension tiling = product.getPreferredTileSize();
+        if (tiling != null) {
+            LOG.info(String.format("Tiling: width = %d height = %d", (int)tiling.getWidth(), (int)tiling.getHeight()));
+        } else {
+            LOG.info("Tiling: NONE");
+        }
         ProductReader productReader = product.getProductReader();
         if (productReader != null) {
             LOG.info(String.format("ProductReader: %s", productReader.toString()));
             LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
+        }
+        GeoCoding geoCoding = product.getGeoCoding();
+        if (geoCoding != null) {
+            LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
         }
         return product;
     }
@@ -103,13 +120,7 @@ public class CalvalusProductIO {
         LOG.info("Copying file to local: " + path + " --> " + localFile);
         if (!localFile.exists()) {
             FileSystem fs = path.getFileSystem(conf);
-            String scheme = path.toUri().getScheme();
-            if (scheme != null && scheme.startsWith("file:")) {
-                LOG.info("Creating symlink");
-                FileUtil.symLink(path.toString(), localFile.getAbsolutePath());
-            } else {
-                FileUtil.copy(fs, path, localFile, false, conf);
-            }
+            FileUtil.copy(fs, path, localFile, false, conf);
         } else {
             LOG.info("File already exist");
         }

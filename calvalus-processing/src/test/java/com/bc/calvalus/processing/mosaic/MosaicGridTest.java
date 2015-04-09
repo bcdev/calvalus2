@@ -7,7 +7,8 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
-import java.awt.Rectangle;
+import java.awt.*;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -71,8 +72,9 @@ public class MosaicGridTest {
     @Test
     public void testGetTileIndices() throws Exception {
         MosaicGrid mosaicGrid = new MosaicGrid();
-        Geometry geometry = null;
-        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(geometry);
+        Geometry geometry;
+        List<Point> tilePointIndices = mosaicGrid.getTilePointIndicesGlobal();
+        TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
         assertNotNull(tileIndices);
         assertEquals(360 * 180, tileIndices.length);
         assertEquals(new TileIndexWritable(0, 0, 0, 0), tileIndices[0]);
@@ -86,7 +88,8 @@ public class MosaicGridTest {
         assertEquals(new TileIndexWritable(0, 1, 0, 5), tileIndices[5 * 360]);
 
         geometry = GeometryUtils.createGeometry("polygon((-2 46, -2 40, 1 40, 1 46, -2 46))");
-        tileIndices = mosaicGrid.getTileIndices(geometry);
+        tilePointIndices = mosaicGrid.getTilePointIndicesFromGeometry(geometry);
+        tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
         assertNotNull(tileIndices);
         assertEquals(3 * 6, tileIndices.length);
 
@@ -99,7 +102,8 @@ public class MosaicGridTest {
         assertEquals(new TileIndexWritable(36, 9, 180, (90 - 45)), tileIndices[5]);
 
         geometry = GeometryUtils.createGeometry("polygon((-2 46, -2 45, 0 45, 0 40, 1 40, 1 46, -2 46))");
-        tileIndices = mosaicGrid.getTileIndices(geometry);
+        tilePointIndices = mosaicGrid.getTilePointIndicesFromGeometry(geometry);
+        tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
         assertNotNull(tileIndices);
         assertEquals(8, tileIndices.length);
         assertEquals(new TileIndexWritable(35, 8, 178, (90 - 46)), tileIndices[0]);
@@ -123,12 +127,30 @@ public class MosaicGridTest {
     }
 
     @Test
+    public void testDegreeToTileX() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        assertEquals(0, mosaicGrid.degreeToTileX(-180.0));
+        assertEquals(1, mosaicGrid.degreeToTileX(-179.0));
+        assertEquals(180, mosaicGrid.degreeToTileX(0.0));
+        assertEquals(360, mosaicGrid.degreeToTileX(180.0));
+    }
+
+    @Test
     public void testTileYToDegree() throws Exception {
         MosaicGrid mosaicGrid = new MosaicGrid();
         assertEquals(90.0, mosaicGrid.tileYToDegree(0), 1e-5);
         assertEquals(89.0, mosaicGrid.tileYToDegree(1), 1e-5);
         assertEquals(0.0, mosaicGrid.tileYToDegree(90), 1e-5);
         assertEquals(-90.0, mosaicGrid.tileYToDegree(180), 1e-5);
+    }
+
+    @Test
+    public void testDegreeToTileY() throws Exception {
+        MosaicGrid mosaicGrid = new MosaicGrid();
+        assertEquals(0, mosaicGrid.degreeToTileY(90.0), 1e-5);
+        assertEquals(1, mosaicGrid.degreeToTileY(89.0), 1e-5);
+        assertEquals(90, mosaicGrid.degreeToTileY(0.0), 1e-5);
+        assertEquals(180, mosaicGrid.degreeToTileY(-90.0), 1e-5);
     }
 
     @Test
