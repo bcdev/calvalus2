@@ -77,9 +77,9 @@ public class ProductionServiceConfig {
     public static Map<String, String> getCalvalusDefaultConfig() {
         Map<String, String> defaultConfig = new HashMap<String, String>();
 
-        defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://master00:9000");
+        //defaultConfig.put("calvalus.hadoop.fs.defaultFS", "hdfs://master00:9000");
         defaultConfig.put("calvalus.hadoop.mapreduce.framework.name", "yarn");
-        defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "master00");
+        //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.hostname", "master00");
         //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.address", "master00:9001");
         //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.scheduler.address", "master00:9002");
         //defaultConfig.put("calvalus.hadoop.yarn.resourcemanager.resource-tracker.address", "master00:9003");
