@@ -57,6 +57,7 @@ public interface JobConfigNames {
     String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
 
     String CALVALUS_METADATA_TEMPLATE = "calvalus.metadata.template";
+    String CALVALUS_LC_VERSION = "calvalus.lc.version";
 
     String CALVALUS_PROJECT_NAME = "calvalus.project.name";
 

@@ -77,7 +77,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
-        final float[][] accu = new float[17][bandTileHeight * bandTileWidth];
+        float[][] accu = null;
+        int numInputBands = 0;
+        int numTargetBands = 0;
         // loop over weeks
         for (Date week = start; ! stop.before(week); week = nextWeek(week)) {
 
@@ -89,9 +91,21 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 continue;
             }
             final Product product = readProduct(conf, fs, path);
-            final MultiLevelImage[] bandImage = new MultiLevelImage[NUM_SRC_BANDS];
-            for (int b = 0; b < 20; ++b) {
-                if (b < 6) {
+            if (accu == null) {
+                numInputBands = product.getBands().length;
+                // 0 is currentPixelState, 1..5 are the count bands,
+                // 6,8,..30 is sr_1_mean..10,12,13,14, or 6..10 are the AVHRR bands
+                // 32 is vegetation_index_mean, or 11 is vegetation_index_mean
+                if (numInputBands == 1 + 5 + 2 * 13 + 1) {
+                    numTargetBands = 13 + 1;
+                } else {
+                    numTargetBands = numInputBands - 6;
+                }
+                accu = new float[numTargetBands + 3][bandTileHeight * bandTileWidth];
+            }
+            final MultiLevelImage[] bandImage = new MultiLevelImage[numTargetBands+6];
+            for (int b = 0; b < numTargetBands+6; ++b) {
+                if (b < 6 || numTargetBands == numInputBands-6) {
                     bandImage[b] = product.getBandAt(b).getGeophysicalImage();
                 } else {
                     // bandAt(6) is sr_1_mean, bandAt(7) is sr_1_uncertainty, ...
@@ -107,7 +121,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 final short[][] bandDataB = new short[NUM_SRC_BANDS][];
                 final short[][] bandDataS = new short[NUM_SRC_BANDS][];
                 final float[][] bandDataF = new float[NUM_SRC_BANDS][];
-                for (int b = 0; b < NUM_SRC_BANDS; b++) {
+                for (int b = 0; b < numTargetBands+6; b++) {
                     bandTile[b] = bandImage[b].getTile(tileIndex.x, tileIndex.y);
                     if (b == 0) {
                         bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandTile[b].getDataBuffer());
@@ -138,7 +152,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             final int stateCount = count(state, bandDataS, iSrc);
                             accu[1][iDst] += stateCount;
                             accu[2][iDst] += count(bandDataS, iSrc);
-                            for (int b = 3; b < 17; ++b) {
+                            for (int b = 3; b < numTargetBands+3; ++b) {
                                 accu[b][iDst] += stateCount * bandDataF[b+3][iSrc];
                             }
                         } else if (rank(state) > rank(accu[0][iDst])) {
@@ -147,7 +161,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             accu[0][iDst] = state;
                             accu[1][iDst] = stateCount;
                             accu[2][iDst] = count(bandDataS, iSrc);
-                            for (int b = 3; b < 17; ++b) {
+                            for (int b = 3; b < numTargetBands+3; ++b) {
                                 accu[b][iDst] = stateCount * bandDataF[b+3][iSrc];
                             }
                         }
@@ -165,7 +179,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 final int i = r * bandTileWidth + c;
                 final float stateCount = accu[1][i];
                 //if (stateCount > 0) {
-                    for (int b = 3; b < 17; ++b) {
+                    for (int b = 3; b < numTargetBands+3; ++b) {
                         accu[b][i] /= stateCount;
                     }
                 //}
@@ -180,9 +194,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         LOG.info(counts[5] + " land, " + counts[4] + " water, " + counts[3] + " snow, " + counts[2] + " shadow, " + counts[1] + " cloud");
 
         // stream results, one per band
-        for (int b = 0; b < 17; ++b) {
+        for (int b = 0; b < numTargetBands+3; ++b) {
             // compose key from band and tile
-            final int bandAndTile = (b << 16) + (tileRow << 8) + tileColumn;
+            final int bandAndTile = (numTargetBands << 24) + (b << 16) + (tileRow << 8) + tileColumn;
             LOG.info("streaming band " + b + " tile row " + tileRow + " tile column " + tileColumn + " key " + bandAndTile);
             // write tile
             final IntWritable key = new IntWritable(bandAndTile);

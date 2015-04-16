@@ -6,7 +6,6 @@ import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -20,9 +19,6 @@ import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.TransformException;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -57,7 +53,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
     public static final int NUM_TILE_COLUMNS = 72;
     public static final int NUM_TILE_ROWS = 36;
 
-    public static String[] BAND_NAMES = {
+    public static String[] MERIS_BANDS = {
             "status",
             "status_count",
             "obs_count",
@@ -76,6 +72,17 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "sr_14_mean",
             "vegetation_index_mean"
     };
+    public static String[] AVHRR_BANDS = {
+            "status",
+            "status_count",
+            "obs_count",
+            "refl_1_mean",
+            "refl_2_mean",
+            "bt_3_mean",
+            "bt_4_mean",
+            "bt_5_mean",
+            "vegetation_index_mean"
+    };
 
     private final List<float[]> usedTiles = new ArrayList<float[]>();
 
@@ -92,15 +99,20 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final int bandTileWidth = bandTileHeight;
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
+        final String version = conf.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final int noOfWeeks = (int) ((stop.getTime() - start.getTime()) / 86400 / 1000 + 1) / 7;
         LOG.info("reducing start=" + DATE_FORMAT.format(start) + " weeks=" + noOfWeeks);
         if (! context.nextKey()) {
             return;
         }
         boolean moreTilesAvailable = true;
-        final int bandNumber = context.getCurrentKey().get() >> 16;
-        final String bandName = BAND_NAMES[bandNumber];
-        final String targetFileName = String.format("ESACCI-LC-L3-SR-MERIS-300m-P%dW-%s-%s-v2.0", noOfWeeks, bandName, COMPACT_DATE_FORMAT.format(start));
+        final int bandNumber = (context.getCurrentKey().get() >> 16) & 0xff;
+        final int numberOfBands = context.getCurrentKey().get() >> 24;
+        final String bandName = numberOfBands == 13+1 ? MERIS_BANDS[bandNumber] : AVHRR_BANDS[bandNumber];
+        final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%sm-P%dW-%s-%s-v%s",
+                                                    numberOfBands == 13+1 ? "MERIS" : "AVHRR",
+                                                    bandTileHeight == 1800 ? "300" : "1000",
+                                                    noOfWeeks, bandName, COMPACT_DATE_FORMAT.format(start), version);
         final String outputDirName = conf.get("calvalus.output.dir");
         final Path outputPath = new Path(outputDirName, targetFileName + ".tif");
         final Product dimapOutput = new Product(targetFileName, bandName + " of seasonal composite",

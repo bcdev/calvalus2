@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Band;
@@ -74,7 +75,7 @@ class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         final String spatialResolution = sensorConfig.getGroundResolution();
         final String temporalResolution = "P7D";  // TODO
         final String startTime = COMPACT_DATE_FORMAT.format(minDate);
-        final String version = configuration.get("calvalus.lc.version", "2.0");
+        final String version = configuration.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final float[] wavelength = sensorConfig.getWavelengths();
         final String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}-{2}-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
