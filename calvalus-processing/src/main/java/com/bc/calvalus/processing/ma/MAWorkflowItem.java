@@ -69,8 +69,8 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         Configuration jobConfig = job.getConfiguration();
 
         // Note: these are applied in GpfUtils.init().
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "32");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "32");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "256");
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
         jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
