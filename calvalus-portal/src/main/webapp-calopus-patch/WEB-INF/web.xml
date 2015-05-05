@@ -126,7 +126,7 @@
         </web-resource-collection>
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
-            <role-name>eop_file.modify_calopus_b</role-name>
+            <role-name>eoc_file.modify_calopus_b</role-name>
         </auth-constraint>
     </security-constraint>
 
@@ -142,7 +142,7 @@
 
     <!-- Security roles referenced by this web application -->
     <security-role>
-        <role-name>eop_file.modify_calopus_b</role-name>
+        <role-name>eoc_file.modify_calopus_b</role-name>
     </security-role>
 
 </web-app>
