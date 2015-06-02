@@ -233,7 +233,7 @@
                             <directory>src/main/webapp/calvalus</directory>
                         </fileset>
                         <fileset>
-                            <directory>src/main/webapp/WEB-INF/classes</directory>
+                            <directory>src/main/webapp/WEB-INF/classes/com</directory>
                         </fileset>
                         <fileset>
                             <directory>tomcat</directory>

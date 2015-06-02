@@ -146,7 +146,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         return parameterDescriptors;
     }
 
-    public enum DtoProcessorCategory {
+    public enum DtoProcessorCategory implements IsSerializable {
         LEVEL2,
         BOOTSTRAPPING,
         DIFFERENTIATION
