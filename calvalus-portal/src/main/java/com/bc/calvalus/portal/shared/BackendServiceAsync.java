@@ -22,6 +22,7 @@ public interface BackendServiceAsync {
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
+    void getAggregators(String filter, AsyncCallback<DtoAggregatorDescriptor[]> callback);
 
     void getProductionRequest(String productionId, AsyncCallback<DtoProductionRequest> callback);
 
@@ -42,4 +43,6 @@ public interface BackendServiceAsync {
     void listUserRecordSource(String s, AsyncCallback<float[]> callback);
 
     void isUserInRole(String role, AsyncCallback<Boolean> async);
+
+    void listSystemFiles(String baseDir, AsyncCallback<String[]> callback);
 }

@@ -7,6 +7,7 @@ import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -53,6 +54,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoProcessorDescriptor[] systemProcessors;
     private DtoProcessorDescriptor[] userProcessors;
     private DtoProcessorDescriptor[] allUserProcessors;
+    private DtoAggregatorDescriptor[] systemAggregators;
+    private DtoAggregatorDescriptor[] userAggregators;
+    private DtoAggregatorDescriptor[] allUserAggregators;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
     private PortalView[] views;
@@ -113,14 +117,17 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 final BundleFilter systemFilter = new BundleFilter();
                 systemFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
                 backendService.getProcessors(systemFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_SYSTEM));
+                backendService.getAggregators(systemFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_SYSTEM));
 
                 final BundleFilter userFilter = new BundleFilter();
                 userFilter.withProvider(BundleFilter.PROVIDER_USER);
                 backendService.getProcessors(userFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_USER));
+                backendService.getAggregators(userFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_USER));
 
                 final BundleFilter allUserFilter = new BundleFilter();
                 allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
                 backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
+                backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
@@ -163,6 +170,18 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return allUserProcessors;
         }
         return new DtoProcessorDescriptor[0];
+    }
+
+    @Override
+    public DtoAggregatorDescriptor[] getAggregators(String filter) {
+        if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
+            return systemAggregators;
+        } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
+            return userAggregators;
+        } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
+            return allUserAggregators;
+        }
+        return new DtoAggregatorDescriptor[0];
     }
 
     @Override
@@ -309,6 +328,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return regions != null
                && productSets != null
                && systemProcessors != null && userProcessors != null && allUserProcessors != null
+               && systemAggregators != null && userAggregators != null && allUserAggregators != null
                && productions != null
                && isCcUser != null
                && isCalEsa != null
@@ -452,6 +472,38 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 CalvalusPortal.this.userProcessors = processors;
             } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
                 CalvalusPortal.this.allUserProcessors = processors;
+            }
+        }
+    }
+
+    private class InitAggregatorsCallback implements AsyncCallback<DtoAggregatorDescriptor[]> {
+
+        private final String filter;
+
+        public InitAggregatorsCallback(String filter) {
+            this.filter = filter;
+        }
+
+        @Override
+        public void onSuccess(DtoAggregatorDescriptor[] aggregators) {
+            assign(aggregators);
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Dialog.error("Server-side Error", caught.getMessage());
+            assign(new DtoAggregatorDescriptor[0]);
+        }
+
+        private void assign(DtoAggregatorDescriptor[] aggregators) {
+            if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
+                CalvalusPortal.this.systemAggregators = aggregators;
+            } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
+                CalvalusPortal.this.userAggregators = aggregators;
+            } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
+                CalvalusPortal.this.allUserAggregators = aggregators;
             }
         }
     }

@@ -16,11 +16,13 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.binning.AggregatorConfig;
 import org.esa.beam.binning.AggregatorDescriptor;
+import org.esa.beam.binning.CompositingType;
 import org.esa.beam.binning.TypedDescriptorsRegistry;
 import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
@@ -337,6 +339,10 @@ public class L3ProductionType extends HadoopProductionType {
 
     static BinningConfig getBinningConfig(ProductionRequest productionRequest) throws ProductionException {
         BinningConfig binningConfig = new BinningConfig();
+        binningConfig.setCompositingType(CompositingType.valueOf(productionRequest.getString("compositingType", "BINNING")));
+        if (productionRequest.getParameters().containsKey("planetaryGrid")) {
+            binningConfig.setPlanetaryGrid(productionRequest.getString("planetaryGrid"));
+        }
         binningConfig.setNumRows(getNumRows(productionRequest));
         binningConfig.setSuperSampling(productionRequest.getInteger("superSampling", 1));
         binningConfig.setMaskExpr(productionRequest.getString("maskExpr", ""));
@@ -360,17 +366,24 @@ public class L3ProductionType extends HadoopProductionType {
             AggregatorDescriptor aggregatorDescriptor = registry.getDescriptor(AggregatorDescriptor.class, aggregatorName);
             AggregatorConfig aggregatorConfig = aggregatorDescriptor.createConfig();
             PropertySet propertySet = aggregatorConfig.asPropertySet();
-            if (propertySet.isPropertyDefined("varName")) {
-                propertySet.setValue("varName", variableName);
-            }
-            if (propertySet.isPropertyDefined("percentage")) {
-                propertySet.setValue("percentage", percentage);
-            }
-            if (propertySet.isPropertyDefined("weightCoeff")) {
-                propertySet.setValue("weightCoeff", weightCoeff);
-            }
-            if (propertySet.isPropertyDefined("fillValue")) {
-                propertySet.setValue("fillValue", fillValue);
+            for (Property property : propertySet.getProperties()) {
+                final String propertyName = property.getName();
+                final String key = prefix + "." + propertyName;
+                if (propertyName.equals("percentage")) {
+                    propertySet.setValue("percentage", percentage);
+                } else if (propertyName.equals("weightCoeff")) {
+                    propertySet.setValue("weightCoeff", weightCoeff);
+                } else if (propertyName.equals("fillValue")) {
+                    propertySet.setValue("fillValue", fillValue);
+                } else if (propertyName.equals("varName")) {
+                    propertySet.setValue("varName", variableName);
+                } else if (request.getParameters().containsKey(key)) {
+                    if (property.getType().isArray()) {
+                        propertySet.setValue(propertyName, request.getString(key).split(","));
+                    } else {
+                        propertySet.setValue(propertyName, request.getString(key));
+                    }
+                }
             }
             aggregatorConfigs[i] = aggregatorConfig;
         }

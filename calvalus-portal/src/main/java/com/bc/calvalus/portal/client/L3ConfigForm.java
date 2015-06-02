@@ -1,6 +1,8 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.client.map.Region;
+import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.google.gwt.cell.client.Cell;
@@ -43,7 +45,23 @@ public class L3ConfigForm extends Composite {
 
     private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
     private static final DtoProcessorVariable[] MER_L1B;
+    public static final List<String> DEFAULT_AGGREGATOR_NAMES = Arrays.asList(new String[]{
+            "AVG",
+            "MIN_MAX",
+            "PERCENTILE_2",
+            "PERCENTILE_5",
+            "PERCENTILE_10",
+            "PERCENTILE_25",
+            "PERCENTILE_50",
+            "PERCENTILE_75",
+            "PERCENTILE_90",
+            "PERCENTILE_95",
+            "PERCENTILE_98"
+    });
+    public static final String COMPOSITING_TYPE_BINNING = "BINNING";
+    public static final String COMPOSITING_TYPE_MOSAICKING = "MOSAICKING";
 
+    private final PortalContext portalContext;
     private ListDataProvider<Variable> variableProvider;
     private SingleSelectionModel<Variable> variableSelectionModel;
     private DynamicSelectionCell variableNameCell;
@@ -51,6 +69,7 @@ public class L3ConfigForm extends Composite {
     private final Map<String, DtoProcessorVariable> processorVariableDefaults;
     private final List<String> variableNames;
     private final List<String> aggregatorNameList;
+    private final List<DtoAggregatorDescriptor> aggregatorDescriptors;
 
     static {
         MER_L1B = new DtoProcessorVariable[15];
@@ -74,6 +93,7 @@ public class L3ConfigForm extends Composite {
         String aggregator = "AVG";
         Double fillValue = Double.NaN;
         Double weightCoeff = 1.0;
+        String parameter = "";
     }
 
 
@@ -86,6 +106,8 @@ public class L3ConfigForm extends Composite {
     @UiField
     IntegerBox periodCount;
 
+    @UiField
+    ListBox compositingType;
     @UiField
     DoubleBox resolution;
     @UiField
@@ -108,27 +130,20 @@ public class L3ConfigForm extends Composite {
     private Date minDate;
     private Date maxDate;
 
-    public L3ConfigForm() {
-        this(Arrays.asList(
-                "AVG",
-                "MIN_MAX",
-                "PERCENTILE_2",
-                "PERCENTILE_5",
-                "PERCENTILE_10",
-                "PERCENTILE_25",
-                "PERCENTILE_50",
-                "PERCENTILE_75",
-                "PERCENTILE_90",
-                "PERCENTILE_95",
-                "PERCENTILE_98"
-        ));
+    public L3ConfigForm(PortalContext portalContext) {
+        this(portalContext, new ArrayList<>(DEFAULT_AGGREGATOR_NAMES));
     }
 
-    public L3ConfigForm(List<String> aggregatorNameList) {
+    public L3ConfigForm(PortalContext portalContext, List<String> aggregatorNameList) {
+        this.portalContext = portalContext;
         processorVariableDefaults = new HashMap<String, DtoProcessorVariable>();
         variableNames = new ArrayList<String>();
         variableProvider = new ListDataProvider<Variable>();
         this.aggregatorNameList = aggregatorNameList;
+        this.aggregatorDescriptors = new ArrayList<DtoAggregatorDescriptor>();
+        if (portalContext != null) {
+            retrieveAggregatorDescriptors();
+        }
 
         // Set a key provider that provides a unique key for each contact. If key is
         // used to identify contacts when fields (such as the name and address)
@@ -197,7 +212,9 @@ public class L3ConfigForm extends Composite {
                 updateTargetSize();
             }
         });
-
+        compositingType.addItem(COMPOSITING_TYPE_BINNING);
+        compositingType.addItem(COMPOSITING_TYPE_MOSAICKING);
+        compositingType.setSelectedIndex(0);
 
         targetWidth.setEnabled(false);
         targetHeight.setEnabled(false);
@@ -205,6 +222,30 @@ public class L3ConfigForm extends Composite {
         updateSpatialParameters(null);
 
         HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
+    }
+
+    private void retrieveAggregatorDescriptors() {
+        aggregatorDescriptors.clear();
+        if (true) {
+            Collections.addAll(aggregatorDescriptors, portalContext.getAggregators(BundleFilter.PROVIDER_SYSTEM));
+        }
+        if (true) {
+            Collections.addAll(aggregatorDescriptors, portalContext.getAggregators(BundleFilter.PROVIDER_USER));
+        }
+        if (true) {
+            Collections.addAll(aggregatorDescriptors, portalContext.getAggregators(BundleFilter.PROVIDER_ALL_USERS));
+        }
+
+        final Iterator<DtoAggregatorDescriptor> iterator = aggregatorDescriptors.iterator();
+        while (iterator.hasNext()) {
+            DtoAggregatorDescriptor aggregatorDescriptor = iterator.next();
+            if (BundleFilter.DUMMY_AGGREGATOR_NAME.equals(aggregatorDescriptor.getAggregator())) {
+                iterator.remove();
+            }
+        }
+        for (DtoAggregatorDescriptor descriptor : aggregatorDescriptors) {
+            aggregatorNameList.add(descriptor.getAggregator());
+        }
     }
 
     private Variable createDefaultVariable() {
@@ -393,9 +434,17 @@ public class L3ConfigForm extends Composite {
                 parameters.put(prefix + ".name", variable.name);
             }
             String aggregator = variable.aggregator;
+            DtoAggregatorDescriptor aggregatorDescriptor = findDescriptor(aggregator);
             if (aggregator.startsWith("PERCENTILE_")) {
                 parameters.put(prefix + ".aggregator", "PERCENTILE");
                 parameters.put(prefix + ".percentage", aggregator.substring("PERCENTILE_".length()));
+            } else if (aggregatorDescriptor != null) {
+                parameters.put(prefix + ".aggregator", aggregator);
+                parameters.put(prefix + "." + aggregatorDescriptor.getVariable(),
+                               parameters.get(prefix + ".name"));
+                if (aggregatorDescriptor.getParameter() != null && variable.parameter.length() > 0) {
+                    parameters.put(prefix + "." + aggregatorDescriptor.getParameter(), variable.parameter);
+                }
             } else {
                 parameters.put(prefix + ".aggregator", aggregator);
             }
@@ -408,11 +457,23 @@ public class L3ConfigForm extends Composite {
         parameters.put("maskExpr", maskExpr.getText());
         parameters.put("periodLength", steppingPeriodLength.getValue().toString());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
+        parameters.put("compositingType", getCompositingType());
+        if (COMPOSITING_TYPE_MOSAICKING.equals(getCompositingType())) {
+            parameters.put("planetaryGrid", "org.esa.beam.binning.support.PlateCarreeGrid");
+        }
         parameters.put("resolution", resolution.getValue().toString());
         parameters.put("superSampling", superSampling.getValue().toString());
         return parameters;
     }
 
+    private DtoAggregatorDescriptor findDescriptor(String aggregator) {
+        for (DtoAggregatorDescriptor descriptor : aggregatorDescriptors) {
+            if (aggregator.equals(descriptor.getAggregator())) {
+                return descriptor;
+            }
+        }
+        return null;
+    }
 
     private void initTableColumns() {
         Column<Variable, String> nameColumn = createNameColumn();
@@ -434,6 +495,10 @@ public class L3ConfigForm extends Composite {
         Column<Variable, String> fillValueColumn = createFillValueColumn();
         variableTable.addColumn(fillValueColumn, "Fill");
         variableTable.setColumnWidth(fillValueColumn, 8, Style.Unit.EM);
+
+        Column<Variable, String> parameterColumn = createParameterColumn();
+        variableTable.addColumn(parameterColumn, "Aggregator Parameter");
+        variableTable.setColumnWidth(parameterColumn, 8, Style.Unit.EM);
     }
 
     private Column<Variable, String> createNameColumn() {
@@ -536,5 +601,26 @@ public class L3ConfigForm extends Composite {
             }
         });
         return fillValueColumn;
+    }
+
+    private Column<Variable, String> createParameterColumn() {
+        Column<Variable, String> parameterColumn = new Column<Variable, String>(new EditTextCell()) {
+            @Override
+            public String getValue(Variable object) {
+                return object.parameter + "";
+            }
+        };
+        parameterColumn.setFieldUpdater(new FieldUpdater<Variable, String>() {
+            public void update(int index, Variable object, String value) {
+                object.parameter = value;
+                variableProvider.refresh();
+            }
+        });
+        return parameterColumn;
+    }
+
+    private String getCompositingType() {
+        int index = compositingType.getSelectedIndex();
+        return compositingType.getValue(index);
     }
 }

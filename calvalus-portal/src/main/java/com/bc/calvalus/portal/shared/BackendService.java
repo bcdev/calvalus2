@@ -55,6 +55,17 @@ public interface BackendService extends RemoteService {
     DtoProcessorDescriptor[] getProcessors(String filter) throws BackendServiceException;
 
     /**
+     * Gets all known aggregators.
+     *
+     * @param filter A filter expression (not yet used).
+     *
+     * @return The aggregators.
+     *
+     * @throws BackendServiceException If a server error occurred.
+     */
+    DtoAggregatorDescriptor[] getAggregators(String filter) throws BackendServiceException;
+
+    /**
      * Gets all known productions.
      *
      * @param filter A filter expression (not yet used).
@@ -96,6 +107,8 @@ public interface BackendService extends RemoteService {
     void scpProduction(String productionId, String remotePath) throws BackendServiceException;
 
     String[] listUserFiles(String dirPath) throws BackendServiceException;
+
+    String[] listSystemFiles(String dirPath) throws BackendServiceException;
 
     boolean removeUserFile(String filePath) throws BackendServiceException;
 

@@ -16,7 +16,7 @@ public class L3ConfigFormTest extends GWTTestCase {
     }
 
     public void testValueMap() {
-        L3ConfigForm l3ConfigForm = new L3ConfigForm();
+        L3ConfigForm l3ConfigForm = new L3ConfigForm(null);
         Map<String, String> valueMap = l3ConfigForm.getValueMap();
         assertNotNull(valueMap);
         assertEquals(6, valueMap.size());

@@ -81,7 +81,7 @@ public class OrderTAProductionView extends OrderProductionView {
             }
         });
 
-        l3ConfigForm = new L3ConfigForm();
+        l3ConfigForm = new L3ConfigForm(portalContext);
         l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
         l3ConfigForm.resolution.setEnabled(false);
         l3ConfigForm.superSampling.setEnabled(false);

@@ -22,6 +22,7 @@ import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
+import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
@@ -32,6 +33,7 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -213,6 +215,25 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
+    @Override
+    public DtoAggregatorDescriptor[] getAggregators(String filterString) throws BackendServiceException {
+        try {
+            List<DtoAggregatorDescriptor> dtoAggregatorDescriptors = new ArrayList<DtoAggregatorDescriptor>();
+            final BundleFilter filter = BundleFilter.fromString(filterString);
+            String userName = getUserName();
+            filter.withTheUser(userName);
+
+            final BundleDescriptor[] bundleDescriptors = productionService.getBundles(userName, filter);
+            for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
+                DtoAggregatorDescriptor[] dtoDescriptors = getDtoAggregatorDescriptors(bundleDescriptor);
+                dtoAggregatorDescriptors.addAll(Arrays.asList(dtoDescriptors));
+            }
+            return dtoAggregatorDescriptors.toArray(new DtoAggregatorDescriptor[dtoAggregatorDescriptors.size()]);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
     private DtoProcessorDescriptor[] getDtoProcessorDescriptors(BundleDescriptor bundleDescriptor) {
         ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
         if (processorDescriptors != null) {
@@ -239,6 +260,28 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                null,
                                                null,
                                                null,
+                                               null)
+            };
+        }
+    }
+
+    private DtoAggregatorDescriptor[] getDtoAggregatorDescriptors(BundleDescriptor bundleDescriptor) {
+        AggregatorDescriptor[] aggregatorDescriptors = bundleDescriptor.getAggregatorDescriptors();
+        if (aggregatorDescriptors != null) {
+            DtoAggregatorDescriptor[] dtoDescriptors = new DtoAggregatorDescriptor[aggregatorDescriptors.length];
+            for (int i = 0; i < aggregatorDescriptors.length; i++) {
+                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
+                                            bundleDescriptor.getBundleLocation(), aggregatorDescriptors[i]);
+            }
+            return dtoDescriptors;
+        } else {
+            return new DtoAggregatorDescriptor[]{
+                    new DtoAggregatorDescriptor(BundleFilter.DUMMY_AGGREGATOR_NAME,
+                                               "",
+                                               "",
+                                               bundleDescriptor.getBundleName(),
+                                               bundleDescriptor.getBundleVersion(),
+                                               bundleDescriptor.getBundleLocation(),
                                                null)
             };
         }
@@ -336,6 +379,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public String[] listSystemFiles(String dirPath) throws BackendServiceException {
+        try {
+            return productionService.listSystemFiles(getUserName(), dirPath);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    @Override
     public boolean removeUserFile(String filePath) throws BackendServiceException {
         try {
             return productionService.removeUserFile(getUserName(), filePath);
@@ -356,7 +408,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public String checkUserRecordSource(String filePath) throws BackendServiceException {
         try {
-            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            String url = productionService.getQualifiedPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
             Iterable<Record> records = recordSource.getRecords();
@@ -406,7 +458,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public float[] listUserRecordSource(String filePath) throws BackendServiceException {
         try {
-            String url = productionService.getQualifiedUserPath(getUserName(), filePath);
+            String url = productionService.getQualifiedPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
             Iterable<Record> records = recordSource.getRecords();
@@ -465,6 +517,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           processorDescriptor.getMaskExpression(),
                                           convert(processorDescriptor.getOutputVariables()),
                                           convert(processorDescriptor.getParameterDescriptors()));
+    }
+
+    private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
+                                            AggregatorDescriptor aggregatorDescriptor) {
+        return new DtoAggregatorDescriptor(aggregatorDescriptor.getAggregator(),
+                                          aggregatorDescriptor.getVariable(),
+                                          aggregatorDescriptor.getParameter(),
+                                          bundleName,
+                                          bundleVersion,
+                                          bundlePath,
+                                          aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "");
     }
 
     private DtoProcessorDescriptor.DtoProcessorCategory convert(ProcessorDescriptor.ProcessorCategory processorCategory) {

@@ -3,6 +3,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -27,6 +28,7 @@ public interface PortalContext {
 
     // make this return ListDataProvider<GsProcessorDescriptor>
     DtoProcessorDescriptor[] getProcessors(String filter);
+    DtoAggregatorDescriptor[] getAggregators(String filter);
 
     ListDataProvider<DtoProduction> getProductions();
 

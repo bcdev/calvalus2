@@ -355,6 +355,15 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     @Override
+    public String[] listSystemFiles(String userName, String glob) throws ProductionException {
+        try {
+            return inventoryService.globPaths(userName, Arrays.asList(glob + "/.*"));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
     public OutputStream addUserFile(String userName, String path) throws ProductionException {
         try {
             return inventoryService.addFile(userName, getUserPath(userName, path));
@@ -385,6 +394,15 @@ public class ProductionServiceImpl implements ProductionService {
     public String getQualifiedUserPath(String userName, String path) throws ProductionException {
         try {
             return inventoryService.getQualifiedPath(userName, getUserPath(userName, path));
+        } catch (IOException e) {
+            throw new ProductionException(e);
+        }
+    }
+
+    @Override
+    public String getQualifiedPath(String userName, String path) throws ProductionException {
+        try {
+            return inventoryService.getQualifiedPath(userName, path);
         } catch (IOException e) {
             throw new ProductionException(e);
         }

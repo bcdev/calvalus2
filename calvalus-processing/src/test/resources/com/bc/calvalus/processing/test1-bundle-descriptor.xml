@@ -2,6 +2,14 @@
     <bundleName>bundle-test-name</bundleName>
     <bundleVersion>1.1-SNAPSHOT</bundleVersion>
 
+    <aggregatorDescriptors>
+        <aggregatorDescriptor>
+            <aggregator>ON_MAX_SET</aggregator>
+            <variable>onMaxVarName</variable>
+            <parameter>setVarNames</parameter>
+        </aggregatorDescriptor>
+    </aggregatorDescriptors>
+
     <processorDescriptors>
         <processorDescriptor>
             <executableName>executeMe.bat</executableName>

@@ -24,6 +24,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
             }
         });
 
-        l3ConfigForm = new L3ConfigForm(Arrays.asList("AVG"));
+        l3ConfigForm = new L3ConfigForm(portalContext, new ArrayList<>(Arrays.asList("AVG")));
         l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
         l3ConfigForm.resolution.setEnabled(false);
         l3ConfigForm.superSampling.setEnabled(false);

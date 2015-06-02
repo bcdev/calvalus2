@@ -43,13 +43,13 @@
                         </td>
                         <td>&nbsp;&nbsp;</td>
                         <td>
-                            <g:Label>Spatial resolution:</g:Label>
+                            <g:Label>Compositing:</g:Label>
                         </td>
                         <td>
-                            <g:DoubleBox ui:field='resolution' visibleLength="8"/>
+                            <g:ListBox ui:field='compositingType' visibleItemCount="1"/>
                         </td>
                         <td>
-                            <g:Label>km/pixel</g:Label>
+                            &nbsp;
                         </td>
                     </tr>
                     <tr>
@@ -64,6 +64,25 @@
                         </td>
                         <td>&nbsp;&nbsp;</td>
                         <td>
+                            <g:Label>Spatial resolution:</g:Label>
+                        </td>
+                        <td>
+                            <g:DoubleBox ui:field='resolution' visibleLength="8"/>
+                        </td>
+                        <td>
+                            <g:Label>km/pixel</g:Label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <g:Label>Number of periods:</g:Label>
+                        </td>
+                        <td>
+                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
+                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;&nbsp;</td>
+                        <td>
                             <g:Label>Supersampling:</g:Label>
                         </td>
                         <td>
@@ -74,12 +93,8 @@
                         </td>
                     </tr>
                     <tr>
-                        <td>
-                            <g:Label>Number of periods:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
-                        </td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
                         <td>&nbsp;</td>
                         <td>&nbsp;&nbsp;</td>
                         <td>

@@ -16,6 +16,8 @@ public class BundleDescriptor {
     private String includeBundle;
     @Parameter(itemAlias = "processorDescriptor")
     ProcessorDescriptor[] processorDescriptors;
+    @Parameter(itemAlias = "aggregatorDescriptor")
+    AggregatorDescriptor[] aggregatorDescriptors;
 
     private String bundleLocation;
 
@@ -42,6 +44,10 @@ public class BundleDescriptor {
 
     public ProcessorDescriptor[] getProcessorDescriptors() {
         return processorDescriptors;
+    }
+
+    public AggregatorDescriptor[] getAggregatorDescriptors() {
+        return aggregatorDescriptors;
     }
 
     public void setBundleLocation(String bundleLocation) {

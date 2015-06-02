@@ -125,7 +125,6 @@ public interface ProductionService {
      */
     void close() throws ProductionException;
 
-    ////////////////////////////////////////////////////////////////////////////////////////
     // Facade for special inventory usages.
 
     /**
@@ -134,11 +133,23 @@ public interface ProductionService {
      * @param userName The name of an authorised user.
      * @param glob     A glob that may containMA
      *
-     * @return The listing of files.
+     * @return The list of files.
      *
      * @throws ProductionException If an error occured.
      */
     String[] listUserFiles(String userName, String glob) throws ProductionException;
+
+    /**
+     * Lists files in the inventory.
+     *
+     * @param userName The name of an authorised user.
+     * @param glob     A glob that may contain files
+     *
+     * @return The list of files.
+     *
+     * @throws ProductionException If an error occured.
+     */
+    String[] listSystemFiles(String userName, String glob) throws ProductionException;
 
     /**
      * Creates a file from the user's file space in the inventory.
@@ -185,4 +196,14 @@ public interface ProductionService {
      * @return A fully qualified path to the user file.
      */
     String getQualifiedUserPath(String userName, String filePath) throws ProductionException;
+
+    /**
+     * Gets the qualified path to the specified file.
+     *
+     * @param userName The name of the user.
+     * @param filePath A relative path.
+     *
+     * @return A fully qualified path to the user file.
+     */
+    String getQualifiedPath(String userName, String filePath) throws ProductionException;
 }
