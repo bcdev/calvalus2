@@ -14,7 +14,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Manages a list of files that can be uploaded and remove by the user.
@@ -22,6 +24,7 @@ import java.util.List;
 class UserManagedFiles {
 
     private final BackendServiceAsync backendService;
+    private final Map<String,String> items;
     private final ListBox contentListbox;
     private final String baseDir;
     private final String what;
@@ -34,6 +37,7 @@ class UserManagedFiles {
     UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget... uploadDescriptions) {
         this.backendService = backendService;
         this.contentListbox = contentListbox;
+        this.items = new HashMap<>();
         this.baseDir = baseDir;
         this.what = what;
         this.uploadDescriptions = uploadDescriptions;
@@ -82,18 +86,32 @@ class UserManagedFiles {
     }
 
     private void setItems(String[] filePaths) {
-        contentListbox.clear();
+        for (String path : items.keySet()) {
+            contentListbox.removeItem(getIndexOf(path));
+        }
+        items.clear();
         for (String filePath : filePaths) {
             int baseDirPos = filePath.lastIndexOf(baseDir + "/");
             if (baseDirPos >= 0) {
+                items.put(filePath, filePath.substring(baseDirPos + baseDir.length() + 1));
                 contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
             } else {
+                items.put(filePath, filePath);
                 contentListbox.addItem(filePath, filePath);
             }
         }
         if (contentListbox.getItemCount() > 0) {
             contentListbox.setSelectedIndex(0);
         }
+    }
+
+    private int getIndexOf(String path) {
+        for (int i=0; i<contentListbox.getItemCount(); ++i) {
+            if (path.equals(contentListbox.getValue(i))) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("cannot find path " + path + " in list box");
     }
 
     public String getSelectedFilePath() {
@@ -187,7 +205,9 @@ class UserManagedFiles {
         @Override
         public void onClick(ClickEvent event) {
             final String recordSource = getSelectedFilename();
-            if (recordSource != null) {
+            if (! items.containsKey(getSelectedFilePath())) {
+                Dialog.error("Remove File", "Cannot remove non-user entry.");
+            } else if (recordSource != null) {
                 Dialog.ask("Remove File",
                            new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
                                     "Do you really want to continue?"),

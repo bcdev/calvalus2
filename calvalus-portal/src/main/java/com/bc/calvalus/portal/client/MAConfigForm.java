@@ -35,6 +35,7 @@ import java.util.Map;
 public class MAConfigForm extends Composite {
 
     private static final String POINT_DATA_DIR = "point-data";
+    public static final String SYSTEM_POINTDATA_DIR = "pointdata";
 
     private final PortalContext portalContext;
     private final UserManagedFiles userManagedContent;
@@ -118,6 +119,11 @@ public class MAConfigForm extends Composite {
                                                   "in-situ or point data",
                                                   description1,
                                                   description2);
+        final SystemManagedFiles systemManagedFiles = new SystemManagedFiles(portalContext.getBackendService(),
+                                                                             recordSources,
+                                                                             SYSTEM_POINTDATA_DIR,
+                                                                             "system point data");
+        systemManagedFiles.updateList();
 
         addRecordSourceButton.addClickHandler(userManagedContent.getAddAction());
         removeRecordSourceButton.addClickHandler(userManagedContent.getRemoveAction());
@@ -127,7 +133,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void checkRecordSource(final String recordSource) {
-        portalContext.getBackendService().checkUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<String>() {
+        portalContext.getBackendService().checkUserRecordSource(recordSource, new AsyncCallback<String>() {
             @Override
             public void onSuccess(String message) {
                 Dialog.info("Passed", "parsing " + recordSource + " succeeded: " + message);
@@ -141,7 +147,7 @@ public class MAConfigForm extends Composite {
     }
 
     private void viewRecordSource(final String recordSource) {
-        portalContext.getBackendService().listUserRecordSource(POINT_DATA_DIR + "/" + recordSource, new AsyncCallback<float[]>() {
+        portalContext.getBackendService().listUserRecordSource(recordSource, new AsyncCallback<float[]>() {
             @Override
             public void onSuccess(float[] points) {
                 MapOptions mapOptions = MapOptions.newInstance();
@@ -238,7 +244,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            checkRecordSource(userManagedContent.getSelectedFilename());
+            checkRecordSource(userManagedContent.getSelectedFilePath());
         }
     }
 
@@ -247,7 +253,7 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            viewRecordSource(userManagedContent.getSelectedFilename());
+            viewRecordSource(userManagedContent.getSelectedFilePath());
         }
     }
 
