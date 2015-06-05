@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -35,7 +33,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.util.StringUtils;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Vicarious Calibration: A production type used for supporting the computation of vicarious calibration coefficients
@@ -84,6 +81,34 @@ public class VCProductionType extends HadoopProductionType {
         MAConfig maConfig = MAProductionType.getMAConfig(productionRequest);
         jobConfig.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
 
+        String processorBundleLocation = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION, null);
+        String processorBundleName;
+        String processorBundleVersion;
+        StringBuilder processorBundles = new StringBuilder();
+        if (processorBundleLocation != null) {
+            processorBundles.append(processorBundleLocation);
+        } else {
+            processorBundleName = productionRequest.getParameter(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME, true);
+            processorBundleVersion = productionRequest.getParameter(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION, true);
+            if (processorBundleName != null && processorBundleVersion != null) {
+                processorBundles.append(processorBundleName).append("-").append(processorBundleVersion);
+            }
+        }
+        processorBundleLocation = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION + VCWorkflowItem.DIFFERENTIATION_SUFFIX, null);
+        if (processorBundleLocation != null) {
+            ensureComma(processorBundles);
+            processorBundles.append(processorBundleLocation);
+        } else {
+            processorBundleName = productionRequest.getParameter(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME + VCWorkflowItem.DIFFERENTIATION_SUFFIX, true);
+            processorBundleVersion = productionRequest.getParameter(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION + VCWorkflowItem.DIFFERENTIATION_SUFFIX, true);
+            if (processorBundleName != null && processorBundleVersion != null) {
+                ensureComma(processorBundles);
+                processorBundles.append(processorBundleName).append("-").append(processorBundleVersion);
+            }
+        }
+
+        jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles.toString());
+
         ///////////////////////////////////////////////////////////////////////////////////////////
         ProcessorProductionRequest pprDifferentiation = new ProcessorProductionRequest(productionRequest,
                                                                                        VCWorkflowItem.DIFFERENTIATION_SUFFIX);
@@ -108,6 +133,12 @@ public class VCProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               workflow);
+    }
+
+    private static void ensureComma(StringBuilder processorBundles) {
+        if (processorBundles.length() > 0) {
+            processorBundles.append(",");
+        }
     }
 
     @Override

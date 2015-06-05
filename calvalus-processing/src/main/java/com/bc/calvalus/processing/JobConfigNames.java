@@ -51,10 +51,10 @@ public interface JobConfigNames {
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
-    String CALVALUS_L2_BUNDLE = "calvalus.l2.bundle";
-    String CALVALUS_L2_BUNDLE_LOCATION = "calvalus.l2.bundleLocation";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
     String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
+
+    String CALVALUS_BUNDLES = "calvalus.bundles";
 
     String CALVALUS_METADATA_TEMPLATE = "calvalus.metadata.template";
     String CALVALUS_LC_VERSION = "calvalus.lc.version";

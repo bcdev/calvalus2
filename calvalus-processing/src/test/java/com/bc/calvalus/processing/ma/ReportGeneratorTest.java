@@ -54,7 +54,7 @@ public class ReportGeneratorTest {
                 "</parameters>");
         configuration.set(JobConfigNames.CALVALUS_BEAM_BUNDLE, "beam-1.2.3" );
         configuration.set(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, "calvalus-4.5.6" );
-        configuration.set(JobConfigNames.CALVALUS_L2_BUNDLE, "coastcolour-processing-1.2-SNAPSHOT" );
+        configuration.set(JobConfigNames.CALVALUS_BUNDLES, "coastcolour-processing-1.2-SNAPSHOT" );
         configuration.set(JobConfigNames.CALVALUS_L2_OPERATOR, "CoastColour.L2W" );
                 configuration.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "" +
                 "<parameters>\n" +

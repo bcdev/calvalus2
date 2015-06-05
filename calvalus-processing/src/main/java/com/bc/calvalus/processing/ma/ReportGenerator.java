@@ -77,7 +77,7 @@ public class ReportGenerator {
                                          plotDataset.getVariablePair().satelliteAttributeName,
                                          plotDataset.getGroupName());
             String subTitle = String.format("%s, %s",
-                                            configuration.get(JobConfigNames.CALVALUS_L2_BUNDLE),
+                                            getSubTitleBundleName(configuration),
                                             configuration.get(JobConfigNames.CALVALUS_L2_OPERATOR));
             String imageFilename = String.format(SCATTER_PLOT_PNG,
                                                  i + 1,
@@ -104,6 +104,12 @@ public class ReportGenerator {
 
         copyResource(outputStreamFactory, ANALYSIS_SUMMARY_XSL);
         copyResource(outputStreamFactory, STYLESET_CSS);
+    }
+
+    private static String getSubTitleBundleName(Configuration configuration) {
+        return configuration.get(JobConfigNames.CALVALUS_BUNDLES) != null ?
+        configuration.get(JobConfigNames.CALVALUS_BUNDLES).split(",")[0] :
+        "";
     }
 
     private static void writeImage(PlotGenerator.Result result, OutputStreamFactory outputStreamFactory, String imageFilename) throws IOException, InterruptedException {

@@ -70,7 +70,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     @Override
     public void prepareProcessing() throws IOException {
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
@@ -93,7 +92,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
-            String processLogName = bundle + "-" + executable + "-prepare";
+            String processLogName = executable + "-prepare";
             KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
             new ProcessObserver(process).
@@ -159,7 +158,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     public KeywordHandler process(ProgressMonitor pm, Rectangle inputRectangle, Path inputPath, File inputFile, Rectangle productRectangle, Map<String, String> velocityProps) throws IOException {
         pm.setSubTaskName("Exec Level 2");
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, "");
 
@@ -193,7 +191,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
-        String processLogName = bundle + "-" + executable + "-process";
+        String processLogName = executable + "-process";
         KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
         new ProcessObserver(process).
@@ -237,7 +235,6 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     public void saveProcessedProductFiles(String[] outputFilesNames, ProgressMonitor pm) throws IOException {
         Configuration conf = getConfiguration();
-        String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
 
@@ -263,7 +260,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             cmdArray[cmdArray.length - 1] = outputPath.toString();
 
             Process process = Runtime.getRuntime().exec(cmdArray);
-            String processLogName = bundle + "-" + executable + "-finalize";
+            String processLogName = executable + "-finalize";
             KeywordHandler keywordHandler = new KeywordHandler(processLogName, getMapContext());
 
             new ProcessObserver(process).

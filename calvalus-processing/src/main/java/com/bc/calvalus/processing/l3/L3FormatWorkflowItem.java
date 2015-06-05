@@ -67,7 +67,7 @@ public class L3FormatWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        ProcessorFactory.installProcessorBundle(job.getConfiguration());
+        ProcessorFactory.installProcessorBundles(job.getConfiguration());
     }
 
 }

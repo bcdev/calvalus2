@@ -62,7 +62,7 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
 
-        ProcessorFactory.installProcessorBundle(jobConfig);
+        ProcessorFactory.installProcessorBundles(jobConfig);
 
         Map<String, String> metadata = ProcessingMetadata.read(FileInputFormat.getInputPaths(job)[0], jobConfig);
         ProcessingMetadata.metadata2Config(metadata, jobConfig, JobConfigNames.LEVEL3_METADATA_KEYS);

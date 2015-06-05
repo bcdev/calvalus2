@@ -46,7 +46,7 @@ public class ProcessorProductionRequest {
     }
 
     public ProcessorProductionRequest(ProductionRequest productionRequest, String parameterSuffix) {
-        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME+ parameterSuffix, null);
+        this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME + parameterSuffix, null);
         this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION + parameterSuffix, null);
         this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
         this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
@@ -80,9 +80,10 @@ public class ProcessorProductionRequest {
         }
         String processorBundle = getProcessorBundle();
         if (processorBundle != null) {
-            jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix, processorBundle);
             if (processorBundleLocation != null) {
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION + parameterSuffix, processorBundleLocation);
+                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
+            } else {
+                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
             }
         }
     }

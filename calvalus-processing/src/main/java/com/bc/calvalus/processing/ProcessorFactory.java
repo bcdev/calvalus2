@@ -36,6 +36,9 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -65,48 +68,52 @@ public class ProcessorFactory {
         throw new IllegalArgumentException("Unknown processor type.");
     }
 
-    public static void installProcessorBundle(Configuration conf) throws IOException {
-        installProcessorBundle(conf, "");
-    }
-
-    public static void installProcessorBundle(Configuration conf, String parameterSuffix) throws IOException {
+    public static void installProcessorBundles(Configuration conf) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
-        if (conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix) != null) {
+        if (conf.get(JobConfigNames.CALVALUS_BUNDLES) != null) {
             final FileSystem fs = FileSystem.get(conf);
-            Path bundlePath = getBundlePath(conf, fs, parameterSuffix);
-            if (bundlePath != null) {
-                HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
-                addBundleArchives(bundlePath, fs, conf);
-                DistributedCache.createSymlink(conf);
+            final String[] split = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
+            List<String> processorFiles = new ArrayList<>();
+            for (int i = 0; i < split.length; i++) {
+                final String bundleSpec = split[i];
+                Path bundlePath = getBundlePath(bundleSpec, fs);
+                if (bundlePath != null) {
+                    HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
+                    addBundleArchives(bundlePath, fs, conf);
 
-                String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
-                if (executable != null) {
-                    processorType = detectProcessorType(bundlePath, executable, fs);
-                    String[] processorFiles = getBundleProcessorFiles(executable, bundlePath, fs);
-                    if (processorFiles.length > 0) {
-                        conf.setStrings(CALVALUS_L2_PROCESSOR_FILES + parameterSuffix, processorFiles);
-                    }
-                }
-                // check for bundle to include, install it
-                try {
-                    Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
-                    if (fs.exists(bundleDesc)) {
-                        BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
-                        if (bundleDescriptor.getIncludeBundle() != null) {
-                            Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
-                            HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
-                            addBundleArchives(includeBundlePath, fs, conf);
+                    String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + "");
+                    if (executable != null) {
+                        // first bundle is the processor bundle
+                        if (i == 0) {
+                            processorType = detectProcessorType(bundlePath, executable, fs);
                         }
+                        Collections.addAll(processorFiles, getBundleProcessorFiles(executable, bundlePath, fs));
+
                     }
-                } catch (Exception ex) {
-                    logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
+                    // check for bundle to include, install it
+                    try {
+                        Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
+                        if (fs.exists(bundleDesc)) {
+                            BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
+                            if (bundleDescriptor.getIncludeBundle() != null) {
+                                Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
+                                HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
+                                addBundleArchives(includeBundlePath, fs, conf);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Processor bundle does not exist.");
                 }
-            } else {
-                throw new IllegalArgumentException("Processor bundle does not exist.");
+            }
+            if (processorFiles.size() > 0) {
+                conf.setStrings(CALVALUS_L2_PROCESSOR_FILES + "", processorFiles.toArray(new String[processorFiles.size()]));
             }
         }
 
-        conf.set(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE + parameterSuffix, processorType.toString());
+        conf.set(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE + "", processorType.toString());
     }
 
     private static ProcessorType detectProcessorType(Path bundlePath, final String executable, FileSystem fs) throws IOException {
@@ -133,14 +140,12 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    private static Path getBundlePath(Configuration conf, FileSystem fs, String parameterSuffix) throws IOException {
-        String bundleLocation = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION + parameterSuffix);
+    private static Path getBundlePath(String bundleSpec, FileSystem fs) throws IOException {
         final Path bundlePath;
-        if (bundleLocation != null) {
-            bundlePath = new Path(bundleLocation);
+        if (isAbsolutePath(bundleSpec)) {
+            bundlePath = new Path(bundleSpec);
         } else {
-            String bundle = conf.get(JobConfigNames.CALVALUS_L2_BUNDLE + parameterSuffix);
-            bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundle);
+            bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
@@ -149,6 +154,10 @@ public class ProcessorFactory {
             }
         }
         return null;
+    }
+
+    private static boolean isAbsolutePath(String bundleSpec) {
+        return bundleSpec.charAt(0) == '/';
     }
 
     private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {

@@ -165,13 +165,13 @@ public class L2PlusProductionType extends HadoopProductionType {
         setDefaultProcessorParameters(processorProductionRequest, formatJobConfig);
         setRequestParameters(productionRequest, formatJobConfig);
 
-
         String processorBundle = processorProductionRequest.getProcessorBundle();
         if (processorBundle != null) {
-            formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
             String processorBundleLocation = processorProductionRequest.getProcessorBundleLocation();
             if (processorBundleLocation != null) {
-                formatJobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
+                formatJobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
+            } else {
+                formatJobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
             }
         }
 

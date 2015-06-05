@@ -55,8 +55,7 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
-                {JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, null},
+                {JobConfigNames.CALVALUS_BUNDLES, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {INPUT_FILE_PROPRTY, NO_DEFAULT},
                 {NUM_ITERATIONS_PROPERTY, Integer.toString(NUM_ITERATIONS_DEFAULT)},
@@ -78,7 +77,7 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(1);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundle(jobConfig);
+        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 
 }

@@ -67,7 +67,7 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
-        ProcessorFactory.installProcessorBundle(jobConfig);
+        ProcessorFactory.installProcessorBundles(jobConfig);
 
         CellInputFormat cellInputFormat = new CellInputFormat();
         Path inputDirectory = cellInputFormat.getFirstInputDirectory(job);

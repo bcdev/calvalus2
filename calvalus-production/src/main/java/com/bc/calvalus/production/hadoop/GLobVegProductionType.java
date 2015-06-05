@@ -90,8 +90,11 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, partsOutputDir);
 
             if (processorName != null) {
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE, processorBundle);
-                jobConfig.set(JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, processorBundleLocation);
+                if (processorBundleLocation != null) {
+                    jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
+                } else if (processorBundle != null) {
+                    jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
+                }
                 jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, processorName);
                 jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS, processorParameters);
             }

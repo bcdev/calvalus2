@@ -69,7 +69,7 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        ProcessorFactory.installProcessorBundle(jobConfig);
+        ProcessorFactory.installProcessorBundles(jobConfig);
 
     }
 }

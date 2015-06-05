@@ -32,8 +32,7 @@ public class CombinationsWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
-                {JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, null},
+                {JobConfigNames.CALVALUS_BUNDLES, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {COMBINATION_CONFIG, NO_DEFAULT},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
@@ -51,6 +50,6 @@ public class CombinationsWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundle(jobConfig);
+        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 }

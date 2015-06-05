@@ -59,13 +59,11 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
 
-                {JobConfigNames.CALVALUS_L2_BUNDLE, null},
-                {JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION, null},
+                {JobConfigNames.CALVALUS_BUNDLES, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>"},
 
-                {JobConfigNames.CALVALUS_L2_BUNDLE + DIFFERENTIATION_SUFFIX, null},
-                {JobConfigNames.CALVALUS_L2_BUNDLE_LOCATION + DIFFERENTIATION_SUFFIX, null},
+                {JobConfigNames.CALVALUS_BUNDLES + DIFFERENTIATION_SUFFIX, null},
                 {JobConfigNames.CALVALUS_L2_OPERATOR + DIFFERENTIATION_SUFFIX, null},
                 {JobConfigNames.CALVALUS_L2_PARAMETERS + DIFFERENTIATION_SUFFIX, "<parameters/>"},
 
@@ -97,8 +95,7 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundle(jobConfig);
-        ProcessorFactory.installProcessorBundle(jobConfig, DIFFERENTIATION_SUFFIX);
+        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 
 }
