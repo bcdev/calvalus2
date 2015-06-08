@@ -93,7 +93,8 @@ public class ProductionRequestTest {
                                                       "i", "4",
                                                       "f", "-2.3",
                                                       "d", "2011-07-13",
-                                                      "g", "POINT(15.1 11.6)");
+                                                      "g", "POINT(15.1 11.6)",
+                                                      "processorBundles", "calopus-beam-1.0,/calvalus/home/martin/software/calopus-aggregators-1.1");
 
         GeometryFactory gf = new GeometryFactory();
         Date date = ProductionRequest.DATE_FORMAT.parse("2011-07-13");
@@ -105,6 +106,7 @@ public class ProductionRequestTest {
         assertEquals(-2.3F, req.getFloat("f"), 1e-5F);
         assertEquals(-2.3, req.getDouble("f"), 1e-10);
         assertEquals(date, req.getDate("d"));
+        assertEquals("calopus-beam-1.0,/calvalus/home/martin/software/calopus-aggregators-1.1", req.getString("processorBundles"));
         assertTrue(point.equalsExact(req.getGeometry("g")));
 
         assertEquals("Calvalus sucks?", req.getString("missingParam", "Calvalus sucks?"));

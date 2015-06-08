@@ -1,0 +1,13 @@
+<bundleDescriptor>
+    <bundleName>beam</bundleName>
+    <bundleVersion>BEAM_BUNDLE_VERSION</bundleVersion>
+
+    <aggregatorDescriptors>
+        <aggregatorDescriptor>
+            <aggregator>ON_MAX_SET</aggregator>
+            <variable>onMaxVarName</variable>
+            <parameter>setVarNames</parameter>
+        </aggregatorDescriptor>
+    </aggregatorDescriptors>
+
+</bundleDescriptor>

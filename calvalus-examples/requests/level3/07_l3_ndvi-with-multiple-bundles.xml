@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS" version="1.0.0" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:ows="http://www.opengis.net/ows/1.1" >
+
+    <ows:Identifier>L3</ows:Identifier>
+
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>productionName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>Landsat NDVI composite test</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>processorBundleName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>calvalus-landsat</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>processorBundleVersion</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>1.0</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>processorBundles</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>calopus-beam-1.0,/calvalus/home/thomas/software/calopus-aggregators-1.1
+                </wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>inputPath</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>
+                    /calvalus/projects/calesa/landsat8-fmasked/Yamal/${yyyy}/${MM}/L2_of_LC8......${yyyy}${DDD}.*nc$
+                </wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>minDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2014-06-01</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>maxDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2014-06-30</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>periodLength</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>30</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>regionWKT</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>POLYGON((68 73,68 68,78 68,78 73,68 73))</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <compositingType>MOSAICKING</compositingType>
+                        <planetaryGrid>org.esa.beam.binning.support.PlateCarreeGrid</planetaryGrid>
+                        <numRows>648000</numRows>
+                        <superSampling>1</superSampling>
+                        <maskExpr>fmask == 0 or fmask == 1 or fmask == 3</maskExpr>
+                        <variables>
+                            <variable>
+                                <name>ndvi</name>
+                                <expr>(near_infrared - red) / (near_infrared + red)</expr>
+                            </variable>
+                        </variables>
+                        <aggregators>
+                            <aggregator>
+                                <type>REFERENCE_DATE</type>
+                                <referenceDate>2014-06-15</referenceDate>
+                                <setVarNames>ndvi,red,green,blue</setVarNames>
+                            </aggregator>
+                        </aggregators>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/home/thomas/landsat-maxndvi_bundle_plus_bundles</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.output.format</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>NetCDF4</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.system.beam.pixelGeoCoding.useTiling</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>true</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.hadoop.mapreduce.job.queuename</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>default</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+    </wps:DataInputs>
+
+</wps:Execute>

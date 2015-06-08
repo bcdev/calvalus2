@@ -34,4 +34,10 @@
             <useProjectArtifact>false</useProjectArtifact>
         </dependencySet>
     </dependencySets>
+    <files>
+        <file>
+            <source>${project.basedir}/src/main/resources/bundle-descriptor.xml</source>
+            <outputDirectory>/</outputDirectory>
+        </file>
+    </files>
 </assembly>

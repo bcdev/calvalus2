@@ -32,11 +32,13 @@ public class ProcessorProductionRequest {
     public static final String PROCESSOR_BUNDLE_NAME = "processorBundleName";
     public static final String PROCESSOR_BUNDLE_VERSION = "processorBundleVersion";
     public static final String PROCESSOR_BUNDLE_LOCATION = "processorBundleLocation";
+    public static final String PROCESSOR_BUNDLES = "processorBundles";
     public static final String PROCESSOR_NAME = "processorName";
     public static final String PROCESSOR_PARAMETERS = "processorParameters";
     private final String processorBundleName;
     private final String processorBundleVersion;
     private final String processorBundleLocation;
+    private final String processorBundles;
     private final String processorName;
     private final String processorParameters;
     private final String userName;
@@ -49,6 +51,7 @@ public class ProcessorProductionRequest {
         this.processorBundleName = productionRequest.getString(PROCESSOR_BUNDLE_NAME + parameterSuffix, null);
         this.processorBundleVersion = productionRequest.getString(PROCESSOR_BUNDLE_VERSION + parameterSuffix, null);
         this.processorBundleLocation = productionRequest.getString(PROCESSOR_BUNDLE_LOCATION + parameterSuffix, null);
+        this.processorBundles = productionRequest.getString(PROCESSOR_BUNDLES, null);
         this.processorName = productionRequest.getString(PROCESSOR_NAME + parameterSuffix, null);
         this.processorParameters = productionRequest.getString(PROCESSOR_PARAMETERS + parameterSuffix, "<parameters/>");
         this.userName = productionRequest.getUserName();
@@ -79,11 +82,14 @@ public class ProcessorProductionRequest {
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);
         }
         String processorBundle = getProcessorBundle();
-        if (processorBundle != null) {
+        if (processorBundle == null) {
+            jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles);
+        } else {
             if (processorBundleLocation != null) {
                 jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
             } else {
-                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
+                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES,
+                              processorBundle + "," + (processorBundles != null ? processorBundles : ""));
             }
         }
     }
