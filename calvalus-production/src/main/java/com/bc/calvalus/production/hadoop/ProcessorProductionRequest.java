@@ -83,13 +83,15 @@ public class ProcessorProductionRequest {
         }
         String processorBundle = getProcessorBundle();
         if (processorBundle == null) {
-            jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles);
+            if (processorBundles != null) {
+                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles);
+            }
         } else {
             if (processorBundleLocation != null) {
                 jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
             } else {
                 jobConfig.set(JobConfigNames.CALVALUS_BUNDLES,
-                              processorBundle + "," + (processorBundles != null ? processorBundles : ""));
+                              processorBundle + (processorBundles != null ? (","+processorBundles) : ""));
             }
         }
     }

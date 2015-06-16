@@ -124,6 +124,10 @@
                     </tr>
                 </table>
             </g:HTMLPanel>
+            <g:DisclosurePanel>
+                <g:header>Aggregator description:</g:header>
+                <g:HTML ui:field="aggregatorDescriptionHTML" width="100%"/>
+            </g:DisclosurePanel>
             <g:Anchor ui:field="showL3ParametersHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
         </g:VerticalPanel>
     </g:HorizontalPanel>

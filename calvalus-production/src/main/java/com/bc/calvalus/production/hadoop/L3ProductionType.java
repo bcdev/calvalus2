@@ -17,6 +17,8 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.Property;
+import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -28,12 +30,17 @@ import org.esa.beam.binning.operator.BinningConfig;
 import org.esa.beam.binning.operator.VariableConfig;
 import org.esa.beam.binning.support.SEAGrid;
 
+import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -364,26 +371,34 @@ public class L3ProductionType extends HadoopProductionType {
 
             TypedDescriptorsRegistry registry = TypedDescriptorsRegistry.getInstance();
             AggregatorDescriptor aggregatorDescriptor = registry.getDescriptor(AggregatorDescriptor.class, aggregatorName);
-            AggregatorConfig aggregatorConfig = aggregatorDescriptor.createConfig();
-            PropertySet propertySet = aggregatorConfig.asPropertySet();
-            for (Property property : propertySet.getProperties()) {
-                final String propertyName = property.getName();
-                final String key = prefix + "." + propertyName;
-                if (propertyName.equals("percentage")) {
-                    propertySet.setValue("percentage", percentage);
-                } else if (propertyName.equals("weightCoeff")) {
-                    propertySet.setValue("weightCoeff", weightCoeff);
-                } else if (propertyName.equals("fillValue")) {
-                    propertySet.setValue("fillValue", fillValue);
-                } else if (propertyName.equals("varName")) {
-                    propertySet.setValue("varName", variableName);
-                } else if (request.getParameters().containsKey(key)) {
-                    if (property.getType().isArray()) {
-                        propertySet.setValue(propertyName, request.getString(key).split(","));
-                    } else {
-                        propertySet.setValue(propertyName, request.getString(key));
+            AggregatorConfig aggregatorConfig;
+            if (aggregatorDescriptor != null) {
+                aggregatorConfig = aggregatorDescriptor.createConfig();
+                PropertySet propertySet = aggregatorConfig.asPropertySet();
+                for (Property property : propertySet.getProperties()) {
+                    final String propertyName = property.getName();
+                    final String key = prefix + "." + propertyName;
+                    if (propertyName.equals("percentage")) {
+                        propertySet.setValue("percentage", percentage);
+                    } else if (propertyName.equals("weightCoeff")) {
+                        propertySet.setValue("weightCoeff", weightCoeff);
+                    } else if (propertyName.equals("fillValue")) {
+                        propertySet.setValue("fillValue", fillValue);
+                    } else if (propertyName.equals("varName")) {
+                        propertySet.setValue("varName", variableName);
+                    } else if (request.getParameters().containsKey(key)) {
+                        if (property.getType().isArray()) {
+                            propertySet.setValue(propertyName, request.getString(key).split(","));
+                        } else {
+                            propertySet.setValue(propertyName, request.getString(key));
+                        }
                     }
                 }
+            } else {
+                final String descriptorVariableName = request.getString(prefix + ".descriptorVariableName");
+                final String descriptorParameterName = request.getString(prefix + ".descriptorParameterName");
+                final String parameterValue = request.getParameters().get(prefix + "." + descriptorParameterName);
+                aggregatorConfig = new ParameterisedAggregatorConfig(aggregatorName, descriptorVariableName, variableName, descriptorParameterName, parameterValue);
             }
             aggregatorConfigs[i] = aggregatorConfig;
         }
@@ -407,4 +422,92 @@ public class L3ProductionType extends HadoopProductionType {
         return SEAGrid.computeRowCount(resolution);
     }
 
+    private static class ParameterisedAggregatorConfig extends AggregatorConfig implements PropertySet {
+        private final PropertySet delegate = new PropertyContainer();
+
+        public ParameterisedAggregatorConfig(String aggregatorName, String variableName, String variableValue, String parameterName, String parameterValue) {
+            super(aggregatorName);
+            delegate.addProperty(Property.create("type", String.class));
+            delegate.setValue("type", aggregatorName);
+            delegate.addProperty(Property.create(variableName, String.class));
+            delegate.setValue(variableName, variableValue);
+            delegate.addProperty(Property.create(parameterName, String.class));
+            delegate.setValue(parameterName, parameterValue);
+        }
+
+        @Override
+        public Property[] getProperties() {
+            return delegate.getProperties();
+        }
+
+        @Override
+        public boolean isPropertyDefined(String name) {
+            return delegate.isPropertyDefined(name);
+        }
+
+        @Override
+        public Property getProperty(String name) {
+            return delegate.getProperty(name);
+        }
+
+        @Override
+        public void addProperty(Property property) {
+            delegate.addProperty(property);
+        }
+
+        @Override
+        public void addProperties(Property... properties) {
+            delegate.addProperties(properties);
+        }
+
+        @Override
+        public void removeProperty(Property property) {
+             delegate.removeProperty(property);
+        }
+
+        @Override
+        public void removeProperties(Property... properties) {
+            delegate.removeProperties(properties);
+        }
+
+        @Override
+        public <T> T getValue(String name) throws ClassCastException {
+            return delegate.getValue(name);
+        }
+
+        @Override
+        public void setValue(String name, Object value) throws IllegalArgumentException {
+            delegate.setValue(name, value);
+        }
+
+        @Override
+        public void setDefaultValues() throws IllegalStateException {
+            delegate.setDefaultValues();
+        }
+
+        @Override
+        public PropertyDescriptor getDescriptor(String name) {
+            return delegate.getDescriptor(name);
+        }
+
+        @Override
+        public void addPropertyChangeListener(PropertyChangeListener l) {
+            delegate.addPropertyChangeListener(l);
+        }
+
+        @Override
+        public void addPropertyChangeListener(String name, PropertyChangeListener l) {
+            delegate.addPropertyChangeListener(name, l);
+        }
+
+        @Override
+        public void removePropertyChangeListener(PropertyChangeListener l) {
+            delegate.removePropertyChangeListener(l);
+        }
+
+        @Override
+        public void removePropertyChangeListener(String name, PropertyChangeListener l) {
+            delegate.removePropertyChangeListener(name, l);
+        }
+    }
 }

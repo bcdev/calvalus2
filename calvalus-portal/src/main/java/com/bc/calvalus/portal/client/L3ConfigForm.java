@@ -26,12 +26,27 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.DoubleBox;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.IntegerBox;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
 import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
@@ -94,6 +109,7 @@ public class L3ConfigForm extends Composite {
         Double fillValue = Double.NaN;
         Double weightCoeff = 1.0;
         String parameter = "";
+        String description = "";
     }
 
 
@@ -124,6 +140,8 @@ public class L3ConfigForm extends Composite {
     Button addVariableButton;
     @UiField
     Button removeVariableButton;
+    @UiField
+    HTML aggregatorDescriptionHTML;
     @UiField
     Anchor showL3ParametersHelp;
 
@@ -442,6 +460,8 @@ public class L3ConfigForm extends Composite {
                 parameters.put(prefix + ".aggregator", aggregator);
                 parameters.put(prefix + "." + aggregatorDescriptor.getVariable(),
                                parameters.get(prefix + ".name"));
+                parameters.put(prefix + ".descriptorVariableName", aggregatorDescriptor.getVariable());
+                parameters.put(prefix + ".descriptorParameterName", aggregatorDescriptor.getParameter());
                 if (aggregatorDescriptor.getParameter() != null && variable.parameter.length() > 0) {
                     parameters.put(prefix + "." + aggregatorDescriptor.getParameter(), variable.parameter);
                 }
@@ -450,6 +470,27 @@ public class L3ConfigForm extends Composite {
             }
             parameters.put(prefix + ".weightCoeff", variable.weightCoeff + "");
             parameters.put(prefix + ".fillValue", variable.fillValue + "");
+            // add aggregator bundle to bundles
+            if (aggregatorDescriptor != null) {
+                final String bundle;
+                if (aggregatorDescriptor.getBundleLocation() != null) {
+                    bundle = aggregatorDescriptor.getBundleLocation();
+                } else if (aggregatorDescriptor.getBundleName() != null && aggregatorDescriptor.getBundleVersion() != null) {
+                    bundle = aggregatorDescriptor.getBundleName() + "-" + aggregatorDescriptor.getBundleVersion();
+                } else {
+                    bundle = null;
+                }
+                if (bundle != null) {
+                    if (parameters.containsKey("processorBundles")) {
+                        final String bundles = parameters.get("processorBundles");
+                        if (! bundles.contains(bundle)) {
+                            parameters.put("processorBundles", bundles + "," + bundle);
+                        }
+                    } else {
+                        parameters.put("processorBundles", bundle);
+                    }
+                }
+            }
         }
         if (expressionCount > 0) {
             parameters.put("expression.count", expressionCount + "");
@@ -555,7 +596,8 @@ public class L3ConfigForm extends Composite {
 
     private Column<Variable, String> createAggregatorColumn() {
 
-        SelectionCell aggregatorCell = new SelectionCell(aggregatorNameList);
+        final SelectionCell aggregatorCell = new SelectionCell(aggregatorNameList);
+
         Column<Variable, String> aggregatorColumn = new Column<Variable, String>(aggregatorCell) {
             @Override
             public String getValue(Variable variable) {
@@ -565,10 +607,20 @@ public class L3ConfigForm extends Composite {
         aggregatorColumn.setFieldUpdater(new FieldUpdater<Variable, String>() {
             public void update(int index, Variable variable, String value) {
                 variable.aggregator = value;
+                aggregatorDescriptionHTML.setHTML(getAggregatorDescription(variable.aggregator));
                 variableProvider.refresh();
             }
         });
         return aggregatorColumn;
+    }
+
+    private String getAggregatorDescription(String aggregatorName) {
+        for (DtoAggregatorDescriptor aggregatorDescriptor: aggregatorDescriptors) {
+            if (aggregatorName.equals(aggregatorDescriptor.getAggregator())) {
+                return aggregatorDescriptor.getDescriptionHtml();
+            }
+        }
+        return "AVG etc.: select variable, or type in an expression name=expr in the Expression column";
     }
 
     private Column<Variable, String> createWeightCoeffColumn() {
