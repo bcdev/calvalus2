@@ -7,33 +7,27 @@ import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapreduce.Counter;
-import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.OutputCommitter;
-import org.apache.hadoop.mapreduce.RecordWriter;
-import org.apache.hadoop.mapreduce.StatusReporter;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
+import org.esa.beam.util.io.FileUtils;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,42 +41,53 @@ public class QLMapperMain {
         System.setProperty("com.sun.media.jai.disableMediaLib", "true");  // disable native libraries for JAI
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
-        qlConfig.setBandName("CHL");
-        qlConfig.setImageType("png");
-        qlConfig.setBackgroundColor(new Color(255, 255, 255, 255));
-        qlConfig.setCpdURL(QLMapper.class.getResource(CHL_CPD).toExternalForm());
-        qlConfig.setMaskOverlays(new String[]{"l1p_cc_land", "l1p_cc_cloud", "l1p_cc_coastline"});
-        qlConfig.setLegendEnabled(true);
-        qlConfig.setOverlayURL(QLMapper.class.getResource(FRESHMON_LOGO).toExternalForm());
-
-        Configuration configuration = new Configuration();
-        configuration.set(JobConfigNames.CALVALUS_PROJECT_NAME, "FRESHMON");
-        final Mapper.Context context = createMapperContext(configuration);
-
-        Product inputProduct;
-        final String pathString;
-        if (args.length >= 1) {
-            pathString = args[0];
-            if (pathString.endsWith("seq")) {
-                inputProduct = CalvalusProductIO.readProduct(new Path(pathString), configuration, StreamingProductPlugin.FORMAT_NAME);
-            } else {
-                inputProduct = ProductIO.readProduct(pathString);
-            }
+        Product product;
+        final Quicklooks.QLConfig qlConfig;
+        Configuration configuration;
+        if (args.length == 2) {
+            Quicklooks quicklooks = Quicklooks.fromXml(FileUtils.readText(new File(args[0])));
+            qlConfig = quicklooks.getConfigs()[0];
+            configuration = new Configuration();
+            product = openProduct(args[1], configuration);
+            final String[] bandNames = product.getBandNames();
+            System.out.println("bandNames = " + Arrays.toString(bandNames));
         } else {
-            URI productUri = QLMapper.class.getResource(TEST_DATA).toURI();
-            inputProduct = ProductIO.readProduct(new File(productUri));
+            qlConfig = new Quicklooks.QLConfig();
+            qlConfig.setBandName("CHL");
+            qlConfig.setImageType("png");
+            qlConfig.setBackgroundColor(new Color(255, 255, 255, 255));
+            qlConfig.setCpdURL(QLMapper.class.getResource(CHL_CPD).toExternalForm());
+            qlConfig.setMaskOverlays(new String[]{"l1p_cc_land", "l1p_cc_cloud", "l1p_cc_coastline"});
+            qlConfig.setLegendEnabled(true);
+            qlConfig.setOverlayURL(QLMapper.class.getResource(FRESHMON_LOGO).toExternalForm());
+
+            configuration = new Configuration();
+            configuration.set(JobConfigNames.CALVALUS_PROJECT_NAME, "FRESHMON");
+
+            Product inputProduct;
+            if (args.length == 1) {
+                inputProduct = openProduct(args[0], configuration);
+            } else {
+                URI productUri = QLMapper.class.getResource(TEST_DATA).toURI();
+                inputProduct = ProductIO.readProduct(new File(productUri));
+            }
+            product = doReprojection(inputProduct);
+            Map<String, Object> spatialSubsetParameter = createSpatialSubsetParameter();
+            if (!spatialSubsetParameter.isEmpty()) {
+                product = GPF.createProduct("Subset", spatialSubsetParameter, product);
+            }
+            ProcessorAdapter.copySceneRasterStartAndStopTime(inputProduct, product, null);
         }
 
-        Product product = doReprojection(inputProduct);
-        Map<String, Object> spatialSubsetParameter = createSpatialSubsetParameter();
-        if (!spatialSubsetParameter.isEmpty()) {
-            product = GPF.createProduct("Subset", spatialSubsetParameter, product);
+        TaskAttemptContext context = createrContext(configuration);
+        RenderedImage image = QuicklookGenerator.createImage(context, product, qlConfig);
+        if (image == null) {
+            throw new IllegalArgumentException("Failed to generate image from config");
         }
-        ProcessorAdapter.copySceneRasterStartAndStopTime(inputProduct, product, null);
 
-        RenderedImage image = QLMapper.createImage(context, product, qlConfig);
-
+        try (OutputStream outputStream = new FileOutputStream(qlConfig.getBandName() + "." + qlConfig.getImageType())) {
+            ImageIO.write(image, qlConfig.getImageType(), outputStream);
+        }
 
         JFrame jFrame = new JFrame();
         final JLabel positionLabel = new JLabel();
@@ -106,91 +111,29 @@ public class QLMapperMain {
         jFrame.setVisible(true);
     }
 
+    private static Product openProduct(String pathString, Configuration configuration) throws IOException {
+        if (pathString.endsWith("seq")) {
+            return CalvalusProductIO.readProduct(new Path(pathString), configuration, StreamingProductPlugin.FORMAT_NAME);
+        } else {
+            return ProductIO.readProduct(pathString);
+        }
+    }
+
     private static Map<String, Object> createSpatialSubsetParameter() {
-        Map<String, Object> subsetParams = new HashMap<String, Object>();
+        Map<String, Object> subsetParams = new HashMap<>();
         subsetParams.put("geoRegion", "POLYGON ((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
         return subsetParams;
     }
 
     private static Product doReprojection(Product product) {
-        Map<String, Object> reprojParams = new HashMap<String, Object>();
+        Map<String, Object> reprojParams = new HashMap<>();
         reprojParams.put("crs", "EPSG:32633");
         reprojParams.put("noDataValue", 0.0);
         return GPF.createProduct("Reproject", reprojParams, product);
     }
 
 
-    private static Mapper.Context createMapperContext(Configuration configuration) throws IOException, InterruptedException {
-        final RecordWriter recordWriter = new RecordWriter() {
-            @Override
-            public void write(Object o, Object o2) throws IOException, InterruptedException {
-            }
-
-            @Override
-            public void close(TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
-            }
-        };
-        final OutputCommitter outputCommitter = new OutputCommitter() {
-            @Override
-            public void setupJob(JobContext jobContext) throws IOException {
-            }
-
-            @Override
-            public void setupTask(TaskAttemptContext taskAttemptContext) throws IOException {
-            }
-
-            @Override
-            public boolean needsTaskCommit(TaskAttemptContext taskAttemptContext) throws IOException {
-                return false;
-            }
-
-            @Override
-            public void commitTask(TaskAttemptContext taskAttemptContext) throws IOException {
-            }
-
-            @Override
-            public void abortTask(TaskAttemptContext taskAttemptContext) throws IOException {
-            }
-        };
-        final StatusReporter statusReporter = new StatusReporter() {
-            @Override
-            public Counter getCounter(Enum<?> anEnum) {
-                return null;
-            }
-
-            @Override
-            public Counter getCounter(String s, String s2) {
-                return null;
-            }
-
-            @Override
-            public void progress() {
-            }
-
-            @Override
-            public float getProgress() {
-                return 0;
-            }
-
-            @Override
-            public void setStatus(String s) {
-            }
-        };
-        final InputSplit inputSplit = new InputSplit() {
-            @Override
-            public long getLength() throws IOException, InterruptedException {
-                return 0;
-            }
-
-            @Override
-            public String[] getLocations() throws IOException, InterruptedException {
-                return new String[0];
-            }
-        };
-        final Mapper mapper = new Mapper();
-        return null /* TODO mapper.new MapContextImpl(configuration, new TaskAttemptID(), new NoRecordReader(), recordWriter, outputCommitter,
-                                  statusReporter, inputSplit)*/;
+    private static TaskAttemptContext createrContext(Configuration configuration) throws IOException, InterruptedException {
+        return new TaskAttemptContextImpl(configuration, new TaskAttemptID());
     }
-
-
 }

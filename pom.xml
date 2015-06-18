@@ -15,6 +15,7 @@
         <calvalus.version>2.6-SNAPSHOT</calvalus.version>
         <beam.version>[5.0,5.1-SNAPSHOT)</beam.version>
         <ceres.version>0.14</ceres.version>
+        <geotools.version>2.7.4</geotools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -329,6 +330,26 @@
                     <exclusion>
                         <groupId>org.esa.beam</groupId>
                         <artifactId>beam-visat-rcp</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-render</artifactId>
+                <version>${geotools.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_codec</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.media</groupId>
+                        <artifactId>jai_imageio</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>

@@ -130,6 +130,11 @@
             <artifactId>hsqldb</artifactId>
             <version>1.8.0.10</version>
         </dependency>
+        <dependency>
+            <groupId>org.geotools</groupId>
+            <artifactId>gt-render</artifactId>
+        </dependency>
+
 
         <!--  JFreeChart -->
 

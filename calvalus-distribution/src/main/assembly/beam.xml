@@ -27,6 +27,7 @@
                 <include>gov.nasa.gsfc.seadas:seadas-reader</include>
                 <include>com.bc.ceres:ceres-metadata</include>
                 <include>hsqldb:hsqldb</include>
+                <include>org.geotools:gt-render</include>
             </includes>
             <scope>runtime</scope>
             <useTransitiveDependencies>true</useTransitiveDependencies>

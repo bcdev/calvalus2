@@ -73,6 +73,8 @@ public class Quicklooks {
         private String[] maskOverlays;
         @Parameter(defaultValue = "false")
         private boolean legendEnabled;
+        @Parameter
+        private String shapefileURL;
 
         public String getImageType() {
             return imageType;
@@ -120,6 +122,10 @@ public class Quicklooks {
 
         public boolean isLegendEnabled() {
             return legendEnabled;
+        }
+
+        public String getShapefileURL() {
+            return shapefileURL;
         }
 
         public void setBandName(String bandName) {
