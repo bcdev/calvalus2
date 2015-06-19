@@ -131,8 +131,9 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
                 DateFormat dateFormat = ProductData.UTC.createDateFormat(auxGeoPath);
                 String geoGlob = dateFormat.format(productDay) + granule + ".GEO*";
 
-                FileSystem fileSystem = FileSystem.get(pathConfig.getConfiguration());
-                FileStatus[] fileStatuses = fileSystem.globStatus(new Path(geoGlob));
+                Path globPath = new Path(geoGlob);
+                FileSystem fs = globPath.getFileSystem(pathConfig.getConfiguration());
+                FileStatus[] fileStatuses = fs.globStatus(globPath);
                 if (fileStatuses != null && fileStatuses.length > 0) {
                     // take the first one
                     Path geoPath = fileStatuses[0].getPath();

@@ -274,7 +274,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
             for (String outputFileName : outputFilesNames) {
                 InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
                 Path workPath = new Path(getWorkOutputDirectoryPath(), outputFileName);
-                OutputStream os = FileSystem.get(conf).create(workPath);
+                OutputStream os = workPath.getFileSystem(conf).create(workPath);
                 ProductFormatter.copyAndClose(is, os, mapContext);
             }
             pm.done();

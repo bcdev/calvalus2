@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -27,6 +28,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -226,7 +228,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         dimapInput.closeIO();
 
         LOG.info("copying geotiff to " + outputPath);
-        final DataOutputStream out = new DataOutputStream(new BufferedOutputStream(FileSystem.get(conf).create(outputPath)));
+        OutputStream outputStream = outputPath.getFileSystem(conf).create(outputPath);
+        final DataOutputStream out = new DataOutputStream(new BufferedOutputStream(outputStream));
         final InputStream in = new BufferedInputStream(new FileInputStream(new File(targetFileName + ".tif")));
         ProductFormatter.copyAndClose(in, out, context);
 

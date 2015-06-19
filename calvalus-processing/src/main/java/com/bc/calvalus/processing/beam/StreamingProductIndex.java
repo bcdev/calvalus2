@@ -77,7 +77,8 @@ public class StreamingProductIndex {
     private SequenceFile.Writer createWriter(int numEntries) throws IOException {
         SequenceFile.Metadata metadata = new SequenceFile.Metadata();
         metadata.set(new Text(NUM_ENTRIES), new Text(Integer.toString(numEntries)));
-        return SequenceFile.createWriter(FileSystem.get(configuration),
+        FileSystem fs = indexPath.getFileSystem(configuration);
+        return SequenceFile.createWriter(fs,
                                          configuration,
                                          indexPath,
                                          Text.class,
@@ -100,7 +101,7 @@ public class StreamingProductIndex {
     }
 
     public Map<String, Long> readIndex() throws IOException {
-        FileSystem fs = FileSystem.get(configuration);
+        FileSystem fs = indexPath.getFileSystem(configuration);
         if (fs.exists(indexPath)) {
             SequenceFile.Reader indexReader = null;
             try {

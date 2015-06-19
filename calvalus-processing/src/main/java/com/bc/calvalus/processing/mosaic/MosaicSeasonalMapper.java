@@ -37,8 +37,8 @@ public class MosaicSeasonalMapper extends Mapper<NullWritable, NullWritable, Til
         final FileSplit split = (FileSplit) context.getInputSplit();
         Path partFile = split.getPath();
 
-        FileSystem hdfs = FileSystem.get(jobConfig);
-        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
+        FileSystem fs = partFile.getFileSystem(jobConfig);
+        SequenceFile.Reader reader = new SequenceFile.Reader(fs, partFile, jobConfig);
         try {
             TileIndexWritable key = new TileIndexWritable();
             TileDataWritable data = new TileDataWritable();
