@@ -179,8 +179,8 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
         velocityContext.put("GlobalFunctions", new GlobalsFunctions(getLogger()));
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
-        FileSystem fs = FileSystem.get(conf);
-        InputStream inputStream = fs.open(new Path(graphPathAsString));
+        Path graphPath = new Path(graphPathAsString);
+        InputStream inputStream = graphPath.getFileSystem(conf).open(graphPath);
         Reader inputReader = new InputStreamReader(inputStream);
         Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
         String graphAsText = processedGraph.getContent();

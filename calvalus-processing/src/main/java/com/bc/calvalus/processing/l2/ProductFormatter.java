@@ -221,7 +221,7 @@ public class ProductFormatter {
             throw new IOException(e);
         }
         Path workPath = new Path(workOutputPath, filename);
-        FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+        FileSystem fileSystem = workPath.getFileSystem(context.getConfiguration());
         return fileSystem.create(workPath);
     }
 

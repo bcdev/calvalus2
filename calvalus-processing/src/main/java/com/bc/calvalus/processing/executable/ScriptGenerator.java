@@ -118,10 +118,9 @@ public class ScriptGenerator {
 
     public void addScriptResources(Configuration conf, String parameterSuffix) throws IOException {
         Collection<String> scriptFiles = conf.getStringCollection(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES + parameterSuffix);
-        FileSystem fs = FileSystem.get(conf);
         for (String scriptFile : scriptFiles) {
             Path scriptFilePath = new Path(scriptFile);
-            InputStream inputStream = fs.open(scriptFilePath);
+            InputStream inputStream = scriptFilePath.getFileSystem(conf).open(scriptFilePath);
             Reader reader = new InputStreamReader(inputStream);
             addResource(new ReaderResource(scriptFile, reader));
         }

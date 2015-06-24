@@ -439,6 +439,7 @@ public class ProductionTool {
                 @Override
                 public FileSystem run() throws Exception {
                     Configuration hadoopConfig = getHadoopConf(config);
+                    // this get the faulf FS, which is HDFS
                     return FileSystem.get(hadoopConfig);
                 }
             });

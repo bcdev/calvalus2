@@ -77,7 +77,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             if (!jobConfig.getBoolean(JobConfigNames.CALVALUS_PROCESS_ALL, false)) {
                 LOG.info("process missing: testing if target product exist");
                 Path outputProductPath = new Path(FileOutputFormat.getOutputPath(context), outputFilename);
-                if (FileSystem.get(jobConfig).exists(outputProductPath)) {
+                if (outputProductPath.getFileSystem(jobConfig).exists(outputProductPath)) {
                     LOG.info("process missing: target product exist, nothing to compute");
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product exist").increment(1);
                     return;

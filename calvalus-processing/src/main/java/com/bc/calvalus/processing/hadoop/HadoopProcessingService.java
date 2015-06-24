@@ -157,7 +157,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     public static void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
-        final FileSystem fileSystem = FileSystem.get(configuration);
+        final FileSystem fileSystem = bundlePath.getFileSystem(configuration);
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {

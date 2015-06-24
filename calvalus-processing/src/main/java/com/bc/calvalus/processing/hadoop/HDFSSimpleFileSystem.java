@@ -18,8 +18,6 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.ceres.metadata.SimpleFileSystem;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -37,19 +35,19 @@ import java.io.Writer;
  */
 public class HDFSSimpleFileSystem implements SimpleFileSystem {
 
-    private final FileSystem fileSystem;
     private final TaskInputOutputContext<?, ?, ?, ?> context;
+    private final Configuration conf;
 
     public HDFSSimpleFileSystem(TaskInputOutputContext<?, ?, ?, ?> context) throws IOException {
         this.context = context;
-        Configuration configuration = context.getConfiguration();
-        fileSystem = FileSystem.get(configuration);
+        this.conf = context.getConfiguration();
     }
 
     @Override
-    public Reader createReader(String path) throws IOException {
-        FSDataInputStream inputStream = fileSystem.open(new Path(path));
-        return new InputStreamReader(inputStream);
+    public Reader createReader(String pathString) throws IOException {
+        final Path path = new Path(pathString);
+        FileSystem fs = path.getFileSystem(conf);
+        return new InputStreamReader(fs.open(path));
     }
 
     @Override
@@ -61,17 +59,18 @@ public class HDFSSimpleFileSystem implements SimpleFileSystem {
             throw new IOException(e);
         }
         Path workPath = new Path(workOutputPath, path);
-        FSDataOutputStream fsDataOutputStream = fileSystem.create(workPath);
-        return new OutputStreamWriter(fsDataOutputStream);
+        FileSystem fs = workPath.getFileSystem(conf);
+        return new OutputStreamWriter(fs.create(workPath));
     }
 
     @Override
-    public String[] list(String path) throws IOException {
-        Path f = new Path(path);
-        if (!fileSystem.exists(f)) {
+    public String[] list(String pathString) throws IOException {
+        Path path = new Path(pathString);
+        FileSystem fs = path.getFileSystem(conf);
+        if (!fs.exists(path)) {
             return null;
         }
-        FileStatus[] fileStatuses = fileSystem.listStatus(f);
+        FileStatus[] fileStatuses = fs.listStatus(path);
         if (fileStatuses == null) {
             return null;
         }
@@ -83,9 +82,11 @@ public class HDFSSimpleFileSystem implements SimpleFileSystem {
     }
 
     @Override
-    public boolean isFile(String s) {
+    public boolean isFile(String pathString) {
         try {
-            return fileSystem.isFile(new Path(s));
+            Path path = new Path(pathString);
+            FileSystem fs = path.getFileSystem(conf);
+            return fs.isFile(path);
         } catch (IOException ignore) {
             return false;
         }

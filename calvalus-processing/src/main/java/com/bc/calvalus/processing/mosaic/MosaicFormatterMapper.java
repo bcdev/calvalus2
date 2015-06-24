@@ -58,8 +58,8 @@ public class MosaicFormatterMapper extends Mapper<NullWritable, NullWritable, Nu
 //        Rectangle geometryRegion = mosaicGrid.computeRegion(regionGeometry);
 //        Rectangle globalRegion = mosaicGrid.alignToTileGrid(geometryRegion);
 
-        FileSystem hdfs = FileSystem.get(jobConfig);
-        SequenceFile.Reader reader = new SequenceFile.Reader(hdfs, partFile, jobConfig);
+        FileSystem fs = partFile.getFileSystem(jobConfig);
+        SequenceFile.Reader reader = new SequenceFile.Reader(fs, partFile, jobConfig);
 
         MosaicTileHandler mosaicProductTileHandler = MosaicProductTileHandler.createHandler(context);
 

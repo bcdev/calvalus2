@@ -21,6 +21,12 @@ cp calvalus-distribution/target/calvalus-bundle/            calvalus-software/
 cp calvalus-distribution/target/beam-bundle/                calvalus-software/
 cp calvalus-distribution/target/cpt.jar                     calvalus-software/
 tar czf calvalus-software.tar.gz  calvalus-software
+
+
+Source archive
+---------------
+cd ..
+tar cvzf calvalus-src-$(date +%Y-%m-%d).tgz  --exclude .git --exclude target calvalus
 ===========================================================================
 Calvalus
 --------

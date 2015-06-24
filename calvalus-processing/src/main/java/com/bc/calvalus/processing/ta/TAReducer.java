@@ -78,12 +78,12 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
 
         // this is for the CSV tables that go into files per feature + numObs
         final TAConfig.RegionConfiguration region = regions[taKey.getRegionId()];
-        FileSystem fs = FileSystem.get(conf);
+        FileSystem fs = new Path(outputDirPath).getFileSystem(conf);
         int numFeatures = outputFeatureNames.size();
         PrintWriter[] writers = new PrintWriter[numFeatures + 1];
         StringBuffer[] lines = new StringBuffer[numFeatures + 1];
-        ArrayList<float[]> lineValuesList = new ArrayList<float[]>();
-        Map<Long,Integer> columnOfBinIndexMap = new HashMap<Long,Integer>();
+        ArrayList<float[]> lineValuesList = new ArrayList<>();
+        Map<Long,Integer> columnOfBinIndexMap = new HashMap<>();
 
         // this is for aggregation and goes into the sequence file
         L3TemporalBin outputBin = null;
@@ -182,7 +182,7 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
         BinningContext binningContext = HadoopBinManager.createBinningContext(binningConfig, null, null);
         binManager = binningContext.getBinManager();
-        outputFeatureNames = new ArrayList<String>();
+        outputFeatureNames = new ArrayList<>();
         for (int i = 0; i < binManager.getAggregatorCount(); i++) {
             Aggregator aggregator = binManager.getAggregator(i);
             outputFeatureNames.addAll(Arrays.asList(aggregator.getOutputFeatureNames()));

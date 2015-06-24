@@ -71,13 +71,13 @@ public class ProcessorFactory {
     public static void installProcessorBundles(Configuration conf) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
         if (conf.get(JobConfigNames.CALVALUS_BUNDLES) != null) {
-            final FileSystem fs = FileSystem.get(conf);
-            final String[] split = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
+            final String[] aBundle = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
             List<String> processorFiles = new ArrayList<>();
-            for (int i = 0; i < split.length; i++) {
-                final String bundleSpec = split[i];
-                Path bundlePath = getBundlePath(bundleSpec, fs);
+            for (int i = 0; i < aBundle.length; i++) {
+                final String bundleSpec = aBundle[i];
+                Path bundlePath = getBundlePath(bundleSpec, conf);
                 if (bundlePath != null) {
+                    FileSystem fs = bundlePath.getFileSystem(conf);
                     HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
                     addBundleArchives(bundlePath, fs, conf);
 
@@ -93,7 +93,7 @@ public class ProcessorFactory {
                     // check for bundle to include, install it
                     try {
                         Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
-                        if (fs.exists(bundleDesc)) {
+                        if (bundleDesc.getFileSystem(conf).exists(bundleDesc)) {
                             BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
@@ -140,16 +140,17 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    private static Path getBundlePath(String bundleSpec, FileSystem fs) throws IOException {
+    private static Path getBundlePath(String bundleSpec, Configuration conf) throws IOException {
         final Path bundlePath;
         if (isAbsolutePath(bundleSpec)) {
             bundlePath = new Path(bundleSpec);
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
+        FileSystem fs = bundlePath.getFileSystem(conf);
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
-            if (bundleStatus != null && bundleStatus.isDir()) {
+            if (bundleStatus != null && bundleStatus.isDirectory()) {
                 return bundlePath;
             }
         }

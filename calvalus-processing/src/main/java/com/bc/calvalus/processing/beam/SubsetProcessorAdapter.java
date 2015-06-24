@@ -49,7 +49,8 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     @Override
     public boolean canSkipInputProduct() throws IOException {
         Path outputProductPath = new Path(getOutputDirectoryPath(), getOutputProductFilename());
-        return FileSystem.get(getConfiguration()).exists(outputProductPath);
+        FileSystem fs = outputProductPath.getFileSystem(getConfiguration());
+        return fs.exists(outputProductPath);
     }
 
     @Override

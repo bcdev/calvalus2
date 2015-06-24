@@ -141,7 +141,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
         String templatePath = jobConfig.get(JobConfigNames.CALVALUS_METADATA_TEMPLATE);
         if (templatePath != null) {
             Path path = new Path(templatePath);
-            if (FileSystem.get(jobConfig).exists(path)) {
+            if (path.getFileSystem(jobConfig).exists(path)) {
                 HDFSSimpleFileSystem hdfsSimpleFileSystem = new HDFSSimpleFileSystem(context);
                 MetadataResourceEngine metadataResourceEngine = new MetadataResourceEngine(hdfsSimpleFileSystem);
 

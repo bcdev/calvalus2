@@ -95,19 +95,16 @@ class TAStaging extends ProductionStaging {
         final TAResult taResult = new TAResult();
         taResult.setOutputFeatureNames(outputFeatureNames.toArray(new String[outputFeatureNames.size()]));
 
-        FileSystem fs = FileSystem.get(hadoopConfiguration);
+        FileSystem fs = new Path(inputDir).getFileSystem(hadoopConfiguration);
         try {
             final FileStatus[] fileStatuses = fs.globStatus(new Path(inputDir, "part-r-?????"));
             for (FileStatus file : fileStatuses) {
-                final SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), hadoopConfiguration);
-                try {
+                try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, file.getPath(), hadoopConfiguration)) {
                     while (reader.next(regionDateKey, taPoint)) {
                         final WritableVector outputVector = binManager.createOutputVector();
                         binManager.computeOutput(taPoint.getTemporalBin(), outputVector);
                         taResult.addRecord(taPoint.getRegionName(), taPoint.getStartDate(), taPoint.getStopDate(), outputVector);
                     }
-                } finally {
-                    reader.close();
                 }
                 if (isCancelled()) {
                     return;
