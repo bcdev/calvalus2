@@ -646,6 +646,21 @@ public class ProductionTool {
                                   .withDescription("Regular expression matching filenames, defaults to 'producttype.*\\.N1'")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
+                                  .withLongOpt("timeelements")
+                                  .hasArg()
+                                  .withDescription("match groups composed to a date string according to timeformat, default to either \"\\1\\2\\3\" or \"\\1\\2\"")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("timeformat")
+                                  .hasArg()
+                                  .withDescription("SimpleDateFormat pattern, defaults to either \"%y%M%d\" or \"%y%j\"")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("pathtemplate")
+                                  .hasArg()
+                                  .withDescription("Path elements and match groups and SimpleDateFormat pattern, defaults to \"/calvalus/eodata/TYPE/VERSION/%y/%M/%d/FILE\"")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
                                   .withLongOpt("verify")
                                   .withDescription("Verify existence and size to avoid double copying, defaults to false")
                                   .create());  // (sub) commands don't have short options
