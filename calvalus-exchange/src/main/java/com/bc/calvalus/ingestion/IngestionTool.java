@@ -123,6 +123,9 @@ public class IngestionTool {
         }
         File input;
         String output;
+        public String toString() {
+            return input.toString();
+        }
     }
 
     private static int ingest(String productType, String revision, long blockSizeParameter, Pattern pattern, FileSystem hdfs, short replication, boolean verify, List<IngestionFile> sourceFiles) throws IOException {
@@ -205,18 +208,19 @@ public class IngestionTool {
         // handle non-existent named file
         } else if (! file.isFile()) {
             throw new FileNotFoundException(file.getAbsolutePath());
-        }
-        // handle file found ...
-        final String path = formatPath(rootDir, file, pattern, timeElements, timeFormat, productType, revision, pathTemplate);
-        if (path != null) {
-            accu.add(new IngestionFile(file, path));
+        } else {
+            // handle file found ...
+            final String path = formatPath(rootDir, file, pattern, timeElements, timeFormat, productType, revision, pathTemplate);
+            if (path != null) {
+                accu.add(new IngestionFile(file, path));
+            }
         }
     }
 
     static String formatPath(String rootDir, File file, Pattern pattern, String timeElements, String timeFormat, String productType, String revision, String pathTemplate) throws IOException {
         final String relPath;
         if (pattern.pattern().contains("/")) {
-            relPath = file.getAbsolutePath().substring(rootDir.length()+1);
+            relPath = file.getPath().substring(rootDir.length()+1);
         } else {
             relPath = file.getName();
         }
