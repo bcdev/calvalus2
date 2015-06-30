@@ -12,10 +12,10 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.ImageUtils;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.util.ImageUtils;
 
 import java.awt.Point;
 import java.awt.image.Raster;

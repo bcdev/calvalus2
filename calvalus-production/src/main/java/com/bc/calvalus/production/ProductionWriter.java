@@ -20,7 +20,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.File;
 import java.io.FileWriter;

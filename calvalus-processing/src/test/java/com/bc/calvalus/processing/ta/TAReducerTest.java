@@ -22,17 +22,16 @@ import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.aggregators.AggregatorAverage;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.AggregatorConfig;
+import org.esa.snap.binning.TemporalBin;
+import org.esa.snap.binning.aggregators.AggregatorAverage;
+import org.esa.snap.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Math.sqrt;
 import static org.junit.Assert.*;
 
 public class TAReducerTest {

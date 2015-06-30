@@ -26,10 +26,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.Aggregator;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.operator.BinningConfig;
 
 import java.io.File;
 import java.io.IOException;

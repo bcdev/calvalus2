@@ -3,7 +3,7 @@ package com.bc.calvalus.processing.l3.cellstream;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.ma2.Section;

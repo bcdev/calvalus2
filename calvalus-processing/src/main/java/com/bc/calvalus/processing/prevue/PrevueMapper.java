@@ -31,13 +31,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductWriter;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.util.math.MathUtils;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductWriter;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.snap.util.math.MathUtils;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
@@ -181,7 +181,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
 
     static CoordinateReferenceSystem getCRSUtmAutomatic(final GeoPos referencePos) throws FactoryException {
         GeodeticDatum datum = DefaultGeodeticDatum.WGS84;
-        int zoneIndex = getZoneIndex(referencePos.getLon());
+        int zoneIndex = getZoneIndex((float) referencePos.getLon());
         final boolean south = referencePos.getLat() < 0.0;
         ParameterValueGroup tmParameters = createTransverseMercatorParameters(zoneIndex, south, datum);
         final String projName = getProjectionName(zoneIndex, south);
@@ -189,8 +189,8 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         return createCrs(projName, new TransverseMercator.Provider(), tmParameters, datum);
     }
 
-    static int getZoneIndex(float longitude) {
-        final float zoneIndex = ((longitude + 180.0f) / 6.0f - 0.5f) + 1;
+    static int getZoneIndex(double longitude) {
+        final float zoneIndex = (((float)longitude + 180.0f) / 6.0f - 0.5f) + 1;
         return MathUtils.roundAndCrop(zoneIndex, 1, 60);
     }
 

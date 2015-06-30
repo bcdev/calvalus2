@@ -16,10 +16,8 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.GeoPos;
 import org.junit.Ignore;
-
-import java.util.Date;
 
 @Ignore
 public class RecordSourceChecker {

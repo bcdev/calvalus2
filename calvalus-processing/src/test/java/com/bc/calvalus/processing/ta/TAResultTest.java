@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
-import org.esa.beam.binning.support.VectorImpl;
+import org.esa.snap.binning.support.VectorImpl;
 import org.junit.Test;
 
 import java.util.List;

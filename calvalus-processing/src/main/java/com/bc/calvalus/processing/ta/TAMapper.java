@@ -11,8 +11,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.DateFormat;

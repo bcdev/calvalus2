@@ -1,11 +1,5 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.ProductData;
-
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.util.Date;
-
 /**
  * Various text utility functions.
  *

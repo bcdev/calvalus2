@@ -1,17 +1,17 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.utils.ProductTransformation;
-import org.esa.beam.framework.dataio.ProductFlipper;
-import org.esa.beam.framework.dataio.ProductSubsetBuilder;
-import org.esa.beam.framework.dataio.ProductSubsetDef;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.snap.framework.dataio.ProductFlipper;
+import org.esa.snap.framework.dataio.ProductSubsetBuilder;
+import org.esa.snap.framework.dataio.ProductSubsetDef;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.FlagCoding;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.TiePointGeoCoding;
+import org.esa.snap.framework.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.awt.Rectangle;
@@ -461,7 +461,9 @@ public class ProductRecordSourceTest {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
         assertEquals(1, pixelPosRecords.size());
-        assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
+        PixelPos pixelPos = pixelPosRecords.get(0).getPixelPos();
+        assertEquals(1.5f, pixelPos.x, 1E-5);
+        assertEquals(4.5f, pixelPos.y, 1E-5);
 
         ProductRecordSource output = new ProductRecordSource(subset, referenceRecordHeader, pixelPosRecords, config, transform);
 
@@ -535,7 +537,9 @@ public class ProductRecordSourceTest {
             throw new RuntimeException("Failed to retrieve input records.", e);
         }
         assertEquals(1, pixelPosRecords.size());
-        assertEquals(new PixelPos(1.5f, 4.5f), pixelPosRecords.get(0).getPixelPos());
+        PixelPos pixelPos = pixelPosRecords.get(0).getPixelPos();
+        assertEquals(1.5, pixelPos.x, 1E-5);
+        assertEquals(4.5, pixelPos.y, 1E-5);
 
         ProductRecordSource output = new ProductRecordSource(flippedProduct, referenceRecordHeader, pixelPosRecords, config, transform);
 

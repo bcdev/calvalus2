@@ -18,18 +18,18 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.beam.MerisProductTestRunner;
 import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.junit.*;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductReader;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 @RunWith(MerisProductTestRunner.class)
 public class ProductSlicingTest {
@@ -38,8 +38,8 @@ public class ProductSlicingTest {
     public void testThatProductCanBeTiledInSlices() throws IOException {
         File testproductFile = MerisProductTestRunner.getTestProductFile();
 
-        System.setProperty("beam.reader.tileHeight", "64");
-        System.setProperty("beam.reader.tileWidth", "*");
+        System.setProperty("snap.dataio.reader.tileHeight", "64");
+        System.setProperty("snap.dataio.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
 
         Product sourceProduct = productReader.readProductNodes(testproductFile, null);

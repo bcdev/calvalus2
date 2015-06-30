@@ -24,11 +24,11 @@ import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.VariableContext;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.math.MathUtils;
+import org.esa.snap.binning.VariableContext;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.math.MathUtils;
 
 import java.awt.Rectangle;
 import java.text.ParseException;

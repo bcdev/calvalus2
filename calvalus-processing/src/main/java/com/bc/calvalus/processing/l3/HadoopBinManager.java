@@ -4,17 +4,17 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.CellProcessorConfig;
-import org.esa.beam.binning.DataPeriod;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.VariableContext;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.support.BinningContextImpl;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.binning.Aggregator;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.CellProcessorConfig;
+import org.esa.snap.binning.DataPeriod;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.VariableContext;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.support.BinningContextImpl;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.StringUtils;
 
 import java.text.ParseException;
 
@@ -89,9 +89,9 @@ public class HadoopBinManager extends BinManager {
     public static ProductData.UTC parseStartDateUtc(String date) {
         try {
             if (date.matches("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")) {
-                return org.esa.beam.framework.datamodel.ProductData.UTC.parse(date, DATETIME_INPUT_PATTERN);
+                return ProductData.UTC.parse(date, DATETIME_INPUT_PATTERN);
             } else {
-                return org.esa.beam.framework.datamodel.ProductData.UTC.parse(date, DATE_INPUT_PATTERN);
+                return ProductData.UTC.parse(date, DATE_INPUT_PATTERN);
             }
         } catch (ParseException e) {
             String msg = String.format("Error while parsing start date parameter '%s': %s", date,

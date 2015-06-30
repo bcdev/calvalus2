@@ -16,13 +16,13 @@
 
 package com.bc.calvalus.processing.l2tol3;
 
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.Observation;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.SpatialBin;
-import org.esa.beam.binning.SpatialBinConsumer;
-import org.esa.beam.binning.SpatialBinner;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.Observation;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.SpatialBin;
+import org.esa.snap.binning.SpatialBinConsumer;
+import org.esa.snap.binning.SpatialBinner;
 
 import java.util.ArrayList;
 import java.util.List;

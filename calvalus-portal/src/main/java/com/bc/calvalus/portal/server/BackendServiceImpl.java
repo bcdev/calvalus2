@@ -48,8 +48,8 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -472,8 +472,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             float[] latLons = new float[geoPoses.size() * 2];
             int i = 0;
             for (GeoPos geoPos : geoPoses) {
-                latLons[i++] = geoPos.lat;
-                latLons[i++] = geoPos.lon;
+                latLons[i++] = (float)geoPos.lat;
+                latLons[i++] = (float)geoPos.lon;
             }
             return latLons;
         } catch (Exception e) {

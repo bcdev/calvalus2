@@ -24,21 +24,21 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.dataio.ProductReaderPlugIn;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductReader;
+import org.esa.snap.framework.dataio.ProductReaderPlugIn;
+import org.esa.snap.framework.datamodel.GeoCoding;
+import org.esa.snap.framework.datamodel.Product;
 
 import javax.imageio.stream.ImageInputStream;
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
  * Handles reading of products.
- * Delegates mostly to {@link org.esa.beam.framework.dataio.ProductIO}
+ * Delegates mostly to {@link org.esa.snap.framework.dataio.ProductIO}
  */
 public class CalvalusProductIO {
 

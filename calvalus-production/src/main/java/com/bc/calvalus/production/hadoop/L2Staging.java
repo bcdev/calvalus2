@@ -29,9 +29,9 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.util.io.FileUtils;
 
 import java.io.File;
 

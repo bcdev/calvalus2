@@ -25,11 +25,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.math.MathUtils;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductReader;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.math.MathUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,7 +37,11 @@ import org.junit.runner.RunWith;
 import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
 import static org.junit.Assert.*;
 
@@ -72,7 +76,7 @@ public class StreamingFormatTest {
         try {
             assertFalse(fileSystem.exists(productPath));
             ProgressMonitor pm = ProgressMonitor.NULL;
-            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath, TILE_HEIGHT);
+            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath);
             assertTrue(fileSystem.exists(productPath));
 
             testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct));

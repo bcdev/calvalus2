@@ -17,7 +17,7 @@
 package com.bc.calvalus.processing;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.snap.framework.gpf.annotations.Parameter;
 
 import java.util.HashMap;
 import java.util.Map;

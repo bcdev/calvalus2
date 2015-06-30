@@ -17,8 +17,8 @@
 package com.bc.calvalus.processing.productinventory;
 
 import com.bc.ceres.core.Assert;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
 import java.text.ParseException;

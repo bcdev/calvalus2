@@ -6,8 +6,8 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.TemporalBinSource;
+import org.esa.snap.binning.TemporalBin;
+import org.esa.snap.binning.TemporalBinSource;
 
 import java.io.IOException;
 import java.util.Iterator;

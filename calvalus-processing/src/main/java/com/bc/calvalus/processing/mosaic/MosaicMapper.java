@@ -28,17 +28,18 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.binning.VariableContext;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.VirtualBand;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.jai.ImageManager;
-import org.esa.beam.util.ImageUtils;
+import org.esa.snap.binning.VariableContext;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.RasterDataNode;
+import org.esa.snap.framework.datamodel.VirtualBand;
+import org.esa.snap.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.snap.jai.ImageManager;
+import org.esa.snap.util.ImageUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
-import java.awt.*;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.IOException;
@@ -130,7 +131,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         sourceProduct.addBand(new VirtualBand("swath_x",ProductData.TYPE_INT32,
                                            sourceProduct.getSceneRasterWidth(),
                                            sourceProduct.getSceneRasterHeight(),"X"));
-        sourceProduct.addBand(new VirtualBand("swath_y",ProductData.TYPE_INT32,
+        sourceProduct.addBand(new VirtualBand("swath_y", ProductData.TYPE_INT32,
                                            sourceProduct.getSceneRasterWidth(),
                                            sourceProduct.getSceneRasterHeight(),"Y"));
 

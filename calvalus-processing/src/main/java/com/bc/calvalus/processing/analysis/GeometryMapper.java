@@ -29,8 +29,8 @@ import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.ProductUtils;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.util.ProductUtils;
 
 import java.awt.geom.GeneralPath;
 import java.awt.geom.PathIterator;

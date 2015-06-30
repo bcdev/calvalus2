@@ -10,7 +10,7 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;

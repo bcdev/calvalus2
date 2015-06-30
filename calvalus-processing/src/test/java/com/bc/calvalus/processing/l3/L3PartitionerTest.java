@@ -19,8 +19,8 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.operator.BinningConfig;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

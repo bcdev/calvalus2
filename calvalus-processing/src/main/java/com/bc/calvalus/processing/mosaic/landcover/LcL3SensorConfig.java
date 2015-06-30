@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
-import org.esa.beam.binning.VariableContext;
+import org.esa.snap.binning.VariableContext;
 
 import java.util.ArrayList;
 import java.util.List;

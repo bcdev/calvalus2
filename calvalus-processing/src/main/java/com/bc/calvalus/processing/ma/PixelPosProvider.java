@@ -16,10 +16,10 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.GeoCoding;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.Product;
 
 import java.awt.Rectangle;
 import java.awt.geom.Area;
@@ -127,8 +127,8 @@ public class PixelPosProvider {
             }
             GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
             PixelPos pixelPos2 = geoCoding.getPixelPos(geoPos, null);
-            float dx = pixelPos.x - pixelPos2.x;
-            float dy = pixelPos.y - pixelPos2.y;
+            double dx = pixelPos.x - pixelPos2.x;
+            double dy = pixelPos.y - pixelPos2.y;
             if (Math.max(Math.abs(dx), Math.abs(dy)) < allowedPixelDisplacement) {
                 return pixelPos;
             }
@@ -195,8 +195,8 @@ public class PixelPosProvider {
             } else if (y1 > y2) {
                 return 2;
             }
-            float x1 = o1.pixelPos.x;
-            float x2 = o2.pixelPos.x;
+            double x1 = o1.pixelPos.x;
+            double x2 = o2.pixelPos.x;
             if (x1 < x2) {
                 return -1;
             } else if (x1 > x2) {

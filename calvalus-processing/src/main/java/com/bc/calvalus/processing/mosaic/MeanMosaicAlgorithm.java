@@ -1,8 +1,8 @@
 package com.bc.calvalus.processing.mosaic;
 
-import org.esa.beam.binning.VariableContext;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.snap.binning.VariableContext;
 
 import java.util.Arrays;
 

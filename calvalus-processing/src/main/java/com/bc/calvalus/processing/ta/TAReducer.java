@@ -27,11 +27,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.binning.Aggregator;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

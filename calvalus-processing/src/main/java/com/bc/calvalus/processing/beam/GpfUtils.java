@@ -19,8 +19,8 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.util.SystemUtils;
+import org.esa.snap.framework.gpf.GPF;
+import org.esa.snap.util.SystemUtils;
 
 import javax.media.jai.JAI;
 import java.util.Map;
@@ -42,12 +42,12 @@ public class GpfUtils {
      * @param configuration The Hadoop job configuration
      */
     public static void init(Configuration configuration) {
-        initGpf(configuration, configuration.getClass().getClassLoader());
+        initGpf(configuration, configuration.getClass());
     }
 
-    public static void initGpf(Configuration configuration, ClassLoader classLoader) {
+    public static void initGpf(Configuration configuration, Class aClass) {
         initSystemProperties(configuration);
-        SystemUtils.init3rdPartyLibs(classLoader);
+        SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfigNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();

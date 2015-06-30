@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.PixelPos;
 import org.junit.Test;
 
 import java.util.ArrayList;

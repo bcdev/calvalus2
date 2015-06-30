@@ -17,19 +17,15 @@
 package com.bc.calvalus.processing.mosaic.firecci;
 
 import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.ColorPaletteDef;
+import org.esa.snap.framework.datamodel.ImageInfo;
+import org.esa.snap.framework.datamodel.IndexCoding;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The factory for creating the final mosaic product for Fire-CCI

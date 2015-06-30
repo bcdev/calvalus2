@@ -3,7 +3,7 @@ package com.bc.calvalus.processing.ma;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
-import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.GeoPos;
 import org.junit.Test;
 
 import java.util.Iterator;

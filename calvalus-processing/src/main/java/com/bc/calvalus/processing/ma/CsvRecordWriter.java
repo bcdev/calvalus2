@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.IOException;
 import java.io.Writer;

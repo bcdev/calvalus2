@@ -51,36 +51,36 @@
          <!--  BEAM -->
 
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-core</artifactId>
+             <groupId>org.esa.snap</groupId>
+             <artifactId>snap-core</artifactId>
          </dependency>
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-gpf</artifactId>
+             <groupId>org.esa.snap</groupId>
+             <artifactId>snap-gpf</artifactId>
          </dependency>
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-netcdf</artifactId>
+             <groupId>org.esa.snap</groupId>
+             <artifactId>snap-netcdf</artifactId>
          </dependency>
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-binning</artifactId>
+             <groupId>org.esa.snap</groupId>
+             <artifactId>snap-binning</artifactId>
          </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-envisat-reader</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-envisat-reader</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-avhrr-reader</artifactId>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-avhrr-reader</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-geotiff</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
         </dependency>
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-bigtiff</artifactId>
+             <groupId>org.esa.snap</groupId>
+             <artifactId>snap-bigtiff</artifactId>
          </dependency>
          <dependency>
              <groupId>org.slf4j</groupId>
@@ -107,22 +107,34 @@
                      <groupId>org.esa.beam</groupId>
                      <artifactId>beam-visat-rcp</artifactId>
                  </exclusion>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-core</artifactId>
+                 </exclusion>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-netcdf</artifactId>
+                 </exclusion>
+                 <exclusion>
+                     <groupId>org.esa.beam</groupId>
+                     <artifactId>beam-merisl3-reader</artifactId>
+                 </exclusion>
              </exclusions>
          </dependency>
          <dependency>
-             <groupId>org.esa.beam</groupId>
-             <artifactId>beam-spot-vgt-reader</artifactId>
-             <version>[5.0,5.1-SNAPSHOT)</version>
+             <groupId>org.esa.s3tbx</groupId>
+             <artifactId>s3tbx-spot-vgt-reader</artifactId>
+             <version>2.0.0-SNAPSHOT</version>
          </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-landsat-reader</artifactId>
-            <version>[5.0,5.1-SNAPSHOT)</version>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-landsat-reader</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-envi-reader</artifactId>
-            <version>[5.0,5.1-SNAPSHOT)</version>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-envi-reader</artifactId>
+            <version>2.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>

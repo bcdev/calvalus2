@@ -16,9 +16,9 @@
 
 package com.bc.calvalus.processing.ta;
 
-import org.esa.beam.binning.support.VectorImpl;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.io.CsvReader;
+import org.esa.snap.binning.support.VectorImpl;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.io.CsvReader;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -32,7 +32,6 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.function.Function2D;
 import org.jfree.data.function.LineFunction2D;
 import org.jfree.data.time.Day;
-import org.jfree.data.time.Month;
 import org.jfree.data.time.MovingAverage;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;

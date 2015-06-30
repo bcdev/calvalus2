@@ -2,10 +2,10 @@ package com.bc.calvalus.processing.l3.cellstream;
 
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.io.LongWritable;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.support.SeadasGrid;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.support.SeadasGrid;
+import org.esa.snap.framework.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFile;

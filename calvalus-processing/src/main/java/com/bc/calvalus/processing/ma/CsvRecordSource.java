@@ -1,10 +1,13 @@
 package com.bc.calvalus.processing.ma;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.*;
-import org.esa.beam.framework.datamodel.GeoPos;
+import org.apache.hadoop.fs.Path;
+import org.esa.snap.framework.datamodel.GeoPos;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.net.URL;
 import java.text.DateFormat;
 import java.util.Date;

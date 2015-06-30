@@ -1,8 +1,8 @@
 package com.bc.calvalus.processing.hadoop;
 
 import com.thoughtworks.xstream.XStream;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.framework.datamodel.MetadataElement;
+import org.esa.snap.util.StringUtils;
 
 public class MetadataSerializer {
 

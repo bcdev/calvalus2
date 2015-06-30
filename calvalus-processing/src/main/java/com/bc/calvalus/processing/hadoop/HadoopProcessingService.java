@@ -38,7 +38,7 @@ import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

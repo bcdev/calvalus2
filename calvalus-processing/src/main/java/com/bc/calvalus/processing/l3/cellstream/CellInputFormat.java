@@ -17,7 +17,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileRecordReader;
 import org.apache.hadoop.mapreduce.task.JobContextImpl;
 import org.apache.hadoop.util.StringUtils;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.operator.BinningConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;

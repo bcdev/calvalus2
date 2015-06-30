@@ -31,28 +31,31 @@ import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.ImageLegend;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.RGBChannelDef;
-import org.esa.beam.framework.datamodel.RGBImageProfile;
-import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.glayer.MaskLayerType;
-import org.esa.beam.glayer.NoDataLayerType;
-import org.esa.beam.glevel.BandImageMultiLevelSource;
-import org.esa.beam.jai.ImageManager;
-import org.esa.beam.util.PropertyMap;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.ColorPaletteDef;
+import org.esa.snap.framework.datamodel.GeoCoding;
+import org.esa.snap.framework.datamodel.ImageInfo;
+import org.esa.snap.framework.datamodel.ImageLegend;
+import org.esa.snap.framework.datamodel.Mask;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductNodeGroup;
+import org.esa.snap.framework.datamodel.RGBChannelDef;
+import org.esa.snap.framework.datamodel.RGBImageProfile;
+import org.esa.snap.framework.datamodel.Stx;
+import org.esa.snap.framework.gpf.GPF;
+import org.esa.snap.glayer.MaskLayerType;
+import org.esa.snap.glayer.NoDataLayerType;
+import org.esa.snap.glevel.BandImageMultiLevelSource;
+import org.esa.snap.jai.ImageManager;
+import org.esa.snap.util.DefaultPropertyMap;
+import org.esa.snap.util.PropertyMap;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.Interpolation;
 import javax.media.jai.operator.ScaleDescriptor;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -404,7 +407,7 @@ public class QuicklookGenerator {
      * Taken from  ColorPaletteDef. modified to use InputStream
      */
     private static ColorPaletteDef loadColorPaletteDef(InputStream inputStream) throws IOException {
-        final PropertyMap propertyMap = new PropertyMap();
+        final PropertyMap propertyMap = new DefaultPropertyMap();
         propertyMap.getProperties().load(inputStream);
 
         final int numPoints = propertyMap.getPropertyInt("numPoints");

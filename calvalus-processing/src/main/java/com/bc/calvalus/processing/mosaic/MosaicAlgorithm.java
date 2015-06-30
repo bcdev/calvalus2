@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.mosaic;
 
-import org.esa.beam.binning.VariableContext;
+import org.esa.snap.binning.VariableContext;
 
 import java.io.IOException;
 

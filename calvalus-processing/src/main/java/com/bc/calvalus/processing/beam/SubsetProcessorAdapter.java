@@ -22,9 +22,9 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.gpf.operators.standard.SubsetOp;
+import org.esa.snap.util.io.FileUtils;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -106,7 +106,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         } else {
             product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
         }
-        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
+        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath());
     }
 
     private Path getWorkOutputProductPath() throws IOException {

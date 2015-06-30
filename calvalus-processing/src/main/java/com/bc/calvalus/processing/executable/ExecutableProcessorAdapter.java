@@ -24,13 +24,12 @@ import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductReader;
+import org.esa.snap.framework.datamodel.Product;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;

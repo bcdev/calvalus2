@@ -25,8 +25,8 @@ import com.vividsolutions.jts.geom.LineString;
 import com.vividsolutions.jts.geom.MultiLineString;
 import com.vividsolutions.jts.geom.MultiPolygon;
 import com.vividsolutions.jts.geom.Polygon;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.util.FeatureUtils;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.util.FeatureUtils;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.styling.FeatureTypeStyle;
@@ -45,7 +45,7 @@ import org.opengis.feature.type.FeatureType;
 import org.opengis.filter.FilterFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import java.awt.*;
+import java.awt.Color;
 import java.io.File;
 
 class ShapefileLoader {

@@ -1,13 +1,13 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGrid;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.FlagCoding;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.Mask;
+import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.TiePointGrid;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -150,8 +150,8 @@ public class PixelExtractor {
                 Point2D originalCoordinates = o2iTransform.transform(pp, null);
                 pixelXPositions[i] = (int) originalCoordinates.getX();
                 pixelYPositions[i] = (int) originalCoordinates.getY();
-                pixelLatitudes[i] = gp.lat;
-                pixelLongitudes[i] = gp.lon;
+                pixelLatitudes[i] = (float) gp.lat;
+                pixelLongitudes[i] = (float) gp.lon;
             }
         }
 

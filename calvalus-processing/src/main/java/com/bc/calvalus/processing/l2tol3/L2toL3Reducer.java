@@ -27,10 +27,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.TemporalBinner;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.TemporalBin;
+import org.esa.snap.binning.TemporalBinner;
+import org.esa.snap.binning.operator.BinningConfig;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;

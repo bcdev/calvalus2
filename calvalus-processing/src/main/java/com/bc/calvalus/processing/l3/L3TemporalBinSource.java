@@ -16,17 +16,17 @@
 
 package com.bc.calvalus.processing.l3;
 
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.binning.TemporalBin;
-import org.esa.beam.binning.TemporalBinSource;
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.esa.snap.binning.TemporalBin;
+import org.esa.snap.binning.TemporalBinSource;
 
 import java.io.IOException;
 import java.text.MessageFormat;

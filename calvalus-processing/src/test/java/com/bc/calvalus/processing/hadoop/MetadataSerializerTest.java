@@ -1,9 +1,9 @@
 package com.bc.calvalus.processing.hadoop;
 
 
-import org.esa.beam.framework.datamodel.MetadataAttribute;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.MetadataAttribute;
+import org.esa.snap.framework.datamodel.MetadataElement;
+import org.esa.snap.framework.datamodel.ProductData;
 import org.junit.Before;
 import org.junit.Test;
 

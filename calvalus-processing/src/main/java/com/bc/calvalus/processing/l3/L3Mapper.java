@@ -16,30 +16,30 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.BinningContext;
-import org.esa.beam.binning.DataPeriod;
-import org.esa.beam.binning.SpatialBin;
-import org.esa.beam.binning.SpatialBinConsumer;
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.binning.SpatialBinner;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.operator.SpatialProductBinner;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.binning.BinningContext;
+import org.esa.snap.binning.DataPeriod;
+import org.esa.snap.binning.SpatialBin;
+import org.esa.snap.binning.SpatialBinConsumer;
+import org.esa.snap.binning.SpatialBinner;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.operator.SpatialProductBinner;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.MetadataElement;
+import org.esa.snap.framework.datamodel.Product;
 
 import java.io.IOException;
 import java.text.MessageFormat;

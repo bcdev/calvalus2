@@ -6,7 +6,7 @@ import com.thoughtworks.xstream.io.copy.HierarchicalStreamCopier;
 import com.thoughtworks.xstream.io.xml.XppDomWriter;
 import com.thoughtworks.xstream.io.xml.XppReader;
 import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.util.StringUtils;
 import org.xmlpull.mxp1.MXParser;
 
 import java.io.IOException;

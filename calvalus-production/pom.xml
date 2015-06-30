@@ -45,16 +45,16 @@
 
         <!-- Used for staging -->
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-core</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-netcdf</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-netcdf</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-geotiff</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
         </dependency>
 
         <!-- Used for SqlProductionStore -->

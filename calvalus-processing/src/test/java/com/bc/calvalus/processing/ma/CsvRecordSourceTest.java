@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.InputStreamReader;

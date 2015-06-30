@@ -22,25 +22,21 @@ import com.bc.ceres.binding.PropertyDescriptor;
 import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.binning.AggregatorDescriptor;
-import org.esa.beam.binning.CompositingType;
-import org.esa.beam.binning.TypedDescriptorsRegistry;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.operator.VariableConfig;
-import org.esa.beam.binning.support.SEAGrid;
+import org.esa.snap.binning.AggregatorConfig;
+import org.esa.snap.binning.AggregatorDescriptor;
+import org.esa.snap.binning.CompositingType;
+import org.esa.snap.binning.TypedDescriptorsRegistry;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.operator.VariableConfig;
+import org.esa.snap.binning.support.SEAGrid;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
 
 /**

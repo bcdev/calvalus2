@@ -3,10 +3,10 @@ package com.bc.calvalus.processing.mosaic.landcover;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -36,7 +36,8 @@ public class WriterTester {
         // fill with fake data
         final Band[] bands = testproduct.getBands();
         for (Band band : bands) {
-            band.setData(ProductData.createInstance(band.getDataType(), macroTileRectangle.width * macroTileRectangle.height));
+            band.setData(ProductData.createInstance(band.getDataType(),
+                                                    macroTileRectangle.width * macroTileRectangle.height));
         }
 
         ProductIO.writeProduct(testproduct, "./" + testproduct.getName() + ".nc", "NetCDF4-LC");

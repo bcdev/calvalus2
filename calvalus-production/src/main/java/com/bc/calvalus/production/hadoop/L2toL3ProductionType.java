@@ -36,10 +36,10 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.binning.AggregatorConfig;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.operator.VariableConfig;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.binning.AggregatorConfig;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.operator.VariableConfig;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.DateFormat;

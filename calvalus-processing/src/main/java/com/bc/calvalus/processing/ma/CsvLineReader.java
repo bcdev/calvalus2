@@ -16,8 +16,8 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.StringUtils;
 
 import java.io.IOException;
 import java.io.LineNumberReader;

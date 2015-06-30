@@ -25,12 +25,12 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGrid;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.MetadataElement;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.TiePointGrid;
+import org.esa.snap.framework.gpf.OperatorException;
+import org.esa.snap.gpf.operators.standard.BandMathsOp;
 
 import java.io.IOException;
 

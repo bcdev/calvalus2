@@ -15,7 +15,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

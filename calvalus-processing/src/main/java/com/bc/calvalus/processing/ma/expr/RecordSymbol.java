@@ -11,6 +11,7 @@ import com.bc.jexp.Term;
  * @author Norman Fomferra
  */
 public class RecordSymbol implements Symbol {
+
     private final String variableName;
 
     public RecordSymbol(String variableName) {
@@ -49,6 +50,11 @@ public class RecordSymbol implements Symbol {
     @Override
     public String evalS(EvalEnv env) throws EvalException {
         return toString(getValue(env));
+    }
+
+    @Override
+    public boolean isConst() {
+        return true;
     }
 
     public static boolean toBoolean(Object o) {

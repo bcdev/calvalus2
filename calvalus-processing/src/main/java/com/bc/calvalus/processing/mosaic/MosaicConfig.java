@@ -22,10 +22,10 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
-import org.esa.beam.binning.VariableContext;
-import org.esa.beam.binning.support.VariableContextImpl;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.binning.VariableContext;
+import org.esa.snap.binning.support.VariableContextImpl;
+import org.esa.snap.framework.gpf.annotations.Parameter;
+import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
 
 /**
  * A configuration for Mosaic processing

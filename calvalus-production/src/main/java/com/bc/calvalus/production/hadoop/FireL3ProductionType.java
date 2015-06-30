@@ -36,7 +36,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.text.DateFormat;
 import java.util.ArrayList;

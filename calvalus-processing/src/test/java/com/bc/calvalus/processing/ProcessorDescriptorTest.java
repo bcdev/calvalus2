@@ -17,8 +17,8 @@
 package com.bc.calvalus.processing;
 
 
-import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.util.io.FileUtils;
 import org.junit.Test;
 
 import java.io.IOException;

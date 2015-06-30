@@ -30,14 +30,14 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.TemporalBinSource;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.binning.operator.Formatter;
-import org.esa.beam.binning.operator.FormatterConfig;
-import org.esa.beam.framework.datamodel.MetadataElement;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.TemporalBinSource;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.binning.operator.Formatter;
+import org.esa.snap.binning.operator.FormatterConfig;
+import org.esa.snap.framework.datamodel.MetadataElement;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 
 import java.io.File;
 import java.io.IOException;
@@ -91,13 +91,13 @@ public class L3Formatter {
         final MetadataElement processingGraphMetadata = metadataSerializer.fromXml(processingHistoryXml);
         // TODO maybe replace region information in metadata if overwritten in formatting request
         Formatter.format(planetaryGrid,
-                temporalBinSource,
-                featureNames,
-                formatterConfig,
-                regionGeometry,
-                startTime,
-                endTime,
-                processingGraphMetadata);
+                         temporalBinSource,
+                         featureNames,
+                         formatterConfig,
+                         regionGeometry,
+                         startTime,
+                         endTime,
+                         processingGraphMetadata);
     }
 
     private static ProductData.UTC parseTime(String timeString) {

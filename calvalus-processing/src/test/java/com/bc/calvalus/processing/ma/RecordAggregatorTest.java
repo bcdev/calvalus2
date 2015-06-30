@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.GeoPos;
 import org.junit.Test;
 
 import java.util.Date;
@@ -84,8 +84,8 @@ public class RecordAggregatorTest {
     }
 
     private void testFirst4Values(Record aggregatedRecord) {
-        assertEquals(53.0F, (Float) aggregatedRecord.getAttributeValues()[0], 1E-5F);
-        assertEquals(13.3F, (Float) aggregatedRecord.getAttributeValues()[1], 1E-5F);
+        assertEquals(53.0, (double)aggregatedRecord.getAttributeValues()[0], 1E-5);
+        assertEquals(13.3, (double)aggregatedRecord.getAttributeValues()[1], 1E-5);
         assertEquals(new Date(128L), aggregatedRecord.getAttributeValues()[2]);
         assertEquals("africa", aggregatedRecord.getAttributeValues()[3]);
     }

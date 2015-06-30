@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.framework.datamodel.PixelPos;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

@@ -16,9 +16,9 @@
 
 package com.bc.calvalus.processing.l2tol3;
 
-import org.esa.beam.binning.Observation;
-import org.esa.beam.binning.support.ObservationImpl;
-import org.esa.beam.binning.support.VariableContextImpl;
+import org.esa.snap.binning.Observation;
+import org.esa.snap.binning.support.ObservationImpl;
+import org.esa.snap.binning.support.VariableContextImpl;
 import org.junit.Test;
 
 import java.util.HashMap;

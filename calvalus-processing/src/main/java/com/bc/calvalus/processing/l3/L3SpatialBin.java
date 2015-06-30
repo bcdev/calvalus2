@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.l3;
 
 import org.apache.hadoop.io.Writable;
-import org.esa.beam.binning.SpatialBin;
+import org.esa.snap.binning.SpatialBin;
 
 import java.io.DataInput;
 import java.io.DataOutput;

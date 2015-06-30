@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.ta;
 
-import org.esa.beam.binning.support.VectorImpl;
+import org.esa.snap.binning.support.VectorImpl;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.general.DatasetUtilities;
 import org.jfree.data.xy.DefaultXYDataset;
@@ -24,12 +24,10 @@ import org.jfree.data.xy.XYDataset;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class TAGraphTest {
 

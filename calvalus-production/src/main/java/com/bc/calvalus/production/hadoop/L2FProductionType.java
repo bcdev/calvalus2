@@ -31,7 +31,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.util.StringUtils;
 
 import java.util.List;
 

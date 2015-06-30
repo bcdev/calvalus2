@@ -24,8 +24,8 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Partitioner;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.operator.BinningConfig;
 
 /**
  * Partitions the bins by their bin index.

@@ -26,7 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.esa.beam.binning.VariableContext;
+import org.esa.snap.binning.VariableContext;
 
 import java.io.IOException;
 import java.text.NumberFormat;

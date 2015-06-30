@@ -17,7 +17,7 @@
 package com.bc.calvalus.inventory;
 
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;

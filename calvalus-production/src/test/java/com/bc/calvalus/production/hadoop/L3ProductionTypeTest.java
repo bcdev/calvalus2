@@ -1,10 +1,10 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -14,8 +14,8 @@ import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobConf;
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
 

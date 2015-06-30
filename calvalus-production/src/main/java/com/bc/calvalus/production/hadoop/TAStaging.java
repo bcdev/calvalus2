@@ -20,11 +20,11 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.esa.beam.binning.Aggregator;
-import org.esa.beam.binning.BinManager;
-import org.esa.beam.binning.WritableVector;
-import org.esa.beam.binning.operator.BinningConfig;
-import org.esa.beam.util.io.FileUtils;
+import org.esa.snap.binning.Aggregator;
+import org.esa.snap.binning.BinManager;
+import org.esa.snap.binning.WritableVector;
+import org.esa.snap.binning.operator.BinningConfig;
+import org.esa.snap.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
 import java.io.File;

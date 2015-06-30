@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.snap.framework.datamodel.PixelPos;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -69,7 +69,7 @@ class OverlappingRecordTransform implements RecordTransformer {
                     pixelPosRecord.getRecord().getAnnotationValues()[exclusionIndex] = EXCLUSION_REASON_OVERLAPPING;
                     workRecords.add(pixelPosRecord);
                 }
-                float minYRow = pixelPosRecord.getPixelPos().y - macroPixelSize;
+                double minYRow = pixelPosRecord.getPixelPos().y - macroPixelSize;
                 Iterator<PixelPosProvider.PixelPosRecord> workRecordsIterator = workRecords.iterator();
                 while (workRecordsIterator.hasNext()) {
                     PixelPosProvider.PixelPosRecord workRecord = workRecordsIterator.next();
@@ -87,8 +87,8 @@ class OverlappingRecordTransform implements RecordTransformer {
     }
 
     private static boolean isOverlapping(PixelPosProvider.PixelPosRecord record1, PixelPosProvider.PixelPosRecord record2, int macroPixelSize) {
-        float xDist = Math.abs(record1.getPixelPos().x - record2.getPixelPos().x);
-        float yDist = Math.abs(record1.getPixelPos().y - record2.getPixelPos().y);
+        double xDist = Math.abs(record1.getPixelPos().x - record2.getPixelPos().x);
+        double yDist = Math.abs(record1.getPixelPos().y - record2.getPixelPos().y);
         return yDist < macroPixelSize && xDist < macroPixelSize;
     }
 

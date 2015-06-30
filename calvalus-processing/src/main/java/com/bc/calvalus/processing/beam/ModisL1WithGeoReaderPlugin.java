@@ -21,16 +21,16 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.dataio.DecodeQualification;
-import org.esa.beam.framework.dataio.IllegalFileFormatException;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.dataio.ProductReaderPlugIn;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.io.BeamFileFilter;
+import org.esa.snap.framework.dataio.AbstractProductReader;
+import org.esa.snap.framework.dataio.DecodeQualification;
+import org.esa.snap.framework.dataio.IllegalFileFormatException;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductReader;
+import org.esa.snap.framework.dataio.ProductReaderPlugIn;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.io.SnapFileFilter;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +89,7 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
     }
 
     @Override
-    public BeamFileFilter getProductFileFilter() {
+    public SnapFileFilter getProductFileFilter() {
         return null; // only used in UI
     }
 

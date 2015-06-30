@@ -12,8 +12,8 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.binning.PlanetaryGrid;
-import org.esa.beam.binning.operator.BinningConfig;
+import org.esa.snap.binning.PlanetaryGrid;
+import org.esa.snap.binning.operator.BinningConfig;
 
 import java.io.IOException;
 

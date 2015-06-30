@@ -25,27 +25,28 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.util.Progressable;
-import org.esa.beam.dataio.dimap.DimapHeaderWriter;
-import org.esa.beam.framework.dataio.AbstractProductWriter;
-import org.esa.beam.framework.dataio.IllegalFileFormatException;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.dataio.ProductWriter;
-import org.esa.beam.framework.dataio.ProductWriterPlugIn;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.TiePointGrid;
-import org.esa.beam.util.ImageUtils;
+import org.esa.snap.dataio.dimap.DimapHeaderWriter;
+import org.esa.snap.framework.dataio.AbstractProductWriter;
+import org.esa.snap.framework.dataio.IllegalFileFormatException;
+import org.esa.snap.framework.dataio.ProductIO;
+import org.esa.snap.framework.dataio.ProductWriter;
+import org.esa.snap.framework.dataio.ProductWriterPlugIn;
+import org.esa.snap.framework.datamodel.Band;
+import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.framework.datamodel.TiePointGrid;
+import org.esa.snap.util.ImageUtils;
 
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -57,7 +58,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
     private Path path;
     private Configuration configuration;
     private final Progressable progressable = null; // TODO no longer needed ??, progress through pm
-    private SequenceFile.Writer sequnceFileWriter;
+    private SequenceFile.Writer sequenceFileWriter;
     private int tileHeight;
 
 
@@ -78,8 +79,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
             throw new IllegalFileFormatException("input is not of the correct type.");
         }
         tileHeight = product.getPreferredTileSize().height;
-        sequnceFileWriter = writeHeader(product, path);
-        writeTiePointData(product, sequnceFileWriter, indexMap);
+        sequenceFileWriter = writeHeader(product, path);
+        writeTiePointData(product, sequenceFileWriter, indexMap);
         LOG.info(" written header");
     }
 
@@ -87,8 +88,8 @@ public class StreamingProductWriter extends AbstractProductWriter {
     public void writeBandRasterData(Band band, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData productData, ProgressMonitor pm) throws IOException {
         int sliceIndex = sourceOffsetY / tileHeight;
         String key = band.getName() + ":" + sliceIndex;
-        updateIndex(indexMap, key, sequnceFileWriter.getLength());
-        writeProductData(sequnceFileWriter, key, productData);
+        updateIndex(indexMap, key, sequenceFileWriter.getLength());
+        writeProductData(sequenceFileWriter, key, productData);
     }
 
     @Override
@@ -98,7 +99,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
     @Override
     public void close() throws IOException {
-        sequnceFileWriter.close();
+        sequenceFileWriter.close();
 
         Path indexPath = StreamingProductIndex.getIndexPath(path);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
@@ -113,30 +114,26 @@ public class StreamingProductWriter extends AbstractProductWriter {
     public static void writeProductInSlices(Configuration configuration,
                                             ProgressMonitor pm,
                                             Product product,
-                                            Path path,
-                                            int tileHeight) throws IOException {
+                                            Path path) throws IOException {
         PathConfiguration output = new PathConfiguration(path, configuration);
-        writeProductInSlices(product, output, StreamingProductPlugin.FORMAT_NAME, tileHeight, pm);
+        writeProductInSlices(product, output, StreamingProductPlugin.FORMAT_NAME, pm);
     }
 
-    public static void writeProductInSlices(Product product, Object output, String format, int tileHeight, ProgressMonitor pm) throws IOException {
+    public static void writeProductInSlices(Product product, Object output, String format, ProgressMonitor pm) throws IOException {
         ProductWriter productWriter = ProductIO.getProductWriter(format);
         product.setProductWriter(productWriter);
         productWriter.writeProductNodes(product, output);
-        writeAllBandsInSlices(product, pm, tileHeight);
+        writeAllBandsInSlices(product, pm);
         product.closeProductWriter();
     }
 
-    // TODO for generig writing with full with tiles products and arbritry tiles products
-    // use code like int SpatialProductbinner
-
     // TODO move to calvalusProductIO
-    private static void writeAllBandsInSlices(Product product, ProgressMonitor pm, int tileHeight) throws IOException {
+    private static void writeAllBandsInSlices(Product product, ProgressMonitor pm) throws IOException {
         ProductWriter productWriter = product.getProductWriter();
 
         // for correct progress indication we need to collect
         // all bands which shall be written to the output
-        ArrayList<Band> bandsToWrite = new ArrayList<Band>();
+        List<Band> bandsToWrite = new ArrayList<>();
         for (int i = 0; i < product.getNumBands(); i++) {
             Band band = product.getBandAt(i);
             if (productWriter.shouldWrite(band)) {
@@ -150,15 +147,25 @@ public class StreamingProductWriter extends AbstractProductWriter {
             try {
 
                 int x = 0;
-                int w = product.getSceneRasterWidth();
-                int h = tileHeight;
                 int sliceIndex = 0;
-                for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
-                    if (y + h > sceneHeight) {
-                        h = sceneHeight - y;
-                    }
-                    for (Band band : bandsToWrite) {
-                        Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
+                int[] bandTileHeights = new int[bandsToWrite.size()];
+                int[] bandTileWidths = new int[bandsToWrite.size()];
+                for (int i = 0; i < bandsToWrite.size(); i++) {
+                    bandTileHeights[i] = Math.min((int)product.getPreferredTileSize().getHeight(), bandsToWrite.get(i).getRasterHeight());
+                    bandTileWidths[i] = Math.min(product.getSceneRasterWidth(), bandsToWrite.get(i).getRasterWidth());
+                }
+
+                for (int i = 0; i < bandsToWrite.size(); i++) {
+                    final Band band = bandsToWrite.get(i);
+                    int h = bandTileHeights[i];
+                    int w = bandTileWidths[i];
+
+                    for (int y = 0; y < bandsToWrite.get(i).getRasterHeight(); y += bandTileHeights[i], sliceIndex++) {
+                        if (y + h > bandsToWrite.get(i).getRasterHeight()) {
+                            h = bandsToWrite.get(i).getRasterHeight() - y;
+                        }
+                        Rectangle rectangle = new Rectangle(x, y, w, h);
+                        Raster tile = band.getSourceImage().getData(rectangle);
                         boolean directMode = tile.getDataBuffer().getSize() == w * h;
                         ProductData productData;
                         if (directMode) {
