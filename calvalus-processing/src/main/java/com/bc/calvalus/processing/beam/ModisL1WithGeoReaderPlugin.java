@@ -55,7 +55,7 @@ public class ModisL1WithGeoReaderPlugin implements ProductReaderPlugIn {
             PathConfiguration pathConfig = (PathConfiguration) input;
             if (pathConfig.getConfiguration().get(AUX_GEO_PATHES) != null) {
                 String filename = pathConfig.getPath().getName();
-                if (filename.matches("A\\d{13}\\.L1[AB]_LAC")) {
+                if (filename.matches("A\\d{13}\\.L1[AB]_LAC") || filename.matches("A\\d{13}\\.L1[AB]_sub")) {
                     return DecodeQualification.INTENDED;
                 }
             }
