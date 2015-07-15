@@ -49,7 +49,14 @@ public class ProductRecordSource implements RecordSource {
         }
 
         this.pixelPosRecords = pixelPosRecords;
-        this.empty = shallApplyTimeCriterion(config) && !canApplyTimeCriterion(referenceRecordHeader);
+
+        boolean shallApplyTimeCriterion = shallApplyTimeCriterion(config);
+        System.out.println("shallApplyTimeCriterion = " + shallApplyTimeCriterion);
+
+        boolean canApplyTimeCriterion = canApplyTimeCriterion(referenceRecordHeader);
+        System.out.println("canApplyTimeCriterion = " + canApplyTimeCriterion);
+
+        this.empty = shallApplyTimeCriterion && !canApplyTimeCriterion;
 
         pixelExtractor = new PixelExtractor(referenceRecordHeader,
                                             product,

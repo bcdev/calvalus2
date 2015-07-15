@@ -84,12 +84,14 @@ public class PixelExtractor {
      * @throws java.io.IOException If an I/O error occurs
      */
     public Record extract(Record inputRecord, PixelPos originalPixelPos, Date originalPixelTime) throws IOException {
-
         Point2D extractionPos = i2oTransform.transform(originalPixelPos, null);
         PixelPos extractionPixelPos = new PixelPos((float) extractionPos.getX(), (float) extractionPos.getY());
+        System.out.println("PixelExtractor.extract: originalPixelPos = " + originalPixelPos + "extractionPixelPos = " + extractionPixelPos);
+
         Rectangle productRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
 
         if (!product.containsPixel(extractionPixelPos)) {
+            System.out.println("pixel pos not in product");
             return null;
         }
 
@@ -99,9 +101,11 @@ public class PixelExtractor {
                               macroPixelSize, macroPixelSize));
 
         if (macroPixelRect.isEmpty()) {
+            System.out.println("macro pixel rect is empty");
             return null;
         }
         if (onlyExtractComplete && (macroPixelRect.width < macroPixelSize || macroPixelRect.height < macroPixelSize)) {
+            System.out.println("macro pixel is not complete");
             return null;
         }
         int x0 = macroPixelRect.x;
