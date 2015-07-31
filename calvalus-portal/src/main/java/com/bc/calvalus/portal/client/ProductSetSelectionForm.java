@@ -169,7 +169,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     private void updateDetailsView() {
-        DtoProductSet productSet = getProductSet();
+        DtoProductSet productSet = getSelectedProductSet();
         if (productSet != null) {
             productSetName.setText(productSet.getName());
             productSetType.setText(productSet.getProductType());
@@ -185,7 +185,8 @@ public class ProductSetSelectionForm extends Composite {
             } else {
                 productSetEndDate.setText("");
             }
-            productSetRegionName.setText(productSet.getRegionName());
+            String regionName = productSet.getRegionName();
+            productSetRegionName.setText(regionName != null ? regionName : "");
         } else {
             productSetName.setText("");
             productSetType.setText("");
@@ -199,12 +200,12 @@ public class ProductSetSelectionForm extends Composite {
         productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
             @Override
             public void onChange(ChangeEvent changeEvent) {
-                changeHandler.onProductSetChanged(getProductSet());
+                changeHandler.onProductSetChanged(getSelectedProductSet());
             }
         });
     }
 
-    public DtoProductSet getProductSet() {
+    public DtoProductSet getSelectedProductSet() {
         int selectedIndex = productSetListBox.getSelectedIndex();
         if (selectedIndex >= 0) {
             return currentProductSets[selectedIndex];
@@ -214,7 +215,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void validateForm() throws ValidationException {
-        DtoProductSet productSet = getProductSet();
+        DtoProductSet productSet = getSelectedProductSet();
         boolean productSetValid = productSet != null;
         if (!productSetValid) {
             throw new ValidationException(productSetListBox, "An input product set must be selected.");
@@ -228,7 +229,7 @@ public class ProductSetSelectionForm extends Composite {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputPath", getProductSet().getPath());
+        parameters.put("inputPath", getSelectedProductSet().getPath());
         return parameters;
     }
 

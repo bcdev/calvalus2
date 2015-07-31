@@ -95,11 +95,12 @@ public class L2ProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String pathPattern = outputDir + "/.*${yyyy}${MM}${dd}.*.seq$";
         String regionWKT = geometry != null ? geometry.toString() : null;
-        ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(
-                getProcessingService());
-        ProductSet productSet = new ProductSet(getResultingProductionType(processorDescriptor),
+        ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        String[] bandNames = getResultingBandNames(processorDesc);
+        String resultingProductionType = getResultingProductionType(processorDesc);
+        ProductSet productSet = new ProductSet(resultingProductionType,
                                                productionName, pathPattern, startDate, stopDate,
-                                               productionRequest.getRegionName(), regionWKT);
+                                               productionRequest.getRegionName(), regionWKT, bandNames);
 
         L2WorkflowItem l2WorkflowItem = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                            productionName, l2JobConfig);
@@ -107,10 +108,26 @@ public class L2ProductionType extends HadoopProductionType {
         return l2WorkflowItem;
     }
 
-    String getResultingProductionType(ProcessorDescriptor processorDescriptor) {
+    static String getResultingProductionType(ProcessorDescriptor processorDescriptor) {
+        String productType = null;
         if (processorDescriptor != null) {
-            return processorDescriptor.getOutputProductType();
+            productType = processorDescriptor.getOutputProductType();
         }
-        return "L2_PRODUCT";
+        if (productType == null || productType.isEmpty()) {
+            productType = "L2_PRODUCT";
+        }
+        return productType;
+    }
+
+    static String[] getResultingBandNames(ProcessorDescriptor processorDescriptor) {
+        if (processorDescriptor == null || processorDescriptor.getOutputVariables() == null) {
+            return new String[0];
+        }
+        ProcessorDescriptor.Variable[] outputVariables = processorDescriptor.getOutputVariables();
+        String[] bandNames = new String[outputVariables.length];
+        for (int i = 0; i < outputVariables.length; i++) {
+            bandNames[i] = outputVariables[i].getName();
+        }
+        return bandNames;
     }
 }

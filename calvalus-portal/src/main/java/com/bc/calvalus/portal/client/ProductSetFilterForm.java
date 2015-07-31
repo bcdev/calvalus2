@@ -175,14 +175,13 @@ public class ProductSetFilterForm extends Composite {
     public void setProductSet(DtoProductSet productSet) {
         this.productSet = productSet;
         if (this.productSet != null) {
-            if (productSet.getRegionName().isEmpty() ||
-                productSet.getRegionName().equalsIgnoreCase("global") ||
-                productSet.getRegionWKT() == null) {
+            String regionName = productSet.getRegionName();
+            if (regionName == null || regionName.isEmpty() ||
+                    regionName.equalsIgnoreCase("global") || productSet.getRegionWKT() == null) {
                 // global
                 regionMap.getMapWidget().setZoom(0);
                 regionMap.getMapWidget().panTo(LatLng.newInstance(0.0, 0.0));
             } else {
-                String regionName = productSet.getRegionName();
                 if (!regionName.isEmpty()) {
                     List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
                     for (Region region : regionList) {

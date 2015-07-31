@@ -83,9 +83,9 @@ public class AbstractInventoryServiceTest {
 
     @Test
     public void testReadProductSetFromCsv() throws Exception {
-        String csv = "MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31\n" +
-                     "MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31\n" +
-                     "MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31\n";
+        String csv = "MER_RR__1;MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31;null;null\n" +
+                     "MER_RR__1;MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31;null;null\n" +
+                     "MER_RR__1;MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31;null;null\n";
         List<ProductSet> productSets = AbstractInventoryService.readProductSetFromCsv(
                 new ByteArrayInputStream(csv.getBytes()));
         assertNotNull(productSets);

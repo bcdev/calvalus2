@@ -59,12 +59,9 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             @Override
             public boolean accept(DtoProcessorDescriptor processorDescriptor) {
                 if (processorDescriptor.getBundleName().startsWith("freshmon")) {
-                    DtoProductSet productSet = productSetSelectionForm.getProductSet();
+                    DtoProductSet productSet = productSetSelectionForm.getSelectedProductSet();
                     if (productSet != null) {
-                        String productType = productSet.getProductType();
-                        if (productType != null) {
-                            return canHandleProductType(processorDescriptor, productType);
-                        }
+                        return canHandleProductType(processorDescriptor, productSet.getProductType());
                     }
                 }
                 return false;
@@ -101,7 +98,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(true);

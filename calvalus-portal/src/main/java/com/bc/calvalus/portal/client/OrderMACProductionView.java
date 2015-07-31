@@ -62,7 +62,7 @@ public class OrderMACProductionView extends OrderProductionView {
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         l2MaForms = new L2MaConfigForm[NUM_PROCESSORS];
         boolean selectionMandatory = false;

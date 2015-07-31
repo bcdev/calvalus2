@@ -230,9 +230,10 @@ public class L2PlusProductionType extends HadoopProductionType {
         String pathPattern = createPathPattern(outputDir);
         String regionWKT = regionGeom != null ? regionGeom.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        ProductSet productSet = new ProductSet(getResultingProductionType(processorDesc),
+        ProductSet productSet = new ProductSet(L2ProductionType.getResultingProductionType(processorDesc),
                                                productionName, pathPattern, startDate, stopDate,
-                                               productionRequest.getRegionName(), regionWKT);
+                                               productionRequest.getRegionName(), regionWKT,
+                                               L2ProductionType.getResultingBandNames(processorDesc));
 
         HadoopWorkflowItem l2Item = new L2WorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                        productionName, l2JobConfig);
@@ -246,12 +247,4 @@ public class L2PlusProductionType extends HadoopProductionType {
         //return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
         return basePath + "/.*.seq$";
     }
-
-    private String getResultingProductionType(ProcessorDescriptor processorDescriptor) {
-        if (processorDescriptor != null) {
-            return processorDescriptor.getOutputProductType();
-        }
-        return "L2_PRODUCT";
-    }
-
 }

@@ -17,8 +17,25 @@ public class ProductSet {
     private final Date maxDate;
     private final String regionName;
     private final String regionWKT;
+    private final String[] bandNames;
 
-    public ProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName, String regionWKT) {
+    public ProductSet(String productType, String name, String path) {
+        this(productType, name, path, null, null, null, null, new String[0]);
+    }
+
+    public ProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName, String regionWKT, String[] bandNames) {
+        if (productType == null) {
+            throw new NullPointerException("productType");
+        }
+        if (name == null) {
+            throw new NullPointerException("name");
+        }
+        if (path == null) {
+            throw new NullPointerException("path");
+        }
+        if (bandNames == null) {
+            throw new NullPointerException("bandNames");
+        }
         this.productType = productType;
         this.name = name;
         this.path = path;
@@ -26,6 +43,7 @@ public class ProductSet {
         this.maxDate = maxDate;
         this.regionName = regionName;
         this.regionWKT = regionWKT;
+        this.bandNames = bandNames;
     }
 
     public String getProductType() {
@@ -54,5 +72,9 @@ public class ProductSet {
 
     public String getRegionWKT() {
         return regionWKT;
+    }
+
+    public String[] getBandNames() {
+        return bandNames;
     }
 }

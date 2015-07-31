@@ -53,7 +53,7 @@ public class OrderMAProductionView extends OrderProductionView {
         l2ConfigForm = new L2ConfigForm(portalContext, false);
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         maConfigForm = new MAConfigForm(portalContext);
 
