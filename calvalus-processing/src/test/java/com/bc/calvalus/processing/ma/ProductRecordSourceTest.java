@@ -350,12 +350,12 @@ public class ProductRecordSourceTest {
         config.setGoodPixelExpression("feq(X, 1.5)");
 
         RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
-                                                     RecordUtils.create(new GeoPos(0.0F, 0.0F), null),  // --> X=0.5,Y=2.5 --> reject
-                                                     RecordUtils.create(new GeoPos(0.0F, 1.0F), null),  // --> X=1.5,Y=2.5 --> ok
-                                                     RecordUtils.create(new GeoPos(0.5F, 0.0F), null),  // --> X=0.5,Y=1.5 --> reject
-                                                     RecordUtils.create(new GeoPos(0.5F, 1.0F), null),  // --> X=1.5,Y=1.5 --> ok
-                                                     RecordUtils.create(new GeoPos(1.0F, 0.0F), null),  // --> X=0.5,Y=0.5 --> reject
-                                                     RecordUtils.create(new GeoPos(1.0F, 1.0F), null));  // --> X=0.5,Y=0.5 --> ok
+                                                     RecordUtils.create(new GeoPos(0.0, 0.0), null),  // --> X=0.5,Y=2.5 --> reject
+                                                     RecordUtils.create(new GeoPos(0.0, 1.0), null),  // --> X=1.5,Y=2.5 --> ok
+                                                     RecordUtils.create(new GeoPos(0.5, 0.0), null),  // --> X=0.5,Y=1.5 --> reject
+                                                     RecordUtils.create(new GeoPos(0.5, 1.0), null),  // --> X=1.5,Y=1.5 --> ok
+                                                     RecordUtils.create(new GeoPos(1.0, 0.0), null),  // --> X=0.5,Y=0.5 --> reject
+                                                     RecordUtils.create(new GeoPos(1.0, 1.0), null));  // --> X=0.5,Y=0.5 --> ok
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         List<Record> records = getRecords(output);
         assertEquals(6, records.size());
@@ -636,8 +636,8 @@ public class ProductRecordSourceTest {
 
     private Product createProduct(int w, int h) {
         Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", w, h);
-        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5f, 0.5f, w - 1, h - 1, new float[]{1, 1, 0, 0}));
-        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5f, 0.5f, w - 1, h - 1, new float[]{0, 1, 0, 1}));
+        product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5, 0.5, w - 1, h - 1, new float[]{1, 1, 0, 0}));
+        product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5, 0.5, w - 1, h - 1, new float[]{0, 1, 0, 1}));
         product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
         product.setStartTime(utc("07-MAY-2010 10:25:14"));
         product.setEndTime(utc("07-MAY-2010 11:24:46"));

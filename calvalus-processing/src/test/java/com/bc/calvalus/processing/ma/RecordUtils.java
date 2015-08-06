@@ -34,7 +34,7 @@ public class RecordUtils {
         }
     }
 
-    public static void addPointRecord(DefaultRecordSource recordSource, float lat, float lon, Object... attributeValues) {
+    public static void addPointRecord(DefaultRecordSource recordSource, double lat, double lon, Object... attributeValues) {
         recordSource.addRecord(create(new GeoPos(lat, lon), null, attributeValues));
     }
 }
