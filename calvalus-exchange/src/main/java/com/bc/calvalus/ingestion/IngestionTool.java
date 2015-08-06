@@ -65,6 +65,7 @@ public class IngestionTool {
         if (commandLine.hasOption("blocksize")) {
             blockSizeParameter = Long.parseLong(commandLine.getOptionValue("blocksize"));
         }
+
         final String filenamePattern;
         if (commandLine.hasOption("filenamepattern")) {
             filenamePattern = commandLine.getOptionValue("filenamepattern");
@@ -72,6 +73,24 @@ public class IngestionTool {
             filenamePattern = productType + ".*\\.N1";
         }
         Pattern pattern = Pattern.compile(filenamePattern);
+        final String timeElements;
+        if (commandLine.hasOption("timeelements")) {
+            timeElements = commandLine.getOptionValue("timeelements");
+        } else {
+            timeElements = null;
+        }
+        final String timeFormat;
+        if (commandLine.hasOption("timeformat")) {
+            timeFormat = commandLine.getOptionValue("timeformat");
+        } else {
+            timeFormat = null;
+        }
+        final String pathTemplate;
+        if (commandLine.hasOption("pathtemplate")) {
+            pathTemplate = commandLine.getOptionValue("pathtemplate");
+        } else {
+            pathTemplate = null;
+        }
 
         final short replication;
         if (commandLine.hasOption("replication")) {
@@ -83,32 +102,45 @@ public class IngestionTool {
         boolean verify = commandLine.hasOption("verify");
 
         // determine input files
-        List<File> sourceFiles = new ArrayList<File>();
+        List<IngestionFile> ingestionFiles = new ArrayList<IngestionFile>();
         for (String path : files) {
             File file = new File(path);
-            collectInputFiles(file, pattern, sourceFiles);
+            collectInputFiles(path, file, pattern, timeElements, timeFormat, productType, revision, pathTemplate, ingestionFiles);
         }
-        if (sourceFiles.isEmpty()) {
+        if (ingestionFiles.isEmpty()) {
             throw new FileNotFoundException("no files found");
         }
-        System.out.format("%d files to be ingested\n", sourceFiles.size());
+        System.out.format("%d files to be ingested\n", ingestionFiles.size());
 
 
-        return ingest(productType, revision, blockSizeParameter, pattern, hdfs, replication, verify, sourceFiles);
+        return ingest(productType, revision, blockSizeParameter, pattern, hdfs, replication, verify, ingestionFiles);
     }
 
-    private static int ingest(String productType, String revision, long blockSizeParameter, Pattern pattern, FileSystem hdfs, short replication, boolean verify, List<File> sourceFiles) throws IOException {
+    static class IngestionFile {
+        IngestionFile(File input, String output) {
+            this.input = input;
+            this.output = output;
+        }
+        File input;
+        String output;
+        public String toString() {
+            return input.toString();
+        }
+    }
+
+    private static int ingest(String productType, String revision, long blockSizeParameter, Pattern pattern, FileSystem hdfs, short replication, boolean verify, List<IngestionFile> sourceFiles) throws IOException {
         // cache HDFS parameters for block size
         final int bufferSize = hdfs.getConf().getInt("io.file.buffer.size", 4096);
         final int checksumSize = hdfs.getConf().getInt("io.bytes.per.checksum", 512);
 
         // loop over input files
-        for (File sourceFile : sourceFiles) {
-            String archivePath = getArchivePath(sourceFile, productType, revision, pattern);
+        for (IngestionFile sourceFile : sourceFiles) {
+            //String archivePath = getArchivePath(sourceFile, productType, revision, pattern);
+            final String archivePath = sourceFile.output;
 
             // calculate block size to cover complete N1
             // blocksize must be a multiple of checksum size
-            long fileSize = sourceFile.length();
+            long fileSize = sourceFile.input.length();
             long blockSize;
             if (blockSizeParameter == -1) {
                 blockSize = ((fileSize + checksumSize - 1) / checksumSize) * checksumSize;
@@ -122,7 +154,7 @@ public class IngestionTool {
             }
 
             // construct HDFS output stream
-            Path destPath = new Path(archivePath, sourceFile.getName());
+            Path destPath = new Path(archivePath, sourceFile.input.getName());
             // copy if either verification is off or target does not exist or target has different size
             if (! verify || ! hdfs.exists(destPath) || hdfs.listStatus(destPath) == null || hdfs.listStatus(destPath)[0].getLen() < fileSize) {
                 int attempt = 1;
@@ -132,7 +164,7 @@ public class IngestionTool {
                 while (attempt <= 3 && !finished) {
                     short actualReplication = attempt == 1 ? replication : 3;
                     OutputStream out = hdfs.create(destPath, true, bufferSize, actualReplication, blockSize);
-                    FileInputStream in = new FileInputStream(sourceFile);
+                    FileInputStream in = new FileInputStream(sourceFile.input);
                     try  {
                         IOUtils.copyBytes(in, out, hdfs.getConf(), true);
                         finished = true;
@@ -160,26 +192,95 @@ public class IngestionTool {
         return 0;
     }
 
-    static void collectInputFiles(File file, Pattern filter, List<File> accu) throws IOException {
+    private static void collectInputFiles(String rootDir, File file, Pattern pattern, String timeElements, String timeFormat, String productType, String revision, String pathTemplate, List<IngestionFile> accu) throws IOException {
+        // handle recursive directory search
         if (file.isDirectory()) {
             if ("lost+found".equals(file.getName())) {
                 return;
             }
             final File[] files = file.listFiles();
             if (files == null) {
-                throw new FileNotFoundException("cannot access directory " + file.getPath() + ".");
+                throw new FileNotFoundException("cannot access directory " + file.getPath());
             }
             for (File f : files) {
-                collectInputFiles(f, filter, accu);
+                collectInputFiles(rootDir, f, pattern, timeElements, timeFormat, productType, revision, pathTemplate, accu);
             }
-        } else if (file.isFile()) {
-            if (filter.matcher(file.getName()).matches()) {
-                accu.add(file);
-            }
-        } else {
+        // handle non-existent named file
+        } else if (! file.isFile()) {
             throw new FileNotFoundException(file.getAbsolutePath());
+        } else {
+            // handle file found ...
+            final String path = formatPath(rootDir, file, pattern, timeElements, timeFormat, productType, revision, pathTemplate);
+            if (path != null) {
+                accu.add(new IngestionFile(file, path));
+            }
         }
     }
+
+    static String formatPath(String rootDir, File file, Pattern pattern, String timeElements, String timeFormat, String productType, String revision, String pathTemplate) throws IOException {
+        final String relPath;
+        if (pattern.pattern().contains("/")) {
+            relPath = file.getPath().substring(rootDir.length()+1);
+        } else {
+            relPath = file.getName();
+        }
+        final Matcher matcher = pattern.matcher(relPath);
+        if (! matcher.matches()) {
+            return null;
+        } else if (pathTemplate != null) {
+            String path = pathTemplate;
+            if (timeElements != null && timeFormat != null) {
+                try {
+                    final String timeString = expand(matcher, timeElements);
+                    final Date date = new SimpleDateFormat(timeFormat).parse(timeString);
+                    path = new SimpleDateFormat(path).format(date);
+                } catch (ParseException e) {
+                    throw new IOException("parsing of date in " + file.getName() + " using " + pattern.pattern() + " " + timeElements + " " + timeFormat + " failed", e);
+                }
+            }
+            return expand(matcher, path);
+        } else {
+            final String subPath = getDatePath(file, productType, pattern);
+            return String.format("/calvalus/eodata/%s/%s/%s", productType, revision, subPath);
+        }
+    }
+
+    public static String expand(Matcher source, String template) throws IndexOutOfBoundsException, IllegalStateException {
+        Pattern elementPattern = Pattern.compile("\\\\(\\d+)");
+        Matcher elementMatcher = elementPattern.matcher(template);
+        StringBuffer result = new StringBuffer();
+        try {
+            while (elementMatcher.find()) {
+                int groupIdx = Integer.parseInt(elementMatcher.group(1));
+                elementMatcher.appendReplacement(result, source.group(groupIdx));
+            }
+            elementMatcher.appendTail(result);
+        } catch (NumberFormatException e) {
+            throw new IndexOutOfBoundsException(e.getMessage());
+        }
+        return result.toString();
+    }
+
+//    static void collectInputFiles(File file, Pattern filter, List<File> accu) throws IOException {
+//        if (file.isDirectory()) {
+//            if ("lost+found".equals(file.getName())) {
+//                return;
+//            }
+//            final File[] files = file.listFiles();
+//            if (files == null) {
+//                throw new FileNotFoundException("cannot access directory " + file.getPath() + ".");
+//            }
+//            for (File f : files) {
+//                collectInputFiles(f, filter, accu);
+//            }
+//        } else if (file.isFile()) {
+//            if (filter.matcher(file.getName()).matches()) {
+//                accu.add(file);
+//            }
+//        } else {
+//            throw new FileNotFoundException(file.getAbsolutePath());
+//        }
+//    }
 
     /**
      * Implements the archiving "rule"

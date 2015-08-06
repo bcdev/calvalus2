@@ -38,6 +38,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
@@ -106,6 +107,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
 
             Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
+            System.out.println("pixelArea.isEmpty = " + pixelArea.isEmpty());
 
             long referencePixelTime = (now() - t0);
             LOG.info(String.format("tested reference records, found %s matches, took %s sec",
@@ -239,11 +241,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     private void logAttributeNames(ProductRecordSource productRecordSource) {
         String[] attributeNames = productRecordSource.getHeader().getAttributeNames();
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < attributeNames.length; i++) {
-            sb.append(String.format("  attributeNames[%d] = \"%s\"\n", i, attributeNames[i]));
-        }
-        LOG.info("Attribute names:\n" + sb);
+        LOG.info("Attribute names:\n" + Arrays.toString(attributeNames));
     }
 
     private static long now() {

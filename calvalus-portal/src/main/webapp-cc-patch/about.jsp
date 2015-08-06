@@ -39,7 +39,7 @@
   </table>
   <hr>
   <p>This is the <a href="http://www.coastcolour.org/">CoastColour</a> on-demand processing system, developed by <a href="http://www.brockmann-consult.de/" class="href">Brockmann Consult GmbH</a>.</p>
-  <p><%= BackendServiceImpl.VERSION %>, &#169; 2014 Brockmann Consult GmbH</p>
+  <p><%= BackendServiceImpl.VERSION %>, &#169; 2015 Brockmann Consult GmbH</p>
 
 </body>
 </html>

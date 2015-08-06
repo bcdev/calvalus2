@@ -89,8 +89,9 @@ public class ProcessorDescriptor {
         this.processorVersion = processorVersion;
         this.defaultParameters = defaultParameters;
         this.outputVariables = outputVariables;
-        formatting = FormattingType.OPTIONAL;
-        processorCategory = ProcessorCategory.LEVEL2;
+        this.formatting = FormattingType.OPTIONAL;
+        this.processorCategory = ProcessorCategory.LEVEL2;
+        this.isL2Processor = true;
     }
 
     public String getExecutableName() {

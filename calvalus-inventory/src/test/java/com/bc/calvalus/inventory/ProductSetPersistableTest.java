@@ -33,30 +33,6 @@ public class ProductSetPersistableTest {
     }
 
     @Test
-    public void testConvertFromCSV_oldFormat() throws Exception {
-        ProductSet productSet = ProductSetPersistable.convertFromCSV(
-                "MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31");
-        assertNotNull(productSet);
-        assertNull(productSet.getProductType());
-        assertEquals("MERIS RR L1b 2004-2008", productSet.getName());
-        assertEquals("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1", productSet.getPath());
-        assertEquals("2004-01-01", ProductSetPersistable.format(productSet.getMinDate()));
-        assertEquals("2008-12-31", ProductSetPersistable.format(productSet.getMaxDate()));
-        assertEquals("", productSet.getRegionName());
-        assertNull(productSet.getRegionWKT());
-
-        productSet = ProductSetPersistable.convertFromCSV("ps0;ps0;null;null");
-        assertNotNull(productSet);
-        assertNull(productSet.getProductType());
-        assertEquals("ps0", productSet.getName());
-        assertEquals("ps0", productSet.getPath());
-        assertNull(productSet.getMinDate());
-        assertNull(productSet.getMaxDate());
-        assertEquals("", productSet.getRegionName());
-        assertNull(productSet.getRegionWKT());
-    }
-
-    @Test
     public void testConvertFromCSV() throws Exception {
         ProductSet productSet = ProductSetPersistable.convertFromCSV(
                 "MER_RR__1;MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31;WesternEurope;polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))");
@@ -68,27 +44,50 @@ public class ProductSetPersistableTest {
         assertEquals("2008-12-31", ProductSetPersistable.format(productSet.getMaxDate()));
         assertEquals("WesternEurope", productSet.getRegionName());
         assertEquals("polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))", productSet.getRegionWKT());
+        assertArrayEquals(new String[0], productSet.getBandNames());
 
-        productSet = ProductSetPersistable.convertFromCSV("null;ps0;ps0;null;null;null;null");
+        productSet = ProductSetPersistable.convertFromCSV(
+                "MER_RR__1;MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31;WesternEurope;polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54));a,b,c");
         assertNotNull(productSet);
-        assertNull(productSet.getProductType());
-        assertEquals("ps0", productSet.getName());
-        assertEquals("ps0", productSet.getPath());
+        assertEquals("MER_RR__1", productSet.getProductType());
+        assertEquals("MERIS RR L1b 2004-2008", productSet.getName());
+        assertEquals("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1", productSet.getPath());
+        assertEquals("2004-01-01", ProductSetPersistable.format(productSet.getMinDate()));
+        assertEquals("2008-12-31", ProductSetPersistable.format(productSet.getMaxDate()));
+        assertEquals("WesternEurope", productSet.getRegionName());
+        assertEquals("polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))", productSet.getRegionWKT());
+        assertArrayEquals(new String[]{"a", "b", "c"}, productSet.getBandNames());
+
+
+        productSet = ProductSetPersistable.convertFromCSV("pt;pn;pp;null;null;null;null");
+        assertNotNull(productSet);
+        assertEquals("pt", productSet.getProductType());
+        assertEquals("pn", productSet.getName());
+        assertEquals("pp", productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
-        assertEquals("", productSet.getRegionName());
+        assertNull(productSet.getRegionName());
         assertNull(productSet.getRegionWKT());
+        assertArrayEquals(new String[0], productSet.getBandNames());
     }
 
     @Test
-    public void testConvertToCSV() throws Exception {
-        ProductSet productSet = new ProductSet(null, "ps0", "ps0", null, null, "", null);
-        String csv = ProductSetPersistable.convertToCSV(productSet);
+    public void testConvertToCSV_minimum() throws Exception {
+        ProductSet ps0 = new ProductSet("pType", "pName", "pPath");
+        String csv = ProductSetPersistable.convertToCSV(ps0);
         assertNotNull(csv);
-        assertEquals("null;ps0;ps0;null;null;;null", csv);
+        assertEquals("pType;pName;pPath;null;null;null;null;", csv);
 
-        ProductSet productSet1 = ProductSetPersistable.convertFromCSV(csv);
-        assertEquals("", productSet1.getRegionName());
+        ProductSet ps1 = ProductSetPersistable.convertFromCSV(csv);
+        assertNotNull(ps1);
+        assertEquals(ps0.getName(), ps1.getName());
+        assertEquals(ps0.getPath(), ps1.getPath());
+        assertEquals(ps0.getProductType(), ps1.getProductType());
+        assertEquals(ps0.getRegionName(), ps1.getRegionName());
+        assertEquals(ps0.getRegionWKT(), ps1.getRegionWKT());
+        assertEquals(ps0.getMinDate(), ps1.getMinDate());
+        assertEquals(ps0.getMaxDate(), ps1.getMaxDate());
+        assertArrayEquals(ps0.getBandNames(), ps1.getBandNames());
     }
 
 }

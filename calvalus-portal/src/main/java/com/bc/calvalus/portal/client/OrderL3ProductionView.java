@@ -20,7 +20,6 @@ import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -55,11 +54,13 @@ public class OrderL3ProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+
             }
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         productSetFilterForm.temporalFilterOff.setEnabled(false);
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
@@ -77,12 +78,12 @@ public class OrderL3ProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
             }
         });
 
         l3ConfigForm = new L3ConfigForm(portalContext);
-        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
         l3ConfigForm.steppingPeriodLength.setValue(30);
         l3ConfigForm.compositingPeriodLength.setValue(30);
 

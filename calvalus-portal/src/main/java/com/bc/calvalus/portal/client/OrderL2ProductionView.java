@@ -61,7 +61,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         outputParametersForm = new OutputParametersForm();
         handleProcessorChanged();

@@ -72,7 +72,7 @@ public class OrderVCProductionView extends OrderProductionView {
         l2ConfigForm = new L2ConfigForm(portalContext, true);
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.expressionTable.setVisible(false);

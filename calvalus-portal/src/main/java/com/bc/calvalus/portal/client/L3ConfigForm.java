@@ -5,6 +5,7 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.EditTextCell;
 import com.google.gwt.cell.client.FieldUpdater;
@@ -59,7 +60,6 @@ import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimatio
 public class L3ConfigForm extends Composite {
 
     private static final DtoProcessorVariable EXPRESSION = new DtoProcessorVariable("<expression>", "AVG", "1.0");
-    private static final DtoProcessorVariable[] MER_L1B;
     public static final List<String> DEFAULT_AGGREGATOR_NAMES = Arrays.asList(new String[]{
             "AVG",
             "MIN_MAX",
@@ -86,12 +86,6 @@ public class L3ConfigForm extends Composite {
     private final List<String> aggregatorNameList;
     private final List<DtoAggregatorDescriptor> aggregatorDescriptors;
 
-    static {
-        MER_L1B = new DtoProcessorVariable[15];
-        for (int i = 0; i < MER_L1B.length; i++) {
-            MER_L1B[i] = new DtoProcessorVariable("radiance_" + (i + 1), "AVG", "1.0");
-        }
-    }
 
     interface TheUiBinder extends UiBinder<Widget, L3ConfigForm> {
 
@@ -326,21 +320,25 @@ public class L3ConfigForm extends Composite {
         targetHeight.setValue(targetSize[1]);
     }
 
-    public void setProcessorDescriptor(DtoProcessorDescriptor selectedProcessor) {
+    public void setProcessorDescriptor(DtoProcessorDescriptor processor, DtoProductSet productSet) {
         processorVariableDefaults.clear();
         variableNames.clear();
         variableNameCell.removeAllOptions();
 
-        String defaultValidMask = "";
+        String defaultValidMask = "true";
         DtoProcessorVariable[] processorVariables;
-        if (selectedProcessor != null) {
-            processorVariables = selectedProcessor.getProcessorVariables();
-            String defaultMaskExpression = selectedProcessor.getDefaultMaskExpression();
+        if (processor != null) {
+            processorVariables = processor.getProcessorVariables();
+            String defaultMaskExpression = processor.getDefaultMaskExpression();
             if (defaultMaskExpression != null) {
                 defaultValidMask = defaultMaskExpression;
             }
         } else {
-            processorVariables = MER_L1B;
+            String[] bandNames = productSet.getBandNames();
+            processorVariables = new DtoProcessorVariable[bandNames.length];
+            for (int i = 0; i < processorVariables.length; i++) {
+                processorVariables[i] = new DtoProcessorVariable(bandNames[i], "AVG", "1.0");
+            }
         }
 
         processorVariableDefaults.put(EXPRESSION.getName(), EXPRESSION);

@@ -26,13 +26,13 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.ceres.binding.BindingException;
-import com.bc.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
@@ -143,10 +143,11 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     // this code exists somewhere else already
     private static String readFile(FileSystem fileSystem, Path path) throws IOException {
-        InputStream is = fileSystem.open(path);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        IOUtils.copyBytes(is, baos);
-        return baos.toString();
+        try (InputStream is = fileSystem.open(path);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            IOUtils.copyBytes(is, baos, 8092);
+            return baos.toString();
+        }
     }
 
     public static BundleDescriptor readBundleDescriptor(FileSystem fileSystem, Path path) throws IOException, BindingException {

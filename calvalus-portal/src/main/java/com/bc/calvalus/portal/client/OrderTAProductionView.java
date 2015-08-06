@@ -56,7 +56,7 @@ public class OrderTAProductionView extends OrderProductionView {
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getProductSet());
+        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         productSetFilterForm.temporalFilterByDateRange.setValue(false);
         productSetFilterForm.temporalFilterOff.setValue(true, true);
         productSetFilterForm.temporalFilterByDateList.setEnabled(false);
@@ -77,12 +77,12 @@ public class OrderTAProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
             }
         });
 
         l3ConfigForm = new L3ConfigForm(portalContext);
-        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor());
+        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
         l3ConfigForm.resolution.setEnabled(false);
         l3ConfigForm.superSampling.setEnabled(false);
         l3ConfigForm.steppingPeriodLength.setValue(32);

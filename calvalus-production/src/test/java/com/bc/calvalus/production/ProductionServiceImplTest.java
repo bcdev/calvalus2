@@ -43,8 +43,8 @@ public class ProductionServiceImplTest {
         ProductSet[] productSets = productionServiceUnderTest.getProductSets("ewa", null);
         assertNotNull(productSets);
         assertEquals(2, productSets.length);
-        assertEquals("ps0", productSets[0].getPath());
-        assertEquals("ps1", productSets[1].getPath());
+        assertEquals("pp0", productSets[0].getPath());
+        assertEquals("pp1", productSets[1].getPath());
     }
 
     @Test
@@ -66,7 +66,7 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testOrderUnknownProductionType() throws ProductionException {
+    public void testOrderUnknownProductionType() {
         try {
             productionServiceUnderTest.orderProduction(new ProductionRequest("erase-hdfs", "devil"));
             fail("ProductionException expected, since 'erase-hdfs' is not a valid production type");

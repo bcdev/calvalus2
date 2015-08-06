@@ -17,13 +17,14 @@
 package com.bc.calvalus.inventory;
 
 import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.util.StringUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
 /**
- * this flass is responsible for converting a {@link ProductSet} into a {@link String} and back.
+ * this class is responsible for converting a {@link ProductSet} into a {@link String} and back.
  *
  * @author MarcoZ
  */
@@ -51,6 +52,8 @@ public class ProductSetPersistable {
         sb.append(productSet.getRegionName());
         sb.append(';');
         sb.append(productSet.getRegionWKT());
+        sb.append(';');
+        sb.append(StringUtils.join(productSet.getBandNames(), ","));
         return sb.toString();
     }
 
@@ -60,22 +63,29 @@ public class ProductSetPersistable {
             return null; //comments are ignored
         }
         String[] splits = trimmedText.split(";");
-        if (splits.length == 4) {
-            String name = nullAware(splits[0]);
-            String path = nullAware(splits[1]);
-            Date date1 = asDate(splits[2]);
-            Date date2 = asDate(splits[3]);
-            return new ProductSet(null, name, path, date1, date2, "", null);
-        } else if (splits.length == 7) {
+        if (splits.length == 7) {
             String productType = nullAware(splits[0]);
             String name = nullAware(splits[1]);
             String path = nullAware(splits[2]);
             Date date1 = asDate(splits[3]);
             Date date2 = asDate(splits[4]);
             String regionName = nullAware(splits[5]);
-            regionName = regionName == null ? "" : regionName;
             String regionWKT = nullAware(splits[6]);
-            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT);
+            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT,  new String[0]);
+        } else if (splits.length == 8) {
+            String productType = nullAware(splits[0]);
+            String name = nullAware(splits[1]);
+            String path = nullAware(splits[2]);
+            Date date1 = asDate(splits[3]);
+            Date date2 = asDate(splits[4]);
+            String regionName = nullAware(splits[5]);
+            String regionWKT = nullAware(splits[6]);
+            String bandNameCSV = nullAware(splits[7]);
+            String[] bandNames =  new String[0];
+            if (bandNameCSV != null) {
+                bandNames = bandNameCSV.split(",");
+            }
+            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT, bandNames);
         }
         return null;
     }

@@ -29,7 +29,7 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.event.shared.HandlerRegistration;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -38,16 +38,11 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.FileUpload;
-import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
@@ -119,8 +114,9 @@ public class L2ConfigForm extends Composite {
     private final boolean selectionMandatory;
     private final PortalContext portalContext;
     private final Filter<DtoProcessorDescriptor> processorFilter;
-    private final Map<DtoParameterDescriptor, Widget> parameterDescriptorWidgets;
     private final List<DtoProcessorDescriptor> processorDescriptors;
+
+    private HandlerRegistration editParamsHandlerRegistration;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, new L2ProcessorFilter(), selectionMandatory);
@@ -152,8 +148,6 @@ public class L2ConfigForm extends Composite {
                                              }
                                          }
         );
-        parameterDescriptorWidgets = new HashMap<DtoParameterDescriptor, Widget>();
-        editParametersButton.addClickHandler(new EditParametersAction());
 
         updateProcessorList();
         processorList.addChangeHandler(new ChangeHandler() {
@@ -226,24 +220,42 @@ public class L2ConfigForm extends Composite {
     }
 
     private void updateProcessorDetails() {
-        DtoProcessorDescriptor processorDescriptor = getSelectedProcessorDescriptor();
-        if (processorDescriptor != null) {
-            processorBundleName.setText("Bundle: " + processorDescriptor.getBundleName() + " v" + processorDescriptor.getBundleVersion());
-            String defaultParameter = processorDescriptor.getDefaultParameter();
-            DtoParameterDescriptor[] parameterDescriptors = processorDescriptor.getParameterDescriptors();
-            boolean hasParameterDescriptors = parameterDescriptors.length > 0;
+        if (editParamsHandlerRegistration != null) {
+            editParamsHandlerRegistration.removeHandler();
+        }
+        DtoProcessorDescriptor processor = getSelectedProcessorDescriptor();
+        if (processor != null) {
+            processorBundleName.setText("Bundle: " + processor.getBundleName() + " v" + processor.getBundleVersion());
+            String defaultParameter = processor.getDefaultParameter();
+            DtoParameterDescriptor[] parameters = processor.getParameterDescriptors();
+            boolean hasParameterDescriptors = parameters.length > 0;
             if (defaultParameter.isEmpty() && hasParameterDescriptors) {
-                defaultParameter = formatAsXMLDescriptor(parameterDescriptors);
+                defaultParameter = formatAsXMLDescriptor(parameters);
             }
             processorParametersArea.setValue(defaultParameter);
-            processorDescriptionHTML.setHTML(processorDescriptor.getDescriptionHtml());
+            processorDescriptionHTML.setHTML(processor.getDescriptionHtml());
             editParametersButton.setEnabled(hasParameterDescriptors);
+            if (hasParameterDescriptors) {
+                String title = "Edit Parameters for " + processor.getProcessorName() + " v" + processor.getProcessorVersion();
+                final ParametersEditorGenerator parametersEditorGenerator = new ParametersEditorGenerator(title, parameters, style);
+                editParamsHandlerRegistration = editParametersButton.addClickHandler(new ClickHandler() {
+                    @Override
+                    public void onClick(ClickEvent event) {
+                        parametersEditorGenerator.showDialog(new ParametersEditorGenerator.OnOkHandler() {
+                            @Override
+                            public void onOk() {
+                                String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
+                                processorParametersArea.setValue(xml);
+                            }
+                        });
+                    }
+                });
+            }
         } else {
             processorBundleName.setText("");
             processorParametersArea.setValue("");
             processorDescriptionHTML.setHTML("");
         }
-        parameterDescriptorWidgets.clear();
     }
 
     public HandlerRegistration addChangeHandler(final ChangeHandler changeHandler) {
@@ -304,158 +316,6 @@ public class L2ConfigForm extends Composite {
 
         sb.append("</parameters>\n");
         return sb.toString();
-    }
-
-
-    private class EditParametersAction implements ClickHandler {
-
-        @Override
-        public void onClick(ClickEvent event) {
-            DtoProcessorDescriptor processor = getSelectedProcessorDescriptor();
-            final DtoParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
-            ensureParameterWidgetsCreated(parameterDescriptors);
-            FlexTable tableWidget = createTableWidget(parameterDescriptors);
-
-            ScrollPanel scrollPanel = new ScrollPanel(tableWidget);
-            scrollPanel.setWidth("800px");
-            scrollPanel.setHeight("640px");
-
-            String title = "Edit Parameters for " + processor.getProcessorName() + " v" + processor.getProcessorVersion();
-            final Dialog dialog = new Dialog(title,
-                                             scrollPanel,
-                                             Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
-                @Override
-                protected void onOk() {
-                    processorParametersArea.setValue(formatAsXMLFromWidgets(parameterDescriptors));
-                    hide();
-                }
-            };
-            dialog.show();
-        }
-
-        private FlexTable createTableWidget(DtoParameterDescriptor[] parameterDescriptors) {
-            FlexTable paramTable = new FlexTable();
-            FlexTable.FlexCellFormatter flexCellFormatter = paramTable.getFlexCellFormatter();
-            paramTable.setCellSpacing(3);
-            int row = 0;
-            for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-                paramTable.setWidget(row, 0, new HTML(parameterDescriptor.getName() + ":"));
-                flexCellFormatter.setVerticalAlignment(row, 0, HasVerticalAlignment.ALIGN_TOP);
-                flexCellFormatter.setHorizontalAlignment(row, 0, HasHorizontalAlignment.ALIGN_LEFT);
-                paramTable.setWidget(row, 1, parameterDescriptorWidgets.get(parameterDescriptor));
-                flexCellFormatter.setVerticalAlignment(row, 1, HasVerticalAlignment.ALIGN_TOP);
-                flexCellFormatter.setHorizontalAlignment(row, 1, HasHorizontalAlignment.ALIGN_LEFT);
-                String description = parameterDescriptor.getDescription();
-                if (description != null && !description.isEmpty()) {
-                    paramTable.setWidget(row, 2, new HTML(description));
-                    flexCellFormatter.addStyleName(row, 2, style.explanatoryLabel());
-                    flexCellFormatter.setVerticalAlignment(row, 2, HasVerticalAlignment.ALIGN_TOP);
-                    flexCellFormatter.setHorizontalAlignment(row, 2, HasHorizontalAlignment.ALIGN_LEFT);
-                }
-                row++;
-            }
-            paramTable.getColumnFormatter().setWidth(0, "20%");
-            paramTable.getColumnFormatter().setWidth(1, "30%");
-            paramTable.getColumnFormatter().setWidth(2, "50%");
-            return paramTable;
-        }
-
-        private String formatAsXMLFromWidgets(DtoParameterDescriptor[] parameterDescriptors) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("<parameters>\n");
-            for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-                Widget widget = parameterDescriptorWidgets.get(parameterDescriptor);
-                sb.append("  <");
-                sb.append(parameterDescriptor.getName());
-                sb.append(">");
-                if (widget instanceof CheckBox) {
-                    CheckBox checkBox = (CheckBox) widget;
-                    sb.append(checkBox.getValue().toString());
-                } else if (widget instanceof TextBox) {
-                    TextBox textBox = (TextBox) widget;
-                    sb.append(textBox.getValue());
-                } else if (widget instanceof ListBox) {
-                    ListBox listBox = (ListBox) widget;
-                    int itemCount = listBox.getItemCount();
-                    for (int i = 0; i < itemCount; i++) {
-                        if (listBox.isItemSelected(i)) {
-                            sb.append(listBox.getValue(i));
-                            sb.append(",");
-                        }
-                    }
-                    sb.deleteCharAt(sb.length() - 1);
-                }
-                sb.append("</");
-                sb.append(parameterDescriptor.getName());
-                sb.append(">\n");
-            }
-
-            sb.append("</parameters>\n");
-            return sb.toString();
-        }
-
-        private void ensureParameterWidgetsCreated(DtoParameterDescriptor[] parameterDescriptors) {
-            if (!parameterDescriptorWidgets.isEmpty()) {
-                return;
-            }
-            for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-                String type = parameterDescriptor.getType();
-                String defaultValue = parameterDescriptor.getDefaultValue();
-
-                Widget widget = null;
-                if (type.equalsIgnoreCase("boolean")) {
-                    widget = createCheckBox(defaultValue);
-                } else if (type.equalsIgnoreCase("string")) {
-                    String[] valueSet = parameterDescriptor.getValueSet();
-                    if (valueSet.length > 0) {
-                        widget = createListBox(defaultValue, valueSet, false);
-                    } else {
-                        widget = createTextBox(defaultValue);
-                    }
-                } else if (type.equalsIgnoreCase("stringArray")) {
-                    String[] valueSet = parameterDescriptor.getValueSet();
-                    widget = createListBox(defaultValue, valueSet, true);
-                }
-                parameterDescriptorWidgets.put(parameterDescriptor, widget);
-            }
-        }
-
-        private ListBox createListBox(String defaultValue, String[] valueSet, boolean multipleSelect) {
-            List<String> defaultValues = new ArrayList<String>();
-            if (multipleSelect && defaultValue.contains(",")) {
-                for (String s : defaultValue.split("\\,")) {
-                    defaultValues.add(s.trim());
-                }
-            } else {
-                defaultValues.add(defaultValue);
-            }
-            ListBox listBox = new ListBox(multipleSelect);
-            for (int j = 0; j < valueSet.length; j++) {
-                String value = valueSet[j];
-                listBox.addItem(value);
-                if (defaultValues.contains(value)) {
-                    listBox.setItemSelected(j, true);
-                }
-            }
-            return listBox;
-        }
-
-        private TextBox createTextBox(String defaultValue) {
-            TextBox textBox = new TextBox();
-            if (defaultValue != null) {
-                textBox.setValue(defaultValue);
-                if (textBox.getVisibleLength() < defaultValue.length()) {
-                    textBox.setVisibleLength(36);
-                }
-            }
-            return textBox;
-        }
-
-        private CheckBox createCheckBox(String defaultValue) {
-            CheckBox checkBox = new CheckBox();
-            checkBox.setValue(Boolean.valueOf(defaultValue));
-            return checkBox;
-        }
     }
 
     private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {

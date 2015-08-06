@@ -18,6 +18,7 @@ public class DtoProductSet implements IsSerializable {
     private Date maxDate;
     private String regionName;
     private String regionWKT;
+    private String[] bandNames;
 
 
     /**
@@ -27,7 +28,7 @@ public class DtoProductSet implements IsSerializable {
     }
 
     public DtoProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName,
-                         String regionWKT) {
+                         String regionWKT, String[] bandNames) {
         if (name == null) {
             throw new NullPointerException("name");
         }
@@ -44,6 +45,7 @@ public class DtoProductSet implements IsSerializable {
         this.maxDate = maxDate;
         this.regionName = regionName;
         this.regionWKT = regionWKT;
+        this.bandNames = bandNames;
     }
 
     public String getProductType() {
@@ -72,6 +74,10 @@ public class DtoProductSet implements IsSerializable {
 
     public String getRegionWKT() {
         return regionWKT;
+    }
+
+    public String[] getBandNames() {
+        return bandNames;
     }
 
     @Override

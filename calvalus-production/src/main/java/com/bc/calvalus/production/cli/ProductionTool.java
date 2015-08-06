@@ -624,12 +624,12 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                                   .withLongOpt("producttype")
                                   .hasArg()
-                                  .withDescription("Product type of uploaded files, defaults to " + IngestionTool.DEFAULT_PRODUCT_TYPE)
+                                  .withDescription("Product type of uploaded files, defaults to " + IngestionTool.DEFAULT_PRODUCT_TYPE+ ", not set for pathtemplate ingestion")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("revision")
                                   .hasArg()
-                                  .withDescription("Revision of uploaded files, defaults to " + IngestionTool.DEFAULT_REVISION)
+                                  .withDescription("Revision of uploaded files, defaults to " + IngestionTool.DEFAULT_REVISION + ", not set for pathtemplate ingestion")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("replication")
@@ -644,7 +644,24 @@ public class ProductionTool {
         options.addOption(OptionBuilder
                                   .withLongOpt("filenamepattern")
                                   .hasArg()
-                                  .withDescription("Regular expression matching filenames, defaults to 'producttype.*\\.N1'")
+                                  .withDescription("Regular expression matching filenames or paths below ingestion dir, defaults to 'producttype.*\\.N1'")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("timeelements")
+                                  .hasArg()
+                                  .withDescription("match groups composed to a date string according to timeformat, e.g. '\\1\\2\\3', not set for canonical type-and-revision ingestion")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("timeformat")
+                                  .hasArg()
+                                  .withDescription("SimpleDateFormat pattern, e.g. yyyyMMdd, not set for canonical type-and-revision ingestion")
+                                  .create());  // (sub) commands don't have short options
+        options.addOption(OptionBuilder
+                                  .withLongOpt("pathtemplate")
+                                  .hasArg()
+                                  .withDescription("3 cases: SimpleDateFormat pattern (e.g. '/calvalus/eodata/MER_RR__1P/r03/'yyyy'/'MM'/'dd) if timeelements and timeformat are provided," +
+                                                           " path element template (e.g. '/calvalus/eodata/MER_RR__1P/r03/\\1/\\2/\\3') if timeelements and timeformat are not provided," +
+                                                           " not set for canonical type-and-revision ingestion")
                                   .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
                                   .withLongOpt("verify")
