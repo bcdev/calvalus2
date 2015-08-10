@@ -44,9 +44,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.WeakHashMap;
 import java.util.logging.Logger;
 
@@ -59,11 +64,38 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     private final JobClientsMap jobClientsMap;
     private final Map<JobID, ProcessStatus> jobStatusMap;
+    private final List<BundleQueryCacheEntry> bundleQueryCache;
+    private final Timer bundlesQueryCleaner;
+    private final Map<String, BundleCacheEntry> bundleCache;
     private final Logger logger;
 
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
         this.jobClientsMap = jobClientsMap;
-        this.jobStatusMap = new WeakHashMap<JobID, ProcessStatus>();
+        this.jobStatusMap = new WeakHashMap<>();
+
+        this.bundleQueryCache = new ArrayList<>();
+        this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner");
+        TimerTask bundlesQueryCleanTask = new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (bundleQueryCache) {
+                    long now = System.currentTimeMillis();
+                    long clearIfOlder = now - 5 * 1000;
+                    Iterator<BundleQueryCacheEntry> iterator = bundleQueryCache.iterator();
+                    while (iterator.hasNext()) {
+                        BundleQueryCacheEntry cacheEntry = iterator.next();
+                        if (cacheEntry.time < clearIfOlder) {
+                            System.out.println("cacheEntry.remove = " + cacheEntry.userName+ "");
+                            iterator.remove();
+                        }
+                    }
+                }
+
+            }
+        };
+        this.bundlesQueryCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, 5*1000, 5*1000);
+
+        this.bundleCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
@@ -77,7 +109,16 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     @Override
     public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
-        ArrayList<BundleDescriptor> descriptors = new ArrayList<BundleDescriptor>();
+        String bundleFilterString = filter.toString();
+        synchronized (bundleQueryCache) {
+            for (BundleQueryCacheEntry bundleQueryCacheEntry : bundleQueryCache) {
+                if (bundleQueryCacheEntry.bundleFilter.equals(bundleFilterString) &&
+                        bundleQueryCacheEntry.userName.equals(username)) {
+                    return bundleQueryCacheEntry.bundles;
+                }
+            }
+        }
+        ArrayList<BundleDescriptor> descriptors = new ArrayList<>();
         String bundleDirName = "*";
         if (filter.getBundleName() != null) {
             bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
@@ -106,8 +147,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             logger.warning(e.getMessage());
             throw e;
         }
-
-        return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
+        BundleDescriptor[] bundles = descriptors.toArray(new BundleDescriptor[descriptors.size()]);
+        bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, bundles));
+        return bundles;
     }
 
     private void collectBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
@@ -116,12 +158,17 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         if (fileStatuses == null) {
             return;
         }
-        final ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
-
         for (FileStatus file : fileStatuses) {
             try {
-                BundleDescriptor bd = readBundleDescriptor(fileSystem, file.getPath());
-                bd.setBundleLocation(file.getPath().getParent().toString());
+                final BundleDescriptor bd;
+                BundleCacheEntry bundleCacheEntry = bundleCache.get(file.getPath().toString());
+                if (bundleCacheEntry != null && bundleCacheEntry.modificationTime == file.getModificationTime()) {
+                    bd = bundleCacheEntry.bundleDescriptor;
+                } else {
+                    bd = readBundleDescriptor(fileSystem, file.getPath());
+                    bd.setBundleLocation(file.getPath().getParent().toString());
+                    bundleCache.put(file.getPath().toString(), new BundleCacheEntry(file.getModificationTime(), bd));
+                }
                 if (filter.getProcessorName() != null) {
                     final ProcessorDescriptor[] processorDescriptors = bd.getProcessorDescriptors();
                     if (processorDescriptors != null) {
@@ -236,6 +283,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     @Override
     public void close() throws IOException {
         jobClientsMap.close();
+        bundlesQueryCleaner.cancel();
     }
 
     /**
@@ -285,6 +333,30 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             return (9.0F * jobStatus.getMapProgress() + jobStatus.getReduceProgress()) / 10.0F;
         } else {
             return jobStatus.getMapProgress();
+        }
+    }
+
+    private static class BundleQueryCacheEntry {
+        private final String userName;
+        private final String bundleFilter;
+        private final long time;
+        private final BundleDescriptor[] bundles;
+
+        public BundleQueryCacheEntry(String userName, String bundleFilter, BundleDescriptor[] bundles) {
+            this.userName = userName;
+            this.bundleFilter = bundleFilter;
+            this.bundles = bundles;
+            time = System.currentTimeMillis();
+        }
+    }
+
+    private class BundleCacheEntry {
+        private final BundleDescriptor bundleDescriptor;
+        private final long modificationTime;
+
+        public BundleCacheEntry(long modificationTime, BundleDescriptor bundleDescriptor) {
+            this.bundleDescriptor = bundleDescriptor;
+            this.modificationTime = modificationTime;
         }
     }
 }
