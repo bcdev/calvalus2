@@ -136,7 +136,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     descriptors.add(bd);
                 }
             } catch (Exception e) {
-                logger.warning(e.getMessage());
+                logger.warning("error reading bundle-descriptor (" + file.getPath() +") : "+ e.getMessage());
             }
         }
     }
