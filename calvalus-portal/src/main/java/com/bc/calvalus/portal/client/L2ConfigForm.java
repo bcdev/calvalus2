@@ -30,7 +30,6 @@ import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.web.bindery.event.shared.HandlerRegistration;
-import com.google.gwt.resources.client.CssResource;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.ui.Anchor;
@@ -67,19 +66,8 @@ public class L2ConfigForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    interface L2Style extends CssResource {
-
-        String explanatoryValue();
-
-        String explanatoryLabel();
-
-        String centeredHorizontalPanel();
-
-        String anchor();
-    }
-
     @UiField
-    L2Style style;
+    CalvalusStyle style;
 
 
     @UiField
@@ -241,7 +229,7 @@ public class L2ConfigForm extends Composite {
                 editParamsHandlerRegistration = editParametersButton.addClickHandler(new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent event) {
-                        parametersEditorGenerator.showDialog(new ParametersEditorGenerator.OnOkHandler() {
+                        parametersEditorGenerator.showDialog("800px", "640px", new ParametersEditorGenerator.OnOkHandler() {
                             @Override
                             public void onOk() {
                                 String xml = parametersEditorGenerator.formatAsXMLFromWidgets();

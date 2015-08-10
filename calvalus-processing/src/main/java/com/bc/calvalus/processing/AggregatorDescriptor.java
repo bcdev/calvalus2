@@ -27,13 +27,12 @@ public class AggregatorDescriptor {
     @Parameter
     private String aggregator;
 
-    @Parameter
-    private String variable;
-    @Parameter
-    private String parameter;
     // Short description in XHTML
     @Parameter
     private String descriptionHtml;
+
+    @Parameter(itemAlias = "parameterDescriptor")
+    private ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors;
 
     @Parameter(itemAlias = "jobParameter")
     private JobParameter[] jobConfig;
@@ -42,27 +41,22 @@ public class AggregatorDescriptor {
     public AggregatorDescriptor() {
     }
 
-    public AggregatorDescriptor(String aggregator,
-                                String variable,
-                                String parameter) {
+    public AggregatorDescriptor(String aggregator) {
 
         Assert.notNull(aggregator, "aggregator");
-        Assert.notNull(variable, "variable");
         this.aggregator = aggregator;
-        this.variable = variable;
-        this.parameter = parameter;
     }
 
     public String getAggregator() {
         return aggregator;
     }
 
-    public String getVariable() {
-        return variable;
+    public ProcessorDescriptor.ParameterDescriptor[] getParameterDescriptors() {
+        return parameterDescriptors;
     }
 
-    public String getParameter() {
-        return parameter;
+    public void setParameterDescriptors(ProcessorDescriptor.ParameterDescriptor...parameterDescriptors) {
+        this.parameterDescriptors = parameterDescriptors;
     }
 
     public String getDescriptionHtml() {

@@ -15,6 +15,14 @@
     color: #777799;
 }
 
+.variableName input {
+    width: 20em;
+}
+
+.variableExpression input {
+    width: 50em;
+}
+
     /* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
 .anchor:hover {
     cursor: pointer;

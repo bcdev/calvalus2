@@ -3,23 +3,41 @@
              xmlns:g='urn:import:com.google.gwt.user.client.ui'
              xmlns:cell='urn:import:com.google.gwt.user.cellview.client'>
 
-    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
 
     <g:HorizontalPanel spacing="16">
 
-        <g:VerticalPanel spacing="2">
+        <g:VerticalPanel spacing="4">
 
             <g:HTMLPanel width="100%">
                 <h3>Level-3 Parameters</h3>
                 <hr/>
             </g:HTMLPanel>
 
-            <cell:CellTable ui:field='variableTable' width="100%"/>
-
+            <cell:CellTable ui:field='variableCellTable' width="100%"/>
+            <g:HTMLPanel width="100%" addStyleNames="{style.explanatoryLabel}">
+                Please define either variables together with a band arithmetic expression or declare band names,
+                that already exits in the product. For further use in an aggregator definition below.
+            </g:HTMLPanel>
             <g:HorizontalPanel spacing="2">
                 <g:Button ui:field='addVariableButton' text="Add"/>
                 <g:Button ui:field='removeVariableButton' text="Remove"/>
             </g:HorizontalPanel>
+            <g:HTML>
+                <br/>
+            </g:HTML>
+
+
+            <cell:CellTable ui:field='aggregatorCellTable' width="100%"/>
+
+            <g:HorizontalPanel spacing="2">
+                <g:Button ui:field='addAggregatorButton' text="Add"/>
+                <g:Button ui:field='removeAggregatorButton' text="Remove"/>
+            </g:HorizontalPanel>
+            <g:HTML>
+                <br/>
+            </g:HTML>
+
 
             <g:HTMLPanel>
                 <table cellspacing="2">
@@ -124,10 +142,6 @@
                     </tr>
                 </table>
             </g:HTMLPanel>
-            <g:DisclosurePanel>
-                <g:header>Aggregator description:</g:header>
-                <g:HTML ui:field="aggregatorDescriptionHTML" width="100%"/>
-            </g:DisclosurePanel>
             <g:Anchor ui:field="showL3ParametersHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
         </g:VerticalPanel>
     </g:HorizontalPanel>

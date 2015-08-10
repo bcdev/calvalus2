@@ -359,48 +359,23 @@ public class L3ProductionType extends HadoopProductionType {
     }
 
     static AggregatorConfig[] getAggregators(ProductionRequest request) throws ProductionException {
+
+        // TODO
+
         int variableCount = request.getInteger("variables.count");
         AggregatorConfig[] aggregatorConfigs = new AggregatorConfig[variableCount];
-        for (int i = 0; i < variableCount; i++) {
-            String prefix = "variables." + i;
-            String variableName = request.getString(prefix + ".name");
+        for (int vIndex = 0; vIndex < variableCount; vIndex++) {
+            String prefix = "variables." + vIndex;
             String aggregatorName = request.getString(prefix + ".aggregator");
-            Double weightCoeff = request.getDouble(prefix + ".weightCoeff", null);
-            Integer percentage = request.getInteger(prefix + ".percentage", null); //unused in portal
-            Float fillValue = request.getFloat(prefix + ".fillValue", null); //unused in portal
+            ParameterisedAggregatorConfig aggregatorConfig = new ParameterisedAggregatorConfig(aggregatorName);
 
-            TypedDescriptorsRegistry registry = TypedDescriptorsRegistry.getInstance();
-            AggregatorDescriptor aggregatorDescriptor = registry.getDescriptor(AggregatorDescriptor.class, aggregatorName);
-            AggregatorConfig aggregatorConfig;
-            if (aggregatorDescriptor != null) {
-                aggregatorConfig = aggregatorDescriptor.createConfig();
-                PropertySet propertySet = aggregatorConfig.asPropertySet();
-                for (Property property : propertySet.getProperties()) {
-                    final String propertyName = property.getName();
-                    final String key = prefix + "." + propertyName;
-                    if (propertyName.equals("percentage")) {
-                        propertySet.setValue("percentage", percentage);
-                    } else if (propertyName.equals("weightCoeff")) {
-                        propertySet.setValue("weightCoeff", weightCoeff);
-                    } else if (propertyName.equals("fillValue")) {
-                        propertySet.setValue("fillValue", fillValue);
-                    } else if (propertyName.equals("varName")) {
-                        propertySet.setValue("varName", variableName);
-                    } else if (request.getParameters().containsKey(key)) {
-                        if (property.getType().isArray()) {
-                            propertySet.setValue(propertyName, request.getString(key).split(","));
-                        } else {
-                            propertySet.setValue(propertyName, request.getString(key));
-                        }
-                    }
-                }
-            } else {
-                final String descriptorVariableName = request.getString(prefix + ".descriptorVariableName");
-                final String descriptorParameterName = request.getString(prefix + ".descriptorParameterName");
-                final String parameterValue = request.getParameters().get(prefix + "." + descriptorParameterName);
-                aggregatorConfig = new ParameterisedAggregatorConfig(aggregatorName, descriptorVariableName, variableName, descriptorParameterName, parameterValue);
-            }
-            aggregatorConfigs[i] = aggregatorConfig;
+            int parameterCount = request.getInteger(prefix + ".parameter.count");
+            for (int pIndex = 0; pIndex < parameterCount; pIndex++) {
+                String pName = request.getString(prefix + ".parameter." + pIndex + ".name");
+                String pValue = request.getString(prefix + ".parameter." + pIndex + ".value");
+                aggregatorConfig.addProperty(Property.create(pName, String.class));
+                aggregatorConfig.setValue(pName, pValue);            }
+            aggregatorConfigs[vIndex] = aggregatorConfig;
         }
         return aggregatorConfigs;
     }
@@ -425,14 +400,10 @@ public class L3ProductionType extends HadoopProductionType {
     private static class ParameterisedAggregatorConfig extends AggregatorConfig implements PropertySet {
         private final PropertySet delegate = new PropertyContainer();
 
-        public ParameterisedAggregatorConfig(String aggregatorName, String variableName, String variableValue, String parameterName, String parameterValue) {
+        public ParameterisedAggregatorConfig(String aggregatorName) {
             super(aggregatorName);
             delegate.addProperty(Property.create("type", String.class));
             delegate.setValue("type", aggregatorName);
-            delegate.addProperty(Property.create(variableName, String.class));
-            delegate.setValue(variableName, variableValue);
-            delegate.addProperty(Property.create(parameterName, String.class));
-            delegate.setValue(parameterName, parameterValue);
         }
 
         @Override

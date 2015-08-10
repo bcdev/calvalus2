@@ -34,6 +34,21 @@ public class BundleDescriptorTest {
         assertEquals("run.exe", processorDescriptor2.getExecutableName());
         assertEquals("Do Test Processing", processorDescriptor2.getProcessorName());
 
+        AggregatorDescriptor[] aggregatorDescriptors = bundleDescriptor.getAggregatorDescriptors();
+        assertNotNull(aggregatorDescriptors);
+        assertEquals(1, aggregatorDescriptors.length);
+        AggregatorDescriptor agg = aggregatorDescriptors[0];
+        assertEquals("ON_MAX_SET", agg.getAggregator());
+        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = agg.getParameterDescriptors();
+        assertNotNull(parameterDescriptors);
+        assertEquals(3, parameterDescriptors.length);
+        assertEquals("onMaxVarName", parameterDescriptors[0].getName());
+        assertEquals("variable", parameterDescriptors[0].getType());
+        assertEquals("If this band reaches its maximum the values of the source bands are taken.", parameterDescriptors[0].getDescription());
+        assertEquals("", parameterDescriptors[0].getDefaultValue());
+        assertNull(parameterDescriptors[0].getValueSet());
+        assertEquals("targetName", parameterDescriptors[1].getName());
+        assertEquals("setVarNames", parameterDescriptors[2].getName());
     }
 
     private String getResourceAsString(String name) throws IOException {

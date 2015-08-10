@@ -1,13 +1,170 @@
 <bundleDescriptor>
-    <bundleName>beam</bundleName>
-    <bundleVersion>BEAM_BUNDLE_VERSION</bundleVersion>
+    <bundleName>beam-buildin</bundleName>
+    <bundleVersion>1.0</bundleVersion>
 
     <aggregatorDescriptors>
         <aggregatorDescriptor>
+            <aggregator>AVG</aggregator>
+            <descriptionHtml> An aggregator that computes an average.</descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>varName</name>
+                    <type>variable</type>
+                    <description>The source band used for aggregation.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>targetName</name>
+                    <type>string</type>
+                    <description>The name prefix for the resulting bands. If empty, the source band name is used.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>weightCoeff</name>
+                    <type>float</type>
+                    <defaultValue>0</defaultValue>
+                    <description>The number of spatial observations to the power of this value will define the value for weighting the sums. Zero means observation count weighting is disabled.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>outputCounts</name>
+                    <type>boolean</type>
+                    <defaultValue>false</defaultValue>
+                    <description>If true, the result will include the count of all valid values</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>outputSums</name>
+                    <type>boolean</type>
+                    <defaultValue>false</defaultValue>
+                    <description>If true, the result will include the sum of all values.</description>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </aggregatorDescriptor>
+
+        <aggregatorDescriptor>
+            <aggregator>MIN_MAX</aggregator>
+            <descriptionHtml>An aggregator that computes the minimum and maximum values.</descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>varName</name>
+                    <type>variable</type>
+                    <description>The source band used for aggregation.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>targetName</name>
+                    <type>string</type>
+                    <description>The name prefix for the resulting bands. If empty, the source band name is used.</description>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </aggregatorDescriptor>
+
+        <aggregatorDescriptor>
+            <aggregator>PERCENTILE</aggregator>
+            <descriptionHtml>An aggregator that computes the p-th percentile, the value of a variable below which a certain percent (p) of observations fall.</descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>varName</name>
+                    <type>variable</type>
+                    <description>The source band used for aggregation.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>targetName</name>
+                    <type>string</type>
+                    <description>The name prefix for the resulting bands. If empty, the source band name is used.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>percentage</name>
+                    <type>int</type>
+                    <defaultValue>90</defaultValue>
+                    <description>The percentile to be created. Must be in the interval [0..100].</description>
+                </parameterDescriptor>
+            </parameterDescriptors>
+        </aggregatorDescriptor>
+
+        <aggregatorDescriptor>
             <aggregator>ON_MAX_SET</aggregator>
-            <variable>onMaxVarName</variable>
-            <parameter>setVarNames</parameter>
+            <descriptionHtml>An aggregator that sets an output if an input is maximal.</descriptionHtml>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>onMaxVarName</name>
+                    <type>variable</type>
+                    <description>If this band reaches its maximum the values of the source bands are taken.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>targetName</name>
+                    <type>string</type>
+                    <description>The name prefix for the resulting bands. If empty, the source band name is used.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>setVarNames</name>
+                    <type>variableArray</type>
+                    <description>The source bands used for aggregation when maximum band reaches its maximum.</description>
+                </parameterDescriptor>
+            </parameterDescriptors>
         </aggregatorDescriptor>
     </aggregatorDescriptors>
 
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>BandMaths</executableName>
+            <processorName>Band arythmetic processor</processorName>
+            <processorVersion>1.1</processorVersion>
+            <defaultParameters><![CDATA[
+<parameters>
+    <targetBands>
+        <targetBand>
+            <name>somename</name>
+            <type>float32</type>
+            <expression>param1</expression>
+            <description>use param1, param2, param3, param4 for subsequent Level 3 aggregation</description>
+            <unit>none</unit>
+            <validExpression>somebooleanexpression</validExpression>
+            <noDataValue>somevalue</noDataValue>
+            <spectralBandIndex>somenumber</spectralBandIndex>
+            <spectralWavelength>somenumber</spectralWavelength>
+            <spectralBandwidth>somenumber</spectralBandwidth>
+        </targetBand>
+    </targetBands>
+    <variables>
+        <variable>
+            <name>somevarname</name>
+            <type>float32</type>
+            <value>somevalue</value>
+        </variable>
+    </variables>
+</parameters>
+]]></defaultParameters>
+            <outputFormats>BEAM-DIMAP,NetCDF,GeoTIFF</outputFormats>
+            <descriptionHtml><![CDATA[<p>This band maths operator can be used to create a product with multiple bands based on mathematical expression. All products specified as source must have the same width and height, otherwise the operator will fail. The geo-coding information and metadata for the target product is taken from the first source product.<p>]]></descriptionHtml>
+            <outputVariables>
+                <outputVariable>
+                    <name>param1</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>param2</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>param3</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+                <outputVariable>
+                    <name>param4</name>
+                    <defaultAggregator>AVG</defaultAggregator>
+                    <defaultWeightCoeff>1.0</defaultWeightCoeff>
+                </outputVariable>
+            </outputVariables>
+<!--
+            <inputProductTypes>*</inputProductTypes>
+            <outputProductType>*</outputProductType>
+            <jobConfig>
+              <jobParameter>
+                <name>calvalus.hadoop.mapred.child.java.opts</name>
+                <value>-Xmx3000M</value>
+              </jobParameter>
+            </jobConfig>
+-->
+        </processorDescriptor>
+    </processorDescriptors>
 </bundleDescriptor>

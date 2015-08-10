@@ -20,7 +20,6 @@ public class BundleFilter {
     private static final String BUNDLE_TAG = "bundle" + TAG_SEPARATOR;
     private static final String PROCESSOR_TAG = "processor" + TAG_SEPARATOR;
     private static final String USER_TAG = "user" + TAG_SEPARATOR;
-    public static final String DUMMY_AGGREGATOR_NAME = "bundle_without_aggregator";
 
     private final List<String> providerList;
     private String bundleName;

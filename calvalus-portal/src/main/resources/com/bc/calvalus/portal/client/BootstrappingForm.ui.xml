@@ -2,7 +2,7 @@
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
              xmlns:g='urn:import:com.google.gwt.user.client.ui'>
 
-    <ui:style src="style.css" type='com.bc.calvalus.portal.client.L2ConfigForm.L2Style'/>
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
 
     <g:VerticalPanel spacing="5" width="100%">
 

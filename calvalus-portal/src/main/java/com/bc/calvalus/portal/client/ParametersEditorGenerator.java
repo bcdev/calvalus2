@@ -18,13 +18,17 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.LongBox;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
@@ -40,32 +44,50 @@ import java.util.Map;
 public class ParametersEditorGenerator {
 
     interface OnOkHandler {
+
         void onOk();
     }
 
     private final Map<DtoParameterDescriptor, ParameterEditor> editorMap;
+
     private final String title;
     private final DtoParameterDescriptor[] parameterDescriptors;
-    private final L2ConfigForm.L2Style style;
+    private final CalvalusStyle style;
 
-    public ParametersEditorGenerator(String title, DtoParameterDescriptor[] parameterDescriptors, L2ConfigForm.L2Style style) {
+    public ParametersEditorGenerator(String title, DtoParameterDescriptor[] parameterDescriptors, CalvalusStyle style) {
         this.title = title;
         this.parameterDescriptors = parameterDescriptors;
         this.style = style;
-        editorMap = new HashMap<DtoParameterDescriptor, ParameterEditor>();
+        this.editorMap = new HashMap<DtoParameterDescriptor, ParameterEditor>();
+        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+            editorMap.put(parameterDescriptor, createEditor(parameterDescriptor));
+        }
     }
 
-    public void showDialog(final OnOkHandler onOkHandler) {
-        ensureParameterWidgetsCreated();
+    public void showDialog(String width, String height, String description, final OnOkHandler onOkHandler) {
+        ScrollPanel scrollPanel = createParameterPanel(width, height);
+        VerticalPanel verticalPanel = new VerticalPanel();
+        verticalPanel.add(scrollPanel);
+        verticalPanel.add(new HTMLPanel(description));
+        showDialog(onOkHandler, verticalPanel);
+
+    }
+    public void showDialog(String width, String height, final OnOkHandler onOkHandler) {
+        ScrollPanel scrollPanel = createParameterPanel(width, height);
+        showDialog(onOkHandler, scrollPanel);
+    }
+
+    private ScrollPanel createParameterPanel(String width, String height) {
         FlexTable tableWidget = createTableWidget();
 
         ScrollPanel scrollPanel = new ScrollPanel(tableWidget);
-        scrollPanel.setWidth("800px");
-        scrollPanel.setHeight("640px");
+        scrollPanel.setWidth(width);
+        scrollPanel.setHeight(height);
+        return scrollPanel;
+    }
 
-        final Dialog dialog = new Dialog(title,
-                                         scrollPanel,
-                                         Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
+    private void showDialog(final OnOkHandler onOkHandler, final Widget widget) {
+        final Dialog dialog = new Dialog(title, widget, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
             @Override
             protected void onOk() {
                 onOkHandler.onOk();
@@ -73,6 +95,19 @@ public class ParametersEditorGenerator {
             }
         };
         dialog.show();
+    }
+
+    public void setAvailableVariables(List<String> variableNames) {
+        String[] variableNameArray = variableNames.toArray(new String[variableNames.size()]);
+        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+            if (parameterDescriptor.getType().startsWith("variable")) {
+                ParameterEditor parameterEditor = editorMap.get(parameterDescriptor);
+                if (parameterEditor instanceof SelectParameterEditor) {
+                    SelectParameterEditor selectParameterEditor = (SelectParameterEditor) parameterEditor;
+                    selectParameterEditor.updateValueSet(variableNameArray);
+                }
+            }
+        }
     }
 
     private FlexTable createTableWidget() {
@@ -102,30 +137,32 @@ public class ParametersEditorGenerator {
         return paramTable;
     }
 
+    public String getParameterValue(DtoParameterDescriptor parameterDescriptor) {
+        ParameterEditor parameterEditor = editorMap.get(parameterDescriptor);
+        if (parameterEditor != null) {
+            return parameterEditor.getValue();
+        }
+        return null;
+    }
+
     public String formatAsXMLFromWidgets() {
         StringBuilder sb = new StringBuilder();
         sb.append("<parameters>\n");
         for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-            sb.append("  <");
-            sb.append(parameterDescriptor.getName());
-            sb.append(">");
-            sb.append(editorMap.get(parameterDescriptor).getValue());
-            sb.append("</");
-            sb.append(parameterDescriptor.getName());
-            sb.append(">\n");
+            String value = editorMap.get(parameterDescriptor).getValue();
+            if (value != null) {
+                sb.append("  <");
+                sb.append(parameterDescriptor.getName());
+                sb.append(">");
+                sb.append(value);
+                sb.append("</");
+                sb.append(parameterDescriptor.getName());
+                sb.append(">\n");
+            }
         }
 
         sb.append("</parameters>\n");
         return sb.toString();
-    }
-
-    private void ensureParameterWidgetsCreated() {
-        if (!editorMap.isEmpty()) {
-            return;
-        }
-        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-            editorMap.put(parameterDescriptor, createEditor(parameterDescriptor));
-        }
     }
 
     private static ParameterEditor createEditor(DtoParameterDescriptor parameterDescriptor) {
@@ -138,13 +175,27 @@ public class ParametersEditorGenerator {
         } else if (type.equalsIgnoreCase("string")) {
             String[] valueSet = parameterDescriptor.getValueSet();
             if (valueSet.length > 0) {
-                editor = new SelectParameterEditor(defaultValue, valueSet, false);
+                SelectParameterEditor selectParameterEditor = new SelectParameterEditor(defaultValue, valueSet, false);
+                selectParameterEditor.updateValueSet(valueSet);
+                editor = selectParameterEditor;
             } else {
                 editor = new TextParameterEditor(defaultValue);
             }
         } else if (type.equalsIgnoreCase("stringArray")) {
             String[] valueSet = parameterDescriptor.getValueSet();
             editor = new SelectParameterEditor(defaultValue, valueSet, true);
+        } else if (type.equalsIgnoreCase("float")) {
+            editor = new FloatParameterEditor(defaultValue);
+        } else if (type.equalsIgnoreCase("int")) {
+            editor = new IntParameterEditor(defaultValue);
+        } else if (type.equalsIgnoreCase("variable")) {
+            editor = new SelectParameterEditor(defaultValue, new String[0], false);
+        } else if (type.equalsIgnoreCase("variableArray")) {
+            editor = new SelectParameterEditor(defaultValue, new String[0], true);
+        }
+        if (editor == null) {
+            // fallback
+            editor = new TextParameterEditor(defaultValue);
         }
         return editor;
     }
@@ -191,12 +242,70 @@ public class ParametersEditorGenerator {
 
         @Override
         public String getValue() {
-            return textBox.getValue();
+            return textBox.getValue().trim();
         }
 
         @Override
         public Widget getWidget() {
             return textBox;
+        }
+    }
+
+    private static class FloatParameterEditor implements ParameterEditor {
+
+        private final DoubleBox doubleBox;
+
+        public FloatParameterEditor(String defaultValue) {
+            doubleBox = new DoubleBox();
+            if (defaultValue != null) {
+                doubleBox.setValue(Double.parseDouble(defaultValue));
+                if (doubleBox.getVisibleLength() < defaultValue.length()) {
+                    doubleBox.setVisibleLength(36);
+                }
+            }
+        }
+
+        @Override
+        public String getValue() {
+            Double value = doubleBox.getValue();
+            if (value != null) {
+                return value.toString();
+            }
+            return null;
+        }
+
+        @Override
+        public Widget getWidget() {
+            return doubleBox;
+        }
+    }
+
+    private static class IntParameterEditor implements ParameterEditor {
+
+        private final LongBox longBox;
+
+        public IntParameterEditor(String defaultValue) {
+            longBox = new LongBox();
+            if (defaultValue != null) {
+                longBox.setValue(Long.parseLong(defaultValue));
+                if (longBox.getVisibleLength() < defaultValue.length()) {
+                    longBox.setVisibleLength(36);
+                }
+            }
+        }
+
+        @Override
+        public String getValue() {
+            Long value = longBox.getValue();
+            if (value != null) {
+                return value.toString();
+            }
+            return null;
+        }
+
+        @Override
+        public Widget getWidget() {
+            return longBox;
         }
     }
 
@@ -206,21 +315,17 @@ public class ParametersEditorGenerator {
 
         public SelectParameterEditor(String defaultValue, String[] valueSet, boolean multiSelect) {
             List<String> defaultValues = new ArrayList<String>();
-            if (multiSelect && defaultValue.contains(",")) {
-                for (String s : defaultValue.split("\\,")) {
-                    defaultValues.add(s.trim());
+            if (!defaultValue.isEmpty()) {
+                if (multiSelect && defaultValue.contains(",")) {
+                    for (String s : defaultValue.split("\\,")) {
+                        defaultValues.add(s.trim());
+                    }
+                } else {
+                    defaultValues.add(defaultValue);
                 }
-            } else {
-                defaultValues.add(defaultValue);
             }
             listBox = new ListBox(multiSelect);
-            for (int j = 0; j < valueSet.length; j++) {
-                String value = valueSet[j];
-                listBox.addItem(value);
-                if (defaultValues.contains(value)) {
-                    listBox.setItemSelected(j, true);
-                }
-            }
+            fillListbox(valueSet, defaultValues);
         }
 
         @Override
@@ -233,13 +338,41 @@ public class ParametersEditorGenerator {
                     sb.append(",");
                 }
             }
-            sb.deleteCharAt(sb.length() - 1);
+            if (sb.length() > 1) {
+                sb.deleteCharAt(sb.length() - 1);
+            }
             return sb.toString();
         }
 
         @Override
         public Widget getWidget() {
             return listBox;
+        }
+
+        public void updateValueSet(String[] valueSet) {
+            List<String> selected = getSelected();
+            listBox.clear();
+            fillListbox(valueSet, selected);
+        }
+
+        private void fillListbox(String[] allItems, List<String> selectedItems) {
+            for (int i = 0; i < allItems.length; i++) {
+                listBox.addItem(allItems[i]);
+                if (selectedItems.contains(allItems[i])) {
+                    listBox.setItemSelected(i, true);
+                }
+            }
+        }
+
+        private List<String> getSelected() {
+            List<String> selected = new ArrayList<String>();
+            int itemCount = listBox.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (listBox.isItemSelected(i)) {
+                    selected.add(listBox.getValue(i));
+                }
+            }
+            return selected;
         }
     }
 }
