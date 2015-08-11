@@ -215,29 +215,22 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>com.google.code.maven-replacer-plugin</groupId>
-                <artifactId>maven-replacer-plugin</artifactId>
-                <version>1.3.2</version>
-                <executions>
                     <execution>
+                        <id>beam-buildin-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/beam-buildin.xml</descriptor>
+                            </descriptors>
+                            <finalName>beam-buildin-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
                         <phase>package</phase>
                         <goals>
-                            <goal>replace</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
-
-                <configuration>
-                    <includes>
-                        <include>target/beam-bundle/bundle-descriptor.xml</include>
-                    </includes>
-                    <regex>false</regex>
-                    <token>BEAM_BUNDLE_VERSION</token>
-                    <value>${beam.bundle.version}</value>
-                </configuration>
             </plugin>
         </plugins>
     </build>
