@@ -27,7 +27,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Created by marcoz on 07.08.15.
+ * @author marcoz
  */
 public class ListProductSetsMain {
 

@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by marcoz on 11.08.15.
+ * @author marcoz
  */
 public class ShowProductContentMain {
 
