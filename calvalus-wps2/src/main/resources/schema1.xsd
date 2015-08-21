@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://bc-schema.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:import schemaLocation="schema2.xsd"/>
+
+  <xs:element name="parameters">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="planetaryGrid" type="xs:string" form="qualified" default="org.esa.beam.binning.support.SEAGrid" minOccurs="0"/>
+        <xs:element name="numRows" type="xs:int" form="qualified" default="2160"/>
+        <xs:element name="compositingType" type="CompositingType" form="qualified" minOccurs="0"/>
+        <xs:element name="superSampling" type="xs:int" form="qualified" default="1" minOccurs="0"/>
+        <xs:element name="maskExpr" type="xs:string" form="qualified" minOccurs="0"/>
+        <xs:element name="variables" type="variables" form="qualified" minOccurs="0"/>
+        <xs:element name="aggregators" type="aggregators" form="qualified" minOccurs="0"/>
+        <xs:element name="postProcessor" type="CellProcessorConfig" form="qualified" minOccurs="0"/>
+        <xs:element name="minDataHour" type="xs:double" form="qualified" minOccurs="0"/>
+        <xs:element name="metadataAggregatorName" type="xs:string" form="qualified" default="FIRST_HISTORY" minOccurs="0"/>
+        <xs:element name="startDateTime" type="xs:string" form="qualified" minOccurs="0"/>
+        <xs:element name="periodDuration" type="xs:double" form="qualified" minOccurs="0"/>
+        <xs:element name="timeFilterMethod" type="TimeFilterMethod" form="qualified" default="NONE" minOccurs="0"/>
+        <xs:element name="outputFile" type="xs:string" form="qualified" minOccurs="0"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+
