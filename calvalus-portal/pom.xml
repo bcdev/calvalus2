@@ -173,7 +173,7 @@
             <!-- Copy static web files before executing gwt:run -->
             <plugin>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>2.7-SNAPSHOT</version>
+                <version>2.6</version>
                 <executions>
                     <execution>
                         <phase>compile</phase>
