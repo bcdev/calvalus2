@@ -54,34 +54,40 @@ def update_verions_numbers():
         for line in fileContent:
             if args.kind == 'calvalus':
                 if 'version>' + args.old_version + '</' in line:
+                    changedLines.append("old:"+line)
                     line = line.replace(args.old_version, args.new_version)
                     changes = True
-                    changedLines.append(line)
+                    changedLines.append("new:"+line)
                 elif 'calvalus-' + args.old_version in line:
                     if exact:
                         if not 'calvalus-' + args.old_version + '-' in line:
+                            changedLines.append("old:"+line)
                             line = line.replace(args.old_version, args.new_version)
                             changes = True
-                            changedLines.append(line)
+                            changedLines.append("new:"+line)
                     else:
+                        changedLines.append("old:"+line)
                         line = line.replace(args.old_version, args.new_version)
                         changes = True
-                        changedLines.append(line)
+                        changedLines.append("new:"+line)
                 elif 'ersion ' + args.old_version in line:
+                    changedLines.append("old:"+line)
                     line = line.replace(args.old_version, args.new_version)
                     changes = True
-                    changedLines.append(line)
+                    changedLines.append("new:"+line)
             elif args.kind == 'beam':
                 if 'beam-' + args.old_version in line:
                     if exact:
                         if not 'beam-' + args.old_version + '-' in line:
+                            changedLines.append("old:"+line)
                             line = line.replace(args.old_version, args.new_version)
                             changes = True
-                            changedLines.append(line)
+                            changedLines.append("new:"+line)
                     else:
+                        changedLines.append("old:"+line)
                         line = line.replace(args.old_version, args.new_version)
                         changes = True
-                        changedLines.append(line)
+                        changedLines.append("new:"+line)
             fileContentNew.append(line)
         if changes:
             if args.dry_run:
