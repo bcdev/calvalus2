@@ -15,9 +15,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.CodeType;
-import net.opengis.ows._1.LanguageStringType;
-import net.opengis.ows._1.MetadataType;
 
 
 /**

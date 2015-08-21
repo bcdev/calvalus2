@@ -8,20 +8,20 @@
 
 package com.bc.calvalus.wps2.jaxb;
 
-import java.util.ArrayList;
-import java.util.List;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
 
 /**
  * <p>Java class for ResponseDocumentType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="ResponseDocumentType">
  *   &lt;complexContent>
@@ -36,12 +36,10 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ResponseDocumentType", propOrder = {
-    "output"
+            "output"
 })
 public class ResponseDocumentType {
 
@@ -56,25 +54,23 @@ public class ResponseDocumentType {
 
     /**
      * Gets the value of the output property.
-     * 
-     * <p>
+     * <p/>
+     * <p/>
      * This accessor method returns a reference to the live list,
      * not a snapshot. Therefore any modification you make to the
      * returned list will be present inside the JAXB object.
      * This is why there is not a <CODE>set</CODE> method for the output property.
-     * 
-     * <p>
+     * <p/>
+     * <p/>
      * For example, to add a new item, do as follows:
      * <pre>
      *    getOutput().add(newItem);
      * </pre>
-     * 
-     * 
-     * <p>
+     * <p/>
+     * <p/>
+     * <p/>
      * Objects of the following type(s) are allowed in the list
      * {@link DocumentOutputDefinitionType }
-     * 
-     * 
      */
     public List<DocumentOutputDefinitionType> getOutput() {
         if (output == null) {
@@ -85,11 +81,9 @@ public class ResponseDocumentType {
 
     /**
      * Gets the value of the storeExecuteResponse property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     *
+     * @return possible object is
+     * {@link Boolean }
      */
     public boolean isStoreExecuteResponse() {
         if (storeExecuteResponse == null) {
@@ -101,11 +95,9 @@ public class ResponseDocumentType {
 
     /**
      * Sets the value of the storeExecuteResponse property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Boolean }
      */
     public void setStoreExecuteResponse(Boolean value) {
         this.storeExecuteResponse = value;
@@ -113,11 +105,9 @@ public class ResponseDocumentType {
 
     /**
      * Gets the value of the lineage property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     *
+     * @return possible object is
+     * {@link Boolean }
      */
     public boolean isLineage() {
         if (lineage == null) {
@@ -129,11 +119,9 @@ public class ResponseDocumentType {
 
     /**
      * Sets the value of the lineage property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Boolean }
      */
     public void setLineage(Boolean value) {
         this.lineage = value;
@@ -141,11 +129,9 @@ public class ResponseDocumentType {
 
     /**
      * Gets the value of the status property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link Boolean }
-     *     
+     *
+     * @return possible object is
+     * {@link Boolean }
      */
     public boolean isStatus() {
         if (status == null) {
@@ -157,11 +143,9 @@ public class ResponseDocumentType {
 
     /**
      * Sets the value of the status property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Boolean }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Boolean }
      */
     public void setStatus(Boolean value) {
         this.status = value;

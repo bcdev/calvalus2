@@ -10,11 +10,11 @@
         <version>2.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>calvalus-portal</artifactId>
-    <packaging>war</packaging>
+    <artifactId>calvalus-wps</artifactId>
+    <packaging>jar</packaging>
 
-    <name>Calvalus Portal</name>
-    <description>The frontend for Calvalus.</description>
+    <name>Calvalus WPS</name>
+    <description>Calvalus WPS Gateway.</description>
 
     <properties>
         <gwt.version>2.6.1</gwt.version>
@@ -22,268 +22,129 @@
         <timestamp>${maven.build.timestamp}</timestamp>
     </properties>
 
-    <dependencies>
-        <dependency>
-            <groupId>com.google.gwt</groupId>
-            <artifactId>gwt-servlet</artifactId>
-            <version>${gwt.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.gwt</groupId>
-            <artifactId>gwt-user</artifactId>
-            <version>${gwt.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.gwt</groupId>
-            <artifactId>gwt-dev</artifactId>
-            <version>${gwt.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- GWT Maps API V3 -->
-        <dependency>
-            <groupId>com.github.branflake2267</groupId>
-            <artifactId>gwt-maps-api</artifactId>
-            <version>3.10.0-alpha-2</version>
-        </dependency>
-        <!-- Other GWT Maps Dependency from Google -->
-        <dependency>
-            <groupId>com.google.gwt.google-apis</groupId>
-            <artifactId>gwt-ajaxloader</artifactId>
-            <version>1.1.0</version>
-        </dependency>
+    <repositories>
+        <repository>
+            <id>deegree-repo</id>
+            <url>http://repo.deegree.org/content/groups/public</url>
+            <releases>
+                <updatePolicy>never</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-inventory</artifactId>
-        </dependency>
+    <dependencies>
         <dependency>
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-production</artifactId>
         </dependency>
-
-        <!--<dependency>-->
-        <!--<groupId>org.gwtopenmaps.openlayers</groupId>-->
-        <!--<artifactId>gwt-openlayers-client</artifactId>-->
-        <!--<version>0.5</version>-->
-        <!--<scope>provided</scope>-->
-        <!--</dependency>-->
-
         <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.4</version>
+            <groupId>com.bc.ceres</groupId>
+            <artifactId>ceres-metadata</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-fileupload</groupId>
-            <artifactId>commons-fileupload</artifactId>
-            <version>1.2.2</version>
+            <groupId>org.deegree</groupId>
+            <artifactId>deegree-services-wps</artifactId>
+            <version>3.3.14</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ws.commons.axiom</groupId>
+            <artifactId>axiom-api</artifactId>
+            <version>1.2.14</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.4.8</version>
         </dependency>
 
-
         <dependency>
-            <groupId>junit</groupId>
             <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
         </dependency>
-
         <dependency>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api-2.5</artifactId>
-            <version>6.1.14</version>
-            <scope>provided</scope>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
         </dependency>
+        <!--<dependency>-->
+            <!--<groupId>org.powermock</groupId>-->
+            <!--<artifactId>powermock-api-mockito</artifactId>-->
+            <!--<version>1.6.2</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+            <!--<groupId>org.powermock</groupId>-->
+            <!--<artifactId>powermock-module-junit4</artifactId>-->
+            <!--<version>1.6.2</version>-->
+            <!--<scope>test</scope>-->
+        <!--</dependency>-->
 
     </dependencies>
 
     <build>
-        <finalName>calvalus-portal</finalName>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>true</filtering>
-            </resource>
-        </resources>
-        <!-- Generate compiled stuff in the folder used for developing mode -->
-        <outputDirectory>target/www/WEB-INF/classes</outputDirectory>
-
         <plugins>
-
-            <!-- GWT Maven Plugin-->
+            <!-- any other plugins -->
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>gwt-maven-plugin</artifactId>
-                <version>2.6.1</version>
-                <!-- JS is only needed in the package phase, this speeds up testing -->
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.5.3</version>
                 <executions>
                     <execution>
-                        <configuration>
-                            <extraJvmArgs>-Xmx850M -Xss100M</extraJvmArgs>
-                            <!-- <localWorkers>2</localWorkers> -->
-                            <sourceLevel>1.7</sourceLevel>
-                        </configuration>
-                        <phase>prepare-package</phase>
+                        <phase>package</phase>
                         <goals>
-                            <goal>compile</goal>
+                            <goal>single</goal>
                         </goals>
                     </execution>
                 </executions>
-                <!-- Plugin configuration. There are many available options,
-           see gwt-maven-plugin documentation at codehaus.org -->
                 <configuration>
-                    <!-- URL that should be automatically opened in the GWT shell (gwt:run). -->
-                    <runTarget>calvalus.jsp</runTarget>
-                    <!-- Location of the develop-mode web application structure (gwt:run). -->
-                    <hostedWebapp>target/www</hostedWebapp>
-                    <compileReport>true</compileReport>
-                    <!--<style>DETAILED</style>-->
-                    <compileSourcesArtifacts>
-                        <artifact>com.bc.calvalus:calvalus-commons</artifact>
-                    </compileSourcesArtifacts>
-
+                    <!--<descriptorRefs>-->
+                    <!--<descriptorRef>jar-with-dependencies</descriptorRef>-->
+                    <!--</descriptorRefs>-->
+                    <descriptors>
+                        <descriptor>src/main/assembly/processlet.xml</descriptor>
+                        <descriptor>src/main/assembly/processlet-lib.xml</descriptor>
+                    </descriptors>
                 </configuration>
             </plugin>
 
-            <!-- Add source folders to test classpath in order to run gwt-tests as normal junit-tests -->
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <additionalClasspathElements>
-                        <additionalClasspathElement>${project.build.sourceDirectory}</additionalClasspathElement>
-                        <additionalClasspathElement>${project.build.testSourceDirectory}</additionalClasspathElement>
-                    </additionalClasspathElements>
-                    <skipTests>true</skipTests>
-                    <useManifestOnlyJar>false</useManifestOnlyJar>
-                    <forkMode>always</forkMode>
+            <!--<plugin>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-shade-plugin</artifactId>-->
+            <!--<version>2.4.1</version>-->
+            <!--<configuration>-->
+            <!--&lt;!&ndash; put your configurations here &ndash;&gt;-->
+            <!--</configuration>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<phase>package</phase>-->
+            <!--<goals>-->
+            <!--<goal>shade</goal>-->
+            <!--</goals>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--</plugin>-->
 
-                    <!-- Folder for generated testing stuff -->
-                    <systemProperties>
-                        <property>
-                            <name>gwt.args</name>
-                            <value>-out target/www</value>
-                        </property>
-                    </systemProperties>
-                </configuration>
-            </plugin>
 
-            <!-- Copy static web files before executing gwt:run -->
-            <plugin>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>2.6</version>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/www</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/webapp</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <!-- TODO: seems to create the cc-patch dir but does not put it into the war file -->
-                    <execution>
-                        <id>cc-patch</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/www/cc-patch</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/webapp-cc-patch</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>calopus-patch</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/www/calopus-patch</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <directory>src/main/webapp-calopus-patch</directory>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- Delete gwt generated stuff -->
-            <plugin>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>2.4.1</version>
-                <configuration>
-                    <filesets>
-                        <fileset>
-                            <directory>src/main/webapp/calvalus</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>src/main/webapp/WEB-INF/classes/com</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>tomcat</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>www-test</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>.gwt-tmp</directory>
-                        </fileset>
-                    </filesets>
-                </configuration>
-            </plugin>
-
-            <!-- This plugin is used by the TeamCity build server to deploy to the bcvm03 tomcat -->
-            <plugin>
-                <groupId>org.codehaus.cargo</groupId>
-                <artifactId>cargo-maven2-plugin</artifactId>
-                <version>1.0.6</version>
-                <configuration>
-                    <wait>true</wait>
-                    <container>
-                        <containerId>tomcat7x</containerId>
-                        <type>remote</type>
-                    </container>
-                    <configuration>
-                        <type>runtime</type>
-                        <properties>
-                            <cargo.tomcat.manager.url>http://bcvm03:8080/manager/text</cargo.tomcat.manager.url>
-                            <cargo.remote.username>buildserver</cargo.remote.username>
-                            <cargo.remote.password>gHGugShf$3dFe4s#6u!igs</cargo.remote.password>
-                        </properties>
-                    </configuration>
-                    <deployer>
-                        <type>remote</type>
-                        <deployables>
-                            <deployable>
-                                <groupId>com.bc.calvalus</groupId>
-                                <artifactId>calvalus-portal</artifactId>
-                                <type>war</type>
-                                <properties>
-                                    <!-- Use 'context' to change the name of the deployed app. -->
-                                    <context>calvalus</context>
-                                </properties>
-                            </deployable>
-                        </deployables>
-                    </deployer>
-                </configuration>
-            </plugin>
-
+            <!--<plugin>-->
+            <!--<groupId>org.apache.maven.plugins</groupId>-->
+            <!--<artifactId>maven-dependency-plugin</artifactId>-->
+            <!--<executions>-->
+            <!--<execution>-->
+            <!--<id>copy-dependencies</id>-->
+            <!--<phase>prepare-package</phase>-->
+            <!--<goals>-->
+            <!--<goal>copy-dependencies</goal>-->
+            <!--</goals>-->
+            <!--<configuration>-->
+            <!--<outputDirectory>${project.build.directory}/classes/lib</outputDirectory>-->
+            <!--<overWriteReleases>false</overWriteReleases>-->
+            <!--<overWriteSnapshots>false</overWriteSnapshots>-->
+            <!--<overWriteIfNewer>true</overWriteIfNewer>-->
+            <!--</configuration>-->
+            <!--</execution>-->
+            <!--</executions>-->
+            <!--</plugin>-->
         </plugins>
     </build>
 </project>

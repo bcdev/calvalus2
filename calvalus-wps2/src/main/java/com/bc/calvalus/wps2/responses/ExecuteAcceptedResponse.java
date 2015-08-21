@@ -19,7 +19,7 @@ import java.util.List;
  */
 public class ExecuteAcceptedResponse {
 
-    public ExecuteResponse getExecuteResponse(List<String> productionResults) throws DatatypeConfigurationException {
+    public ExecuteResponse getExecuteResponse() throws DatatypeConfigurationException {
         ExecuteResponse executeResponse = new ExecuteResponse();
 
         StatusType statusType = new StatusType();
@@ -28,19 +28,7 @@ public class ExecuteAcceptedResponse {
         statusType.setCreationTime(currentTime);
         statusType.setProcessAccepted("The request has been accepted.");
         executeResponse.setStatus(statusType);
-
-        ProcessOutputs productUrl = new ProcessOutputs();
-        OutputDataType url = new OutputDataType();
-
-        CodeType outputId = new CodeType();
-        outputId.setValue("productionResults");
-        url.setIdentifier(outputId);
-        OutputReferenceType urlLink = new OutputReferenceType();
-        urlLink.setHref("http://link-to-product");
-        urlLink.setMimeType("binary");
-        url.setReference(urlLink);
-        productUrl.getOutput().add(url);
-        executeResponse.setProcessOutputs(productUrl);
+        executeResponse.setStatusLocation("http://tomcat.status.xml");
 
         return executeResponse;
     }

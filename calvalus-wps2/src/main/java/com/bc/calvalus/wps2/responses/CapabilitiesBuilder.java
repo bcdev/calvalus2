@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps2.responses;
 
+import com.bc.calvalus.wps2.jaxb.Capabilities;
 import com.bc.calvalus.wps2.jaxb.Languages;
 import com.bc.calvalus.wps2.jaxb.ProcessOfferings;
 import com.bc.calvalus.wps2.jaxb.ServiceIdentification;
@@ -16,15 +17,14 @@ public class CapabilitiesBuilder {
     private Languages languages;
 
     private CapabilitiesBuilder() {
-
     }
 
     public static CapabilitiesBuilder create() {
         return new CapabilitiesBuilder();
     }
 
-    public GetCapabilitiesResponse build() {
-        return new GetCapabilitiesResponse(this);
+    public Capabilities build() {
+        return new Capabilities(this);
     }
 
     public CapabilitiesBuilder withServiceIdentification(ServiceIdentification serviceIdentification) {

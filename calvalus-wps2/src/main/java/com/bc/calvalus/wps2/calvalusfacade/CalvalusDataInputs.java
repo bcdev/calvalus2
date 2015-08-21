@@ -1,48 +1,86 @@
 package com.bc.calvalus.wps2.calvalusfacade;
 
-import com.bc.calvalus.wps.utility.XmlProcessor;
-import org.deegree.services.wps.ProcessletInputs;
-import org.deegree.services.wps.input.ComplexInput;
-import org.deegree.services.wps.input.LiteralInput;
-import org.deegree.services.wps.input.ProcessletInput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+import com.bc.calvalus.wps2.CalvalusParameter;
+import com.bc.calvalus.wps2.ExecuteRequestExtractor;
+import com.bc.calvalus.wps2.Processor;
+import org.apache.commons.lang.StringUtils;
 
-import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.XMLStreamReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
+ * This class transform the input parameters map into a format recognized by Calvalus Production Request.
+ * <p/>
  * Created by hans on 23.07.2015.
  */
 public class CalvalusDataInputs {
 
-    private static final Logger LOG = LoggerFactory.getLogger(CalvalusDataInputs.class);
+    private final Map<String, String> inputMapRaw;
+    private final Map<String, String> inputMapFormatted;
 
-    private final Map<String, String> inputMap;
-
-    /**
-     * Constructor.
-     *
-     * @param processletInputs WPS Inputs.
-     */
-    public CalvalusDataInputs(ProcessletInputs processletInputs) {
-        this.inputMap = new HashMap<>();
-        processInputData(processletInputs);
+    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, Processor processor) {
+        this.inputMapFormatted = new HashMap<>();
+        this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
+        extractProductionParameters();
+        extractProcessorInfoParameters();
+        extractProductsetParameters();
+        transformProcessorParameters(processor);
+        transformL3Parameters();
     }
 
-    private void processInputData(ProcessletInputs processletInputs) {
-        List<ProcessletInput> processletInputList = processletInputs.getParameters();
-        for (ProcessletInput processletInput : processletInputList) {
-            if (processletInput instanceof LiteralInput) {
-                inputMap.put(processletInput.getIdentifier().toString(), ((LiteralInput) processletInput).getValue());
-            } else if (processletInput instanceof ComplexInput) {
-                ComplexInput complexInput = (ComplexInput) processletInput;
-                inputMap.put(complexInput.getIdentifier().toString(), getXmlParameter(complexInput));
+    private void transformL3Parameters() {
+        inputMapFormatted.put("calvalus.l3.parameters", inputMapRaw.get("calvalus.l3.parameters"));
+    }
+
+    private void extractProductionParameters() {
+        List<String> productionParameterNames = CalvalusParameter.getProductionParameters();
+        for (String parameterName : productionParameterNames) {
+            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
+                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
             }
+        }
+    }
+
+    private void extractProcessorInfoParameters() {
+        List<String> processorInfoParameterNames = CalvalusParameter.getProcessorInfoParameters();
+        for (String parameterName : processorInfoParameterNames) {
+            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
+                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
+            }
+        }
+    }
+
+    private void extractProductsetParameters() {
+        List<String> productsetParameterNames = CalvalusParameter.getProductsetParameters();
+        for (String parameterName : productsetParameterNames) {
+            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
+                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
+            }
+        }
+    }
+
+    private void transformProcessorParameters(Processor processor) {
+        ParameterDescriptor[] processorParameters = processor.getParameterDescriptors();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<parameters>\n");
+        if (processorParameters != null) {
+            for (ParameterDescriptor parameterDescriptor : processorParameters) {
+                sb.append("<");
+                sb.append(parameterDescriptor.getName());
+                sb.append(">");
+
+                sb.append(inputMapRaw.get(parameterDescriptor.getName()));
+
+                sb.append("</");
+                sb.append(parameterDescriptor.getName());
+                sb.append(">\n");
+            }
+            sb.append("</parameters>");
+            this.inputMapFormatted.put("processorParameters", sb.toString());
+        } else {
+            this.inputMapFormatted.put("processorParameters", processor.getDefaultParameters());
         }
     }
 
@@ -54,7 +92,7 @@ public class CalvalusDataInputs {
      * @return The corresponding value.
      */
     public String getValue(String parameterName) {
-        return inputMap.get(parameterName);
+        return inputMapFormatted.get(parameterName);
     }
 
     /**
@@ -62,33 +100,19 @@ public class CalvalusDataInputs {
      *
      * @return A Map object that consists of key value pair of the input data.
      */
-    public Map<String, String> getInputMap() {
-        return inputMap;
+    public Map<String, String> getInputMapFormatted() {
+        return inputMapFormatted;
     }
 
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();
-        for (String key : inputMap.keySet()) {
+        for (String key : inputMapFormatted.keySet()) {
             stringBuilder.append(key);
             stringBuilder.append(" : ");
-            stringBuilder.append(inputMap.get(key));
+            stringBuilder.append(inputMapFormatted.get(key));
             stringBuilder.append("\n");
         }
         return stringBuilder.toString();
-    }
-
-    private String getXmlParameter(ComplexInput complexInput) {
-        try {
-            XMLStreamReader xmlStreamReader = complexInput.getValueAsXMLStream();
-            return getXmlStringFromXmlStreamReader(new XmlProcessor(xmlStreamReader));
-        } catch (XMLStreamException | IOException exception) {
-            LOG.error("Error when extracting " + complexInput.getIdentifier() + " : " + exception.getMessage());
-            return "";
-        }
-    }
-
-    private String getXmlStringFromXmlStreamReader(XmlProcessor xmlProcessor) {
-        return xmlProcessor.getXmlString();
     }
 }

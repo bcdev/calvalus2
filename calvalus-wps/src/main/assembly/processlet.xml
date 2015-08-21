@@ -4,7 +4,7 @@
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
     <!-- copied from jar-with-dependencies (http://maven.apache.org/plugins/maven-assembly-plugin/descriptor-refs.html#jar-with-dependencies) -->
     <!-- added containerDescriptorHandler to merge META-INF/service files -->
-    <id>tool</id>
+    <id>processlet</id>
     <formats>
         <format>jar</format>
     </formats>
@@ -17,7 +17,7 @@
     <dependencySets>
         <dependencySet>
             <outputDirectory>/</outputDirectory>
-            <useProjectArtifact>false</useProjectArtifact>
+            <useProjectArtifact>true</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
         </dependencySet>

@@ -16,12 +16,12 @@ import javax.xml.bind.annotation.XmlType;
 
 
 /**
- * WPS operation response base, for all WPS operations except GetCapabilities. 
- * 
+ * WPS operation response base, for all WPS operations except GetCapabilities.
+ * <p/>
  * <p>Java class for ResponseBaseType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="ResponseBaseType">
  *   &lt;complexContent>
@@ -33,14 +33,12 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ResponseBaseType")
 @XmlSeeAlso({
-    ProcessDescriptions.class,
-    ExecuteResponse.class
+            ProcessDescriptions.class,
+            ExecuteResponse.class
 })
 public class ResponseBaseType {
 
@@ -53,11 +51,9 @@ public class ResponseBaseType {
 
     /**
      * Gets the value of the service property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getService() {
         if (service == null) {
@@ -69,11 +65,9 @@ public class ResponseBaseType {
 
     /**
      * Sets the value of the service property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setService(String value) {
         this.service = value;
@@ -81,11 +75,9 @@ public class ResponseBaseType {
 
     /**
      * Gets the value of the version property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getVersion() {
         if (version == null) {
@@ -97,11 +89,9 @@ public class ResponseBaseType {
 
     /**
      * Sets the value of the version property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setVersion(String value) {
         this.version = value;
@@ -109,11 +99,9 @@ public class ResponseBaseType {
 
     /**
      * RFC 4646 language code of the human-readable text (e.g. "en-CA").
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getLang() {
         return lang;
@@ -121,11 +109,9 @@ public class ResponseBaseType {
 
     /**
      * Sets the value of the lang property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setLang(String value) {
         this.lang = value;

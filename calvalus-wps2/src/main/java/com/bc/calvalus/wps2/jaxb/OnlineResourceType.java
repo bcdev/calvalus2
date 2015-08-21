@@ -13,9 +13,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
-import org.w3._1999.xlink.ActuateType;
-import org.w3._1999.xlink.ShowType;
-import org.w3._1999.xlink.TypeType;
 
 
 /**

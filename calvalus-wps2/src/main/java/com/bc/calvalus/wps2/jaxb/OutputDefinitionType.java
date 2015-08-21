@@ -15,16 +15,15 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlSeeAlso;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.CodeType;
 
 
 /**
- * Definition of a format, encoding,  schema, and unit-of-measure for an output to be returned from a process. 
- * 
+ * Definition of a format, encoding,  schema, and unit-of-measure for an output to be returned from a process.
+ * <p/>
  * <p>Java class for OutputDefinitionType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="OutputDefinitionType">
  *   &lt;complexContent>
@@ -38,15 +37,13 @@ import net.opengis.ows._1.CodeType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "OutputDefinitionType", propOrder = {
-    "identifier"
+            "identifier"
 })
 @XmlSeeAlso({
-    DocumentOutputDefinitionType.class
+            DocumentOutputDefinitionType.class
 })
 public class OutputDefinitionType {
 
@@ -65,12 +62,10 @@ public class OutputDefinitionType {
     protected String schema;
 
     /**
-     * Unambiguous identifier or name of an output, unique for this process. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link CodeType }
-     *     
+     * Unambiguous identifier or name of an output, unique for this process.
+     *
+     * @return possible object is
+     * {@link CodeType }
      */
     public CodeType getIdentifier() {
         return identifier;
@@ -78,11 +73,9 @@ public class OutputDefinitionType {
 
     /**
      * Sets the value of the identifier property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link CodeType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link CodeType }
      */
     public void setIdentifier(CodeType value) {
         this.identifier = value;
@@ -90,11 +83,9 @@ public class OutputDefinitionType {
 
     /**
      * Gets the value of the uom property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getUom() {
         return uom;
@@ -102,11 +93,9 @@ public class OutputDefinitionType {
 
     /**
      * Sets the value of the uom property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setUom(String value) {
         this.uom = value;
@@ -114,11 +103,9 @@ public class OutputDefinitionType {
 
     /**
      * Gets the value of the mimeType property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getMimeType() {
         return mimeType;
@@ -126,11 +113,9 @@ public class OutputDefinitionType {
 
     /**
      * Sets the value of the mimeType property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setMimeType(String value) {
         this.mimeType = value;
@@ -138,11 +123,9 @@ public class OutputDefinitionType {
 
     /**
      * Gets the value of the encoding property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getEncoding() {
         return encoding;
@@ -150,11 +133,9 @@ public class OutputDefinitionType {
 
     /**
      * Sets the value of the encoding property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setEncoding(String value) {
         this.encoding = value;
@@ -162,11 +143,9 @@ public class OutputDefinitionType {
 
     /**
      * Gets the value of the schema property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getSchema() {
         return schema;
@@ -174,11 +153,9 @@ public class OutputDefinitionType {
 
     /**
      * Sets the value of the schema property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setSchema(String value) {
         this.schema = value;

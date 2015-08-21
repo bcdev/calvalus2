@@ -12,17 +12,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.CodeType;
-import net.opengis.ows._1.LanguageStringType;
 
 
 /**
- * Value of one input to a process. 
- * 
+ * Value of one input to a process.
+ * <p/>
  * <p>Java class for InputType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="InputType">
  *   &lt;complexContent>
@@ -37,16 +35,14 @@ import net.opengis.ows._1.LanguageStringType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "InputType", propOrder = {
-    "identifier",
-    "title",
-    "_abstract",
-    "reference",
-    "data"
+            "identifier",
+            "title",
+            "_abstract",
+            "reference",
+            "data"
 })
 public class InputType {
 
@@ -62,12 +58,10 @@ public class InputType {
     protected DataType data;
 
     /**
-     * Unambiguous identifier or name of a process, unique for this server, or unambiguous identifier or name of an output, unique for this process. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link CodeType }
-     *     
+     * Unambiguous identifier or name of a process, unique for this server, or unambiguous identifier or name of an output, unique for this process.
+     *
+     * @return possible object is
+     * {@link CodeType }
      */
     public CodeType getIdentifier() {
         return identifier;
@@ -75,23 +69,19 @@ public class InputType {
 
     /**
      * Sets the value of the identifier property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link CodeType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link CodeType }
      */
     public void setIdentifier(CodeType value) {
         this.identifier = value;
     }
 
     /**
-     * Title of a process or output, normally available for display to a human. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link LanguageStringType }
-     *     
+     * Title of a process or output, normally available for display to a human.
+     *
+     * @return possible object is
+     * {@link LanguageStringType }
      */
     public LanguageStringType getTitle() {
         return title;
@@ -99,23 +89,19 @@ public class InputType {
 
     /**
      * Sets the value of the title property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link LanguageStringType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link LanguageStringType }
      */
     public void setTitle(LanguageStringType value) {
         this.title = value;
     }
 
     /**
-     * Brief narrative description of a process or output, normally available for display to a human. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link LanguageStringType }
-     *     
+     * Brief narrative description of a process or output, normally available for display to a human.
+     *
+     * @return possible object is
+     * {@link LanguageStringType }
      */
     public LanguageStringType getAbstract() {
         return _abstract;
@@ -123,11 +109,9 @@ public class InputType {
 
     /**
      * Sets the value of the abstract property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link LanguageStringType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link LanguageStringType }
      */
     public void setAbstract(LanguageStringType value) {
         this._abstract = value;
@@ -135,11 +119,9 @@ public class InputType {
 
     /**
      * Gets the value of the reference property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link InputReferenceType }
-     *     
+     *
+     * @return possible object is
+     * {@link InputReferenceType }
      */
     public InputReferenceType getReference() {
         return reference;
@@ -147,11 +129,9 @@ public class InputType {
 
     /**
      * Sets the value of the reference property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link InputReferenceType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link InputReferenceType }
      */
     public void setReference(InputReferenceType value) {
         this.reference = value;
@@ -159,11 +139,9 @@ public class InputType {
 
     /**
      * Gets the value of the data property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link DataType }
-     *     
+     *
+     * @return possible object is
+     * {@link DataType }
      */
     public DataType getData() {
         return data;
@@ -171,11 +149,9 @@ public class InputType {
 
     /**
      * Sets the value of the data property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link DataType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link DataType }
      */
     public void setData(DataType value) {
         this.data = value;

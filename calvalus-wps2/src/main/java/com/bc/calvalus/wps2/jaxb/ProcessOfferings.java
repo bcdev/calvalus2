@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent>
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
  *       &lt;sequence>
- *         &lt;element name="Process" type="{http://www.opengis.net/wps/1.0.0}ProcessBriefType" maxOccurs="unbounded"/>
+ *         &lt;element name="Processor" type="{http://www.opengis.net/wps/1.0.0}ProcessBriefType" maxOccurs="unbounded"/>
  *       &lt;/sequence>
  *     &lt;/restriction>
  *   &lt;/complexContent>
@@ -43,7 +43,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "ProcessOfferings")
 public class ProcessOfferings {
 
-    @XmlElement(name = "Process", required = true)
+    @XmlElement(name = "Processor", required = true)
     protected List<ProcessBriefType> process;
 
     /**

@@ -8,7 +8,13 @@ import com.bc.calvalus.wps2.jaxb.DataType;
 import com.bc.calvalus.wps2.jaxb.ExecuteResponse;
 import com.bc.calvalus.wps2.jaxb.LiteralDataType;
 import com.bc.calvalus.wps2.jaxb.OutputDataType;
+import com.bc.calvalus.wps2.jaxb.OutputReferenceType;
+import com.bc.calvalus.wps2.jaxb.StatusType;
 
+import javax.xml.datatype.DatatypeConfigurationException;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -16,29 +22,30 @@ import java.util.List;
  */
 public class ExecuteSuccessfulResponse {
 
-    public ExecuteResponse getExecuteResponse(List<String> productionResults) {
+    public ExecuteResponse getExecuteResponse(List<String> productionResultsUrls) throws DatatypeConfigurationException {
         ExecuteResponse executeResponse = new ExecuteResponse();
-        ProcessOutputs productUrl = new ProcessOutputs();
-        OutputDataType url = new OutputDataType();
-        DataType urlValue = new DataType();
-        LiteralDataType urlData = new LiteralDataType();
-        urlData.setValue("http://dummyUrl.com");
-        urlData.setDataType("URL");
-        urlValue.setLiteralData(urlData);
-        LiteralDataType urlData2 = new LiteralDataType();
-        urlData2.setValue("http://dummyUrl2.com");
-        urlData2.setDataType("URL");
-        urlValue.setLiteralData(urlData2);
-        ComplexDataType urlXml = new ComplexDataType();
-        urlXml.getContent().add("test1\n");
-        urlXml.getContent().add("test2");
-        urlValue.setComplexData(urlXml);
-        url.setData(urlValue);
 
-        CodeType outputId = new CodeType();
-        outputId.setValue("productionResults");
-        url.setIdentifier(outputId);
-        productUrl.getOutput().add(url);
+        StatusType statusType = new StatusType();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+        statusType.setCreationTime(currentTime);
+        statusType.setProcessSucceeded("The request has been processed successfully.");
+        executeResponse.setStatus(statusType);
+
+        ProcessOutputs productUrl = new ProcessOutputs();
+
+        for(String productionResultsUrl : productionResultsUrls){
+            OutputDataType url = new OutputDataType();
+            CodeType outputId = new CodeType();
+            outputId.setValue("productionResults");
+            url.setIdentifier(outputId);
+            OutputReferenceType urlLink = new OutputReferenceType();
+            urlLink.setHref(productionResultsUrl);
+            urlLink.setMimeType("binary");
+            url.setReference(urlLink);
+
+            productUrl.getOutput().add(url);
+        }
         executeResponse.setProcessOutputs(productUrl);
 
         return executeResponse;

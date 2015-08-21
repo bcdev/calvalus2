@@ -11,7 +11,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.CalvalusProduction;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProduction;
 import org.junit.*;
 
 /**

@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,9 @@ public class Aggregators {
     protected List<AggregatorConfig> aggregator;
 
     public List<AggregatorConfig> getAggregator() {
+        if (aggregator == null) {
+            aggregator = new ArrayList<AggregatorConfig>();
+        }
         return aggregator;
     }
 }

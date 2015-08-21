@@ -13,14 +13,13 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.CodeType;
 
 
 /**
  * <p>Java class for anonymous complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType>
  *   &lt;complexContent>
@@ -34,19 +33,16 @@ import net.opengis.ows._1.CodeType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "identifier",
-    "dataInputs",
-    "responseForm"
+            "identifier",
+            "dataInputs",
+            "responseForm"
 })
 @XmlRootElement(name = "Execute")
 public class Execute
-    extends RequestBaseType
-{
+            extends RequestBaseType {
 
     @XmlElement(name = "Identifier", namespace = "http://www.opengis.net/ows/1.1", required = true)
     protected CodeType identifier;
@@ -56,12 +52,10 @@ public class Execute
     protected ResponseFormType responseForm;
 
     /**
-     * Identifier of the Process to be executed. This Process identifier shall be as listed in the ProcessOfferings section of the WPS Capabilities document. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link CodeType }
-     *     
+     * Identifier of the Process to be executed. This Process identifier shall be as listed in the ProcessOfferings section of the WPS Capabilities document.
+     *
+     * @return possible object is
+     * {@link CodeType }
      */
     public CodeType getIdentifier() {
         return identifier;
@@ -69,11 +63,9 @@ public class Execute
 
     /**
      * Sets the value of the identifier property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link CodeType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link CodeType }
      */
     public void setIdentifier(CodeType value) {
         this.identifier = value;
@@ -81,11 +73,9 @@ public class Execute
 
     /**
      * Gets the value of the dataInputs property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link DataInputsType }
-     *     
+     *
+     * @return possible object is
+     * {@link DataInputsType }
      */
     public DataInputsType getDataInputs() {
         return dataInputs;
@@ -93,11 +83,9 @@ public class Execute
 
     /**
      * Sets the value of the dataInputs property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link DataInputsType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link DataInputsType }
      */
     public void setDataInputs(DataInputsType value) {
         this.dataInputs = value;
@@ -105,11 +93,9 @@ public class Execute
 
     /**
      * Gets the value of the responseForm property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link ResponseFormType }
-     *     
+     *
+     * @return possible object is
+     * {@link ResponseFormType }
      */
     public ResponseFormType getResponseForm() {
         return responseForm;
@@ -117,11 +103,9 @@ public class Execute
 
     /**
      * Sets the value of the responseForm property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link ResponseFormType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link ResponseFormType }
      */
     public void setResponseForm(ResponseFormType value) {
         this.responseForm = value;

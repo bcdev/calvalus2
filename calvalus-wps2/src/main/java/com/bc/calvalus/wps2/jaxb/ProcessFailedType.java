@@ -12,16 +12,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.ExceptionReport;
 
 
 /**
- * Indicator that the process has failed to execute successfully. The reason for failure is given in the exception report. 
- * 
+ * Indicator that the process has failed to execute successfully. The reason for failure is given in the exception report.
+ * <p/>
  * <p>Java class for ProcessFailedType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="ProcessFailedType">
  *   &lt;complexContent>
@@ -33,12 +32,10 @@ import net.opengis.ows._1.ExceptionReport;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ProcessFailedType", propOrder = {
-    "exceptionReport"
+            "exceptionReport"
 })
 public class ProcessFailedType {
 
@@ -47,11 +44,9 @@ public class ProcessFailedType {
 
     /**
      * Gets the value of the exceptionReport property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link ExceptionReport }
-     *     
+     *
+     * @return possible object is
+     * {@link ExceptionReport }
      */
     public ExceptionReport getExceptionReport() {
         return exceptionReport;
@@ -59,11 +54,9 @@ public class ProcessFailedType {
 
     /**
      * Sets the value of the exceptionReport property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link ExceptionReport }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link ExceptionReport }
      */
     public void setExceptionReport(ExceptionReport value) {
         this.exceptionReport = value;

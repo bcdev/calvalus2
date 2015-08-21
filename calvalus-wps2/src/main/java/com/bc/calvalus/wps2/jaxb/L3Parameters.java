@@ -8,161 +8,171 @@
 
 package com.bc.calvalus.wps2.jaxb;
 
-import com.bc.calvalus.wps2.responses.CapabilitiesBuilder;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
+import java.util.List;
 
-
-/**
- * <p>Java class for anonymous complex type.
- * <p/>
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p/>
- * <pre>
- * &lt;complexType>
- *   &lt;complexContent>
- *     &lt;extension base="{http://www.opengis.net/ows/1.1}CapabilitiesBaseType">
- *       &lt;sequence>
- *         &lt;element ref="{http://www.opengis.net/wps/1.0.0}ProcessOfferings"/>
- *         &lt;element ref="{http://www.opengis.net/wps/1.0.0}Languages"/>
- *         &lt;element ref="{http://www.opengis.net/wps/1.0.0}WSDL" minOccurs="0"/>
- *       &lt;/sequence>
- *       &lt;attribute name="service" use="required" type="{http://www.w3.org/2001/XMLSchema}anySimpleType" fixed="WPS" />
- *       &lt;attribute ref="{http://www.w3.org/XML/1998/namespace}lang use="required""/>
- *     &lt;/extension>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-            "processOfferings",
-            "languages",
-            "wsdl"
+            "planetaryGrid",
+            "numRows",
+            "compositingType",
+            "superSampling",
+            "maskExpr",
+            "variables",
+            "aggregators",
+            "postProcessor",
+            "minDataHour",
+            "metadataAggregatorName",
+            "startDateTime",
+            "periodDuration",
+            "timeFilterMethod",
+            "outputFile"
 })
-@XmlRootElement(name = "parameters")
+@XmlRootElement(name = "parameters", namespace = "http://bc-schema.xsd")
 public class L3Parameters {
 
-    @XmlElement(name = "compositingType")
-    protected String compositingType;
-    @XmlElement(name = "Languages", required = true)
-    protected Languages languages;
-    @XmlElement(name = "WSDL")
-    protected WSDL wsdl;
-    @XmlAttribute(name = "service", required = true)
-    @XmlSchemaType(name = "anySimpleType")
-    protected String service;
-    @XmlAttribute(name = "lang", namespace = "http://www.w3.org/XML/1998/namespace", required = true)
-    protected String lang;
+    @XmlElement(name = "planetaryGrid", defaultValue = "org.esa.beam.binning.support.SEAGrid", namespace = "http://bc-schema.xsd")
+    protected String planetaryGrid;
+    @XmlElement(name = "numRows", defaultValue = "2160", namespace = "http://bc-schema.xsd")
+    protected int numRows;
+    @XmlElement(name = "compositingType", namespace = "http://bc-schema.xsd")
+    protected CompositingType compositingType;
+    @XmlElement(name = "superSampling", defaultValue = "1", namespace = "http://bc-schema.xsd")
+    protected Integer superSampling;
+    @XmlElement(name = "maskExpr", namespace = "http://bc-schema.xsd")
+    protected String maskExpr;
+    @XmlElement(name = "variables", namespace = "http://bc-schema.xsd")
+    protected Variables variables;
+    @XmlElement(name = "aggregators", namespace = "http://bc-schema.xsd")
+    protected Aggregators aggregators;
+    @XmlElement(name = "postProcessor", namespace = "http://bc-schema.xsd")
+    protected CellProcessorConfig postProcessor;
+    @XmlElement(name = "minDataHour", namespace = "http://bc-schema.xsd")
+    protected Double minDataHour;
+    @XmlElement(name = "metadataAggregatorName", defaultValue = "FIRST_HISTORY", namespace = "http://bc-schema.xsd")
+    protected String metadataAggregatorName;
+    @XmlElement(name = "startDateTime", namespace = "http://bc-schema.xsd")
+    protected String startDateTime;
+    @XmlElement(name = "periodDuration", namespace = "http://bc-schema.xsd")
+    protected Double periodDuration;
+    @XmlElement(name = "timeFilterMethod", defaultValue = "NONE", namespace = "http://bc-schema.xsd")
+    protected TimeFilterMethod timeFilterMethod;
+    @XmlElement(name = "outputFile", namespace = "http://bc-schema.xsd")
+    protected String outputFile;
 
-    /**
-     * Gets the value of the processOfferings property.
-     *
-     * @return possible object is
-     * {@link ProcessOfferings }
-     */
-    public ProcessOfferings getProcessOfferings() {
-        return processOfferings;
+    public String getPlanetaryGrid() {
+        return planetaryGrid;
     }
 
-    /**
-     * Sets the value of the processOfferings property.
-     *
-     * @param value allowed object is
-     *              {@link ProcessOfferings }
-     */
-    public void setProcessOfferings(ProcessOfferings value) {
-        this.processOfferings = value;
+    public void setPlanetaryGrid(String planetaryGrid) {
+        this.planetaryGrid = planetaryGrid;
     }
 
-    /**
-     * List of the default and other languages supported by this service.
-     *
-     * @return possible object is
-     * {@link Languages }
-     */
-    public Languages getLanguages() {
-        return languages;
+    public int getNumRows() {
+        return numRows;
     }
 
-    /**
-     * Sets the value of the languages property.
-     *
-     * @param value allowed object is
-     *              {@link Languages }
-     */
-    public void setLanguages(Languages value) {
-        this.languages = value;
+    public void setNumRows(int numRows) {
+        this.numRows = numRows;
     }
 
-    /**
-     * Location of a WSDL document which describes the entire service.
-     *
-     * @return possible object is
-     * {@link WSDL }
-     */
-    public WSDL getWSDL() {
-        return wsdl;
+    public CompositingType getCompositingType() {
+        return compositingType;
     }
 
-    /**
-     * Sets the value of the wsdl property.
-     *
-     * @param value allowed object is
-     *              {@link WSDL }
-     */
-    public void setWSDL(WSDL value) {
-        this.wsdl = value;
+    public void setCompositingType(CompositingType compositingType) {
+        this.compositingType = compositingType;
     }
 
-    /**
-     * Gets the value of the service property.
-     *
-     * @return possible object is
-     * {@link String }
-     */
-    public String getService() {
-        if (service == null) {
-            return "WPS";
-        } else {
-            return service;
-        }
+    public Integer getSuperSampling() {
+        return superSampling;
     }
 
-    /**
-     * Sets the value of the service property.
-     *
-     * @param value allowed object is
-     *              {@link String }
-     */
-    public void setService(String value) {
-        this.service = value;
+    public void setSuperSampling(Integer superSampling) {
+        this.superSampling = superSampling;
     }
 
-    /**
-     * Gets the value of the lang property.
-     *
-     * @return possible object is
-     * {@link String }
-     */
-    public String getLang() {
-        return lang;
+    public String getMaskExpr() {
+        return maskExpr;
     }
 
-    /**
-     * Sets the value of the lang property.
-     *
-     * @param value allowed object is
-     *              {@link String }
-     */
-    public void setLang(String value) {
-        this.lang = value;
+    public void setMaskExpr(String maskExpr) {
+        this.maskExpr = maskExpr;
     }
 
+    public Variables getVariables() {
+        return variables;
+    }
+
+    public void setVariables(Variables variables) {
+        this.variables = variables;
+    }
+
+    public Aggregators getAggregators() {
+        return aggregators;
+    }
+
+    public void setAggregators(Aggregators aggregators) {
+        this.aggregators = aggregators;
+    }
+
+    public CellProcessorConfig getPostProcessorConfig() {
+        return postProcessor;
+    }
+
+    public void setPostProcessorConfig(CellProcessorConfig postProcessor) {
+        this.postProcessor = postProcessor;
+    }
+
+    public Double getMinDataHour() {
+        return minDataHour;
+    }
+
+    public void setMinDataHour(Double minDataHour) {
+        this.minDataHour = minDataHour;
+    }
+
+    public String getMetadataAggregatorName() {
+        return metadataAggregatorName;
+    }
+
+    public void setMetadataAggregatorName(String metadataAggregatorName) {
+        this.metadataAggregatorName = metadataAggregatorName;
+    }
+
+    public String getStartDateTime() {
+        return startDateTime;
+    }
+
+    public void setStartDateTime(String startDateTime) {
+        this.startDateTime = startDateTime;
+    }
+
+    public Double getPeriodDuration() {
+        return periodDuration;
+    }
+
+    public void setPeriodDuration(Double periodDuration) {
+        this.periodDuration = periodDuration;
+    }
+
+    public TimeFilterMethod getTimeFilterMethod() {
+        return timeFilterMethod;
+    }
+
+    public void setTimeFilterMethod(TimeFilterMethod timeFilterMethod) {
+        this.timeFilterMethod = timeFilterMethod;
+    }
+
+    public String getOutputFile() {
+        return outputFile;
+    }
+
+    public void setOutputFile(String outputFile) {
+        this.outputFile = outputFile;
+    }
 }

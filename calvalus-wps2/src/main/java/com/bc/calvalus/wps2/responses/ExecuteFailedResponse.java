@@ -1,6 +1,8 @@
 package com.bc.calvalus.wps2.responses;
 
+import com.bc.calvalus.wps2.jaxb.ExceptionReport;
 import com.bc.calvalus.wps2.jaxb.ExecuteResponse;
+import com.bc.calvalus.wps2.jaxb.ProcessFailedType;
 import com.bc.calvalus.wps2.jaxb.StatusType;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -20,11 +22,14 @@ public class ExecuteFailedResponse {
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         XMLGregorianCalendar currentTime = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
-        statusType.setProcessAccepted("The request has been accepted.");
+
+        ProcessFailedType processFailedType = new ProcessFailedType();
+        ExceptionReport exceptionReport = new ExceptionReport();
+        exceptionReport.setVersion("1");
+        processFailedType.setExceptionReport(exceptionReport);
+        statusType.setProcessFailed(processFailedType);
         executeResponse.setStatus(statusType);
-        executeResponse.setStatusLocation("http://tomcat.status.xml");
 
         return executeResponse;
     }
-
 }

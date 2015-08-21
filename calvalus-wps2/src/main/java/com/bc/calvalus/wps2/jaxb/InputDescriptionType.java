@@ -8,6 +8,8 @@
 
 package com.bc.calvalus.wps2.jaxb;
 
+import com.bc.calvalus.wps2.responses.InputDescriptionTypeBuilder;
+
 import java.math.BigInteger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -51,6 +53,15 @@ import javax.xml.bind.annotation.XmlType;
 public class InputDescriptionType
     extends DescriptionType
 {
+
+    public InputDescriptionType(InputDescriptionTypeBuilder builder) {
+        this.identifier = builder.getIdentifier();
+        this._abstract = builder.getAbstractValue();
+        this.literalData = builder.getLiteralInputType();
+    }
+
+    public InputDescriptionType() {
+    }
 
     @XmlElement(name = "ComplexData", namespace = "")
     protected SupportedComplexDataInputType complexData;

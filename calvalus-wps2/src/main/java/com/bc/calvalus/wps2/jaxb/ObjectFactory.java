@@ -12,18 +12,17 @@ import javax.xml.bind.annotation.XmlRegistry;
 
 
 /**
- * This object contains factory methods for each 
- * Java content interface and Java element interface 
- * generated in the net.opengis.wps._1_0 package. 
- * <p>An ObjectFactory allows you to programatically 
- * construct new instances of the Java representation 
- * for XML content. The Java representation of XML 
- * content can consist of schema derived interfaces 
- * and classes representing the binding of schema 
- * type definitions, element declarations and model 
- * groups.  Factory methods for each of these are 
+ * This object contains factory methods for each
+ * Java content interface and Java element interface
+ * generated in the net.opengis.wps._1_0 package.
+ * <p>An ObjectFactory allows you to programatically
+ * construct new instances of the Java representation
+ * for XML content. The Java representation of XML
+ * content can consist of schema derived interfaces
+ * and classes representing the binding of schema
+ * type definitions, element declarations and model
+ * groups.  Factory methods for each of these are
  * provided in this class.
- * 
  */
 @XmlRegistry
 public class ObjectFactory {
@@ -31,14 +30,12 @@ public class ObjectFactory {
 
     /**
      * Create a new ObjectFactory that can be used to create new instances of schema derived classes for package: net.opengis.wps._1_0
-     * 
      */
     public ObjectFactory() {
     }
 
     /**
      * Create an instance of {@link Languages }
-     * 
      */
     public Languages createLanguages() {
         return new Languages();
@@ -46,7 +43,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ExecuteResponse }
-     * 
      */
     public ExecuteResponse createExecuteResponse() {
         return new ExecuteResponse();
@@ -54,7 +50,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedUOMsType }
-     * 
      */
     public SupportedUOMsType createSupportedUOMsType() {
         return new SupportedUOMsType();
@@ -62,7 +57,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link InputReferenceType }
-     * 
      */
     public InputReferenceType createInputReferenceType() {
         return new InputReferenceType();
@@ -70,7 +64,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedCRSsType }
-     * 
      */
     public SupportedCRSsType createSupportedCRSsType() {
         return new SupportedCRSsType();
@@ -78,7 +71,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessDescriptionType }
-     * 
      */
     public ProcessDescriptionType createProcessDescriptionType() {
         return new ProcessDescriptionType();
@@ -86,7 +78,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link Execute }
-     * 
      */
     public Execute createExecute() {
         return new Execute();
@@ -94,7 +85,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link RequestBaseType }
-     * 
      */
     public RequestBaseType createRequestBaseType() {
         return new RequestBaseType();
@@ -102,7 +92,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link DataInputsType }
-     * 
      */
     public DataInputsType createDataInputsType() {
         return new DataInputsType();
@@ -110,7 +99,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ResponseFormType }
-     * 
      */
     public ResponseFormType createResponseFormType() {
         return new ResponseFormType();
@@ -118,7 +106,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link GetCapabilities }
-     * 
      */
     public GetCapabilities createGetCapabilities() {
         return new GetCapabilities();
@@ -126,7 +113,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link Capabilities }
-     * 
      */
     public Capabilities createCapabilities() {
         return new Capabilities();
@@ -134,7 +120,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessOfferings }
-     * 
      */
     public ProcessOfferings createProcessOfferings() {
         return new ProcessOfferings();
@@ -142,7 +127,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessBriefType }
-     * 
      */
     public ProcessBriefType createProcessBriefType() {
         return new ProcessBriefType();
@@ -150,7 +134,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link Languages.Default }
-     * 
      */
     public Languages.Default createLanguagesDefault() {
         return new Languages.Default();
@@ -158,7 +141,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link LanguagesType }
-     * 
      */
     public LanguagesType createLanguagesType() {
         return new LanguagesType();
@@ -166,7 +148,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link WSDL }
-     * 
      */
     public WSDL createWSDL() {
         return new WSDL();
@@ -174,7 +155,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link DescribeProcess }
-     * 
      */
     public DescribeProcess createDescribeProcess() {
         return new DescribeProcess();
@@ -182,7 +162,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ResponseBaseType }
-     * 
      */
     public ResponseBaseType createResponseBaseType() {
         return new ResponseBaseType();
@@ -190,7 +169,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link StatusType }
-     * 
      */
     public StatusType createStatusType() {
         return new StatusType();
@@ -198,7 +176,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link OutputDefinitionsType }
-     * 
      */
     public OutputDefinitionsType createOutputDefinitionsType() {
         return new OutputDefinitionsType();
@@ -206,7 +183,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ExecuteResponse.ProcessOutputs }
-     * 
      */
     public ExecuteResponse.ProcessOutputs createExecuteResponseProcessOutputs() {
         return new ExecuteResponse.ProcessOutputs();
@@ -214,7 +190,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessDescriptions }
-     * 
      */
     public ProcessDescriptions createProcessDescriptions() {
         return new ProcessDescriptions();
@@ -222,7 +197,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link CRSsType }
-     * 
      */
     public CRSsType createCRSsType() {
         return new CRSsType();
@@ -230,7 +204,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ResponseDocumentType }
-     * 
      */
     public ResponseDocumentType createResponseDocumentType() {
         return new ResponseDocumentType();
@@ -238,7 +211,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link UOMsType }
-     * 
      */
     public UOMsType createUOMsType() {
         return new UOMsType();
@@ -246,7 +218,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ComplexDataCombinationsType }
-     * 
      */
     public ComplexDataCombinationsType createComplexDataCombinationsType() {
         return new ComplexDataCombinationsType();
@@ -254,7 +225,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ValuesReferenceType }
-     * 
      */
     public ValuesReferenceType createValuesReferenceType() {
         return new ValuesReferenceType();
@@ -262,7 +232,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link OutputDefinitionType }
-     * 
      */
     public OutputDefinitionType createOutputDefinitionType() {
         return new OutputDefinitionType();
@@ -270,7 +239,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link OutputReferenceType }
-     * 
      */
     public OutputReferenceType createOutputReferenceType() {
         return new OutputReferenceType();
@@ -278,7 +246,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link DataType }
-     * 
      */
     public DataType createDataType() {
         return new DataType();
@@ -286,7 +253,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link DescriptionType }
-     * 
      */
     public DescriptionType createDescriptionType() {
         return new DescriptionType();
@@ -294,7 +260,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessFailedType }
-     * 
      */
     public ProcessFailedType createProcessFailedType() {
         return new ProcessFailedType();
@@ -302,7 +267,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ComplexDataType }
-     * 
      */
     public ComplexDataType createComplexDataType() {
         return new ComplexDataType();
@@ -310,7 +274,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link LiteralDataType }
-     * 
      */
     public LiteralDataType createLiteralDataType() {
         return new LiteralDataType();
@@ -318,7 +281,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link DocumentOutputDefinitionType }
-     * 
      */
     public DocumentOutputDefinitionType createDocumentOutputDefinitionType() {
         return new DocumentOutputDefinitionType();
@@ -326,7 +288,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedComplexDataInputType }
-     * 
      */
     public SupportedComplexDataInputType createSupportedComplexDataInputType() {
         return new SupportedComplexDataInputType();
@@ -334,7 +295,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link InputDescriptionType }
-     * 
      */
     public InputDescriptionType createInputDescriptionType() {
         return new InputDescriptionType();
@@ -342,7 +302,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link InputType }
-     * 
      */
     public InputType createInputType() {
         return new InputType();
@@ -350,7 +309,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link OutputDataType }
-     * 
      */
     public OutputDataType createOutputDataType() {
         return new OutputDataType();
@@ -358,7 +316,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ComplexDataCombinationType }
-     * 
      */
     public ComplexDataCombinationType createComplexDataCombinationType() {
         return new ComplexDataCombinationType();
@@ -366,7 +323,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ComplexDataDescriptionType }
-     * 
      */
     public ComplexDataDescriptionType createComplexDataDescriptionType() {
         return new ComplexDataDescriptionType();
@@ -374,7 +330,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link OutputDescriptionType }
-     * 
      */
     public OutputDescriptionType createOutputDescriptionType() {
         return new OutputDescriptionType();
@@ -382,7 +337,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedComplexDataType }
-     * 
      */
     public SupportedComplexDataType createSupportedComplexDataType() {
         return new SupportedComplexDataType();
@@ -390,7 +344,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link LiteralInputType }
-     * 
      */
     public LiteralInputType createLiteralInputType() {
         return new LiteralInputType();
@@ -398,7 +351,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessStartedType }
-     * 
      */
     public ProcessStartedType createProcessStartedType() {
         return new ProcessStartedType();
@@ -406,7 +358,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link LiteralOutputType }
-     * 
      */
     public LiteralOutputType createLiteralOutputType() {
         return new LiteralOutputType();
@@ -414,7 +365,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link WPSCapabilitiesType }
-     * 
      */
     public WPSCapabilitiesType createWPSCapabilitiesType() {
         return new WPSCapabilitiesType();
@@ -422,7 +372,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedUOMsType.Default }
-     * 
      */
     public SupportedUOMsType.Default createSupportedUOMsTypeDefault() {
         return new SupportedUOMsType.Default();
@@ -430,7 +379,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link InputReferenceType.Header }
-     * 
      */
     public InputReferenceType.Header createInputReferenceTypeHeader() {
         return new InputReferenceType.Header();
@@ -438,7 +386,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link InputReferenceType.BodyReference }
-     * 
      */
     public InputReferenceType.BodyReference createInputReferenceTypeBodyReference() {
         return new InputReferenceType.BodyReference();
@@ -446,7 +393,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link SupportedCRSsType.Default }
-     * 
      */
     public SupportedCRSsType.Default createSupportedCRSsTypeDefault() {
         return new SupportedCRSsType.Default();
@@ -454,7 +400,6 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessDescriptionType.DataInputs }
-     * 
      */
     public ProcessDescriptionType.DataInputs createProcessDescriptionTypeDataInputs() {
         return new ProcessDescriptionType.DataInputs();
@@ -462,10 +407,12 @@ public class ObjectFactory {
 
     /**
      * Create an instance of {@link ProcessDescriptionType.ProcessOutputs }
-     * 
      */
     public ProcessDescriptionType.ProcessOutputs createProcessDescriptionTypeProcessOutputs() {
         return new ProcessDescriptionType.ProcessOutputs();
     }
 
+    public L3Parameters createL3Parameters() {
+        return new L3Parameters();
+    }
 }

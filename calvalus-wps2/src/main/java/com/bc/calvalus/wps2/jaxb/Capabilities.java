@@ -8,6 +8,8 @@
 
 package com.bc.calvalus.wps2.jaxb;
 
+import com.bc.calvalus.wps2.responses.CapabilitiesBuilder;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -15,14 +17,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
-import net.opengis.ows._1.CapabilitiesBaseType;
 
 
 /**
  * <p>Java class for anonymous complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType>
  *   &lt;complexContent>
@@ -38,19 +39,26 @@ import net.opengis.ows._1.CapabilitiesBaseType;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
-    "processOfferings",
-    "languages",
-    "wsdl"
+            "processOfferings",
+            "languages",
+            "wsdl"
 })
 @XmlRootElement(name = "Capabilities")
 public class Capabilities
-    extends CapabilitiesBaseType
-{
+            extends CapabilitiesBaseType {
+
+    public Capabilities() {
+    }
+
+    public Capabilities(CapabilitiesBuilder builder) {
+        this.serviceIdentification = builder.getServiceIdentification();
+        this.serviceProvider = builder.getServiceProvider();
+        this.processOfferings = builder.getProcessOfferings();
+        this.languages = builder.getLanguages();
+    }
 
     @XmlElement(name = "ProcessOfferings", required = true)
     protected ProcessOfferings processOfferings;
@@ -66,11 +74,9 @@ public class Capabilities
 
     /**
      * Gets the value of the processOfferings property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link ProcessOfferings }
-     *     
+     *
+     * @return possible object is
+     * {@link ProcessOfferings }
      */
     public ProcessOfferings getProcessOfferings() {
         return processOfferings;
@@ -78,23 +84,19 @@ public class Capabilities
 
     /**
      * Sets the value of the processOfferings property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link ProcessOfferings }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link ProcessOfferings }
      */
     public void setProcessOfferings(ProcessOfferings value) {
         this.processOfferings = value;
     }
 
     /**
-     * List of the default and other languages supported by this service. 
-     * 
-     * @return
-     *     possible object is
-     *     {@link Languages }
-     *     
+     * List of the default and other languages supported by this service.
+     *
+     * @return possible object is
+     * {@link Languages }
      */
     public Languages getLanguages() {
         return languages;
@@ -102,11 +104,9 @@ public class Capabilities
 
     /**
      * Sets the value of the languages property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link Languages }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link Languages }
      */
     public void setLanguages(Languages value) {
         this.languages = value;
@@ -114,11 +114,9 @@ public class Capabilities
 
     /**
      * Location of a WSDL document which describes the entire service.
-     * 
-     * @return
-     *     possible object is
-     *     {@link WSDL }
-     *     
+     *
+     * @return possible object is
+     * {@link WSDL }
      */
     public WSDL getWSDL() {
         return wsdl;
@@ -126,11 +124,9 @@ public class Capabilities
 
     /**
      * Sets the value of the wsdl property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link WSDL }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link WSDL }
      */
     public void setWSDL(WSDL value) {
         this.wsdl = value;
@@ -138,11 +134,9 @@ public class Capabilities
 
     /**
      * Gets the value of the service property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getService() {
         if (service == null) {
@@ -154,11 +148,9 @@ public class Capabilities
 
     /**
      * Sets the value of the service property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setService(String value) {
         this.service = value;
@@ -166,11 +158,9 @@ public class Capabilities
 
     /**
      * Gets the value of the lang property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
+     *
+     * @return possible object is
+     * {@link String }
      */
     public String getLang() {
         return lang;
@@ -178,11 +168,9 @@ public class Capabilities
 
     /**
      * Sets the value of the lang property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link String }
      */
     public void setLang(String value) {
         this.lang = value;

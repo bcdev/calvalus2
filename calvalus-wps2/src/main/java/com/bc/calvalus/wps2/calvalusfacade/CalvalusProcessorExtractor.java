@@ -1,56 +1,70 @@
 package com.bc.calvalus.wps2.calvalusfacade;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.wps2.calvalusfacade.CalvalusConfig;
-import com.bc.calvalus.wps2.calvalusfacade.CalvalusProductionService;
+import com.bc.calvalus.wps2.Processor;
+import com.bc.calvalus.wps2.ProcessorNameParser;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by hans on 13/08/2015.
  */
 public class CalvalusProcessorExtractor {
 
-    private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(),
-                                                               "calvalus.config").getPath();
+    private ProductionService productionService;
 
-    public void getProcessor() throws IOException, ProductionException {
-        CalvalusProductionService calvalusProductionService = new CalvalusProductionService();
-        CalvalusConfig calvalusConfig = new CalvalusConfig();
-        Map<String, String> defaultConfig = calvalusConfig.getDefaultConfig();
-        Map<String, String> config = ProductionServiceConfig.loadConfig(new File(DEFAULT_CONFIG_PATH), defaultConfig);
-        ProductionService productionService = calvalusProductionService.createProductionService(config);
-        BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
-        BundleDescriptor[] bundleDescriptor = productionService.getBundles("martin", filter);
+    public CalvalusProcessorExtractor(ProductionService productionService) {
+        this.productionService = productionService;
+    }
 
-        System.out.println("bundleDescriptor.length = " + bundleDescriptor.length);
-        List<String> processorNames = new ArrayList<>();
+    public List<Processor> getProcessors() throws IOException, ProductionException {
+        BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
+
+        List<Processor> processors = new ArrayList<>();
         for (BundleDescriptor bundle : bundleDescriptor) {
-            System.out.println("bundle.getBundleName() = " + bundle.getBundleName());
-            System.out.println("bundle.getBundleLocation() = " + bundle.getBundleLocation());
-            System.out.println("bundle.getBundleVersion() = " + bundle.getBundleVersion());
-            ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
-            if (processorDescriptors == null) {
+            if (bundle.getProcessorDescriptors() == null) {
                 continue;
             }
+            ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
             for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                processorNames.add(processorDescriptor.getProcessorName());
-                System.out.println("processorDescriptor.getProcessorName() = " + processorDescriptor.getProcessorName());
-                System.out.println("processorDescriptor.getDescriptionHtml() = " + processorDescriptor.getDescriptionHtml());
-                System.out.println("processorDescriptor.getProcessorVersion() = " + processorDescriptor.getProcessorVersion());
+                Processor processor = new Processor(bundle, processorDescriptor);
+                processors.add(processor);
             }
-            System.out.println();
         }
-        System.out.println("processorNames.size() = " + processorNames.size());
+        return processors;
+    }
+
+    public Processor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
+        BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
+        for (BundleDescriptor bundle : bundleDescriptor) {
+            if (bundle.getProcessorDescriptors() == null) {
+                continue;
+            }
+            if (bundle.getBundleName().equals(parser.getBundleName()) && bundle.getBundleVersion().equals(parser.getBundleVersion())) {
+                for (ProcessorDescriptor processorDescriptor : bundle.getProcessorDescriptors()) {
+                    if (processorDescriptor.getExecutableName().equals(parser.getExecutableName())) {
+                        return new Processor(bundle, processorDescriptor);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    public ProductSet[] getProductSets() throws ProductionException {
+        return productionService.getProductSets("hans", "");
+    }
+
+    private BundleDescriptor[] getBundleDescriptors() throws ProductionException, IOException {
+        BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
+        return productionService.getBundles("hans", filter);
     }
 
 }
