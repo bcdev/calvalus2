@@ -498,7 +498,7 @@ public class L3ConfigForm extends Composite {
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
         parameters.put("compositingType", getCompositingType());
         if (COMPOSITING_TYPE_MOSAICKING.equals(getCompositingType())) {
-            parameters.put("planetaryGrid", "org.esa.beam.binning.support.PlateCarreeGrid");
+            parameters.put("planetaryGrid", "org.esa.snap.binning.support.PlateCarreeGrid");
         }
         parameters.put("resolution", resolution.getValue().toString());
         parameters.put("superSampling", superSampling.getValue().toString());
