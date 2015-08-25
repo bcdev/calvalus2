@@ -122,7 +122,13 @@ public class L2toL3ProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, l2Conf);
         processorProductionRequest.configureProcessor(l2Conf);
 
-        l2Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        if (productionRequest.getParameters().containsKey("inputPath")) {
+            l2Conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        } else if (productionRequest.getParameters().containsKey("inputTable")) {
+            l2Conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+        } else {
+            throw new ProductionException("missing request parameter inputPath or inputTable");
+        }
         l2Conf.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         DateRange maxDateRange = new DateRange(dateRanges.get(0).getStartDate(), dateRanges.get(dateRanges.size() - 1).getStopDate());
         l2Conf.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, maxDateRange.toString());

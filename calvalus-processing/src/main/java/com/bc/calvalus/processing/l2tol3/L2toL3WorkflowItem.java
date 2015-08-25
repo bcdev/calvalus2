@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import com.bc.calvalus.processing.l3.L3SpatialBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -56,7 +57,7 @@ public class L2toL3WorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
@@ -78,7 +79,14 @@ public class L2toL3WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
 
-        job.setInputFormatClass(PatternBasedInputFormat.class);
+        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            job.setInputFormatClass(PatternBasedInputFormat.class);
+        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            job.setInputFormatClass(TableInputFormat.class);
+        } else {
+            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
+                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
+        }
         job.setMapperClass(L2toL3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);
         job.setMapOutputValueClass(L3SpatialBin.class);
