@@ -50,9 +50,9 @@ public class L3ParameterXmlGenerator {
                 createOpeningTag("variable");
                 constructSingleElement("name", variableConfig.getName());
                 constructSingleElement("expr", variableConfig.getExpr());
-                createClosingTag("variables");
+                createClosingTag("variable");
             }
-            createClosingTag("variable");
+            createClosingTag("variables");
         }
     }
 

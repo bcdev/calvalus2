@@ -20,17 +20,16 @@ public class CalvalusProduction {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public Production orderProduction(ProductionService productionService, ProductionRequest request)
+    protected Production orderProduction(ProductionService productionService, ProductionRequest request)
                 throws ProductionException, InterruptedException {
         logInfo("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
-//        observeProduction(productionService, production);
         return production;
     }
 
-    public void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
+    protected void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 

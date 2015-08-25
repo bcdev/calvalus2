@@ -4,7 +4,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusConfig;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusProcessorExtractor;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
@@ -31,14 +31,11 @@ public class GetCapabilitiesService {
     @GET
     @Produces(MediaType.APPLICATION_XML)
     public String getCapabilities() {
-//        CalvalusProductionService calvalusProductionService = new CalvalusProductionService();
-        CalvalusConfig calvalusConfig = new CalvalusConfig();
         StringWriter writer = new StringWriter();
         try {
-            ProductionService productionService = CalvalusProductionService.getInstance(calvalusConfig);
+            CalvalusHelper calvalusHelper = new CalvalusHelper();
 
-            CalvalusProcessorExtractor extractor = new CalvalusProcessorExtractor(productionService);
-            List<Processor> processors = extractor.getProcessors();
+            List<Processor> processors = calvalusHelper.getProcessors();
 
             GetCapabilitiesResponse getCapabilitiesResponse = new GetCapabilitiesResponse();
             Capabilities capabilities = getCapabilitiesResponse.createGetCapabilitiesResponse(processors);

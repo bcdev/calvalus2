@@ -31,6 +31,26 @@ public class CalvalusDataInputs {
         this.inputMapFormatted.put("autoStaging", "true");
     }
 
+    /**
+     * Returns a value for the given parameter name.
+     *
+     * @param parameterName Parameter name.
+     *
+     * @return The corresponding value.
+     */
+    public String getValue(String parameterName) {
+        return inputMapFormatted.get(parameterName);
+    }
+
+    /**
+     * Returns a key value pair of the input data.
+     *
+     * @return A Map object that consists of key value pair of the input data.
+     */
+    public Map<String, String> getInputMapFormatted() {
+        return inputMapFormatted;
+    }
+
     private void transformL3Parameters() {
         inputMapFormatted.put("calvalus.l3.parameters", inputMapRaw.get("calvalus.l3.parameters"));
     }
@@ -85,26 +105,6 @@ public class CalvalusDataInputs {
                 this.inputMapFormatted.put("processorParameters", processor.getDefaultParameters());
             }
         }
-    }
-
-    /**
-     * Returns a value for the given parameter name.
-     *
-     * @param parameterName Parameter name.
-     *
-     * @return The corresponding value.
-     */
-    public String getValue(String parameterName) {
-        return inputMapFormatted.get(parameterName);
-    }
-
-    /**
-     * Returns a key value pair of the input data.
-     *
-     * @return A Map object that consists of key value pair of the input data.
-     */
-    public Map<String, String> getInputMapFormatted() {
-        return inputMapFormatted;
     }
 
     @Override

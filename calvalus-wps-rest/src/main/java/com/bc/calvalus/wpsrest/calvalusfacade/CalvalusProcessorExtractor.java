@@ -20,11 +20,11 @@ public class CalvalusProcessorExtractor {
 
     private ProductionService productionService;
 
-    public CalvalusProcessorExtractor(ProductionService productionService) {
+    protected CalvalusProcessorExtractor(ProductionService productionService) {
         this.productionService = productionService;
     }
 
-    public List<Processor> getProcessors() throws IOException, ProductionException {
+    protected List<Processor> getProcessors() throws IOException, ProductionException {
         BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
 
         List<Processor> processors = new ArrayList<>();
@@ -41,7 +41,7 @@ public class CalvalusProcessorExtractor {
         return processors;
     }
 
-    public Processor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
+    protected Processor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
         BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
         for (BundleDescriptor bundle : bundleDescriptor) {
             if (bundle.getProcessorDescriptors() == null) {
@@ -58,7 +58,7 @@ public class CalvalusProcessorExtractor {
         return null;
     }
 
-    public ProductSet[] getProductSets() throws ProductionException {
+    protected ProductSet[] getProductSets() throws ProductionException {
         return productionService.getProductSets("hans", "");
     }
 

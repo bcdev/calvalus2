@@ -5,7 +5,6 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.Processor;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusProcessorExtractor;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationsType;
@@ -29,7 +28,7 @@ import java.util.List;
  */
 public class DescribeProcessResponse {
 
-    public ProcessDescriptions getDescribeProcessResponse(Processor processor, CalvalusProcessorExtractor extractor) throws ProductionException {
+    public ProcessDescriptions getDescribeProcessResponse(Processor processor, ProductSet[] productSets) throws ProductionException {
         ProcessDescriptions processDescriptions = new ProcessDescriptions();
 
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
@@ -43,7 +42,7 @@ public class DescribeProcessResponse {
         LanguageStringType abstractText = getAbstractText(processor.getAbstractText());
         processDescription.setAbstract(abstractText);
 
-        DataInputs dataInputs = getDataInputs(processor, extractor);
+        DataInputs dataInputs = getDataInputs(processor, productSets);
         processDescription.setDataInputs(dataInputs);
 
         ProcessOutputs dataOutputs = new ProcessOutputs();
@@ -72,7 +71,7 @@ public class DescribeProcessResponse {
         return processDescriptions;
     }
 
-    private DataInputs getDataInputs(Processor processor, CalvalusProcessorExtractor extractor) throws ProductionException {
+    private DataInputs getDataInputs(Processor processor, ProductSet[] productSets) throws ProductionException {
         DataInputs dataInputs = new DataInputs();
         ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
 
@@ -127,7 +126,7 @@ public class DescribeProcessResponse {
         }
 
         List<String> allowedInputPaths = new ArrayList<>();
-        for (ProductSet productSet : extractor.getProductSets()) {
+        for (ProductSet productSet : productSets) {
             allowedInputPaths.add("/calvalus/" + productSet.getPath());
         }
         InputDescriptionType inputPath = InputDescriptionTypeBuilder

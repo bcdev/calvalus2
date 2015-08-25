@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,15 +25,15 @@ public class CalvalusStaging {
     private static final String WEBAPPS_ROOT = "/webapps/ROOT/";
     private static final String PORT_NUMBER = "9080";
 
-    public void stageProduction(ProductionService productionService, Production production)
+    protected void stageProduction(ProductionService productionService, Production production)
                 throws ProductionException, InterruptedException {
         logInfo("Staging results...");
         productionService.stageProductions(production.getId());
         observeStagingStatus(productionService, production);
     }
 
-    public List<String> getProductResultUrls(CalvalusConfig calvalusConfig, Production production) throws UnknownHostException {
-        String stagingDirectoryPath = calvalusConfig.getDefaultConfig().get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
+    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) throws UnknownHostException {
+        String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
         File stagingDirectory = new File((System.getProperty("catalina.base") + WEBAPPS_ROOT) + stagingDirectoryPath);
         File[] productResultFles = stagingDirectory.listFiles();
         List<String> productResultUrls = new ArrayList<>();

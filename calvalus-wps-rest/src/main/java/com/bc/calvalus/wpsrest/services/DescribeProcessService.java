@@ -1,14 +1,11 @@
 package com.bc.calvalus.wpsrest.services;
 
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.WpsException;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusConfig;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusProcessorExtractor;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusProductionService;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionType;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
@@ -34,18 +31,14 @@ public class DescribeProcessService {
     @Path("{processorId}")
     @Produces(MediaType.APPLICATION_XML)
     public String describeProcess(@PathParam("processorId") String processorId) {
-//        CalvalusProductionService calvalusProductionService = new CalvalusProductionService();
-        CalvalusConfig calvalusConfig = new CalvalusConfig();
         StringWriter writer = new StringWriter();
         try {
-            ProductionService productionService = CalvalusProductionService.getInstance(calvalusConfig);
-
-            CalvalusProcessorExtractor extractor = new CalvalusProcessorExtractor(productionService);
+            CalvalusHelper calvalusHelper = new CalvalusHelper();
             ProcessorNameParser parser = new ProcessorNameParser(processorId);
-            Processor testProcessor = extractor.getProcessor(parser);
+            Processor testProcessor = calvalusHelper.getProcessor(parser);
 
             DescribeProcessResponse describeProcessResponse = new DescribeProcessResponse();
-            ProcessDescriptions processDescriptions = describeProcessResponse.getDescribeProcessResponse(testProcessor, extractor);
+            ProcessDescriptions processDescriptions = describeProcessResponse.getDescribeProcessResponse(testProcessor, calvalusHelper.getProductSets());
 
             JaxbHelper jaxbHelper = new JaxbHelper();
             jaxbHelper.marshal(processDescriptions, writer);
