@@ -92,7 +92,13 @@ public class FireL3ProductionType extends HadoopProductionType {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+            } else {
+                throw new ProductionException("missing request parameter inputPath or inputTable");
+            }
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
 
@@ -118,7 +124,13 @@ public class FireL3ProductionType extends HadoopProductionType {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 setRequestParameters(productionRequest, jobConfigSr);
 
-                jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+                if (productionRequest.getParameters().containsKey("inputPath")) {
+                    jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+                } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                    jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+                } else {
+                    throw new ProductionException("missing request parameter inputPath or inputTable");
+                }
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, singleDayAsRange.toString());
 

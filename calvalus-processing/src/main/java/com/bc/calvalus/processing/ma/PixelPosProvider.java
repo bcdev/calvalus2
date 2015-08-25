@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
@@ -28,11 +29,13 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Provides a {@code PixelPos} for a given {@code Record}, if possible.
  */
 public class PixelPosProvider {
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Product product;
     private final PixelTimeProvider pixelTimeProvider;
@@ -171,8 +174,13 @@ public class PixelPosProvider {
 
     public static Area computePixelArea(List<PixelPosRecord> pixelPosRecords, int macroPixelSize) {
         Area pixelArea = new Area();
+        int i = 0;
         for (PixelPosProvider.PixelPosRecord pixelPosRecord : pixelPosRecords) {
             PixelPos pixelPos = pixelPosRecord.getPixelPos();
+            if (++i <= 4) {
+                LOG.info(String.format("pixel pos y=%9.4f, x=%9.4f ...", pixelPos.y, pixelPos.x));
+            }
+
             Rectangle rectangle = new Rectangle((int) pixelPos.x - macroPixelSize / 2,
                                                 (int) pixelPos.y - macroPixelSize / 2,
                                                 macroPixelSize, macroPixelSize);

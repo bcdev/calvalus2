@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -47,7 +48,7 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
@@ -67,7 +68,14 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
         jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
 
-        job.setInputFormatClass(PatternBasedInputFormat.class);
+        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            job.setInputFormatClass(PatternBasedInputFormat.class);
+        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            job.setInputFormatClass(TableInputFormat.class);
+        } else {
+            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
+                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
+        }
         job.setMapperClass(PrevueMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);

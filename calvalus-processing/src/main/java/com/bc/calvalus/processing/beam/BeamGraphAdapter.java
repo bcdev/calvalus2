@@ -165,6 +165,11 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
         ResourceEngine resourceEngine = new ResourceEngine();
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
+        for (int i=0; i<getInputParameters().length; i+=2) {
+            if (! "output".equals(getInputParameters()[i])) {
+                processingParameters.put(getInputParameters()[i], getInputParameters()[i + 1]);
+            }
+        }
         for (String key : processingParameters.stringPropertyNames()) {
             velocityContext.put(key, processingParameters.get(key));
         }
