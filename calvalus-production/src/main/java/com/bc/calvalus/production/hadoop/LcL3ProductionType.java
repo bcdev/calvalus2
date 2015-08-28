@@ -21,15 +21,10 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.mosaic.MosaicConfig;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
 import com.bc.calvalus.processing.mosaic.MosaicWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.AbstractLcMosaicAlgorithm;
-import com.bc.calvalus.processing.mosaic.landcover.LCMosaicAlgorithm;
-import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
-import com.bc.calvalus.processing.mosaic.landcover.LcSDR8MosaicAlgorithm;
-import com.bc.calvalus.processing.mosaic.landcover.StatusRemapper;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -88,8 +83,11 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String outputVersion = productionRequest.getString("calvalus.output.version", "1.0");
 
-        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null)).toXml();
-        String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4")).toXml();
+        int cloudBorderWidth = productionRequest.getInteger("cloudBorderWidth", 150);
+        int mainBorderWidth = productionRequest.getInteger("mainBorderWidth", 250);
+
+        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
+        String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"), mainBorderWidth).toXml();
 
         String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");

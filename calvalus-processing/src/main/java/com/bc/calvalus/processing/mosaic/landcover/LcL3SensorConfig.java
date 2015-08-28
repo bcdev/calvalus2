@@ -60,9 +60,9 @@ public abstract class LcL3SensorConfig {
 
     public abstract float[] getWavelengths();
 
-    public abstract MosaicConfig getCloudMosaicConfig(String asLandText);
+    public abstract MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth);
 
-    public abstract MosaicConfig getMainMosaicConfig(String netCDF4);
+    public abstract MosaicConfig getMainMosaicConfig(String netCDF4, int borderWidth);
 
     public abstract String getTemporalCloudBandName();
 
@@ -132,7 +132,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText) {
+        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
             String sdrBandName = "sdr_8";
             String maskExpr;
             if (asLandText != null) {
@@ -153,7 +153,7 @@ public abstract class LcL3SensorConfig {
             return new MosaicConfig(type, maskExpr, varNames);
         }
 
-        public MosaicConfig getMainMosaicConfig(String outputFormat) {
+        public MosaicConfig getMainMosaicConfig(String outputFormat, int borderWidth) {
             String maskExpr;
             String[] varNames;
             // exclude invalid and deep water pixels
@@ -318,7 +318,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText) {
+        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
             String sdrBandName = "sdr_B3";
             String maskExpr;
             if (asLandText != null) {
@@ -339,7 +339,7 @@ public abstract class LcL3SensorConfig {
             return new MosaicConfig(type, maskExpr, varNames);
         }
 
-        public MosaicConfig getMainMosaicConfig(String outputFormat) {
+        public MosaicConfig getMainMosaicConfig(String outputFormat, int borderWidth) {
             String maskExpr;
             String[] varNames;
             // exclude invalid
@@ -476,7 +476,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText) {
+        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
             String sdrBandName = "refl_2";
             String maskExpr;
             if (asLandText != null) {
@@ -497,7 +497,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "(swath_x < 150 || swath_x > 1898 || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
@@ -506,7 +506,7 @@ public abstract class LcL3SensorConfig {
             return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);
         }
 
-        public MosaicConfig getMainMosaicConfig(String outputFormat) {
+        public MosaicConfig getMainMosaicConfig(String outputFormat, int borderWidth) {
             String maskExpr;
             String[] varNames;
             // exclude invalid
@@ -523,7 +523,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "(swath_x < 250 || swath_x > 1798 || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(refl_2 - refl_1) / (refl_2 + refl_1)"
             };
 
