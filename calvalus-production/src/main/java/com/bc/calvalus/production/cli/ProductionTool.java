@@ -433,6 +433,9 @@ public class ProductionTool {
     }
 
     private FileSystem getHDFS(String username, final Map<String, String> config) throws IOException {
+        if (config.containsKey("calvalus.hadoop.systemuser")) {
+            username = config.get("calvalus.hadoop.systemuser");
+        }
         UserGroupInformation hadoop = UserGroupInformation.createRemoteUser(username);
         try {
             return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {
