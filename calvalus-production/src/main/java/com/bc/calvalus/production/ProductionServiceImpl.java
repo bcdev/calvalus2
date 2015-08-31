@@ -453,12 +453,13 @@ public class ProductionServiceImpl implements ProductionService {
     private void deleteWorkflowOutput(WorkflowItem workflowItem) {
         if (workflowItem instanceof HadoopWorkflowItem) {
             HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
+            String outputDir = hadoopWorkflowItem.getOutputDir();
             try {
                 String userName = hadoopWorkflowItem.getUserName();
-                FileSystem fileSystem = hadoopWorkflowItem.getProcessingService().getFileSystem(userName);
-                JobUtils.clearDir(hadoopWorkflowItem.getOutputDir(), fileSystem);
+                FileSystem fileSystem = hadoopWorkflowItem.getProcessingService().getFileSystem(userName, outputDir);
+                JobUtils.clearDir(outputDir, fileSystem);
             } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to delete output dir " + hadoopWorkflowItem.getOutputDir(), e);
+                logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
             }
         } else {
             for (WorkflowItem item : workflowItem.getItems()) {

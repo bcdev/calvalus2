@@ -46,7 +46,7 @@ class ProductSetSaver implements WorkflowStatusListener {
         Path productSetsFile = new Path(outputDir, ProductSetPersistable.FILENAME);
         OutputStreamWriter outputStreamWriter = null;
         try {
-            FileSystem fileSystem = l2WorkflowItem.getProcessingService().getFileSystem(l2WorkflowItem.getUserName());
+            FileSystem fileSystem = l2WorkflowItem.getProcessingService().getFileSystem(l2WorkflowItem.getUserName(), productSetsFile.toString());
             OutputStream fsDataOutputStream = fileSystem.create(productSetsFile);
             outputStreamWriter = new OutputStreamWriter(fsDataOutputStream);
             outputStreamWriter.write(text);

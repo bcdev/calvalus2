@@ -58,37 +58,36 @@ public class PatternBasedInputFormat extends InputFormat {
 
         try {
             // parse request
-            Configuration configuration = job.getConfiguration();
-            String inputPathPatterns = configuration.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
-            String regionName = configuration.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
-            String dateRangesString = configuration.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
+            Configuration conf = job.getConfiguration();
+            String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
+            String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
+            String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
 
             List<DateRange> dateRanges = createDateRangeList(dateRangesString);
 
-            FileSystem fileSystem = FileSystem.get(configuration);
-            JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(configuration));
+            JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
             HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
 
-            ProductInventory productInventory = ProductInventory.createInventory(configuration);
-            List<InputSplit> splits = new ArrayList<InputSplit>(1000);
+            ProductInventory productInventory = ProductInventory.createInventory(conf);
+            List<InputSplit> splits = new ArrayList<>(1000);
             if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
                 for (DateRange dateRange : dateRanges) {
-                    FileStatus[] fileStatuses = getFileStatuses(fileSystem,
-                                                                hdfsInventoryService,
+                    FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService,
                                                                 inputPathPatterns,
                                                                 dateRange.getStartDate(),
                                                                 dateRange.getStopDate(),
-                                                                regionName);
-                    createSplits(fileSystem, productInventory, fileStatuses, splits);
+                                                                regionName,
+                                                                conf);
+                    createSplits(productInventory, fileStatuses, splits, conf);
                 }
             } else {
-                FileStatus[] fileStatuses = getFileStatuses(fileSystem,
-                                                            hdfsInventoryService,
+                FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService,
                                                             inputPathPatterns,
                                                             null,
                                                             null,
-                                                            regionName);
-                createSplits(fileSystem, productInventory, fileStatuses, splits);
+                                                            regionName,
+                                                            conf);
+                createSplits(productInventory, fileStatuses, splits, conf);
             }
 
             LOG.info("Total files to process : " + splits.size());
@@ -100,7 +99,7 @@ public class PatternBasedInputFormat extends InputFormat {
     }
 
     private List<DateRange> createDateRangeList(String dateRangesString) throws IOException {
-        List<DateRange> dateRanges = new ArrayList<DateRange>();
+        List<DateRange> dateRanges = new ArrayList<>();
         boolean isDateRangeSet = StringUtils.isNotNullAndNotEmpty(dateRangesString);
         if (isDateRangeSet) {
             String[] dateRangesStrings = dateRangesString.split(",");
@@ -118,10 +117,13 @@ public class PatternBasedInputFormat extends InputFormat {
     }
 
 
-    protected void createSplits(FileSystem fs, ProductInventory productInventory,
-                              FileStatus[] fileStatuses, List<InputSplit> splits) throws IOException {
+    protected void createSplits(ProductInventory productInventory,
+                                FileStatus[] fileStatuses,
+                                List<InputSplit> splits,
+                                Configuration conf) throws IOException {
         for (FileStatus file : fileStatuses) {
             long fileLength = file.getLen();
+            FileSystem fs = file.getPath().getFileSystem(conf);
             BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
             if (blocks != null && blocks.length > 0) {
                 BlockLocation block = blocks[0];
@@ -148,15 +150,18 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    private static FileStatus[] getFileStatuses(FileSystem fileSystem,
-                                                HdfsInventoryService inventoryService, String inputPathPatterns,
-                                                Date minDate, Date maxDate, String regionName) throws IOException {
+    private static FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+                                                String inputPathPatterns,
+                                                Date minDate,
+                                                Date maxDate,
+                                                String regionName,
+                                                Configuration conf) throws IOException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(fileSystem, inputPatterns);
+        return inventoryService.globFileStatuses(inputPatterns, conf);
     }
 
     /**
