@@ -16,11 +16,13 @@ import java.util.List;
 public class InputDescriptionTypeBuilder {
 
     private CodeType identifier;
+    private LanguageStringType title;
     private LanguageStringType abstractValue;
     private LiteralInputType literalInputType;
 
     private InputDescriptionTypeBuilder() {
         this.identifier = new CodeType();
+        this.title = new LanguageStringType();
         this.abstractValue = new LanguageStringType();
         this.literalInputType = new LiteralInputType();
     }
@@ -37,6 +39,12 @@ public class InputDescriptionTypeBuilder {
         this.identifier.setValue(identifierText);
         return this;
     }
+
+    public InputDescriptionTypeBuilder withTitle(String title) {
+        this.title.setValue(title);
+        return this;
+    }
+
 
     public InputDescriptionTypeBuilder withAbstract(String abstractText) {
         this.abstractValue.setValue(abstractText);
@@ -66,6 +74,10 @@ public class InputDescriptionTypeBuilder {
 
     public CodeType getIdentifier() {
         return identifier;
+    }
+
+    public LanguageStringType getTitle() {
+        return title;
     }
 
     public LanguageStringType getAbstractValue() {

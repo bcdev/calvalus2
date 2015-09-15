@@ -54,10 +54,14 @@ public class Capabilities
     }
 
     public Capabilities(CapabilitiesBuilder builder) {
+        this.operationsMetadata = builder.getOperationsMetadata();
         this.serviceIdentification = builder.getServiceIdentification();
         this.serviceProvider = builder.getServiceProvider();
         this.processOfferings = builder.getProcessOfferings();
         this.languages = builder.getLanguages();
+        this.service = "WPS";
+        this.version = "1.0.0";
+        this.lang = "en";
     }
 
     @XmlElement(name = "ProcessOfferings", required = true)

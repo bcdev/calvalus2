@@ -1,7 +1,12 @@
 package com.bc.calvalus.wpsrest.calvalusfacade;
 
+import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
+import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
+import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_NAME;
+import static com.bc.calvalus.wpsrest.CalvalusParameter.getProductionParameters;
+import static com.bc.calvalus.wpsrest.CalvalusParameter.getProductsetParameters;
+
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
-import com.bc.calvalus.wpsrest.CalvalusParameter;
 import com.bc.calvalus.wpsrest.ExecuteRequestExtractor;
 import com.bc.calvalus.wpsrest.Processor;
 import org.apache.commons.lang.StringUtils;
@@ -24,7 +29,7 @@ public class CalvalusDataInputs {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
-        extractProcessorInfoParameters();
+        extractProcessorInfoParameters(processor);
         extractProductsetParameters();
         transformProcessorParameters(processor);
         transformL3Parameters();
@@ -56,7 +61,7 @@ public class CalvalusDataInputs {
     }
 
     private void extractProductionParameters() {
-        List<String> productionParameterNames = CalvalusParameter.getProductionParameters();
+        List<String> productionParameterNames = getProductionParameters();
         for (String parameterName : productionParameterNames) {
             if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
                 inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
@@ -64,17 +69,16 @@ public class CalvalusDataInputs {
         }
     }
 
-    private void extractProcessorInfoParameters() {
-        List<String> processorInfoParameterNames = CalvalusParameter.getProcessorInfoParameters();
-        for (String parameterName : processorInfoParameterNames) {
-            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
-                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
-            }
+    private void extractProcessorInfoParameters(Processor processor) {
+        if (processor != null) {
+            inputMapFormatted.put(PROCESSOR_BUNDLE_NAME.getIdentifier(), processor.getBundleName());
+            inputMapFormatted.put(PROCESSOR_BUNDLE_VERSION.getIdentifier(), processor.getBundleVersion());
+            inputMapFormatted.put(PROCESSOR_NAME.getIdentifier(), processor.getName());
         }
     }
 
     private void extractProductsetParameters() {
-        List<String> productsetParameterNames = CalvalusParameter.getProductsetParameters();
+        List<String> productsetParameterNames = getProductsetParameters();
         for (String parameterName : productsetParameterNames) {
             if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
                 inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));

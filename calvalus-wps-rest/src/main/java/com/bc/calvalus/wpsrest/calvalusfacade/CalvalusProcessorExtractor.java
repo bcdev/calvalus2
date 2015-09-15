@@ -19,9 +19,11 @@ import java.util.List;
 public class CalvalusProcessorExtractor {
 
     private ProductionService productionService;
+    private String userName;
 
-    protected CalvalusProcessorExtractor(ProductionService productionService) {
+    protected CalvalusProcessorExtractor(ProductionService productionService, String userName) {
         this.productionService = productionService;
+        this.userName = userName;
     }
 
     protected List<Processor> getProcessors() throws IOException, ProductionException {
@@ -59,12 +61,12 @@ public class CalvalusProcessorExtractor {
     }
 
     protected ProductSet[] getProductSets() throws ProductionException {
-        return productionService.getProductSets("hans", "");
+        return productionService.getProductSets(userName, "");
     }
 
     private BundleDescriptor[] getBundleDescriptors() throws ProductionException, IOException {
         BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
-        return productionService.getBundles("hans", filter);
+        return productionService.getBundles(userName, filter);
     }
 
 }

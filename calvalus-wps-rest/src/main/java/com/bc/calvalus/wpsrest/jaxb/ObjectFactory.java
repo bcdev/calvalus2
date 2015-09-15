@@ -8,6 +8,7 @@
 
 package com.bc.calvalus.wpsrest.jaxb;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlRegistry;
 
 
@@ -414,5 +415,9 @@ public class ObjectFactory {
 
     public L3Parameters createL3Parameters() {
         return new L3Parameters();
+    }
+
+    public RequestMethodType createRequestMethodType() {
+        return new RequestMethodType();
     }
 }

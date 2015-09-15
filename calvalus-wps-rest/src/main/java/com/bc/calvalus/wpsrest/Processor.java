@@ -47,6 +47,11 @@ public class Processor {
         return processorDescriptor.getParameterDescriptors();
     }
 
+    /**
+     * This is triggered when the processor parameter is not in XML format (eg. polymer)
+     *
+     * @return A template of processor parameters in a plain text format.
+     */
     public String getDefaultParameters() {
         return processorDescriptor.getDefaultParameters();
     }
@@ -57,6 +62,22 @@ public class Processor {
 
     public String getDefaultBeamBundle() {
         return defaultBeamBundle;
+    }
+
+    public String getBundleName() {
+        return bundleDescriptor.getBundleName();
+    }
+
+    public String getBundleVersion() {
+        return bundleDescriptor.getBundleVersion();
+    }
+
+    public String getName() {
+        return processorDescriptor.getExecutableName();
+    }
+
+    public String getVersion() {
+        return processorDescriptor.getProcessorVersion();
     }
 
     private String extractTitle() {

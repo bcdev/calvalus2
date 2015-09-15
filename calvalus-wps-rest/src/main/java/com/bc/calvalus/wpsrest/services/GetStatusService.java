@@ -32,16 +32,16 @@ public class GetStatusService {
     @GET
     @Path("{productionId}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String execute(@PathParam("productionId") String productionId) {
+    public String getStatus(String userName, @PathParam("productionId") String productionId) {
         JaxbHelper jaxbHelper = new JaxbHelper();
         StringWriter stringWriter = new StringWriter();
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper();
+            CalvalusHelper calvalusHelper = new CalvalusHelper(userName);
             ProductionService productionService = calvalusHelper.getProductionService();
             Production production = productionService.getProduction(productionId);
 
-            String userName = production.getProductionRequest().getUserName();
-            productionService.updateStatuses(userName);
+//            String userName = production.getProductionRequest().getUserName();
+//            productionService.updateStatuses(userName);
             ProcessStatus processingStatus = production.getProcessingStatus();
 
             if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
@@ -57,6 +57,11 @@ public class GetStatusService {
                 ExecuteResponse executeResponse = executeSuccessfulResponse.getExecuteResponse(productResultUrls);
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
+            } else if (production.getProcessingStatus().getState().isDone()) {
+                ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();
+                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse(production.getProcessingStatus().getMessage());
+                jaxbHelper.marshal(executeResponse, stringWriter);
+                return stringWriter.toString();
             } else {
                 ExecuteStartedResponse executeStartedResponse = new ExecuteStartedResponse();
                 ExecuteResponse executeResponse = executeStartedResponse.getExecuteResponse(processingStatus.getState().toString(), 100 * processingStatus.getProgress());
@@ -69,7 +74,7 @@ public class GetStatusService {
             StringWriter exceptionStringWriter = new StringWriter();
             ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();
             try {
-                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse();
+                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse(e.getMessage());
                 jaxbHelper.marshal(executeResponse, exceptionStringWriter);
             } catch (JAXBException | DatatypeConfigurationException exception) {
                 exception.printStackTrace();

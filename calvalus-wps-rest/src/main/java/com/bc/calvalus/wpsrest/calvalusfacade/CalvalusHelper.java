@@ -17,22 +17,28 @@ import java.util.List;
  */
 public class CalvalusHelper {
 
+    private final String userName;
     private final CalvalusProduction calvalusProduction;
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
-    public CalvalusHelper() throws IOException, ProductionException {
+    public CalvalusHelper(String userName) throws IOException, ProductionException {
+        this.userName = userName;
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging();
-        this.calvalusProcessorExtractor = new CalvalusProcessorExtractor(getProductionService());
+        this.calvalusProcessorExtractor = new CalvalusProcessorExtractor(getProductionService(), userName);
     }
 
     public ProductionService getProductionService() throws ProductionException, IOException {
-        return CalvalusProductionService.getInstance();
+        return CalvalusProductionService.getProductionServiceSingleton();
     }
 
-    public Production orderProduction(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
-        return calvalusProduction.orderProduction(getProductionService(), request);
+    public Production orderProductionAsynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
+        return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
+    }
+
+    public Production orderProductionSynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
+        return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
     }
 
     public List<String> getProductResultUrls(Production production) throws UnknownHostException {
@@ -41,6 +47,10 @@ public class CalvalusHelper {
 
     public void stageProduction(ProductionService productionService, Production production) throws ProductionException, InterruptedException {
         calvalusStaging.stageProduction(productionService, production);
+    }
+
+    public void observeStagingStatus(ProductionService productionService, Production production) throws InterruptedException {
+        calvalusStaging.observeStagingStatus(productionService, production);
     }
 
     public List<Processor> getProcessors() throws IOException, ProductionException {

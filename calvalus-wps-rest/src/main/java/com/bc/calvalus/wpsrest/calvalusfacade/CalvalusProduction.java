@@ -10,6 +10,9 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 
+import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,17 +22,46 @@ import java.util.logging.Logger;
 public class CalvalusProduction {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
 
-    protected Production orderProduction(ProductionService productionService, ProductionRequest request)
+    protected Production orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
                 throws ProductionException, InterruptedException {
         logInfo("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
+
+        Timer statusObserver = CalvalusProductionService.getStatusObserverSingleton();
+        synchronized (CalvalusProductionService.getUserProductionMap()) {
+            if (!CalvalusProductionService.getUserProductionMap().containsKey(userName)) {
+                CalvalusProductionService.getUserProductionMap().put(userName, 1);
+                statusObserver.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            updateProductionStatuses(userName);
+                        } catch (IOException | ProductionException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
+            }
+        }
+
         return production;
     }
 
-    protected void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
+    protected Production orderProductionSynchronous(ProductionService productionService, ProductionRequest request)
+                throws ProductionException, InterruptedException {
+        logInfo("Ordering production...");
+        ProductionResponse productionResponse = productionService.orderProduction(request);
+        Production production = productionResponse.getProduction();
+        logInfo("Production successfully ordered. The production ID is: " + production.getId());
+        observeProduction(productionService, production);
+        return production;
+    }
+
+    private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
         Runtime.getRuntime().addShutdownHook(shutDownHook);
 
@@ -49,6 +81,15 @@ public class CalvalusProduction {
             logInfo("Production completed. Output directory is " + production.getStagingPath());
         } else {
             logError("Error: Production did not complete normally: " + production.getProcessingStatus().getMessage());
+        }
+    }
+
+    private void updateProductionStatuses(String userName) throws IOException, ProductionException {
+        final ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+        if (productionService != null) {
+            synchronized (this) {
+                productionService.updateStatuses(userName);
+            }
         }
     }
 

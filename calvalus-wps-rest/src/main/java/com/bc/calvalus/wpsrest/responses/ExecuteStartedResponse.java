@@ -14,9 +14,16 @@ import java.util.GregorianCalendar;
  */
 public class ExecuteStartedResponse {
 
-    public ExecuteResponse getExecuteResponse(String state, float progress) throws DatatypeConfigurationException {
-        ExecuteResponse executeResponse = new ExecuteResponse();
+    private final ExecuteResponse executeResponse;
 
+    public ExecuteStartedResponse() {
+        this.executeResponse = new ExecuteResponse();
+        this.executeResponse.setService("WPS");
+        this.executeResponse.setVersion("1.0.0");
+        this.executeResponse.setLang("en");
+    }
+
+    public ExecuteResponse getExecuteResponse(String state, float progress) throws DatatypeConfigurationException {
         StatusType statusType = new StatusType();
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         XMLGregorianCalendar currentTime = DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
@@ -30,5 +37,4 @@ public class ExecuteStartedResponse {
 
         return executeResponse;
     }
-
 }

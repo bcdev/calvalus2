@@ -21,14 +21,14 @@ import java.math.BigInteger;
 
 
 /**
- * Description of an input to a process. 
- * 
- * In this use, the DescriptionType shall describe this process input. 
- * 
+ * Description of an input to a process.
+ * <p/>
+ * In this use, the DescriptionType shall describe this process input.
+ * <p/>
  * <p>Java class for InputDescriptionType complex type.
- * 
+ * <p/>
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ * <p/>
  * <pre>
  * &lt;complexType name="InputDescriptionType">
  *   &lt;complexContent>
@@ -42,22 +42,19 @@ import java.math.BigInteger;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "InputDescriptionType", propOrder = {
-    "complexData",
-    "literalData",
-    "boundingBoxData"
+            "complexData",
+            "literalData",
+            "boundingBoxData"
 })
 public class InputDescriptionType
-    extends DescriptionType
-{
+            extends DescriptionType {
 
     public InputDescriptionType(InputDescriptionTypeBuilder builder) {
         this.identifier = builder.getIdentifier();
-        this._abstract = builder.getAbstractValue();
+        this.title = builder.getTitle();
         this.literalData = builder.getLiteralInputType();
     }
 
@@ -79,11 +76,9 @@ public class InputDescriptionType
 
     /**
      * Gets the value of the complexData property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link SupportedComplexDataInputType }
-     *     
+     *
+     * @return possible object is
+     * {@link SupportedComplexDataInputType }
      */
     public SupportedComplexDataInputType getComplexData() {
         return complexData;
@@ -91,11 +86,9 @@ public class InputDescriptionType
 
     /**
      * Sets the value of the complexData property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link SupportedComplexDataInputType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link SupportedComplexDataInputType }
      */
     public void setComplexData(SupportedComplexDataInputType value) {
         this.complexData = value;
@@ -103,11 +96,9 @@ public class InputDescriptionType
 
     /**
      * Gets the value of the literalData property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link LiteralInputType }
-     *     
+     *
+     * @return possible object is
+     * {@link LiteralInputType }
      */
     public LiteralInputType getLiteralData() {
         return literalData;
@@ -115,11 +106,9 @@ public class InputDescriptionType
 
     /**
      * Sets the value of the literalData property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link LiteralInputType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link LiteralInputType }
      */
     public void setLiteralData(LiteralInputType value) {
         this.literalData = value;
@@ -127,11 +116,9 @@ public class InputDescriptionType
 
     /**
      * Gets the value of the boundingBoxData property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link SupportedCRSsType }
-     *     
+     *
+     * @return possible object is
+     * {@link SupportedCRSsType }
      */
     public SupportedCRSsType getBoundingBoxData() {
         return boundingBoxData;
@@ -139,11 +126,9 @@ public class InputDescriptionType
 
     /**
      * Sets the value of the boundingBoxData property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link SupportedCRSsType }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link SupportedCRSsType }
      */
     public void setBoundingBoxData(SupportedCRSsType value) {
         this.boundingBoxData = value;
@@ -151,11 +136,9 @@ public class InputDescriptionType
 
     /**
      * Gets the value of the minOccurs property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link BigInteger }
-     *     
+     *
+     * @return possible object is
+     * {@link BigInteger }
      */
     public BigInteger getMinOccurs() {
         return minOccurs;
@@ -163,11 +146,9 @@ public class InputDescriptionType
 
     /**
      * Sets the value of the minOccurs property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link BigInteger }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link BigInteger }
      */
     public void setMinOccurs(BigInteger value) {
         this.minOccurs = value;
@@ -175,11 +156,9 @@ public class InputDescriptionType
 
     /**
      * Gets the value of the maxOccurs property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link BigInteger }
-     *     
+     *
+     * @return possible object is
+     * {@link BigInteger }
      */
     public BigInteger getMaxOccurs() {
         return maxOccurs;
@@ -187,11 +166,9 @@ public class InputDescriptionType
 
     /**
      * Sets the value of the maxOccurs property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link BigInteger }
-     *     
+     *
+     * @param value allowed object is
+     *              {@link BigInteger }
      */
     public void setMaxOccurs(BigInteger value) {
         this.maxOccurs = value;

@@ -28,10 +28,36 @@ import java.util.List;
  */
 public class DescribeProcessResponse {
 
-    public ProcessDescriptions getDescribeProcessResponse(Processor processor, ProductSet[] productSets) throws ProductionException {
-        ProcessDescriptions processDescriptions = new ProcessDescriptions();
+    public ProcessDescriptions getMultipleDescribeProcessResponse(List<Processor> processors, ProductSet[] productSets) throws ProductionException {
+        ProcessDescriptions processDescriptions = createDefaultProcessDescriptions();
+        for (Processor processor : processors) {
+            ProcessDescriptionType processDescription = getSingleProcessDescription(processor, productSets);
+            processDescriptions.getProcessDescription().add(processDescription);
+        }
+        return processDescriptions;
+    }
 
+    public ProcessDescriptions getSingleDescribeProcessResponse(Processor processor, ProductSet[] productSets) throws ProductionException {
+        ProcessDescriptions processDescriptions = createDefaultProcessDescriptions();
+        ProcessDescriptionType processDescription = getSingleProcessDescription(processor, productSets);
+        processDescriptions.getProcessDescription().add(processDescription);
+        return processDescriptions;
+    }
+
+    private ProcessDescriptions createDefaultProcessDescriptions() {
+        ProcessDescriptions processDescriptions = new ProcessDescriptions();
+        processDescriptions.setService("WPS");
+        processDescriptions.setVersion("1.0.0");
+        processDescriptions.setLang("en");
+        return processDescriptions;
+    }
+
+    private ProcessDescriptionType getSingleProcessDescription(Processor processor, ProductSet[] productSets) throws ProductionException {
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
+
+        processDescription.setStoreSupported(true);
+        processDescription.setStatusSupported(true);
+        processDescription.setProcessVersion(processor.getVersion());
 
         CodeType identifier = getIdentifier(processor.getIdentifier());
         processDescription.setIdentifier(identifier);
@@ -55,20 +81,22 @@ public class DescribeProcessResponse {
         complexDataDescriptionType.setMimeType("binary");
         complexDataCombinationType.setFormat(complexDataDescriptionType);
         supportedComplexDataType.setDefault(complexDataCombinationType);
+
+        ComplexDataCombinationsType complexDataCombinationsType = new ComplexDataCombinationsType();
+        complexDataCombinationsType.getFormat().add(complexDataDescriptionType);
+        supportedComplexDataType.setSupported(complexDataCombinationsType);
+
         output.setComplexOutput(supportedComplexDataType);
 
         CodeType outputId = getIdentifier("productionResults");
         output.setIdentifier(outputId);
 
         LanguageStringType abstractOutput = getAbstractText("URL to the production result(s)");
-        output.setAbstract(abstractOutput);
+        output.setTitle(abstractOutput);
 
         dataOutputs.getOutput().add(output);
         processDescription.setProcessOutputs(dataOutputs);
-
-        processDescriptions.getProcessDescription().add(processDescription);
-
-        return processDescriptions;
+        return processDescription;
     }
 
     private DataInputs getDataInputs(Processor processor, ProductSet[] productSets) throws ProductionException {
@@ -78,7 +106,7 @@ public class DescribeProcessResponse {
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("productionName")
-                    .withAbstract("Production name")
+                    .withTitle("Production name")
                     .withDataType("string")
                     .build();
         dataInputs.getInput().add(productionNameInput);
@@ -86,7 +114,7 @@ public class DescribeProcessResponse {
         InputDescriptionType calvalusBundleVersion = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("calvalus.calvalus.bundle")
-                    .withAbstract("Calvalus bundle version")
+                    .withTitle("Calvalus bundle version")
                     .withDefaultValue(processor.getDefaultCalvalusBundle())
                     .withDataType("string")
                     .build();
@@ -95,7 +123,7 @@ public class DescribeProcessResponse {
         InputDescriptionType beamBundleVersion = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("calvalus.beam.bundle")
-                    .withAbstract("Beam bundle version")
+                    .withTitle("Beam bundle version")
                     .withDefaultValue(processor.getDefaultBeamBundle())
                     .withDataType("string")
                     .build();
@@ -106,7 +134,7 @@ public class DescribeProcessResponse {
                 InputDescriptionType input = InputDescriptionTypeBuilder
                             .create()
                             .withIdentifier(parameterDescriptor.getName())
-                            .withAbstract(parameterDescriptor.getDescription())
+                            .withTitle(parameterDescriptor.getDescription())
                             .withDefaultValue(parameterDescriptor.getDefaultValue())
                             .withDataType(parameterDescriptor.getType())
                             .build();
@@ -117,7 +145,7 @@ public class DescribeProcessResponse {
             InputDescriptionType input = InputDescriptionTypeBuilder
                         .create()
                         .withIdentifier("processorParameters")
-                        .withAbstract("Processor parameters")
+                        .withTitle("Processor parameters")
                         .withDefaultValue(processor.getDefaultParameters())
                         .withDataType("string")
                         .build();
@@ -132,7 +160,7 @@ public class DescribeProcessResponse {
         InputDescriptionType inputPath = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("inputPath")
-                    .withAbstract("Input path")
+                    .withTitle("Input path")
                     .withDataType("string")
                     .withAllowedValues(allowedInputPaths)
                     .build();
@@ -142,7 +170,7 @@ public class DescribeProcessResponse {
         InputDescriptionType minDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("minDate")
-                    .withAbstract("Date from")
+                    .withTitle("Date from")
                     .withDataType("string")
                     .build();
 
@@ -151,7 +179,7 @@ public class DescribeProcessResponse {
         InputDescriptionType maxDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("maxDate")
-                    .withAbstract("Date to")
+                    .withTitle("Date to")
                     .withDataType("string")
                     .build();
 
@@ -160,7 +188,7 @@ public class DescribeProcessResponse {
         InputDescriptionType periodLength = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("periodLength")
-                    .withAbstract("Period length")
+                    .withTitle("Period length")
                     .withDataType("string")
                     .build();
 
@@ -169,7 +197,7 @@ public class DescribeProcessResponse {
         InputDescriptionType regionWkt = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("regionWkt")
-                    .withAbstract("Region WKT")
+                    .withTitle("Region WKT")
                     .withDataType("string")
                     .build();
 
@@ -182,7 +210,7 @@ public class DescribeProcessResponse {
         InputDescriptionType calvalusOutputFormat = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("calvalus.output.format")
-                    .withAbstract("Calvalus output format")
+                    .withTitle("Calvalus output format")
                     .withDataType("string")
                     .withAllowedValues(allowedOutputFormat)
                     .build();

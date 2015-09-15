@@ -29,7 +29,6 @@ public class CalvalusStaging {
                 throws ProductionException, InterruptedException {
         logInfo("Staging results...");
         productionService.stageProductions(production.getId());
-        observeStagingStatus(productionService, production);
     }
 
     protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) throws UnknownHostException {
@@ -50,7 +49,7 @@ public class CalvalusStaging {
         return productResultUrls;
     }
 
-    private void observeStagingStatus(ProductionService productionService, Production production)
+    protected void observeStagingStatus(ProductionService productionService, Production production)
                 throws InterruptedException {
         String userName = production.getProductionRequest().getUserName();
         while (!production.getStagingStatus().isDone()) {
