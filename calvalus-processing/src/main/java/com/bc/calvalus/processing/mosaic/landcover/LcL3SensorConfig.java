@@ -428,7 +428,7 @@ public abstract class LcL3SensorConfig {
     public static class LcL3AvhrrConfig extends LcL3SensorConfig {
 
         static final String[] BANDNAMES = new String[] {
-                "refl_1", "refl_2", "bt_3", "bt_4", "bt_5"
+                "refl_1_ac", "refl_2_ac", "bt_3", "bt_4", "bt_5"
         };
         static final float[] WAVELENGTH = new float[] {
             630f, 912f, 3740f, 10800f, 12000f
@@ -464,7 +464,7 @@ public abstract class LcL3SensorConfig {
         }
 
         public String getTemporalCloudBandName() {
-            return "refl_2";
+            return "refl_2_ac";
         }
 
         @Override
@@ -477,7 +477,7 @@ public abstract class LcL3SensorConfig {
         }
 
         public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
-            String sdrBandName = "refl_2";
+            String sdrBandName = "refl_2_ac";
             String maskExpr;
             if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
@@ -497,8 +497,9 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
-                    "(refl_2 - refl_1) / (refl_2 + refl_1)"
+                    //"(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || sza > 70 || pixel_classif_flags == 0 || (pixel_classif_flags & 1 != 0)) ? 0 : (pixel_classif_flags & (2+16) != 0) ? 4 : (pixel_classif_flags & 32 != 0) ? 5 : (pixel_classif_flags & 64 != 0) ? 3 : (pixel_classif_flags & 1024 != 0) ? 1 : 2",
+                    "(refl_2_ac - refl_1_ac) / (refl_2_ac + refl_1_ac)"
             };
 
             String type = LcSDR8MosaicAlgorithm.class.getName();
@@ -510,10 +511,10 @@ public abstract class LcL3SensorConfig {
             String maskExpr;
             String[] varNames;
             // exclude invalid
-            maskExpr = "(status == 1 or (status == 2 and not nan(refl_1)) or (status >= 3))";
+            maskExpr = "(status == 1 or (status == 2 and not nan(refl_1_ac)) or (status >= 3))";
 
             varNames = new String[]{
-                    "refl_1", "refl_2", "bt_3", "bt_4", "bt_5"
+                    "refl_1_ac", "refl_2_ac", "bt_3", "bt_4", "bt_5"
                     //,"refl_error_1", "refl_error_2", "refl_error_3", "bt_error_4", "bt_error_5"
             };
 
@@ -523,8 +524,9 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
-                    "(refl_2 - refl_1) / (refl_2 + refl_1)"
+                    //"(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
+                    "(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || sza > 70 || pixel_classif_flags == 0 || (pixel_classif_flags & 1 != 0)) ? 0 : (pixel_classif_flags & (2+16) != 0) ? 4 : (pixel_classif_flags & 32 != 0) ? 5 : (pixel_classif_flags & 64 != 0) ? 3 : (pixel_classif_flags & 1024 != 0) ? 1 : 2",
+                    "(refl_2_ac - refl_1_ac) / (refl_2_ac + refl_1_ac)"
             };
 
             String type = "NetCDF4-LC".equals(outputFormat)
