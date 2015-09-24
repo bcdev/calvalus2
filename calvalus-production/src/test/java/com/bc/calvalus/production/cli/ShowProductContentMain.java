@@ -72,7 +72,7 @@ public class ShowProductContentMain {
             System.out.println("first pattern = " + pattern);
             firstPattern.add(pattern);
             try {
-                FileStatus[] fileStatuses = inventoryService.globFileStatuses(jobClientsMap.getFileSystem("marcoz"), firstPattern);
+                FileStatus[] fileStatuses = inventoryService.globFileStatuses(firstPattern, jobClientsMap.getConfiguration());
                 System.out.println("fileStatuses.length = " + fileStatuses.length);
                 if (fileStatuses.length > 0) {
                     System.out.println("fileStatuses[0] = " + fileStatuses[0]);

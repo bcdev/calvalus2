@@ -17,6 +17,7 @@
 package com.bc.calvalus.inventory;
 
 import com.bc.calvalus.JobClientsMap;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -51,7 +52,7 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws Exception {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        FileSystem fileSystem = FileSystem.get(jobClientsMap.getConfiguration()); // HDFS
         if (filter != null && filter.startsWith(USER_FILTER)) {
             String userName = filter.substring(USER_FILTER.length());
             if (userName.equals("all")) {
@@ -126,9 +127,11 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public String[] globPaths(String username, List<String> pathPatterns) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
-        Pattern pattern = createPattern(fileSystem, pathPatterns);
+        Configuration conf = jobClientsMap.getConfiguration();
+
+        Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        FileSystem fileSystem = new Path(commonPathPrefix).getFileSystem(conf);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
         List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
         collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
@@ -141,41 +144,49 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public String getQualifiedPath(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
-        return makeQualified(fileSystem, path).toString();
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return qualifiedPath.toString();
     }
 
     @Override
     public OutputStream addFile(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
-        return fileSystem.create(makeQualified(fileSystem, path));
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.create(qualifiedPath);
     }
 
     @Override
     public boolean removeFile(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
-        return fileSystem.delete(makeQualified(fileSystem, path), false);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.delete(qualifiedPath, false);
     }
 
     @Override
     public boolean removeDirectory(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
-        return fileSystem.delete(makeQualified(fileSystem, path), true);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.delete(qualifiedPath, true);
     }
 
-    public FileStatus[] globFileStatuses(FileSystem fileSystem, List<String> pathPatterns) throws IOException {
-        Pattern pattern = createPattern(fileSystem, pathPatterns);
+
+
+    public FileStatus[] globFileStatuses(List<String> pathPatterns, Configuration conf) throws IOException {
+        Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
-        return collectFileStatuses(fileSystem, qualifiedPath, pattern);
+        FileSystem commonFS = new Path(commonPathPrefix).getFileSystem(conf);
+        Path qualifiedPath = makeQualified(commonFS, commonPathPrefix);
+        return collectFileStatuses(commonFS, qualifiedPath, pattern);
     }
 
-    private Pattern createPattern(FileSystem fileSystem, List<String> inputRegexs) {
+    private Pattern createPattern(List<String> inputRegexs, Configuration conf) throws IOException {
         if (inputRegexs.size() == 0) {
             return null;
         }
         StringBuilder hugePattern = new StringBuilder(inputRegexs.size() * inputRegexs.get(0).length());
         for (String regex : inputRegexs) {
+            FileSystem fileSystem = new Path(regex).getFileSystem(conf);
             Path qualifiedPath = makeQualified(fileSystem, regex);
             hugePattern.append(qualifiedPath.toString());
             hugePattern.append("|");

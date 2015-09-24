@@ -21,7 +21,7 @@ public class LocalInventoryService extends AbstractInventoryService {
     public static final File EODATA_DIR = new File(CONTEXT_DIR, EODATA);
 
     public LocalInventoryService() throws IOException {
-        super(createLocal(), EODATA);
+        super(new JobClientsMap(new JobConf()), EODATA);
         CONTEXT_DIR.mkdirs();
         EODATA_DIR.mkdir();
     }
@@ -31,12 +31,4 @@ public class LocalInventoryService extends AbstractInventoryService {
         return CONTEXT_DIR.getPath();
     }
 
-    private static JobClientsMap createLocal() {
-        return new JobClientsMap(new JobConf()){
-            @Override
-            public synchronized FileSystem getFileSystem(String userName) throws IOException {
-                return LocalFileSystem.getLocal(getJobConf());
-            }
-        };
-    }
 }

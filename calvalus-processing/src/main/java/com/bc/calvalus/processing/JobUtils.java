@@ -36,7 +36,7 @@ public class JobUtils {
     public static void clearAndSetOutputDir(String outputDir, Job job, HadoopWorkflowItem hadoopWorkflowItem) throws IOException {
         HadoopProcessingService processingService = hadoopWorkflowItem.getProcessingService();
         String userName = hadoopWorkflowItem.getUserName();
-        FileSystem fileSystem = processingService.getFileSystem(userName);
+        FileSystem fileSystem = processingService.getFileSystem(userName, outputDir);
         final Path outputPath = clearDir(outputDir, fileSystem);
         FileOutputFormat.setOutputPath(job, outputPath);
     }

@@ -106,14 +106,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
-    public JobClient getJobClients(String username) throws IOException {
-        return jobClientsMap.getJobClient(username);
-    }
-
-    public FileSystem getFileSystem(String username) throws IOException {
-        return jobClientsMap.getFileSystem(username);
-    }
-
     @Override
     public BundleDescriptor[] getBundles(final String username, final BundleFilter filter) throws IOException {
         String bundleFilterString = filter.toString();
@@ -150,7 +142,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             bundleDirName = filter.getBundleName() + "-" + filter.getBundleVersion();
         }
         try {
-            FileSystem fileSystem = jobClientsMap.getFileSystem(username);
             if (filter.getNumSupportedProvider() == 0) {
                 logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
@@ -158,15 +149,18 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
                                                              BUNDLE_DESCRIPTOR_XML_FILENAME);
+                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                final String calvalusSoftwarePath = (jobClientsMap.getJobConf().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
+                final String calvalusSoftwarePath = (jobClientsMap.getConfiguration().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
                 String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
             }
         } catch (IOException e) {
@@ -358,6 +352,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         } else {
             return jobStatus.getMapProgress();
         }
+    }
+
+    public FileSystem getFileSystem(String userName, String path) throws IOException {
+        return jobClientsMap.getFileSystem(userName, path);
     }
 
     private static class BundleQueryCacheEntry {
