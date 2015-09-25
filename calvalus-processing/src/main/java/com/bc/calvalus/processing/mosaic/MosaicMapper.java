@@ -151,7 +151,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         }
 
         final String maskExpr = ctx.getValidMaskExpression();
-        final MultiLevelImage maskImage = ImageManager.getInstance().getMaskImage(maskExpr, gridProduct);
+        final MultiLevelImage maskImage = gridProduct.getMaskImage(maskExpr, null); // ImageManager.getInstance().getMaskImage(maskExpr, gridProduct);
 
         final MultiLevelImage[] varImages = new MultiLevelImage[ctx.getVariableCount()];
         for (int i = 0; i < ctx.getVariableCount(); i++) {

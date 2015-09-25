@@ -28,6 +28,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.framework.datamodel.Band;
 import org.esa.snap.framework.datamodel.MetadataElement;
 import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.framework.datamodel.ProductData;
 import org.esa.snap.framework.datamodel.TiePointGrid;
 import org.esa.snap.framework.gpf.OperatorException;
 import org.esa.snap.gpf.operators.standard.BandMathsOp;
@@ -118,14 +119,27 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         context.getCounter("Products", entry.getMessage()).increment(1);
     }
 
+    /* copied from old version of BandMathsOp */
+    public static BandMathsOp createBooleanExpressionBand(String expression, Product sourceProduct) {
+        BandMathsOp.BandDescriptor bandDescriptor = new BandMathsOp.BandDescriptor();
+        bandDescriptor.name = "band1";
+        bandDescriptor.expression = expression;
+        bandDescriptor.type = ProductData.TYPESTRING_INT8;
+        BandMathsOp bandMathsOp = new BandMathsOp();
+        bandMathsOp.setParameterDefaultValues();
+        bandMathsOp.setSourceProduct(sourceProduct);
+        bandMathsOp.setTargetBandDescriptors(bandDescriptor);
+        return bandMathsOp;
+    }
+
     private static boolean productHasSuspectLines(Product product) throws IOException {
         BandMathsOp mathop1 = null;
         BandMathsOp mathop2 = null;
         try {
-            mathop1 = BandMathsOp.createBooleanExpressionBand("l1_flags.INVALID", product);
+            mathop1 = createBooleanExpressionBand("l1_flags.INVALID", product);
             Band invalid = mathop1.getTargetProduct().getBandAt(0);
 
-            mathop2 = BandMathsOp.createBooleanExpressionBand("l1_flags.SUSPECT", product);
+            mathop2 = createBooleanExpressionBand("l1_flags.SUSPECT", product);
             Band suspect = mathop2.getTargetProduct().getBandAt(0);
 
             int width = product.getSceneRasterWidth();
