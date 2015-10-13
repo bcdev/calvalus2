@@ -34,9 +34,10 @@ import java.text.NumberFormat;
 import java.util.Arrays;
 
 /**
- * The algorithm, for lc_cci..
+ * The algorithm for fire_cci.
  *
  * @author MarcoZ
+ * @author thomas
  */
 public class FireMosaicAlgorithm implements MosaicAlgorithm, Configurable {
 

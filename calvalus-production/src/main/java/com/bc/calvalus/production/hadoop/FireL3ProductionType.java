@@ -45,11 +45,14 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * A production type used for generating one or more lc_cci Level-3 products.
+ * A production type used for generating one or more fire_cci Level-3 products.
  *
  * @author MarcoZ
+ * @author thomas
  */
 public class FireL3ProductionType extends HadoopProductionType {
+
+    public static final int DEFAULT_WINGS_RANGE = 15;
 
     public static class Spi extends HadoopProductionType.Spi {
 
@@ -201,7 +204,7 @@ public class FireL3ProductionType extends HadoopProductionType {
     }
 
     static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws ProductionException {
-        int wings = productionRequest.getInteger("wings", 10);
+        int wings = productionRequest.getInteger("wings", DEFAULT_WINGS_RANGE);
 
         Calendar calendar = ProductData.UTC.createCalendar();
         calendar.setTime(mainRange.getStartDate());
