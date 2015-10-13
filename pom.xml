@@ -28,8 +28,6 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-wps</module>
-        <module>calvalus-wps2</module>
         <module>calvalus-wps-rest</module>
     </modules>
 
