@@ -3,6 +3,7 @@ package com.bc.calvalus.wpsrest.services;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
@@ -26,11 +27,11 @@ public class GetCapabilitiesService {
 
     @GET
     @Produces(MediaType.APPLICATION_XML)
-    public String getCapabilities(String userName) {
+    public String getCapabilities(ServletRequestWrapper servletRequestWrapper) {
         StringWriter writer = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(userName);
+            CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
 
             List<Processor> processors = calvalusHelper.getProcessors();
 

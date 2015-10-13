@@ -1,6 +1,7 @@
 package com.bc.calvalus.wpsrest.responses;
 
 import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+import static com.bc.calvalus.wpsrest.WpsConstants.WPS_L3_PARAMETERS_SCHEMA_LOCATION;
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
@@ -18,6 +19,7 @@ import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptionType.ProcessOutputs;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.jaxb.SupportedComplexDataInputType;
 import com.bc.calvalus.wpsrest.jaxb.SupportedComplexDataType;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -77,7 +79,6 @@ public class DescribeProcessResponse {
         SupportedComplexDataType supportedComplexDataType = new SupportedComplexDataType();
         ComplexDataCombinationType complexDataCombinationType = new ComplexDataCombinationType();
         ComplexDataDescriptionType complexDataDescriptionType = new ComplexDataDescriptionType();
-        complexDataDescriptionType.setSchema("http://schemaOutput.xsd");
         complexDataDescriptionType.setMimeType("binary");
         complexDataCombinationType.setFormat(complexDataDescriptionType);
         supportedComplexDataType.setDefault(complexDataCombinationType);
@@ -111,24 +112,6 @@ public class DescribeProcessResponse {
                     .build();
         dataInputs.getInput().add(productionNameInput);
 
-        InputDescriptionType calvalusBundleVersion = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("calvalus.calvalus.bundle")
-                    .withTitle("Calvalus bundle version")
-                    .withDefaultValue(processor.getDefaultCalvalusBundle())
-                    .withDataType("string")
-                    .build();
-        dataInputs.getInput().add(calvalusBundleVersion);
-
-        InputDescriptionType beamBundleVersion = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("calvalus.beam.bundle")
-                    .withTitle("Beam bundle version")
-                    .withDefaultValue(processor.getDefaultBeamBundle())
-                    .withDataType("string")
-                    .build();
-        dataInputs.getInput().add(beamBundleVersion);
-
         if (parameterDescriptors != null) {
             for (ParameterDescriptor parameterDescriptor : parameterDescriptors) {
                 InputDescriptionType input = InputDescriptionTypeBuilder
@@ -153,19 +136,21 @@ public class DescribeProcessResponse {
             dataInputs.getInput().add(input);
         }
 
-        List<String> allowedInputPaths = new ArrayList<>();
+        List<String> allowedInputDataSets = new ArrayList<>();
         for (ProductSet productSet : productSets) {
-            allowedInputPaths.add("/calvalus/" + productSet.getPath());
+            if (ArrayUtils.contains(processor.getInputProductTypes(), productSet.getProductType())) {
+                allowedInputDataSets.add(productSet.getName());
+            }
         }
-        InputDescriptionType inputPath = InputDescriptionTypeBuilder
+        InputDescriptionType inputDataSetName = InputDescriptionTypeBuilder
                     .create()
-                    .withIdentifier("inputPath")
-                    .withTitle("Input path")
+                    .withIdentifier("inputDataSetName")
+                    .withTitle("Input data set name")
                     .withDataType("string")
-                    .withAllowedValues(allowedInputPaths)
+                    .withAllowedValues(allowedInputDataSets)
                     .build();
 
-        dataInputs.getInput().add(inputPath);
+        dataInputs.getInput().add(inputDataSetName);
 
         InputDescriptionType minDate = InputDescriptionTypeBuilder
                     .create()
@@ -203,7 +188,7 @@ public class DescribeProcessResponse {
 
         dataInputs.getInput().add(regionWkt);
 
-        InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema("http://schema.xsd");
+        InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(WPS_L3_PARAMETERS_SCHEMA_LOCATION);
         dataInputs.getInput().add(l3ParametersComplexType);
 
         List<String> allowedOutputFormat = getAllowedOutputFormats();

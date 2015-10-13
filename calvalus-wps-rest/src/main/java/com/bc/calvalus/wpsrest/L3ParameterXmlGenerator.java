@@ -24,7 +24,7 @@ public class L3ParameterXmlGenerator {
         sb.append("<parameters>\n");
 
         constructSingleElement("planetaryGrid", l3Parameters.getPlanetaryGrid());
-        constructSingleElement("numRows", String.valueOf(l3Parameters.getNumRows()));
+        constructSingleElement("numRows", l3Parameters.getNumRows() == 0 ? "" : "" + (l3Parameters.getNumRows()));
         constructSingleElement("compositingType", String.valueOf(l3Parameters.getCompositingType()));
         constructSingleElement("superSampling", String.valueOf(l3Parameters.getSuperSampling()));
         constructSingleElement("maskExpr", l3Parameters.getMaskExpr());
@@ -45,9 +45,11 @@ public class L3ParameterXmlGenerator {
     private void constructVariablesElement() {
         if (l3Parameters.getVariables() != null) {
             createOpeningTag("variables");
+            sb.append("\n");
             Variables variables = l3Parameters.getVariables();
             for (VariableConfig variableConfig : variables.getVariable()) {
                 createOpeningTag("variable");
+                sb.append("\n");
                 constructSingleElement("name", variableConfig.getName());
                 constructSingleElement("expr", variableConfig.getExpr());
                 createClosingTag("variable");
@@ -59,9 +61,11 @@ public class L3ParameterXmlGenerator {
     private void constructAggregatorsElement() {
         if (l3Parameters.getAggregators() != null) {
             createOpeningTag("aggregators");
+            sb.append("\n");
             Aggregators aggregators = l3Parameters.getAggregators();
             for (AggregatorConfig aggregatorConfig : aggregators.getAggregator()) {
                 createOpeningTag("aggregator");
+                sb.append("\n");
                 constructSingleElement("type", aggregatorConfig.getType());
                 constructSingleElement("varName", aggregatorConfig.getVarName());
                 createClosingTag("aggregator");
@@ -73,6 +77,7 @@ public class L3ParameterXmlGenerator {
     private void constructPostProcessorElement() {
         if (l3Parameters.getPostProcessorConfig() != null) {
             createOpeningTag("postProcessor");
+            sb.append("\n");
             constructSingleElement("type", l3Parameters.getPostProcessorConfig().getType());
             constructSingleElement("varName", l3Parameters.getPostProcessorConfig().getVarName());
             createClosingTag("postProcessor");

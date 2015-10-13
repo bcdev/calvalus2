@@ -1,5 +1,6 @@
 package com.bc.calvalus.wpsrest;
 
+import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
 import org.apache.commons.lang.StringUtils;
 
 /**
@@ -11,7 +12,7 @@ public class ProcessorNameParser {
     private String bundleVersion;
     private String executableName;
 
-    public ProcessorNameParser(String processorIdentifier) throws WpsException {
+    public ProcessorNameParser(String processorIdentifier) {
         parse(processorIdentifier);
     }
 
@@ -27,17 +28,17 @@ public class ProcessorNameParser {
         return executableName;
     }
 
-    private void parse(String processorIdentifier) throws WpsException {
+    private void parse(String processorIdentifier) {
         if (!StringUtils.isBlank(processorIdentifier)) {
             String parsedString[] = processorIdentifier.split(Processor.DELIMITER);
             if (parsedString.length < 3) {
-                throw new WpsException("Invalid processor identifier in the request URL.");
+                throw new ProcessorNotAvailableException(processorIdentifier);
             }
             this.bundleName = parsedString[0];
             this.bundleVersion = parsedString[1];
             this.executableName = parsedString[2];
         } else {
-            throw new WpsException("Invalid processor identifier in the request URL.");
+            throw new ProcessorNotAvailableException(processorIdentifier);
         }
     }
 }

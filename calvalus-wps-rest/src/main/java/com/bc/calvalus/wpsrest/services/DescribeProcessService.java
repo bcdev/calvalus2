@@ -4,7 +4,9 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
-import com.bc.calvalus.wpsrest.WpsException;
+import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
+import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
@@ -31,13 +33,13 @@ public class DescribeProcessService {
     @GET
     @Path("{processorId}")
     @Produces(MediaType.APPLICATION_XML)
-    public String describeProcess(String userName, @PathParam("processorId") String processorId) {
+    public String describeProcess(ServletRequestWrapper servletRequestWrapper, @PathParam("processorId") String processorId) {
         StringWriter writer = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
 
         String[] processorIdArray = processorId.split(",");
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(userName);
+            CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
 
             ProcessDescriptions processDescriptions;
             if (processorId.equalsIgnoreCase("all")) {
@@ -48,6 +50,9 @@ public class DescribeProcessService {
                 for (String singleProcessorId : processorIdArray) {
                     ProcessorNameParser parser = new ProcessorNameParser(singleProcessorId);
                     Processor processor = calvalusHelper.getProcessor(parser);
+                    if (processor == null) {
+                        throw new ProcessorNotAvailableException(singleProcessorId);
+                    }
                     processors.add(processor);
                 }
                 DescribeProcessResponse describeProcessResponse = new DescribeProcessResponse();
@@ -55,26 +60,19 @@ public class DescribeProcessService {
             } else {
                 ProcessorNameParser parser = new ProcessorNameParser(processorId);
                 Processor processor = calvalusHelper.getProcessor(parser);
+                if (processor == null) {
+                    throw new ProcessorNotAvailableException(processorId);
+                }
                 DescribeProcessResponse describeProcessResponse = new DescribeProcessResponse();
                 processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(processor, calvalusHelper.getProductSets());
             }
 
             jaxbHelper.marshal(processDescriptions, writer);
             return writer.toString();
-        } catch (ProductionException | IOException | JAXBException exception) {
+        } catch (ProductionException | IOException | JAXBException | ProcessorNotAvailableException exception) {
             exception.printStackTrace();
             ExceptionResponse exceptionResponse = new ExceptionResponse();
             ExceptionReport exceptionReport = exceptionResponse.getGeneralExceptionResponse(exception);
-            try {
-                jaxbHelper.marshal(exceptionReport, writer);
-            } catch (JAXBException e) {
-                e.printStackTrace();
-            }
-            return writer.toString();
-        } catch (WpsException exception) {
-            exception.printStackTrace();
-            ExceptionResponse exceptionResponse = new ExceptionResponse();
-            ExceptionReport exceptionReport = exceptionResponse.getInvalidParameterExceptionResponse(exception, "Identifier");
             try {
                 jaxbHelper.marshal(exceptionReport, writer);
             } catch (JAXBException e) {

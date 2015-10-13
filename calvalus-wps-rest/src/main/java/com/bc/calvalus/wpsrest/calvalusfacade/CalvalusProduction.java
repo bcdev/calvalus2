@@ -25,7 +25,7 @@ public class CalvalusProduction {
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
 
     protected Production orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
-                throws ProductionException, InterruptedException {
+                throws ProductionException {
         logInfo("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
@@ -88,7 +88,13 @@ public class CalvalusProduction {
         final ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
         if (productionService != null) {
             synchronized (this) {
-                productionService.updateStatuses(userName);
+                try {
+                    productionService.updateStatuses(userName);
+                } catch (IllegalStateException exception) {
+                    System.out.println("Trying to stop thread " + Thread.currentThread().getName());
+                    Timer statusObserver = CalvalusProductionService.getStatusObserverSingleton();
+                    statusObserver.cancel();
+                }
             }
         }
     }

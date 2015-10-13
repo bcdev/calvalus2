@@ -80,6 +80,10 @@ public class Processor {
         return processorDescriptor.getProcessorVersion();
     }
 
+    public String[] getInputProductTypes() {
+        return processorDescriptor.getInputProductTypes();
+    }
+
     private String extractTitle() {
         return processorDescriptor.getProcessorName();
     }

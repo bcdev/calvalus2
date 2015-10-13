@@ -6,6 +6,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.JaxbHelper;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteFailedResponse;
@@ -32,11 +33,11 @@ public class GetStatusService {
     @GET
     @Path("{productionId}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getStatus(String userName, @PathParam("productionId") String productionId) {
+    public String getStatus(ServletRequestWrapper servletRequestWrapper, @PathParam("productionId") String productionId) {
         JaxbHelper jaxbHelper = new JaxbHelper();
         StringWriter stringWriter = new StringWriter();
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(userName);
+            CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
             ProductionService productionService = calvalusHelper.getProductionService();
             Production production = productionService.getProduction(productionId);
 
@@ -51,7 +52,7 @@ public class GetStatusService {
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             } else if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
-                calvalusHelper.stageProduction(productionService, production);
+                calvalusHelper.stageProduction(production);
                 List<String> productResultUrls = calvalusHelper.getProductResultUrls(production);
                 ExecuteSuccessfulResponse executeSuccessfulResponse = new ExecuteSuccessfulResponse();
                 ExecuteResponse executeResponse = executeSuccessfulResponse.getExecuteResponse(productResultUrls);
@@ -69,7 +70,7 @@ public class GetStatusService {
                 return stringWriter.toString();
             }
 
-        } catch (ProductionException | IOException | InterruptedException | DatatypeConfigurationException | JAXBException e) {
+        } catch (ProductionException | IOException | DatatypeConfigurationException | JAXBException e) {
             e.printStackTrace();
             StringWriter exceptionStringWriter = new StringWriter();
             ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();

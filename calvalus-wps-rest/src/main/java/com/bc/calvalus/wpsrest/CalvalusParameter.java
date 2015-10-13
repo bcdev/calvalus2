@@ -8,16 +8,17 @@ import java.util.List;
  */
 public enum CalvalusParameter {
 
-    PRODUCTION_TYPE("productionType", "Production type", "production"),
-    CALVALUS_BUNDLE_VERSION("calvalus.calvalus.bundle", "Calvalus bundle version", "production"),
-    BEAM_BUNDLE_VERSION("calvalus.beam.bundle", "Beam bundle version", "production"),
-    PRODUCT_NAME("productionName", "Production name", "production"),
+    PRODUCTION_TYPE("productionType", "Production type", "productionInfo"),
+    CALVALUS_BUNDLE_VERSION("calvalus.calvalus.bundle", "Calvalus bundle version", "productionInfo"),
+    BEAM_BUNDLE_VERSION("calvalus.beam.bundle", "Beam bundle version", "productionInfo"),
+    PRODUCT_NAME("productionName", "Production name", "productionInfo"),
 
     PROCESSOR_BUNDLE_NAME("processorBundleName", "Processor bundle name", "processorInfo"),
     PROCESSOR_BUNDLE_VERSION("processorBundleVersion", "Processor bundle version", "processorInfo"),
     PROCESSOR_NAME("processorName", "Processor name", "processorInfo"),
 
-    INPUT_PATH("inputPath", "Input path", "productSet"),
+    INPUT_DATASET("inputDataSetName", "Input dataset name", "inputDataSet"),
+
     MIN_DATE("minDate", "Date from", "productSet"),
     MAX_DATE("maxDate", "Date to", "productSet"),
     PERIOD_LENGTH("periodLength", "Period length", "productSet"),
@@ -54,10 +55,10 @@ public enum CalvalusParameter {
         return allParameters;
     }
 
-    public static List<String> getProductionParameters() {
+    public static List<String> getProductionInfoParameters() {
         List<String> productionParameters = new ArrayList<>();
         for (CalvalusParameter calvalusParameter : CalvalusParameter.values()) {
-            if(calvalusParameter.getType().equals("production")){
+            if(calvalusParameter.getType().equals("productionInfo")){
                 productionParameters.add(calvalusParameter.getIdentifier());
             }
         }

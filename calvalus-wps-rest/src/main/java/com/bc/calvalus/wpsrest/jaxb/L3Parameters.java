@@ -31,36 +31,36 @@ import javax.xml.bind.annotation.XmlType;
             "timeFilterMethod",
             "outputFile"
 })
-@XmlRootElement(name = "parameters", namespace = "http://bc-schema.xsd")
+@XmlRootElement(name = "parameters", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
 public class L3Parameters {
 
-    @XmlElement(name = "planetaryGrid", defaultValue = "org.esa.beam.binning.support.SEAGrid", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "planetaryGrid", defaultValue = "org.esa.beam.binning.support.SEAGrid", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String planetaryGrid;
-    @XmlElement(name = "numRows", defaultValue = "2160", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "numRows", defaultValue = "2160", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected int numRows;
-    @XmlElement(name = "compositingType", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "compositingType", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected CompositingType compositingType;
-    @XmlElement(name = "superSampling", defaultValue = "1", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "superSampling", defaultValue = "1", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected Integer superSampling;
-    @XmlElement(name = "maskExpr", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "maskExpr", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String maskExpr;
-    @XmlElement(name = "variables", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "variables", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected Variables variables;
-    @XmlElement(name = "aggregators", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "aggregators", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected Aggregators aggregators;
-    @XmlElement(name = "postProcessor", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "postProcessor", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected CellProcessorConfig postProcessor;
-    @XmlElement(name = "minDataHour", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "minDataHour", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected Double minDataHour;
-    @XmlElement(name = "metadataAggregatorName", defaultValue = "FIRST_HISTORY", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "metadataAggregatorName", defaultValue = "FIRST_HISTORY", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String metadataAggregatorName;
-    @XmlElement(name = "startDateTime", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "startDateTime", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String startDateTime;
-    @XmlElement(name = "periodDuration", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "periodDuration", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected Double periodDuration;
-    @XmlElement(name = "timeFilterMethod", defaultValue = "NONE", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "timeFilterMethod", defaultValue = "NONE", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected TimeFilterMethod timeFilterMethod;
-    @XmlElement(name = "outputFile", namespace = "http://bc-schema.xsd")
+    @XmlElement(name = "outputFile", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String outputFile;
 
     public String getPlanetaryGrid() {

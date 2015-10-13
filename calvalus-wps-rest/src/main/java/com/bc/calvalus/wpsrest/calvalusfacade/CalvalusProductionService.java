@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -28,7 +29,7 @@ public class CalvalusProductionService {
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
     private static final String STAGING_DIRECTORY = "staging";
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
-    private static final String WEBAPP_ROOT = CATALINA_BASE + "/webapps/ROOT/";
+    private static final String CALWPS_ROOT = CATALINA_BASE + "/webapps/calwps/";
     private static final String DEFAULT_CONFIG_PATH = new File(getUserAppDataCalWpsDir(), "calvalus.config").getPath();
 
     private CalvalusProductionService() {
@@ -43,7 +44,7 @@ public class CalvalusProductionService {
 
     public synchronized static Timer getStatusObserverSingleton() {
         if (statusObserver == null) {
-            statusObserver = new Timer("StatusObserver", true);
+            statusObserver = new Timer("StatusObserver" + new Date().toString(), true);
         }
         return statusObserver;
     }
@@ -68,7 +69,7 @@ public class CalvalusProductionService {
         Map<String, String> defaultConfig = getDefaultConfig();
         Map<String, String> config = ProductionServiceConfig.loadConfig(getConfigFile(), defaultConfig);
         return productionServiceFactory
-                    .create(config, getUserAppDataCalWpsDir(), new File(WEBAPP_ROOT, config.get("calvalus.wps.staging.path")));
+                    .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
     }
 
     private static File getConfigFile() {

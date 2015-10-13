@@ -3,6 +3,7 @@ package com.bc.calvalus.wpsrest;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import com.bc.calvalus.wpsrest.exception.WpsException;
 import org.junit.*;
 
 /**

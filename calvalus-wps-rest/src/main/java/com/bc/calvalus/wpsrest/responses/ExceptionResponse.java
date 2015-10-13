@@ -9,17 +9,24 @@ import org.apache.commons.lang.StringUtils;
  */
 public class ExceptionResponse {
 
-    public ExceptionReport getGeneralExceptionResponse(Exception exception) {
+    public ExceptionReport getGeneralExceptionWithCustomMessageResponse(String errorMessage) {
+        return getGeneralExceptionReport(errorMessage);
+    }
+
+    private ExceptionReport getGeneralExceptionReport(String errorMessage) {
         ExceptionReport exceptionReport = new ExceptionReport();
         ExceptionType exceptionResponse = new ExceptionType();
-        exceptionResponse.getExceptionText().add(exception.getMessage());
+        exceptionResponse.getExceptionText().add(errorMessage);
         exceptionResponse.setExceptionCode("NoApplicableCode");
 
         exceptionReport.getException().add(exceptionResponse);
         exceptionReport.setLang("Lang");
         exceptionReport.setVersion("version");
-
         return exceptionReport;
+    }
+
+    public ExceptionReport getGeneralExceptionResponse(Exception exception) {
+        return getGeneralExceptionReport(exception.getMessage());
     }
 
     public ExceptionReport getMissingParameterExceptionResponse(Exception exception, String missingParameter) {

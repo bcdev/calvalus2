@@ -7,12 +7,14 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.List;
 
 /**
+ * This is the facade of any calvalus-related operations.
+ * <p/>
  * Created by hans on 13/08/2015.
  */
 public class CalvalusHelper {
@@ -22,10 +24,10 @@ public class CalvalusHelper {
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
-    public CalvalusHelper(String userName) throws IOException, ProductionException {
-        this.userName = userName;
+    public CalvalusHelper(ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException {
+        this.userName = servletRequestWrapper.getUserName();
         this.calvalusProduction = new CalvalusProduction();
-        this.calvalusStaging = new CalvalusStaging();
+        this.calvalusStaging = new CalvalusStaging(servletRequestWrapper);
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor(getProductionService(), userName);
     }
 
@@ -33,7 +35,7 @@ public class CalvalusHelper {
         return CalvalusProductionService.getProductionServiceSingleton();
     }
 
-    public Production orderProductionAsynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
+    public Production orderProductionAsynchronous(ProductionRequest request) throws ProductionException, IOException {
         return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
     }
 
@@ -41,16 +43,16 @@ public class CalvalusHelper {
         return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
     }
 
-    public List<String> getProductResultUrls(Production production) throws UnknownHostException {
+    public List<String> getProductResultUrls(Production production) {
         return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
     }
 
-    public void stageProduction(ProductionService productionService, Production production) throws ProductionException, InterruptedException {
-        calvalusStaging.stageProduction(productionService, production);
+    public void stageProduction(Production production) throws ProductionException, IOException {
+        calvalusStaging.stageProduction(getProductionService(), production);
     }
 
-    public void observeStagingStatus(ProductionService productionService, Production production) throws InterruptedException {
-        calvalusStaging.observeStagingStatus(productionService, production);
+    public void observeStagingStatus(Production production) throws InterruptedException, IOException, ProductionException {
+        calvalusStaging.observeStagingStatus(getProductionService(), production);
     }
 
     public List<Processor> getProcessors() throws IOException, ProductionException {

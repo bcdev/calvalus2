@@ -6,10 +6,9 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 
 import java.io.File;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,25 +21,31 @@ import java.util.logging.Logger;
 public class CalvalusStaging {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String WEBAPPS_ROOT = "/webapps/ROOT/";
-    private static final String PORT_NUMBER = "9080";
+    private static final String CALWPS_ROOT_PATH = "/webapps/calwps/";
+    private static final String APP_NAME = "calwps";
 
-    protected void stageProduction(ProductionService productionService, Production production)
-                throws ProductionException, InterruptedException {
+    private final ServletRequestWrapper servletRequestWrapper;
+
+    public CalvalusStaging(ServletRequestWrapper servletRequestWrapper) {
+        this.servletRequestWrapper = servletRequestWrapper;
+    }
+
+    protected void stageProduction(ProductionService productionService, Production production) throws ProductionException {
         logInfo("Staging results...");
         productionService.stageProductions(production.getId());
     }
 
-    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) throws UnknownHostException {
+    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) {
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
-        File stagingDirectory = new File((System.getProperty("catalina.base") + WEBAPPS_ROOT) + stagingDirectoryPath);
-        File[] productResultFles = stagingDirectory.listFiles();
+        File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+        File[] productResultFiles = stagingDirectory.listFiles();
         List<String> productResultUrls = new ArrayList<>();
-        if (productResultFles != null) {
-            for (File productResultFile : productResultFles) {
+        if (productResultFiles != null) {
+            for (File productResultFile : productResultFiles) {
                 String productUrl = "http://"
-                                    + InetAddress.getLocalHost().getHostName()
-                                    + ":" + PORT_NUMBER
+                                    + servletRequestWrapper.getServerName()
+                                    + ":" + servletRequestWrapper.getPortNumber()
+                                    + "/" + APP_NAME
                                     + "/" + stagingDirectoryPath
                                     + "/" + productResultFile.getName();
                 productResultUrls.add(productUrl);

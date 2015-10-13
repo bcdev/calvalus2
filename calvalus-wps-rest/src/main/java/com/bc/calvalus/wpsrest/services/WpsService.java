@@ -1,12 +1,16 @@
 package com.bc.calvalus.wpsrest.services;
 
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.WpsException;
+import com.bc.calvalus.wpsrest.ServletRequestWrapper;
+import com.bc.calvalus.wpsrest.exception.InvalidRequestException;
+import com.bc.calvalus.wpsrest.exception.WpsInvalidParameterValueException;
+import com.bc.calvalus.wpsrest.exception.WpsMissingParameterValueException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import org.apache.commons.lang.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -15,8 +19,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.SecurityContext;
 import javax.xml.bind.JAXBException;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.io.StringWriter;
 
 /**
@@ -34,9 +39,9 @@ public class WpsService {
                                 @QueryParam("Identifier") String processorId,
                                 @QueryParam("Version") String version,
                                 @QueryParam("JobId") String jobId,
-                                @Context SecurityContext security) {
+                                @Context HttpServletRequest servletRequest) {
 
-        String userName = security.getUserPrincipal().getName();
+        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
 
         if (StringUtils.isBlank(service)) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Service");
@@ -54,7 +59,7 @@ public class WpsService {
         switch (requestType) {
         case "GetCapabilities":
             GetCapabilitiesService getCapabilitiesService = new GetCapabilitiesService();
-            return getCapabilitiesService.getCapabilities(userName);
+            return getCapabilitiesService.getCapabilities(servletRequestWrapper);
         case "DescribeProcess":
             if (StringUtils.isBlank(version)) {
                 StringWriter stringWriter = getMissingParameterXmlWriter("Version");
@@ -65,10 +70,10 @@ public class WpsService {
                 return stringWriter.toString();
             }
             DescribeProcessService describeProcessService = new DescribeProcessService();
-            return describeProcessService.describeProcess(userName, processorId);
+            return describeProcessService.describeProcess(servletRequestWrapper, processorId);
         case "GetStatus":
             GetStatusService getStatusService = new GetStatusService();
-            return getStatusService.getStatus(userName, jobId);
+            return getStatusService.getStatus(servletRequestWrapper, jobId);
         default:
             StringWriter stringWriter = getInvalidParameterXmlWriter("Request");
             return stringWriter.toString();
@@ -78,13 +83,12 @@ public class WpsService {
     @POST
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public String postExecuteService(Execute execute, @Context SecurityContext security) {
-
+    public String postExecuteService(String request, @Context HttpServletRequest servletRequest) {
+        Execute execute = getExecute(request);
+        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
         String service = execute.getService();
         String version = execute.getVersion();
         String processorId = execute.getIdentifier().getValue();
-        String userName = security.getUserPrincipal().getName();
-        System.out.println("userName = " + userName);
 
         if (StringUtils.isBlank(service)) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Service");
@@ -105,19 +109,35 @@ public class WpsService {
         }
 
         ExecuteService executeService = new ExecuteService();
-        return executeService.execute(execute, userName, processorId);
+        return executeService.execute(execute, servletRequestWrapper, processorId);
+    }
 
+    private Execute getExecute(String request) {
+        InputStream requestInputStream = new ByteArrayInputStream(request.getBytes());
+        JaxbHelper jaxbHelper = new JaxbHelper();
+        Execute execute;
+        try {
+            execute = (Execute) jaxbHelper.unmarshal(requestInputStream);
+        } catch (ClassCastException exception) {
+            exception.printStackTrace();
+            throw new InvalidRequestException("Invalid Execute request. Please see the WPS 1.0.0 guideline for the right Execute request structure.");
+        } catch (JAXBException exception) {
+            exception.printStackTrace();
+            throw new InvalidRequestException("Invalid Execute request. "
+                                              + (exception.getMessage() != null ? exception.getMessage() : exception.getCause().getMessage()));
+        }
+        return execute;
     }
 
     private StringWriter getMissingParameterXmlWriter(String missingParameter) {
-        WpsException exception = new WpsException("Missing parameter '" + missingParameter + "'.");
+        WpsMissingParameterValueException exception = new WpsMissingParameterValueException(missingParameter);
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         ExceptionReport exceptionReport = exceptionResponse.getMissingParameterExceptionResponse(exception, missingParameter);
         return getExceptionStringWriter(exceptionReport);
     }
 
     private StringWriter getInvalidParameterXmlWriter(String invalidParameter) {
-        WpsException exception = new WpsException("Invalid parameter value '" + invalidParameter + "'.");
+        WpsInvalidParameterValueException exception = new WpsInvalidParameterValueException(invalidParameter);
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         ExceptionReport exceptionReport = exceptionResponse.getInvalidParameterExceptionResponse(exception, invalidParameter);
         return getExceptionStringWriter(exceptionReport);

@@ -45,4 +45,6 @@ public class WpsConstants {
 
     public static String WPS_SUPPORTED_LANG = "EN";
 
+    public static String WPS_L3_PARAMETERS_SCHEMA_LOCATION = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd";
+
 }
