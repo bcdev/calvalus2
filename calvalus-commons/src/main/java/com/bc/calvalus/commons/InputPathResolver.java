@@ -126,6 +126,7 @@ public class InputPathResolver {
     public static boolean containsDateVariables(String pattern) {
         return pattern.contains("${yyyy}") ||
                 pattern.contains("${MM}") ||
-                pattern.contains("${dd}");
+                pattern.contains("${dd}") ||
+                pattern.contains("${DDD}");
     }
 }
