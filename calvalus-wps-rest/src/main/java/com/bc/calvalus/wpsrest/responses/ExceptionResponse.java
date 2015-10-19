@@ -2,10 +2,11 @@ package com.bc.calvalus.wpsrest.responses;
 
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionType;
-import org.apache.commons.lang.StringUtils;
+
+import java.util.Date;
 
 /**
- * Created by hans on 25/08/2015.
+ * @author hans
  */
 public class ExceptionResponse {
 

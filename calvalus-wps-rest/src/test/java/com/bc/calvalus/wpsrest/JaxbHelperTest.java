@@ -5,9 +5,11 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
+import com.bc.calvalus.wpsrest.jaxb.DataInputsType;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.jaxb.LanguageStringType;
+import com.bc.calvalus.wpsrest.jaxb.ResponseFormType;
 import com.bc.calvalus.wpsrest.jaxb.ServiceIdentification;
 import org.junit.*;
 
@@ -16,7 +18,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 
 /**
- * Created by hans on 15/09/2015.
+ * @author hans
  */
 public class JaxbHelperTest {
 
@@ -49,7 +51,29 @@ public class JaxbHelperTest {
     }
 
     @Test
-    public void testUnmarshal() throws Exception {
+    public void testUnmarshalExecuteRequest() throws Exception {
+        String executeRequestXmlString = getExecuteRequestXmlString();
+        InputStream requestInputStream = new ByteArrayInputStream(executeRequestXmlString.getBytes());
+
+        Execute executeRequest = (Execute) jaxbHelper.unmarshal(requestInputStream);
+        DataInputsType dataInputsType = executeRequest.getDataInputs();
+        ResponseFormType responseFormType = executeRequest.getResponseForm();
+
+        assertThat(executeRequest.getService(), equalTo("WPS"));
+        assertThat(executeRequest.getVersion(), equalTo("1.0.0"));
+        assertThat(executeRequest.getIdentifier().getValue(), equalTo("beam-idepix~2.0.9~Idepix.Water"));
+
+        assertThat(dataInputsType.getInput().get(0).getIdentifier().getValue(), equalTo("productionType"));
+        assertThat(dataInputsType.getInput().get(0).getData().getLiteralData().getValue(), equalTo("L2"));
+
+        assertThat(responseFormType.getResponseDocument().isStoreExecuteResponse(), equalTo(true));
+        assertThat(responseFormType.getResponseDocument().isLineage(), equalTo(false));
+        assertThat(responseFormType.getResponseDocument().isStatus(), equalTo(true));
+        assertThat(responseFormType.getResponseDocument().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
+    }
+
+    @Test
+    public void testUnmarshalExecuteResponse() throws Exception {
         String executeResponseXmlString = getExecuteResponseXmlString();
         InputStream requestInputStream = new ByteArrayInputStream(executeResponseXmlString.getBytes());
 
@@ -69,6 +93,33 @@ public class JaxbHelperTest {
                "        <wps:ProcessAccepted>The request has been accepted. The status of the process can be found in the URL.</wps:ProcessAccepted>\n" +
                "    </wps:Status>\n" +
                "</wps:ExecuteResponse>";
+    }
+
+    private String getExecuteRequestXmlString() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n" +
+               "\n" +
+               "<wps:Execute service=\"WPS\"\n" +
+               "             version=\"1.0.0\"\n" +
+               "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
+               "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
+               "\t\t\t xmlns:cal= \"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
+               "\n" +
+               "        <ows:Identifier>beam-idepix~2.0.9~Idepix.Water</ows:Identifier>\n" +
+               "        <wps:DataInputs>\n" +
+               "            <wps:Input>\n" +
+               "                <ows:Identifier>productionType</ows:Identifier>\n" +
+               "                <wps:Data><wps:LiteralData>L2</wps:LiteralData></wps:Data>\n" +
+               "            </wps:Input>\n" +
+               "        </wps:DataInputs>\n" +
+               "\t<wps:ResponseForm>\n" +
+               "\t\t<wps:ResponseDocument storeExecuteResponse=\"true\" status=\"true\">\n" +
+               "\t\t\t<wps:Output>\n" +
+               "\t\t\t\t<ows:Identifier>productionResults</ows:Identifier>\n" +
+               "\t\t\t</wps:Output>\n" +
+               "\t\t</wps:ResponseDocument>\n" +
+               "\t</wps:ResponseForm>\n" +
+               "</wps:Execute>";
     }
 
     private Capabilities createCapabilities() {

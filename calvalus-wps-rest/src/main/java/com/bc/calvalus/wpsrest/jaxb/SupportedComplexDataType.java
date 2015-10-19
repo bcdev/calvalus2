@@ -47,9 +47,9 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class SupportedComplexDataType {
 
-    @XmlElement(name = "Default", namespace = "", required = true)
+    @XmlElement(name = "Default", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
     protected ComplexDataCombinationType _default;
-    @XmlElement(name = "Supported", namespace = "", required = true)
+    @XmlElement(name = "Supported", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
     protected ComplexDataCombinationsType supported;
 
     /**

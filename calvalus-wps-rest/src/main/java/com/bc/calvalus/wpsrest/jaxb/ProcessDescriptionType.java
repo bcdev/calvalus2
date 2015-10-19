@@ -18,12 +18,12 @@ import java.util.List;
 
 
 /**
- * Full description of a process. 
- * 
+ * Full description of a process.
+ *
  * <p>Java class for ProcessDescriptionType complex type.
- * 
+ *
  * <p>The following schema fragment specifies the expected content contained within this class.
- * 
+ *
  * <pre>
  * &lt;complexType name="ProcessDescriptionType">
  *   &lt;complexContent>
@@ -58,8 +58,8 @@ import java.util.List;
  *   &lt;/complexContent>
  * &lt;/complexType>
  * </pre>
- * 
- * 
+ *
+ *
  */
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "ProcessDescriptionType", propOrder = {
@@ -70,9 +70,9 @@ public class ProcessDescriptionType
     extends ProcessBriefType
 {
 
-    @XmlElement(name = "DataInputs", namespace = "")
+    @XmlElement(name = "DataInputs", namespace = "http://www.opengis.net/wps/1.0.0")
     protected DataInputs dataInputs;
-    @XmlElement(name = "ProcessOutputs", namespace = "", required = true)
+    @XmlElement(name = "ProcessOutputs", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
     protected ProcessOutputs processOutputs;
     @XmlAttribute(name = "storeSupported")
     protected Boolean storeSupported;
@@ -81,11 +81,11 @@ public class ProcessDescriptionType
 
     /**
      * Gets the value of the dataInputs property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link DataInputs }
-     *     
+     *
      */
     public DataInputs getDataInputs() {
         return dataInputs;
@@ -93,11 +93,11 @@ public class ProcessDescriptionType
 
     /**
      * Sets the value of the dataInputs property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link DataInputs }
-     *     
+     *
      */
     public void setDataInputs(DataInputs value) {
         this.dataInputs = value;
@@ -105,11 +105,11 @@ public class ProcessDescriptionType
 
     /**
      * Gets the value of the processOutputs property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link ProcessOutputs }
-     *     
+     *
      */
     public ProcessOutputs getProcessOutputs() {
         return processOutputs;
@@ -117,11 +117,11 @@ public class ProcessDescriptionType
 
     /**
      * Sets the value of the processOutputs property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link ProcessOutputs }
-     *     
+     *
      */
     public void setProcessOutputs(ProcessOutputs value) {
         this.processOutputs = value;
@@ -129,11 +129,11 @@ public class ProcessDescriptionType
 
     /**
      * Gets the value of the storeSupported property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public boolean isStoreSupported() {
         if (storeSupported == null) {
@@ -145,11 +145,11 @@ public class ProcessDescriptionType
 
     /**
      * Sets the value of the storeSupported property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setStoreSupported(Boolean value) {
         this.storeSupported = value;
@@ -157,11 +157,11 @@ public class ProcessDescriptionType
 
     /**
      * Gets the value of the statusSupported property.
-     * 
+     *
      * @return
      *     possible object is
      *     {@link Boolean }
-     *     
+     *
      */
     public boolean isStatusSupported() {
         if (statusSupported == null) {
@@ -173,11 +173,11 @@ public class ProcessDescriptionType
 
     /**
      * Sets the value of the statusSupported property.
-     * 
+     *
      * @param value
      *     allowed object is
      *     {@link Boolean }
-     *     
+     *
      */
     public void setStatusSupported(Boolean value) {
         this.statusSupported = value;
@@ -186,9 +186,9 @@ public class ProcessDescriptionType
 
     /**
      * <p>Java class for anonymous complex type.
-     * 
+     *
      * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
+     *
      * <pre>
      * &lt;complexType>
      *   &lt;complexContent>
@@ -200,8 +200,8 @@ public class ProcessDescriptionType
      *   &lt;/complexContent>
      * &lt;/complexType>
      * </pre>
-     * 
-     * 
+     *
+     *
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
@@ -209,34 +209,34 @@ public class ProcessDescriptionType
     })
     public static class DataInputs {
 
-        @XmlElement(name = "Input", namespace = "", required = true)
+        @XmlElement(name = "Input", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
         protected List<InputDescriptionType> input;
 
         /**
          * Gets the value of the input property.
-         * 
+         *
          * <p>
          * This accessor method returns a reference to the live list,
          * not a snapshot. Therefore any modification you make to the
          * returned list will be present inside the JAXB object.
          * This is why there is not a <CODE>set</CODE> method for the input property.
-         * 
+         *
          * <p>
          * For example, to add a new item, do as follows:
          * <pre>
          *    getInput().add(newItem);
          * </pre>
-         * 
-         * 
+         *
+         *
          * <p>
          * Objects of the following type(s) are allowed in the list
          * {@link InputDescriptionType }
-         * 
-         * 
+         *
+         *
          */
         public List<InputDescriptionType> getInput() {
             if (input == null) {
-                input = new ArrayList<InputDescriptionType>();
+                input = new ArrayList<>();
             }
             return this.input;
         }
@@ -246,9 +246,9 @@ public class ProcessDescriptionType
 
     /**
      * <p>Java class for anonymous complex type.
-     * 
+     *
      * <p>The following schema fragment specifies the expected content contained within this class.
-     * 
+     *
      * <pre>
      * &lt;complexType>
      *   &lt;complexContent>
@@ -260,8 +260,8 @@ public class ProcessDescriptionType
      *   &lt;/complexContent>
      * &lt;/complexType>
      * </pre>
-     * 
-     * 
+     *
+     *
      */
     @XmlAccessorType(XmlAccessType.FIELD)
     @XmlType(name = "", propOrder = {
@@ -269,34 +269,34 @@ public class ProcessDescriptionType
     })
     public static class ProcessOutputs {
 
-        @XmlElement(name = "Output", namespace = "", required = true)
+        @XmlElement(name = "Output", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
         protected List<OutputDescriptionType> output;
 
         /**
          * Gets the value of the output property.
-         * 
+         *
          * <p>
          * This accessor method returns a reference to the live list,
          * not a snapshot. Therefore any modification you make to the
          * returned list will be present inside the JAXB object.
          * This is why there is not a <CODE>set</CODE> method for the output property.
-         * 
+         *
          * <p>
          * For example, to add a new item, do as follows:
          * <pre>
          *    getOutput().add(newItem);
          * </pre>
-         * 
-         * 
+         *
+         *
          * <p>
          * Objects of the following type(s) are allowed in the list
          * {@link OutputDescriptionType }
-         * 
-         * 
+         *
+         *
          */
         public List<OutputDescriptionType> getOutput() {
             if (output == null) {
-                output = new ArrayList<OutputDescriptionType>();
+                output = new ArrayList<>();
             }
             return this.output;
         }

@@ -20,7 +20,7 @@ import java.io.StringWriter;
 import java.util.List;
 
 /**
- * Created by hans on 21/08/2015.
+ * @author hans
  */
 @Path("/GetCapabilities")
 public class GetCapabilitiesService {
@@ -48,8 +48,18 @@ public class GetCapabilitiesService {
                 jaxbHelper.marshal(exceptionReport, writer);
             } catch (JAXBException e) {
                 e.printStackTrace();
+                return getDefaultExceptionResponse();
             }
             return writer.toString();
         }
+    }
+
+    private String getDefaultExceptionResponse() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+               "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
+               "    <Exception exceptionCode=\"NoApplicableCode\">\n" +
+               "        <ExceptionText>Unable to generate the exception XML : JAXB Exception.</ExceptionText>\n" +
+               "    </Exception>\n" +
+               "</ExceptionReport>\n";
     }
 }

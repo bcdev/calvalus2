@@ -45,11 +45,11 @@ public class OutputDescriptionType
     extends DescriptionType
 {
 
-    @XmlElement(name = "ComplexOutput", namespace = "")
+    @XmlElement(name = "ComplexOutput", namespace = "http://www.opengis.net/wps/1.0.0")
     protected SupportedComplexDataType complexOutput;
-    @XmlElement(name = "LiteralOutput", namespace = "")
+    @XmlElement(name = "LiteralOutput", namespace = "http://www.opengis.net/wps/1.0.0")
     protected LiteralOutputType literalOutput;
-    @XmlElement(name = "BoundingBoxOutput", namespace = "")
+    @XmlElement(name = "BoundingBoxOutput", namespace = "http://www.opengis.net/wps/1.0.0")
     protected SupportedCRSsType boundingBoxOutput;
 
     /**

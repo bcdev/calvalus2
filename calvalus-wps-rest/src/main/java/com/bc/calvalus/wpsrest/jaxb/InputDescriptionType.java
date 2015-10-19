@@ -61,11 +61,11 @@ public class InputDescriptionType
     public InputDescriptionType() {
     }
 
-    @XmlElement(name = "ComplexData", namespace = "")
+    @XmlElement(name = "ComplexData", namespace = "http://www.opengis.net/wps/1.0.0")
     protected SupportedComplexDataInputType complexData;
-    @XmlElement(name = "LiteralData", namespace = "")
+    @XmlElement(name = "LiteralData", namespace = "http://www.opengis.net/wps/1.0.0")
     protected LiteralInputType literalData;
-    @XmlElement(name = "BoundingBoxData", namespace = "")
+    @XmlElement(name = "BoundingBoxData", namespace = "http://www.opengis.net/wps/1.0.0")
     protected SupportedCRSsType boundingBoxData;
     @XmlAttribute(name = "minOccurs", required = true)
     @XmlSchemaType(name = "nonNegativeInteger")

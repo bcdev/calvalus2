@@ -45,7 +45,7 @@ public class ProcessDescriptions
     extends ResponseBaseType
 {
 
-    @XmlElement(name = "ProcessDescription", namespace = "", required = true)
+    @XmlElement(name = "ProcessDescription", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
     protected List<ProcessDescriptionType> processDescription;
 
     /**
@@ -72,7 +72,7 @@ public class ProcessDescriptions
      */
     public List<ProcessDescriptionType> getProcessDescription() {
         if (processDescription == null) {
-            processDescription = new ArrayList<ProcessDescriptionType>();
+            processDescription = new ArrayList<>();
         }
         return this.processDescription;
     }

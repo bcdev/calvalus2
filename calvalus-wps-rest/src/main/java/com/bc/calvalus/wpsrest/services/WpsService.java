@@ -5,6 +5,7 @@ import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.exception.InvalidRequestException;
 import com.bc.calvalus.wpsrest.exception.WpsInvalidParameterValueException;
 import com.bc.calvalus.wpsrest.exception.WpsMissingParameterValueException;
+import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
@@ -25,7 +26,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 
 /**
- * Created by hans on 03/09/2015.
+ * @author hans
  */
 @Path("/")
 public class WpsService {
@@ -72,6 +73,10 @@ public class WpsService {
             DescribeProcessService describeProcessService = new DescribeProcessService();
             return describeProcessService.describeProcess(servletRequestWrapper, processorId);
         case "GetStatus":
+            if (StringUtils.isBlank(jobId)) {
+                StringWriter stringWriter = getMissingParameterXmlWriter("JobId");
+                return stringWriter.toString();
+            }
             GetStatusService getStatusService = new GetStatusService();
             return getStatusService.getStatus(servletRequestWrapper, jobId);
         default:
@@ -88,13 +93,13 @@ public class WpsService {
         ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
         String service = execute.getService();
         String version = execute.getVersion();
-        String processorId = execute.getIdentifier().getValue();
+        CodeType identifier = execute.getIdentifier();
 
         if (StringUtils.isBlank(service)) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Service");
             return stringWriter.toString();
         }
-        if (!service.equals("WPS")) {
+        if (!"WPS".equals(service)) {
             StringWriter stringWriter = getInvalidParameterXmlWriter(service);
             return stringWriter.toString();
         }
@@ -103,10 +108,12 @@ public class WpsService {
             StringWriter stringWriter = getMissingParameterXmlWriter("Version");
             return stringWriter.toString();
         }
-        if (StringUtils.isBlank(processorId)) {
+        if (identifier == null || StringUtils.isBlank(identifier.getValue())) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Identifier");
             return stringWriter.toString();
         }
+
+        String processorId = execute.getIdentifier().getValue();
 
         ExecuteService executeService = new ExecuteService();
         return executeService.execute(execute, servletRequestWrapper, processorId);

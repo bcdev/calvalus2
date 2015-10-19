@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 public class ComplexDataCombinationType {
 
-    @XmlElement(name = "Format", namespace = "", required = true)
+    @XmlElement(name = "Format", namespace = "http://www.opengis.net/wps/1.0.0", required = true)
     protected ComplexDataDescriptionType format;
 
     /**

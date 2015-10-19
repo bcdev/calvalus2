@@ -22,10 +22,11 @@ import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Date;
 import java.util.List;
 
 /**
- * Created by hans on 24/08/2015.
+ * @author hans
  */
 @Path("/Status")
 public class GetStatusService {
@@ -41,34 +42,21 @@ public class GetStatusService {
             ProductionService productionService = calvalusHelper.getProductionService();
             Production production = productionService.getProduction(productionId);
 
-//            String userName = production.getProductionRequest().getUserName();
-//            productionService.updateStatuses(userName);
-            ProcessStatus processingStatus = production.getProcessingStatus();
-
-            if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
+            ExecuteResponse executeResponse;
+            if (isProductionJobFinishedAndSuccessful(production)) {
                 List<String> productResultUrls = calvalusHelper.getProductResultUrls(production);
                 ExecuteSuccessfulResponse executeSuccessfulResponse = new ExecuteSuccessfulResponse();
-                ExecuteResponse executeResponse = executeSuccessfulResponse.getExecuteResponse(productResultUrls);
-                jaxbHelper.marshal(executeResponse, stringWriter);
-                return stringWriter.toString();
-            } else if (production.getProcessingStatus().getState() == ProcessState.COMPLETED) {
-                calvalusHelper.stageProduction(production);
-                List<String> productResultUrls = calvalusHelper.getProductResultUrls(production);
-                ExecuteSuccessfulResponse executeSuccessfulResponse = new ExecuteSuccessfulResponse();
-                ExecuteResponse executeResponse = executeSuccessfulResponse.getExecuteResponse(productResultUrls);
-                jaxbHelper.marshal(executeResponse, stringWriter);
-                return stringWriter.toString();
-            } else if (production.getProcessingStatus().getState().isDone()) {
+                executeResponse = executeSuccessfulResponse.getExecuteResponse(productResultUrls);
+            } else if (isProductionJobFinishedAndFailed(production)) {
                 ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();
-                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse(production.getProcessingStatus().getMessage());
-                jaxbHelper.marshal(executeResponse, stringWriter);
-                return stringWriter.toString();
+                executeResponse = executeFailedResponse.getExecuteResponse(production.getProcessingStatus().getMessage());
             } else {
+                ProcessStatus processingStatus = production.getProcessingStatus();
                 ExecuteStartedResponse executeStartedResponse = new ExecuteStartedResponse();
-                ExecuteResponse executeResponse = executeStartedResponse.getExecuteResponse(processingStatus.getState().toString(), 100 * processingStatus.getProgress());
-                jaxbHelper.marshal(executeResponse, stringWriter);
-                return stringWriter.toString();
+                executeResponse = executeStartedResponse.getExecuteResponse(processingStatus.getState().toString(), 100 * processingStatus.getProgress());
             }
+            jaxbHelper.marshal(executeResponse, stringWriter);
+            return stringWriter.toString();
 
         } catch (ProductionException | IOException | DatatypeConfigurationException | JAXBException e) {
             e.printStackTrace();
@@ -79,8 +67,32 @@ public class GetStatusService {
                 jaxbHelper.marshal(executeResponse, exceptionStringWriter);
             } catch (JAXBException | DatatypeConfigurationException exception) {
                 exception.printStackTrace();
+                return getDefaultExceptionResponse();
             }
             return exceptionStringWriter.toString();
         }
+    }
+
+    private boolean isProductionJobFinishedAndFailed(Production production) {
+        return production.getProcessingStatus().getState().isDone();
+    }
+
+    private boolean isProductionJobFinishedAndSuccessful(Production production) {
+        return production.getStagingStatus().getState() == ProcessState.COMPLETED;
+    }
+
+    private String getDefaultExceptionResponse() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+               "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
+               "    <Status creationTime=\"" + new Date() + "\"" +
+               "        <ProcessFailed>\n" +
+               "            <ns1:ExceptionReport version=\"1\">\n" +
+               "                <Exception>\n" +
+               "                    <ExceptionText>Unable to generate the requested status : JAXB Exception.</ExceptionText>\n" +
+               "                </Exception>\n" +
+               "            </ns1:ExceptionReport>\n" +
+               "        </ProcessFailed>\n" +
+               "    </Status>\n" +
+               "</ExecuteResponse>";
     }
 }
