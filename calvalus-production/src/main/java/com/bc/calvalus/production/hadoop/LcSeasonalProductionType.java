@@ -82,7 +82,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             groundResultion = "1000m";
         }
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (!successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
+        if (!successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
@@ -104,7 +104,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             sequence.add(new MosaicSeasonalWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                         productionName + " SR", jobConfigSr));
         }
-        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (!successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);

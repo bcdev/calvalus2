@@ -29,6 +29,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -130,9 +131,12 @@ public abstract class AbstractInventoryService implements InventoryService {
         Configuration conf = jobClientsMap.getConfiguration();
 
         Pattern pattern = createPattern(pathPatterns, conf);
+        System.out.println("pattern = " + pattern);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         FileSystem fileSystem = new Path(commonPathPrefix).getFileSystem(conf);
+        System.out.println("fileSystem = " + fileSystem);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
+        System.out.println("qualifiedPath = " + qualifiedPath);
         List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
         collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
         String[] result = new String[fileStatuses.size()];
@@ -170,7 +174,15 @@ public abstract class AbstractInventoryService implements InventoryService {
         return fileSystem.delete(qualifiedPath, true);
     }
 
+    @Override
+    public boolean pathExists(String path) throws IOException {
+        Configuration conf = jobClientsMap.getConfiguration();
 
+        Path p = new Path(path);
+        FileSystem fileSystem = p.getFileSystem(conf);
+
+        return fileSystem.exists(p);
+    }
 
     public FileStatus[] globFileStatuses(List<String> pathPatterns, Configuration conf) throws IOException {
         Pattern pattern = createPattern(pathPatterns, conf);

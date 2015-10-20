@@ -16,7 +16,11 @@
 
 package com.bc.calvalus.processing.mosaic.firecci;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.ColorPaletteDef;
 import org.esa.beam.framework.datamodel.ImageInfo;
@@ -26,8 +30,12 @@ import org.esa.beam.framework.datamodel.ProductData;
 
 import java.awt.Color;
 import java.awt.Rectangle;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,8 +43,11 @@ import java.util.regex.Pattern;
  * The factory for creating the final mosaic product for Fire-CCI
  *
  * @author MarcoZ
+ * @author thomas
  */
 class FireMosaicProductFactory extends DefaultMosaicProductFactory {
+
+    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
 
     static final float[] MERIS_WAVELENGTH = new float[]{
             412.691f,   // 1
@@ -55,9 +66,20 @@ class FireMosaicProductFactory extends DefaultMosaicProductFactory {
             884.94403f, // 14
             //900.00006f  // 15
     };
+    private Configuration configuration;
+    private int tileX;
+    private int tileY;
 
     public FireMosaicProductFactory(String[] outputFeatures) {
         super(outputFeatures);
+    }
+
+    @Override
+    public Product createProduct(Configuration configuration, int tileX, int tileY, Rectangle rect) {
+        this.configuration = configuration;
+        this.tileX = tileX;
+        this.tileY = tileY;
+        return super.createProduct(configuration, tileX, tileY, rect);
     }
 
     @Override
@@ -97,6 +119,30 @@ class FireMosaicProductFactory extends DefaultMosaicProductFactory {
                 sdrBandIndex++;
             }
         }
+
+        LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(configuration.get("calvalus.lc.resolution"));
+        product.getMetadataRoot().setAttributeString("sensor", sensorConfig.getSensorName());
+        product.getMetadataRoot().setAttributeString("platform", sensorConfig.getPlatformName());
+        product.getMetadataRoot().setAttributeString("spatialResolution", sensorConfig.getGroundResolution());
+        product.getMetadataRoot().setAttributeString("temporalResolution", "P1D");  // TODO
+        product.getMetadataRoot().setAttributeString("version", configuration.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0"));
+        product.getMetadataRoot().setAttributeInt("tileY", tileY);
+        product.getMetadataRoot().setAttributeInt("tileX", tileX);
+
+        String minDateParameter = configuration.get("calvalus.minDate");
+        String maxDateParameter = configuration.get("calvalus.maxDate");
+        final Date minDate;
+        final Date maxDate;
+        try {
+            minDate = DATE_FORMAT.parse(minDateParameter);
+            maxDate = DATE_FORMAT.parse(maxDateParameter);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
+        product.setStartTime(ProductData.UTC.create(minDate, 0));
+        product.setEndTime(ProductData.UTC.create(maxDate, 0));
+
         return product;
     }
 }

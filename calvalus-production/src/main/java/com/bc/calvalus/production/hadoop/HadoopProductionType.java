@@ -33,10 +33,7 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
 import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
@@ -178,12 +175,9 @@ public abstract class HadoopProductionType implements ProductionType {
      *
      * @return true, if "_SUCCESS" exists
      */
-    protected boolean successfullyCompleted(String username, String outputDir) {
-        ArrayList<String> globs = new ArrayList<String>();
-        globs.add(outputDir + "/_SUCCESS");
+    protected boolean successfullyCompleted(String outputDir) {
         try {
-            String[] pathes = inventoryService.globPaths(username, globs);
-            return pathes.length == 1;
+            return inventoryService.pathExists(outputDir + "/_SUCCESS");
         } catch (IOException e) {
             return false;
         }

@@ -79,7 +79,7 @@ public class GLobVegProductionType extends HadoopProductionType {
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
         Workflow.Sequential sequence = new Workflow.Sequential();
 
-        if (!successfullyCompleted(productionRequest.getUserName(), partsOutputDir)) {
+        if (!successfullyCompleted(partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
 
@@ -114,7 +114,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " L3", jobConfig));
         }
-        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (!successfullyCompleted(ncOutputDir)) {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
