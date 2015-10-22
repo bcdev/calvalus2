@@ -131,12 +131,9 @@ public abstract class AbstractInventoryService implements InventoryService {
         Configuration conf = jobClientsMap.getConfiguration();
 
         Pattern pattern = createPattern(pathPatterns, conf);
-        System.out.println("pattern = " + pattern);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
         FileSystem fileSystem = new Path(commonPathPrefix).getFileSystem(conf);
-        System.out.println("fileSystem = " + fileSystem);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
-        System.out.println("qualifiedPath = " + qualifiedPath);
         List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
         collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
         String[] result = new String[fileStatuses.size()];
