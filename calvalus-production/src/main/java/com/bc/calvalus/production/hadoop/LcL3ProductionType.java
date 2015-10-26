@@ -99,7 +99,7 @@ public class LcL3ProductionType extends HadoopProductionType {
 
 
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(productionRequest.getUserName(), meanOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
@@ -126,7 +126,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " Cloud", jobConfigCloud));
         }
-        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
@@ -156,7 +156,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " SR", jobConfigSr));
         }
-        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResolution, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);

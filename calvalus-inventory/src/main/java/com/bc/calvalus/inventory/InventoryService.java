@@ -75,4 +75,13 @@ public interface InventoryService {
      * @throws IOException If an I/O error occurs
      */
     boolean removeDirectory(String username, String userPath) throws IOException;
+
+    /**
+     * Provides the information if the given path exists.
+     *
+     * @param path    the path to check.
+     * @return {@code true}, if the path exists, otherwise {@code false}.
+     * @throws IOException If an I/O error occurs
+     */
+    boolean pathExists(String path) throws IOException;
 }

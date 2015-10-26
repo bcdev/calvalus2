@@ -62,4 +62,9 @@ public class TestInventoryService implements InventoryService {
     public boolean removeDirectory(String username, String userPath) throws IOException {
         return false;
     }
+
+    @Override
+    public boolean pathExists(String path) throws IOException {
+        return false;
+    }
 }

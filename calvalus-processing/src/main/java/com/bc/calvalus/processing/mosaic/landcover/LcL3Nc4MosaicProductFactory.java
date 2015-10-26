@@ -27,7 +27,7 @@ import java.util.TimeZone;
  *
  * @author MarcoZ
  */
-class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
+public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
     static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");

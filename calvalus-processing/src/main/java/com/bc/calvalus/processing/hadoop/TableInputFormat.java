@@ -48,9 +48,8 @@ public class TableInputFormat extends InputFormat {
         // parse request
         Configuration configuration = job.getConfiguration();
         final Path inputTablePath = new Path(configuration.get(JobConfigNames.CALVALUS_INPUT_TABLE));
-        //final FileSystem fileSystem = FileSystem.get(configuration);
-        final FileSystem fileSystem = inputTablePath.getFileSystem(configuration);
-        final BufferedReader in = new BufferedReader(new InputStreamReader(fileSystem.open(inputTablePath)));
+        final FileSystem tableFS = inputTablePath.getFileSystem(configuration);
+        final BufferedReader in = new BufferedReader(new InputStreamReader(tableFS.open(inputTablePath)));
         String headLine;
         do {
             headLine = in.readLine();
@@ -81,6 +80,7 @@ public class TableInputFormat extends InputFormat {
             }
 
             final Path path = new Path(values[0]);
+            FileSystem fileSystem = path.getFileSystem(configuration);
             final FileStatus[] statuses = fileSystem.listStatus(path);
             if (statuses == null || statuses.length == 0) {
                 LOG.warning("cannot find input " + values[0]);
