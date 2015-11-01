@@ -487,9 +487,9 @@ public abstract class LcL3SensorConfig {
                     sb.append(" or status == ");
                     sb.append(i);
                 }
-                maskExpr = "(status == 1 " + sb.toString() + ") and not nan(" + sdrBandName + ")";
+                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
             } else {
-                maskExpr = "status == 1 and not nan(" + sdrBandName + ")";
+                maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
             String[] varNames = new String[]{sdrBandName};
             final String[] virtualVariableName = {
@@ -499,7 +499,7 @@ public abstract class LcL3SensorConfig {
             final String[] virtualVariableExpr = {
                     //"(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(" + (borderWidth > 0 ? ("swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || sza > 70 || ") : "") +
-                            "pixel_classif_flags == 0 || (pixel_classif_flags & 1 != 0)) ? 0 : " +
+                            "nan(refl_2_ac) || (pixel_classif_flags & 1 != 0)) ? 0 : " +
                             "(pixel_classif_flags & (2+16) != 0) ? 4 : " +
                             "(pixel_classif_flags & 32 != 0) ? 5 : " +
                             "(pixel_classif_flags & 64 != 0) ? 3 : " +
@@ -516,7 +516,7 @@ public abstract class LcL3SensorConfig {
             String maskExpr;
             String[] varNames;
             // exclude invalid
-            maskExpr = "(status == 1 or (status == 2 and not nan(refl_1_ac)) or (status >= 3))";
+            maskExpr = "(status == 1 or (status == 2 and not nan(refl_2_ac)) or (status >= 3))";
 
             varNames = new String[]{
                     "refl_1_ac", "refl_2_ac", "bt_3", "bt_4", "bt_5"
@@ -528,10 +528,14 @@ public abstract class LcL3SensorConfig {
                     "status",
                     "ndvi"
             };
+
+            //pixel_classif_flags:flag_meanings = "F_INVALID F_CLOUD F_CLOUD_AMBIGUOUS F_CLOUD_SURE F_CLOUD_BUFFER F_CLOUD_SHADOW F_SNOW_ICE F_MIXED_PIXEL F_GLINT_RISK F_COASTLINE F_LAND F_REFL1_ABOVE_THRESH F_REFL2_ABOVE_THRESH F_RATIO_REFL21_ABOVE_THRESH F_RATIO_REFL31_ABOVE_THRESH F_BT4_ABOVE_THRESH F_BT5_ABOVE_THRESH" ;
+            //pixel_classif_flags:flag_masks = 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s, 512s, 1024s, 2048s, 4096s, 8192s, 16384s, -32768s, 0s ;
+
             final String[] virtualVariableExpr = {
                     //"(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(" + (borderWidth > 0 ? ("swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || sza > 70 || ") : "") +
-                            "pixel_classif_flags == 0 || (pixel_classif_flags & 1 != 0)) ? 0 : " +
+                            "nan(refl_2_ac) || (pixel_classif_flags & 1 != 0)) ? 0 : " +
                             "(pixel_classif_flags & (2+16) != 0) ? 4 : " +
                             "(pixel_classif_flags & 32 != 0) ? 5 : " +
                             "(pixel_classif_flags & 64 != 0) ? 3 : " +
