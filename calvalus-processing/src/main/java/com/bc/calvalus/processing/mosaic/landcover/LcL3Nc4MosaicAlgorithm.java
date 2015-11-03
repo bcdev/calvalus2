@@ -57,7 +57,7 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
 */
 
     /**
-     * Removes bands 11 and 15 and substitutes sigma values by uncertainties (sqrt(sigma/numobs)).
+     * Removes bands 11 and 15.
      * @param temporalData  values of source bands and tile
      * @return  values of output bands and tile
      */
@@ -93,27 +93,6 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
                 continue;
             }
             targetData[targetI++] = temporalData[i];
-            if (getTemporalFeatures()[i].endsWith("_sigma")) {
-                for (int j=0; j<temporalData[i].length; ++j) {
-                    int currentPixelState = (int) temporalData[currentPixelStateIndex][j];
-                    switch (currentPixelState) {
-                        case 1:
-                            temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[clearLandCountIndex][j]);
-                            break;
-                        case 2:
-                            temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[clearWaterCountIndex][j]);
-                            break;
-                        case 3:
-                            temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[clearSnowIceCountIndex][j]);
-                            break;
-                        case 5:
-                            temporalData[i][j] = (float) Math.sqrt(temporalData[i][j] / (int) temporalData[cloudShadowCountIndex][j]);
-                            break;
-                        default:
-                            temporalData[i][j] = Float.NaN;
-                    }
-                }
-            }
         }
         return targetData;
     }

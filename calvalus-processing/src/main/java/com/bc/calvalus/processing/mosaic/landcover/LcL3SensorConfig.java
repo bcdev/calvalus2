@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
+import org.apache.commons.lang.StringUtils;
 import org.esa.beam.binning.VariableContext;
 
 import java.util.ArrayList;
@@ -87,6 +88,9 @@ public abstract class LcL3SensorConfig {
     public abstract List<String> getMeanBandNames();
 
     public abstract List<String> getUncertaintyBandNames();
+
+    public abstract boolean isUncertaintiesAreSquares();
+
 
     public static abstract class LcL3MerisConfig extends LcL3SensorConfig {
 
@@ -228,6 +232,11 @@ public abstract class LcL3SensorConfig {
                 names.add("sr_" + name + "_uncertainty");
             }
             return names;
+        }
+
+        @Override
+        public boolean isUncertaintiesAreSquares() {
+            return true;
         }
 
         @Override
@@ -413,6 +422,11 @@ public abstract class LcL3SensorConfig {
         }
 
         @Override
+        public boolean isUncertaintiesAreSquares() {
+            return true;
+        }
+
+        @Override
         public int getL2BandIndex(String srBandName) {
             final String name = srBandName.substring("sr_".length(), srBandName.length() - "_mean".length());
             for (int j=0; j<BANDNAMES.length; ++j) {
@@ -519,8 +533,8 @@ public abstract class LcL3SensorConfig {
             maskExpr = "(status == 1 or (status == 2 and not nan(refl_2_ac)) or (status >= 3))";
 
             varNames = new String[]{
-                    "refl_1_ac", "refl_2_ac", "bt_3", "bt_4", "bt_5"
-                    //,"refl_error_1", "refl_error_2", "refl_error_3", "bt_error_4", "bt_error_5"
+                    "refl_1_ac", "refl_2_ac", "bt_3", "bt_4", "bt_5",
+                    "refl_1_ac_uncertainty", "refl_2_ac_uncertainty"
             };
 
             // add status band as virtual band from pixel_classif_flags
@@ -551,7 +565,7 @@ public abstract class LcL3SensorConfig {
         }
 
         public int[] createVariableIndexes(VariableContext varCtx) {
-            int[] varIndexes = new int[2 + BANDNAMES.length];
+            int[] varIndexes = new int[2 + BANDNAMES.length + 2];
             int j = 0;
             varIndexes[j++] = getVariableIndex(varCtx, "status");
             for (int i = 0; i < BANDNAMES.length; i++) {
@@ -559,29 +573,27 @@ public abstract class LcL3SensorConfig {
                 varIndexes[j++] = getVariableIndex(varCtx, bandSuffix);
             }
             varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
-//            for (int i = 0; i < numBands; i++) {
-//                String bandSuffix = BANDNAMES[i];
-//                varIndexes[j++] = getVariableIndex(varCtx, "sdr_error_" + bandSuffix);
-//            }
+            for (int i = 0; i < 2; i++) {
+                String bandSuffix = BANDNAMES[i];
+                varIndexes[j++] = getVariableIndex(varCtx, bandSuffix + "_uncertainty");
+            }
             return varIndexes;
         }
 
         public String[] createOutputFeatureNames() {
-            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length];
+            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length + 2];
             int j = 0;
             featureNames[j++] = "status";
             for (String counter : COUNTER_NAMES) {
                 featureNames[j++] = counter + "_count";
             }
             for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
-                featureNames[j++] = bandSuffix + "_mean";
+                featureNames[j++] = outputBandNameOf(BANDNAMES[i]) + "_mean";
             }
             featureNames[j++] = "ndvi_mean";
-//            for (int i = 0; i < numBands; i++) {
-//                String bandSuffix = BANDNAMES[i];
-//                featureNames[j++] = "sr_" + bandSuffix + "_sigma";
-//            }
+            for (int i = 0; i < 2; i++) {
+                featureNames[j++] = outputBandNameOf(BANDNAMES[i]) + "_uncertainty";
+            }
             return featureNames;
         }
 
@@ -589,7 +601,7 @@ public abstract class LcL3SensorConfig {
         public List<String> getMeanBandNames() {
             ArrayList<String> names = new ArrayList<String>(BANDNAMES.length);
             for (String name : BANDNAMES) {
-                names.add(name + "_mean");
+                names.add(outputBandNameOf(name) + "_mean");
             }
             return names;
         }
@@ -597,18 +609,47 @@ public abstract class LcL3SensorConfig {
         @Override
         public List<String> getUncertaintyBandNames() {
             ArrayList<String> names = new ArrayList<String>(0);
+            for (int i = 0; i < 2; i++) {
+                names.add(outputBandNameOf(BANDNAMES[i]) + "_uncertainty");
+            }
             return names;
+        }
+
+
+
+        @Override
+        public boolean isUncertaintiesAreSquares() {
+            return false;
         }
 
         @Override
         public int getL2BandIndex(String srBandName) {
-            final String name = srBandName.substring(0, srBandName.length() - "_mean".length());
+            final String bandname = inputBandNameOf(srBandName);
+            final String name = bandname.substring(0, bandname.length() - "_mean".length());
             for (int j=0; j<BANDNAMES.length; ++j) {
                 if (BANDNAMES[j].equals(name)) {
                     return j+1;
                 }
             }
             return -1;
+        }
+
+        // refl_2_ac gets sr_2
+        private String outputBandNameOf(String bandname) {
+            if (bandname.startsWith("refl_")) {
+                return "sr_" + bandname.substring(5,6) + bandname.substring(9);
+            } else {
+                return bandname;
+            }
+        }
+
+        // sr_2 gets refl_2_ac
+        private String inputBandNameOf(String srBandName) {
+            if (srBandName.startsWith("sr_")) {
+                return "refl_" + srBandName.substring(3,4) + "_ac" + srBandName.substring(4);
+            } else {
+                return srBandName;
+            }
         }
     }
 }

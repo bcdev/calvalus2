@@ -235,8 +235,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                 wSum = aggregatedSamples[status][i];
             }
             if (wSum != 0f) {
-                for (int j = 0; j < aggregatedSamples.length - SDR_AGGREGATED_OFFSET; j++) {  // sdr + ndvi + sdr_error
+                for (int j = 0; j < sensorConfig.getBandNames().length + 1; j++) {  // sdr + ndvi
                     aggregatedSamples[SDR_AGGREGATED_OFFSET + j][i] /= wSum;
+                }
+                for (int j = sensorConfig.getBandNames().length + 1; j < aggregatedSamples.length - SDR_AGGREGATED_OFFSET; j++) {  // sdr_error
+                    aggregatedSamples[SDR_AGGREGATED_OFFSET + j][i] = ((float) Math.sqrt(aggregatedSamples[SDR_AGGREGATED_OFFSET + j][i])) / wSum;
                 }
             } else {
                 clearSDR(i, sensorConfig.getBandNames().length, Float.NaN);
@@ -294,10 +297,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         }
         if (varIndexes.length > SDR_L2_OFFSET + numSDRBands + 1) {
             sdrOffset += numSDRBands + 1;
-            for (int j = 0; j < numSDRBands; j++) { // sdr_error
+            boolean uncertaintiesAreSquares = sensorConfig.isUncertaintiesAreSquares();
+            for (int j = 0; SDR_L2_OFFSET + sdrOffset + j < varIndexes.length; j++) { // sdr_error
                 final int varIndex = varIndexes[SDR_L2_OFFSET + numSDRBands + 1 + j];
                 float sdrErrorMeasurement = samples[varIndex][i];
-                aggregatedSamples[sdrOffset + j][i] += sdrErrorMeasurement;
+                aggregatedSamples[sdrOffset + j][i] += uncertaintiesAreSquares ? sdrErrorMeasurement : (sdrErrorMeasurement * sdrErrorMeasurement);
             }
         }
     }

@@ -201,11 +201,22 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 int bandIndex = product.getBand(meanBandName).getSpectralBandIndex();
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + bandIndex);
-                variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
-                variable.addAttribute("wavelength", wavelength);
-                variable.addAttribute("valid_min", 0.0f);
-                variable.addAttribute("valid_max", 1.0f);
+                if (! meanBandName.startsWith("bt_")) {
+                    variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + bandIndex);
+                    variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
+                    variable.addAttribute("wavelength", wavelength);
+                    variable.addAttribute("valid_min", 0.0f);
+                    variable.addAttribute("valid_max", 1.0f);
+                    variable.addAttribute("units", "1");
+                } else {
+                    variable.addAttribute("long_name", "top-of-atmosphere brightness temperature of channel " + bandIndex);
+                    variable.addAttribute("standard_name", "toa_brightness_temperature");
+                    variable.addAttribute("wavelength", wavelength);
+                    variable.addAttribute("valid_min", 0.0f);
+                    variable.addAttribute("valid_max", 400.0f);
+                    variable.addAttribute("units", "K");
+
+                }
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 if (i < srSigmaBandNames.size()) {
                     String sigmaBandName = srSigmaBandNames.get(i);
@@ -216,6 +227,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                     variable.addAttribute("wavelength", wavelength);
                     variable.addAttribute("valid_min", 0.0f);
                     variable.addAttribute("valid_max", 1.0f);
+                    variable.addAttribute("units", "1");
                     variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 }
             }
