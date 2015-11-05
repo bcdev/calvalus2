@@ -73,8 +73,8 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
 
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));

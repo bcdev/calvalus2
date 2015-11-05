@@ -48,8 +48,8 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ProductionServiceFactory;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.ProductData;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;

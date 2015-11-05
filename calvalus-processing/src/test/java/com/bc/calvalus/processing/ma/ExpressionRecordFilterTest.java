@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import com.bc.jexp.ParseException;
+import org.esa.snap.core.jexp.ParseException;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

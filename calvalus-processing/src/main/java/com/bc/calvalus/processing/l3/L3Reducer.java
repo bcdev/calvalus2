@@ -37,9 +37,9 @@ import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.metadata.GlobalMetadata;
 import org.esa.snap.binning.operator.metadata.MetadataAggregator;
 import org.esa.snap.binning.operator.metadata.MetadataAggregatorFactory;
-import org.esa.snap.framework.datamodel.MetadataAttribute;
-import org.esa.snap.framework.datamodel.MetadataElement;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.MetadataAttribute;
+import org.esa.snap.core.datamodel.MetadataElement;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;

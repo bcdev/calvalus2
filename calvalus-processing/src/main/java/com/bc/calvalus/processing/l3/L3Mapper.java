@@ -37,9 +37,9 @@ import org.esa.snap.binning.SpatialBinConsumer;
 import org.esa.snap.binning.SpatialBinner;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.SpatialProductBinner;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.MetadataElement;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.MetadataElement;
+import org.esa.snap.core.datamodel.Product;
 
 import java.io.IOException;
 import java.text.MessageFormat;

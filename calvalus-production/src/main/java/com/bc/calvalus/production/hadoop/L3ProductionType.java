@@ -120,7 +120,7 @@ public class L3ProductionType extends HadoopProductionType {
 
             Integer superSampling = productionRequest.getInteger("superSampling", 1);
             if (superSampling > 1) {
-                jobConfig.setBoolean("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", true);
+                jobConfig.setBoolean("calvalus.system.snap.pixelGeoCoding.fractionAccuracy", true);
             }
 
             if (singleReducer && requiresFormatting) {

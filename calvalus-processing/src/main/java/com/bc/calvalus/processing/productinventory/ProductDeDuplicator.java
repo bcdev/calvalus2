@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.productinventory;
 
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -23,22 +23,22 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.esa.snap.dataio.dimap.DimapProductHelpers;
-import org.esa.snap.framework.dataio.AbstractProductReader;
-import org.esa.snap.framework.dataio.IllegalFileFormatException;
-import org.esa.snap.framework.dataio.ProductReaderPlugIn;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.PixelGeoCoding;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.RasterDataNode;
-import org.esa.snap.framework.datamodel.TiePointGrid;
-import org.esa.snap.jai.ImageManager;
-import org.esa.snap.jai.ResolutionLevel;
-import org.esa.snap.jai.SingleBandedOpImage;
-import org.esa.snap.util.ImageUtils;
-import org.esa.snap.util.math.MathUtils;
+import org.esa.snap.core.dataio.AbstractProductReader;
+import org.esa.snap.core.dataio.IllegalFileFormatException;
+import org.esa.snap.core.dataio.ProductReaderPlugIn;
+import org.esa.snap.core.dataio.dimap.DimapProductHelpers;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.PixelGeoCoding;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.RasterDataNode;
+import org.esa.snap.core.datamodel.TiePointGrid;
+import org.esa.snap.core.image.ImageManager;
+import org.esa.snap.core.image.ResolutionLevel;
+import org.esa.snap.core.image.SingleBandedOpImage;
+import org.esa.snap.core.util.ImageUtils;
+import org.esa.snap.core.util.math.MathUtils;
 import org.jdom.Document;
 
 import javax.imageio.stream.ImageInputStream;
@@ -157,7 +157,7 @@ public class StreamingProductReader extends AbstractProductReader {
         final GeoCoding[] geoCodings = DimapProductHelpers.createGeoCoding(dom, product);
         if (geoCodings != null) {
             if (geoCodings.length == 1) {
-                product.setGeoCoding(geoCodings[0]);
+                product.setSceneGeoCoding(geoCodings[0]);
             } else {
                 for (int i = 0; i < geoCodings.length; i++) {
                     product.getBandAt(i).setGeoCoding(geoCodings[i]);
@@ -167,7 +167,7 @@ public class StreamingProductReader extends AbstractProductReader {
             final Band lonBand = product.getBand("longitude");
             final Band latBand = product.getBand("latitude");
             if (latBand != null && lonBand != null) {
-                product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 6));
+                product.setSceneGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 6));
             }
         }
     }

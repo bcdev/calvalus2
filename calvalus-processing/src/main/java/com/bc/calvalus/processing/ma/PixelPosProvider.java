@@ -16,10 +16,10 @@
 
 package com.bc.calvalus.processing.ma;
 
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
 
 import java.awt.Rectangle;
 import java.awt.geom.Area;
@@ -119,7 +119,7 @@ public class PixelPosProvider {
         if (location == null) {
             return null;
         }
-        GeoCoding geoCoding = product.getGeoCoding();
+        GeoCoding geoCoding = product.getSceneGeoCoding();
         final PixelPos pixelPos = geoCoding.getPixelPos(location, null);
         if (pixelPos.isValid() && product.containsPixel(pixelPos)) {
             if (allowedPixelDisplacement < 0) {

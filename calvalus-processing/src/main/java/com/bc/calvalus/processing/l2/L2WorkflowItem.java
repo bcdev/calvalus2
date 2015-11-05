@@ -63,8 +63,8 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(L2Mapper.class);

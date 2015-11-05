@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
 import org.esa.snap.dataio.netcdf.ProfileWriteContext;
 import org.esa.snap.dataio.netcdf.metadata.ProfileInitPartWriter;
@@ -26,10 +27,9 @@ import org.esa.snap.dataio.netcdf.nc.NVariable;
 import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
 import org.esa.snap.dataio.netcdf.util.Constants;
 import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
-import org.esa.snap.framework.dataio.EncodeQualification;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.jai.ImageManager;
+import org.esa.snap.core.dataio.EncodeQualification;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import ucar.ma2.ArrayByte;
 
 import java.awt.Dimension;

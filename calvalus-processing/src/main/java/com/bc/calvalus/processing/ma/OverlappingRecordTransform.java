@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.snap.framework.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.PixelPos;
 
 import java.util.ArrayList;
 import java.util.Date;

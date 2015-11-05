@@ -11,12 +11,12 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductWriter;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.CrsGeoCoding;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.io.BufferedInputStream;
@@ -119,7 +119,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
                                           NUM_TILE_COLUMNS * bandTileWidth,
                                           NUM_TILE_ROWS * bandTileHeight);
         try {
-            dimapOutput.setGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+            dimapOutput.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84,
                                                       dimapOutput.getSceneRasterWidth(), dimapOutput.getSceneRasterHeight(),
                                                       -180.0, 90.0,
                                                       360.0/NUM_TILE_COLUMNS/bandTileWidth, 180.0/NUM_TILE_ROWS/bandTileHeight,

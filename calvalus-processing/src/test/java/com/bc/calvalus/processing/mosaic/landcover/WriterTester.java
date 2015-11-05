@@ -3,10 +3,10 @@ package com.bc.calvalus.processing.mosaic.landcover;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -32,7 +32,7 @@ public class WriterTester {
 
         final MosaicProductFactory lcMosaicProductFactory = new LcL3Nc4MosaicProductFactory(new String[]{"sdr_test"});
         final Product testproduct = lcMosaicProductFactory.createProduct(configuration, 5, 7, macroTileRectangle);
-        testproduct.setGeoCoding(mosaicGrid.createMacroCRS(new Point(5, 7)));
+        testproduct.setSceneGeoCoding(mosaicGrid.createMacroCRS(new Point(5, 7)));
         // fill with fake data
         final Band[] bands = testproduct.getBands();
         for (Band band : bands) {

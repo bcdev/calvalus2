@@ -36,7 +36,7 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -101,7 +101,7 @@ public class FireL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigCloud.setIfUnset("calvalus.mosaic.macroTileSize", "10");
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
-            jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+            jobConfigCloud.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " Cloud", jobConfigCloud));
@@ -131,7 +131,7 @@ public class FireL3ProductionType extends HadoopProductionType {
                 }
                 jobConfigSr.setIfUnset("calvalus.mosaic.macroTileSize", "10");
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
-                jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+                jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
                 singleDaySequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                              productionName + " SR", jobConfigSr));

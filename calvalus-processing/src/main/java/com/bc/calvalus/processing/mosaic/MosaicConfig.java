@@ -24,8 +24,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.esa.snap.binning.VariableContext;
 import org.esa.snap.binning.support.VariableContextImpl;
-import org.esa.snap.framework.gpf.annotations.Parameter;
-import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.Parameter;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
 /**
  * A configuration for Mosaic processing

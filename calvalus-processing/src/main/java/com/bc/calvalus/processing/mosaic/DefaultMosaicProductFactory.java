@@ -17,9 +17,9 @@
 package com.bc.calvalus.processing.mosaic;
 
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.awt.Rectangle;
 

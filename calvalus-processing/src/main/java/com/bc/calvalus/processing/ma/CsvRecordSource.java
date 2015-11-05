@@ -2,7 +2,7 @@ package com.bc.calvalus.processing.ma;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.GeoPos;
 
 import java.io.IOException;
 import java.io.InputStream;

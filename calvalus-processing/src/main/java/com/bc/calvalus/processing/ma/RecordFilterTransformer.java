@@ -16,11 +16,10 @@
 
 package com.bc.calvalus.processing.ma;
 
-import com.bc.jexp.ParseException;
 
-import java.util.ArrayList;
+import org.esa.snap.core.jexp.ParseException;
+
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * A record transformer that annotates the record ith the given annotation,

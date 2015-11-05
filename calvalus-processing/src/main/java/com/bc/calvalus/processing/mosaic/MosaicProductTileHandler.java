@@ -24,13 +24,13 @@ import com.bc.ceres.metadata.MetadataResourceEngine;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.velocity.VelocityContext;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductWriter;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.CrsGeoCoding;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.io.FileUtils;
 
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -170,7 +170,7 @@ public class MosaicProductTileHandler extends MosaicTileHandler {
 
         MosaicProductFactory productFactory = algorithm.getProductFactory();
         product = productFactory.createProduct(context.getConfiguration(), macroTile.x, macroTile.y, productRect);
-        product.setGeoCoding(geoCoding);
+        product.setSceneGeoCoding(geoCoding);
 
         productFormatter = new ProductFormatter(product.getName(), format, compression);
         productFile = productFormatter.createTemporaryProductFile();

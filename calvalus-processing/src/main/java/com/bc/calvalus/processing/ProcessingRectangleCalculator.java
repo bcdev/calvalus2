@@ -5,8 +5,8 @@ import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.gpf.operators.standard.SubsetOp;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.SubsetOp;
 
 import java.awt.Rectangle;
 import java.io.IOException;

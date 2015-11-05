@@ -18,10 +18,10 @@ package com.bc.calvalus.processing;
 
 import com.bc.calvalus.processing.beam.BeamOperatorAdapter;
 import com.bc.ceres.binding.dom.DomElement;
-import org.esa.snap.framework.gpf.GPF;
-import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
-import org.esa.snap.gpf.operators.standard.BandMathsOp;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.common.BandMathsOp;
+import org.esa.snap.core.util.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;

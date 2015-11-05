@@ -30,7 +30,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.util.StringUtils;
+import org.esa.snap.core.util.StringUtils;
 
 import java.util.List;
 

@@ -1,9 +1,9 @@
 package com.bc.calvalus.processing.l3;
 
-import org.esa.snap.framework.datamodel.MetadataAttribute;
-import org.esa.snap.framework.datamodel.MetadataElement;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.MetadataAttribute;
+import org.esa.snap.core.datamodel.MetadataElement;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -24,7 +24,7 @@ public class L3MapperTest {
         product.getMetadataRoot().addElement(processingGraph);
 
         final String metadataXml = L3Mapper.extractProcessingGraphXml(product);
-        assertEquals(2284, metadataXml.length());
+        assertEquals(2259, metadataXml.length());
         assertTrue(metadataXml.contains("1.98"));
 
     }

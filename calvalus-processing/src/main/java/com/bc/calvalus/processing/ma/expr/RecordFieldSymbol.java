@@ -1,9 +1,6 @@
 package com.bc.calvalus.processing.ma.expr;
 
-import com.bc.jexp.EvalEnv;
-import com.bc.jexp.EvalException;
-import com.bc.jexp.Symbol;
-import com.bc.jexp.Term;
+import org.esa.snap.core.jexp.EvalEnv;
 
 import java.lang.reflect.Field;
 

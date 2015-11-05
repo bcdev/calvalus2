@@ -31,13 +31,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductWriter;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.snap.util.math.MathUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.esa.snap.core.util.math.MathUtils;
 import org.geotools.geometry.DirectPosition2D;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
@@ -107,7 +107,7 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         for (Record record : recordSource.getRecords()) {
             context.progress();
             GeoPos location = record.getLocation();
-            PixelPos pixelPos = product.getGeoCoding().getPixelPos(location, null);
+            PixelPos pixelPos = product.getSceneGeoCoding().getPixelPos(location, null);
             if (product.containsPixel(pixelPos)) {
                 Double id = (Double) record.getAttributeValues()[0];
                 String idAsString = decimalFormat.format(id);

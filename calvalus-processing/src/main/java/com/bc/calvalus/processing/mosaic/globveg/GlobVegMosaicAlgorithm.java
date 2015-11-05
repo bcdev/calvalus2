@@ -25,10 +25,10 @@ import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.VariableContext;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.math.MathUtils;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.math.MathUtils;
 
 import java.awt.Rectangle;
 import java.text.ParseException;

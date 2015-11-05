@@ -19,7 +19,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.esa.snap.util.StringUtils;
+import org.esa.snap.core.util.StringUtils;
 
 import java.io.IOException;
 import java.text.ParseException;

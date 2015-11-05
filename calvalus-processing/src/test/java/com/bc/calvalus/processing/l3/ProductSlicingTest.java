@@ -18,10 +18,10 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.beam.MerisProductTestRunner;
 import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductReader;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductReader;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 

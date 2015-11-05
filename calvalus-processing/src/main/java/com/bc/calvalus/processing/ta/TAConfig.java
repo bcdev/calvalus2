@@ -23,9 +23,9 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.gpf.annotations.Parameter;
-import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
-import org.esa.snap.util.converters.JtsGeometryConverter;
+import org.esa.snap.core.gpf.annotations.Parameter;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.util.converters.JtsGeometryConverter;
 
 /**
  * The configuration for the trend analysis.

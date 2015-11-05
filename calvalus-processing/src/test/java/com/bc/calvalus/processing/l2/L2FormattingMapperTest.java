@@ -18,8 +18,8 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.mapred.JobConf;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.util.Map;

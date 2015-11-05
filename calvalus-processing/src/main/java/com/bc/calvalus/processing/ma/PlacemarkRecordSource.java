@@ -2,10 +2,10 @@ package com.bc.calvalus.processing.ma;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.esa.snap.dataio.placemark.PlacemarkIO;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.PinDescriptor;
-import org.esa.snap.framework.datamodel.Placemark;
+import org.esa.snap.core.dataio.placemark.PlacemarkIO;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PinDescriptor;
+import org.esa.snap.core.datamodel.Placemark;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;

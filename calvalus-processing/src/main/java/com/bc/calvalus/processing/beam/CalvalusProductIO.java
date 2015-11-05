@@ -25,11 +25,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductReader;
-import org.esa.snap.framework.dataio.ProductReaderPlugIn;
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductReader;
+import org.esa.snap.core.dataio.ProductReaderPlugIn;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.Product;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.Dimension;
@@ -39,7 +39,7 @@ import java.util.logging.Logger;
 
 /**
  * Handles reading of products.
- * Delegates mostly to {@link org.esa.snap.framework.dataio.ProductIO}
+ * Delegates mostly to {@link org.esa.snap.core.dataio.ProductIO}
  */
 public class CalvalusProductIO {
 
@@ -111,7 +111,7 @@ public class CalvalusProductIO {
             LOG.info(String.format("ProductReader: %s", productReader.toString()));
             LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
         }
-        GeoCoding geoCoding = product.getGeoCoding();
+        GeoCoding geoCoding = product.getSceneGeoCoding();
         if (geoCoding != null) {
             LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
         }

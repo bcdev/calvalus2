@@ -19,8 +19,8 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.gpf.GPF;
-import org.esa.snap.util.SystemUtils;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.util.SystemUtils;
 
 import javax.media.jai.JAI;
 import java.util.Map;

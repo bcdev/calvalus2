@@ -1,17 +1,17 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.utils.ProductTransformation;
-import org.esa.snap.framework.dataio.ProductFlipper;
-import org.esa.snap.framework.dataio.ProductSubsetBuilder;
-import org.esa.snap.framework.dataio.ProductSubsetDef;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.FlagCoding;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.TiePointGeoCoding;
-import org.esa.snap.framework.datamodel.TiePointGrid;
+import org.esa.snap.core.dataio.ProductFlipper;
+import org.esa.snap.core.dataio.ProductSubsetBuilder;
+import org.esa.snap.core.dataio.ProductSubsetDef;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.FlagCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.TiePointGeoCoding;
+import org.esa.snap.core.datamodel.TiePointGrid;
 import org.junit.Test;
 
 import java.awt.Rectangle;
@@ -638,7 +638,7 @@ public class ProductRecordSourceTest {
         Product product = new Product("MER_RR__2P.N1", "MER_RR__2P", w, h);
         product.addTiePointGrid(new TiePointGrid("latitude", 2, 2, 0.5, 0.5, w - 1, h - 1, new float[]{1, 1, 0, 0}));
         product.addTiePointGrid(new TiePointGrid("longitude", 2, 2, 0.5, 0.5, w - 1, h - 1, new float[]{0, 1, 0, 1}));
-        product.setGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
+        product.setSceneGeoCoding(new TiePointGeoCoding(product.getTiePointGrid("latitude"), product.getTiePointGrid("longitude")));
         product.setStartTime(utc("07-MAY-2010 10:25:14"));
         product.setEndTime(utc("07-MAY-2010 11:24:46"));
         product.addBand("b1", "X-0.5", ProductData.TYPE_INT16);

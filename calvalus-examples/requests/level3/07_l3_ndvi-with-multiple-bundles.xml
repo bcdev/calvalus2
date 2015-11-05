@@ -107,7 +107,7 @@
         </wps:Input>
 
         <wps:Input>
-            <ows:Identifier>calvalus.system.beam.pixelGeoCoding.useTiling</ows:Identifier>
+            <ows:Identifier>calvalus.system.snap.pixelGeoCoding.useTiling</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>true</wps:LiteralData>
             </wps:Data>

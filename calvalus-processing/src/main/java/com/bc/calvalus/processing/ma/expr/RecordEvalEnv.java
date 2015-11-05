@@ -1,8 +1,7 @@
 package com.bc.calvalus.processing.ma.expr;
 
-import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.Record;
-import com.bc.jexp.EvalEnv;
+import org.esa.snap.core.jexp.EvalEnv;
 
 import java.util.HashMap;
 

@@ -20,7 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.esa.snap.util.io.CsvReader;
+import org.esa.snap.core.util.io.CsvReader;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

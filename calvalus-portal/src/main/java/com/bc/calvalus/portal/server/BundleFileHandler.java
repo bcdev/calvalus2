@@ -6,7 +6,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.ceres.binding.BindingException;
 import org.apache.commons.fileupload.FileItem;
-import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;

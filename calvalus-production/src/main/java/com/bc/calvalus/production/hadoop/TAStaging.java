@@ -24,7 +24,7 @@ import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.BinManager;
 import org.esa.snap.binning.WritableVector;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.util.io.FileUtils;
 import org.jfree.chart.JFreeChart;
 
 import java.io.File;

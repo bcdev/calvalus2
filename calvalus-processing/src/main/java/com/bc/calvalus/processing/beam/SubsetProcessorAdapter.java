@@ -22,9 +22,9 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.gpf.operators.standard.SubsetOp;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.util.io.FileUtils;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;

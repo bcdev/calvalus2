@@ -71,8 +71,8 @@ public class MRProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, minDateStr);
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDateStr);
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
 
         jobConfig.set("mapreduce.inputformat.class", productionRequest.getString("calvalus.mapreduce.inputformat.class", PatternBasedInputFormat.class.getName()));
         jobConfig.set("mapreduce.map.class", productionRequest.getString("calvalus.mapreduce.map.class"));

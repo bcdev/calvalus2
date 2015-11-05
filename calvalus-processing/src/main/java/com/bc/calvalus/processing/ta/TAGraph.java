@@ -17,8 +17,8 @@
 package com.bc.calvalus.processing.ta;
 
 import org.esa.snap.binning.support.VectorImpl;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.io.CsvReader;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.io.CsvReader;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;

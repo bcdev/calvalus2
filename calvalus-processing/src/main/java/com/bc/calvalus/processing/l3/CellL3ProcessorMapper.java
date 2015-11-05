@@ -15,7 +15,7 @@ import org.esa.snap.binning.SpatialBin;
 import org.esa.snap.binning.VariableContext;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.support.ObservationImpl;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.DateFormat;

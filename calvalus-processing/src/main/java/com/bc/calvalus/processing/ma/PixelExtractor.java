@@ -1,13 +1,13 @@
 package com.bc.calvalus.processing.ma;
 
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.FlagCoding;
-import org.esa.snap.framework.datamodel.GeoPos;
-import org.esa.snap.framework.datamodel.Mask;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.TiePointGrid;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.FlagCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.TiePointGrid;
 
 import java.awt.Color;
 import java.awt.Rectangle;
@@ -150,7 +150,7 @@ public class PixelExtractor {
         for (int i = 0, y = y0; y < y0 + height; y++) {
             for (int x = x0; x < x0 + width; x++, i++) {
                 PixelPos pp = new PixelPos(x + 0.5F, y + 0.5F);
-                GeoPos gp = product.getGeoCoding().getGeoPos(pp, null);
+                GeoPos gp = product.getSceneGeoCoding().getGeoPos(pp, null);
                 Point2D originalCoordinates = o2iTransform.transform(pp, null);
                 pixelXPositions[i] = (int) originalCoordinates.getX();
                 pixelYPositions[i] = (int) originalCoordinates.getY();

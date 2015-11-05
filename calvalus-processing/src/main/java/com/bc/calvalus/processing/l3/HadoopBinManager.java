@@ -13,8 +13,8 @@ import org.esa.snap.binning.PlanetaryGrid;
 import org.esa.snap.binning.VariableContext;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.support.BinningContextImpl;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.StringUtils;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.StringUtils;
 
 import java.text.ParseException;
 

@@ -39,7 +39,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.VariableConfig;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.DateFormat;

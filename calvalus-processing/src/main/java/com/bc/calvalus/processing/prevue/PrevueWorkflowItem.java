@@ -62,10 +62,10 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
         Configuration jobConfig = job.getConfiguration();
 
         // Note: these are applied in GpfUtils.init().
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "50");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "50");
-        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
-        jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "50");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "50");
+        jobConfig.setIfUnset("calvalus.system.snap.pixelGeoCoding.useTiling", "true");
+        jobConfig.setIfUnset("calvalus.system.snap.envisat.usePixelGeoCoding", "true");
 
         job.setInputFormatClass(PatternBasedInputFormat.class);
         job.setMapperClass(PrevueMapper.class);

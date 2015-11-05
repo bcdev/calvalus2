@@ -19,7 +19,7 @@ package com.bc.calvalus.processing.prevue;
 import com.bc.calvalus.processing.ma.CsvRecordSource;
 import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.Record;
-import org.esa.snap.framework.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.GeoPos;
 import org.junit.Test;
 
 import java.io.StringReader;

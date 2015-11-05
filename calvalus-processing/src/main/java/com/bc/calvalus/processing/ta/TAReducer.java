@@ -31,7 +31,7 @@ import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.BinManager;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

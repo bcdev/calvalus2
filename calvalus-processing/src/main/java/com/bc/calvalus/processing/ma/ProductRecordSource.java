@@ -1,8 +1,8 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.ceres.core.Assert;
-import org.esa.snap.framework.datamodel.PixelPos;
-import org.esa.snap.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
 
 import java.awt.geom.AffineTransform;
 import java.io.IOException;

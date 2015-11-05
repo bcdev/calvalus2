@@ -5,9 +5,9 @@ import com.bc.calvalus.processing.ma.Header;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordUtils;
 import com.bc.calvalus.processing.ma.TestHeader;
-import com.bc.jexp.Symbol;
-import com.bc.jexp.Term;
-import com.bc.jexp.impl.ParserImpl;
+import org.esa.snap.core.jexp.Symbol;
+import org.esa.snap.core.jexp.Term;
+import org.esa.snap.core.jexp.impl.ParserImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.*;

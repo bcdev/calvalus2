@@ -61,8 +61,8 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         Configuration jobConfig = job.getConfiguration();
 
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
-        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
 
         // because the size of the value objects can get very big
         // it is better to report progress more often

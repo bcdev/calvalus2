@@ -10,9 +10,9 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
 import org.esa.snap.binning.CompositingType;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.gpf.annotations.Parameter;
-import org.esa.snap.framework.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.annotations.Parameter;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
 import java.text.DateFormat;
 import java.text.ParseException;

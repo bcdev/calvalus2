@@ -35,11 +35,11 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.velocity.VelocityContext;
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.FeatureUtils;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.FeatureUtils;
+import org.esa.snap.core.util.io.FileUtils;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.transform.AffineTransform2D;
 import org.opengis.referencing.FactoryException;
@@ -160,7 +160,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("configuration", jobConfig);
                 vcx.put("sourceProduct", sourceProduct);
                 vcx.put("targetProduct", targetProduct);
-                GeoCoding geoCoding = targetProduct.getGeoCoding();
+                GeoCoding geoCoding = targetProduct.getSceneGeoCoding();
                 if (geoCoding != null) {
                     CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
                     try {

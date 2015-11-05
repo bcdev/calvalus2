@@ -103,7 +103,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfig.setInt("calvalus.mosaic.macroTileSize", 10);
             jobConfig.setInt("calvalus.mosaic.tileSize", 360);
-            jobConfig.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+            jobConfig.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
             jobConfig.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " L3", jobConfig));

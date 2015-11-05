@@ -2,9 +2,9 @@ package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.processing.ma.expr.HeaderNamespace;
 import com.bc.calvalus.processing.ma.expr.RecordEvalEnv;
-import com.bc.jexp.ParseException;
-import com.bc.jexp.Term;
-import com.bc.jexp.impl.ParserImpl;
+import org.esa.snap.core.jexp.ParseException;
+import org.esa.snap.core.jexp.Term;
+import org.esa.snap.core.jexp.impl.ParserImpl;
 
 /**
  * A record filter that uses an expression to decide if a record is accepted or not.

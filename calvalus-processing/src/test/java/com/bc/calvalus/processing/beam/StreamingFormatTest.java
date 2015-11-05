@@ -25,11 +25,11 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
-import org.esa.snap.framework.dataio.ProductIO;
-import org.esa.snap.framework.dataio.ProductReader;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.math.MathUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductReader;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.math.MathUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -66,8 +66,8 @@ public class StreamingFormatTest {
 
         File testProductFile = MerisProductTestRunner.getTestProductFile();
 
-        System.setProperty("beam.reader.tileHeight", "64");
-        System.setProperty("beam.reader.tileWidth", "*");
+        System.setProperty("snap.dataio.reader.tileHeight", "64");
+        System.setProperty("snap.dataio.reader.tileWidth", "*");
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
         Product sourceProduct = productReader.readProductNodes(testProductFile, null);
 

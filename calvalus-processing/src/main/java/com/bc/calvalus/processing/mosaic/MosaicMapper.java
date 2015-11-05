@@ -29,13 +29,12 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.binning.VariableContext;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.framework.datamodel.RasterDataNode;
-import org.esa.snap.framework.datamodel.VirtualBand;
-import org.esa.snap.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.snap.jai.ImageManager;
-import org.esa.snap.util.ImageUtils;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.RasterDataNode;
+import org.esa.snap.core.datamodel.VirtualBand;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.esa.snap.core.util.ImageUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
 import java.awt.Point;
@@ -74,7 +73,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             int numTilesProcessed = 0;
             if (product != null) {
-                if (product.getGeoCoding() == null) {
+                if (product.getSceneGeoCoding() == null) {
                     throw new IllegalArgumentException("product.getGeoCoding() == null");
                 }
                 Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get("calvalus.mosaic.regionGeometry"));

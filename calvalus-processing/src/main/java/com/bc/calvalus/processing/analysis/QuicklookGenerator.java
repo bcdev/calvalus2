@@ -31,24 +31,24 @@ import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
-import org.esa.snap.framework.datamodel.Band;
-import org.esa.snap.framework.datamodel.ColorPaletteDef;
-import org.esa.snap.framework.datamodel.GeoCoding;
-import org.esa.snap.framework.datamodel.ImageInfo;
-import org.esa.snap.framework.datamodel.ImageLegend;
-import org.esa.snap.framework.datamodel.Mask;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.framework.datamodel.ProductNodeGroup;
-import org.esa.snap.framework.datamodel.RGBChannelDef;
-import org.esa.snap.framework.datamodel.RGBImageProfile;
-import org.esa.snap.framework.datamodel.Stx;
-import org.esa.snap.framework.gpf.GPF;
-import org.esa.snap.glayer.MaskLayerType;
-import org.esa.snap.glayer.NoDataLayerType;
-import org.esa.snap.glevel.BandImageMultiLevelSource;
-import org.esa.snap.jai.ImageManager;
-import org.esa.snap.util.DefaultPropertyMap;
-import org.esa.snap.util.PropertyMap;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.ColorPaletteDef;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.ImageInfo;
+import org.esa.snap.core.datamodel.ImageLegend;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductNodeGroup;
+import org.esa.snap.core.datamodel.RGBChannelDef;
+import org.esa.snap.core.datamodel.RGBImageProfile;
+import org.esa.snap.core.datamodel.Stx;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.image.BandImageMultiLevelSource;
+import org.esa.snap.core.image.ImageManager;
+import org.esa.snap.core.layer.MaskLayerType;
+import org.esa.snap.core.layer.NoDataLayerType;
+import org.esa.snap.core.util.DefaultPropertyMap;
+import org.esa.snap.core.util.PropertyMap;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.Interpolation;
@@ -223,7 +223,7 @@ public class QuicklookGenerator {
         final LayerContext layerContext = new LayerContext() {
             @Override
             public Object getCoordinateReferenceSystem() {
-                final GeoCoding geoCoding = product.getGeoCoding();
+                final GeoCoding geoCoding = product.getSceneGeoCoding();
                 if (geoCoding != null) {
                     return ImageManager.getModelCrs(geoCoding);
                 }

@@ -28,8 +28,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.esa.snap.framework.datamodel.Product;
-import org.esa.snap.util.io.FileUtils;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;

@@ -35,8 +35,8 @@ import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.snap.framework.datamodel.ProductData;
-import org.esa.snap.util.StringUtils;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -134,7 +134,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 jobConfigSr.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, mosaicConfigXml);
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
-                jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
+                jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
                 sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                     productionName + " SR " + rr, jobConfigSr));
