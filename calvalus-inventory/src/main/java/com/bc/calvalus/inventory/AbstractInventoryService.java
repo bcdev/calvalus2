@@ -22,14 +22,16 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,6 +41,7 @@ import java.util.regex.Pattern;
  *
  * @author MarcoZ
  * @author Norman
+ * @author Martin (for ACL)
  */
 public abstract class AbstractInventoryService implements InventoryService {
 
@@ -53,13 +56,23 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws Exception {
-        FileSystem fileSystem = FileSystem.get(jobClientsMap.getConfiguration()); // HDFS
+        final FileSystem fileSystem;
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+            final UserGroupInformation user = UserGroupInformation.createRemoteUser(username);
+            final PrivilegedExceptionAction<FileSystem> getFileSystemAction = (PrivilegedExceptionAction<FileSystem>) () -> {
+                return FileSystem.get(jobClientsMap.getConfiguration());
+            };
+            fileSystem = user.doAs(getFileSystemAction);
+        } else {
+            fileSystem = FileSystem.get(jobClientsMap.getConfiguration()); // HDFS
+        }
+
         if (filter != null && filter.startsWith(USER_FILTER)) {
-            String userName = filter.substring(USER_FILTER.length());
-            if (userName.equals("all")) {
+            String filterUserName = filter.substring(USER_FILTER.length());
+            if (filterUserName.equals("all")) {
                 return loadProcessed(fileSystem, "*");
             } else {
-                return loadProcessed(fileSystem, userName);
+                return loadProcessed(fileSystem, filterUserName);
             }
         } else {
             return loadPredefined(fileSystem);
@@ -72,16 +85,54 @@ public abstract class AbstractInventoryService implements InventoryService {
             databasePath = makeQualified(fileSystem, archiveRootDir + "/" + ProductSetPersistable.FILENAME);
         }
         if (fileSystem.exists(databasePath)) {
-            return readProductSets(fileSystem, new Path[]{databasePath});
+            final ProductSet[] productSets = readProductSets(fileSystem, new Path[]{databasePath});
+            if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+                List<ProductSet> accu = new ArrayList<>();
+                for (ProductSet productSet : productSets) {
+                    try {
+                        fileSystem.exists(makeQualified(fileSystem, productSet.getPath()));
+                        accu.add(productSet);
+                    } catch (AccessControlException e) {
+                    }
+                }
+                return accu.toArray(new ProductSet[accu.size()]);
+            } else {
+                return productSets;
+            }
         }
         return new ProductSet[0];
     }
 
-    private ProductSet[] loadProcessed(FileSystem fileSystem, String username) throws IOException {
-        String path = String.format("home/%s/*/%s", username, ProductSetPersistable.FILENAME);
-        Path pathPattern = makeQualified(fileSystem, path);
-        FileStatus[] fileStatuses = fileSystem.globStatus(pathPattern);
-        Path[] paths = FileUtil.stat2Paths(fileStatuses);
+    private ProductSet[] loadProcessed(FileSystem fileSystem, String filterUserName) throws IOException {
+        final Path[] paths;
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+            final List<Path> accu = new ArrayList<>();
+            final String userDirsPattern = String.format("home/%s", filterUserName);
+            final Path userDirsPath = makeQualified(fileSystem, userDirsPattern);
+            final FileStatus[] userDirsStatuses = fileSystem.globStatus(userDirsPath);
+            for (FileStatus userDirStatus : userDirsStatuses) {
+                try {
+                    final FileStatus[] userDatasetsStatus = fileSystem.listStatus(userDirStatus.getPath());
+                    for (FileStatus userDatasetStatus : userDatasetsStatus) {
+                        try {
+                            final FileStatus[] fileStatuses = fileSystem.listStatus(new Path(userDatasetStatus.getPath(), ProductSetPersistable.FILENAME));
+                            if (fileStatuses.length == 1) {
+                                accu.add(fileStatuses[0].getPath());
+                            }
+                        } catch (AccessControlException _) {
+                        }
+                    }
+                } catch (AccessControlException _) {
+                }
+            }
+            paths = accu.toArray(new Path[accu.size()]);
+        } else {
+            final String path = String.format("home/%s/*/%s", filterUserName, ProductSetPersistable.FILENAME);
+            final Path pathPattern = makeQualified(fileSystem, path);
+            final FileStatus[] fileStatuses = fileSystem.globStatus(pathPattern);
+            paths = FileUtil.stat2Paths(fileStatuses);
+        }
+
         return readProductSets(fileSystem, paths);
     }
 
@@ -91,7 +142,9 @@ public abstract class AbstractInventoryService implements InventoryService {
         } else {
             List<ProductSet> productSetList = new ArrayList<ProductSet>();
             for (Path path : paths) {
-                productSetList.addAll(readProductSetFile(fileSystem, path));
+                try {
+                    productSetList.addAll(readProductSetFile(fileSystem, path));
+                } catch (AccessControlException e) {}
             }
             return productSetList.toArray(new ProductSet[productSetList.size()]);
         }

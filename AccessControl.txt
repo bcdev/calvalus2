@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Access control on Calvalus is based on user groups and ACL of HDFS.
+#
+# o Users are members of groups bc, calvalus, coastcolour, calwps.
+# o cvop:bc is the owner of generic data and software.
+#
+# To set up the directory tree below /calvalus/eodata execute
+
+for t in MER_FSG_1P MER_RRG_1P ATS_LST_2P ATS_NR__2P ATS_TOA_1P AVHRR_L1B AVHRR_TL_L1B Landsat45-TM Landsat7-ETM Landsat8 MERIS_SR_FR MERIS_SR_RR MER_FRS_1P MER_RR__1P MODISA_GEO MODISA_L1A MODISA_L1B MODISA_L1C MODISA_L2_LAC MODIS_L1B OC-CCI_chl OCM_L1B OSISAF-SEAICE S2_L1C SEAWIFS_L1B SENTINEL-2 SPOT_VGT_1P SPOT_VGT_L2_PGM VIIRS_L1; do
+  hdfs dfs -setfacl -R -m group:calvalus:r-x /calvalus/eodata/$t
+  hdfs dfs -setfacl -R -m default:group:calvalus:r-x /calvalus/eodata/$t
+  if [ $t = MER_FSG_1P -o $t = MER_RRG_1P ]; then
+    hdfs dfs -setfacl -R -m group:coastcolour:r-x /calvalus/eodata/$t
+    hdfs dfs -setfacl -R -m default:group:coastcolour:r-x /calvalus/eodata/$t
+  fi
+  if [ $t = MER_FSG_1P -o $t = MER_RRG_1P -o $t = MERIS_SR_FR -o $t = Landsat8 -o $t = AVHRR_L1B ]; then
+    hdfs dfs -setfacl -R -m group:calwps:rx /calvalus/eodata/$t
+    hdfs dfs -setfacl -R -m default:group:calwps:r-x /calvalus/eodata/$t
+  fi
+  #hdfs dfs -setfacl -R -m default:user::rwx /calvalus/eodata/$t
+  hdfs dfs -setfacl -R -m default:group::r-x /calvalus/eodata/$t
+  hdfs dfs -setfacl -R -m default:other::... /calvalus/eodata/$t
+  hdfs dfs -chown -R cvop:bc /calvalus/eodata/$t
+  hdfs dfs -chmod -R 750 /calvalus/eodata/$t
+  #hdfs dfs -chmod -R 770 /calvalus/eodata/$t
+done
+
+# For subtrees into which other than cvop performs ingestion the bc group needs write access.
+#
+
+# To set up the directory tree below /calvalus/home execute
+
+for u in $(hdfs dfs -ls /calvalus/home|awk '{print $8}'|xargs -n 1 basename); do
+  echo $u
+  g=$(id -gn $u)
+  if [ $g = bc -o $g = calvalus -o $g = coastcolour -o $g = calwps ]; then
+    hdfs dfs -chown -R $u:$g /calvalus/home/$u
+    hdfs dfs -chmod -R 750 /calvalus/home/$u
+done
+
+#
