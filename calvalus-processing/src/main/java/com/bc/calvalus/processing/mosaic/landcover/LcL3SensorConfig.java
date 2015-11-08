@@ -513,8 +513,9 @@ public abstract class LcL3SensorConfig {
             final String[] virtualVariableExpr = {
                     //"(swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || pixel_classif_flags == 0 || pixel_classif_flags.F_INVALID) ? 0 : pixel_classif_flags.F_CLOUD ? 4 : pixel_classif_flags.F_CLOUD_SHADOW ? 5 : pixel_classif_flags.F_SNOW_ICE ? 3 : pixel_classif_flags.F_LAND ? 1 : 2",
                     "(" + (borderWidth > 0 ? ("swath_x < " + borderWidth + " || swath_x >= " + (2048 - borderWidth) + " || sza > 70 || ") : "") +
-                            "nan(refl_2_ac) || (pixel_classif_flags & 1 != 0)) ? 0 : " +
+                            "(pixel_classif_flags & 1 != 0)) ? 0 : " +
                             "(pixel_classif_flags & (2+16) != 0) ? 4 : " +
+                            "nan(refl_2_ac) ? 0 : " +
                             "(pixel_classif_flags & 32 != 0) ? 5 : " +
                             "(pixel_classif_flags & 64 != 0) ? 3 : " +
                             "(pixel_classif_flags & 1024 != 0) ? 1 : 2",
