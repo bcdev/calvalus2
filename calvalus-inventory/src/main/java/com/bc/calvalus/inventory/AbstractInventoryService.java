@@ -57,7 +57,7 @@ public abstract class AbstractInventoryService implements InventoryService {
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws Exception {
         final FileSystem fileSystem;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
             final UserGroupInformation user = UserGroupInformation.createRemoteUser(username);
             final PrivilegedExceptionAction<FileSystem> getFileSystemAction = (PrivilegedExceptionAction<FileSystem>) () -> {
                 return FileSystem.get(jobClientsMap.getConfiguration());
@@ -86,7 +86,7 @@ public abstract class AbstractInventoryService implements InventoryService {
         }
         if (fileSystem.exists(databasePath)) {
             final ProductSet[] productSets = readProductSets(fileSystem, new Path[]{databasePath});
-            if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+            if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
                 List<ProductSet> accu = new ArrayList<>();
                 for (ProductSet productSet : productSets) {
                     try {
@@ -105,7 +105,7 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     private ProductSet[] loadProcessed(FileSystem fileSystem, String filterUserName) throws IOException {
         final Path[] paths;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", false)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
             final List<Path> accu = new ArrayList<>();
             final String userDirsPattern = String.format("home/%s", filterUserName);
             final Path userDirsPath = makeQualified(fileSystem, userDirsPattern);

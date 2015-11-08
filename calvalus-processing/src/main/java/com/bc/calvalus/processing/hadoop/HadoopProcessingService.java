@@ -32,18 +32,24 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.security.AccessControlException;
 import org.esa.beam.framework.gpf.annotations.ParameterBlockConverter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -129,6 +135,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             try {
                 return future.get();
             } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
                 logger.warning(e.getMessage());
             }
         }
@@ -172,7 +179,14 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     private void collectBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
-        final FileStatus[] fileStatuses = fileSystem.globStatus(qualifiedPath);
+        final FileStatus[] fileStatuses;
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+            final ArrayList<FileStatus> accu = new ArrayList<>();
+            collectAccessibleFiles(fileSystem, bundlePathsGlob, 1, new Path("/"), accu);
+            fileStatuses = accu.toArray(new FileStatus[accu.size()]);
+        } else {
+            fileStatuses = fileSystem.globStatus(qualifiedPath);
+        }
         if (fileStatuses == null) {
             return;
         }
@@ -204,6 +218,30 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 logger.warning("error reading bundle-descriptor (" + file.getPath() +") : "+ e.getMessage());
             }
         }
+    }
+
+    private void collectAccessibleFiles(FileSystem fileSystem, String pathPattern, int pos, Path path, ArrayList<FileStatus> accu) throws IOException {
+        try {
+            final int pos1 = pathPattern.indexOf('/', pos);
+            if (pos1 > -1) {
+                final FileStatus[] stati = fileSystem.globStatus(new Path(path, pathPattern.substring(pos, pos1)));
+                if (stati != null) {
+                    for (FileStatus status : stati) {
+                        if (status.isDirectory()) {
+                            collectAccessibleFiles(fileSystem, pathPattern, pos1+1, status.getPath(), accu);
+                        }
+                    }
+                }
+            } else {
+                final FileStatus status = fileSystem.getFileStatus(new Path(path, pathPattern.substring(pos)));
+                if (status.isFile()) {
+                    accu.add(status);
+                }
+            }
+        } catch (FileNotFoundException _) {
+        } catch (AccessControlException _) {
+        }
+
     }
 
     // this code exists somewhere else already
