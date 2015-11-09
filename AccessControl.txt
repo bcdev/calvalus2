@@ -51,11 +51,14 @@ done
 
 # software
 
-for p in $(hdfs dfs -ls /calvalus/software/1.0/*|awk '{print $8}'); do
+for p in $(hdfs dfs -ls /calvalus/software/1.0|awk '{print $8}'); do
   f=$(basename $p)
   date
   echo $f
-  if [ ${f:0:7} != polymer ]; then
+  if [ ${f:0:7} = polymer ]; then
+    hdfs dfs -setfacl -R -m user:dagmar:r-x $p
+    hdfs dfs -setfacl -R -m default:user:dagmar:r-x $p
+  else
     hdfs dfs -setfacl -R -m group:calvalus:r-x $p
     hdfs dfs -setfacl -R -m default:group:calvalus:r-x $p
   fi
