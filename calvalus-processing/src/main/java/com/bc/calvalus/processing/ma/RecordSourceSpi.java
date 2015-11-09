@@ -7,7 +7,7 @@ import java.net.URL;
 import java.util.ServiceLoader;
 
 /**
- * The service exceptionmapper interface (SPI) for record sources.
+ * The service provider interface (SPI) for record sources.
  *
  * @author MarcoZ
  * @author Norman

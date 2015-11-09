@@ -132,7 +132,7 @@ public class ManageProductionsView extends PortalView {
         productionTable.addColumn(stageColumn, "Result");
         productionTable.addColumn(downloadColumn, SafeHtmlUtils.fromSafeConstant("<br/>"));
 
-        // Connect the table to the data exceptionmapper.
+        // Connect the table to the data provider.
         getPortal().getProductions().addDataDisplay(productionTable);
         ColumnSortList.ColumnSortInfo sortInfo = new ColumnSortList.ColumnSortInfo(idColumn, false);
         productionTable.getColumnSortList().push(sortInfo);

@@ -150,7 +150,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
         try {
             if (filter.getNumSupportedProvider() == 0) {
-                logger.warning("No bundle exceptionmapper set in filter. Using SYSTEM as exceptionmapper.");
+                logger.warning("No bundle provider set in filter. Using SYSTEM as provider.");
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
