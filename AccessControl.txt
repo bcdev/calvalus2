@@ -71,5 +71,5 @@ done
 hdfs dfs -setfacl -R -m default:group::rwx /calvalus/software/1.0
 hdfs dfs -setfacl -R -m default:other::... /calvalus/software/1.0
 hdfs dfs -chown -R cvop:bc /calvalus/software/1.0
-hdfs dfs -chmod -R 770 /calvalus/software/1.0
+hdfs dfs -chmod -R 775 /calvalus/software/1.0
 date
