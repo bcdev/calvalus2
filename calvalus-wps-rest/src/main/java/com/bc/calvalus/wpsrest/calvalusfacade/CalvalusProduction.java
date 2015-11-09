@@ -17,6 +17,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * This class handles the order production operations (synchronously and asynchronously).
+ *
  * Created by hans on 11/08/2015.
  */
 public class CalvalusProduction {
@@ -41,7 +43,7 @@ public class CalvalusProduction {
                         try {
                             updateProductionStatuses(userName);
                         } catch (IOException | ProductionException e) {
-                            e.printStackTrace();
+                            LOG.log(Level.SEVERE, "Unable to update production status.", e);
                         }
                     }
                 }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);

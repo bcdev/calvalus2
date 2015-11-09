@@ -16,7 +16,7 @@ public class BundleFilter {
     private static final char VALUE_SEPARATOR = ',';
     private static final char PARAMETER_SEPARATOR = ';';
     private static final char TAG_SEPARATOR = '=';
-    private static final String PROVIDER_TAG = "provider" + TAG_SEPARATOR;
+    private static final String PROVIDER_TAG = "exceptionmapper" + TAG_SEPARATOR;
     private static final String BUNDLE_TAG = "bundle" + TAG_SEPARATOR;
     private static final String PROCESSOR_TAG = "processor" + TAG_SEPARATOR;
     private static final String USER_TAG = "user" + TAG_SEPARATOR;
@@ -90,7 +90,7 @@ public class BundleFilter {
     }
 
     /**
-     * @return a string like: "provider=SYSTEM,USER;bundle=coastcolour,1.6;processor=idepix,1.8-cc;user=Hugo"
+     * @return a string like: "exceptionmapper=SYSTEM,USER;bundle=coastcolour,1.6;processor=idepix,1.8-cc;user=Hugo"
      */
     @Override
     public String toString() {
@@ -145,7 +145,7 @@ public class BundleFilter {
             } else if (parameter.startsWith(USER_TAG)) {
                 filter.withTheUser(parameter.substring(USER_TAG.length()));
             } else {
-                throw new IllegalArgumentException("Tag provider=, bundle= or processor= not found in '" + text + "'");
+                throw new IllegalArgumentException("Tag exceptionmapper=, bundle= or processor= not found in '" + text + "'");
             }
         }
         return filter;

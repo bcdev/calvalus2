@@ -16,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * This class handles all the product-staging-related operations.
+ *
  * Created by hans on 10/08/2015.
  */
 public class CalvalusStaging {

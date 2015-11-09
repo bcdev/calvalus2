@@ -5,7 +5,7 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.staging.StagingService;
 
 /**
- * Abstraction of a product type service provider interface (workflow implementation).
+ * Abstraction of a product type service exceptionmapper interface (workflow implementation).
  *
  * @author MarcoZ
  */

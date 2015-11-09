@@ -1,5 +1,6 @@
 package com.bc.calvalus.wpsrest.services;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -20,46 +21,43 @@ import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteAcceptedResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteSuccessfulResponse;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
+ * This class handles all the Execute requests.
+ * <p/>
  * Created by hans on 21/08/2015.
  */
-@Path("/Execute")
 public class ExecuteService {
 
-    @POST
-    @Path("{processorId}")
-    @Consumes(MediaType.APPLICATION_XML)
-    @Produces(MediaType.APPLICATION_XML)
-    public String execute(Execute execute,
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
+    public String execute(Execute executeRequest,
                           ServletRequestWrapper servletRequestWrapper,
                           @PathParam("processorId") String processorId) {
         StringWriter stringWriter = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
         try {
-            ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(execute);
+            ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
             CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
 
             ProcessorNameParser parser = new ProcessorNameParser(processorId);
             Processor processor = calvalusHelper.getProcessor(parser);
-            CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, processor, calvalusHelper.getProductSets());
+            CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, processor,
+                                                                           calvalusHelper.getProductSets());
 
             ProductionRequest request = new ProductionRequest(calvalusDataInputs.getValue("productionType"),
                                                               servletRequestWrapper.getUserName(),
                                                               calvalusDataInputs.getInputMapFormatted());
 
-            ResponseFormType responseFormType = execute.getResponseForm();
+            ResponseFormType responseFormType = executeRequest.getResponseForm();
             ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
 
 
@@ -67,7 +65,8 @@ public class ExecuteService {
 
                 Production production = calvalusHelper.orderProductionAsynchronous(request);
 
-                ExecuteResponse executeResponse = createAsyncExecuteResponse(execute, servletRequestWrapper, responseDocumentType, production.getId());
+                ExecuteResponse executeResponse = createAsyncExecuteResponse(executeRequest, servletRequestWrapper,
+                                                                             responseDocumentType, production.getId());
 
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
@@ -77,28 +76,28 @@ public class ExecuteService {
                 calvalusHelper.observeStagingStatus(production);
                 List<String> productResultUrls = calvalusHelper.getProductResultUrls(production);
 
-                ExecuteResponse executeResponse = createSyncExecuteResponse(execute, responseDocumentType, productResultUrls);
+                ExecuteResponse executeResponse = createSyncExecuteResponse(executeRequest, responseDocumentType, productResultUrls);
 
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             }
 
         } catch (WpsMissingParameterValueException exception) {
-            exception.printStackTrace();
+            LOG.log(Level.SEVERE, "A WpsMissingParameterValueException has been caught.", exception);
             ExceptionResponse exceptionResponse = new ExceptionResponse();
             try {
                 jaxbHelper.marshal(exceptionResponse.getMissingParameterExceptionResponse(exception, ""), stringWriter);
-            } catch (JAXBException e) {
-                e.printStackTrace();
+            } catch (JAXBException jaxbException) {
+                LOG.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
             }
             return stringWriter.toString();
         } catch (InterruptedException | IOException | JAXBException | DatatypeConfigurationException | ProductionException exception) {
-            exception.printStackTrace();
+            LOG.log(Level.SEVERE, "Unable to process an Execute request.", exception);
             ExceptionResponse exceptionResponse = new ExceptionResponse();
             try {
                 jaxbHelper.marshal(exceptionResponse.getGeneralExceptionResponse(exception), stringWriter);
-            } catch (JAXBException e) {
-                e.printStackTrace();
+            } catch (JAXBException jaxbException) {
+                LOG.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
             }
             return stringWriter.toString();
         }

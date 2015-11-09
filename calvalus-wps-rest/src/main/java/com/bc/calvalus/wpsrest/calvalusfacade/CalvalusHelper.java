@@ -63,8 +63,8 @@ public class CalvalusHelper {
         return calvalusProcessorExtractor.getProcessor(parser);
     }
 
-    public ProductSet[] getProductSets() throws ProductionException {
-        return calvalusProcessorExtractor.getProductSets();
+    public ProductSet[] getProductSets() throws ProductionException, IOException {
+        return getProductionService().getProductSets(userName, "");
     }
 
 }

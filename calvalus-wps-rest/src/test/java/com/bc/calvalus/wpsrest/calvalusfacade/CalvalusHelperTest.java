@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.bc.calvalus.production.Production;
@@ -14,6 +15,7 @@ import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import org.junit.*;
 import org.junit.runner.*;
 import org.mockito.ArgumentCaptor;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -22,7 +24,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
  */
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusHelper.class, CalvalusProduction.class})
+@PrepareForTest({CalvalusHelper.class, CalvalusProduction.class, CalvalusProductionService.class})
 public class CalvalusHelperTest {
 
     private ServletRequestWrapper mockServletRequestWrapper;
@@ -148,11 +150,13 @@ public class CalvalusHelperTest {
 
     @Test
     public void testGetProductSets() throws Exception {
-        whenNew(CalvalusProcessorExtractor.class).withArguments(any(ProductionService.class), anyString()).thenReturn(mockCalvalusProcessorExtractor);
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        ProductionService mockProductionService = mock(ProductionService.class);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
 
         calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
         calvalusHelper.getProductSets();
 
-        verify(mockCalvalusProcessorExtractor).getProductSets();
+        verify(mockProductionService).getProductSets(anyString(), anyString());
     }
 }

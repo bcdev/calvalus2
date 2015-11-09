@@ -1,5 +1,6 @@
 package com.bc.calvalus.wpsrest.services;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
@@ -24,16 +25,18 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
+ * This class handles the GetStatus requests.
+ *
  * @author hans
  */
-@Path("/Status")
 public class GetStatusService {
 
-    @GET
-    @Path("{productionId}")
-    @Produces(MediaType.TEXT_PLAIN)
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     public String getStatus(ServletRequestWrapper servletRequestWrapper, @PathParam("productionId") String productionId) {
         JaxbHelper jaxbHelper = new JaxbHelper();
         StringWriter stringWriter = new StringWriter();
@@ -58,15 +61,15 @@ public class GetStatusService {
             jaxbHelper.marshal(executeResponse, stringWriter);
             return stringWriter.toString();
 
-        } catch (ProductionException | IOException | DatatypeConfigurationException | JAXBException e) {
-            e.printStackTrace();
+        } catch (ProductionException | IOException | DatatypeConfigurationException | JAXBException exception) {
+            LOG.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request." , exception);
             StringWriter exceptionStringWriter = new StringWriter();
             ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();
             try {
-                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse(e.getMessage());
+                ExecuteResponse executeResponse = executeFailedResponse.getExecuteResponse(exception.getMessage());
                 jaxbHelper.marshal(executeResponse, exceptionStringWriter);
-            } catch (JAXBException | DatatypeConfigurationException exception) {
-                exception.printStackTrace();
+            } catch (JAXBException | DatatypeConfigurationException marshallingException) {
+                LOG.log(Level.SEVERE, "Unable to marshal the WPS exception.", marshallingException);
                 return getDefaultExceptionResponse();
             }
             return exceptionStringWriter.toString();

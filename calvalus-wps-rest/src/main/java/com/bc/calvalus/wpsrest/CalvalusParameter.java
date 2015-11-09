@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * A list of production parameters with their corresponding abstract
+ * and title values (in WPS request context).
+ *
  * Created by hans on 20/08/2015.
  */
 public enum CalvalusParameter {

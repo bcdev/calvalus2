@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * This class handles the processor lookup operation.
+ *
  * Created by hans on 13/08/2015.
  */
 public class CalvalusProcessorExtractor {
@@ -60,13 +62,8 @@ public class CalvalusProcessorExtractor {
         return null;
     }
 
-    protected ProductSet[] getProductSets() throws ProductionException {
-        return productionService.getProductSets(userName, "");
-    }
-
     private BundleDescriptor[] getBundleDescriptors() throws ProductionException, IOException {
         BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
         return productionService.getBundles(userName, filter);
     }
-
 }
