@@ -10,7 +10,7 @@
 
 #eodata
 
-for t in MER_FSG_1P MER_RRG_1P ATS_LST_2P ATS_NR__2P ATS_TOA_1P AVHRR_L1B AVHRR_TL_L1B Landsat45-TM Landsat7-ETM Landsat8 MERIS_SR_FR MERIS_SR_RR MER_FRS_1P MER_RR__1P MODISA_GEO MODISA_L1A MODISA_L1B MODISA_L1C MODISA_L2_LAC MODIS_L1B OC-CCI_chl OCM_L1B OSISAF-SEAICE S2_L1C SEAWIFS_L1B SENTINEL-2 SPOT_VGT_1P SPOT_VGT_L2_PGM VIIRS_L1; do
+for t in MER_FSG_1P MER_RRG_1P ATS_LST_2P ATS_NR__2P ATS_TOA_1P AVHRR_L1B AVHRR_TL_L1B Landsat45-TM Landsat7-ETM Landsat8 MERIS_SR_FR MERIS_SR_RR MER_FRS_1P MER_RR__1P MODISA_GEO MODISA_L1A MODISA_L1B MODISA_L1C MODISA_L2_LAC MODIS_L1B OC-CCI_chl OCM_L1B OSISAF-SEAICE S2_L1C SEAWIFS_L1B SENTINEL-2 SPOT_VGT_1P SPOT_VGT_L2_PGM VIIRS_L1 VIIRS_L1C; do
   date
   echo $t
   hdfs dfs -setfacl -R -m group:calvalus:r-x /calvalus/eodata/$t
@@ -56,8 +56,8 @@ for p in $(hdfs dfs -ls /calvalus/software/1.0|awk '{print $8}'); do
   date
   echo $f
   if [ ${f:0:7} = polymer ]; then
-    hdfs dfs -setfacl -R -m user:dagmar:r-x $p
-    hdfs dfs -setfacl -R -m default:user:dagmar:r-x $p
+    hdfs dfs -setfacl -R -m user:dagmar:r-x,user:constant:r-x $p
+    hdfs dfs -setfacl -R -m default:user:dagmar:r-x,default:user:constant:r-x $p
   else
     hdfs dfs -setfacl -R -m group:calvalus:r-x $p
     hdfs dfs -setfacl -R -m default:group:calvalus:r-x $p
