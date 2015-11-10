@@ -26,6 +26,7 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -119,10 +120,10 @@ public abstract class AbstractInventoryService implements InventoryService {
                             if (fileStatuses.length == 1) {
                                 accu.add(fileStatuses[0].getPath());
                             }
-                        } catch (AccessControlException _) {
+                        } catch (AccessControlException | FileNotFoundException _) {
                         }
                     }
-                } catch (AccessControlException _) {
+                } catch (AccessControlException | FileNotFoundException _) {
                 }
             }
             paths = accu.toArray(new Path[accu.size()]);

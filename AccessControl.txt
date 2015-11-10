@@ -13,19 +13,13 @@
 for t in MER_FSG_1P MER_RRG_1P ATS_LST_2P ATS_NR__2P ATS_TOA_1P AVHRR_L1B AVHRR_TL_L1B Landsat45-TM Landsat7-ETM Landsat8 MERIS_SR_FR MERIS_SR_RR MER_FRS_1P MER_RR__1P MODISA_GEO MODISA_L1A MODISA_L1B MODISA_L1C MODISA_L2_LAC MODIS_L1B OC-CCI_chl OCM_L1B OSISAF-SEAICE S2_L1C SEAWIFS_L1B SENTINEL-2 SPOT_VGT_1P SPOT_VGT_L2_PGM VIIRS_L1 VIIRS_L1C; do
   date
   echo $t
-  hdfs dfs -setfacl -R -m group:calvalus:r-x /calvalus/eodata/$t
-  hdfs dfs -setfacl -R -m default:group:calvalus:r-x /calvalus/eodata/$t
   if [ $t = MER_FSG_1P -o $t = MER_RRG_1P ]; then
-    hdfs dfs -setfacl -R -m group:coastcolour:r-x /calvalus/eodata/$t
-    hdfs dfs -setfacl -R -m default:group:coastcolour:r-x /calvalus/eodata/$t
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,group:coastcolour:r-x,default:group:coastcolour:r-x,group:calwps:r-x,default:group:calwps:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
+  elif [ $t = MERIS_SR_FR -o $t = Landsat8 -o $t = AVHRR_L1B ]; then
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,group:calwps:r-x,default:group:calwps:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
+  else
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
   fi
-  if [ $t = MER_FSG_1P -o $t = MER_RRG_1P -o $t = MERIS_SR_FR -o $t = Landsat8 -o $t = AVHRR_L1B ]; then
-    hdfs dfs -setfacl -R -m group:calwps:r-x /calvalus/eodata/$t
-    hdfs dfs -setfacl -R -m default:group:calwps:r-x /calvalus/eodata/$t
-  fi
-  #hdfs dfs -setfacl -R -m default:user::rwx /calvalus/eodata/$t
-  hdfs dfs -setfacl -R -m default:group::r-x /calvalus/eodata/$t
-  hdfs dfs -setfacl -R -m default:other::--- /calvalus/eodata/$t
   if [ $t = MODISA_L1A -o $t = VIIRS_L1 -o $t = Landsat8 ]; then
     hdfs dfs -chown -R cvop:bc /calvalus/eodata/$t
     hdfs dfs -chmod -R 750 /calvalus/eodata/$t
