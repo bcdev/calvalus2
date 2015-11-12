@@ -17,6 +17,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.Locale;
 
 /**
  * @author hans
@@ -34,6 +35,7 @@ public class WpsServiceTest {
 
     @Before
     public void setUp() throws Exception {
+        Locale.setDefault(Locale.ENGLISH);
         wpsService = new WpsService();
         getMockServletRequest();
     }
