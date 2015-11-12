@@ -1,6 +1,5 @@
 package com.bc.calvalus.ingestion;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -41,7 +40,7 @@ public class IngestionToolTest {
     }
 
     //formatPath(String rootDir, File file, Pattern pattern, String timeElements, String timeFormat, String productType, String revision, String pathTemplate)
-    @Ignore
+    @Test
     public void testFormatPath() throws IOException {
         final File inputFile = new File(new File(new File(new File("/mnt"), "usb"), "20090909"), "MER_RR__1POBCM20060718_091715_000001012049_00308_22907_0113.N1");
         String path = IngestionTool.formatPath("/mnt/usb", inputFile, Pattern.compile("..............(....)(..)(..).*"), null, null, "MER_RR__1P", "r03", null);

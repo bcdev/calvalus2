@@ -220,7 +220,7 @@ public class IngestionTool {
     static String formatPath(String rootDir, File file, Pattern pattern, String timeElements, String timeFormat, String productType, String revision, String pathTemplate) throws IOException {
         final String relPath;
         if (pattern.pattern().contains("/")) {
-            relPath = file.getPath().substring(rootDir.length()+1);
+            relPath = file.getPath().replace(File.separator, "/").substring(rootDir.length()+1);
         } else {
             relPath = file.getName();
         }

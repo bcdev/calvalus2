@@ -76,10 +76,8 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
     private static ProductionType[] getProductionTypes(InventoryService inventoryService,
                                   HadoopProcessingService processingService,
                                   StagingService stagingService) {
-
-        ClassLoader classLoader = HadoopProductionServiceFactory.class.getClassLoader();
-
-        ServiceLoader<ProductionTypeSpi> productionTypes = ServiceLoader.load(ProductionTypeSpi.class, classLoader);
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        ServiceLoader<ProductionTypeSpi> productionTypes = ServiceLoader.load(ProductionTypeSpi.class, contextClassLoader);
         ArrayList<ProductionType> list = new ArrayList<>();
         for (ProductionTypeSpi productionType : productionTypes) {
             list.add(productionType.create(inventoryService, processingService, stagingService));
