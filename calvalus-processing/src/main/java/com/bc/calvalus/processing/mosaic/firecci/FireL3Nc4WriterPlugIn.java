@@ -30,13 +30,16 @@ import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
-import ucar.ma2.ArrayByte;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.UUID;
 
 public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
@@ -154,6 +157,9 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final String dimensions = writeable.getDimensions();
 
             NVariable variable;
+
+            // don't add current_pixel_state, *_count, because it is not computed by FireMosaicAlgorithm
+            /*
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
@@ -182,6 +188,8 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 ancillaryVariables.append(counter);
                 ancillaryVariables.append("_count");
             }
+            */
+
 
             String[] bandNames = product.getBandNames();
             List<String> srMeanBandNames = getSrMeanBandNames(bandNames);
@@ -200,7 +208,7 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 if (i < srSigmaBandNames.size()) {
                     String sigmaBandName = srSigmaBandNames.get(i);
-                    variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
+//                    variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
                     variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
                     variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + bandIndex);
                     variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
@@ -211,6 +219,9 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 }
             }
 
+            // don't add vegetation_index_mean, because it is not computed by FireMosaicAlgorithm
+
+            /*
             variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
             variable.addAttribute("long_name", "mean of vegetation index");
             variable.addAttribute("standard_name", "normalized_difference_vegetation_index");
@@ -218,6 +229,8 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("valid_max", 1.0f);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
             variable.addAttribute("ancillary_variables", ancillaryVariables.toString());
+
+            */
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {
