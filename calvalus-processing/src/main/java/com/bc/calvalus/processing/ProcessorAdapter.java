@@ -19,6 +19,7 @@ package com.bc.calvalus.processing;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.GpfUtils;
+import com.bc.calvalus.processing.hadoop.ParameterizedSplit;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
@@ -83,6 +84,7 @@ import java.util.logging.Logger;
 public abstract class ProcessorAdapter {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    public static final String[] EMPTY_PARAMETERS = new String[0];
 
     private final MapContext mapContext;
     private final Configuration conf;
@@ -278,6 +280,18 @@ public abstract class ProcessorAdapter {
             return fileSplit.getPath();
         } else {
             throw new IllegalArgumentException("input split is neither a FileSplit nor a ProductSplit");
+        }
+    }
+
+    /**
+     * Returns parameters from TableInputFormat/ParameterizedSplit, or empty array for other input formats.
+     * The return value is encoded as key1, value1, key2, value2 ... in a string array
+     */
+    protected String[] getInputParameters() {
+        if (inputSplit instanceof ParameterizedSplit) {
+            return ((ParameterizedSplit) inputSplit).getParameters();
+        } else {
+            return EMPTY_PARAMETERS;
         }
     }
 

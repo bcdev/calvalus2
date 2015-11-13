@@ -32,6 +32,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
@@ -186,6 +188,19 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             configureJob(job);
             validateJob(job);
             JobID jobId = submitJob(job);
+
+            CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
+            HashMap<String, String> calvaluaConfMap = new HashMap<>();
+            for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
+                if (keyValue.getKey().startsWith("calvalus")) {
+                    calvaluaConfMap.put(keyValue.getKey(), keyValue.getValue());
+                }
+            }
+            calvaluaConfMap.entrySet().
+                    stream().
+                    sorted(Map.Entry.<String, String>comparingByKey()).
+                    forEach(keyValue -> CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue()));
+
             setJobId(jobId);
         } catch (Throwable e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);

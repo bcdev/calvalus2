@@ -6,6 +6,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import com.bc.calvalus.processing.l3.MRWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -67,14 +68,27 @@ public class MRProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        if (productionRequest.getParameters().containsKey("inputPath")) {
+             jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+         } else if (productionRequest.getParameters().containsKey("inputTable")) {
+             jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+         } else {
+             throw new ProductionException("missing request parameter inputPath or inputTable");
+         }
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, minDateStr);
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDateStr);
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
 
-        jobConfig.set("mapreduce.inputformat.class", productionRequest.getString("calvalus.mapreduce.inputformat.class", PatternBasedInputFormat.class.getName()));
+        final Class defaultInputFormat;
+        if (productionRequest.getParameters().containsKey("inputTable")) {
+            defaultInputFormat = TableInputFormat.class;
+        } else {
+            defaultInputFormat = PatternBasedInputFormat.class;
+        }
+
+        jobConfig.set("mapreduce.inputformat.class", productionRequest.getString("calvalus.mapreduce.inputformat.class", defaultInputFormat.getName()));
         jobConfig.set("mapreduce.map.class", productionRequest.getString("calvalus.mapreduce.map.class"));
         jobConfig.set("mapred.mapoutput.key.class", productionRequest.getString("calvalus.mapred.mapoutput.key.class"));
         jobConfig.set("mapred.mapoutput.value.class", productionRequest.getString("calvalus.mapred.mapoutput.value.class"));

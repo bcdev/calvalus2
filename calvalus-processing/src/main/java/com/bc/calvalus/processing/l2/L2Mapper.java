@@ -147,7 +147,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 VelocityContext vcx = metadataResourceEngine.getVelocityContext();
                 vcx.put("system", System.getProperties());
                 vcx.put("softwareName", "Calvalus");
-                vcx.put("softwareVersion", "2.6-SNAPSHOT");
+                vcx.put("softwareVersion", "2.7-SNAPSHOT");
                 vcx.put("processingTime", ProductData.UTC.create(new Date(), 0));
 
                 File targetFile = new File(targetPath);

@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,7 +53,7 @@ import java.util.Map;
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-2.6-SNAPSHOT'
+ *                         the production. Defaults to 'calvalus-2.8-SNAPSHOT'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
@@ -433,6 +432,9 @@ public class ProductionTool {
     }
 
     private FileSystem getHDFS(String username, final Map<String, String> config) throws IOException {
+        if (config.containsKey("calvalus.hadoop.systemuser")) {
+            username = config.get("calvalus.hadoop.systemuser");
+        }
         UserGroupInformation hadoop = UserGroupInformation.createRemoteUser(username);
         try {
             return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {

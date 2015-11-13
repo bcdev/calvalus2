@@ -1,0 +1,72 @@
+#!/bin/bash
+
+# Access control on Calvalus is based on user groups and ACL of HDFS.
+#
+# o Users are members of groups bc, calvalus, coastcolour, calwps.
+# o cvop:bc is the owner of generic data and software.
+#
+# To set up the directory tree below /calvalus/eodata execute ...
+# (available as scripts on hadoop@master01)
+
+#eodata
+
+for t in MER_FSG_1P MER_RRG_1P ATS_LST_2P ATS_NR__2P ATS_TOA_1P AVHRR_L1B AVHRR_TL_L1B Landsat45-TM Landsat7-ETM Landsat8 MERIS_SR_FR MERIS_SR_RR MER_FRS_1P MER_RR__1P MODISA_GEO MODISA_L1A MODISA_L1B MODISA_L1C MODISA_L2_LAC MODIS_L1B OC-CCI_chl OCM_L1B OSISAF-SEAICE S2_L1C SEAWIFS_L1B SENTINEL-2 SPOT_VGT_1P SPOT_VGT_L2_PGM VIIRS_L1 VIIRS_L1C; do
+  date
+  echo $t
+  if [ $t = MER_FSG_1P -o $t = MER_RRG_1P ]; then
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,group:coastcolour:r-x,default:group:coastcolour:r-x,group:calwps:r-x,default:group:calwps:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
+  elif [ $t = MERIS_SR_FR -o $t = Landsat8 -o $t = AVHRR_L1B ]; then
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,group:calwps:r-x,default:group:calwps:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
+  else
+    hdfs dfs -setfacl -R -m group:calvalus:r-x,default:group:calvalus:r-x,default:group::r-x,default:other::--- /calvalus/eodata/$t
+  fi
+  if [ $t = MODISA_L1A -o $t = VIIRS_L1 -o $t = Landsat8 ]; then
+    hdfs dfs -chown -R cvop:bc /calvalus/eodata/$t
+    hdfs dfs -chmod -R 750 /calvalus/eodata/$t
+  elif [ $t = SENTINEL-2 ]; then
+    hdfs dfs -chown -R cvop:bc /calvalus/eodata/$t
+    hdfs dfs -chmod -R 770 /calvalus/eodata/$t
+  else
+    hdfs dfs -chown -R hadoop:bc /calvalus/eodata/$t
+    hdfs dfs -chmod -R 750 /calvalus/eodata/$t
+  fi
+done
+
+# home
+
+for u in $(hdfs dfs -ls /calvalus/home|awk '{print $8}'|xargs -n 1 basename); do
+  date
+  echo $u
+  g=$(id -gn $u)
+  if [ $g = bc -o $g = calvalus -o $g = coastcolour -o $g = calwps ]; then
+    hdfs dfs -chown -R $u:$g /calvalus/home/$u
+    hdfs dfs -chmod -R 750 /calvalus/home/$u
+done
+
+# software
+
+for p in $(hdfs dfs -ls /calvalus/software/1.0|awk '{print $8}'); do
+  f=$(basename $p)
+  date
+  echo $f
+  if [ ${f:0:7} = polymer ]; then
+    hdfs dfs -setfacl -R -m user:dagmar:r-x,user:constant:r-x $p
+    hdfs dfs -setfacl -R -m default:user:dagmar:r-x,default:user:constant:r-x $p
+  else
+    hdfs dfs -setfacl -R -m group:calvalus:r-x $p
+    hdfs dfs -setfacl -R -m default:group:calvalus:r-x $p
+  fi
+  if [ $f = calvalus-2.7-portal -o $f = beam-5.0.1-portal -o $f = coastcolour-processing-1.8.4-SNAPSHOT -o $f = beam-bin-5.0 -o $f = beam-buildin-1.0 ]; then
+    hdfs dfs -setfacl -R -m group:calwps:r-x $p
+    hdfs dfs -setfacl -R -m default:group:calwps:r-x $p
+  fi
+  if [ $f = calvalus-2.7-portal -o $f = beam-5.0.1-portal -o $f = coastcolour-processing-1.8.3 -o $f = coastcolour-processing-1.8.4-SNAPSHOT ]; then
+    hdfs dfs -setfacl -R -m group:coastcolour:r-x $p
+    hdfs dfs -setfacl -R -m default:group:coastcolour:r-x $p
+  fi
+done
+hdfs dfs -setfacl -R -m default:group::rwx /calvalus/software/1.0
+hdfs dfs -setfacl -R -m default:other::... /calvalus/software/1.0
+hdfs dfs -chown -R cvop:bc /calvalus/software/1.0
+hdfs dfs -chmod -R 775 /calvalus/software/1.0
+date

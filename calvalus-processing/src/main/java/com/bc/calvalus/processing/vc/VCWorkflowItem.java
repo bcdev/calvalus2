@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import com.bc.calvalus.processing.ma.MAReducer;
 import com.bc.calvalus.processing.ma.RecordWritable;
 import org.apache.hadoop.conf.Configuration;
@@ -53,7 +54,7 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_INPUT_FORMAT, null},
@@ -84,7 +85,14 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.snap.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.snap.pixelGeoCoding.fractionAccuracy", "true");
 
-        job.setInputFormatClass(PatternBasedInputFormat.class);
+        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            job.setInputFormatClass(PatternBasedInputFormat.class);
+        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            job.setInputFormatClass(TableInputFormat.class);
+        } else {
+            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
+                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
+        }
         job.setMapperClass(VCMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(RecordWritable.class);

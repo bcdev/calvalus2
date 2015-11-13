@@ -88,18 +88,37 @@ public class L3ProductionTypeTest {
         ProductionRequest productionRequest = createValidL3ProductionRequest();
         BinningConfig binningConfig = L3ProductionType.getBinningConfig(productionRequest);
         assertNotNull(binningConfig);
-        assertEquals(4320, binningConfig.createBinningContext(null, null, null).getPlanetaryGrid().getNumRows());
-        assertEquals("NOT INVALID", binningConfig.createVariableContext().getValidMaskExpression());
+        assertEquals(4320, binningConfig.getNumRows());
+        assertEquals("NOT INVALID", binningConfig.getMaskExpr());
         assertNotNull(binningConfig.getSuperSampling());
         assertEquals(1, (int) binningConfig.getSuperSampling());
-        assertEquals(3, binningConfig.createVariableContext().getVariableCount());
-        assertEquals("a", binningConfig.createVariableContext().getVariableName(0));
-        assertEquals("b", binningConfig.createVariableContext().getVariableName(1));
-        assertEquals("c", binningConfig.createVariableContext().getVariableName(2));
-        BinManager binManager = binningConfig.createBinningContext(null, null, null).getBinManager();
-        assertEquals(3, binManager.getAggregatorCount());
-        assertEquals("MIN_MAX", binManager.getAggregator(0).getName());
-        assertEquals(2, binManager.getAggregator(0).getOutputFeatureNames().length);
+        assertEquals(0, binningConfig.getVariableConfigs().length);
+        assertEquals(3, binningConfig.getAggregatorConfigs().length);
+        assertEquals("MIN_MAX", binningConfig.getAggregatorConfigs()[0].getName());
+
+        String xmlExpected = "<parameters>\n" +
+                "  <planetaryGrid>org.esa.beam.binning.support.SEAGrid</planetaryGrid>\n" +
+                "  <numRows>4320</numRows>\n" +
+                "  <compositingType>BINNING</compositingType>\n" +
+                "  <superSampling>1</superSampling>\n" +
+                "  <maskExpr>NOT INVALID</maskExpr>\n" +
+                "  <variables/>\n" +
+                "  <aggregators>\n" +
+                "    <aggregator>\n" +
+                "      <type>MIN_MAX</type>\n" +
+                "      <varName>a</varName>\n" +
+                "    </aggregator>\n" +
+                "    <aggregator>\n" +
+                "      <type>MIN_MAX</type>\n" +
+                "      <varName>b</varName>\n" +
+                "    </aggregator>\n" +
+                "    <aggregator>\n" +
+                "      <type>MIN_MAX</type>\n" +
+                "      <varName>c</varName>\n" +
+                "    </aggregator>\n" +
+                "  </aggregators>\n" +
+                "</parameters>";
+        assertEquals(xmlExpected, binningConfig.toXml());
     }
 
     @Test
@@ -238,17 +257,29 @@ public class L3ProductionTypeTest {
                                      // Special Level 3 parameters
                                      "variables.count", "3",
 
-                                     "variables.0.name", "a",
                                      "variables.0.aggregator", "MIN_MAX",
                                      "variables.0.weightCoeff", "1.0",
+                                     "variables.0.parameter.count", "1",
+                                     "variables.0.parameter.0.name", "varName",
+                                     "variables.0.parameter.0.value", "a",
+                                     "variables.0.parameter.1.name", "weightCoeff",
+                                     "variables.0.parameter.1.value", "1.0",
 
-                                     "variables.1.name", "b",
                                      "variables.1.aggregator", "MIN_MAX",
                                      "variables.1.weightCoeff", "1.0",
+                                     "variables.1.parameter.count", "1",
+                                     "variables.1.parameter.0.name", "varName",
+                                     "variables.1.parameter.0.value", "b",
+                                     "variables.1.parameter.1.name", "weightCoeff",
+                                     "variables.1.parameter.1.value", "1.0",
 
-                                     "variables.2.name", "c",
                                      "variables.2.aggregator", "MIN_MAX",
                                      "variables.2.weightCoeff", "1.0",
+                                     "variables.2.parameter.count", "1",
+                                     "variables.2.parameter.0.name", "varName",
+                                     "variables.2.parameter.0.value", "c",
+                                     "variables.2.parameter.1.name", "weightCoeff",
+                                     "variables.2.parameter.1.value", "1.0",
 
                                      "maskExpr", "NOT INVALID",
                                      "minDate", "2010-06-15",

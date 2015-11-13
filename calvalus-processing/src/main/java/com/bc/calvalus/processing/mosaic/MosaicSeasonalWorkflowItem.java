@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
+import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -46,7 +47,7 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
-                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT}
@@ -62,7 +63,14 @@ public class MosaicSeasonalWorkflowItem extends HadoopWorkflowItem {
         // to prevent timeouts (Hadoop default is 10000)
         jobConfig.set("mapred.merge.recordsBeforeProgress", "10");
 
-        job.setInputFormatClass(PatternBasedInputFormat.class);
+        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            job.setInputFormatClass(PatternBasedInputFormat.class);
+        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            job.setInputFormatClass(TableInputFormat.class);
+        } else {
+            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
+                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
+        }
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_FORMAT, "HADOOP-STREAMING");
 
         job.setMapperClass(MosaicSeasonalMapper.class);

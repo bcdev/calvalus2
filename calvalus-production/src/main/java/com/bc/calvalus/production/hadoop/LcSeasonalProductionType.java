@@ -82,11 +82,17 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             groundResultion = "1000m";
         }
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (!successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
+        if (!successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
-            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+             } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+             } else {
+                 throw new ProductionException("missing request parameter inputPath or inputTable");
+             }
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, mainRange.toString());
 
@@ -98,7 +104,7 @@ public class LcSeasonalProductionType extends HadoopProductionType {
             sequence.add(new MosaicSeasonalWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                         productionName + " SR", jobConfigSr));
         }
-        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (!successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResultion, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);

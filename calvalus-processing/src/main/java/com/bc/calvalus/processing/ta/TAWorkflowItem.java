@@ -24,10 +24,8 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -124,8 +122,7 @@ public class TAWorkflowItem extends HadoopWorkflowItem {
                 try {
                     String[] dirs = getInputDir().split(",");
                     for (String dir : dirs) {
-                        HadoopProcessingService processingService = getProcessingService();
-                        FileSystem fileSystem = processingService.getFileSystem(getUserName());
+                        FileSystem fileSystem = getProcessingService().getFileSystem(getUserName(), dir);
                         JobUtils.clearDir(dir, fileSystem);
                     }
                 } catch (IOException e) {

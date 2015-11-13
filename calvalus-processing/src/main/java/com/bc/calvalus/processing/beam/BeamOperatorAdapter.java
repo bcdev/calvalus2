@@ -100,13 +100,18 @@ public class BeamOperatorAdapter extends SubsetProcessorAdapter {
         }
     }
 
-    private static Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
+    private Product getProcessedProduct(Product source, String operatorName, String operatorParameters) {
         Product product = source;
         if (operatorName != null && !operatorName.isEmpty()) {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
                 parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+                for (int i=0; i<getInputParameters().length; i+=2) {
+                    if (! "output".equals(getInputParameters()[i])) {
+                        parameterMap.put(getInputParameters()[i], getInputParameters()[i + 1]);
+                    }
+                }
             } catch (BindingException e) {
                 throw new IllegalArgumentException("Invalid operator parameters: " + e.getMessage(), e);
             }

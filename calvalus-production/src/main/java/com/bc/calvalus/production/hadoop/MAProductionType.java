@@ -61,7 +61,13 @@ public class MAProductionType extends HadoopProductionType {
         String maParametersXml = getMAConfigXml(productionRequest);
 
         List<DateRange> dateRanges = productionRequest.getDateRanges();
-        maJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        if (productionRequest.getParameters().containsKey("inputPath")) {
+             maJobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+         } else if (productionRequest.getParameters().containsKey("inputTable")) {
+             maJobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+         } else {
+             throw new ProductionException("missing request parameter inputPath or inputTable");
+         }
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         maJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 

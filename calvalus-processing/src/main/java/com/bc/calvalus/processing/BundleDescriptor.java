@@ -50,6 +50,10 @@ public class BundleDescriptor {
         return aggregatorDescriptors;
     }
 
+    public void setAggregatorDescriptors(AggregatorDescriptor...aggregatorDescriptors) {
+        this.aggregatorDescriptors = aggregatorDescriptors;
+    }
+
     public void setBundleLocation(String bundleLocation) {
         this.bundleLocation = bundleLocation;
     }

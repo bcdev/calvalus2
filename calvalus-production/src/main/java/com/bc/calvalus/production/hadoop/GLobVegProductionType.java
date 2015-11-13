@@ -79,11 +79,17 @@ public class GLobVegProductionType extends HadoopProductionType {
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
         Workflow.Sequential sequence = new Workflow.Sequential();
 
-        if (!successfullyCompleted(productionRequest.getUserName(), partsOutputDir)) {
+        if (!successfullyCompleted(partsOutputDir)) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
 
-            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+            } else {
+                throw new ProductionException("missing request parameter inputPath or inputTable");
+            }
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 
@@ -108,7 +114,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " L3", jobConfig));
         }
-        if (!successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (!successfullyCompleted(ncOutputDir)) {
             String outputNameFormat = "meris-globveg-" + period + "-v%02dh%02d-1.0";
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);

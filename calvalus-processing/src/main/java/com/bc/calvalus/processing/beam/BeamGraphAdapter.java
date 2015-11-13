@@ -165,6 +165,11 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
         ResourceEngine resourceEngine = new ResourceEngine();
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
+        for (int i=0; i<getInputParameters().length; i+=2) {
+            if (! "output".equals(getInputParameters()[i])) {
+                processingParameters.put(getInputParameters()[i], getInputParameters()[i + 1]);
+            }
+        }
         for (String key : processingParameters.stringPropertyNames()) {
             velocityContext.put(key, processingParameters.get(key));
         }
@@ -286,15 +291,23 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
         }
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws IOException {
+
         ResourceEngine resourceEngine = new ResourceEngine();
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         velocityContext.put("system", System.getProperties());
         Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", "hdfs://master00:9000");
+        conf.set("fs.defaultFS", "hdfs://calvalus");
+        conf.set("dfs.nameservices", "calvalus");
+        conf.set("dfs.ha.namenodes.calvalus", "nn1,nn2");
+        conf.set("dfs.namenode.rpc-address.calvalus.nn1", "master00:8020");
+        conf.set("dfs.namenode.rpc-address.calvalus.nn2", "master01:8020");
+        conf.set("dfs.client.failover.proxy.provider.calvalus", "org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider");
+
         velocityContext.put("configuration", conf);
 
-        velocityContext.put("inputPath", new Path("MER_RR__1PNACR20030101_130000_xyz"));
+        Path inputPath = new Path("hdfs://calvalus/calvalus/eodata/MER_RR__1P/r03/2008/06/01/MER_RR__1PRACR20080601_122734_000026432069_00081_32700_0000.N1");
+        velocityContext.put("inputPath", inputPath);
         velocityContext.put("GlobalFunctions", new GlobalsFunctions(Logger.getLogger("test")));
 
         Reader inputReader = new FileReader(args[0]);

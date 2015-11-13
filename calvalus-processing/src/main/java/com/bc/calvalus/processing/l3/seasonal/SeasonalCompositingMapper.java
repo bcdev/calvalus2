@@ -94,10 +94,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             if (accu == null) {
                 numInputBands = product.getBands().length;
                 // 0 is currentPixelState, 1..5 are the count bands,
-                // 6,8,..30 is sr_1_mean..10,12,13,14, or 6..10 are the AVHRR bands
+                // 6,8,..30 is sr_1_mean..10,12,13,14, or
+                // 6,8,10,11,12 are the AVHRR bands or
+                // 6 .. n the are the SPOT bands
                 // 32 is vegetation_index_mean, or 11 is vegetation_index_mean
                 if (numInputBands == 1 + 5 + 2 * 13 + 1) {
                     numTargetBands = 13 + 1;
+                } else if (numInputBands == 1 + 5 + 2*2 + 3 + 1) {
+                    numTargetBands = 5 + 1;
                 } else {
                     numTargetBands = numInputBands - 6;
                 }
@@ -107,6 +111,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             for (int b = 0; b < numTargetBands+6; ++b) {
                 if (b < 6 || numTargetBands == numInputBands-6) {
                     bandImage[b] = product.getBandAt(b).getGeophysicalImage();
+                } else if (numTargetBands == 5 + 1) {
+                    bandImage[b] = product.getBandAt(b==6?6:b==7?8:b+2).getGeophysicalImage();
                 } else {
                     // bandAt(6) is sr_1_mean, bandAt(7) is sr_1_uncertainty, ...
                     bandImage[b] = product.getBandAt(2*b-6).getGeophysicalImage();

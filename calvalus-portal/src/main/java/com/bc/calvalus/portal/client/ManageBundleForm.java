@@ -59,7 +59,7 @@ public class ManageBundleForm extends Composite {
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     @UiField
-    L2ConfigForm.L2Style style;
+    CalvalusStyle style;
 
     @UiField
     ListBox bundleList;

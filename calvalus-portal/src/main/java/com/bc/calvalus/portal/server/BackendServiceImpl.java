@@ -275,15 +275,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
             return dtoDescriptors;
         } else {
-            return new DtoAggregatorDescriptor[]{
-                    new DtoAggregatorDescriptor(BundleFilter.DUMMY_AGGREGATOR_NAME,
-                                               "",
-                                               "",
-                                               bundleDescriptor.getBundleName(),
-                                               bundleDescriptor.getBundleVersion(),
-                                               bundleDescriptor.getBundleLocation(),
-                                               null)
-            };
+            return new DtoAggregatorDescriptor[0];
         }
     }
 
@@ -523,12 +515,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
                                             AggregatorDescriptor aggregatorDescriptor) {
         return new DtoAggregatorDescriptor(aggregatorDescriptor.getAggregator(),
-                                          aggregatorDescriptor.getVariable(),
-                                          aggregatorDescriptor.getParameter(),
-                                          bundleName,
-                                          bundleVersion,
-                                          bundlePath,
-                                          aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "");
+                                           bundleName,
+                                           bundleVersion,
+                                           bundlePath,
+                                           aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
+                                           convert(aggregatorDescriptor.getParameterDescriptors()));
     }
 
     private DtoProcessorDescriptor.DtoProcessorCategory convert(ProcessorDescriptor.ProcessorCategory processorCategory) {

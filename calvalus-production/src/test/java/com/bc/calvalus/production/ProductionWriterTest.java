@@ -39,6 +39,7 @@ public class ProductionWriterTest {
         String xml = productionWriter.asXML();
 
         assertNotNull(xml);
+        xml = xml.replace(System.lineSeparator(), "\n");
         assertEquals(320, xml.length());
         assertTrue(xml.contains("<id>9A3F</id>"));
         assertTrue(xml.contains("<name>Toasting</name>"));
@@ -49,6 +50,7 @@ public class ProductionWriterTest {
         String html = productionWriter.asHTML();
 
         assertNotNull(html);
+        html = html.replace(System.lineSeparator(), "\n");
         assertEquals(2168, html.length());
         assertTrue(html.contains("<td align=\"left\">9A3F</td>"));
     }

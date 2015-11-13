@@ -26,12 +26,11 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 public class DtoAggregatorDescriptor implements IsSerializable {
 
     private String aggregator;
-    private String variable;
-    private String parameter;
     private String bundleName;
     private String bundleVersion;
     private String bundleLocation;
     private String descriptionHtml;
+    private DtoParameterDescriptor[] parameterDescriptors;
 
     /**
      * No-arg constructor as required by {@link IsSerializable}. Don't use directly.
@@ -40,31 +39,21 @@ public class DtoAggregatorDescriptor implements IsSerializable {
     }
 
     public DtoAggregatorDescriptor(String aggregator,
-                                   String variable,
-                                   String parameter,
                                    String bundleName,
                                    String bundleVersion,
                                    String bundleLocation,
-                                   String descriptionHtml) {
+                                   String descriptionHtml,
+                                   DtoParameterDescriptor[] parameterDescriptors) {
         this.aggregator = aggregator;
-        this.variable = variable;
-        this.parameter = parameter;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
         this.bundleLocation = bundleLocation;
         this.descriptionHtml = descriptionHtml;
+        this.parameterDescriptors = parameterDescriptors;
     }
 
     public String getAggregator() {
         return aggregator;
-    }
-
-    public String getVariable() {
-        return variable;
-    }
-
-    public String getParameter() {
-        return parameter;
     }
 
     public String getBundleName() {
@@ -81,5 +70,9 @@ public class DtoAggregatorDescriptor implements IsSerializable {
 
     public String getDescriptionHtml() {
         return descriptionHtml;
+    }
+
+    public DtoParameterDescriptor[] getParameterDescriptors() {
+        return parameterDescriptors;
     }
 }

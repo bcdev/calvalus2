@@ -83,8 +83,11 @@ public class LcL3ProductionType extends HadoopProductionType {
 
         String outputVersion = productionRequest.getString("calvalus.output.version", "1.0");
 
-        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null)).toXml();
-        String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4")).toXml();
+        int cloudBorderWidth = productionRequest.getInteger("cloudBorderWidth", 0);  // was 150
+        int mainBorderWidth = productionRequest.getInteger("mainBorderWidth", 0);  // was 250
+
+        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
+        String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"), mainBorderWidth).toXml();
 
         String period = getLcPeriodName(productionRequest);
         String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
@@ -96,11 +99,17 @@ public class LcL3ProductionType extends HadoopProductionType {
 
 
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(productionRequest.getUserName(), meanOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                 jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+             } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                 jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+             } else {
+                 throw new ProductionException("missing request parameter inputPath or inputTable");
+             }
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
 
@@ -117,11 +126,17 @@ public class LcL3ProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " Cloud", jobConfigCloud));
         }
-        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
 
-            jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+             } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+             } else {
+                 throw new ProductionException("missing request parameter inputPath or inputTable");
+             }
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, mainRange.toString());
 
@@ -141,7 +156,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " SR", jobConfigSr));
         }
-        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+        if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
             String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s", groundResolution, period);
             Configuration jobConfigFormat = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigFormat);

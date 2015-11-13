@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Properties;
 import java.util.logging.Level;
 
 /**
@@ -71,6 +72,20 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
+        if (getInputParameters().length > 0) {
+            final StringBuilder accu = new StringBuilder(processorParameters);
+            for (int i=0; i<getInputParameters().length; i+=2) {
+                if (!"output".equals(getInputParameters()[i])) {
+                    if (accu.length() > 0) {
+                        accu.append('\n');
+                    }
+                    accu.append(getInputParameters()[i]);
+                    accu.append(':');
+                    accu.append(getInputParameters()[i + 1]);
+                }
+            }
+            processorParameters = accu.toString();
+        }
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PREPARE, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -159,6 +174,20 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, "");
+        if (getInputParameters().length > 0) {
+            final StringBuilder accu = new StringBuilder(processorParameters);
+            for (int i=0; i<getInputParameters().length; i+=2) {
+                if (! "output".equals(getInputParameters()[i])) {
+                    if (accu.length() > 0) {
+                        accu.append('\n');
+                    }
+                    accu.append(getInputParameters()[i]);
+                    accu.append(':');
+                    accu.append(getInputParameters()[i + 1]);
+                }
+            }
+            processorParameters = accu.toString();
+        }
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
@@ -236,6 +265,20 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
+        if (getInputParameters().length > 0) {
+            final StringBuilder accu = new StringBuilder(processorParameters);
+            for (int i=0; i<getInputParameters().length; i+=2) {
+                if (! "output".equals(getInputParameters()[i])) {
+                    if (accu.length() > 0) {
+                        accu.append('\n');
+                    }
+                    accu.append(getInputParameters()[i]);
+                    accu.append(':');
+                    accu.append(getInputParameters()[i + 1]);
+                }
+            }
+            processorParameters = accu.toString();
+        }
 
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.FINALIZE, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();

@@ -218,6 +218,14 @@ public class ProcessorDescriptor {
         public ParameterDescriptor() {
         }
 
+        public ParameterDescriptor(String name, String type, String description) {
+            this(name, type, description, null);
+        }
+
+        public ParameterDescriptor(String name, String type, String description, String defaultValue) {
+            this(name, type, description, defaultValue, null);
+        }
+
         public ParameterDescriptor(String name, String type, String description, String defaultValue, String[] valueSet) {
             this.name = name;
             this.type = type;
@@ -239,7 +247,15 @@ public class ProcessorDescriptor {
         }
 
         public String getDefaultValue() {
-            return defaultValue;
+            if (defaultValue != null) {
+                return defaultValue;
+            } else {
+                if ("boolean".equals(type)) {
+                    return "false";
+                } else {
+                    return "";
+                }
+            }
         }
 
         public String[] getValueSet() {

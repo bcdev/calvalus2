@@ -5,8 +5,23 @@
     <aggregatorDescriptors>
         <aggregatorDescriptor>
             <aggregator>ON_MAX_SET</aggregator>
-            <variable>onMaxVarName</variable>
-            <parameter>setVarNames</parameter>
+            <parameterDescriptors>
+                <parameterDescriptor>
+                    <name>onMaxVarName</name>
+                    <type>variable</type>
+                    <description>If this band reaches its maximum the values of the source bands are taken.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>targetName</name>
+                    <type>string</type>
+                    <description>The name prefix for the resulting bands. If empty, the source band name is used.</description>
+                </parameterDescriptor>
+                <parameterDescriptor>
+                    <name>setVarNames</name>
+                    <type>variableArray</type>
+                    <description>The source bands used for aggregation when maximum band reaches its maximum.</description>
+                </parameterDescriptor>
+            </parameterDescriptors>
         </aggregatorDescriptor>
     </aggregatorDescriptors>
 

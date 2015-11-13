@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.local;
 
 import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
@@ -48,12 +49,12 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG", "0.5"),
                                                              new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"));
         case2r.setParameterDescriptors(
-                new ProcessorDescriptor.ParameterDescriptor("doSmile", "boolean", "Correct smile effect", "true", null),
-                new ProcessorDescriptor.ParameterDescriptor("doRadiometric", "boolean", "Correct radiometric effect", "false", null),
+                new ProcessorDescriptor.ParameterDescriptor("doSmile", "boolean", "Correct smile effect", "true"),
+                new ProcessorDescriptor.ParameterDescriptor("doRadiometric", "boolean", "Correct radiometric effect", "false"),
                 new ProcessorDescriptor.ParameterDescriptor("validExpressionCHL", "string",
                                                             "Valid expression additionally applied",
                                                             "!l1p_flags.CC_LAND and !l1p_flags.CC_MIXEDPIXEL and\n" +
-                                                            "!l1p_flags.CC_CLOUD and !result_flags.CHL_OUT", null),
+                                                            "!l1p_flags.CC_CLOUD and !result_flags.CHL_OUT"),
                 new ProcessorDescriptor.ParameterDescriptor("idepixAlgo", "string", "Idepix cloud algorithm", "GlobAlbedo",
                                                             new String[]{"CoastColour", "GlobAlbedo", "QWG"}),
                 new ProcessorDescriptor.ParameterDescriptor("correctBands", "stringArray", "Which bands should be corrected",
@@ -64,6 +65,24 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                             new String[]{"412", "442", "490", "510", "560", "620", "665"})
 
         );
+
+        BundleDescriptor aggregatorBundle = new BundleDescriptor("aggregator", "1.0", "/software/system");
+        AggregatorDescriptor avg = new AggregatorDescriptor("AVG");
+        avg.setParameterDescriptors(
+                new ProcessorDescriptor.ParameterDescriptor("varName", "variable", "The source band used for aggregation."),
+                new ProcessorDescriptor.ParameterDescriptor("targetName", "string", "The name prefix for the resulting bands. If empty, the source band name is used."),
+                new ProcessorDescriptor.ParameterDescriptor("weightCoeff", "float", "The number of spatial observations to the power of this value \n" +
+                                                 "will define the value for weighting the sums. Zero means observation count weighting is disabled.", "0.0"),
+                new ProcessorDescriptor.ParameterDescriptor("outputCounts", "boolean", "If true, the result will include the count of all valid values.", "false"),
+                new ProcessorDescriptor.ParameterDescriptor("outputSums", "boolean", "If true, the result will include the sum of all values.", "false")
+        );
+        AggregatorDescriptor onMaxSet = new AggregatorDescriptor("ON_MAX_SET");
+        onMaxSet.setParameterDescriptors(
+                new ProcessorDescriptor.ParameterDescriptor("onMaxVarName", "variable", "If this band reaches its maximum the values of the source bands are taken."),
+                new ProcessorDescriptor.ParameterDescriptor("targetName", "string", "The name prefix for the resulting bands. If empty, the source band name is used."),
+                new ProcessorDescriptor.ParameterDescriptor("setVarNames", "variableArray", "The source bands used for aggregation when maximum band reaches its maximum.")
+        );
+        aggregatorBundle.setAggregatorDescriptors(avg, onMaxSet);
 
         LocalProcessingService processingService = new LocalProcessingService(
                 new BundleDescriptor("beam-meris-case2r", "1.5", "/software/user/olga",
@@ -96,7 +115,8 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                      new ProcessorDescriptor("pc2", "MERIS IOP QAA", "1.0.1",
                                                              "u = 1\nv = 2",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG", "0.5"),
-                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0")))
+                                                             new ProcessorDescriptor.Variable("tsm_conc", "AVG", "1.0"))),
+                aggregatorBundle
         );
         SimpleStagingService stagingService = new SimpleStagingService(localStagingDir, 1);
 

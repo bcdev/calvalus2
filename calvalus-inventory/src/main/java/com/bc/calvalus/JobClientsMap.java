@@ -16,12 +16,15 @@
 
 package com.bc.calvalus;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,15 +36,13 @@ public class JobClientsMap {
 
     private final JobConf jobConfTemplate;
     private final Map<String, JobClient> jobClients;
-    private final Map<String, FileSystem> fileSystems;
 
     public JobClientsMap(JobConf jobConf) {
         this.jobConfTemplate = jobConf;
-        jobClients = new HashMap<String, JobClient>();
-        fileSystems = new HashMap<String, FileSystem>();
+        jobClients = new HashMap<>();
     }
 
-    public JobConf getJobConf() {
+    public Configuration getConfiguration() {
         return jobConfTemplate;
     }
 
@@ -65,20 +66,16 @@ public class JobClientsMap {
         return jobClients.get(userName);
     }
 
-    public synchronized FileSystem getFileSystem(String userName) throws IOException {
-        FileSystem fileSystem = fileSystems.get(userName);
-        if (fileSystem == null) {
-            fileSystem = getJobClient(userName).getFs();
-            fileSystems.put(userName, fileSystem);
+    public FileSystem getFileSystem(String userName, String path) throws IOException {
+        URI uri = new Path(path).toUri();
+        try {
+            return FileSystem.get(uri, jobConfTemplate, userName);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
         }
-        return fileSystem;
     }
 
     public void close() throws IOException {
-        for (FileSystem fileSystem : fileSystems.values()) {
-            fileSystem.close();
-        }
-        fileSystems.clear();
         for (JobClient jobClient : jobClients.values()) {
             jobClient.close();
         }

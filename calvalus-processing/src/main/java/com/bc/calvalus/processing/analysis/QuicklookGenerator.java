@@ -43,7 +43,6 @@ import org.esa.snap.core.datamodel.RGBChannelDef;
 import org.esa.snap.core.datamodel.RGBImageProfile;
 import org.esa.snap.core.datamodel.Stx;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.image.BandImageMultiLevelSource;
 import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
@@ -337,13 +336,13 @@ public class QuicklookGenerator {
                                       Interpolation.getInstance(Interpolation.INTERP_NEAREST), hints);
 
         AffineTransform legendI2M = imageLayer.getImageToModelTransform();
-        legendI2M.translate(masterBand.getSceneRasterWidth() + 10, logo.getHeight());
+        legendI2M.translate(masterBand.getRasterWidth() + 10, logo.getHeight());
         final ImageLayer legendLayer = new ImageLayer(legend, legendI2M, 1);
 
         layerChildren.add(0, legendLayer);
 
         AffineTransform logoI2M = imageLayer.getImageToModelTransform();
-        logoI2M.translate(masterBand.getSceneRasterWidth() + 10, 0);
+        logoI2M.translate(masterBand.getRasterWidth() + 10, 0);
         final ImageLayer logoLayer = new ImageLayer(logo, logoI2M, 1);
 
         layerChildren.add(0, logoLayer);
@@ -369,8 +368,8 @@ public class QuicklookGenerator {
         BufferedImage legend = createImageLegend(masterBand, useAlpha, ImageLegend.VERTICAL);
 
         AffineTransform imageToModelTransform = imageLayer.getImageToModelTransform();
-        imageToModelTransform.translate(masterBand.getSceneRasterWidth() - legend.getWidth(),
-                                        masterBand.getSceneRasterHeight() - legend.getHeight());
+        imageToModelTransform.translate(masterBand.getRasterWidth() - legend.getWidth(),
+                                        masterBand.getRasterHeight() - legend.getHeight());
         final ImageLayer overlayLayer = new ImageLayer(legend, imageToModelTransform, 1);
         layerChildren.add(0, overlayLayer);
     }

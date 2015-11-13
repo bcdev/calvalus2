@@ -16,6 +16,9 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import org.esa.snap.core.dataio.EncodeQualification;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
 import org.esa.snap.dataio.netcdf.ProfileWriteContext;
@@ -27,9 +30,6 @@ import org.esa.snap.dataio.netcdf.nc.NVariable;
 import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
 import org.esa.snap.dataio.netcdf.util.Constants;
 import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
-import org.esa.snap.core.dataio.EncodeQualification;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import ucar.ma2.ArrayByte;
 
 import java.awt.Dimension;
@@ -121,7 +121,23 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("institution", "Brockmann Consult GmbH");
             writeable.addGlobalAttribute("contact", "info@brockmann-consult.de");
             writeable.addGlobalAttribute("source", source);
-            writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.0, lc-sr-2.0");  // versions
+            if ("AVHRR".equals(sensor)) {
+                writeable.addGlobalAttribute("history", "INPUT AVHRR_HRPT_L1B_NOAA11+14\n" +
+                        "QA beam-watermask 1.3.4 watermask resolution=150\n" +
+                        "QA lc-l3 2.0 lc.avhrr.qa\n" +
+                        "QA beam 5.0.1\n" +
+                        "SDR cdo 1.6.2 cdo mergetime,inttime,merge,remapbil era-interim\n" +
+                        "SDR cdo 1.6.2 cdo mergetime -shifttime,inttime,remapbil aerosol-climatology\n" +
+                        "SDR lc-l3 2.0 AddElevation\n" +
+                        "SDR idepix 2.2.16-SNAPSHOT idepix.avhrrac \n" +
+                        "SDR beam-avhrr-ac 1.0.8 py_avhrr_ac_lccci_oo era-interim,aerosol,processing_mask,uncertainty_climatology \n" +
+                        "SDR beam 5.0.1\n" +
+                        "SR Calvalus 2.7-SNAPSHOT LCL3 temporalCloudRadius=10d,mainBorderWidth=700\n" +
+                        "SR beam 5.0.1\n" +
+                        "SR netcdf-bin 4.1.3 nccopy -k 4");
+            } else {
+                writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.1, lc-sr-2.1");  // versions
+            }
             writeable.addGlobalAttribute("comment", "");
 
             writeable.addGlobalAttribute("Conventions", "CF-1.6");
@@ -205,11 +221,22 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 int bandIndex = product.getBand(meanBandName).getSpectralBandIndex();
                 float wavelength = product.getBand(meanBandName).getSpectralWavelength();
                 variable = writeable.addVariable(meanBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-                variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + bandIndex);
-                variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
-                variable.addAttribute("wavelength", wavelength);
-                variable.addAttribute("valid_min", 0.0f);
-                variable.addAttribute("valid_max", 1.0f);
+                if (! meanBandName.startsWith("bt_")) {
+                    variable.addAttribute("long_name", "normalised (averaged) surface reflectance of channel " + bandIndex);
+                    variable.addAttribute("standard_name", "surface_bidirectional_reflectance");
+                    variable.addAttribute("wavelength", wavelength);
+                    variable.addAttribute("valid_min", 0.0f);
+                    variable.addAttribute("valid_max", 1.0f);
+                    variable.addAttribute("units", "1");
+                } else {
+                    variable.addAttribute("long_name", "top-of-atmosphere brightness temperature of channel " + bandIndex);
+                    variable.addAttribute("standard_name", "toa_brightness_temperature");
+                    variable.addAttribute("wavelength", wavelength);
+                    variable.addAttribute("valid_min", 0.0f);
+                    variable.addAttribute("valid_max", 400.0f);
+                    variable.addAttribute("units", "K");
+
+                }
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 if (i < srSigmaBandNames.size()) {
                     String sigmaBandName = srSigmaBandNames.get(i);
@@ -220,8 +247,10 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                     variable.addAttribute("wavelength", wavelength);
                     variable.addAttribute("valid_min", 0.0f);
                     variable.addAttribute("valid_max", 1.0f);
+                    variable.addAttribute("units", "1");
                     variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 }
+                variable.addAttribute("ancillary_variables", ancillaryVariables.toString());
             }
 
             variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);

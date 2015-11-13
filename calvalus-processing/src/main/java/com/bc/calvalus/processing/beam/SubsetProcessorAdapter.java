@@ -114,6 +114,11 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected String getOutputProductFilename() {
+        for (int i=0; i<getInputParameters().length; i+=2) {
+            if ("output".equals(getInputParameters()[i])) {
+                return FileUtils.exchangeExtension(getInputParameters()[i+1], ".seq");
+            }
+        }
         String inputFilename = getInputPath().getName();
         return "L2_of_" + FileUtils.exchangeExtension(inputFilename, ".seq");
     }

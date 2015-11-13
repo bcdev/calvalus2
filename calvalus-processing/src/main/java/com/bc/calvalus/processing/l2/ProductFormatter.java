@@ -59,6 +59,9 @@ public class ProductFormatter {
         } else if (outputFormat.equals("NetCDF4-LC")) {
             outputExtension = ".nc";
             outputCompression = ""; // no further compression required
+        }  else if (outputFormat.equals("NetCDF4-Fire")) {
+            outputExtension = ".nc";
+            outputCompression = ""; // no further compression required
         } else if (outputFormat.startsWith("NetCDF4")) {
             outputExtension = ".nc";
             outputFormat = "NetCDF4-BEAM"; // use NetCDF with BEAM extensions

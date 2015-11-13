@@ -126,7 +126,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             String ncOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-nc-" + rr);
 
             Workflow.Sequential sequence = new Workflow.Sequential();
-            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(productionRequest.getUserName(), mainOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 setRequestParameters(productionRequest, jobConfigSr);
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, StringUtils.join(allInputs, ","));
@@ -140,7 +140,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                                                     productionName + " SR " + rr, jobConfigSr));
             }
 
-            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(productionRequest.getUserName(), ncOutputDir)) {
+            if (productionRequest.getBoolean("lcl3.nc", true) && !successfullyCompleted(ncOutputDir)) {
                 String outputPrefix = String.format("CCI-LC-MERIS-SR-L3-%s-v4.0--%s--rrdays%s", groundResultion, period,
                                                     rr);
                 Configuration jobConfigFormat = createJobConfig(productionRequest);
