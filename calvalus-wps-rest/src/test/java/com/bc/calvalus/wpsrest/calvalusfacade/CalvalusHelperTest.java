@@ -4,10 +4,10 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
@@ -19,12 +19,17 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
+
 /**
  * Created by hans on 15/09/2015.
  */
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusHelper.class, CalvalusProduction.class, CalvalusProductionService.class})
+@PrepareForTest({
+            CalvalusHelper.class, CalvalusProduction.class,
+            CalvalusProductionService.class, CalvalusProductionService.class
+})
 public class CalvalusHelperTest {
 
     private ServletRequestWrapper mockServletRequestWrapper;
@@ -45,6 +50,8 @@ public class CalvalusHelperTest {
         mockCalvalusProcessorExtractor = mock(CalvalusProcessorExtractor.class);
 
         when(mockServletRequestWrapper.getUserName()).thenReturn("mockUserName");
+
+        mockProductionService();
     }
 
     @Test
@@ -158,5 +165,11 @@ public class CalvalusHelperTest {
         calvalusHelper.getProductSets();
 
         verify(mockProductionService).getProductSets(anyString(), anyString());
+    }
+
+    private void mockProductionService() throws IOException, ProductionException {
+        ProductionService mockProductionService = mock(ProductionService.class);
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
     }
 }
