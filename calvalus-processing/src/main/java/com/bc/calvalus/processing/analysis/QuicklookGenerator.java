@@ -43,6 +43,7 @@ import org.esa.snap.core.datamodel.RGBChannelDef;
 import org.esa.snap.core.datamodel.RGBImageProfile;
 import org.esa.snap.core.datamodel.Stx;
 import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.image.BandImageMultiLevelSource;
 import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;

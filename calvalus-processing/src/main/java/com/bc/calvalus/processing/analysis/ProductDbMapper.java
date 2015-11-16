@@ -28,13 +28,13 @@ import com.vividsolutions.jts.geom.Polygon;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.util.ProductUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.text.DateFormat;
 

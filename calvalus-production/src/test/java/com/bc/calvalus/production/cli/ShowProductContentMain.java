@@ -27,7 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
 import java.io.IOException;

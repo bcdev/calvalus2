@@ -17,19 +17,20 @@
 package com.bc.calvalus.processing.mosaic.firecci;
 
 import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicProductFactory;
-import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
-import org.esa.beam.dataio.netcdf.ProfileWriteContext;
-import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
-import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
-import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
-import org.esa.beam.dataio.netcdf.nc.NVariable;
-import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
-import org.esa.beam.dataio.netcdf.util.Constants;
-import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.jai.ImageManager;
+import org.esa.snap.core.dataio.EncodeQualification;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.image.ImageManager;
+import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
+import org.esa.snap.dataio.netcdf.ProfileWriteContext;
+import org.esa.snap.dataio.netcdf.metadata.ProfileInitPartWriter;
+import org.esa.snap.dataio.netcdf.metadata.ProfilePartWriter;
+import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
+import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
+import org.esa.snap.dataio.netcdf.nc.NVariable;
+import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
+import org.esa.snap.dataio.netcdf.util.Constants;
+import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -74,6 +75,11 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     @Override
     public NFileWriteable createWritable(String outputPath) throws IOException {
         return NWritableFactory.create(outputPath, "netcdf4");
+    }
+
+    @Override
+    public EncodeQualification getEncodeQualification(Product product) {
+        return EncodeQualification.FULL;
     }
 
     private class FireMainPart implements ProfileInitPartWriter {

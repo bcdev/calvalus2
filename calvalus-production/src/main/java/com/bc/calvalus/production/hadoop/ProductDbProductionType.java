@@ -17,14 +17,10 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.analysis.GeometryWorkflowItem;
 import com.bc.calvalus.processing.analysis.ProductDbWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.productinventory.ProductInventoryWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -33,7 +29,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-import org.esa.beam.util.StringUtils;
+import org.esa.snap.core.util.StringUtils;
 
 import java.util.List;
 
