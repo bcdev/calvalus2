@@ -23,8 +23,8 @@ import java.util.Map;
 
 /**
  * This class transform the input parameters map into a format recognized by Calvalus Production Request.
- * <p/>
- * Created by hans on 23.07.2015.
+ *
+ * @author hans
  */
 public class CalvalusDataInputs {
 
@@ -35,10 +35,12 @@ public class CalvalusDataInputs {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
-        extractProductionInfoParameters(processor);
-        extractProcessorInfoParameters(processor);
+        if (processor != null) {
+            extractProductionInfoParameters(processor);
+            extractProcessorInfoParameters(processor);
+            transformProcessorParameters(processor);
+        }
         extractProductsetParameters(productSets, processor);
-        transformProcessorParameters(processor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
     }
@@ -79,18 +81,19 @@ public class CalvalusDataInputs {
     }
 
     private void extractProductionInfoParameters(Processor processor) {
-        if (processor != null) {
-            inputMapFormatted.put(CALVALUS_BUNDLE_VERSION.getIdentifier(), processor.getDefaultCalvalusBundle());
+        if (processor.getDefaultCalvalusBundle() != null) {
+            inputMapFormatted.put(CALVALUS_BUNDLE_VERSION.getIdentifier(),
+                                  processor.getDefaultCalvalusBundle());
+        }
+        if (processor.getDefaultBeamBundle() != null) {
             inputMapFormatted.put(BEAM_BUNDLE_VERSION.getIdentifier(), processor.getDefaultBeamBundle());
         }
     }
 
     private void extractProcessorInfoParameters(Processor processor) {
-        if (processor != null) {
-            inputMapFormatted.put(PROCESSOR_BUNDLE_NAME.getIdentifier(), processor.getBundleName());
-            inputMapFormatted.put(PROCESSOR_BUNDLE_VERSION.getIdentifier(), processor.getBundleVersion());
-            inputMapFormatted.put(PROCESSOR_NAME.getIdentifier(), processor.getName());
-        }
+        inputMapFormatted.put(PROCESSOR_BUNDLE_NAME.getIdentifier(), processor.getBundleName());
+        inputMapFormatted.put(PROCESSOR_BUNDLE_VERSION.getIdentifier(), processor.getBundleVersion());
+        inputMapFormatted.put(PROCESSOR_NAME.getIdentifier(), processor.getName());
     }
 
     private void extractProductsetParameters(ProductSet[] productSets, Processor processor) {
@@ -115,30 +118,28 @@ public class CalvalusDataInputs {
     }
 
     private void transformProcessorParameters(Processor processor) {
-        if (processor != null) {
-            ParameterDescriptor[] processorParameters = processor.getParameterDescriptors();
-            StringBuilder sb = new StringBuilder();
-            sb.append("<parameters>\n");
-            if (processorParameters != null) {
-                for (ParameterDescriptor parameterDescriptor : processorParameters) {
-                    String processorParameterValue = inputMapRaw.get(parameterDescriptor.getName());
-                    if (StringUtils.isNotBlank(processorParameterValue)) {
-                        sb.append("<");
-                        sb.append(parameterDescriptor.getName());
-                        sb.append(">");
+        ParameterDescriptor[] processorParameters = processor.getParameterDescriptors();
+        StringBuilder sb = new StringBuilder();
+        sb.append("<parameters>\n");
+        if (processorParameters != null) {
+            for (ParameterDescriptor parameterDescriptor : processorParameters) {
+                String processorParameterValue = inputMapRaw.get(parameterDescriptor.getName());
+                if (StringUtils.isNotBlank(processorParameterValue)) {
+                    sb.append("<");
+                    sb.append(parameterDescriptor.getName());
+                    sb.append(">");
 
-                        sb.append(processorParameterValue);
+                    sb.append(processorParameterValue);
 
-                        sb.append("</");
-                        sb.append(parameterDescriptor.getName());
-                        sb.append(">\n");
-                    }
+                    sb.append("</");
+                    sb.append(parameterDescriptor.getName());
+                    sb.append(">\n");
                 }
-                sb.append("</parameters>");
-                this.inputMapFormatted.put("processorParameters", sb.toString());
-            } else {
-                this.inputMapFormatted.put("processorParameters", processor.getDefaultParameters());
             }
+            sb.append("</parameters>");
+            this.inputMapFormatted.put("processorParameters", sb.toString());
+        } else {
+            this.inputMapFormatted.put("processorParameters", processor.getDefaultParameters());
         }
     }
 

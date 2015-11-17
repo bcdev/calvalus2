@@ -20,7 +20,7 @@ import java.util.Timer;
  * This class handles the production service operations. It has also been extended to include
  * other singleton objects.
  *
- * Created by hans on 13/08/2015.
+ * @author hans
  */
 public class CalvalusProductionService {
 

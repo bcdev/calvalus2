@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Created by hans on 15/09/2015.
+ * @author hans
  */
 public class CalvalusDataInputsTest {
 
@@ -205,6 +205,23 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+    }
+
+    @Test
+    public void canIgnoreDefaultBeamAndCalvalusBundleVersionWhenNotProvided() throws Exception {
+        Map<String, String> mockInputMapRaw = getMinimalRawMap();
+        when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
+        when(mockProcessor.getDefaultCalvalusBundle()).thenReturn(null);
+        when(mockProcessor.getDefaultBeamBundle()).thenReturn(null);
+
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+
+        assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                                          "autoStaging : true\n" +
+                                                          "processorName : null\n" +
+                                                          "processorBundleName : null\n" +
+                                                          "processorParameters : null\n" +
+                                                          "processorBundleVersion : null\n"));
     }
 
     private String getMockDefaultParameters() {
