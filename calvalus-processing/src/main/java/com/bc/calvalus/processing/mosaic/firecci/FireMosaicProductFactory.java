@@ -32,12 +32,7 @@ import java.awt.Color;
 import java.awt.Rectangle;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The factory for creating the final mosaic product for Fire-CCI
@@ -84,6 +79,7 @@ class FireMosaicProductFactory extends DefaultMosaicProductFactory {
 
     @Override
     public Product createProduct(String productName, Rectangle rect) {
+        CalvalusLogger.getLogger().info("Creating mosaic product (Fire-CCI)");
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);
 
         Band band = product.addBand("status", ProductData.TYPE_INT8);

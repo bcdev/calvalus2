@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.firecci;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.mosaic.MosaicAlgorithm;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import com.bc.calvalus.processing.mosaic.MosaicPartitioner;
@@ -219,6 +220,7 @@ public class FireMosaicAlgorithm implements MosaicAlgorithm, Configurable {
         int[] varIndexes = new int[outputFeatures.length];
         for (int i = 0; i < outputFeatures.length; i++) {
             varIndexes[i] = getVariableIndex(varCtx, outputFeatures[i]);
+            CalvalusLogger.getLogger().info("var index for variable '" + outputFeatures[i] + "' = " + varIndexes[i]);
         }
         return varIndexes;
     }
