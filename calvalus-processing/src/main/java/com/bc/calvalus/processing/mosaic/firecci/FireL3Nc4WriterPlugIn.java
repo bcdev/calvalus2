@@ -32,11 +32,15 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.jai.ImageManager;
 import ucar.ma2.ArrayByte;
 
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.UUID;
 
 public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
@@ -154,7 +158,8 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final String dimensions = writeable.getDimensions();
 
             NVariable variable;
-            variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
+
+            variable = writeable.addVariable("status", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
             final ArrayByte.D1 valids = new ArrayByte.D1(6);
@@ -169,19 +174,6 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("valid_min", 0);
             variable.addAttribute("valid_max", 5);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
-
-            StringBuilder ancillaryVariables = new StringBuilder("current_pixel_state");
-            for (String counter : COUNTER_NAMES) {
-                variable = writeable.addVariable(counter + "_count", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT16), tileSize, dimensions);
-                variable.addAttribute("long_name", "number of " + counter + " observations");
-                variable.addAttribute("standard_name", "surface_bidirectional_reflectance number_of_observations");
-                variable.addAttribute("valid_min", 0);
-                variable.addAttribute("valid_max", 150);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (short)-1);
-                ancillaryVariables.append(' ');
-                ancillaryVariables.append(counter);
-                ancillaryVariables.append("_count");
-            }
 
             String[] bandNames = product.getBandNames();
             List<String> srMeanBandNames = getSrMeanBandNames(bandNames);
@@ -200,7 +192,7 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
                 if (i < srSigmaBandNames.size()) {
                     String sigmaBandName = srSigmaBandNames.get(i);
-                    variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
+//                    variable.addAttribute("ancillary_variables", sigmaBandName + " " + ancillaryVariables.toString());
                     variable = writeable.addVariable(sigmaBandName, DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
                     variable.addAttribute("long_name", "uncertainty of normalised surface reflectance of channel " + bandIndex);
                     variable.addAttribute("standard_name", "surface_bidirectional_reflectance standard_error");
@@ -211,13 +203,12 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 }
             }
 
-            variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-            variable.addAttribute("long_name", "mean of vegetation index");
-            variable.addAttribute("standard_name", "normalized_difference_vegetation_index");
-            variable.addAttribute("valid_min", -1.0f);
-            variable.addAttribute("valid_max", 1.0f);
+            variable = writeable.addVariable("ndvi", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
-            variable.addAttribute("ancillary_variables", ancillaryVariables.toString());
+            writeable.addVariable("sun_zenith", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("sun_azimuth", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("view_zenith", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("view_azimuth", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {

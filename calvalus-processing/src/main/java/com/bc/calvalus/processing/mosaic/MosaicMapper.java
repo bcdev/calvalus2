@@ -248,12 +248,12 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
             boolean containsData = containsData(byteBuffer);
 
             if (containsData) {
-                LOG.info("Tile contains data: " + tileIndex);
+                LOG.fine("Tile contains data: " + tileIndex);
                 float[][] sampleValues = new float[varImages.length][tileSize * tileSize];
                 for (int i = 0; i < varImages.length; i++) {
                     Raster raster = varImages[i].getTile(tileIndex.getTileX(), tileIndex.getTileY());
                     if (raster == null) {
-                        LOG.info("Image[" + i + "] raster is null: " + tileIndex);
+                        LOG.fine("Image[" + i + "] raster is null: " + tileIndex);
                         return false;
                     }
                     float[] samples = sampleValues[i];
@@ -263,7 +263,7 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
                 TileDataWritable value = new TileDataWritable(sampleValues);
                 context.write(tileIndex, value);
             } else {
-                LOG.info("Tile contains NO data: " + tileIndex);
+                LOG.fine("Tile contains NO data: " + tileIndex);
             }
             return containsData;
         }
