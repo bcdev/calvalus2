@@ -49,6 +49,21 @@ public class MAConfigTest {
     }
 
     @Test
+    public void testXmlEscaping() throws Exception {
+        MAConfig maConfig1 = new MAConfig();
+        maConfig1.setGoodPixelExpression("a < b");
+        maConfig1.setGoodRecordExpression("c > d");
+
+        String xml = maConfig1.toXml();
+        assertTrue(xml.contains("<goodPixelExpression>a &lt; b</goodPixelExpression>"));
+        assertTrue(xml.contains("<goodRecordExpression>c &gt; d</goodRecordExpression>"));
+
+        MAConfig maConfig2 = MAConfig.fromXml(xml);
+        assertEquals(maConfig1.getGoodPixelExpression(), maConfig2.getGoodPixelExpression());
+        assertEquals(maConfig1.getGoodRecordExpression(), maConfig2.getGoodRecordExpression());
+    }
+
+    @Test
     public void testCreateRecordSource() throws Exception {
         MAConfig maConfig = new MAConfig();
         maConfig.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
