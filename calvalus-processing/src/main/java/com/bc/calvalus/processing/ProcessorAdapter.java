@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -100,6 +101,14 @@ public abstract class ProcessorAdapter {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
+//        try {
+//            String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
+//            System.setProperty("snap.userdir", cacheRootDir);
+//            System.setProperty("snap.home", cacheRootDir);
+//            System.setProperty("snap.pythonModuleDir", cacheRootDir);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
         GpfUtils.init(mapContext.getConfiguration());
     }
 

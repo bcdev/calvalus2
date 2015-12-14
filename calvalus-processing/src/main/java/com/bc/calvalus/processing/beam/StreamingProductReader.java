@@ -178,8 +178,8 @@ public class StreamingProductReader extends AbstractProductReader {
 
         protected BandImage(RasterDataNode rasterDataNode, Dimension tileSize) {
             super(ImageManager.getDataBufferType(rasterDataNode.getDataType()),
-                  rasterDataNode.getSceneRasterWidth(),
-                  rasterDataNode.getSceneRasterHeight(),
+                  rasterDataNode.getRasterWidth(),
+                  rasterDataNode.getRasterHeight(),
                   tileSize,
                   null,
                   ResolutionLevel.MAXRES);

@@ -43,7 +43,7 @@ import org.esa.snap.core.datamodel.RGBChannelDef;
 import org.esa.snap.core.datamodel.RGBImageProfile;
 import org.esa.snap.core.datamodel.Stx;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.image.BandImageMultiLevelSource;
+import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
 import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
@@ -89,7 +89,7 @@ public class QuicklookGenerator {
             subsetParams.put("subSamplingY", qlConfig.getSubSamplingY());
             product = GPF.createProduct("Subset", subsetParams, product);
         }
-        BandImageMultiLevelSource multiLevelSource;
+        ColoredBandImageMultiLevelSource multiLevelSource;
         Band masterBand;
         if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
             String[] rgbaExpressions;
@@ -114,7 +114,7 @@ public class QuicklookGenerator {
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
             }
-            multiLevelSource = BandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
+            multiLevelSource = ColoredBandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
             if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null &&
                 qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
@@ -142,7 +142,7 @@ public class QuicklookGenerator {
             }
 
             masterBand.getImageInfo(wrapPM(context));
-            multiLevelSource = BandImageMultiLevelSource.create(masterBand, wrapPM(context));
+            multiLevelSource = ColoredBandImageMultiLevelSource.create(masterBand, wrapPM(context));
 
             try (InputStream inputStream = new URL(cpdURL).openStream()) {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
@@ -225,7 +225,7 @@ public class QuicklookGenerator {
             public Object getCoordinateReferenceSystem() {
                 final GeoCoding geoCoding = product.getSceneGeoCoding();
                 if (geoCoding != null) {
-                    return ImageManager.getModelCrs(geoCoding);
+                    return Product.findModelCRS(geoCoding);
                 }
                 return null;
             }
