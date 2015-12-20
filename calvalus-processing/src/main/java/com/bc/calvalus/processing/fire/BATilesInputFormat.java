@@ -78,8 +78,8 @@ public class BATilesInputFormat extends InputFormat {
     }
 
     static void validatePattern(String inputPathPatterns) throws IOException {
-        // example: hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v03h07/2008/2008.*fire-nc/.*nc$
-        String regex = "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/\\d\\d\\d\\d/v\\d\\dh\\d\\d/\\d\\d\\d\\d/\\d\\d\\d\\d.*fire-nc/.*nc\\$";
+        // example: hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/.*/2008/2008.*fire-nc/.*nc$
+        String regex = "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/\\d\\d\\d\\d/\\.\\*/\\d\\d\\d\\d/\\d\\d\\d\\d.*fire-nc/.*nc\\$";
         if (!inputPathPatterns.matches(regex)) {
             throw new IOException("invalid input path; must match following pattern:\n" + regex);
         }
