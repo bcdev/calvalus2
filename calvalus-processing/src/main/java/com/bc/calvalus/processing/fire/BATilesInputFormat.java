@@ -1,13 +1,11 @@
 package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.JobClientsMap;
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
-import com.bc.calvalus.processing.productinventory.ProductInventory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -64,22 +62,20 @@ public class BATilesInputFormat extends InputFormat {
         if (year - 1 > 2001) {
             beforeInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year - 1))
                 .replace(Integer.toString(year - 1) + ".*fire-nc",
-                         Integer.toString(year - 1) + "-1[12]-\\d\\d-fire-nc")
-                .replace(".*nc$", ".*nc\\$");
+                         Integer.toString(year - 1) + "-1[12]-.*fire-nc");
         }
         String afterInputPathPatterns = "";
         if (year + 1 < 2013) {
             afterInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year + 1))
                     .replace(Integer.toString(year + 1) + ".*fire-nc",
-                            Integer.toString(year + 1) + "-0[12]-\\d\\d-fire-nc")
-                    .replace(".*nc$", ".*nc\\$");
+                            Integer.toString(year + 1) + "-0[12]-.*fire-nc");
         }
         return new String[] {beforeInputPathPatterns, afterInputPathPatterns};
     }
 
     static void validatePattern(String inputPathPatterns) throws IOException {
         // example: hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/.*/2008/2008.*fire-nc/.*nc$
-        String regex = "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/\\d\\d\\d\\d/\\.\\*/\\d\\d\\d\\d/\\d\\d\\d\\d.*fire-nc/.*nc\\$";
+        String regex = "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/\\d\\d\\d\\d/.*/\\d\\d\\d\\d/\\d\\d\\d\\d.*fire-nc/.*nc\\$";
         if (!inputPathPatterns.matches(regex)) {
             throw new IOException("invalid input path; must match following pattern:\n" + regex);
         }
@@ -118,36 +114,6 @@ public class BATilesInputFormat extends InputFormat {
             long[] lengths = combineFileSplitDef.lengths.stream().mapToLong(Long::longValue).toArray();
             splits.add(new CombineFileSplit(files, lengths));
         }
-
-//
-//
-//        for (FileStatus file : fileStatuses) {
-//            long fileLength = file.getLen();
-//            FileSystem fs = file.getPath().getFileSystem(conf);
-//            BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
-//            if (blocks != null && blocks.length > 0) {
-//                BlockLocation block = blocks[0];
-//                // create a split for the input
-//                if (productInventory == null) {
-//                    // no inventory, process whole product
-//                    splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-//                } else {
-//                    ProductInventoryEntry entry = productInventory.getEntry(file.getPath().getName());
-//                    if (entry != null && entry.getProcessLength() > 0) {
-//                        // when listed process the given subset
-//                        int start = entry.getProcessStartLine();
-//                        int length = entry.getProcessLength();
-//                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts(), start, length));
-//                    } else if (entry == null) {
-//                        // when not listed process whole product
-//                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-//                    }
-//                }
-//            } else {
-//                String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
-//                throw new IOException(String.format(msgFormat, file.getPath()));
-//            }
-//        }
     }
 
     private static boolean fileMatchesTile(FileStatus file, int tileX, int tileY) {

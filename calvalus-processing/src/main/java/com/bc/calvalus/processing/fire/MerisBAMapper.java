@@ -18,31 +18,30 @@ package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.executable.ScriptGenerator;
+import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.mosaic.TileDataWritable;
 import com.bc.calvalus.processing.mosaic.TileIndexWritable;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.resource.ReaderResource;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Map;
 
 /**
  * Runs the MERIS BA processor adapter for a single tile.
@@ -59,7 +58,15 @@ public class MerisBAMapper extends Mapper<NullWritable, NullWritable, TileIndexW
         this.cwd = new File(".");
         this.debugScriptGenerator = context.getConfiguration().getBoolean("calvalus.l2.debugScriptGenerator", false);
         InputSplit inputSplit = context.getInputSplit();
-        process(ProgressMonitor.NULL, inputSplit, context);
+        KeywordHandler keywordHandler = process(ProgressMonitor.NULL, inputSplit, context);
+        String[] outputFilesNames = keywordHandler.getOutputFiles();
+        CalvalusLogger.getLogger().info("Writing output files: " + Arrays.toString(outputFilesNames));
+        for (String outputFileName : outputFilesNames) {
+            InputStream is = new BufferedInputStream(new FileInputStream(new File(cwd, outputFileName)));
+            Path workPath = new Path(getWorkOutputDirectoryPath(context), outputFileName);
+            OutputStream os = workPath.getFileSystem(context.getConfiguration()).create(workPath);
+            ProductFormatter.copyAndClose(is, os, context);
+        }
     }
 
     private KeywordHandler process(ProgressMonitor pm, InputSplit inputSplit, Context context) throws IOException, InterruptedException {
@@ -116,4 +123,19 @@ public class MerisBAMapper extends Mapper<NullWritable, NullWritable, TileIndexW
         String name = combineFileSplit.getPath(0).getName();    // ok, if there are no paths, there is no input split as well.
         return name.substring(name.length() - "vXXhXX.nc".length(), name.length() - ".nc".length());
     }
+
+    private Path getWorkOutputDirectoryPath(Context context) throws IOException {
+        try {
+            Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            return appendDatePart(workOutputPath, context);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+    }
+
+    private Path appendDatePart(Path path, Context context) {
+        String year = context.getConfiguration().get("calvalus.year");
+        return new Path(path, year);
+    }
+
 }
