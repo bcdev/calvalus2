@@ -17,6 +17,7 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
@@ -33,10 +34,18 @@ import java.util.logging.Logger;
  *
  * @author hans
  */
-@Path("/")
+@Path("/{application}")
 public class WpsService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+
+    private AbstractWpsService wpsService;
+
+    public WpsService(@PathParam("application") String applicationName, @Context HttpServletRequest servletRequest) {
+        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
+        WpsServiceFactory wpsServiceFactory = new WpsServiceFactory(servletRequestWrapper);
+        wpsService = wpsServiceFactory.getWpsService(applicationName);
+    }
 
     @GET
     @Produces(MediaType.APPLICATION_XML)
@@ -44,12 +53,9 @@ public class WpsService {
                                 @QueryParam("Request") String requestType,
                                 @QueryParam("AcceptVersions") String acceptedVersion,
                                 @QueryParam("Language") String language,
-                                @QueryParam("Identifier") String processorId,
+                                @QueryParam("Identifier") String processId,
                                 @QueryParam("Version") String version,
-                                @QueryParam("JobId") String jobId,
-                                @Context HttpServletRequest servletRequest) {
-
-        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
+                                @QueryParam("JobId") String jobId) {
 
         String exceptionXml = performUrlParameterValidation(service, requestType);
         if (StringUtils.isNotBlank(exceptionXml)) {
@@ -58,22 +64,19 @@ public class WpsService {
 
         switch (requestType) {
         case "GetCapabilities":
-            GetCapabilitiesService getCapabilitiesService = new GetCapabilitiesService();
-            return getCapabilitiesService.getCapabilities(servletRequestWrapper);
+            return wpsService.getCapabilities();
         case "DescribeProcess":
-            String describeProcessExceptionXml = performDescribeProcessParameterValidation(processorId, version);
+            String describeProcessExceptionXml = performDescribeProcessParameterValidation(processId, version);
             if (StringUtils.isNotBlank(describeProcessExceptionXml)) {
                 return describeProcessExceptionXml;
             }
-            DescribeProcessService describeProcessService = new DescribeProcessService();
-            return describeProcessService.describeProcess(servletRequestWrapper, processorId);
+            return wpsService.describeProcess(processId, version);
         case "GetStatus":
             if (StringUtils.isBlank(jobId)) {
                 StringWriter stringWriter = getMissingParameterXmlWriter("JobId");
                 return stringWriter.toString();
             }
-            GetStatusService getStatusService = new GetStatusService();
-            return getStatusService.getStatus(servletRequestWrapper, jobId);
+            return wpsService.getStatus(jobId);
         default:
             StringWriter stringWriter = getInvalidParameterXmlWriter("Request");
             return stringWriter.toString();
@@ -85,20 +88,18 @@ public class WpsService {
     @Produces(MediaType.APPLICATION_XML)
     public String postExecuteService(String request, @Context HttpServletRequest servletRequest) {
         Execute execute = getExecute(request);
-        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
 
-        String exceptionXml = performRequestParameterValidation(execute);
+        String exceptionXml = performXmlParameterValidation(execute);
         if (StringUtils.isNotBlank(exceptionXml)) {
             return exceptionXml;
         }
 
         String processorId = execute.getIdentifier().getValue();
 
-        ExecuteService executeService = new ExecuteService();
-        return executeService.execute(execute, servletRequestWrapper, processorId);
+        return wpsService.doExecute(execute, processorId);
     }
 
-    private String performDescribeProcessParameterValidation(@QueryParam("Identifier") String processorId, @QueryParam("Version") String version) {
+    private String performDescribeProcessParameterValidation(String processorId, String version) {
         if (StringUtils.isBlank(version)) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Version");
             return stringWriter.toString();
@@ -110,7 +111,7 @@ public class WpsService {
         return null;
     }
 
-    private String performUrlParameterValidation(@QueryParam("Service") String service, @QueryParam("Request") String requestType) {
+    private String performUrlParameterValidation(String service, String requestType) {
         if (StringUtils.isBlank(service)) {
             StringWriter stringWriter = getMissingParameterXmlWriter("Service");
             return stringWriter.toString();
@@ -126,7 +127,7 @@ public class WpsService {
         return "";
     }
 
-    private String performRequestParameterValidation(Execute execute) {
+    private String performXmlParameterValidation(Execute execute) {
         String service = execute.getService();
         String version = execute.getVersion();
         CodeType identifier = execute.getIdentifier();

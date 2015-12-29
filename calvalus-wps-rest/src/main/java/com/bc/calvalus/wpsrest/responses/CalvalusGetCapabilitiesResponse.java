@@ -42,27 +42,11 @@ import com.bc.calvalus.wpsrest.jaxb.TelephoneType;
 import java.util.List;
 
 /**
- * Created by hans on 13/08/2015.
+ * @author hans
  */
-public class GetCapabilitiesResponse {
+public class CalvalusGetCapabilitiesResponse extends AbstractGetCapabilitiesResponse {
 
-    public Capabilities createGetCapabilitiesResponse(List<Processor> processors) {
-        OperationsMetadata operationsMetadata = getOperationsMetadata();
-        ServiceIdentification serviceIdentification = getServiceIdentification();
-        ServiceProvider serviceProvider = getServiceProvider();
-        ProcessOfferings processOfferings = getProcessOfferings(processors);
-        Languages languages = getLanguages();
-
-        return CapabilitiesBuilder.create()
-                    .withOperationsMetadata(operationsMetadata)
-                    .withServiceIdentification(serviceIdentification)
-                    .withServiceProvider(serviceProvider)
-                    .withProcessOfferings(processOfferings)
-                    .withLanguages(languages)
-                    .build();
-    }
-
-    private OperationsMetadata getOperationsMetadata() {
+    public OperationsMetadata getOperationsMetadata() {
         OperationsMetadata operationsMetadata = new OperationsMetadata();
 
         Operation getCapabilitiesOperation = new Operation();
@@ -85,7 +69,7 @@ public class GetCapabilitiesResponse {
         return operationsMetadata;
     }
 
-    private ServiceProvider getServiceProvider() {
+    public ServiceProvider getServiceProvider() {
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setProviderName(COMPANY_NAME);
 
@@ -127,21 +111,21 @@ public class GetCapabilitiesResponse {
         return serviceProvider;
     }
 
-    private ProcessOfferings getProcessOfferings(List<Processor> processors) {
+    public ProcessOfferings getProcessOfferings(List<WpsProcess> processList) {
         ProcessOfferings processOfferings = new ProcessOfferings();
-        for (Processor processor : processors) {
+        for (WpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
 
             CodeType identifier = new CodeType();
-            identifier.setValue(processor.getIdentifier());
+            identifier.setValue(process.getIdentifier());
             singleProcessor.setIdentifier(identifier);
 
             LanguageStringType title = new LanguageStringType();
-            title.setValue(processor.getTitle());
+            title.setValue(process.getTitle());
             singleProcessor.setTitle(title);
 
             LanguageStringType abstractText = new LanguageStringType();
-            abstractText.setValue(processor.getAbstractText());
+            abstractText.setValue(process.getAbstractText());
             singleProcessor.setAbstract(abstractText);
 
             processOfferings.getProcess().add(singleProcessor);
@@ -149,7 +133,7 @@ public class GetCapabilitiesResponse {
         return processOfferings;
     }
 
-    private ServiceIdentification getServiceIdentification() {
+    public ServiceIdentification getServiceIdentification() {
         ServiceIdentification serviceIdentification = new ServiceIdentification();
         LanguageStringType title = new LanguageStringType();
         title.setValue(WPS_SERVICE_ID);
@@ -167,7 +151,7 @@ public class GetCapabilitiesResponse {
         return serviceIdentification;
     }
 
-    private Languages getLanguages() {
+    public Languages getLanguages() {
         Languages languages = new Languages();
 
         Languages.Default defaultLanguage = new Languages.Default();

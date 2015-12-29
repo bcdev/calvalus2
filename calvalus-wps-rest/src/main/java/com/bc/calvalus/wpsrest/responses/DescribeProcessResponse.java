@@ -26,13 +26,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by hans on 13/08/2015.
+ * @author hans
  */
 public class DescribeProcessResponse {
 
-    public ProcessDescriptions getMultipleDescribeProcessResponse(List<Processor> processors, ProductSet[] productSets) throws ProductionException {
+    public ProcessDescriptions getMultipleDescribeProcessResponse(List<WpsProcess> processors, ProductSet[] productSets) throws ProductionException {
         ProcessDescriptions processDescriptions = createDefaultProcessDescriptions();
-        for (Processor processor : processors) {
+        for (WpsProcess processor : processors) {
             ProcessDescriptionType processDescription = getSingleProcessDescription(processor, productSets);
             processDescriptions.getProcessDescription().add(processDescription);
         }
@@ -54,7 +54,7 @@ public class DescribeProcessResponse {
         return processDescriptions;
     }
 
-    private ProcessDescriptionType getSingleProcessDescription(Processor processor, ProductSet[] productSets) throws ProductionException {
+    private ProcessDescriptionType getSingleProcessDescription(WpsProcess processor, ProductSet[] productSets) throws ProductionException {
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
 
         processDescription.setStoreSupported(true);
@@ -100,7 +100,7 @@ public class DescribeProcessResponse {
         return processDescription;
     }
 
-    private DataInputs getDataInputs(Processor processor, ProductSet[] productSets) throws ProductionException {
+    private DataInputs getDataInputs(WpsProcess processor, ProductSet[] productSets) throws ProductionException {
         DataInputs dataInputs = new DataInputs();
         ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
 

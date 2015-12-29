@@ -16,6 +16,7 @@
 
     <properties>
         <powermockito.version>1.5.6</powermockito.version>
+        <jersey.version>1.18</jersey.version>
     </properties>
 
     <dependencies>
@@ -37,12 +38,12 @@
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-server</artifactId>
-            <version>1.18</version>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>com.sun.jersey</groupId>
             <artifactId>jersey-servlet</artifactId>
-            <version>1.18</version>
+            <version>${jersey.version}</version>
         </dependency>
         <dependency>
             <groupId>xerces</groupId>
@@ -69,7 +70,12 @@
             <artifactId>powermock-module-junit4</artifactId>
             <version>${powermockito.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.sun.jersey.jersey-test-framework</groupId>
+            <artifactId>jersey-test-framework-grizzly2</artifactId>
+            <version>${jersey.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 

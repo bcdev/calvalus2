@@ -12,6 +12,7 @@ import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.DescribeProcessResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
+import com.bc.calvalus.wpsrest.responses.WpsProcess;
 
 import javax.ws.rs.PathParam;
 import javax.xml.bind.JAXBException;
@@ -44,7 +45,7 @@ public class DescribeProcessService {
                 DescribeProcessResponse describeProcessResponse = new DescribeProcessResponse();
                 processDescriptions = describeProcessResponse.getMultipleDescribeProcessResponse(calvalusHelper.getProcessors(), calvalusHelper.getProductSets());
             } else if (processorIdArray.length > 1) {
-                List<Processor> processors = new ArrayList<>();
+                List<WpsProcess> processors = new ArrayList<>();
                 for (String singleProcessorId : processorIdArray) {
                     ProcessorNameParser parser = new ProcessorNameParser(singleProcessorId);
                     Processor processor = calvalusHelper.getProcessor(parser);

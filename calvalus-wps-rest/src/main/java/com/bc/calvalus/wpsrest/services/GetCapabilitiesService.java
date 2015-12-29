@@ -3,13 +3,14 @@ package com.bc.calvalus.wpsrest.services;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
+import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponse;
+import com.bc.calvalus.wpsrest.responses.CalvalusGetCapabilitiesResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
-import com.bc.calvalus.wpsrest.responses.GetCapabilitiesResponse;
+import com.bc.calvalus.wpsrest.responses.WpsProcess;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -33,9 +34,9 @@ public class GetCapabilitiesService {
         try {
             CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
 
-            List<Processor> processors = calvalusHelper.getProcessors();
+            List<WpsProcess> processors = calvalusHelper.getProcessors();
 
-            GetCapabilitiesResponse getCapabilitiesResponse = new GetCapabilitiesResponse();
+            AbstractGetCapabilitiesResponse getCapabilitiesResponse = new CalvalusGetCapabilitiesResponse();
             Capabilities capabilities = getCapabilitiesResponse.createGetCapabilitiesResponse(processors);
 
             jaxbHelper.marshal(capabilities, writer);

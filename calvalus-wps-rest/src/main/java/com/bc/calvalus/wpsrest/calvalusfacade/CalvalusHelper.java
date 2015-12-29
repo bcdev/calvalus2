@@ -8,6 +8,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
+import com.bc.calvalus.wpsrest.responses.WpsProcess;
 
 import java.io.IOException;
 import java.util.List;
@@ -55,7 +56,7 @@ public class CalvalusHelper {
         calvalusStaging.observeStagingStatus(getProductionService(), production);
     }
 
-    public List<Processor> getProcessors() throws IOException, ProductionException {
+    public List<WpsProcess> getProcessors() throws IOException, ProductionException {
         return calvalusProcessorExtractor.getProcessors();
     }
 

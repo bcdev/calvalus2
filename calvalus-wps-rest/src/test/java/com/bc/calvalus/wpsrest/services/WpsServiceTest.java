@@ -23,7 +23,7 @@ import java.util.Locale;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({WpsService.class, GetCapabilitiesService.class, DescribeProcessService.class})
+@PrepareForTest({CalvalusWpsService.class, GetCapabilitiesService.class, DescribeProcessService.class})
 public class WpsServiceTest {
 
     private WpsService wpsService;
@@ -36,15 +36,15 @@ public class WpsServiceTest {
     @Before
     public void setUp() throws Exception {
         Locale.setDefault(Locale.ENGLISH);
-        wpsService = new WpsService();
         getMockServletRequest();
+        wpsService = new WpsService("Calvalus", mockServletRequest);
     }
 
     @Test
     public void canGetCapabilitiesWithValidRequest() throws Exception {
         getMockGetCapabilitiesService("validGetCapabilitiesXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("WPS", "GetCapabilities", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "GetCapabilities", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("validGetCapabilitiesXmlResponse"));
     }
@@ -53,7 +53,7 @@ public class WpsServiceTest {
     public void canReturnExceptionGetCapabilitiesWithInvalidService() throws Exception {
         getMockGetCapabilitiesService("validGetCapabilitiesXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("invalidService", "GetCapabilities", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("invalidService", "GetCapabilities", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -67,7 +67,7 @@ public class WpsServiceTest {
     public void canDescribeProcessWithValidRequest() throws Exception {
         getMockDescribeProcessService("validDescribeProcessXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "bundle~name~version", "1.0.0", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "bundle~name~version", "1.0.0", "");
 
         assertThat(wpsResponse, equalTo("validDescribeProcessXmlResponse"));
     }
@@ -76,7 +76,7 @@ public class WpsServiceTest {
     public void canReturnExceptionWhenDescribeProcessWithNoProcessorId() throws Exception {
         getMockDescribeProcessService("validDescribeProcessXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "", "1.0.0", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "", "1.0.0", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -90,7 +90,7 @@ public class WpsServiceTest {
     public void canReturnExceptionWhenDescribeProcessWithNoVersionNumber() throws Exception {
         getMockDescribeProcessService("validDescribeProcessXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "bundle~name~version", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "bundle~name~version", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -104,14 +104,14 @@ public class WpsServiceTest {
     public void canGetStatusWithValidRequest() throws Exception {
         getMockGetStatusService("validGetStatusXmlResponse");
 
-        String wpsResponse = wpsService.getWpsService("WPS", "GetStatus", "", "", "", "", "dummyJobId", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "GetStatus", "", "", "", "", "dummyJobId");
 
         assertThat(wpsResponse, equalTo("validGetStatusXmlResponse"));
     }
 
     @Test
     public void canReturnExceptionWhenGetStatusWithoutJobId() throws Exception {
-        String wpsResponse = wpsService.getWpsService("WPS", "GetStatus", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "GetStatus", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -123,9 +123,7 @@ public class WpsServiceTest {
 
     @Test
     public void canReturnExceptionWhenRequestIsUnknown() throws Exception {
-        getMockGetStatusService("validDescribeProcessXmlResponse");
-
-        String wpsResponse = wpsService.getWpsService("WPS", "InvalidService", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "InvalidService", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -198,7 +196,7 @@ public class WpsServiceTest {
 
     @Test
     public void canReturnExceptionWhenNoServiceParameter() throws Exception {
-        String wpsResponse = wpsService.getWpsService("", "", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("", "", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -210,7 +208,7 @@ public class WpsServiceTest {
 
     @Test
     public void canReturnExceptionWhenNoRequestTypeParameter() throws Exception {
-        String wpsResponse = wpsService.getWpsService("WPS", "", "", "", "", "", "", mockServletRequest);
+        String wpsResponse = wpsService.getWpsService("WPS", "", "", "", "", "", "");
 
         assertThat(wpsResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                         "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +

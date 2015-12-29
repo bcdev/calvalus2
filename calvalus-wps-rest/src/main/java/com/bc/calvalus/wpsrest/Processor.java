@@ -4,11 +4,12 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.wpsrest.responses.WpsProcess;
 
 /**
- * Created by hans on 13/08/2015.
+ * @author hans
  */
-public class Processor {
+public class Processor implements WpsProcess {
 
     public static final String DELIMITER = "~";
 
@@ -43,6 +44,10 @@ public class Processor {
         return abstractText;
     }
 
+    public String getVersion() {
+        return processorDescriptor.getProcessorVersion();
+    }
+
     public ParameterDescriptor[] getParameterDescriptors() {
         return processorDescriptor.getParameterDescriptors();
     }
@@ -74,10 +79,6 @@ public class Processor {
 
     public String getName() {
         return processorDescriptor.getExecutableName();
-    }
-
-    public String getVersion() {
-        return processorDescriptor.getProcessorVersion();
     }
 
     public String[] getInputProductTypes() {
