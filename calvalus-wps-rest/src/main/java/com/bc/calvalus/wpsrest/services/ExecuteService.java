@@ -20,8 +20,8 @@ import com.bc.calvalus.wpsrest.jaxb.ResponseFormType;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteAcceptedResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteSuccessfulResponse;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
-import javax.ws.rs.PathParam;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.IOException;
@@ -32,18 +32,17 @@ import java.util.logging.Logger;
 
 /**
  * This class handles all the Execute requests.
- * <p/>
- * Created by hans on 21/08/2015.
+ *
+ * @author hans
  */
 public class ExecuteService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public String execute(Execute executeRequest,
-                          ServletRequestWrapper servletRequestWrapper,
-                          @PathParam("processorId") String processorId) {
+    public String execute(Execute executeRequest, WpsMetadata wpsMetadata, String processorId) {
         StringWriter stringWriter = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
+        ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
         try {
             ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
             CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);

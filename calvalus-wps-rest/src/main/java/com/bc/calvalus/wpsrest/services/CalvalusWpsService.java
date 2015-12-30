@@ -1,38 +1,42 @@
 package com.bc.calvalus.wpsrest.services;
 
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
+import static org.powermock.api.mockito.PowerMockito.mock;
+
 import com.bc.calvalus.wpsrest.jaxb.Execute;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
+import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.CalvalusGetCapabilitiesOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.GetCapabilitiesOperation;
 
 /**
  * @author hans
  */
-public class CalvalusWpsService extends AbstractWpsService {
+public class CalvalusWpsService extends WpsServiceProvider {
 
-    public CalvalusWpsService(ServletRequestWrapper servletRequestWrapper) {
-        super(servletRequestWrapper);
+    public CalvalusWpsService(WpsMetadata wpsMetadata) {
+        super(wpsMetadata);
     }
 
     @Override
     public String getCapabilities() {
-        GetCapabilitiesService getCapabilitiesService = new GetCapabilitiesService();
-        return getCapabilitiesService.getCapabilities(servletRequestWrapper);
+        GetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsMetadata);
+        return getCapabilitiesOperation.getCapabilities();
     }
 
     @Override
-    public String describeProcess(String processorId, String version) {
+    public String describeProcess(String processorId) {
         DescribeProcessService describeProcessService = new DescribeProcessService();
-        return describeProcessService.describeProcess(servletRequestWrapper, processorId);
+        return describeProcessService.describeProcess(wpsMetadata, processorId);
     }
 
     @Override
     public String doExecute(Execute execute, String processorId) {
         ExecuteService executeService = new ExecuteService();
-        return executeService.execute(execute, servletRequestWrapper, processorId);
+        return executeService.execute(execute, wpsMetadata, processorId);
     }
 
     @Override
     public String getStatus(String jobId) {
         GetStatusService getStatusService = new GetStatusService();
-        return getStatusService.getStatus(servletRequestWrapper, jobId);
+        return getStatusService.getStatus(wpsMetadata, jobId);
     }
 }

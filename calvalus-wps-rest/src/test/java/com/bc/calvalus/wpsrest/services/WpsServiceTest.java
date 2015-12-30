@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.exception.InvalidRequestException;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
@@ -23,7 +24,10 @@ import java.util.Locale;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusWpsService.class, GetCapabilitiesService.class, DescribeProcessService.class})
+@PrepareForTest({
+            CalvalusWpsService.class, GetCapabilitiesService.class, DescribeProcessService.class,
+            WpsServiceFactory.class, WpsService.class, ServletRequestWrapper.class
+})
 public class WpsServiceTest {
 
     private WpsService wpsService;
@@ -42,11 +46,16 @@ public class WpsServiceTest {
 
     @Test
     public void canGetCapabilitiesWithValidRequest() throws Exception {
-        getMockGetCapabilitiesService("validGetCapabilitiesXmlResponse");
+        WpsServiceFactory mockWpsServiceFactory = mock(WpsServiceFactory.class);
+        WpsServiceProvider mockWpsServiceProvider = mock(WpsServiceProvider.class);
+        when(mockWpsServiceFactory.getWpsService(anyString())).thenReturn(mockWpsServiceProvider);
 
-        String wpsResponse = wpsService.getWpsService("WPS", "GetCapabilities", "", "", "", "", "");
+        PowerMockito.whenNew(WpsServiceFactory.class).withArguments(any(ServletRequestWrapper.class)).thenReturn(mockWpsServiceFactory);
 
-        assertThat(wpsResponse, equalTo("validGetCapabilitiesXmlResponse"));
+        wpsService = new WpsService("Calvalus", mockServletRequest);
+        wpsService.getWpsService("WPS", "GetCapabilities", "", "", "", "", "");
+
+        verify(mockWpsServiceProvider).getCapabilities();
     }
 
     @Test
@@ -303,19 +312,19 @@ public class WpsServiceTest {
 
     private void getMockDescribeProcessService(String response) throws Exception {
         DescribeProcessService mockDescribeProcessService = mock(DescribeProcessService.class);
-        when(mockDescribeProcessService.describeProcess(any(ServletRequestWrapper.class), anyString())).thenReturn(response);
+        when(mockDescribeProcessService.describeProcess(any(WpsMetadata.class), anyString())).thenReturn(response);
         PowerMockito.whenNew(DescribeProcessService.class).withNoArguments().thenReturn(mockDescribeProcessService);
     }
 
     private void getMockGetStatusService(String response) throws Exception {
         GetStatusService mockGetStatusService = mock(GetStatusService.class);
-        when(mockGetStatusService.getStatus(any(ServletRequestWrapper.class), anyString())).thenReturn(response);
+        when(mockGetStatusService.getStatus(any(WpsMetadata.class), anyString())).thenReturn(response);
         PowerMockito.whenNew(GetStatusService.class).withNoArguments().thenReturn(mockGetStatusService);
     }
 
     private void configureMockExecuteService(String response) throws Exception {
         ExecuteService mockExecuteService = mock(ExecuteService.class);
-        when(mockExecuteService.execute(any(Execute.class), any(ServletRequestWrapper.class), anyString())).thenReturn(response);
+        when(mockExecuteService.execute(any(Execute.class), any(WpsMetadata.class), anyString())).thenReturn(response);
         PowerMockito.whenNew(ExecuteService.class).withNoArguments().thenReturn(mockExecuteService);
     }
 

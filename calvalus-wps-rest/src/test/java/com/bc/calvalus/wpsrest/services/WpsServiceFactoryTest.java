@@ -24,7 +24,7 @@ public class WpsServiceFactoryTest {
 
     @Test
     public void testGetCalvalusWpsService() throws Exception {
-        AbstractWpsService wpsService = wpsServiceFactory.getWpsService("calvalus");
+        WpsServiceProvider wpsService = wpsServiceFactory.getWpsService("calvalus");
 
         assertThat(wpsService, instanceOf(CalvalusWpsService.class));
     }

@@ -5,7 +5,6 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
@@ -13,8 +12,8 @@ import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.DescribeProcessResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
-import javax.ws.rs.PathParam;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.StringWriter;
@@ -25,20 +24,20 @@ import java.util.logging.Logger;
 
 /**
  * This class handles all DescribeProcess requests.
- * <p/>
- * Created by hans on 21/08/2015.
+ *
+ * @author hans
  */
 public class DescribeProcessService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public String describeProcess(ServletRequestWrapper servletRequestWrapper, @PathParam("processorId") String processorId) {
+    public String describeProcess(WpsMetadata wpsMetadata, String processorId) {
         StringWriter writer = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
 
         String[] processorIdArray = processorId.split(",");
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
+            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
 
             ProcessDescriptions processDescriptions;
             if (processorId.equalsIgnoreCase("all")) {

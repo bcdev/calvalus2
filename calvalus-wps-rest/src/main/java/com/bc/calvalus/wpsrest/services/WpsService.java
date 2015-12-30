@@ -39,12 +39,12 @@ public class WpsService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private AbstractWpsService wpsService;
+    private WpsServiceProvider wpsServiceProvider;
 
     public WpsService(@PathParam("application") String applicationName, @Context HttpServletRequest servletRequest) {
         ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
         WpsServiceFactory wpsServiceFactory = new WpsServiceFactory(servletRequestWrapper);
-        wpsService = wpsServiceFactory.getWpsService(applicationName);
+        wpsServiceProvider = wpsServiceFactory.getWpsService(applicationName);
     }
 
     @GET
@@ -64,19 +64,19 @@ public class WpsService {
 
         switch (requestType) {
         case "GetCapabilities":
-            return wpsService.getCapabilities();
+            return wpsServiceProvider.getCapabilities();
         case "DescribeProcess":
             String describeProcessExceptionXml = performDescribeProcessParameterValidation(processId, version);
             if (StringUtils.isNotBlank(describeProcessExceptionXml)) {
                 return describeProcessExceptionXml;
             }
-            return wpsService.describeProcess(processId, version);
+            return wpsServiceProvider.describeProcess(processId);
         case "GetStatus":
             if (StringUtils.isBlank(jobId)) {
                 StringWriter stringWriter = getMissingParameterXmlWriter("JobId");
                 return stringWriter.toString();
             }
-            return wpsService.getStatus(jobId);
+            return wpsServiceProvider.getStatus(jobId);
         default:
             StringWriter stringWriter = getInvalidParameterXmlWriter("Request");
             return stringWriter.toString();
@@ -96,7 +96,7 @@ public class WpsService {
 
         String processorId = execute.getIdentifier().getValue();
 
-        return wpsService.doExecute(execute, processorId);
+        return wpsServiceProvider.doExecute(execute, processorId);
     }
 
     private String performDescribeProcessParameterValidation(String processorId, String version) {

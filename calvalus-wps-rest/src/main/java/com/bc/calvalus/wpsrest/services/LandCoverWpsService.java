@@ -1,17 +1,15 @@
 package com.bc.calvalus.wpsrest.services;
 
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
-
-import java.io.StringWriter;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 /**
  * @author hans
  */
-public class LandCoverWpsService extends AbstractWpsService {
+public class LandCoverWpsService extends WpsServiceProvider {
 
-    public LandCoverWpsService(ServletRequestWrapper servletRequestWrapper) {
-        super(servletRequestWrapper);
+    public LandCoverWpsService(WpsMetadata wpsMetadata) {
+        super(wpsMetadata);
     }
 
     @Override
@@ -20,7 +18,7 @@ public class LandCoverWpsService extends AbstractWpsService {
     }
 
     @Override
-    public String describeProcess(String processorId, String version) {
+    public String describeProcess(String processorId) {
         return null;
     }
 

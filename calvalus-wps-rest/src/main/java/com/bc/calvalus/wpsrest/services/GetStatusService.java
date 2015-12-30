@@ -7,18 +7,13 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteFailedResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteStartedResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteSuccessfulResponse;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.io.IOException;
@@ -37,11 +32,11 @@ public class GetStatusService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public String getStatus(ServletRequestWrapper servletRequestWrapper, @PathParam("productionId") String productionId) {
+    public String getStatus(WpsMetadata wpsMetadata, String productionId) {
         JaxbHelper jaxbHelper = new JaxbHelper();
         StringWriter stringWriter = new StringWriter();
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
+            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
             ProductionService productionService = calvalusHelper.getProductionService();
             Production production = productionService.getProduction(productionId);
 
@@ -62,7 +57,7 @@ public class GetStatusService {
             return stringWriter.toString();
 
         } catch (ProductionException | IOException | DatatypeConfigurationException | JAXBException exception) {
-            LOG.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request." , exception);
+            LOG.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request.", exception);
             StringWriter exceptionStringWriter = new StringWriter();
             ExecuteFailedResponse executeFailedResponse = new ExecuteFailedResponse();
             try {

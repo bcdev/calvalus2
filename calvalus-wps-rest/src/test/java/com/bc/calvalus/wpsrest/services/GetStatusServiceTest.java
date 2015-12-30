@@ -12,6 +12,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.hamcrest.CoreMatchers;
 import org.junit.*;
 import org.junit.runner.*;
@@ -44,6 +45,7 @@ public class GetStatusServiceTest {
     private ProductionService mockProductionService;
     private Production mockProduction;
     private ServletRequestWrapper mockServletRequestWrapper;
+    private WpsMetadata mockWpsMetadata;
 
     @Before
     public void setUp() throws Exception {
@@ -51,6 +53,7 @@ public class GetStatusServiceTest {
         mockProductionService = mock(ProductionService.class);
         mockProduction = mock(Production.class);
         mockServletRequestWrapper = mock(ServletRequestWrapper.class);
+        mockWpsMetadata = mock(WpsMetadata.class);
 
         getStatusService = new GetStatusService();
     }
@@ -67,7 +70,7 @@ public class GetStatusServiceTest {
         when(mockCalvalusHelper.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" " +
@@ -99,7 +102,7 @@ public class GetStatusServiceTest {
     public void canReturnExecuteInProgressResponse() throws Exception {
         configureProcessRunningMockings();
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, CoreMatchers.containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                                   "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" " +
@@ -125,7 +128,7 @@ public class GetStatusServiceTest {
         when(mockCalvalusHelper.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" " +
@@ -150,7 +153,7 @@ public class GetStatusServiceTest {
     public void canCatchProductionException() throws Exception {
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenThrow(new ProductionException("production exception"));
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
@@ -171,7 +174,7 @@ public class GetStatusServiceTest {
     public void canCatchIOException() throws Exception {
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("IO exception"));
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
@@ -197,7 +200,7 @@ public class GetStatusServiceTest {
 
         configureProcessRunningMockings();
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
@@ -221,7 +224,7 @@ public class GetStatusServiceTest {
 
         configureProcessRunningMockings();
 
-        String getStatusResponse = getStatusService.getStatus(mockServletRequestWrapper, JOB_ID);
+        String getStatusResponse = getStatusService.getStatus(mockWpsMetadata, JOB_ID);
 
         assertThat(getStatusResponse, containsString("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                      "<ExecuteResponse service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
