@@ -10,7 +10,7 @@ import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponse;
 import com.bc.calvalus.wpsrest.responses.CalvalusGetCapabilitiesResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class GetCapabilitiesService {
         try {
             CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
 
-            List<WpsProcess> processors = calvalusHelper.getProcessors();
+            List<IWpsProcess> processors = calvalusHelper.getProcessors();
 
             AbstractGetCapabilitiesResponse getCapabilitiesResponse = new CalvalusGetCapabilitiesResponse();
             Capabilities capabilities = getCapabilitiesResponse.createGetCapabilitiesResponse(processors);

@@ -6,6 +6,8 @@ import static com.bc.calvalus.wpsrest.WpsConstants.WPS_L3_PARAMETERS_SCHEMA_LOCA
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationsType;
@@ -19,34 +21,25 @@ import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptionType.ProcessOutputs;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.jaxb.SupportedComplexDataInputType;
 import com.bc.calvalus.wpsrest.jaxb.SupportedComplexDataType;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author hans
  */
-public class DescribeProcessResponse {
+public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResponse {
 
-    public ProcessDescriptions getMultipleDescribeProcessResponse(List<WpsProcess> processors, ProductSet[] productSets) throws ProductionException {
-        ProcessDescriptions processDescriptions = createDefaultProcessDescriptions();
-        for (WpsProcess processor : processors) {
-            ProcessDescriptionType processDescription = getSingleProcessDescription(processor, productSets);
-            processDescriptions.getProcessDescription().add(processDescription);
-        }
-        return processDescriptions;
+    public CalvalusDescribeProcessResponse(WpsMetadata wpsMetadata) {
+        super(wpsMetadata);
     }
 
-    public ProcessDescriptions getSingleDescribeProcessResponse(Processor processor, ProductSet[] productSets) throws ProductionException {
-        ProcessDescriptions processDescriptions = createDefaultProcessDescriptions();
-        ProcessDescriptionType processDescription = getSingleProcessDescription(processor, productSets);
-        processDescriptions.getProcessDescription().add(processDescription);
-        return processDescriptions;
-    }
-
-    private ProcessDescriptions createDefaultProcessDescriptions() {
+    @Override
+    public ProcessDescriptions createBasicProcessDescriptions() {
         ProcessDescriptions processDescriptions = new ProcessDescriptions();
         processDescriptions.setService("WPS");
         processDescriptions.setVersion("1.0.0");
@@ -54,7 +47,10 @@ public class DescribeProcessResponse {
         return processDescriptions;
     }
 
-    private ProcessDescriptionType getSingleProcessDescription(WpsProcess processor, ProductSet[] productSets) throws ProductionException {
+    @Override
+    public ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata) {
+        ProductSet[] productSets = getProductSets(wpsMetadata);
+        Processor processor = (Processor) process;
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
 
         processDescription.setStoreSupported(true);
@@ -100,7 +96,16 @@ public class DescribeProcessResponse {
         return processDescription;
     }
 
-    private DataInputs getDataInputs(WpsProcess processor, ProductSet[] productSets) throws ProductionException {
+    private ProductSet[] getProductSets(WpsMetadata wpsMetadata) {
+        try {
+            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
+            return calvalusHelper.getProductSets();
+        } catch (IOException | ProductionException exception) {
+            throw new WpsException("Unable to instanciate CalvalusHelper.", exception);
+        }
+    }
+
+    private DataInputs getDataInputs(Processor processor, ProductSet[] productSets) {
         DataInputs dataInputs = new DataInputs();
         ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
 

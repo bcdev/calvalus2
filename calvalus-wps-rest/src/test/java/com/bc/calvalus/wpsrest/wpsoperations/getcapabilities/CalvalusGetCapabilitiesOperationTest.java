@@ -12,7 +12,7 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.junit.*;
 import org.junit.runner.*;
@@ -36,7 +36,7 @@ import java.util.logging.Logger;
 @PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusHelper.class, CalvalusLogger.class})
 public class CalvalusGetCapabilitiesOperationTest {
 
-    private GetCapabilitiesOperation getCapabilitiesOperation;
+    private AbstractGetCapabilitiesOperation getCapabilitiesOperation;
 
     private ServletRequestWrapper mockServletRequestWrapper;
     private WpsMetadata mockWpsMetadata;
@@ -52,7 +52,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test
     public void canGetCapabilities() throws Exception {
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -176,7 +176,7 @@ public class CalvalusGetCapabilitiesOperationTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception")).thenCallRealMethod();
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -197,7 +197,7 @@ public class CalvalusGetCapabilitiesOperationTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception"));
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -212,8 +212,8 @@ public class CalvalusGetCapabilitiesOperationTest {
                                      "</ExceptionReport>\n"));
     }
 
-    private List<WpsProcess> getMockProcessors() {
-        List<WpsProcess> mockProcessorList = new ArrayList<>();
+    private List<IWpsProcess> getMockProcessors() {
+        List<IWpsProcess> mockProcessorList = new ArrayList<>();
         Processor mockProcessor = mock(Processor.class);
         when(mockProcessor.getIdentifier()).thenReturn("beam-idepix~2.0.9~Idepix.Water");
         when(mockProcessor.getTitle()).thenReturn("Idepix (Water Pixel Classification)");

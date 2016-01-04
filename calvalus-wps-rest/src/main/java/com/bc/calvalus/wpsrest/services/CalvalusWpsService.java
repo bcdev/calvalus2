@@ -1,11 +1,11 @@
 package com.bc.calvalus.wpsrest.services;
 
-import static org.powermock.api.mockito.PowerMockito.mock;
-
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
+import com.bc.calvalus.wpsrest.wpsoperations.describeprocess.AbstractDescribeProcessOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.describeprocess.CalvalusDescribeProcessOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.AbstractGetCapabilitiesOperation;
 import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.CalvalusGetCapabilitiesOperation;
-import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.GetCapabilitiesOperation;
 
 /**
  * @author hans
@@ -18,13 +18,13 @@ public class CalvalusWpsService extends WpsServiceProvider {
 
     @Override
     public String getCapabilities() {
-        GetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsMetadata);
+        AbstractGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsMetadata);
         return getCapabilitiesOperation.getCapabilities();
     }
 
     @Override
     public String describeProcess(String processorId) {
-        DescribeProcessService describeProcessService = new DescribeProcessService();
+        AbstractDescribeProcessOperation describeProcessService = new CalvalusDescribeProcessOperation();
         return describeProcessService.describeProcess(wpsMetadata, processorId);
     }
 

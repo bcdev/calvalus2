@@ -1,6 +1,5 @@
 package com.bc.calvalus.wpsrest.responses;
 
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.Languages;
 import com.bc.calvalus.wpsrest.jaxb.OperationsMetadata;
@@ -15,7 +14,7 @@ import java.util.List;
  */
 public abstract class AbstractGetCapabilitiesResponse {
 
-    public Capabilities createGetCapabilitiesResponse(List<WpsProcess> processList) {
+    public Capabilities createGetCapabilitiesResponse(List<IWpsProcess> processList) {
         OperationsMetadata operationsMetadata = getOperationsMetadata();
         ServiceIdentification serviceIdentification = getServiceIdentification();
         ServiceProvider serviceProvider = getServiceProvider();
@@ -35,7 +34,7 @@ public abstract class AbstractGetCapabilitiesResponse {
 
     public abstract ServiceProvider getServiceProvider();
 
-    public abstract ProcessOfferings getProcessOfferings(List<WpsProcess> processList);
+    public abstract ProcessOfferings getProcessOfferings(List<IWpsProcess> processList);
 
     public abstract ServiceIdentification getServiceIdentification();
 

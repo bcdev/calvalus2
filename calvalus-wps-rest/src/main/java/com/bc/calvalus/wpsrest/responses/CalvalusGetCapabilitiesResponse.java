@@ -21,9 +21,7 @@ import static com.bc.calvalus.wpsrest.WpsConstants.WPS_SERVICE_TYPE;
 import static com.bc.calvalus.wpsrest.WpsConstants.WPS_SUPPORTED_LANG;
 import static com.bc.calvalus.wpsrest.WpsConstants.WPS_VERSION;
 
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.jaxb.AddressType;
-import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ContactType;
 import com.bc.calvalus.wpsrest.jaxb.LanguageStringType;
@@ -111,9 +109,9 @@ public class CalvalusGetCapabilitiesResponse extends AbstractGetCapabilitiesResp
         return serviceProvider;
     }
 
-    public ProcessOfferings getProcessOfferings(List<WpsProcess> processList) {
+    public ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
         ProcessOfferings processOfferings = new ProcessOfferings();
-        for (WpsProcess process : processList) {
+        for (IWpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
 
             CodeType identifier = new CodeType();

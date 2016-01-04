@@ -10,7 +10,7 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import org.junit.*;
 import org.junit.runner.*;
 import org.powermock.api.mockito.PowerMockito;
@@ -40,7 +40,7 @@ public class GetCapabilitiesServiceTest {
 
     @Test
     public void testGetCapabilities() throws Exception {
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -146,7 +146,7 @@ public class GetCapabilitiesServiceTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception")).thenCallRealMethod();
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -168,7 +168,7 @@ public class GetCapabilitiesServiceTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception"));
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
-        List<WpsProcess> mockProcessorList = getMockProcessors();
+        List<IWpsProcess> mockProcessorList = getMockProcessors();
         CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
         when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
         PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
@@ -185,8 +185,8 @@ public class GetCapabilitiesServiceTest {
     }
 
 
-    private List<WpsProcess> getMockProcessors() {
-        List<WpsProcess> mockProcessorList = new ArrayList<>();
+    private List<IWpsProcess> getMockProcessors() {
+        List<IWpsProcess> mockProcessorList = new ArrayList<>();
         Processor mockProcessor = mock(Processor.class);
         when(mockProcessor.getIdentifier()).thenReturn("beam-idepix~2.0.9~Idepix.Water");
         when(mockProcessor.getTitle()).thenReturn("Idepix (Water Pixel Classification)");

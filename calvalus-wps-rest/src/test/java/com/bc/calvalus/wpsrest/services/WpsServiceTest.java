@@ -8,7 +8,9 @@ import static org.mockito.Mockito.*;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.exception.InvalidRequestException;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
+import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponse;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
+import com.bc.calvalus.wpsrest.wpsoperations.describeprocess.CalvalusDescribeProcessOperation;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
@@ -25,7 +27,7 @@ import java.util.Locale;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
-            CalvalusWpsService.class, GetCapabilitiesService.class, DescribeProcessService.class,
+            CalvalusWpsService.class, GetCapabilitiesService.class, CalvalusDescribeProcessOperation.class,
             WpsServiceFactory.class, WpsService.class, ServletRequestWrapper.class
 })
 public class WpsServiceTest {
@@ -70,15 +72,6 @@ public class WpsServiceTest {
                                         "        <ExceptionText>Invalid value of parameter 'invalidService'</ExceptionText>\n" +
                                         "    </Exception>\n" +
                                         "</ExceptionReport>\n"));
-    }
-
-    @Test
-    public void canDescribeProcessWithValidRequest() throws Exception {
-        getMockDescribeProcessService("validDescribeProcessXmlResponse");
-
-        String wpsResponse = wpsService.getWpsService("WPS", "DescribeProcess", "", "", "bundle~name~version", "1.0.0", "");
-
-        assertThat(wpsResponse, equalTo("validDescribeProcessXmlResponse"));
     }
 
     @Test

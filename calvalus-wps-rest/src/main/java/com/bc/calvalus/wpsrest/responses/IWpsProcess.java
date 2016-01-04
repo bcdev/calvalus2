@@ -5,7 +5,7 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 /**
  * @author hans
  */
-public interface WpsProcess {
+public interface IWpsProcess {
 
     String getIdentifier();
 
@@ -15,9 +15,4 @@ public interface WpsProcess {
 
     String getVersion();
 
-    ParameterDescriptor[] getParameterDescriptors();
-
-    String getDefaultParameters();
-
-    String[] getInputProductTypes();
 }

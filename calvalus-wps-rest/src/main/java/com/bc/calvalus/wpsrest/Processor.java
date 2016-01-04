@@ -4,12 +4,12 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 
 /**
  * @author hans
  */
-public class Processor implements WpsProcess {
+public class Processor implements IWpsProcess {
 
     public static final String DELIMITER = "~";
 

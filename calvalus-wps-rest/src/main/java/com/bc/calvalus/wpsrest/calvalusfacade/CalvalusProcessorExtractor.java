@@ -1,14 +1,13 @@
 package com.bc.calvalus.wpsrest.calvalusfacade;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -29,10 +28,10 @@ public class CalvalusProcessorExtractor {
         this.userName = userName;
     }
 
-    protected List<WpsProcess> getProcessors() throws IOException, ProductionException {
+    protected List<IWpsProcess> getProcessors() throws IOException, ProductionException {
         BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
 
-        List<WpsProcess> processors = new ArrayList<>();
+        List<IWpsProcess> processors = new ArrayList<>();
         for (BundleDescriptor bundle : bundleDescriptor) {
             if (bundle.getProcessorDescriptors() == null) {
                 continue;

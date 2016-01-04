@@ -7,7 +7,7 @@ import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponse;
 import com.bc.calvalus.wpsrest.responses.CalvalusGetCapabilitiesResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
-import com.bc.calvalus.wpsrest.responses.WpsProcess;
+import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
@@ -19,13 +19,13 @@ import java.util.logging.Logger;
 /**
  * @author hans
  */
-public abstract class GetCapabilitiesOperation {
+public abstract class AbstractGetCapabilitiesOperation {
 
     private Logger logger = getLogger();
 
     protected WpsMetadata wpsMetadata;
 
-    public GetCapabilitiesOperation(WpsMetadata wpsMetadata) {
+    public AbstractGetCapabilitiesOperation(WpsMetadata wpsMetadata) {
         this.wpsMetadata = wpsMetadata;
     }
 
@@ -33,7 +33,7 @@ public abstract class GetCapabilitiesOperation {
         StringWriter writer = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
         try {
-            List<WpsProcess> processes = getProcesses();
+            List<IWpsProcess> processes = getProcesses();
 
             AbstractGetCapabilitiesResponse getCapabilitiesResponse = new CalvalusGetCapabilitiesResponse();
             Capabilities capabilities = getCapabilitiesResponse.createGetCapabilitiesResponse(processes);
@@ -42,8 +42,7 @@ public abstract class GetCapabilitiesOperation {
             return writer.toString();
         } catch (WpsException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request.", exception);
-            ExceptionResponse exceptionResponse = new ExceptionResponse();
-            ExceptionReport exceptionReport = exceptionResponse.getGeneralExceptionResponse(exception);
+            ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
                 jaxbHelper.marshal(exceptionReport, writer);
             } catch (JAXBException jaxbException) {
@@ -54,7 +53,16 @@ public abstract class GetCapabilitiesOperation {
         }
     }
 
-    private String getWpsJaxbExceptionResponse() {
+    public abstract Logger getLogger();
+
+    public abstract List<IWpsProcess> getProcesses();
+
+    public ExceptionReport getExceptionReport(Exception exception) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        return exceptionResponse.getGeneralExceptionResponse(exception);
+    }
+
+    public String getWpsJaxbExceptionResponse() {
         return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
                "    <Exception exceptionCode=\"NoApplicableCode\">\n" +
@@ -62,9 +70,5 @@ public abstract class GetCapabilitiesOperation {
                "    </Exception>\n" +
                "</ExceptionReport>\n";
     }
-
-    public abstract Logger getLogger();
-
-    public abstract List<WpsProcess> getProcesses();
 
 }
