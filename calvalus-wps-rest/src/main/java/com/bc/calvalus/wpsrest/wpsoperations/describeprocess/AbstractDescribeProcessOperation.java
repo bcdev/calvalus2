@@ -1,15 +1,12 @@
 package com.bc.calvalus.wpsrest.wpsoperations.describeprocess;
 
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,7 +26,7 @@ public abstract class AbstractDescribeProcessOperation {
             ProcessDescriptions processDescriptions = getProcessDescriptions(wpsMetadata, processorId);
             jaxbHelper.marshal(processDescriptions, writer);
             return writer.toString();
-        } catch (ProductionException | IOException | JAXBException | ProcessorNotAvailableException exception) {
+        } catch (JAXBException exception) {
             logger.log(Level.SEVERE, "An error occurred when trying to construct a DescribeProcess response.", exception);
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
@@ -42,8 +39,7 @@ public abstract class AbstractDescribeProcessOperation {
         }
     }
 
-    public abstract ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId)
-                throws IOException, ProductionException;
+    public abstract ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId);
 
     public abstract Logger getLogger();
 
