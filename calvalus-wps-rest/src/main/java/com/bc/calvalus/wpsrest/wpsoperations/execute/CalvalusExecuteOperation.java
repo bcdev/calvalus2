@@ -14,8 +14,11 @@ import com.bc.calvalus.wpsrest.jaxb.DocumentOutputDefinitionType;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.jaxb.ResponseDocumentType;
+import com.bc.calvalus.wpsrest.responses.AbstractExecuteResponse;
+import com.bc.calvalus.wpsrest.responses.CalvalusExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteAcceptedResponse;
 import com.bc.calvalus.wpsrest.responses.ExecuteSuccessfulResponse;
+import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -28,18 +31,21 @@ import java.util.logging.Logger;
  */
 public class CalvalusExecuteOperation extends AbstractExecuteOperation {
 
-    public List<String> processSync(Execute executeRequest, String processorId, ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException, JAXBException, InterruptedException {
+    @Override
+    public List<String> processSync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata)
+            throws IOException, ProductionException, JAXBException, InterruptedException {
+        ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
         CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
         ProcessorNameParser parser = new ProcessorNameParser(processorId);
         Processor processor = calvalusHelper.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, processor,
-                                                                       calvalusHelper.getProductSets());
+                calvalusHelper.getProductSets());
 
         ProductionRequest request = new ProductionRequest(calvalusDataInputs.getValue("productionType"),
-                                                          servletRequestWrapper.getUserName(),
-                                                          calvalusDataInputs.getInputMapFormatted());
+                servletRequestWrapper.getUserName(),
+                calvalusDataInputs.getInputMapFormatted());
 
         Production production = calvalusHelper.orderProductionSynchronous(request);
         calvalusHelper.stageProduction(production);
@@ -47,18 +53,21 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
         return calvalusHelper.getProductResultUrls(production);
     }
 
-    public String processAsync(Execute executeRequest, String processorId, ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException, JAXBException {
+    @Override
+    public String processAsync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata)
+            throws IOException, ProductionException, JAXBException {
+        ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
         CalvalusHelper calvalusHelper = new CalvalusHelper(servletRequestWrapper);
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
         ProcessorNameParser parser = new ProcessorNameParser(processorId);
         Processor processor = calvalusHelper.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, processor,
-                                                                       calvalusHelper.getProductSets());
+                calvalusHelper.getProductSets());
 
         ProductionRequest request = new ProductionRequest(calvalusDataInputs.getValue("productionType"),
-                                                          servletRequestWrapper.getUserName(),
-                                                          calvalusDataInputs.getInputMapFormatted());
+                servletRequestWrapper.getUserName(),
+                calvalusDataInputs.getInputMapFormatted());
 
         Production production = calvalusHelper.orderProductionAsynchronous(request);
 
@@ -66,29 +75,31 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
     }
 
     @Override
-    public ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, ServletRequestWrapper servletRequestWrapper,
+    public ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, WpsMetadata wpsMetadata,
                                                       ResponseDocumentType responseDocumentType, String productionId)
-                throws DatatypeConfigurationException {
+            throws DatatypeConfigurationException {
         if (responseDocumentType.isLineage()) {
-            ExecuteAcceptedResponse executeAcceptedResponse = new ExecuteAcceptedResponse();
+            AbstractExecuteResponse executeAcceptedResponse = new CalvalusExecuteResponse();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
-            return executeAcceptedResponse.getExecuteResponseWithLineage(productionId, executeRequest.getDataInputs(),
-                                                                                    outputType, servletRequestWrapper);
+            return executeAcceptedResponse.getAcceptedWithLineageResponse(productionId, executeRequest.getDataInputs(),
+                    outputType, wpsMetadata);
         } else {
-            ExecuteAcceptedResponse executeAcceptedResponse = new ExecuteAcceptedResponse();
-            return executeAcceptedResponse.getExecuteResponse(productionId, servletRequestWrapper);
+            AbstractExecuteResponse executeAcceptedResponse = new CalvalusExecuteResponse();
+            return executeAcceptedResponse.getAcceptedResponse(productionId, wpsMetadata);
         }
     }
 
     @Override
-    public ExecuteResponse createSyncExecuteResponse(Execute executeRequest, ResponseDocumentType responseDocumentType, List<String> productResultUrls) throws DatatypeConfigurationException {
+    public ExecuteResponse createSyncExecuteResponse(Execute executeRequest, ResponseDocumentType responseDocumentType,
+                                                     List<String> productResultUrls)
+            throws DatatypeConfigurationException {
         if (responseDocumentType.isLineage()) {
-            ExecuteSuccessfulResponse executeSuccessfulResponse = new ExecuteSuccessfulResponse();
+            AbstractExecuteResponse executeSuccessfulResponse = new CalvalusExecuteResponse();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
-            return executeSuccessfulResponse.getExecuteResponseWithLineage(productResultUrls, executeRequest.getDataInputs(), outputType);
+            return executeSuccessfulResponse.getSuccessfulWithLineageResponse(productResultUrls, executeRequest.getDataInputs(), outputType);
         } else {
-            ExecuteSuccessfulResponse executeSuccessfulResponse = new ExecuteSuccessfulResponse();
-            return executeSuccessfulResponse.getExecuteResponse(productResultUrls);
+            AbstractExecuteResponse executeSuccessfulResponse = new CalvalusExecuteResponse();
+            return executeSuccessfulResponse.getSuccessfulResponse(productResultUrls);
         }
     }
 

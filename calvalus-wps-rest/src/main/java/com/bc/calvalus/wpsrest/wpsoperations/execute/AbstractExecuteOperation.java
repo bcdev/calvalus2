@@ -29,17 +29,16 @@ public abstract class AbstractExecuteOperation {
     public String execute(Execute executeRequest, WpsMetadata wpsMetadata, String processId) {
         StringWriter stringWriter = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
-        ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
         try {
             ResponseFormType responseFormType = executeRequest.getResponseForm();
             ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
             if (responseDocumentType.isStatus()) {
-                String jobId = processAsync(executeRequest, processId, servletRequestWrapper);
-                ExecuteResponse executeResponse = createAsyncExecuteResponse(executeRequest, servletRequestWrapper, responseDocumentType, jobId);
+                String jobId = processAsync(executeRequest, processId, wpsMetadata);
+                ExecuteResponse executeResponse = createAsyncExecuteResponse(executeRequest, wpsMetadata, responseDocumentType, jobId);
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             } else {
-                List<String> results = processSync(executeRequest, processId, servletRequestWrapper);
+                List<String> results = processSync(executeRequest, processId, wpsMetadata);
                 ExecuteResponse executeResponse = createSyncExecuteResponse(executeRequest, responseDocumentType, results);
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
@@ -66,18 +65,19 @@ public abstract class AbstractExecuteOperation {
         }
     }
 
-    public abstract List<String> processSync(Execute executeRequest, String processorId, ServletRequestWrapper servletRequestWrapper)
-                throws IOException, ProductionException, JAXBException, InterruptedException;
+    public abstract List<String> processSync(Execute executeRequest, String processId, WpsMetadata wpsMetadata)
+            throws IOException, ProductionException, JAXBException, InterruptedException;
 
-    public abstract String processAsync(Execute executeRequest, String processorId, ServletRequestWrapper servletRequestWrapper)
-                throws IOException, ProductionException, JAXBException;
+    public abstract String processAsync(Execute executeRequest, String processId, WpsMetadata wpsMetadata)
+            throws IOException, ProductionException, JAXBException;
 
-    public abstract ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, ServletRequestWrapper servletRequestWrapper,
-                                                               ResponseDocumentType responseDocumentType, String productionId)
-                throws DatatypeConfigurationException;
+    public abstract ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, WpsMetadata wpsMetadata,
+                                                               ResponseDocumentType responseDocumentType, String jobId)
+            throws DatatypeConfigurationException;
 
     public abstract ExecuteResponse createSyncExecuteResponse(Execute executeRequest, ResponseDocumentType responseDocumentType,
-                                                              List<String> productResultUrls) throws DatatypeConfigurationException;
+                                                              List<String> productResultUrls)
+            throws DatatypeConfigurationException;
 
     public abstract Logger getLogger();
 
