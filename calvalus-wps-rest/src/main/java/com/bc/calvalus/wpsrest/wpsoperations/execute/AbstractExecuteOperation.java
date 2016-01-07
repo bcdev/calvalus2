@@ -1,9 +1,7 @@
 package com.bc.calvalus.wpsrest.wpsoperations.execute;
 
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.exception.WpsMissingParameterValueException;
+import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.jaxb.ResponseDocumentType;
@@ -12,8 +10,6 @@ import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
-import javax.xml.datatype.DatatypeConfigurationException;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.logging.Level;
@@ -32,53 +28,57 @@ public abstract class AbstractExecuteOperation {
         try {
             ResponseFormType responseFormType = executeRequest.getResponseForm();
             ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
-            if (responseDocumentType.isStatus()) {
+            boolean isAsynchronous = responseDocumentType.isStatus();
+            boolean isLineage = responseDocumentType.isLineage();
+
+            if (isAsynchronous) {
                 String jobId = processAsync(executeRequest, processId, wpsMetadata);
-                ExecuteResponse executeResponse = createAsyncExecuteResponse(executeRequest, wpsMetadata, responseDocumentType, jobId);
+                ExecuteResponse executeResponse = createAsyncExecuteResponse(executeRequest, wpsMetadata, isLineage, jobId);
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             } else {
                 List<String> results = processSync(executeRequest, processId, wpsMetadata);
-                ExecuteResponse executeResponse = createSyncExecuteResponse(executeRequest, responseDocumentType, results);
+                ExecuteResponse executeResponse = createSyncExecuteResponse(executeRequest, isLineage, results);
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             }
-
-        } catch (WpsMissingParameterValueException exception) {
-            logger.log(Level.SEVERE, "A WpsMissingParameterValueException has been caught.", exception);
-            ExceptionResponse exceptionResponse = new ExceptionResponse();
-            try {
-                jaxbHelper.marshal(exceptionResponse.getMissingParameterExceptionResponse(exception, ""), stringWriter);
-            } catch (JAXBException jaxbException) {
-                logger.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
-            }
-            return stringWriter.toString();
-        } catch (InterruptedException | IOException | JAXBException | DatatypeConfigurationException | ProductionException exception) {
+        } catch (JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to process an Execute request.", exception);
-            ExceptionResponse exceptionResponse = new ExceptionResponse();
+            ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
-                jaxbHelper.marshal(exceptionResponse.getGeneralExceptionResponse(exception), stringWriter);
+                jaxbHelper.marshal(exceptionReport, stringWriter);
+                return stringWriter.toString();
             } catch (JAXBException jaxbException) {
                 logger.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
+                return getWpsJaxbExceptionResponse();
             }
-            return stringWriter.toString();
         }
     }
 
-    public abstract List<String> processSync(Execute executeRequest, String processId, WpsMetadata wpsMetadata)
-            throws IOException, ProductionException, JAXBException, InterruptedException;
+    public abstract List<String> processSync(Execute executeRequest, String processId, WpsMetadata wpsMetadata);
 
-    public abstract String processAsync(Execute executeRequest, String processId, WpsMetadata wpsMetadata)
-            throws IOException, ProductionException, JAXBException;
+    public abstract String processAsync(Execute executeRequest, String processId, WpsMetadata wpsMetadata);
 
     public abstract ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, WpsMetadata wpsMetadata,
-                                                               ResponseDocumentType responseDocumentType, String jobId)
-            throws DatatypeConfigurationException;
+                                                               boolean isLineage, String jobId);
 
-    public abstract ExecuteResponse createSyncExecuteResponse(Execute executeRequest, ResponseDocumentType responseDocumentType,
-                                                              List<String> productResultUrls)
-            throws DatatypeConfigurationException;
+    public abstract ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage,
+                                                              List<String> productResultUrls);
 
     public abstract Logger getLogger();
+
+    public ExceptionReport getExceptionReport(Exception exception) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse();
+        return exceptionResponse.getGeneralExceptionResponse(exception);
+    }
+
+    public String getWpsJaxbExceptionResponse() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+               "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
+               "    <Exception exceptionCode=\"NoApplicableCode\">\n" +
+               "        <ExceptionText>Unable to generate the exception XML : JAXB Exception.</ExceptionText>\n" +
+               "    </Exception>\n" +
+               "</ExceptionReport>\n";
+    }
 
 }

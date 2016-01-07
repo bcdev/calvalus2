@@ -32,7 +32,7 @@ public class ExecuteRequestExtractor {
 
     private final Map<String, String> inputParametersMapRaw;
 
-    public ExecuteRequestExtractor(Execute execute) throws JAXBException, WpsMissingParameterValueException {
+    public ExecuteRequestExtractor(Execute execute) throws JAXBException {
         inputParametersMapRaw = new HashMap<>();
         extractInputParameters(execute);
     }
@@ -45,7 +45,7 @@ public class ExecuteRequestExtractor {
         return inputParametersMapRaw.get(parameterName);
     }
 
-    private void extractInputParameters(Execute execute) throws JAXBException, WpsMissingParameterValueException {
+    private void extractInputParameters(Execute execute) throws JAXBException {
         DataInputsType dataInputs = execute.getDataInputs();
         for (InputType dataInput : dataInputs.getInput()) {
             if (dataInput.getIdentifier() == null) {

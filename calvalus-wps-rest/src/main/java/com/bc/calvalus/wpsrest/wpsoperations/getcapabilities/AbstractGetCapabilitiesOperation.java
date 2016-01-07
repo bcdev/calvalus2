@@ -45,11 +45,11 @@ public abstract class AbstractGetCapabilitiesOperation {
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
                 jaxbHelper.marshal(exceptionReport, writer);
+                return writer.toString();
             } catch (JAXBException jaxbException) {
                 logger.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
                 return getWpsJaxbExceptionResponse();
             }
-            return writer.toString();
         }
     }
 

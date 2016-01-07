@@ -1,6 +1,5 @@
 package com.bc.calvalus.wpsrest.responses;
 
-import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.jaxb.DataInputsType;
 import com.bc.calvalus.wpsrest.jaxb.DocumentOutputDefinitionType;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;

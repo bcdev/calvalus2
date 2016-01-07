@@ -57,7 +57,7 @@ public class CalvalusExecuteResponse extends AbstractExecuteResponse {
     }
 
     @Override
-    public ExecuteResponse getSuccessfulResponse(List<String> resultsUrls) {
+    public ExecuteResponse getSuccessfulResponse(List<String> resultUrls) {
         StatusType statusType = new StatusType();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
         statusType.setCreationTime(currentTime);
@@ -66,13 +66,13 @@ public class CalvalusExecuteResponse extends AbstractExecuteResponse {
 
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
-        for (String productionResultsUrl : resultsUrls) {
+        for (String productionResultUrl : resultUrls) {
             OutputDataType url = new OutputDataType();
             CodeType outputId = new CodeType();
             outputId.setValue("productionResults");
             url.setIdentifier(outputId);
             OutputReferenceType urlLink = new OutputReferenceType();
-            urlLink.setHref(productionResultsUrl);
+            urlLink.setHref(productionResultUrl);
             urlLink.setMimeType("binary");
             url.setReference(urlLink);
 
@@ -84,7 +84,7 @@ public class CalvalusExecuteResponse extends AbstractExecuteResponse {
     }
 
     @Override
-    public ExecuteResponse getSuccessfulWithLineageResponse(List<String> resultsUrls,
+    public ExecuteResponse getSuccessfulWithLineageResponse(List<String> resultUrls,
                                                             DataInputsType dataInputs,
                                                             List<DocumentOutputDefinitionType> outputType) {
         StatusType statusType = new StatusType();
@@ -95,13 +95,13 @@ public class CalvalusExecuteResponse extends AbstractExecuteResponse {
 
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
-        for (String productionResultsUrl : resultsUrls) {
+        for (String productionResultUrl : resultUrls) {
             OutputDataType url = new OutputDataType();
             CodeType outputId = new CodeType();
             outputId.setValue("productionResults");
             url.setIdentifier(outputId);
             OutputReferenceType urlLink = new OutputReferenceType();
-            urlLink.setHref(productionResultsUrl);
+            urlLink.setHref(productionResultUrl);
             urlLink.setMimeType("binary");
             url.setReference(urlLink);
 

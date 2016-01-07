@@ -4,6 +4,7 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
+import com.bc.calvalus.wpsrest.wpsoperations.AbstractOperation;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
@@ -14,7 +15,7 @@ import java.util.logging.Logger;
 /**
  * @author hans
  */
-public abstract class AbstractDescribeProcessOperation {
+public abstract class AbstractDescribeProcessOperation extends AbstractOperation {
 
     private Logger logger = getLogger();
 
@@ -31,11 +32,11 @@ public abstract class AbstractDescribeProcessOperation {
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
                 jaxbHelper.marshal(exceptionReport, writer);
+                return writer.toString();
             } catch (JAXBException jaxbException) {
                 logger.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
                 return getWpsJaxbExceptionResponse();
             }
-            return writer.toString();
         }
     }
 

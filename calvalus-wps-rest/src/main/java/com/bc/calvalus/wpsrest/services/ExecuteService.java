@@ -81,15 +81,6 @@ public class ExecuteService {
                 return stringWriter.toString();
             }
 
-        } catch (WpsMissingParameterValueException exception) {
-            LOG.log(Level.SEVERE, "A WpsMissingParameterValueException has been caught.", exception);
-            ExceptionResponse exceptionResponse = new ExceptionResponse();
-            try {
-                jaxbHelper.marshal(exceptionResponse.getMissingParameterExceptionResponse(exception, ""), stringWriter);
-            } catch (JAXBException jaxbException) {
-                LOG.log(Level.SEVERE, "Unable to marshal the WPS exception.", jaxbException);
-            }
-            return stringWriter.toString();
         } catch (InterruptedException | IOException | JAXBException | DatatypeConfigurationException | ProductionException exception) {
             LOG.log(Level.SEVERE, "Unable to process an Execute request.", exception);
             ExceptionResponse exceptionResponse = new ExceptionResponse();
