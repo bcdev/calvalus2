@@ -22,7 +22,17 @@ public abstract class AbstractExecuteOperation {
 
     private Logger logger = getLogger();
 
-    public String execute(Execute executeRequest, WpsMetadata wpsMetadata, String processId) {
+    protected Execute executeRequest;
+    protected WpsMetadata wpsMetadata;
+    protected String processId;
+
+    public AbstractExecuteOperation(Execute executeRequest, WpsMetadata wpsMetadata, String processId) {
+        this.executeRequest = executeRequest;
+        this.wpsMetadata = wpsMetadata;
+        this.processId = processId;
+    }
+
+    public String execute() {
         StringWriter stringWriter = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
         try {

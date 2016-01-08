@@ -4,7 +4,7 @@ import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Created by hans on 14/08/2015.
+ * @author hans
  */
 public class ProcessorNameParser {
 
@@ -30,7 +30,7 @@ public class ProcessorNameParser {
 
     private void parse(String processorIdentifier) {
         if (!StringUtils.isBlank(processorIdentifier)) {
-            String parsedString[] = processorIdentifier.split(Processor.DELIMITER);
+            String parsedString[] = processorIdentifier.split(CalvalusProcessor.DELIMITER);
             if (parsedString.length < 3) {
                 throw new ProcessorNotAvailableException(processorIdentifier);
             }

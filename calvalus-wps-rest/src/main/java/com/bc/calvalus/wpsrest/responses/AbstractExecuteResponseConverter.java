@@ -10,11 +10,11 @@ import java.util.List;
 /**
  * @author hans
  */
-public abstract class AbstractExecuteResponse {
+public abstract class AbstractExecuteResponseConverter {
 
     protected final ExecuteResponse executeResponse;
 
-    public AbstractExecuteResponse() {
+    public AbstractExecuteResponseConverter() {
         this.executeResponse = new ExecuteResponse();
         this.executeResponse.setService("WPS");
         this.executeResponse.setVersion("1.0.0");

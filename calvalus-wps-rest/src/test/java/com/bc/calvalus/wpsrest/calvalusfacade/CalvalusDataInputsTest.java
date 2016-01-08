@@ -6,8 +6,8 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ExecuteRequestExtractor;
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.exception.WpsInvalidParameterValueException;
 import org.junit.*;
 
@@ -22,7 +22,7 @@ import java.util.Map;
 public class CalvalusDataInputsTest {
 
     private ExecuteRequestExtractor mockExecuteRequestExtractor;
-    private Processor mockProcessor;
+    private CalvalusProcessor mockCalvalusProcessor;
     private ProductSet[] productSets;
 
     /**
@@ -33,8 +33,8 @@ public class CalvalusDataInputsTest {
     @Before
     public void setUp() throws Exception {
         mockExecuteRequestExtractor = mock(ExecuteRequestExtractor.class);
-        mockProcessor = mock(Processor.class);
-        when(mockProcessor.getInputProductTypes()).thenReturn(new String[]{"MERIS RR  r03 L1b 2002-2012"});
+        mockCalvalusProcessor = mock(CalvalusProcessor.class);
+        when(mockCalvalusProcessor.getInputProductTypes()).thenReturn(new String[]{"MERIS RR  r03 L1b 2002-2012"});
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
@@ -46,10 +46,10 @@ public class CalvalusDataInputsTest {
     public void canGetInputMapFormatted() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
-        when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
+        when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
@@ -61,10 +61,10 @@ public class CalvalusDataInputsTest {
     public void canGetProductionParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
-        when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
+        when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getValue("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
@@ -77,11 +77,11 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        when(mockProcessor.getBundleName()).thenReturn("beam-idepix");
-        when(mockProcessor.getBundleVersion()).thenReturn("2.0.9");
-        when(mockProcessor.getName()).thenReturn("Idepix.Water");
+        when(mockCalvalusProcessor.getBundleName()).thenReturn("beam-idepix");
+        when(mockCalvalusProcessor.getBundleVersion()).thenReturn("2.0.9");
+        when(mockCalvalusProcessor.getName()).thenReturn("Idepix.Water");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo("beam-idepix"));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo("2.0.9"));
@@ -93,7 +93,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo(null));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo(null));
@@ -105,7 +105,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getProductSetParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
         assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
@@ -120,9 +120,9 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getProcessorParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
-        when(mockProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
+        when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
@@ -136,9 +136,9 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getLessProcessorParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
-        when(mockProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
+        when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
@@ -149,9 +149,9 @@ public class CalvalusDataInputsTest {
     public void canGetDefaultProcessorParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultParameters()).thenReturn(getMockDefaultParameters());
+        when(mockCalvalusProcessor.getDefaultParameters()).thenReturn(getMockDefaultParameters());
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("########################\n" +
                                                                                "# POLYMER COMMAND FILE #\n" +
@@ -182,10 +182,10 @@ public class CalvalusDataInputsTest {
     public void canListAllParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
-        when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
+        when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
@@ -204,17 +204,17 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getRawMapWithoutInputDataSetName();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
     }
 
     @Test
     public void canIgnoreDefaultBeamAndCalvalusBundleVersionWhenNotProvided() throws Exception {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultCalvalusBundle()).thenReturn(null);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn(null);
+        when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn(null);
+        when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn(null);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "autoStaging : true\n" +

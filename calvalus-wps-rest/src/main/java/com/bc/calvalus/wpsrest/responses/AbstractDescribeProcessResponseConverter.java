@@ -1,6 +1,6 @@
 package com.bc.calvalus.wpsrest.responses;
 
-import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptionType;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -10,11 +10,11 @@ import java.util.List;
 /**
  * @author hans
  */
-public abstract class AbstractDescribeProcessResponse {
+public abstract class AbstractDescribeProcessResponseConverter {
 
     private WpsMetadata wpsMetadata;
 
-    public AbstractDescribeProcessResponse(WpsMetadata wpsMetadata) {
+    public AbstractDescribeProcessResponseConverter(WpsMetadata wpsMetadata) {
         this.wpsMetadata = wpsMetadata;
     }
 
@@ -27,9 +27,9 @@ public abstract class AbstractDescribeProcessResponse {
         return processDescriptions;
     }
 
-    public ProcessDescriptions getSingleDescribeProcessResponse(Processor processor) {
+    public ProcessDescriptions getSingleDescribeProcessResponse(CalvalusProcessor calvalusProcessor) {
         ProcessDescriptions processDescriptions = createBasicProcessDescriptions();
-        ProcessDescriptionType processDescription = getSingleProcessDescription(processor, wpsMetadata);
+        ProcessDescriptionType processDescription = getSingleProcessDescription(calvalusProcessor, wpsMetadata);
         processDescriptions.getProcessDescription().add(processDescription);
         return processDescriptions;
     }

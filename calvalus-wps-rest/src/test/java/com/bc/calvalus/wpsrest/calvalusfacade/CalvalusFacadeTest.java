@@ -27,10 +27,10 @@ import java.io.IOException;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
-            CalvalusHelper.class, CalvalusProduction.class,
+            CalvalusFacade.class, CalvalusProduction.class,
             CalvalusProductionService.class, CalvalusProductionService.class
 })
-public class CalvalusHelperTest {
+public class CalvalusFacadeTest {
 
     private ServletRequestWrapper mockServletRequestWrapper;
     private CalvalusProduction mockCalvalusProduction;
@@ -40,7 +40,7 @@ public class CalvalusHelperTest {
     /**
      * Class under test.
      */
-    private CalvalusHelper calvalusHelper;
+    private CalvalusFacade calvalusFacade;
 
     @Before
     public void setUp() throws Exception {
@@ -66,8 +66,8 @@ public class CalvalusHelperTest {
         ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.orderProductionAsynchronous(mockProductionRequest);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.orderProductionAsynchronous(mockProductionRequest);
 
         verify(mockCalvalusProduction).orderProductionAsynchronous(any(ProductionService.class), requestArgumentCaptor.capture(), userNameCaptor.capture());
 
@@ -81,8 +81,8 @@ public class CalvalusHelperTest {
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
         ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.orderProductionSynchronous(mockProductionRequest);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.orderProductionSynchronous(mockProductionRequest);
 
         verify(mockCalvalusProduction).orderProductionSynchronous(any(ProductionService.class), requestArgumentCaptor.capture());
 
@@ -95,8 +95,8 @@ public class CalvalusHelperTest {
         whenNew(CalvalusStaging.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusStaging);
         ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.getProductResultUrls(mockProduction);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.getProductResultUrls(mockProduction);
 
         verify(mockCalvalusStaging).getProductResultUrls(anyMapOf(String.class, String.class), productionCaptor.capture());
 
@@ -109,8 +109,8 @@ public class CalvalusHelperTest {
         whenNew(CalvalusStaging.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusStaging);
         ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.stageProduction(mockProduction);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.stageProduction(mockProduction);
 
         verify(mockCalvalusStaging).stageProduction(any(ProductionService.class), productionCaptor.capture());
 
@@ -123,8 +123,8 @@ public class CalvalusHelperTest {
         whenNew(CalvalusStaging.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusStaging);
         ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.observeStagingStatus(mockProduction);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.observeStagingStatus(mockProduction);
 
         verify(mockCalvalusStaging).observeStagingStatus(any(ProductionService.class), productionCaptor.capture());
 
@@ -135,8 +135,8 @@ public class CalvalusHelperTest {
     public void testGetProcessors() throws Exception {
         whenNew(CalvalusProcessorExtractor.class).withArguments(any(ProductionService.class), anyString()).thenReturn(mockCalvalusProcessorExtractor);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.getProcessors();
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.getProcessors();
 
         verify(mockCalvalusProcessorExtractor).getProcessors();
     }
@@ -147,8 +147,8 @@ public class CalvalusHelperTest {
         whenNew(CalvalusProcessorExtractor.class).withArguments(any(ProductionService.class), anyString()).thenReturn(mockCalvalusProcessorExtractor);
         ArgumentCaptor<ProcessorNameParser> parserCaptor = ArgumentCaptor.forClass(ProcessorNameParser.class);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.getProcessor(mockParser);
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.getProcessor(mockParser);
 
         verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture());
 
@@ -161,8 +161,8 @@ public class CalvalusHelperTest {
         ProductionService mockProductionService = mock(ProductionService.class);
         PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
 
-        calvalusHelper = new CalvalusHelper(mockServletRequestWrapper);
-        calvalusHelper.getProductSets();
+        calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
+        calvalusFacade.getProductSets();
 
         verify(mockProductionService).getProductSets(anyString(), anyString());
     }

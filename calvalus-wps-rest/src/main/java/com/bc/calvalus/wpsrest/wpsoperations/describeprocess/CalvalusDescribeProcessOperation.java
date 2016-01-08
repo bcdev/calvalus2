@@ -2,14 +2,14 @@ package com.bc.calvalus.wpsrest.wpsoperations.describeprocess;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
-import com.bc.calvalus.wpsrest.responses.AbstractDescribeProcessResponse;
-import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponse;
+import com.bc.calvalus.wpsrest.responses.AbstractDescribeProcessResponseConverter;
+import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponseConverter;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
@@ -23,37 +23,41 @@ import java.util.logging.Logger;
  */
 public class CalvalusDescribeProcessOperation extends AbstractDescribeProcessOperation {
 
+    public CalvalusDescribeProcessOperation(WpsMetadata wpsMetadata, String processorId) {
+        super(wpsMetadata, processorId);
+    }
+
     @Override
     public ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId) {
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
+            CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
 
             String[] processorIdArray = processorId.split(",");
 
             ProcessDescriptions processDescriptions;
             if (processorId.equalsIgnoreCase("all")) {
-                AbstractDescribeProcessResponse describeProcessResponse = new CalvalusDescribeProcessResponse(wpsMetadata);
-                processDescriptions = describeProcessResponse.getMultipleDescribeProcessResponse(calvalusHelper.getProcessors());
+                AbstractDescribeProcessResponseConverter describeProcessResponse = new CalvalusDescribeProcessResponseConverter(wpsMetadata);
+                processDescriptions = describeProcessResponse.getMultipleDescribeProcessResponse(calvalusFacade.getProcessors());
             } else if (processorIdArray.length > 1) {
                 List<IWpsProcess> processors = new ArrayList<>();
                 for (String singleProcessorId : processorIdArray) {
                     ProcessorNameParser parser = new ProcessorNameParser(singleProcessorId);
-                    Processor processor = calvalusHelper.getProcessor(parser);
-                    if (processor == null) {
+                    CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+                    if (calvalusProcessor == null) {
                         throw new ProcessorNotAvailableException(singleProcessorId);
                     }
-                    processors.add(processor);
+                    processors.add(calvalusProcessor);
                 }
-                AbstractDescribeProcessResponse describeProcessResponse = new CalvalusDescribeProcessResponse(wpsMetadata);
+                AbstractDescribeProcessResponseConverter describeProcessResponse = new CalvalusDescribeProcessResponseConverter(wpsMetadata);
                 processDescriptions = describeProcessResponse.getMultipleDescribeProcessResponse(processors);
             } else {
                 ProcessorNameParser parser = new ProcessorNameParser(processorId);
-                Processor processor = calvalusHelper.getProcessor(parser);
-                if (processor == null) {
+                CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+                if (calvalusProcessor == null) {
                     throw new ProcessorNotAvailableException(processorId);
                 }
-                AbstractDescribeProcessResponse describeProcessResponse = new CalvalusDescribeProcessResponse(wpsMetadata);
-                processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(processor);
+                AbstractDescribeProcessResponseConverter describeProcessResponse = new CalvalusDescribeProcessResponseConverter(wpsMetadata);
+                processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(calvalusProcessor);
             }
             return processDescriptions;
         } catch (IOException | ProductionException | ProcessorNotAvailableException exception) {

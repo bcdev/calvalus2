@@ -8,8 +8,8 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wpsrest.Processor;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -26,17 +26,17 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusDescribeProcessResponse.class, CalvalusHelper.class})
+@PrepareForTest({CalvalusDescribeProcessResponseConverter.class, CalvalusFacade.class})
 public class CalvalusDescribeProcessResponseTest {
 
-    private CalvalusDescribeProcessResponse describeProcessResponse;
+    private CalvalusDescribeProcessResponseConverter describeProcessResponse;
 
     private WpsMetadata mockWpsMetadata;
 
     @Before
     public void setUp() throws Exception {
         mockWpsMetadata = mock(WpsMetadata.class);
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
     }
 
     @Test
@@ -44,7 +44,7 @@ public class CalvalusDescribeProcessResponseTest {
         List<IWpsProcess> mockProcessList = getMockProcessList();
         configureCalvalusHelperMock();
 
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         ProcessDescriptions processDescriptions = describeProcessResponse.getMultipleDescribeProcessResponse(mockProcessList);
 
         assertThat(processDescriptions.getProcessDescription().size(), equalTo(2));
@@ -123,10 +123,10 @@ public class CalvalusDescribeProcessResponseTest {
 
     @Test
     public void canGetSingleDescribeProcessResponse() throws Exception {
-        Processor process1 = getSingleProcessorWithDescriptor();
+        CalvalusProcessor process1 = getSingleProcessorWithDescriptor();
         configureCalvalusHelperMock();
 
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         ProcessDescriptions processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(process1);
 
         assertThat(processDescriptions.getProcessDescription().size(), equalTo(1));
@@ -140,10 +140,10 @@ public class CalvalusDescribeProcessResponseTest {
 
     @Test
     public void canGetSingleDescribeProcessResponseWithParameterDescriptor() throws Exception {
-        Processor process1 = getSingleProcessorWithDescriptor();
+        CalvalusProcessor process1 = getSingleProcessorWithDescriptor();
         configureCalvalusHelperMock();
 
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         ProcessDescriptions processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(process1);
 
         assertThat(processDescriptions.getProcessDescription().get(0).getDataInputs().getInput().size(), equalTo(9));
@@ -159,10 +159,10 @@ public class CalvalusDescribeProcessResponseTest {
 
     @Test
     public void canGetSingleDescribeProcessResponseWithDefaultProcessorParameters() throws Exception {
-        Processor process1 = getSingleProcessorWithDefaultParameters();
+        CalvalusProcessor process1 = getSingleProcessorWithDefaultParameters();
         configureCalvalusHelperMock();
 
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         ProcessDescriptions processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(process1);
 
         assertThat(processDescriptions.getProcessDescription().get(0).getDataInputs().getInput().size(), equalTo(9));
@@ -178,7 +178,7 @@ public class CalvalusDescribeProcessResponseTest {
 
     @Test
     public void canCreateDefaultProcessDescriptions() throws Exception {
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         ProcessDescriptions processDescriptions = describeProcessResponse.createBasicProcessDescriptions();
 
         assertThat(processDescriptions.getProcessDescription().size(), equalTo(0));
@@ -190,35 +190,35 @@ public class CalvalusDescribeProcessResponseTest {
 
     @Test(expected = WpsException.class)
     public void canThrowWpsException() throws Exception {
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(any(WpsMetadata.class)).thenThrow(new ProductionException("Error when creating CalvalusHelper"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsMetadata.class)).thenThrow(new ProductionException("Error when creating CalvalusFacade"));
         IWpsProcess mockProcess = mock(IWpsProcess.class);
 
-        describeProcessResponse = new CalvalusDescribeProcessResponse(mockWpsMetadata);
+        describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);
         describeProcessResponse.getSingleProcessDescription(mockProcess, mockWpsMetadata);
     }
 
     private void configureCalvalusHelperMock() throws Exception {
-        CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         ProductSet mockProductSet1 = mock(ProductSet.class);
         when(mockProductSet1.getProductType()).thenReturn("Product1");
         ProductSet mockProductSet2 = mock(ProductSet.class);
         when(mockProductSet2.getProductType()).thenReturn("Product2");
         ProductSet[] mockProductSets = new ProductSet[]{mockProductSet1, mockProductSet2};
-        when(mockCalvalusHelper.getProductSets()).thenReturn(mockProductSets);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(any(WpsMetadata.class)).thenReturn(mockCalvalusHelper);
+        when(mockCalvalusFacade.getProductSets()).thenReturn(mockProductSets);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsMetadata.class)).thenReturn(mockCalvalusFacade);
     }
 
     private List<IWpsProcess> getMockProcessList() {
         List<IWpsProcess> mockProcessList = new ArrayList<>();
 
-        Processor process1 = mock(Processor.class);
+        CalvalusProcessor process1 = mock(CalvalusProcessor.class);
         when(process1.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process1.getTitle()).thenReturn("Band arythmetic processor");
         when(process1.getAbstractText()).thenReturn("Some description");
         when(process1.getVersion()).thenReturn("1.0");
         when(process1.getInputProductTypes()).thenReturn(new String[]{"Product1"});
 
-        Processor process2 = mock(Processor.class);
+        CalvalusProcessor process2 = mock(CalvalusProcessor.class);
         when(process2.getIdentifier()).thenReturn("beam-buildin~1.0~urban-tep-indices");
         when(process2.getTitle()).thenReturn("Urban TEP seasonality indices from MERIS SR");
         when(process2.getAbstractText()).thenReturn("Some description");
@@ -229,8 +229,8 @@ public class CalvalusDescribeProcessResponseTest {
         return mockProcessList;
     }
 
-    private Processor getSingleProcessorWithDescriptor() {
-        Processor process = mock(Processor.class);
+    private CalvalusProcessor getSingleProcessorWithDescriptor() {
+        CalvalusProcessor process = mock(CalvalusProcessor.class);
         when(process.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process.getTitle()).thenReturn("Band arythmetic processor");
         when(process.getAbstractText()).thenReturn("Some description");
@@ -243,8 +243,8 @@ public class CalvalusDescribeProcessResponseTest {
         return process;
     }
 
-    private Processor getSingleProcessorWithDefaultParameters() {
-        Processor process = mock(Processor.class);
+    private CalvalusProcessor getSingleProcessorWithDefaultParameters() {
+        CalvalusProcessor process = mock(CalvalusProcessor.class);
         when(process.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process.getTitle()).thenReturn("Band arythmetic processor");
         when(process.getAbstractText()).thenReturn("Some description");

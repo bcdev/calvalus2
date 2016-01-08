@@ -44,7 +44,7 @@ public class WpsService {
     public WpsService(@PathParam("application") String applicationName, @Context HttpServletRequest servletRequest) {
         ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
         WpsServiceFactory wpsServiceFactory = new WpsServiceFactory(servletRequestWrapper);
-        wpsServiceProvider = wpsServiceFactory.getWpsService(applicationName);
+        wpsServiceProvider = wpsServiceFactory.getWpsService("calvalus");
     }
 
     @GET

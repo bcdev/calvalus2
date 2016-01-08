@@ -8,10 +8,10 @@ import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.junit.*;
@@ -33,7 +33,7 @@ import java.util.logging.Logger;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusHelper.class, CalvalusLogger.class})
+@PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusFacade.class, CalvalusLogger.class})
 public class CalvalusGetCapabilitiesOperationTest {
 
     private AbstractGetCapabilitiesOperation getCapabilitiesOperation;
@@ -53,9 +53,9 @@ public class CalvalusGetCapabilitiesOperationTest {
     @Test
     public void canGetCapabilities() throws Exception {
         List<IWpsProcess> mockProcessorList = getMockProcessors();
-        CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
-        when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
+        when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessorList);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
         String response = getCapabilitiesOperation.getCapabilities();
 
@@ -123,7 +123,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test
     public void canCatchProductionException() throws Exception {
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenThrow(new ProductionException("production exception"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenThrow(new ProductionException("production exception"));
 
         String response = getCapabilitiesOperation.getCapabilities();
 
@@ -137,7 +137,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test
     public void canCatchIOException() throws Exception {
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("IO exception"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("IO exception"));
 
         String response = getCapabilitiesOperation.getCapabilities();
 
@@ -151,7 +151,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test
     public void canLogIOException() throws Exception {
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("IO exception"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("IO exception"));
         Logger mockLogger = mock(Logger.class);
         PowerMockito.mockStatic(CalvalusLogger.class);
         PowerMockito.when(CalvalusLogger.getLogger()).thenReturn(mockLogger);
@@ -177,9 +177,9 @@ public class CalvalusGetCapabilitiesOperationTest {
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
         List<IWpsProcess> mockProcessorList = getMockProcessors();
-        CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
-        when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
+        when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessorList);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
         String response = getCapabilitiesOperation.getCapabilities();
 
@@ -198,9 +198,9 @@ public class CalvalusGetCapabilitiesOperationTest {
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
 
         List<IWpsProcess> mockProcessorList = getMockProcessors();
-        CalvalusHelper mockCalvalusHelper = mock(CalvalusHelper.class);
-        when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessorList);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
+        when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessorList);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
         String response = getCapabilitiesOperation.getCapabilities();
 
@@ -214,11 +214,11 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     private List<IWpsProcess> getMockProcessors() {
         List<IWpsProcess> mockProcessorList = new ArrayList<>();
-        Processor mockProcessor = mock(Processor.class);
-        when(mockProcessor.getIdentifier()).thenReturn("beam-idepix~2.0.9~Idepix.Water");
-        when(mockProcessor.getTitle()).thenReturn("Idepix (Water Pixel Classification)");
-        when(mockProcessor.getAbstractText()).thenReturn("Idepix (Water Pixel Classification) Description");
-        mockProcessorList.add(mockProcessor);
+        CalvalusProcessor mockCalvalusProcessor = mock(CalvalusProcessor.class);
+        when(mockCalvalusProcessor.getIdentifier()).thenReturn("beam-idepix~2.0.9~Idepix.Water");
+        when(mockCalvalusProcessor.getTitle()).thenReturn("Idepix (Water Pixel Classification)");
+        when(mockCalvalusProcessor.getAbstractText()).thenReturn("Idepix (Water Pixel Classification) Description");
+        mockProcessorList.add(mockCalvalusProcessor);
 
         return mockProcessorList;
     }

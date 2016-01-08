@@ -42,9 +42,9 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusGetCapabilitiesResponse extends AbstractGetCapabilitiesResponse {
+public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabilitiesResponseConverter {
 
-    public OperationsMetadata getOperationsMetadata() {
+    protected OperationsMetadata getOperationsMetadata() {
         OperationsMetadata operationsMetadata = new OperationsMetadata();
 
         Operation getCapabilitiesOperation = new Operation();

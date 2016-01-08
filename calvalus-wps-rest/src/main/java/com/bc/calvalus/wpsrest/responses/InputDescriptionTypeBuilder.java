@@ -11,7 +11,7 @@ import com.bc.calvalus.wpsrest.jaxb.LiteralInputType;
 import java.util.List;
 
 /**
- * Created by hans on 17/08/2015.
+ * @author hans
  */
 public class InputDescriptionTypeBuilder {
 

@@ -4,8 +4,8 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
-import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponse;
-import com.bc.calvalus.wpsrest.responses.CalvalusGetCapabilitiesResponse;
+import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponseConverter;
+import com.bc.calvalus.wpsrest.responses.CalvalusGetCapabilitiesResponseConverter;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -35,7 +35,7 @@ public abstract class AbstractGetCapabilitiesOperation {
         try {
             List<IWpsProcess> processes = getProcesses();
 
-            AbstractGetCapabilitiesResponse getCapabilitiesResponse = new CalvalusGetCapabilitiesResponse();
+            AbstractGetCapabilitiesResponseConverter getCapabilitiesResponse = new CalvalusGetCapabilitiesResponseConverter();
             Capabilities capabilities = getCapabilitiesResponse.createGetCapabilitiesResponse(processes);
 
             jaxbHelper.marshal(capabilities, writer);

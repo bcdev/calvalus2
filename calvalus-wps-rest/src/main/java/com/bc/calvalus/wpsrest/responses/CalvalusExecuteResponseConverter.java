@@ -14,9 +14,9 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusExecuteResponse extends AbstractExecuteResponse {
+public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseConverter {
 
-    public CalvalusExecuteResponse() {
+    public CalvalusExecuteResponseConverter() {
         super();
     }
 

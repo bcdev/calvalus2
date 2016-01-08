@@ -5,7 +5,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
@@ -18,14 +18,14 @@ import java.util.List;
  * <p/>
  * Created by hans on 13/08/2015.
  */
-public class CalvalusHelper {
+public class CalvalusFacade {
 
     private final String userName;
     private final CalvalusProduction calvalusProduction;
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
-    public CalvalusHelper(ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException {
+    public CalvalusFacade(ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException {
         this.userName = servletRequestWrapper.getUserName();
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(servletRequestWrapper);
@@ -60,7 +60,7 @@ public class CalvalusHelper {
         return calvalusProcessorExtractor.getProcessors();
     }
 
-    public Processor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
+    public CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
         return calvalusProcessorExtractor.getProcessor(parser);
     }
 

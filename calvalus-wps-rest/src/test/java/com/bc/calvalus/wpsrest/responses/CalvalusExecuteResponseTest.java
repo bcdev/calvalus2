@@ -25,14 +25,14 @@ import java.util.List;
  */
 public class CalvalusExecuteResponseTest {
 
-    private CalvalusExecuteResponse calvalusExecuteResponse;
+    private CalvalusExecuteResponseConverter calvalusExecuteResponse;
 
     private WpsMetadata mockWpsMetadata;
     private ServletRequestWrapper mockServletRequestWrapper;
 
     @Before
     public void setUp() throws Exception {
-        calvalusExecuteResponse = new CalvalusExecuteResponse();
+        calvalusExecuteResponse = new CalvalusExecuteResponseConverter();
     }
 
     @Test

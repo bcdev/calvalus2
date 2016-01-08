@@ -18,12 +18,12 @@ import java.util.Map;
 /**
  * @author hans
  */
-public class ProcessorTest {
+public class CalvalusProcessorTest {
 
     /**
      * Class under test.
      */
-    private Processor processor;
+    private CalvalusProcessor calvalusProcessor;
 
     private BundleDescriptor mockBundleDescriptor;
     private ProcessorDescriptor mockProcessorDescriptor;
@@ -40,27 +40,27 @@ public class ProcessorTest {
         when(mockBundleDescriptor.getBundleVersion()).thenReturn("1.0.0");
         when(mockProcessorDescriptor.getExecutableName()).thenReturn("Idepix.Water");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getIdentifier(), equalTo("beam-idepix~1.0.0~Idepix.Water"));
+        assertThat(calvalusProcessor.getIdentifier(), equalTo("beam-idepix~1.0.0~Idepix.Water"));
     }
 
     @Test
     public void canGetTitle() throws Exception {
         when(mockProcessorDescriptor.getProcessorName()).thenReturn("dummyProcessorName");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getTitle(), equalTo("dummyProcessorName"));
+        assertThat(calvalusProcessor.getTitle(), equalTo("dummyProcessorName"));
     }
 
     @Test
     public void canGetAbstractText() throws Exception {
         when(mockProcessorDescriptor.getDescriptionHtml()).thenReturn("dummyProcessorDescription");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getAbstractText(), equalTo("dummyProcessorDescription"));
+        assertThat(calvalusProcessor.getAbstractText(), equalTo("dummyProcessorDescription"));
     }
 
     @Test
@@ -68,9 +68,9 @@ public class ProcessorTest {
         ParameterDescriptor[] mockParameterDescriptors = getParameterDescriptors();
         when(mockProcessorDescriptor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
+        ParameterDescriptor[] parameterDescriptors = calvalusProcessor.getParameterDescriptors();
         ParameterDescriptor parameter1 = parameterDescriptors[0];
         ParameterDescriptor parameter2 = parameterDescriptors[1];
 
@@ -90,69 +90,69 @@ public class ProcessorTest {
     public void canGetDefaultParameters() throws Exception {
         when(mockProcessorDescriptor.getDefaultParameters()).thenReturn(getSampleProcessorParameterTxt());
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getDefaultParameters(), equalTo("########################\n" +
-                                                             "# POLYMER COMMAND FILE #\n" +
-                                                             "########################\n" +
-                                                             "# NB: paths can be given as relative or absolute\n" +
-                                                             "# lines starting with character '#' are ignored\n" +
-                                                             "# INPUT/OUTPUT ######\nL1_FORMAT SEAWIFS\n" +
-                                                             "# output format: HDF, NETCDF, NETCDF_CLASSIC\n"));
+        assertThat(calvalusProcessor.getDefaultParameters(), equalTo("########################\n" +
+                                                                     "# POLYMER COMMAND FILE #\n" +
+                                                                     "########################\n" +
+                                                                     "# NB: paths can be given as relative or absolute\n" +
+                                                                     "# lines starting with character '#' are ignored\n" +
+                                                                     "# INPUT/OUTPUT ######\nL1_FORMAT SEAWIFS\n" +
+                                                                     "# output format: HDF, NETCDF, NETCDF_CLASSIC\n"));
     }
 
     @Test
     public void canGetDefaultCalvalusBundle() throws Exception {
         when(mockProcessorDescriptor.getJobConfiguration()).thenReturn(getJobConfiguration());
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getDefaultCalvalusBundle(), equalTo("calvalus-2.7-SNAPSHOT"));
+        assertThat(calvalusProcessor.getDefaultCalvalusBundle(), equalTo("calvalus-2.7-SNAPSHOT"));
     }
 
     @Test
     public void canGetDefaultBeamBundle() throws Exception {
         when(mockProcessorDescriptor.getJobConfiguration()).thenReturn(getJobConfiguration());
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getDefaultBeamBundle(), equalTo("beam-5.0.1"));
+        assertThat(calvalusProcessor.getDefaultBeamBundle(), equalTo("beam-5.0.1"));
     }
 
     @Test
     public void canGetBundleName() throws Exception {
         when(mockBundleDescriptor.getBundleName()).thenReturn("dummyBundleName");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getBundleName(), equalTo("dummyBundleName"));
+        assertThat(calvalusProcessor.getBundleName(), equalTo("dummyBundleName"));
     }
 
     @Test
     public void canGetBundleVersion() throws Exception {
         when(mockBundleDescriptor.getBundleVersion()).thenReturn("dummyBundleVersion");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getBundleVersion(), equalTo("dummyBundleVersion"));
+        assertThat(calvalusProcessor.getBundleVersion(), equalTo("dummyBundleVersion"));
     }
 
     @Test
     public void canGetName() throws Exception {
         when(mockProcessorDescriptor.getExecutableName()).thenReturn("Idepix.Water");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getName(), equalTo("Idepix.Water"));
+        assertThat(calvalusProcessor.getName(), equalTo("Idepix.Water"));
     }
 
     @Test
     public void canGetVersion() throws Exception {
         when(mockProcessorDescriptor.getProcessorVersion()).thenReturn("1.0.0");
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getVersion(), equalTo("1.0.0"));
+        assertThat(calvalusProcessor.getVersion(), equalTo("1.0.0"));
     }
 
     @Test
@@ -160,9 +160,9 @@ public class ProcessorTest {
         String[] mockInputProductTypes = getInputProductTypes();
         when(mockProcessorDescriptor.getInputProductTypes()).thenReturn(mockInputProductTypes);
 
-        processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        String[] inputProductTypes = processor.getInputProductTypes();
+        String[] inputProductTypes = calvalusProcessor.getInputProductTypes();
         List<String> inputProductTypeList = Arrays.asList(inputProductTypes);
 
         assertThat(inputProductTypeList, hasItem("MERIS RR  r03 L1b 2002-2012"));

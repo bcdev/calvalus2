@@ -5,8 +5,8 @@ import static com.bc.calvalus.wpsrest.WpsConstants.WPS_L3_PARAMETERS_SCHEMA_LOCA
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wpsrest.Processor;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationType;
@@ -32,9 +32,9 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResponse {
+public class CalvalusDescribeProcessResponseConverter extends AbstractDescribeProcessResponseConverter {
 
-    public CalvalusDescribeProcessResponse(WpsMetadata wpsMetadata) {
+    public CalvalusDescribeProcessResponseConverter(WpsMetadata wpsMetadata) {
         super(wpsMetadata);
     }
 
@@ -50,23 +50,23 @@ public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResp
     @Override
     public ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata) {
         ProductSet[] productSets = getProductSets(wpsMetadata);
-        Processor processor = (Processor) process;
+        CalvalusProcessor calvalusProcessor = (CalvalusProcessor) process;
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
 
         processDescription.setStoreSupported(true);
         processDescription.setStatusSupported(true);
-        processDescription.setProcessVersion(processor.getVersion());
+        processDescription.setProcessVersion(calvalusProcessor.getVersion());
 
-        CodeType identifier = getIdentifier(processor.getIdentifier());
+        CodeType identifier = getIdentifier(calvalusProcessor.getIdentifier());
         processDescription.setIdentifier(identifier);
 
-        LanguageStringType title = getTitle(processor.getIdentifier());
+        LanguageStringType title = getTitle(calvalusProcessor.getIdentifier());
         processDescription.setTitle(title);
 
-        LanguageStringType abstractText = getAbstractText(processor.getAbstractText());
+        LanguageStringType abstractText = getAbstractText(calvalusProcessor.getAbstractText());
         processDescription.setAbstract(abstractText);
 
-        DataInputs dataInputs = getDataInputs(processor, productSets);
+        DataInputs dataInputs = getDataInputs(calvalusProcessor, productSets);
         processDescription.setDataInputs(dataInputs);
 
         ProcessOutputs dataOutputs = new ProcessOutputs();
@@ -98,16 +98,16 @@ public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResp
 
     private ProductSet[] getProductSets(WpsMetadata wpsMetadata) {
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
-            return calvalusHelper.getProductSets();
+            CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
+            return calvalusFacade.getProductSets();
         } catch (IOException | ProductionException exception) {
-            throw new WpsException("Unable to instanciate CalvalusHelper.", exception);
+            throw new WpsException("Unable to instanciate CalvalusFacade.", exception);
         }
     }
 
-    private DataInputs getDataInputs(Processor processor, ProductSet[] productSets) {
+    private DataInputs getDataInputs(CalvalusProcessor calvalusProcessor, ProductSet[] productSets) {
         DataInputs dataInputs = new DataInputs();
-        ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
+        ParameterDescriptor[] parameterDescriptors = calvalusProcessor.getParameterDescriptors();
 
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
                     .create()
@@ -129,12 +129,12 @@ public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResp
 
                 dataInputs.getInput().add(input);
             }
-        } else if (!StringUtils.isBlank(processor.getDefaultParameters())) {
+        } else if (!StringUtils.isBlank(calvalusProcessor.getDefaultParameters())) {
             InputDescriptionType input = InputDescriptionTypeBuilder
                         .create()
                         .withIdentifier("processorParameters")
                         .withTitle("Processor parameters")
-                        .withDefaultValue(processor.getDefaultParameters())
+                        .withDefaultValue(calvalusProcessor.getDefaultParameters())
                         .withDataType("string")
                         .build();
 
@@ -143,7 +143,7 @@ public class CalvalusDescribeProcessResponse extends AbstractDescribeProcessResp
 
         List<String> allowedInputDataSets = new ArrayList<>();
         for (ProductSet productSet : productSets) {
-            if (ArrayUtils.contains(processor.getInputProductTypes(), productSet.getProductType())) {
+            if (ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
                 allowedInputDataSets.add(productSet.getName());
             }
         }

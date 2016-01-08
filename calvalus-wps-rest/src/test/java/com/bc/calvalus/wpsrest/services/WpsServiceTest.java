@@ -7,10 +7,11 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.exception.InvalidRequestException;
-import com.bc.calvalus.wpsrest.jaxb.Execute;
-import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponse;
-import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import com.bc.calvalus.wpsrest.wpsoperations.describeprocess.CalvalusDescribeProcessOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.execute.AbstractExecuteOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.execute.CalvalusExecuteOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.getcapabilities.CalvalusGetCapabilitiesOperation;
+import com.bc.calvalus.wpsrest.wpsoperations.getstatus.CalvalusGetStatusOperation;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
@@ -27,7 +28,7 @@ import java.util.Locale;
  */
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
-            CalvalusWpsService.class, GetCapabilitiesService.class, CalvalusDescribeProcessOperation.class,
+            CalvalusWpsService.class, CalvalusDescribeProcessOperation.class,
             WpsServiceFactory.class, WpsService.class, ServletRequestWrapper.class
 })
 public class WpsServiceTest {
@@ -298,27 +299,27 @@ public class WpsServiceTest {
 
 
     private void getMockGetCapabilitiesService(String response) throws Exception {
-        GetCapabilitiesService mockGetCapabilitiesService = mock(GetCapabilitiesService.class);
-        when(mockGetCapabilitiesService.getCapabilities(any(ServletRequestWrapper.class))).thenReturn(response);
-        PowerMockito.whenNew(GetCapabilitiesService.class).withNoArguments().thenReturn(mockGetCapabilitiesService);
+        CalvalusGetCapabilitiesOperation mockGetCapabilitiesOperation = mock(CalvalusGetCapabilitiesOperation.class);
+        when(mockGetCapabilitiesOperation.getCapabilities()).thenReturn(response);
+        PowerMockito.whenNew(CalvalusGetCapabilitiesOperation.class).withAnyArguments().thenReturn(mockGetCapabilitiesOperation);
     }
 
     private void getMockDescribeProcessService(String response) throws Exception {
-        DescribeProcessService mockDescribeProcessService = mock(DescribeProcessService.class);
-        when(mockDescribeProcessService.describeProcess(any(WpsMetadata.class), anyString())).thenReturn(response);
-        PowerMockito.whenNew(DescribeProcessService.class).withNoArguments().thenReturn(mockDescribeProcessService);
+        CalvalusDescribeProcessOperation mockDescribeProcessOperation = mock(CalvalusDescribeProcessOperation.class);
+        when(mockDescribeProcessOperation.describeProcess()).thenReturn(response);
+        PowerMockito.whenNew(CalvalusDescribeProcessOperation.class).withAnyArguments().thenReturn(mockDescribeProcessOperation);
     }
 
     private void getMockGetStatusService(String response) throws Exception {
-        GetStatusService mockGetStatusService = mock(GetStatusService.class);
-        when(mockGetStatusService.getStatus(any(WpsMetadata.class), anyString())).thenReturn(response);
-        PowerMockito.whenNew(GetStatusService.class).withNoArguments().thenReturn(mockGetStatusService);
+        CalvalusGetStatusOperation mockGetStatusOperation = mock(CalvalusGetStatusOperation.class);
+        when(mockGetStatusOperation.getStatus()).thenReturn(response);
+        PowerMockito.whenNew(CalvalusGetStatusOperation.class).withAnyArguments().thenReturn(mockGetStatusOperation);
     }
 
     private void configureMockExecuteService(String response) throws Exception {
-        ExecuteService mockExecuteService = mock(ExecuteService.class);
-        when(mockExecuteService.execute(any(Execute.class), any(WpsMetadata.class), anyString())).thenReturn(response);
-        PowerMockito.whenNew(ExecuteService.class).withNoArguments().thenReturn(mockExecuteService);
+        CalvalusExecuteOperation mockExecuteOperation = mock(CalvalusExecuteOperation.class);
+        when(mockExecuteOperation.execute()).thenReturn(response);
+        PowerMockito.whenNew(CalvalusExecuteOperation.class).withAnyArguments().thenReturn(mockExecuteOperation);
     }
 
     private void getMockServletRequest() {

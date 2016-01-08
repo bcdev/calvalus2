@@ -28,14 +28,14 @@ public class CalvalusWpsService extends WpsServiceProvider {
 
     @Override
     public String describeProcess(String processorId) {
-        AbstractDescribeProcessOperation describeProcessOperation = new CalvalusDescribeProcessOperation();
-        return describeProcessOperation.describeProcess(wpsMetadata, processorId);
+        AbstractDescribeProcessOperation describeProcessOperation = new CalvalusDescribeProcessOperation(wpsMetadata, processorId);
+        return describeProcessOperation.describeProcess();
     }
 
     @Override
     public String doExecute(Execute execute, String processorId) {
-        AbstractExecuteOperation executeOperation = new CalvalusExecuteOperation();
-        return executeOperation.execute(execute, wpsMetadata, processorId);
+        AbstractExecuteOperation executeOperation = new CalvalusExecuteOperation(execute, wpsMetadata, processorId);
+        return executeOperation.execute();
     }
 
     @Override

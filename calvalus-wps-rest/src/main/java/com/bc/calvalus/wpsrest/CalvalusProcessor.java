@@ -9,7 +9,7 @@ import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 /**
  * @author hans
  */
-public class Processor implements IWpsProcess {
+public class CalvalusProcessor implements IWpsProcess {
 
     public static final String DELIMITER = "~";
 
@@ -22,7 +22,7 @@ public class Processor implements IWpsProcess {
     private String defaultCalvalusBundle;
     private String defaultBeamBundle;
 
-    public Processor(BundleDescriptor bundleDescriptor, ProcessorDescriptor processorDescriptor) {
+    public CalvalusProcessor(BundleDescriptor bundleDescriptor, ProcessorDescriptor processorDescriptor) {
         this.bundleDescriptor = bundleDescriptor;
         this.processorDescriptor = processorDescriptor;
         this.identifier = constructIdentifier();

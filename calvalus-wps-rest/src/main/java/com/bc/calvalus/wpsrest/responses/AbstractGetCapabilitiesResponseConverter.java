@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * @author hans
  */
-public abstract class AbstractGetCapabilitiesResponse {
+public abstract class AbstractGetCapabilitiesResponseConverter {
 
     public Capabilities createGetCapabilitiesResponse(List<IWpsProcess> processList) {
         OperationsMetadata operationsMetadata = getOperationsMetadata();
@@ -30,7 +30,7 @@ public abstract class AbstractGetCapabilitiesResponse {
                     .build();
     }
 
-    public abstract OperationsMetadata getOperationsMetadata();
+    protected abstract OperationsMetadata getOperationsMetadata();
 
     public abstract ServiceProvider getServiceProvider();
 

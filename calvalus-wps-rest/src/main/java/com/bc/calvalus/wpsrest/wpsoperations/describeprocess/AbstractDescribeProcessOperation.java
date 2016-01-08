@@ -19,7 +19,15 @@ public abstract class AbstractDescribeProcessOperation extends AbstractOperation
 
     private Logger logger = getLogger();
 
-    public String describeProcess(WpsMetadata wpsMetadata, String processorId) {
+    private WpsMetadata wpsMetadata;
+    private String processorId;
+
+    public AbstractDescribeProcessOperation(WpsMetadata wpsMetadata, String processorId) {
+        this.wpsMetadata = wpsMetadata;
+        this.processorId = processorId;
+    }
+
+    public String describeProcess() {
         StringWriter writer = new StringWriter();
         JaxbHelper jaxbHelper = new JaxbHelper();
 

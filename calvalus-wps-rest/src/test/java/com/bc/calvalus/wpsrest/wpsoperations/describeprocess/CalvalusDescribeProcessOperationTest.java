@@ -6,18 +6,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.*;
 
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.InputDescriptionType;
 import com.bc.calvalus.wpsrest.jaxb.LanguageStringType;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptionType;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
-import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponse;
+import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponseConverter;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.junit.*;
@@ -36,46 +36,46 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusDescribeProcessOperation.class, CalvalusDescribeProcessResponse.class, CalvalusHelper.class, ProcessorNameParser.class})
+@PrepareForTest({CalvalusDescribeProcessOperation.class, CalvalusDescribeProcessResponseConverter.class, CalvalusFacade.class, ProcessorNameParser.class})
 public class CalvalusDescribeProcessOperationTest {
 
     private CalvalusDescribeProcessOperation describeProcessOperation;
 
     private WpsMetadata mockWpsMetadata;
-    private CalvalusDescribeProcessResponse mockDescribeProcessResponse;
-    private CalvalusHelper mockCalvalusHelper;
+    private CalvalusDescribeProcessResponseConverter mockDescribeProcessResponse;
+    private CalvalusFacade mockCalvalusFacade;
     private List<IWpsProcess> mockProcessList;
     private ServletRequestWrapper mockServletRequestWrapper;
 
     @Before
     public void setUp() throws Exception {
         mockWpsMetadata = mock(WpsMetadata.class);
-        mockDescribeProcessResponse = mock(CalvalusDescribeProcessResponse.class);
-        mockCalvalusHelper = mock(CalvalusHelper.class);
+        mockDescribeProcessResponse = mock(CalvalusDescribeProcessResponseConverter.class);
+        mockCalvalusFacade = mock(CalvalusFacade.class);
         mockProcessList = getMockProcessList();
         mockServletRequestWrapper = mock(ServletRequestWrapper.class);
         when(mockWpsMetadata.getServletRequestWrapper()).thenReturn(mockServletRequestWrapper);
 
-        PowerMockito.whenNew(CalvalusDescribeProcessResponse.class).withArguments(mockWpsMetadata).thenReturn(mockDescribeProcessResponse);
+        PowerMockito.whenNew(CalvalusDescribeProcessResponseConverter.class).withArguments(mockWpsMetadata).thenReturn(mockDescribeProcessResponse);
     }
 
     @Test
     public void canGetProcessDescription() throws Exception {
         ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(any(ServletRequestWrapper.class)).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(ServletRequestWrapper.class)).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
-        Processor processor1 = getProcess1();
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(processor1);
-        when(mockDescribeProcessResponse.getSingleDescribeProcessResponse(any(Processor.class))).thenCallRealMethod();
+        CalvalusProcessor calvalusProcessor1 = getProcess1();
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
+        when(mockDescribeProcessResponse.getSingleDescribeProcessResponse(any(CalvalusProcessor.class))).thenCallRealMethod();
         when(mockDescribeProcessResponse.createBasicProcessDescriptions()).thenCallRealMethod();
 
         ProcessDescriptionType processDescription = getProcessDescriptionType();
 
         when(mockDescribeProcessResponse.getSingleProcessDescription(any(IWpsProcess.class), any(WpsMetadata.class))).thenReturn(processDescription);
-        PowerMockito.whenNew(CalvalusDescribeProcessResponse.class).withArguments(mockWpsMetadata).thenReturn(mockDescribeProcessResponse);
+        PowerMockito.whenNew(CalvalusDescribeProcessResponseConverter.class).withArguments(mockWpsMetadata).thenReturn(mockDescribeProcessResponse);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
-        String describeProcessResponse = describeProcessOperation.describeProcess(mockWpsMetadata, "process1");
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "process1");
+        String describeProcessResponse = describeProcessOperation.describeProcess();
 
         assertThat(describeProcessResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                                     "<ProcessDescriptions service=\"WPS\" version=\"1.0.0\" xml:lang=\"en\" xmlns:ns5=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\" xmlns:ns1=\"http://www.opengis.net/ows/1.1\" xmlns:ns4=\"http://www.opengis.net/wps/1.0.0\" xmlns:ns3=\"http://www.w3.org/1999/xlink\">\n" +
@@ -95,14 +95,14 @@ public class CalvalusDescribeProcessOperationTest {
     @Test
     public void canGetAllProcesses() throws Exception {
         ArgumentCaptor<List> processes = ArgumentCaptor.forClass(List.class);
-        when(mockCalvalusHelper.getProcessors()).thenReturn(mockProcessList);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessList);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "process1");
         describeProcessOperation.getProcessDescriptions(mockWpsMetadata, "all");
 
         verify(mockDescribeProcessResponse).getMultipleDescribeProcessResponse(processes.capture());
-        verify(mockCalvalusHelper).getProcessors();
+        verify(mockCalvalusFacade).getProcessors();
 
         assertThat(processes.getValue(), equalTo(mockProcessList));
     }
@@ -113,13 +113,13 @@ public class CalvalusDescribeProcessOperationTest {
         ArgumentCaptor<String> processName = ArgumentCaptor.forClass(String.class);
         ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
 
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
-        Processor processor1 = getProcess1();
-        Processor processor2 = getProcess2();
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(processor1, processor2);
+        CalvalusProcessor calvalusProcessor1 = getProcess1();
+        CalvalusProcessor calvalusProcessor2 = getProcess2();
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1, calvalusProcessor2);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "process1");
         describeProcessOperation.getProcessDescriptions(mockWpsMetadata, "process1,process2");
 
         PowerMockito.verifyNew(ProcessorNameParser.class, times(2)).withArguments(processName.capture());
@@ -131,31 +131,31 @@ public class CalvalusDescribeProcessOperationTest {
 
     @Test
     public void canGetSingleProcess() throws Exception {
-        ArgumentCaptor<Processor> singleProcess = ArgumentCaptor.forClass(Processor.class);
+        ArgumentCaptor<CalvalusProcessor> singleProcess = ArgumentCaptor.forClass(CalvalusProcessor.class);
         ArgumentCaptor<String> processName = ArgumentCaptor.forClass(String.class);
         ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
-        Processor processor1 = getProcess1();
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(processor1);
+        CalvalusProcessor calvalusProcessor1 = getProcess1();
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "process1");
         describeProcessOperation.getProcessDescriptions(mockWpsMetadata, "process1");
 
         PowerMockito.verifyNew(ProcessorNameParser.class).withArguments(processName.capture());
         verify(mockDescribeProcessResponse).getSingleDescribeProcessResponse(singleProcess.capture());
         assertThat(processName.getValue(), equalTo("process1"));
-        assertThat(singleProcess.getValue(), equalTo(processor1));
+        assertThat(singleProcess.getValue(), equalTo(calvalusProcessor1));
     }
 
     @Test(expected = WpsException.class)
     public void canThrowExceptionWhenProcessorIsNull() throws Exception {
         ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(null);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(null);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "process1");
         describeProcessOperation.getProcessDescriptions(mockWpsMetadata, "process1");
     }
 
@@ -165,13 +165,13 @@ public class CalvalusDescribeProcessOperationTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception")).thenCallRealMethod();
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
         when(mockDescribeProcessResponse.getMultipleDescribeProcessResponse(any())).thenReturn(new ProcessDescriptions());
-        PowerMockito.whenNew(CalvalusDescribeProcessResponse.class).withArguments(any(WpsMetadata.class)).thenReturn(mockDescribeProcessResponse);
-        Processor processor1 = getProcess1();
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(processor1);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusDescribeProcessResponseConverter.class).withArguments(any(WpsMetadata.class)).thenReturn(mockDescribeProcessResponse);
+        CalvalusProcessor calvalusProcessor1 = getProcess1();
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
-        String exceptionResponse = describeProcessOperation.describeProcess(mockWpsMetadata, "all");
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "all");
+        String exceptionResponse = describeProcessOperation.describeProcess();
 
         assertThat(exceptionResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                               "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -187,13 +187,13 @@ public class CalvalusDescribeProcessOperationTest {
         when(mockJaxbHelper.marshal(anyObject(), any(StringWriter.class))).thenThrow(new JAXBException("JAXB exception"));
         PowerMockito.whenNew(JaxbHelper.class).withNoArguments().thenReturn(mockJaxbHelper);
         when(mockDescribeProcessResponse.getMultipleDescribeProcessResponse(any())).thenReturn(new ProcessDescriptions());
-        PowerMockito.whenNew(CalvalusDescribeProcessResponse.class).withArguments(any(WpsMetadata.class)).thenReturn(mockDescribeProcessResponse);
-        Processor processor1 = getProcess1();
-        when(mockCalvalusHelper.getProcessor(any(ProcessorNameParser.class))).thenReturn(processor1);
-        PowerMockito.whenNew(CalvalusHelper.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusHelper);
+        PowerMockito.whenNew(CalvalusDescribeProcessResponseConverter.class).withArguments(any(WpsMetadata.class)).thenReturn(mockDescribeProcessResponse);
+        CalvalusProcessor calvalusProcessor1 = getProcess1();
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);
 
-        describeProcessOperation = new CalvalusDescribeProcessOperation();
-        String exceptionResponse = describeProcessOperation.describeProcess(mockWpsMetadata, "all");
+        describeProcessOperation = new CalvalusDescribeProcessOperation(mockWpsMetadata, "all");
+        String exceptionResponse = describeProcessOperation.describeProcess();
 
         assertThat(exceptionResponse, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                               "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
@@ -230,8 +230,8 @@ public class CalvalusDescribeProcessOperationTest {
     private List<IWpsProcess> getMockProcessList() {
         List<IWpsProcess> mockProcessList = new ArrayList<>();
 
-        Processor process1 = getProcess1();
-        Processor process2 = getProcess2();
+        CalvalusProcessor process1 = getProcess1();
+        CalvalusProcessor process2 = getProcess2();
 
         mockProcessList.add(process1);
         mockProcessList.add(process2);
@@ -239,16 +239,16 @@ public class CalvalusDescribeProcessOperationTest {
         return mockProcessList;
     }
 
-    private Processor getProcess2() {
-        Processor process2 = mock(Processor.class);
+    private CalvalusProcessor getProcess2() {
+        CalvalusProcessor process2 = mock(CalvalusProcessor.class);
         when(process2.getIdentifier()).thenReturn("beam-buildin~1.0~urban-tep-indices");
         when(process2.getTitle()).thenReturn("Urban TEP seasonality indices from MERIS SR");
         when(process2.getAbstractText()).thenReturn("Some description");
         return process2;
     }
 
-    private Processor getProcess1() {
-        Processor process1 = mock(Processor.class);
+    private CalvalusProcessor getProcess1() {
+        CalvalusProcessor process1 = mock(CalvalusProcessor.class);
         when(process1.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process1.getTitle()).thenReturn("Band arythmetic processor");
         when(process1.getAbstractText()).thenReturn("Some description");

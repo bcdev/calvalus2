@@ -2,7 +2,7 @@ package com.bc.calvalus.wpsrest.wpsoperations.getcapabilities;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusHelper;
+import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.WpsException;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -28,8 +28,8 @@ public class CalvalusGetCapabilitiesOperation extends AbstractGetCapabilitiesOpe
     @Override
     public List<IWpsProcess> getProcesses() {
         try {
-            CalvalusHelper calvalusHelper = new CalvalusHelper(wpsMetadata.getServletRequestWrapper());
-            return calvalusHelper.getProcessors();
+            CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
+            return calvalusFacade.getProcessors();
         } catch (IOException | ProductionException exception) {
             throw new WpsException(exception);
         }

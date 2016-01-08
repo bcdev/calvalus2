@@ -20,11 +20,11 @@ import java.util.List;
  */
 public class CalvalusGetCapabilitiesResponseTest {
 
-    private CalvalusGetCapabilitiesResponse getCapabilitiesResponse;
+    private CalvalusGetCapabilitiesResponseConverter getCapabilitiesResponse;
 
     @Before
     public void setUp() throws Exception {
-        getCapabilitiesResponse = new CalvalusGetCapabilitiesResponse();
+        getCapabilitiesResponse = new CalvalusGetCapabilitiesResponseConverter();
     }
 
     @Test

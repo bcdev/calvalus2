@@ -5,7 +5,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wpsrest.Processor;
+import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 
@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * This class handles the processor lookup operation.
- *
+ * <p/>
  * Created by hans on 13/08/2015.
  */
 public class CalvalusProcessorExtractor {
@@ -29,23 +29,23 @@ public class CalvalusProcessorExtractor {
     }
 
     protected List<IWpsProcess> getProcessors() throws IOException, ProductionException {
-        BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
+        BundleDescriptor[] bundleDescriptors = getBundleDescriptors();
 
         List<IWpsProcess> processors = new ArrayList<>();
-        for (BundleDescriptor bundle : bundleDescriptor) {
-            if (bundle.getProcessorDescriptors() == null) {
+        for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
+            if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;
             }
-            ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
+            ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
             for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                Processor processor = new Processor(bundle, processorDescriptor);
-                processors.add(processor);
+                CalvalusProcessor calvalusProcessor = new CalvalusProcessor(bundleDescriptor, processorDescriptor);
+                processors.add(calvalusProcessor);
             }
         }
         return processors;
     }
 
-    protected Processor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
+    protected CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
         BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
         for (BundleDescriptor bundle : bundleDescriptor) {
             if (bundle.getProcessorDescriptors() == null) {
@@ -54,7 +54,7 @@ public class CalvalusProcessorExtractor {
             if (bundle.getBundleName().equals(parser.getBundleName()) && bundle.getBundleVersion().equals(parser.getBundleVersion())) {
                 for (ProcessorDescriptor processorDescriptor : bundle.getProcessorDescriptors()) {
                     if (processorDescriptor.getExecutableName().equals(parser.getExecutableName())) {
-                        return new Processor(bundle, processorDescriptor);
+                        return new CalvalusProcessor(bundle, processorDescriptor);
                     }
                 }
             }
