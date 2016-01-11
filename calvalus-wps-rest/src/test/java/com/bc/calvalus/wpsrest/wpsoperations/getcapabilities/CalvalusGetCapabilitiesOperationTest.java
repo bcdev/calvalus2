@@ -130,7 +130,7 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(response, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                      "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
                                      "    <Exception exceptionCode=\"NoApplicableCode\">\n" +
-                                     "        <ExceptionText>com.bc.calvalus.production.ProductionException: production exception</ExceptionText>\n" +
+                                     "        <ExceptionText>com.bc.calvalus.production.ProductionException: production exception : production exception</ExceptionText>\n" +
                                      "    </Exception>\n" +
                                      "</ExceptionReport>\n"));
     }
@@ -144,7 +144,7 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(response, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                                      "<ExceptionReport version=\"version\" xml:lang=\"Lang\">\n" +
                                      "    <Exception exceptionCode=\"NoApplicableCode\">\n" +
-                                     "        <ExceptionText>java.io.IOException: IO exception</ExceptionText>\n" +
+                                     "        <ExceptionText>java.io.IOException: IO exception : IO exception</ExceptionText>\n" +
                                      "    </Exception>\n" +
                                      "</ExceptionReport>\n"));
     }

@@ -30,7 +30,8 @@ public class NullPointerExceptionMapper implements ExceptionMapper<NullPointerEx
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringWriter stringWriter = getExceptionStringWriter(exceptionResponse.
                     getGeneralExceptionWithCustomMessageResponse("A value is missing" +
-                                                                 (StringUtils.isNotBlank(exception.getMessage()) ? " : " + exception.getMessage() : "")));
+                                                                 (StringUtils.isNotBlank(exception.getMessage()) ? " : " + exception.getMessage() : ""),
+                                                                 exception.getCause()));
         return Response.serverError()
                     .entity(stringWriter.toString())
                     .build();

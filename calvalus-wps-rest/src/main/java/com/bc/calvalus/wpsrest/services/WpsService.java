@@ -34,28 +34,25 @@ import java.util.logging.Logger;
  *
  * @author hans
  */
-@Path("/{application}")
+@Path("/")
 public class WpsService {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private WpsServiceProvider wpsServiceProvider;
-
-    public WpsService(@PathParam("application") String applicationName, @Context HttpServletRequest servletRequest) {
-        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
-        WpsServiceFactory wpsServiceFactory = new WpsServiceFactory(servletRequestWrapper);
-        wpsServiceProvider = wpsServiceFactory.getWpsService("calvalus");
-    }
-
     @GET
+    @Path("/{application}")
     @Produces(MediaType.APPLICATION_XML)
-    public String getWpsService(@QueryParam("Service") String service,
+    public String getWpsService(@PathParam("application") String applicationName,
+                                @QueryParam("Service") String service,
                                 @QueryParam("Request") String requestType,
                                 @QueryParam("AcceptVersions") String acceptedVersion,
                                 @QueryParam("Language") String language,
                                 @QueryParam("Identifier") String processId,
                                 @QueryParam("Version") String version,
-                                @QueryParam("JobId") String jobId) {
+                                @QueryParam("JobId") String jobId,
+                                @Context HttpServletRequest servletRequest) {
+
+        WpsServiceProvider wpsServiceProvider = getWpsServiceProvider(applicationName, servletRequest);
 
         String exceptionXml = performUrlParameterValidation(service, requestType);
         if (StringUtils.isNotBlank(exceptionXml)) {
@@ -84,9 +81,13 @@ public class WpsService {
     }
 
     @POST
+    @Path("/{application}")
     @Consumes(MediaType.APPLICATION_XML)
     @Produces(MediaType.APPLICATION_XML)
-    public String postExecuteService(String request, @Context HttpServletRequest servletRequest) {
+    public String postExecuteService(@PathParam("application") String applicationName,
+                                     String request,
+                                     @Context HttpServletRequest servletRequest) {
+        WpsServiceProvider wpsServiceProvider = getWpsServiceProvider(applicationName, servletRequest);
         Execute execute = getExecute(request);
 
         String exceptionXml = performXmlParameterValidation(execute);
@@ -97,6 +98,12 @@ public class WpsService {
         String processorId = execute.getIdentifier().getValue();
 
         return wpsServiceProvider.doExecute(execute, processorId);
+    }
+
+    private WpsServiceProvider getWpsServiceProvider(String applicationName, HttpServletRequest servletRequest) {
+        ServletRequestWrapper servletRequestWrapper = new ServletRequestWrapper(servletRequest);
+        WpsServiceFactory wpsServiceFactory = new WpsServiceFactory(servletRequestWrapper);
+        return wpsServiceFactory.getWpsService(applicationName);
     }
 
     private String performDescribeProcessParameterValidation(String processorId, String version) {

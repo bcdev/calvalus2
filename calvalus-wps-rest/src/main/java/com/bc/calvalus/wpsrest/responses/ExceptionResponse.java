@@ -3,21 +3,23 @@ package com.bc.calvalus.wpsrest.responses;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionType;
 
-import java.util.Date;
-
 /**
  * @author hans
  */
 public class ExceptionResponse {
 
-    public ExceptionReport getGeneralExceptionWithCustomMessageResponse(String errorMessage) {
-        return getGeneralExceptionReport(errorMessage);
+    public ExceptionReport getGeneralExceptionWithCustomMessageResponse(String errorMessage, Throwable cause) {
+        return getGeneralExceptionReport(errorMessage, cause);
     }
 
-    private ExceptionReport getGeneralExceptionReport(String errorMessage) {
+    private ExceptionReport getGeneralExceptionReport(String errorMessage, Throwable cause) {
         ExceptionReport exceptionReport = new ExceptionReport();
         ExceptionType exceptionResponse = new ExceptionType();
-        exceptionResponse.getExceptionText().add(errorMessage);
+        if (cause != null) {
+            exceptionResponse.getExceptionText().add(errorMessage + " : " + cause.getMessage());
+        } else {
+            exceptionResponse.getExceptionText().add(errorMessage);
+        }
         exceptionResponse.setExceptionCode("NoApplicableCode");
 
         exceptionReport.getException().add(exceptionResponse);
@@ -27,7 +29,7 @@ public class ExceptionResponse {
     }
 
     public ExceptionReport getGeneralExceptionResponse(Exception exception) {
-        return getGeneralExceptionReport(exception.getMessage());
+        return getGeneralExceptionReport(exception.getMessage(), exception.getCause());
     }
 
     public ExceptionReport getMissingParameterExceptionResponse(Exception exception, String missingParameter) {

@@ -29,6 +29,8 @@ public class CalvalusProduction {
     protected Production orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
                 throws ProductionException {
         logInfo("Ordering production...");
+        logInfo("user : " + userName);
+        logInfo("request user name : " + request.getUserName());
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
