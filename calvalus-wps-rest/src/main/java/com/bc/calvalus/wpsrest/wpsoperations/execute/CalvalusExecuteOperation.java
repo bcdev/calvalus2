@@ -10,7 +10,8 @@ import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
+import com.bc.calvalus.wpsrest.exception.FailedRequestException;
+import com.bc.calvalus.wpsrest.exception.InvalidProcessorIdException;
 import com.bc.calvalus.wpsrest.jaxb.DocumentOutputDefinitionType;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
@@ -33,7 +34,7 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
     }
 
     @Override
-    public List<String> processSync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata) {
+    public List<String> processSync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata) throws FailedRequestException {
         try {
             ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
             CalvalusFacade calvalusFacade = new CalvalusFacade(servletRequestWrapper);
@@ -43,13 +44,13 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
             calvalusFacade.stageProduction(production);
             calvalusFacade.observeStagingStatus(production);
             return calvalusFacade.getProductResultUrls(production);
-        } catch (InterruptedException | IOException | JAXBException | ProductionException exception) {
-            throw new WpsRuntimeException("Unable to process the request synchronously", exception);
+        } catch (InterruptedException | IOException | JAXBException | ProductionException | InvalidProcessorIdException exception) {
+            throw new FailedRequestException("Unable to process the request synchronously", exception);
         }
     }
 
     @Override
-    public String processAsync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata) {
+    public String processAsync(Execute executeRequest, String processorId, WpsMetadata wpsMetadata) throws FailedRequestException {
         try {
             ServletRequestWrapper servletRequestWrapper = wpsMetadata.getServletRequestWrapper();
             CalvalusFacade calvalusFacade = new CalvalusFacade(servletRequestWrapper);
@@ -57,8 +58,8 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
 
             Production production = calvalusFacade.orderProductionAsynchronous(request);
             return production.getId();
-        } catch (IOException | JAXBException | ProductionException exception) {
-            throw new WpsRuntimeException("Unable to process the request asynchronously", exception);
+        } catch (IOException | JAXBException | ProductionException | InvalidProcessorIdException exception) {
+            throw new FailedRequestException("Unable to process the request asynchronously", exception);
         }
     }
 
@@ -95,7 +96,7 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
     private ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
                                                       ServletRequestWrapper servletRequestWrapper,
                                                       CalvalusFacade calvalusFacade)
-                throws JAXBException, IOException, ProductionException {
+                throws JAXBException, IOException, ProductionException, InvalidProcessorIdException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
         ProcessorNameParser parser = new ProcessorNameParser(processorId);

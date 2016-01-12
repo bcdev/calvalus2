@@ -10,6 +10,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wpsrest.exception.ProductSetsNotAvailableException;
 import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -188,9 +189,11 @@ public class CalvalusDescribeProcessResponseTest {
 
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = ProductSetsNotAvailableException.class)
     public void canThrowWpsException() throws Exception {
-        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsMetadata.class)).thenThrow(new ProductionException("Error when creating CalvalusFacade"));
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
+        when(mockCalvalusFacade.getProductSets()).thenThrow(new ProductionException("Production exception"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsMetadata.class)).thenReturn(mockCalvalusFacade);
         IWpsProcess mockProcess = mock(IWpsProcess.class);
 
         describeProcessResponse = new CalvalusDescribeProcessResponseConverter(mockWpsMetadata);

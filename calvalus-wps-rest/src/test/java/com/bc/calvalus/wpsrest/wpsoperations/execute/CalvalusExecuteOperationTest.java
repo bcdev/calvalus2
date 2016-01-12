@@ -13,6 +13,7 @@ import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wpsrest.exception.FailedRequestException;
 import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.DataInputsType;
 import com.bc.calvalus.wpsrest.jaxb.DocumentOutputDefinitionType;
@@ -148,10 +149,10 @@ public class CalvalusExecuteOperationTest {
     }
 
     @Test
-    public void canCatchInterruptedExceptionInProcessSync() throws Exception {
+    public void canThrowFailedRequestExceptionInProcessSync() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenThrow(new InterruptedException("error"));
 
-        thrownException.expect(WpsRuntimeException.class);
+        thrownException.expect(FailedRequestException.class);
         thrownException.expectMessage("Unable to process the request synchronously");
 
         executeOperation = new CalvalusExecuteOperation(mockExecuteRequest, mockWpsMetadata, "process1");
@@ -192,7 +193,7 @@ public class CalvalusExecuteOperationTest {
     public void canCatchIOExceptionInProcessAsync() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenThrow(new IOException("error"));
 
-        thrownException.expect(WpsRuntimeException.class);
+        thrownException.expect(FailedRequestException.class);
         thrownException.expectMessage("Unable to process the request asynchronously");
 
         executeOperation = new CalvalusExecuteOperation(mockExecuteRequest, mockWpsMetadata, "process1");

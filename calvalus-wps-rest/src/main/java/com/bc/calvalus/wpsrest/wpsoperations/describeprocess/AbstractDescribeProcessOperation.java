@@ -1,6 +1,7 @@
 package com.bc.calvalus.wpsrest.wpsoperations.describeprocess;
 
 import com.bc.calvalus.wpsrest.JaxbHelper;
+import com.bc.calvalus.wpsrest.exception.ProcessesNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
@@ -34,7 +35,7 @@ public abstract class AbstractDescribeProcessOperation {
             ProcessDescriptions processDescriptions = getProcessDescriptions(wpsMetadata, processorId);
             jaxbHelper.marshal(processDescriptions, writer);
             return writer.toString();
-        } catch (JAXBException exception) {
+        } catch (ProcessesNotAvailableException | JAXBException exception) {
             logger.log(Level.SEVERE, "An error occurred when trying to construct a DescribeProcess response.", exception);
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
@@ -47,7 +48,8 @@ public abstract class AbstractDescribeProcessOperation {
         }
     }
 
-    public abstract ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId);
+    public abstract ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId)
+                throws ProcessesNotAvailableException;
 
     public abstract Logger getLogger();
 

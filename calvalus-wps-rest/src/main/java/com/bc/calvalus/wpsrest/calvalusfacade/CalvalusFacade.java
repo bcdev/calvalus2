@@ -25,7 +25,7 @@ public class CalvalusFacade {
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
-    public CalvalusFacade(ServletRequestWrapper servletRequestWrapper) throws IOException, ProductionException {
+    public CalvalusFacade(ServletRequestWrapper servletRequestWrapper) {
         this.userName = servletRequestWrapper.getUserName();
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(servletRequestWrapper);

@@ -1,6 +1,7 @@
 package com.bc.calvalus.wpsrest.wpsoperations.execute;
 
 import com.bc.calvalus.wpsrest.JaxbHelper;
+import com.bc.calvalus.wpsrest.exception.FailedRequestException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
@@ -52,7 +53,7 @@ public abstract class AbstractExecuteOperation {
                 jaxbHelper.marshal(executeResponse, stringWriter);
                 return stringWriter.toString();
             }
-        } catch (JAXBException exception) {
+        } catch (FailedRequestException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to process an Execute request.", exception);
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {
@@ -65,9 +66,9 @@ public abstract class AbstractExecuteOperation {
         }
     }
 
-    public abstract List<String> processSync(Execute executeRequest, String processId, WpsMetadata wpsMetadata);
+    public abstract List<String> processSync(Execute executeRequest, String processId, WpsMetadata wpsMetadata) throws FailedRequestException;
 
-    public abstract String processAsync(Execute executeRequest, String processId, WpsMetadata wpsMetadata);
+    public abstract String processAsync(Execute executeRequest, String processId, WpsMetadata wpsMetadata) throws FailedRequestException;
 
     public abstract ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, WpsMetadata wpsMetadata,
                                                                boolean isLineage, String jobId);

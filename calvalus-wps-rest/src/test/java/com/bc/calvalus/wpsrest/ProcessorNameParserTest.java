@@ -3,6 +3,7 @@ package com.bc.calvalus.wpsrest;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
+import com.bc.calvalus.wpsrest.exception.InvalidProcessorIdException;
 import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import org.junit.*;
 
@@ -27,35 +28,35 @@ public class ProcessorNameParserTest {
         assertThat(parser.getExecutableName(), equalTo("Idepix.Water"));
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = InvalidProcessorIdException.class)
     public void testParseIdentifierWithNoDelimiter() throws Exception {
         String identifier = "beam-idepix2.0.9Idepix.Water";
 
         parser = new ProcessorNameParser(identifier);
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = InvalidProcessorIdException.class)
     public void testParseIdentifierWithInvalidDelimiter() throws Exception {
         String identifier = "beam-idepix_2.0.9_Idepix.Water";
 
         parser = new ProcessorNameParser(identifier);
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = InvalidProcessorIdException.class)
     public void testParseIdentifierWithMissingProcessorName() throws Exception {
         String identifier = "beam-idepix~2.0.9";
 
         parser = new ProcessorNameParser(identifier);
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = InvalidProcessorIdException.class)
     public void testParseEmptyIdentifier() throws Exception {
         String identifier = "";
 
         parser = new ProcessorNameParser(identifier);
     }
 
-    @Test(expected = WpsRuntimeException.class)
+    @Test(expected = InvalidProcessorIdException.class)
     public void testParseNullIdentifier() throws Exception {
         parser = new ProcessorNameParser(null);
     }

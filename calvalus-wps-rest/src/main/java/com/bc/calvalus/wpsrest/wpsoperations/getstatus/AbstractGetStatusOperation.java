@@ -1,6 +1,7 @@
 package com.bc.calvalus.wpsrest.wpsoperations.getstatus;
 
 import com.bc.calvalus.wpsrest.JaxbHelper;
+import com.bc.calvalus.wpsrest.exception.JobNotFoundException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
@@ -8,7 +9,6 @@ import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
 import java.io.StringWriter;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,8 +33,7 @@ public abstract class AbstractGetStatusOperation {
             ExecuteResponse executeResponse = getExecuteResponse();
             jaxbHelper.marshal(executeResponse, stringWriter);
             return stringWriter.toString();
-
-        } catch (JAXBException exception) {
+        } catch (JobNotFoundException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request.", exception);
             StringWriter exceptionStringWriter = new StringWriter();
             ExceptionReport exceptionReport = getExceptionReport(exception);
@@ -48,19 +47,19 @@ public abstract class AbstractGetStatusOperation {
         }
     }
 
-    public abstract ExecuteResponse getExecuteAcceptedResponse();
+    public abstract ExecuteResponse getExecuteAcceptedResponse() throws JobNotFoundException;
 
-    public abstract ExecuteResponse getExecuteFailedResponse();
+    public abstract ExecuteResponse getExecuteFailedResponse() throws JobNotFoundException;
 
-    public abstract ExecuteResponse getExecuteSuccessfulResponse();
+    public abstract ExecuteResponse getExecuteSuccessfulResponse() throws JobNotFoundException;
 
-    public abstract boolean isProductionJobFinishedAndSuccessful();
+    public abstract boolean isProductionJobFinishedAndSuccessful() throws JobNotFoundException;
 
-    public abstract boolean isProductionJobFinishedAndFailed();
+    public abstract boolean isProductionJobFinishedAndFailed() throws JobNotFoundException;
 
     public abstract Logger getLogger();
 
-    private ExecuteResponse getExecuteResponse() {
+    private ExecuteResponse getExecuteResponse() throws JobNotFoundException {
         ExecuteResponse executeResponse;
         if (isProductionJobFinishedAndSuccessful()) {
             executeResponse = getExecuteSuccessfulResponse();

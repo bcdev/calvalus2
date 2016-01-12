@@ -7,7 +7,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
+import com.bc.calvalus.wpsrest.exception.ProductSetsNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationsType;
@@ -48,8 +48,15 @@ public class CalvalusDescribeProcessResponseConverter extends AbstractDescribePr
     }
 
     @Override
-    public ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata) {
-        ProductSet[] productSets = getProductSets(wpsMetadata);
+    public ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata)
+                throws ProductSetsNotAvailableException {
+        ProductSet[] productSets;
+        try {
+            productSets = getProductSets(wpsMetadata);
+        } catch (IOException | ProductionException exception) {
+            throw new ProductSetsNotAvailableException("Unable to get available product sets", exception);
+        }
+
         CalvalusProcessor calvalusProcessor = (CalvalusProcessor) process;
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
 
@@ -96,13 +103,9 @@ public class CalvalusDescribeProcessResponseConverter extends AbstractDescribePr
         return processDescription;
     }
 
-    private ProductSet[] getProductSets(WpsMetadata wpsMetadata) {
-        try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
-            return calvalusFacade.getProductSets();
-        } catch (IOException | ProductionException exception) {
-            throw new WpsRuntimeException("Unable to instanciate CalvalusFacade.", exception);
-        }
+    private ProductSet[] getProductSets(WpsMetadata wpsMetadata) throws IOException, ProductionException {
+        CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
+        return calvalusFacade.getProductSets();
     }
 
     private DataInputs getDataInputs(CalvalusProcessor calvalusProcessor, ProductSet[] productSets) {

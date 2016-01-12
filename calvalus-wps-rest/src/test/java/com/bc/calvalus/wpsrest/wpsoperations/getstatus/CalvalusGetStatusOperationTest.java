@@ -12,6 +12,8 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wpsrest.exception.FailedRequestException;
+import com.bc.calvalus.wpsrest.exception.JobNotFoundException;
 import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.CalvalusExecuteResponseConverter;
@@ -217,25 +219,27 @@ public class CalvalusGetStatusOperationTest {
     }
 
     @Test
-    public void canCatchIOExceptionWhenInstantiatingObject() throws Exception {
+    public void canCatchIOExceptionWhenCheckingJob() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(ServletRequestWrapper.class))
                     .thenThrow(new IOException("IOException error."));
 
-        thrownException.expect(WpsRuntimeException.class);
+        thrownException.expect(JobNotFoundException.class);
         thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockWpsMetadata, "job-01");
+        getStatusOperation.isProductionJobFinishedAndFailed();
     }
 
     @Test
-    public void canCatchProductionExceptionWhenInstantiatingObject() throws Exception {
+    public void canCatchProductionExceptionWhenCheckingJob() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(ServletRequestWrapper.class))
                     .thenThrow(new ProductionException("ProductionException error."));
 
-        thrownException.expect(WpsRuntimeException.class);
+        thrownException.expect(JobNotFoundException.class);
         thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockWpsMetadata, "job-01");
+        getStatusOperation.isProductionJobFinishedAndFailed();
     }
 
     private ProcessStatus getInProgressProcessStatus() {

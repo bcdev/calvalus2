@@ -5,8 +5,9 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
-import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
+import com.bc.calvalus.wpsrest.exception.InvalidProcessorIdException;
+import com.bc.calvalus.wpsrest.exception.ProcessesNotAvailableException;
+import com.bc.calvalus.wpsrest.exception.ProductSetsNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.AbstractDescribeProcessResponseConverter;
 import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponseConverter;
@@ -28,7 +29,7 @@ public class CalvalusDescribeProcessOperation extends AbstractDescribeProcessOpe
     }
 
     @Override
-    public ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId) {
+    public ProcessDescriptions getProcessDescriptions(WpsMetadata wpsMetadata, String processorId) throws ProcessesNotAvailableException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
 
@@ -44,7 +45,8 @@ public class CalvalusDescribeProcessOperation extends AbstractDescribeProcessOpe
                     ProcessorNameParser parser = new ProcessorNameParser(singleProcessorId);
                     CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
                     if (calvalusProcessor == null) {
-                        throw new ProcessorNotAvailableException(singleProcessorId);
+                        throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
+                                                                 "due to invalid process ID '" + singleProcessorId + "'");
                     }
                     processors.add(calvalusProcessor);
                 }
@@ -54,14 +56,15 @@ public class CalvalusDescribeProcessOperation extends AbstractDescribeProcessOpe
                 ProcessorNameParser parser = new ProcessorNameParser(processorId);
                 CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
                 if (calvalusProcessor == null) {
-                    throw new ProcessorNotAvailableException(processorId);
+                    throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
+                                                             "due to invalid process ID '" + processorId + "'");
                 }
                 AbstractDescribeProcessResponseConverter describeProcessResponse = new CalvalusDescribeProcessResponseConverter(wpsMetadata);
                 processDescriptions = describeProcessResponse.getSingleDescribeProcessResponse(calvalusProcessor);
             }
             return processDescriptions;
-        } catch (IOException | ProductionException | ProcessorNotAvailableException exception) {
-            throw new WpsRuntimeException("Unable to create describe process response", exception);
+        } catch (IOException | ProductionException | ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
+            throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es)", exception);
         }
     }
 

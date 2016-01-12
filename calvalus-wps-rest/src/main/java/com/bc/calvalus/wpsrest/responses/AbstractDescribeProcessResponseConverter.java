@@ -1,6 +1,7 @@
 package com.bc.calvalus.wpsrest.responses;
 
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
+import com.bc.calvalus.wpsrest.exception.ProductSetsNotAvailableException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptionType;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -18,7 +19,8 @@ public abstract class AbstractDescribeProcessResponseConverter {
         this.wpsMetadata = wpsMetadata;
     }
 
-    public ProcessDescriptions getMultipleDescribeProcessResponse(List<IWpsProcess> processes) {
+    public ProcessDescriptions getMultipleDescribeProcessResponse(List<IWpsProcess> processes)
+                throws ProductSetsNotAvailableException {
         ProcessDescriptions processDescriptions = createBasicProcessDescriptions();
         for (IWpsProcess process : processes) {
             ProcessDescriptionType processDescription = getSingleProcessDescription(process, wpsMetadata);
@@ -27,7 +29,8 @@ public abstract class AbstractDescribeProcessResponseConverter {
         return processDescriptions;
     }
 
-    public ProcessDescriptions getSingleDescribeProcessResponse(CalvalusProcessor calvalusProcessor) {
+    public ProcessDescriptions getSingleDescribeProcessResponse(CalvalusProcessor calvalusProcessor)
+                throws ProductSetsNotAvailableException {
         ProcessDescriptions processDescriptions = createBasicProcessDescriptions();
         ProcessDescriptionType processDescription = getSingleProcessDescription(calvalusProcessor, wpsMetadata);
         processDescriptions.getProcessDescription().add(processDescription);
@@ -36,6 +39,6 @@ public abstract class AbstractDescribeProcessResponseConverter {
 
     public abstract ProcessDescriptions createBasicProcessDescriptions();
 
-    public abstract ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata);
+    public abstract ProcessDescriptionType getSingleProcessDescription(IWpsProcess process, WpsMetadata wpsMetadata) throws ProductSetsNotAvailableException;
 
 }
