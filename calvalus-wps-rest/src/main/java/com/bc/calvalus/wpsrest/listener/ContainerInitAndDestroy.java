@@ -9,8 +9,8 @@ import java.util.Timer;
 /**
  * In this case, any actions (if any) to happen when the servlet context is
  * initialized or destroyed are defined.
- * <p/>
- * Created by hans on 13/10/2015.
+ *
+ * @author hans
  */
 public class ContainerInitAndDestroy implements ServletContextListener {
 

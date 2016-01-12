@@ -1,9 +1,9 @@
 package com.bc.calvalus.wpsrest.exception;
 
 /**
- * Created by hans on 08/10/2015.
+ * @author hans
  */
-public class WpsMissingParameterValueException extends WpsException {
+public class WpsMissingParameterValueException extends WpsRuntimeException {
 
     public WpsMissingParameterValueException(String missingParameter) {
         super("Missing value from parameter : " + missingParameter);

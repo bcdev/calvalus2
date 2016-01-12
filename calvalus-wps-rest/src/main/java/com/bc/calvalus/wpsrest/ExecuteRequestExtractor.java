@@ -26,7 +26,7 @@ import java.util.Map;
  * This class handles the transformation of the parameters on an Execute request into a format
  * that conforms to Calvalus Production.
  *
- * Created by hans on 19/08/2015.
+ * @author hans
  */
 public class ExecuteRequestExtractor {
 

@@ -7,7 +7,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationType;
 import com.bc.calvalus.wpsrest.jaxb.ComplexDataCombinationsType;
@@ -101,7 +101,7 @@ public class CalvalusDescribeProcessResponseConverter extends AbstractDescribePr
             CalvalusFacade calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
             return calvalusFacade.getProductSets();
         } catch (IOException | ProductionException exception) {
-            throw new WpsException("Unable to instanciate CalvalusFacade.", exception);
+            throw new WpsRuntimeException("Unable to instanciate CalvalusFacade.", exception);
         }
     }
 

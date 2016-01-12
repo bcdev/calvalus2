@@ -1,7 +1,7 @@
 package com.bc.calvalus.wpsrest;
 
 /**
- * Created by hans on 17/08/2015.
+ * @author hans
  */
 public class WpsConstants {
 

@@ -1,7 +1,7 @@
 package com.bc.calvalus.wpsrest.services;
 
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadataBuilder;
 
@@ -23,7 +23,7 @@ public class WpsServiceFactory {
                         .build();
             return new CalvalusWpsService(calvalusWpsMetadata);
         } else {
-            throw new WpsException("Unknown application name '" + applicationName + "'.");
+            throw new WpsRuntimeException("Unknown application name '" + applicationName + "'.");
         }
     }
 }

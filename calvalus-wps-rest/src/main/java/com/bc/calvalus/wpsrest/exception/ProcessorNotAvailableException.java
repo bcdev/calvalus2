@@ -1,9 +1,9 @@
 package com.bc.calvalus.wpsrest.exception;
 
 /**
- * Created by hans on 14/08/2015.
+ * @author hans
  */
-public class ProcessorNotAvailableException extends WpsException {
+public class ProcessorNotAvailableException extends WpsRuntimeException {
 
     public ProcessorNotAvailableException(String processorId) {
         super("Invalid processorId '" + processorId + "'");

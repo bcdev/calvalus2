@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 /**
  * This class handles the order production operations (synchronously and asynchronously).
  *
- * Created by hans on 11/08/2015.
+ * @author hans
  */
 public class CalvalusProduction {
 

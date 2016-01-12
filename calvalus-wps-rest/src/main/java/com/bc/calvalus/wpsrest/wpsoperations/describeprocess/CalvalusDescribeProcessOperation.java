@@ -6,7 +6,7 @@ import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wpsrest.exception.ProcessorNotAvailableException;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.AbstractDescribeProcessResponseConverter;
 import com.bc.calvalus.wpsrest.responses.CalvalusDescribeProcessResponseConverter;
@@ -61,7 +61,7 @@ public class CalvalusDescribeProcessOperation extends AbstractDescribeProcessOpe
             }
             return processDescriptions;
         } catch (IOException | ProductionException | ProcessorNotAvailableException exception) {
-            throw new WpsException("Unable to create describe process response", exception);
+            throw new WpsRuntimeException("Unable to create describe process response", exception);
         }
     }
 

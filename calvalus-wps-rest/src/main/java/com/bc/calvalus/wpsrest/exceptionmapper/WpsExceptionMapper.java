@@ -2,7 +2,7 @@ package com.bc.calvalus.wpsrest.exceptionmapper;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
 
@@ -15,18 +15,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * This class maps any unhandled WpsException to a proper WPS Exception response.
+ * This class maps any unhandled WpsRuntimeException to a proper WPS Exception response.
  *
  * @author hans
  */
 @Provider
-public class WpsExceptionMapper implements ExceptionMapper<WpsException> {
+public class WpsExceptionMapper implements ExceptionMapper<WpsRuntimeException> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     @Override
-    public Response toResponse(WpsException exception) {
-        LOG.log(Level.SEVERE, "A WpsException has been caught.", exception);
+    public Response toResponse(WpsRuntimeException exception) {
+        LOG.log(Level.SEVERE, "A WpsRuntimeException has been caught.", exception);
         ExceptionResponse exceptionResponse = new ExceptionResponse();
         StringWriter stringWriter = getExceptionStringWriter(exceptionResponse.getGeneralExceptionResponse(exception));
         return Response.serverError()

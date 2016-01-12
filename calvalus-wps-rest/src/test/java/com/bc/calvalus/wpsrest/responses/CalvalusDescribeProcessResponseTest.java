@@ -10,7 +10,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 import org.junit.*;
@@ -188,7 +188,7 @@ public class CalvalusDescribeProcessResponseTest {
 
     }
 
-    @Test(expected = WpsException.class)
+    @Test(expected = WpsRuntimeException.class)
     public void canThrowWpsException() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsMetadata.class)).thenThrow(new ProductionException("Error when creating CalvalusFacade"));
         IWpsProcess mockProcess = mock(IWpsProcess.class);

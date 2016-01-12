@@ -1,7 +1,7 @@
 package com.bc.calvalus.wpsrest.wpsoperations.getcapabilities;
 
 import com.bc.calvalus.wpsrest.JaxbHelper;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.Capabilities;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.responses.AbstractGetCapabilitiesResponseConverter;
@@ -40,7 +40,7 @@ public abstract class AbstractGetCapabilitiesOperation {
 
             jaxbHelper.marshal(capabilities, writer);
             return writer.toString();
-        } catch (WpsException | JAXBException exception) {
+        } catch (WpsRuntimeException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to create a response to a GetCapabilities request.", exception);
             ExceptionReport exceptionReport = getExceptionReport(exception);
             try {

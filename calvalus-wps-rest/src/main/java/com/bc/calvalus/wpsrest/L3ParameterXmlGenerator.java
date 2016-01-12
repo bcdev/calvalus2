@@ -11,7 +11,7 @@ import org.apache.commons.lang.StringUtils;
  * This class constructs L3 parameter from the request to a format
  * that conforms to Production Request.
  *
- * Created by hans on 19/08/2015.
+ * @author hans
  */
 public class L3ParameterXmlGenerator {
 

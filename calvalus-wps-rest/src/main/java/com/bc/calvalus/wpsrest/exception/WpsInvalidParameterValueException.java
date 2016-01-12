@@ -1,9 +1,9 @@
 package com.bc.calvalus.wpsrest.exception;
 
 /**
- * Created by hans on 08/10/2015.
+ * @author hans
  */
-public class WpsInvalidParameterValueException extends WpsException {
+public class WpsInvalidParameterValueException extends WpsRuntimeException {
 
     public WpsInvalidParameterValueException(String invalidValue) {
         super("Invalid value of parameter '" + invalidValue + "'");

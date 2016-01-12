@@ -15,8 +15,8 @@ import java.util.List;
 
 /**
  * This is the facade of any calvalus-related operations.
- * <p/>
- * Created by hans on 13/08/2015.
+ *
+ * @author hans
  */
 public class CalvalusFacade {
 
@@ -29,7 +29,7 @@ public class CalvalusFacade {
         this.userName = servletRequestWrapper.getUserName();
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(servletRequestWrapper);
-        this.calvalusProcessorExtractor = new CalvalusProcessorExtractor(getProductionService(), userName);
+        this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
     public ProductionService getProductionService() throws ProductionException, IOException {
@@ -57,11 +57,11 @@ public class CalvalusFacade {
     }
 
     public List<IWpsProcess> getProcessors() throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessors();
+        return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
     }
 
     public CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessor(parser);
+        return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {

@@ -10,7 +10,7 @@ import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.DocumentOutputDefinitionType;
 import com.bc.calvalus.wpsrest.jaxb.Execute;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
@@ -44,7 +44,7 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
             calvalusFacade.observeStagingStatus(production);
             return calvalusFacade.getProductResultUrls(production);
         } catch (InterruptedException | IOException | JAXBException | ProductionException exception) {
-            throw new WpsException("Unable to process the request synchronously", exception);
+            throw new WpsRuntimeException("Unable to process the request synchronously", exception);
         }
     }
 
@@ -58,7 +58,7 @@ public class CalvalusExecuteOperation extends AbstractExecuteOperation {
             Production production = calvalusFacade.orderProductionAsynchronous(request);
             return production.getId();
         } catch (IOException | JAXBException | ProductionException exception) {
-            throw new WpsException("Unable to process the request asynchronously", exception);
+            throw new WpsRuntimeException("Unable to process the request asynchronously", exception);
         }
     }
 

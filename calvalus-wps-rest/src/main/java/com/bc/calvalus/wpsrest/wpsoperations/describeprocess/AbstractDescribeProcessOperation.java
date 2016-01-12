@@ -4,7 +4,6 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.jaxb.ExceptionReport;
 import com.bc.calvalus.wpsrest.jaxb.ProcessDescriptions;
 import com.bc.calvalus.wpsrest.responses.ExceptionResponse;
-import com.bc.calvalus.wpsrest.wpsoperations.AbstractOperation;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
 import javax.xml.bind.JAXBException;
@@ -15,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * @author hans
  */
-public abstract class AbstractDescribeProcessOperation extends AbstractOperation {
+public abstract class AbstractDescribeProcessOperation {
 
     private Logger logger = getLogger();
 

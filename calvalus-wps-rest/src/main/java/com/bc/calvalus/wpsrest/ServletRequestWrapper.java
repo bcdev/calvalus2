@@ -3,7 +3,7 @@ package com.bc.calvalus.wpsrest;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * Created by hans on 15/09/2015.
+ * @author hans
  */
 public class ServletRequestWrapper {
 

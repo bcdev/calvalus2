@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import org.junit.*;
 
 /**
@@ -29,7 +29,7 @@ public class WpsServiceFactoryTest {
         assertThat(wpsService, instanceOf(CalvalusWpsService.class));
     }
 
-    @Test (expected = WpsException.class)
+    @Test (expected = WpsRuntimeException.class)
     public void testGetInvalidWpsService() throws Exception {
         wpsServiceFactory.getWpsService("invalid");
     }

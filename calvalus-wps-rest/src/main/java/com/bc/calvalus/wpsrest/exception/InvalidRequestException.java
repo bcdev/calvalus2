@@ -1,9 +1,9 @@
 package com.bc.calvalus.wpsrest.exception;
 
 /**
- * Created by hans on 14/08/2015.
+ * @author hans
  */
-public class InvalidRequestException extends WpsException {
+public class InvalidRequestException extends WpsRuntimeException {
 
     public InvalidRequestException(String message) {
         super(message);

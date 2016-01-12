@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.io.Writer;
 
 /**
- * Created by hans on 12/08/2015.
+ * @author hans
  */
 public class JaxbHelper {
 

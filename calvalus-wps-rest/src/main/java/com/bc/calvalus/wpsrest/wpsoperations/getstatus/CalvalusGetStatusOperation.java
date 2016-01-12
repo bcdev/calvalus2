@@ -7,7 +7,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.AbstractExecuteResponseConverter;
 import com.bc.calvalus.wpsrest.responses.CalvalusExecuteResponseConverter;
@@ -31,7 +31,7 @@ public class CalvalusGetStatusOperation extends AbstractGetStatusOperation {
             this.calvalusFacade = new CalvalusFacade(wpsMetadata.getServletRequestWrapper());
             production = getProduction(jobId);
         } catch (IOException | ProductionException exception) {
-            throw new WpsException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new WpsRuntimeException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
         }
     }
 

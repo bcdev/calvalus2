@@ -9,27 +9,19 @@ import com.bc.calvalus.wpsrest.CalvalusProcessor;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.responses.IWpsProcess;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * This class handles the processor lookup operation.
- * <p/>
- * Created by hans on 13/08/2015.
+ *
+ * @author hans
  */
 public class CalvalusProcessorExtractor {
 
-    private ProductionService productionService;
-    private String userName;
-
-    protected CalvalusProcessorExtractor(ProductionService productionService, String userName) {
-        this.productionService = productionService;
-        this.userName = userName;
-    }
-
-    protected List<IWpsProcess> getProcessors() throws IOException, ProductionException {
-        BundleDescriptor[] bundleDescriptors = getBundleDescriptors();
+    protected List<IWpsProcess> getProcessors(ProductionService productionService, String userName)
+                throws ProductionException {
+        BundleDescriptor[] bundleDescriptors = getBundleDescriptors(productionService, userName);
 
         List<IWpsProcess> processors = new ArrayList<>();
         for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
@@ -45,13 +37,15 @@ public class CalvalusProcessorExtractor {
         return processors;
     }
 
-    protected CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
-        BundleDescriptor[] bundleDescriptor = getBundleDescriptors();
+    protected CalvalusProcessor getProcessor(ProcessorNameParser parser, ProductionService productionService, String userName)
+                throws ProductionException {
+        BundleDescriptor[] bundleDescriptor = getBundleDescriptors(productionService, userName);
         for (BundleDescriptor bundle : bundleDescriptor) {
             if (bundle.getProcessorDescriptors() == null) {
                 continue;
             }
-            if (bundle.getBundleName().equals(parser.getBundleName()) && bundle.getBundleVersion().equals(parser.getBundleVersion())) {
+            if (bundle.getBundleName().equals(parser.getBundleName())
+                && bundle.getBundleVersion().equals(parser.getBundleVersion())) {
                 for (ProcessorDescriptor processorDescriptor : bundle.getProcessorDescriptors()) {
                     if (processorDescriptor.getExecutableName().equals(parser.getExecutableName())) {
                         return new CalvalusProcessor(bundle, processorDescriptor);
@@ -62,7 +56,8 @@ public class CalvalusProcessorExtractor {
         return null;
     }
 
-    private BundleDescriptor[] getBundleDescriptors() throws ProductionException, IOException {
+    private BundleDescriptor[] getBundleDescriptors(ProductionService productionService, String userName)
+                throws ProductionException {
         BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
         return productionService.getBundles(userName, filter);
     }

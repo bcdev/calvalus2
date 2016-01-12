@@ -12,7 +12,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.ExecuteResponse;
 import com.bc.calvalus.wpsrest.responses.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
@@ -221,7 +221,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(ServletRequestWrapper.class))
                     .thenThrow(new IOException("IOException error."));
 
-        thrownException.expect(WpsException.class);
+        thrownException.expect(WpsRuntimeException.class);
         thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockWpsMetadata, "job-01");
@@ -232,7 +232,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(ServletRequestWrapper.class))
                     .thenThrow(new ProductionException("ProductionException error."));
 
-        thrownException.expect(WpsException.class);
+        thrownException.expect(WpsRuntimeException.class);
         thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockWpsMetadata, "job-01");

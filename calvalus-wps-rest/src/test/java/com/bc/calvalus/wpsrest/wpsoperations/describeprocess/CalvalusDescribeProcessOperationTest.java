@@ -11,7 +11,7 @@ import com.bc.calvalus.wpsrest.JaxbHelper;
 import com.bc.calvalus.wpsrest.ProcessorNameParser;
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
 import com.bc.calvalus.wpsrest.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.CodeType;
 import com.bc.calvalus.wpsrest.jaxb.InputDescriptionType;
 import com.bc.calvalus.wpsrest.jaxb.LanguageStringType;
@@ -148,7 +148,7 @@ public class CalvalusDescribeProcessOperationTest {
         assertThat(singleProcess.getValue(), equalTo(calvalusProcessor1));
     }
 
-    @Test(expected = WpsException.class)
+    @Test(expected = WpsRuntimeException.class)
     public void canThrowExceptionWhenProcessorIsNull() throws Exception {
         ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(mockServletRequestWrapper).thenReturn(mockCalvalusFacade);

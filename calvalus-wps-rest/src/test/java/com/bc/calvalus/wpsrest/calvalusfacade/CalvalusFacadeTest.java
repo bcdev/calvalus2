@@ -22,7 +22,7 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.io.IOException;
 
 /**
- * Created by hans on 15/09/2015.
+ * @author hans
  */
 
 @RunWith(PowerMockRunner.class)
@@ -36,6 +36,7 @@ public class CalvalusFacadeTest {
     private CalvalusProduction mockCalvalusProduction;
     private CalvalusStaging mockCalvalusStaging;
     private CalvalusProcessorExtractor mockCalvalusProcessorExtractor;
+    private ProductionService mockProductionService;
 
     /**
      * Class under test.
@@ -51,7 +52,7 @@ public class CalvalusFacadeTest {
 
         when(mockServletRequestWrapper.getUserName()).thenReturn("mockUserName");
 
-        mockProductionService();
+        configureProductionServiceMocking();
     }
 
     @Test
@@ -133,26 +134,36 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testGetProcessors() throws Exception {
-        whenNew(CalvalusProcessorExtractor.class).withArguments(any(ProductionService.class), anyString()).thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
+
+        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
+        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
         calvalusFacade.getProcessors();
 
-        verify(mockCalvalusProcessorExtractor).getProcessors();
+        verify(mockCalvalusProcessorExtractor).getProcessors(productionServiceCaptor.capture(), userNameCaptor.capture());
+
+        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
+        assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
     @Test
     public void testGetProcessor() throws Exception {
         ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
-        whenNew(CalvalusProcessorExtractor.class).withArguments(any(ProductionService.class), anyString()).thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
         ArgumentCaptor<ProcessorNameParser> parserCaptor = ArgumentCaptor.forClass(ProcessorNameParser.class);
+        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
+        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockServletRequestWrapper);
         calvalusFacade.getProcessor(mockParser);
 
-        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture());
+        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture(), productionServiceCaptor.capture(), userNameCaptor.capture());
 
         assertThat(parserCaptor.getValue(), equalTo(mockParser));
+        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
+        assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
     @Test
@@ -167,8 +178,8 @@ public class CalvalusFacadeTest {
         verify(mockProductionService).getProductSets(anyString(), anyString());
     }
 
-    private void mockProductionService() throws IOException, ProductionException {
-        ProductionService mockProductionService = mock(ProductionService.class);
+    private void configureProductionServiceMocking() throws IOException, ProductionException {
+        mockProductionService = mock(ProductionService.class);
         PowerMockito.mockStatic(CalvalusProductionService.class);
         PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
     }

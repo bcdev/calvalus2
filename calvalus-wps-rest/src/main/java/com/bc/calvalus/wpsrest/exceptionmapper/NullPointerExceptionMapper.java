@@ -16,8 +16,8 @@ import java.util.logging.Logger;
 
 /**
  * This class maps any NullPointerException to a proper WPS Exception response.
- * <p/>
- * Created by hans on 08/10/2015.
+ *
+ * @author hans
  */
 @Provider
 public class NullPointerExceptionMapper implements ExceptionMapper<NullPointerException> {

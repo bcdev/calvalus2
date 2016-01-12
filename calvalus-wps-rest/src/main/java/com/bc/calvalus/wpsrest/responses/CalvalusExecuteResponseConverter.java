@@ -1,7 +1,7 @@
 package com.bc.calvalus.wpsrest.responses;
 
 import com.bc.calvalus.wpsrest.ServletRequestWrapper;
-import com.bc.calvalus.wpsrest.exception.WpsException;
+import com.bc.calvalus.wpsrest.exception.WpsRuntimeException;
 import com.bc.calvalus.wpsrest.jaxb.*;
 import com.bc.calvalus.wpsrest.wpsoperations.WpsMetadata;
 
@@ -155,7 +155,7 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         try {
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
         } catch (DatatypeConfigurationException exception) {
-            throw new WpsException("Unable to create new Gregorian Calendar.", exception);
+            throw new WpsRuntimeException("Unable to create new Gregorian Calendar.", exception);
         }
     }
 
