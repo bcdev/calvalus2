@@ -149,7 +149,7 @@ public class CalvalusProductIO {
         return new FSImageInputStream(in, status.getLen());
     }
 
-    private static Product readProductImpl(Object input, Class<?> inputClass, String inputFormat) throws IOException {
+    private static Product readProductImpl(Object input, Class<?> inputClass, String inputFormat) {
         if (inputFormat != null) {
             return readProductWithInputFormat(input, inputClass, inputFormat);
         } else {
@@ -157,12 +157,16 @@ public class CalvalusProductIO {
         }
     }
 
-    private static Product readProductWithInputFormat(Object input, Class<?> inputClass, String inputFormat) throws IOException {
+    private static Product readProductWithInputFormat(Object input, Class<?> inputClass, String inputFormat) {
         ProductReader productReader = ProductIO.getProductReader(inputFormat);
         if (productReader != null) {
             ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
             if (canHandle(readerPlugIn, inputClass)) {
-                return productReader.readProductNodes(input, null);
+                try {
+                    return productReader.readProductNodes(input, null);
+                } catch (IOException e) {
+                    return null;
+                }
             }
         }
         return null;
@@ -180,10 +184,14 @@ public class CalvalusProductIO {
         return false;
     }
 
-    private static Product readProductWithAutodetect(Object input) throws IOException {
+    private static Product readProductWithAutodetect(Object input) {
         ProductReader productReader = ProductIO.getProductReaderForInput(input);
         if (productReader != null) {
-            return productReader.readProductNodes(input, null);
+            try {
+                return productReader.readProductNodes(input, null);
+            } catch (IOException e) {
+                return null;
+            }
         }
         return null;
     }
