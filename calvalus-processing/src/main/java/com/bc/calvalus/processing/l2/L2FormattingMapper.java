@@ -57,6 +57,7 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
 
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 20 : 80;

@@ -96,6 +96,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
         ProcessorAdapter l2ProcessorAdapter = ProcessorFactory.createAdapter(context);
+        l2ProcessorAdapter.prepareProcessing();
 
         final int progressForFindingMatchingReferences = 5 + 5;
         final int progressForDifferentiation = 10;
@@ -150,6 +151,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
                 // Differentiation processing
                 ExecutableProcessorAdapter differentiationProcessorAdapter = new ExecutableProcessorAdapter(context, VCWorkflowItem.DIFFERENTIATION_SUFFIX);
+                differentiationProcessorAdapter.prepareProcessing();
                 ProgressMonitor differentiationPM = SubProgressMonitor.create(pm, progressForDifferentiation);
                 KeywordHandler keywordHandler = differentiationProcessorAdapter.process(differentiationPM,
                                                                                         null,

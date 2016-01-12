@@ -46,6 +46,7 @@ public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Te
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {

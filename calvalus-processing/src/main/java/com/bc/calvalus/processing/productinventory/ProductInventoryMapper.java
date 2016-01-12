@@ -48,6 +48,7 @@ public class ProductInventoryMapper extends Mapper<NullWritable, NullWritable, T
         Path inputPath = split.getPath();
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
+        processorAdapter.prepareProcessing();
         // distinguish the MERIS overlap inventory case from the general one
         final String operatorName = context.getConfiguration().get(JobConfigNames.CALVALUS_L2_OPERATOR);
         if (operatorName == null) {

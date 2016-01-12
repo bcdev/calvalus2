@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.runtime.Engine;
 
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
@@ -101,14 +102,14 @@ public abstract class ProcessorAdapter {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
-//        try {
-//            String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
-//            System.setProperty("snap.userdir", cacheRootDir);
-//            System.setProperty("snap.home", cacheRootDir);
-//            System.setProperty("snap.pythonModuleDir", cacheRootDir);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        try {
+            String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
+            System.setProperty("snap.userdir", cacheRootDir);
+            System.setProperty("snap.home", cacheRootDir);
+            System.setProperty("snap.pythonModuleDir", cacheRootDir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         GpfUtils.init(mapContext.getConfiguration());
     }
 
@@ -125,11 +126,15 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * Prepares the processing.
-     * The default implementation does nothing.
+     * <p>Prepares the processing.</p>
+     * <p>The default implementation starts the SNAP Engine. This enables SNAP modules which rely on activators
+     * (implementations of <code>org.esa.snap.runtime.Activator</code>). If that type of SNAP module is envisaged to be
+     * used, overrides must call <code>super.prepareProcessing()</code>.</p>
+     *
+     * @see org.esa.snap.runtime.Activator
      */
     public void prepareProcessing() throws IOException {
-
+        Engine.start();
     }
 
     /**

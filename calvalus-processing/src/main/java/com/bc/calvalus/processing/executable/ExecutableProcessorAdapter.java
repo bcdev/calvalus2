@@ -40,7 +40,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
-import java.util.Properties;
 import java.util.logging.Level;
 
 /**
@@ -69,6 +68,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public void prepareProcessing() throws IOException {
+        super.prepareProcessing();
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
