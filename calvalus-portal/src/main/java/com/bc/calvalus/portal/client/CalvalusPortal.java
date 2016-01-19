@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -43,6 +44,8 @@ import java.util.Map;
  * @author Norman
  */
 public class CalvalusPortal implements EntryPoint, PortalContext {
+
+    public static final Logger LOG = Logger.getLogger("CalvalusPortal");
 
     public static final String NO_FILTER = "";
     private static final String[] VIEW_NAMES = {
@@ -643,15 +646,25 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private static boolean roleSupports(String viewName, String[] roles, Map<String, String> config) {
         final String viewRoles = config.get(viewName);
+        // for debugging
+        final StringBuilder s = new StringBuilder();
+        for (String r : roles) {
+            s.append(r);
+            s.append(' ');
+        }
+        s.setLength(s.length()-1);
+        // end for debugging
         if (viewRoles != null) {
             for (String configuredRole : viewRoles.split(" ")) {
                 for (String userRole : roles) {
                     if (userRole.equals(configuredRole)) {
+                        LOG.fine("prop " + viewName + " (" + viewRoles + ") supported by role " + userRole + " (" + s.toString() + ")");
                         return true;
                     }
                 }
             }
         }
+        LOG.fine("prop " + viewName + " (" + viewRoles + ") not supported by any role (" + s.toString() + ")");
         return false;
     }
 }

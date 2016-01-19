@@ -5,7 +5,7 @@
 
 <html>
 <head>
-    <title>Finnish Calvalus Processing On-Demand</title>
+    <title>Finnish Calvalus portal for on-demand processing</title>
     <link type="text/css" rel="stylesheet" href="calvalus.css">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
@@ -32,13 +32,13 @@
             <hr/>
             <table style="width: 100%;">
                 <tr>
-                    <td>
-                        <a href="http://feeder.calfin.fmi.fi/"><img src="/calfin/images/fmi-logo.png" alt="FMI logo"/> <img src="/calfin/images/syke-logo.png" alt="SYKE logo"/></a>
+                    <td width="200">
+                        <a href="http://feeder.calfin.fmi.fi/"><img src="/calfin/images/fmi-logo.png" width="200" alt="FMI logo"/><br/><img src="/calfin/images/syke-logo.png" height="60" alt="SYKE logo"/></a>
                     </td>
                     <td>
                         <h1 class="title">Calvalus</h1>
 
-                        <h2 class="subTitle">Portal for Finnish Calvalus on-demand processing</h2>
+                        <h2 class="subTitle">Finnish portal for on-demand processing</h2>
                     </td>
                     <td class="userName">
                         <% final Principal userPrincipal = request.getUserPrincipal(); %>
