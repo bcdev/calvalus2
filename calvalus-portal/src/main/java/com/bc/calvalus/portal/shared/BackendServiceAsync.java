@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.shared;
 
+import com.bc.calvalus.portal.client.CalvalusPortal;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
@@ -45,4 +46,6 @@ public interface BackendServiceAsync {
     void isUserInRole(String role, AsyncCallback<Boolean> async);
 
     void listSystemFiles(String baseDir, AsyncCallback<String[]> callback);
+
+    void getCalvalusConfig(AsyncCallback<DtoCalvalusConfig> callback);
 }
