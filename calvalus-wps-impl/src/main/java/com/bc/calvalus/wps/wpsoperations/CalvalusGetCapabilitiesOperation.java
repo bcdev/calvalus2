@@ -1,9 +1,8 @@
-package com.bc.calvalus.wps.wpsoperations.getcapabilities;
+package com.bc.calvalus.wps.wpsoperations;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
-import com.bc.calvalus.wps.responses.AbstractGetCapabilitiesResponseConverter;
 import com.bc.calvalus.wps.responses.CalvalusGetCapabilitiesResponseConverter;
 import com.bc.calvalus.wps.responses.IWpsProcess;
 import com.bc.wps.api.WpsRequestContext;
@@ -26,12 +25,12 @@ public class CalvalusGetCapabilitiesOperation {
 
     public Capabilities getCapabilities() throws ProcessesNotAvailableException, JAXBException {
         List<IWpsProcess> processes = getProcesses();
-        AbstractGetCapabilitiesResponseConverter getCapabilitiesResponse = new CalvalusGetCapabilitiesResponseConverter();
+        CalvalusGetCapabilitiesResponseConverter getCapabilitiesResponse = new CalvalusGetCapabilitiesResponseConverter();
 
-        return getCapabilitiesResponse.createGetCapabilitiesResponse(processes);
+        return getCapabilitiesResponse.constructGetCapabilitiesResponse(processes);
     }
 
-    public List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
+    private List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             return calvalusFacade.getProcessors();

@@ -1,4 +1,4 @@
-package com.bc.calvalus.wps.wpsoperations.execute;
+package com.bc.calvalus.wps.wpsoperations;
 
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -8,7 +8,6 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.FailedRequestException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.responses.AbstractExecuteResponseConverter;
 import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
@@ -50,7 +49,7 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    public List<String> processSync(Execute executeRequest, String processorId) throws FailedRequestException {
+    protected List<String> processSync(Execute executeRequest, String processorId) throws FailedRequestException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
@@ -64,7 +63,7 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    public String processAsync(Execute executeRequest, String processorId) throws FailedRequestException {
+    protected String processAsync(Execute executeRequest, String processorId) throws FailedRequestException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
@@ -76,30 +75,30 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    public ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
+    protected ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
         if (isLineage) {
-            AbstractExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
+            CalvalusExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
             return executeAcceptedResponse.getAcceptedWithLineageResponse(productionId, executeRequest.getDataInputs(),
                                                                           outputType, context.getServerContext());
         } else {
-            AbstractExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
+            CalvalusExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
             return executeAcceptedResponse.getAcceptedResponse(productionId, context.getServerContext());
         }
     }
 
-    public ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, List<String> productResultUrls) {
+    protected ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, List<String> productResultUrls) {
         if (isLineage) {
-            AbstractExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
+            CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
             return executeSuccessfulResponse.getSuccessfulWithLineageResponse(productResultUrls, executeRequest.getDataInputs(), outputType);
         } else {
-            AbstractExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
+            CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
             return executeSuccessfulResponse.getSuccessfulResponse(productResultUrls);
         }
     }
 
-    private ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
+    protected ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
                                                       CalvalusFacade calvalusFacade)
                 throws JAXBException, IOException, ProductionException, InvalidProcessorIdException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);

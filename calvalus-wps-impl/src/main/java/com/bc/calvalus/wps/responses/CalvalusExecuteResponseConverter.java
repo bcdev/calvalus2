@@ -25,13 +25,17 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseConverter {
+public class CalvalusExecuteResponseConverter {
+
+    private ExecuteResponse executeResponse;
 
     public CalvalusExecuteResponseConverter() {
-        super();
+        this.executeResponse = new ExecuteResponse();
+        this.executeResponse.setService("WPS");
+        this.executeResponse.setVersion("1.0.0");
+        this.executeResponse.setLang("en");
     }
 
-    @Override
     public ExecuteResponse getAcceptedResponse(String jobId, WpsServerContext context) {
         StatusType statusType = new StatusType();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
@@ -45,7 +49,6 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         return executeResponse;
     }
 
-    @Override
     public ExecuteResponse getAcceptedWithLineageResponse(String jobId,
                                                           DataInputsType dataInputs,
                                                           List<DocumentOutputDefinitionType> rawDataOutput,
@@ -65,7 +68,6 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         return executeResponse;
     }
 
-    @Override
     public ExecuteResponse getSuccessfulResponse(List<String> resultUrls) {
         StatusType statusType = new StatusType();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
@@ -92,7 +94,6 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         return executeResponse;
     }
 
-    @Override
     public ExecuteResponse getSuccessfulWithLineageResponse(List<String> resultUrls,
                                                             DataInputsType dataInputs,
                                                             List<DocumentOutputDefinitionType> outputType) {
@@ -125,7 +126,6 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         return executeResponse;
     }
 
-    @Override
     public ExecuteResponse getFailedResponse(String exceptionMessage) {
         StatusType statusType = new StatusType();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
@@ -144,7 +144,6 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
         return executeResponse;
     }
 
-    @Override
     public ExecuteResponse getStartedResponse(String state, float progress) {
         StatusType statusType = new StatusType();
         XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
@@ -169,6 +168,7 @@ public class CalvalusExecuteResponseConverter extends AbstractExecuteResponseCon
     }
 
     private String getStatusUrl(String productId, WpsServerContext context) {
-        return context.getHostAddress() + "?Service=WPS&Request=GetStatus&JobId=" + productId;
+        return "http://" + context.getHostAddress() +
+               "?Service=WPS&Request=GetStatus&JobId=" + productId;
     }
 }

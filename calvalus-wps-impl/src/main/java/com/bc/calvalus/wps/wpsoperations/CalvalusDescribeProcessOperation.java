@@ -1,4 +1,4 @@
-package com.bc.calvalus.wps.wpsoperations.describeprocess;
+package com.bc.calvalus.wps.wpsoperations;
 
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_L3_PARAMETERS_SCHEMA_LOCATION;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2CodeType;

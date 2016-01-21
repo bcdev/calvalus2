@@ -23,6 +23,7 @@ import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_VERSION;
 
 
 import com.bc.wps.api.schema.AddressType;
+import com.bc.wps.api.schema.Capabilities;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.ContactType;
 import com.bc.wps.api.schema.LanguageStringType;
@@ -37,13 +38,30 @@ import com.bc.wps.api.schema.ResponsiblePartySubsetType;
 import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
 import com.bc.wps.api.schema.TelephoneType;
+import com.bc.wps.api.utils.CapabilitiesBuilder;
 
 import java.util.List;
 
 /**
  * @author hans
  */
-public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabilitiesResponseConverter {
+public class CalvalusGetCapabilitiesResponseConverter {
+
+    public Capabilities constructGetCapabilitiesResponse(List<IWpsProcess> processList) {
+        OperationsMetadata operationsMetadata = getOperationsMetadata();
+        ServiceIdentification serviceIdentification = getServiceIdentification();
+        ServiceProvider serviceProvider = getServiceProvider();
+        ProcessOfferings processOfferings = getProcessOfferings(processList);
+        Languages languages = getLanguages();
+
+        return CapabilitiesBuilder.create()
+                    .withOperationsMetadata(operationsMetadata)
+                    .withServiceIdentification(serviceIdentification)
+                    .withServiceProvider(serviceProvider)
+                    .withProcessOfferings(processOfferings)
+                    .withLanguages(languages)
+                    .build();
+    }
 
     protected OperationsMetadata getOperationsMetadata() {
         OperationsMetadata operationsMetadata = new OperationsMetadata();
@@ -68,7 +86,7 @@ public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabil
         return operationsMetadata;
     }
 
-    public ServiceProvider getServiceProvider() {
+    protected ServiceProvider getServiceProvider() {
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setProviderName(COMPANY_NAME);
 
@@ -110,7 +128,7 @@ public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabil
         return serviceProvider;
     }
 
-    public ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
+    protected ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
         ProcessOfferings processOfferings = new ProcessOfferings();
         for (IWpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
@@ -132,7 +150,7 @@ public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabil
         return processOfferings;
     }
 
-    public ServiceIdentification getServiceIdentification() {
+    protected ServiceIdentification getServiceIdentification() {
         ServiceIdentification serviceIdentification = new ServiceIdentification();
         LanguageStringType title = new LanguageStringType();
         title.setValue(WPS_SERVICE_ID);
@@ -150,7 +168,7 @@ public class CalvalusGetCapabilitiesResponseConverter extends AbstractGetCapabil
         return serviceIdentification;
     }
 
-    public Languages getLanguages() {
+    protected Languages getLanguages() {
         Languages languages = new Languages();
 
         Languages.Default defaultLanguage = new Languages.Default();
