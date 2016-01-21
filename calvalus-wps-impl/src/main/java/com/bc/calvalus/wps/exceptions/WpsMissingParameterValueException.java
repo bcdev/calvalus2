@@ -9,11 +9,4 @@ public class WpsMissingParameterValueException extends WpsRuntimeException {
         super("Missing value from parameter : " + missingParameter);
     }
 
-    public WpsMissingParameterValueException(String missingParameter, Throwable cause) {
-        super("Missing value from parameter : " + missingParameter, cause);
-    }
-
-    public WpsMissingParameterValueException(Throwable cause) {
-        super(cause);
-    }
 }

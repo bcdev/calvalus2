@@ -9,12 +9,4 @@ public class InvalidProcessorIdException extends Exception {
         super("Invalid processorId '" + processorId + "'");
     }
 
-    public InvalidProcessorIdException(String processorId, Throwable cause) {
-        super("Invalid processorId '" + processorId + "'", cause);
-    }
-
-    public InvalidProcessorIdException(Throwable cause) {
-        super(cause);
-    }
-
 }

@@ -13,8 +13,4 @@ public class WpsRuntimeException extends RuntimeException {
         super(message, cause);
     }
 
-    public WpsRuntimeException(Throwable cause) {
-        super(cause);
-    }
-
 }

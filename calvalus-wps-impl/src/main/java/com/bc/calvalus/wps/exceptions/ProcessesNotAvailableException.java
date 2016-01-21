@@ -13,8 +13,4 @@ public class ProcessesNotAvailableException extends Exception {
         super(message, cause);
     }
 
-    public ProcessesNotAvailableException(Throwable cause) {
-        super(cause);
-    }
-
 }

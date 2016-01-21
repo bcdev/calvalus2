@@ -9,11 +9,4 @@ public class WpsInvalidParameterValueException extends WpsRuntimeException {
         super("Invalid value of parameter '" + invalidValue + "'");
     }
 
-    public WpsInvalidParameterValueException(String invalidValue, Throwable cause) {
-        super("Invalid value of parameter '" + invalidValue + "'", cause);
-    }
-
-    public WpsInvalidParameterValueException(Throwable cause) {
-        super(cause);
-    }
 }
