@@ -44,11 +44,11 @@ import java.io.OutputStream;
 import java.util.Arrays;
 
 /**
- * Runs the MERIS BA processor adapter for a single tile.
+ * Runs the BA processor adapter.
  *
  * @author thomas
  */
-public class MerisBAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritable, TileDataWritable> {
+public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritable, TileDataWritable> {
 
     private File cwd;
     private boolean debugScriptGenerator;

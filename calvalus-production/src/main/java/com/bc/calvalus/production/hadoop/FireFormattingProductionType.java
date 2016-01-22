@@ -23,11 +23,10 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
-import com.bc.calvalus.processing.fire.BAMapper;
-import com.bc.calvalus.processing.fire.BATilesInputFormat;
+import com.bc.calvalus.processing.fire.FireFormattingMapper;
+import com.bc.calvalus.processing.fire.FireInputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -43,36 +42,33 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * The production type used for generating the MERIS BA data.
+ * The production type used for formatting the MERIS BA data.
  *
  * @author thomas
  */
-public class FireMERISBAProductionType extends HadoopProductionType {
+public class FireFormattingProductionType extends HadoopProductionType {
 
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
         public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new FireMERISBAProductionType(inventory, processing, staging);
+            return new FireFormattingProductionType(inventory, processing, staging);
         }
     }
 
-    FireMERISBAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                              StagingService stagingService) {
-        super("Fire-MERIS-BA", inventoryService, processingService, stagingService);
+    FireFormattingProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                                 StagingService stagingService) {
+        super("Fire-Formatting", inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = "Fire MERIS BA" + " " + productionRequest.getString("calvalus.year");
+        String defaultProductionName = String.format("Fire Formatting %s/%s", productionRequest.getString("calvalus.year"), productionRequest.getString("calvalus.month"));
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        String outputPath = getOutputPath(productionRequest, productionId, "MERIS-BA");
-        final int mosaicTileSize = getMosaicTileSize(productionRequest);
-        jobConfig.setIfUnset("calvalus.mosaic.macroTileSize", "10");
-        jobConfig.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Formatting");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR, productionRequest.getString("processorName"));
@@ -80,13 +76,13 @@ public class FireMERISBAProductionType extends HadoopProductionType {
 
         String processorBundle = productionRequest.getParameter("processorBundleName", true) + "-" + productionRequest.getParameter("processorBundleVersion", true);
         jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundle);
-        Workflow.Sequential merisBAWorkflow = new Workflow.Sequential();
+        Workflow.Sequential merisFormattingWorkflow = new Workflow.Sequential();
         String userName = productionRequest.getUserName();
-        MerisBAWorkflowItem merisBAWorkflowItem = new MerisBAWorkflowItem(getProcessingService(), userName, productionName, jobConfig);
-        merisBAWorkflow.add(merisBAWorkflowItem);
+        MerisFormattingWorkflowItem merisFormattingWorkflowItem = new MerisFormattingWorkflowItem(getProcessingService(), userName, productionName, jobConfig);
+        merisFormattingWorkflow.add(merisFormattingWorkflowItem);
         CalvalusLogger.getLogger().info("Submitting workflow.");
         try {
-            merisBAWorkflow.submit();
+            merisFormattingWorkflow.submit();
         } catch (WorkflowException e) {
             throw new ProductionException(e);
         }
@@ -98,12 +94,7 @@ public class FireMERISBAProductionType extends HadoopProductionType {
                 stagingDir,
                 false,
                 productionRequest,
-                merisBAWorkflow);
-    }
-
-    private static int getMosaicTileSize(ProductionRequest productionRequest) throws ProductionException {
-        LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(productionRequest.getString("calvalus.lc.resolution"));
-        return sensorConfig.getMosaicTileSize();
+                merisFormattingWorkflow);
     }
 
     @Override
@@ -111,9 +102,9 @@ public class FireMERISBAProductionType extends HadoopProductionType {
         throw new NotImplementedException("Staging currently not implemented for fire-cci MERIS BA.");
     }
 
-    private static class MerisBAWorkflowItem extends HadoopWorkflowItem {
+    private static class MerisFormattingWorkflowItem extends HadoopWorkflowItem {
 
-        public MerisBAWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
+        public MerisFormattingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
             super(processingService, userName, jobName, jobConfig);
         }
 
@@ -124,8 +115,9 @@ public class FireMERISBAProductionType extends HadoopProductionType {
 
         @Override
         protected void configureJob(Job job) throws IOException {
-            job.setInputFormatClass(BATilesInputFormat.class);
-            job.setMapperClass(BAMapper.class);
+            CalvalusLogger.getLogger().info("Configuring job.");
+            job.setInputFormatClass(FireInputFormat.class);
+            job.setMapperClass(FireFormattingMapper.class);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
 

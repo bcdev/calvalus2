@@ -14,28 +14,28 @@ public class BATilesInputFormatTest {
 
     @Test
     public void testValidatePattern_1() throws Exception {
-        BATilesInputFormat.validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v03h07/2008/2008.*fire-nc/.*nc$");
+        new BATilesInputFormat().validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v03h07/2008/2008.*fire-nc/.*nc$");
     }
 
     @Test
     public void testValidatePattern_2() throws Exception {
-        BATilesInputFormat.validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007.*fire-nc/.*nc$");
+        new BATilesInputFormat().validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007.*fire-nc/.*nc$");
 
     }
 
     @Test(expected = IOException.class)
     public void testValidatePattern_fail_1() throws Exception {
-        BATilesInputFormat.validatePattern("hdfs://calvaluss/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007.*fire-nc/.*nc$");
+        new BATilesInputFormat().validatePattern("hdfs://calvaluss/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007.*fire-nc/.*nc$");
     }
 
     @Test(expected = IOException.class)
     public void testValidatePattern_fail_2() throws Exception {
-        BATilesInputFormat.validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007.*fire-nc/.*nc$");
+        new BATilesInputFormat().validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007.*fire-nc/.*nc$");
     }
 
     @Test(expected = IOException.class)
     public void testValidatePattern_fail_3() throws Exception {
-        BATilesInputFormat.validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007/.*nc$");
+        new BATilesInputFormat().validatePattern("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2007/.*/2007/2007/.*nc$");
     }
 
     @Test

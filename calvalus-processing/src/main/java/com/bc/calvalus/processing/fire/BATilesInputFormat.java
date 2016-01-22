@@ -1,24 +1,14 @@
 package com.bc.calvalus.processing.fire;
 
-import com.bc.calvalus.JobClientsMap;
-import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
-import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
-import org.apache.hadoop.mapreduce.JobContext;
-import org.apache.hadoop.mapreduce.RecordReader;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,53 +17,27 @@ import java.util.Map;
  *
  * @author thomas
  */
-public class BATilesInputFormat extends InputFormat {
+public class BATilesInputFormat extends FireInputFormat {
 
     @Override
-    public List<InputSplit> getSplits(JobContext context) throws IOException {
-        Configuration conf = context.getConfiguration();
-        String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
-        validatePattern(inputPathPatterns);
+    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+                                           String inputPathPatterns,
+                                           Configuration conf) throws IOException {
+        FileStatus[] sameYearStatuses = super.getFileStatuses(inventoryService, inputPathPatterns, conf);
 
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
-
-        List<InputSplit> splits = new ArrayList<>(1000);
-        FileStatus[] sameYearStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
-
-        String[] wingsPathPatterns = createWingsPathPatterns(inputPathPatterns);
-        FileStatus[] beforeStatuses = getFileStatuses(hdfsInventoryService, wingsPathPatterns[0], conf);
-        FileStatus[] afterStatuses = getFileStatuses(hdfsInventoryService, wingsPathPatterns[1], conf);
+        String[] wingsPathPatterns = BATilesInputFormat.createWingsPathPatterns(inputPathPatterns);
+        FileStatus[] beforeStatuses = super.getFileStatuses(inventoryService, wingsPathPatterns[0], conf);
+        FileStatus[] afterStatuses = super.getFileStatuses(inventoryService, wingsPathPatterns[1], conf);
 
         FileStatus[] fileStatuses = new FileStatus[sameYearStatuses.length + beforeStatuses.length + afterStatuses.length];
         System.arraycopy(sameYearStatuses, 0, fileStatuses, 0, sameYearStatuses.length);
         System.arraycopy(beforeStatuses, 0, fileStatuses, sameYearStatuses.length, beforeStatuses.length);
         System.arraycopy(afterStatuses, 0, fileStatuses, sameYearStatuses.length + beforeStatuses.length, afterStatuses.length);
-
-        createSplits(fileStatuses, splits, conf);
-        return splits;
+        return fileStatuses;
     }
 
-    static String[] createWingsPathPatterns(String inputPathPatterns) throws IOException {
-        int year = Integer.parseInt(inputPathPatterns.substring(
-                "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length(),
-                "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length() + 4));
-        String beforeInputPathPatterns = "";
-        if (year - 1 > 2001) {
-            beforeInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year - 1))
-                .replace(Integer.toString(year - 1) + ".*fire-nc",
-                         Integer.toString(year - 1) + "-1[12]-.*fire-nc");
-        }
-        String afterInputPathPatterns = "";
-        if (year + 1 < 2013) {
-            afterInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year + 1))
-                    .replace(Integer.toString(year + 1) + ".*fire-nc",
-                            Integer.toString(year + 1) + "-0[12]-.*fire-nc");
-        }
-        return new String[] {beforeInputPathPatterns, afterInputPathPatterns};
-    }
-
-    static void validatePattern(String inputPathPatterns) throws IOException {
+    @Override
+    protected void validatePattern(String inputPathPatterns) throws IOException {
         // example: hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/.*/2008/2008.*fire-nc/.*nc$
         String regex = "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/\\d\\d\\d\\d/.*/\\d\\d\\d\\d/\\d\\d\\d\\d.*fire-nc/.*nc\\$";
         if (!inputPathPatterns.matches(regex)) {
@@ -81,9 +45,9 @@ public class BATilesInputFormat extends InputFormat {
         }
     }
 
-    private void createSplits(FileStatus[] fileStatuses,
-                              List<InputSplit> splits,
-                              Configuration conf) throws IOException {
+    protected void createSplits(FileStatus[] fileStatuses,
+                                List<InputSplit> splits,
+                                Configuration conf) throws IOException {
         // for all tiles, create an instance of CombineFileSplit
 
         MosaicGrid mosaicGrid = MosaicGrid.create(conf);
@@ -116,31 +80,23 @@ public class BATilesInputFormat extends InputFormat {
         }
     }
 
-    private static boolean fileMatchesTile(FileStatus file, int tileX, int tileY) {
-        return file.getPath().getName().contains(String.format("-v%02dh%02d", tileX, tileY));
-    }
-
-    private static FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
-                                                String inputPathPatterns,
-                                                Configuration conf) throws IOException {
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
-    }
-
-    @Override
-    public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
-        return new NoRecordReader();
-    }
-
-    private static class CombineFileSplitDef {
-
-        public CombineFileSplitDef() {
-            this.files = new ArrayList<>();
-            this.lengths = new ArrayList<>();
+    static String[] createWingsPathPatterns(String inputPathPatterns) throws IOException {
+        int year = Integer.parseInt(inputPathPatterns.substring(
+                "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length(),
+                "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length() + 4));
+        String beforeInputPathPatterns = "";
+        if (year - 1 > 2001) {
+            beforeInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year - 1))
+                .replace(Integer.toString(year - 1) + ".*fire-nc",
+                         Integer.toString(year - 1) + "-1[12]-.*fire-nc");
         }
-
-        ArrayList<Path> files;
-        ArrayList<Long> lengths;
+        String afterInputPathPatterns = "";
+        if (year + 1 < 2013) {
+            afterInputPathPatterns = inputPathPatterns.replaceAll(Integer.toString(year), Integer.toString(year + 1))
+                    .replace(Integer.toString(year + 1) + ".*fire-nc",
+                            Integer.toString(year + 1) + "-0[12]-.*fire-nc");
+        }
+        return new String[] {beforeInputPathPatterns, afterInputPathPatterns};
     }
+
 }
