@@ -5,8 +5,8 @@
 
 <web-app>
 
-    <display-name>Calvalus Portal</display-name>
-    <description>Calvalus Portal</description>
+    <display-name>CoastColour Processing On-Demand</display-name>
+    <description>Calvalus Portal for CoastColour on-demand processing</description>
 
     <!-- Configuration properties for the Calvalus portal -->
 
@@ -127,7 +127,7 @@
         <auth-constraint>
             <!-- Anyone with one of the listed roles may access this area -->
             <role-name>calvalus</role-name>
-            <role-name>coastcolour</role-name>
+            <role-name>calpro</role-name>
         </auth-constraint>
     </security-constraint>
 
@@ -144,7 +144,7 @@
     <!-- Security roles referenced by this web application -->
     <security-role>
         <role-name>calvalus</role-name>
-        <role-name>coastcolour</role-name>
+        <role-name>calpro</role-name>
     </security-role>
 
 </web-app>

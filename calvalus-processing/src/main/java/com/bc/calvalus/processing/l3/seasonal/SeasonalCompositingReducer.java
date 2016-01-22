@@ -85,6 +85,16 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             "bt_5_mean",
             "vegetation_index_mean"
     };
+    public static String[] PROBA_BANDS = {
+            "status",
+            "status_count",
+            "obs_count",
+            "sr_1_mean",
+            "sr_2_mean",
+            "sr_3_mean",
+            "sr_4_mean",
+            "vegetation_index_mean"
+    };
 
     private final List<float[]> usedTiles = new ArrayList<float[]>();
 
@@ -110,7 +120,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         boolean moreTilesAvailable = true;
         final int bandNumber = (context.getCurrentKey().get() >> 16) & 0xff;
         final int numberOfBands = context.getCurrentKey().get() >> 24;
-        final String bandName = numberOfBands == 13+1 ? MERIS_BANDS[bandNumber] : AVHRR_BANDS[bandNumber];
+        final String bandName = numberOfBands == 13+1 ? MERIS_BANDS[bandNumber] : numberOfBands == 5+1 ? AVHRR_BANDS[bandNumber] : PROBA_BANDS[bandNumber];
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%sm-P%dW-%s-%s-v%s",
                                                     numberOfBands == 13+1 ? "MERIS" : "AVHRR",
                                                     bandTileHeight == 1800 ? "300" : "1000",

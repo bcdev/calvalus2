@@ -155,9 +155,7 @@ public class L2ConfigForm extends Composite {
         showAllUserProcessors.addValueChangeHandler(valueChangeHandler);
         showSystemProcessors.addValueChangeHandler(valueChangeHandler);
 
-        if (! portalContext.withPortalFeature("othersets")) {
-            showAllUserProcessors.setEnabled(false);
-        }
+        showAllUserProcessors.setEnabled(portalContext.withPortalFeature("otherSets"));
 
         updateProcessorDetails();
 
