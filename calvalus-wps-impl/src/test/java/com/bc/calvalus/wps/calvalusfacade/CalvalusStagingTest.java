@@ -84,8 +84,8 @@ public class CalvalusStagingTest {
         List<String> productResultUrls = calvalusStaging.getProductResultUrls(mockCalvalusDefaultConfig, mockProduction);
 
         assertThat(productResultUrls.size(), equalTo(2));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/calwps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product1.nc"));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/calwps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product2.nc"));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product1.nc"));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product2.nc"));
     }
 
     @Test

@@ -32,12 +32,12 @@ public class CalvalusGetStatusOperation {
         } else if (isProductionJobFinishedAndFailed(jobId)) {
             executeResponse = getExecuteFailedResponse(jobId);
         } else {
-            executeResponse = getExecuteAcceptedResponse(jobId);
+            executeResponse = getExecuteInProgressResponse(jobId);
         }
         return executeResponse;
     }
 
-    private ExecuteResponse getExecuteAcceptedResponse(String jobId) throws JobNotFoundException {
+    private ExecuteResponse getExecuteInProgressResponse(String jobId) throws JobNotFoundException {
         try {
             Production production = getProduction(jobId);
             ProcessStatus processingStatus = production.getProcessingStatus();

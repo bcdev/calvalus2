@@ -24,8 +24,8 @@ import java.util.logging.Logger;
 public class CalvalusStaging {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String CALWPS_ROOT_PATH = "/webapps/calwps/";
-    private static final String APP_NAME = "calwps";
+    private static final String CALWPS_ROOT_PATH = "/webapps/bc-wps/";
+    private static final String APP_NAME = "bc-wps";
 
     private final WpsServerContext wpsServerContext;
 
