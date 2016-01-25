@@ -15,6 +15,8 @@ import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_WEBSITE;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.PROJECT_MANAGER_NAME;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.PROJECT_MANAGER_POSITION_NAME;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_DEFAULT_LANG;
+import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_GET_REQUEST_URL;
+import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_POST_REQUEST_URL;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_ABSTRACT;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_ID;
 import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_TYPE;
@@ -30,6 +32,8 @@ import com.bc.wps.api.schema.AddressType;
 import com.bc.wps.api.schema.Capabilities;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.ContactType;
+import com.bc.wps.api.schema.DCP;
+import com.bc.wps.api.schema.HTTP;
 import com.bc.wps.api.schema.LanguageStringType;
 import com.bc.wps.api.schema.Languages;
 import com.bc.wps.api.schema.LanguagesType;
@@ -38,6 +42,7 @@ import com.bc.wps.api.schema.Operation;
 import com.bc.wps.api.schema.OperationsMetadata;
 import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.schema.ProcessOfferings;
+import com.bc.wps.api.schema.RequestMethodType;
 import com.bc.wps.api.schema.ResponsiblePartySubsetType;
 import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
@@ -76,15 +81,23 @@ public class CalvalusGetCapabilitiesOperation {
 
         Operation getCapabilitiesOperation = new Operation();
         getCapabilitiesOperation.setName("GetCapabilities");
+        DCP getCapabilitiesDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        getCapabilitiesOperation.getDCP().add(getCapabilitiesDcp);
 
         Operation describeProcessOperation = new Operation();
         describeProcessOperation.setName("DescribeProcess");
+        DCP describeProcessDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        describeProcessOperation.getDCP().add(describeProcessDcp);
 
         Operation executeOperation = new Operation();
         executeOperation.setName("Execute");
+        DCP executeDcp = getPostDcp(WPS_POST_REQUEST_URL);
+        executeOperation.getDCP().add(executeDcp);
 
         Operation getStatusOperation = new Operation();
         getStatusOperation.setName("GetStatus");
+        DCP getStatusDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        getStatusOperation.getDCP().add(getStatusDcp);
 
         operationsMetadata.getOperation().add(getCapabilitiesOperation);
         operationsMetadata.getOperation().add(describeProcessOperation);
@@ -92,6 +105,26 @@ public class CalvalusGetCapabilitiesOperation {
         operationsMetadata.getOperation().add(getStatusOperation);
 
         return operationsMetadata;
+    }
+
+    private DCP getPostDcp(String serviceUrl) {
+        DCP executeDcp = new DCP();
+        HTTP executeHttp = new HTTP();
+        RequestMethodType executeRequestMethod = new RequestMethodType();
+        executeRequestMethod.setHref(serviceUrl);
+        executeHttp.setPost(executeRequestMethod);
+        executeDcp.setHTTP(executeHttp);
+        return executeDcp;
+    }
+
+    private DCP getGetDcp(String serviceUrl) {
+        DCP describeProcessDcp = new DCP();
+        HTTP describeProcessHttp = new HTTP();
+        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
+        describeProcessRequestMethod.setHref(serviceUrl);
+        describeProcessHttp.setGet(describeProcessRequestMethod);
+        describeProcessDcp.setHTTP(describeProcessHttp);
+        return describeProcessDcp;
     }
 
     protected ServiceProvider getServiceProvider() {

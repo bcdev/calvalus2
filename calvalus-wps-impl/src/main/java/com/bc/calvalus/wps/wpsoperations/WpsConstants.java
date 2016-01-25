@@ -47,4 +47,8 @@ public class WpsConstants {
 
     public static String WPS_L3_PARAMETERS_SCHEMA_LOCATION = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd";
 
+    public static String WPS_GET_REQUEST_URL = "http://www.brockmann-consult.de/bc-wps/calvalus?";
+
+    public static String WPS_POST_REQUEST_URL = "http://www.brockmann-consult.de/bc-wps/calvalus";
+
 }

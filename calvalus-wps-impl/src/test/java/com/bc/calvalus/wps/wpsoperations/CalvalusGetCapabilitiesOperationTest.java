@@ -32,12 +32,11 @@ import java.util.List;
 public class CalvalusGetCapabilitiesOperationTest {
 
     private CalvalusGetCapabilitiesOperation getCapabilitiesOperation;
-    private WpsRequestContext mockRequestContext;
     private CalvalusFacade mockCalvalusFacade;
 
     @Before
     public void setUp() throws Exception {
-        mockRequestContext = mock(WpsRequestContext.class);
+        WpsRequestContext mockRequestContext = mock(WpsRequestContext.class);
         mockCalvalusFacade = mock(CalvalusFacade.class);
 
 
@@ -64,9 +63,24 @@ public class CalvalusGetCapabilitiesOperationTest {
 
         assertThat(operationsMetadata.getOperation().size(), equalTo(4));
         assertThat(operationsMetadata.getOperation().get(0).getName(), equalTo("GetCapabilities"));
+        assertThat(operationsMetadata.getOperation().get(0).getDCP().size(), equalTo(1));
+        assertThat(operationsMetadata.getOperation().get(0).getDCP().get(0).getHTTP().getGet().getHref(),
+                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
+
         assertThat(operationsMetadata.getOperation().get(1).getName(), equalTo("DescribeProcess"));
+        assertThat(operationsMetadata.getOperation().get(1).getDCP().size(), equalTo(1));
+        assertThat(operationsMetadata.getOperation().get(1).getDCP().get(0).getHTTP().getGet().getHref(),
+                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
+
         assertThat(operationsMetadata.getOperation().get(2).getName(), equalTo("Execute"));
+        assertThat(operationsMetadata.getOperation().get(2).getDCP().size(), equalTo(1));
+        assertThat(operationsMetadata.getOperation().get(2).getDCP().get(0).getHTTP().getPost().getHref(),
+                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus"));
+
         assertThat(operationsMetadata.getOperation().get(3).getName(), equalTo("GetStatus"));
+        assertThat(operationsMetadata.getOperation().get(3).getDCP().size(), equalTo(1));
+        assertThat(operationsMetadata.getOperation().get(3).getDCP().get(0).getHTTP().getGet().getHref(),
+                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
     }
 
     @Test

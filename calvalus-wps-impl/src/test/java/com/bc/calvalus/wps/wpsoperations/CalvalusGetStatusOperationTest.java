@@ -11,17 +11,18 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
+import com.bc.calvalus.wps.exceptions.FailedRequestException;
+import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
-import org.mockito.ArgumentCaptor;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -71,6 +72,40 @@ public class CalvalusGetStatusOperationTest {
 
         assertThat(executeResponse.getStatus().getProcessStarted().getPercentCompleted(), equalTo(40));
         assertThat(executeResponse.getStatus().getProcessStarted().getValue(), equalTo("RUNNING"));
+    }
+
+    @Test
+    public void canCatchIOExceptionWhenGetInProgressStatus() throws Exception {
+        ProcessStatus mockInProgressStatus = getInProgressProcessStatus();
+        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
+        when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
+        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("IOException error"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
+
+        thrownException.expect(JobNotFoundException.class);
+        thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
+
+        getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
+        getStatusOperation.getStatus("job-01");
+    }
+
+    @Test
+    public void canCatchProductionExceptionWhenGetInProgressStatus() throws Exception {
+        ProcessStatus mockInProgressStatus = getInProgressProcessStatus();
+        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
+        when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
+        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("Production error"));
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
+
+        thrownException.expect(JobNotFoundException.class);
+        thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
+
+        getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
+        getStatusOperation.getStatus("job-01");
     }
 
     @Test
