@@ -43,7 +43,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman
  */
-public class BeamOperatorAdapterTest {
+public class SnapOperatorAdapterTest {
 
     private static InternalTestOperator.Spi operatorSpi;
 
@@ -83,6 +83,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "InternalTestOp");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, productSplit);
+        mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
         BeamOperatorAdapter beamOperatorAdapter = new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
@@ -170,6 +171,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
+        mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
         return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
@@ -190,6 +192,7 @@ public class BeamOperatorAdapterTest {
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
+        mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
         return new BeamOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {

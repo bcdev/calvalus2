@@ -34,6 +34,7 @@ import static org.junit.Assert.*;
 public class ProductRecordSourceTest {
 
     public static final int EXCLUSION_REASON_INDEX = 0;
+    public static final double EPS = 1E-10;
 
     @Test(expected = NullPointerException.class)
     public void testConstructorArg1CannotBeNull() throws Exception {
@@ -67,9 +68,9 @@ public class ProductRecordSourceTest {
 
         RecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                      new TestRecord(0, new GeoPos(1, 0)),
-                                                     new TestRecord(1, new GeoPos(1, 1)),
+                                                     new TestRecord(1, new GeoPos(1, 1 - EPS)),
                                                      new TestRecord(2, new GeoPos(0, 0)),
-                                                     new TestRecord(3, new GeoPos(0, 1)));
+                                                     new TestRecord(3, new GeoPos(0, 1 - EPS)));
 
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         int n = 0;
@@ -104,10 +105,10 @@ public class ProductRecordSourceTest {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                             new TestRecord(0, new GeoPos(1, 0)),// in
                                                             new TestRecord(1, new GeoPos(-1, 2)),   // out
-                                                            new TestRecord(2, new GeoPos(1, 1)), // in
+                                                            new TestRecord(2, new GeoPos(1, 1 - EPS)), // in
                                                             new TestRecord(3, new GeoPos(-1, -1)), // out
                                                             new TestRecord(4, new GeoPos(0, 0)), // in
-                                                            new TestRecord(5, new GeoPos(0, 1)), // in
+                                                            new TestRecord(5, new GeoPos(0, 1 - EPS)), // in
                                                             new TestRecord(6, new GeoPos(-3, -1))); // out
         MAConfig config = new MAConfig();
         config.setMacroPixelSize(1);
@@ -124,10 +125,10 @@ public class ProductRecordSourceTest {
     public void testThatInputSortingWorks() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"),
                                                             new TestRecord(0, new GeoPos(0.0F, 0.0F)),
-                                                            new TestRecord(1, new GeoPos(0.0F, 1.0F)),
+                                                            new TestRecord(1, new GeoPos(0.0F, 1.0F - EPS)),
                                                             new TestRecord(2, new GeoPos(1.0F, 0.0F)),
                                                             new TestRecord(3, new GeoPos(0.5F, 0.5F)),
-                                                            new TestRecord(4, new GeoPos(1.0F, 1.0F)));
+                                                            new TestRecord(4, new GeoPos(1.0F, 1.0F - EPS)));
 
         final int PIXEL_Y = 3;
 
@@ -190,7 +191,7 @@ public class ProductRecordSourceTest {
 
             @Override
             public Iterable<Record> getRecords() throws Exception {
-                return Arrays.asList((Record) RecordUtils.create(new GeoPos(0F, 1F), null, "?"));
+                return Arrays.asList((Record) RecordUtils.create(new GeoPos(0F, 1F - EPS), null, "?"));
             }
 
             @Override
@@ -240,8 +241,8 @@ public class ProductRecordSourceTest {
         Object[] attributeValues = next.getAttributeValues();
         assertNotNull(attributeValues);
         assertEquals(16, attributeValues.length);
-        assertEquals(0.0F, (Float) attributeValues[0], 1E-5F);
-        assertEquals(1.0F, (Float) attributeValues[1], 1E-5F);
+        assertEquals(0.0, (Double) attributeValues[0], 1E-5);
+        assertEquals(1.0, (Double) attributeValues[1], 1E-5);
         assertEquals("?", attributeValues[2]);
     }
 
@@ -249,11 +250,11 @@ public class ProductRecordSourceTest {
     public void testThatGetRecordsFulfillsIterableContract() throws Exception {
         DefaultRecordSource input = new DefaultRecordSource(new TestHeader(true, "lat", "lon"));
         RecordUtils.addPointRecord(input, 1F, 0F);
-        RecordUtils.addPointRecord(input, 1F, 1F);
-        RecordUtils.addPointRecord(input, -2F, 1F);
+        RecordUtils.addPointRecord(input, 1F, 1F - EPS);
+        RecordUtils.addPointRecord(input, -2F, 1F - EPS);
         RecordUtils.addPointRecord(input, 0F, 0F);
-        RecordUtils.addPointRecord(input, 0F, 1F);
-        RecordUtils.addPointRecord(input, 0F, -1F);
+        RecordUtils.addPointRecord(input, 0F, 1F - EPS);
+        RecordUtils.addPointRecord(input, 0F, -1F - EPS);
         RecordUtils.addPointRecord(input, 5F, 0F);
 
         MAConfig config = new MAConfig();
@@ -351,11 +352,11 @@ public class ProductRecordSourceTest {
 
         RecordSource input = new DefaultRecordSource(new TestHeader(true, "latitude", "longitude"),
                                                      RecordUtils.create(new GeoPos(0.0, 0.0), null),  // --> X=0.5,Y=2.5 --> reject
-                                                     RecordUtils.create(new GeoPos(0.0, 1.0), null),  // --> X=1.5,Y=2.5 --> ok
+                                                     RecordUtils.create(new GeoPos(0.0, 1- EPS), null),  // --> X=1.5,Y=2.5 --> ok
                                                      RecordUtils.create(new GeoPos(0.5, 0.0), null),  // --> X=0.5,Y=1.5 --> reject
-                                                     RecordUtils.create(new GeoPos(0.5, 1.0), null),  // --> X=1.5,Y=1.5 --> ok
-                                                     RecordUtils.create(new GeoPos(1.0, 0.0), null),  // --> X=0.5,Y=0.5 --> reject
-                                                     RecordUtils.create(new GeoPos(1.0, 1.0), null));  // --> X=0.5,Y=0.5 --> ok
+                                                     RecordUtils.create(new GeoPos(0.5, 1- EPS), null),  // --> X=1.5,Y=1.5 --> ok
+                                                     RecordUtils.create(new GeoPos(1- EPS, 0.0), null),  // --> X=0.5,Y=0.5 --> reject
+                                                     RecordUtils.create(new GeoPos(1- EPS, 1- EPS), null));  // --> X=0.5,Y=0.5 --> ok
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         List<Record> records = getRecords(output);
         assertEquals(6, records.size());
@@ -586,9 +587,9 @@ public class ProductRecordSourceTest {
 
         RecordSource input = new DefaultRecordSource(new DefaultHeader(true, true, "latitude", "longitude", "time"),
                                                      RecordUtils.create(new GeoPos(0, 0), date("07-MAY-2010 11:25:00")), // still ok
-                                                     RecordUtils.create(new GeoPos(0, 1), date("07-MAY-2010 10:25:00")), // ok
+                                                     RecordUtils.create(new GeoPos(0, 1 - EPS), date("07-MAY-2010 10:25:00")), // ok
                                                      RecordUtils.create(new GeoPos(1, 0), date("07-MAY-2010 10:59:00")), // ok
-                                                     RecordUtils.create(new GeoPos(1, 1), date("07-MAY-2010 09:25:00"))); // still ok
+                                                     RecordUtils.create(new GeoPos(1, 1 - EPS), date("07-MAY-2010 09:25:00"))); // still ok
 
         ProductRecordSource output = createProductRecordSource(2, 3, input, config);
         List<Record> records = getRecords(output);

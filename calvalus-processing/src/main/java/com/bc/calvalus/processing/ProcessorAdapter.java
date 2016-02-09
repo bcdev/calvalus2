@@ -40,6 +40,7 @@ import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -102,13 +103,16 @@ public abstract class ProcessorAdapter {
         this.mapContext = mapContext;
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
-        try {
-            String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
-            System.setProperty("snap.userdir", cacheRootDir);
-            System.setProperty("snap.home", cacheRootDir);
-            System.setProperty("snap.pythonModuleDir", cacheRootDir);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (conf.getBoolean("calvalus.snap.setSnapProperties", true)) {
+            try {
+                String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
+                System.setProperty("snap.userdir", cacheRootDir);
+                System.setProperty("snap.home", cacheRootDir);
+                System.setProperty("snap.pythonModuleDir", cacheRootDir);
+            } catch (IOException e) {
+                LOG.log(Level.SEVERE, e.getMessage(), e);
+                throw new RuntimeException(e);
+            }
         }
         GpfUtils.init(mapContext.getConfiguration());
     }

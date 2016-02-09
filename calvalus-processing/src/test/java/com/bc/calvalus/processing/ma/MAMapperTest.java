@@ -18,7 +18,8 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * @author Marco Peters
@@ -186,6 +187,7 @@ public class MAMapperTest {
 //        maConfig.setCopyInput(true);
 
         jobConf.set(JobConfigNames.CALVALUS_MA_PARAMETERS, maConfig.toXml());
+        jobConf.setBoolean("calvalus.snap.setSnapProperties", false);
         Mockito.when(context.getConfiguration()).thenReturn(jobConf);
         mapper.run(context);
     }

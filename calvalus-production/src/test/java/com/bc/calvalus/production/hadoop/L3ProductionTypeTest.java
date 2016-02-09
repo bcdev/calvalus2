@@ -14,7 +14,6 @@ import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobConf;
-import org.esa.snap.binning.BinManager;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.junit.Before;
 import org.junit.Test;
@@ -97,7 +96,7 @@ public class L3ProductionTypeTest {
         assertEquals("MIN_MAX", binningConfig.getAggregatorConfigs()[0].getName());
 
         String xmlExpected = "<parameters>\n" +
-                "  <planetaryGrid>org.esa.beam.binning.support.SEAGrid</planetaryGrid>\n" +
+                "  <planetaryGrid>org.esa.snap.binning.support.SEAGrid</planetaryGrid>\n" +
                 "  <numRows>4320</numRows>\n" +
                 "  <compositingType>BINNING</compositingType>\n" +
                 "  <superSampling>1</superSampling>\n" +
