@@ -23,6 +23,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
+import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
@@ -707,6 +708,27 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return getThreadLocalRequest().isUserInRole(role) &&
                // and the portal is either generic or destined to this user role ...
                (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
-                role.equals(backendConfig.getConfigMap().get("calvalus.portal.userRole")));
+                backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
+                Arrays.asList(backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ")).contains(role));
+    }
+
+    @Override
+    public DtoCalvalusConfig getCalvalusConfig() {
+        backendConfig.getConfigMap().put("user", getUserName());
+        String[] configuredRoles;
+        if (backendConfig.getConfigMap().containsKey("calvalus.portal.userRole")
+            && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
+            configuredRoles = backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ");
+        } else {
+            configuredRoles = new String[] { "calvalus" };
+        }
+        List<String> accu = new ArrayList<>();
+        for (String role : configuredRoles) {
+            if (getThreadLocalRequest().isUserInRole(role)) {
+                accu.add(role);
+            }
+        }
+        backendConfig.getConfigMap().put("roles", accu.toString());
+        return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
     }
 }

@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class TableInputFormat extends InputFormat {
         } while (headLine.startsWith("#"));
         final String[] attributes = headLine.split("[ \t]+");
         List<InputSplit> splits = new ArrayList<InputSplit>();
+        int fileCounter = 0;
         while (true) {
             final String line = in.readLine();
             if (line == null) {
@@ -79,25 +81,30 @@ public class TableInputFormat extends InputFormat {
                 parameters[2 * i - 1] = values[i];
             }
 
+            fileCounter++;
             final Path path = new Path(values[0]);
             FileSystem fileSystem = path.getFileSystem(configuration);
-            final FileStatus[] statuses = fileSystem.listStatus(path);
-            if (statuses == null || statuses.length == 0) {
+            try {
+                final FileStatus status = fileSystem.getFileStatus(path);
+                if (status != null) {
+                    final BlockLocation[] locations = fileSystem.getFileBlockLocations(status, 0, status.getLen());
+                    if (locations == null || locations.length == 0) {
+                        LOG.warning("cannot find hosts of input " + values[0]);
+                    } else {
+                        LOG.fine("adding input split for " + path.getName());
+                        splits.add(new ParameterizedSplit(path, status.getLen(), locations[0].getHosts(), parameters));
+                    }
+                } else {
+                    LOG.warning("cannot find input " + values[0]);
+                }
+            } catch (FileNotFoundException e) {
                 LOG.warning("cannot find input " + values[0]);
-                continue;
             }
-            final BlockLocation[] locations = fileSystem.getFileBlockLocations(statuses[0], 0, statuses[0].getLen());
-            if (locations == null || locations.length == 0) {
-                LOG.warning("cannot find hosts of input " + values[0]);
-                continue;
-            }
-            LOG.fine("adding input split for " + path.getName());
-            splits.add(new ParameterizedSplit(path, statuses[0].getLen(), locations[0].getHosts(), parameters));
         }
         if (splits.size() == 0) {
             throw new IOException("no splits found in table " + inputTablePath.getName());
         }
-        LOG.info(splits.size() + " splits added from table " + inputTablePath.getName());
+        LOG.info(splits.size() + " splits added from table " + inputTablePath.getName() + " (from " + fileCounter + " listed).");
         return splits;
     }
 

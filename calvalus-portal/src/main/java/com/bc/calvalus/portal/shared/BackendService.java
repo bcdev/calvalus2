@@ -119,4 +119,6 @@ public interface BackendService extends RemoteService {
     float[] listUserRecordSource(String filePath) throws BackendServiceException;
 
     boolean isUserInRole(String role);
+
+    DtoCalvalusConfig getCalvalusConfig();
 }

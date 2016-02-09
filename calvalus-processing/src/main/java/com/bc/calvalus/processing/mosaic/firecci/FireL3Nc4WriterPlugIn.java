@@ -17,20 +17,20 @@
 package com.bc.calvalus.processing.mosaic.firecci;
 
 import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicProductFactory;
-import org.esa.snap.core.dataio.EncodeQualification;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.image.ImageManager;
-import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
-import org.esa.snap.dataio.netcdf.ProfileWriteContext;
-import org.esa.snap.dataio.netcdf.metadata.ProfileInitPartWriter;
-import org.esa.snap.dataio.netcdf.metadata.ProfilePartWriter;
-import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
-import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
-import org.esa.snap.dataio.netcdf.nc.NVariable;
-import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
-import org.esa.snap.dataio.netcdf.util.Constants;
-import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
+import org.esa.beam.dataio.netcdf.ProfileWriteContext;
+import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
+import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
+import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
+import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
+import org.esa.beam.dataio.netcdf.nc.NVariable;
+import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
+import org.esa.beam.dataio.netcdf.util.Constants;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.jai.ImageManager;
+import ucar.ma2.ArrayByte;
 
 import java.awt.Dimension;
 import java.io.IOException;
@@ -75,11 +75,6 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     @Override
     public NFileWriteable createWritable(String outputPath) throws IOException {
         return NWritableFactory.create(outputPath, "netcdf4");
-    }
-
-    @Override
-    public EncodeQualification getEncodeQualification(Product product) {
-        return EncodeQualification.FULL;
     }
 
     private class FireMainPart implements ProfileInitPartWriter {
@@ -164,9 +159,7 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             NVariable variable;
 
-            // don't add current_pixel_state, *_count, because it is not computed by FireMosaicAlgorithm
-            /*
-            variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
+            variable = writeable.addVariable("status", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
             final ArrayByte.D1 valids = new ArrayByte.D1(6);
@@ -181,21 +174,6 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("valid_min", 0);
             variable.addAttribute("valid_max", 5);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
-
-            StringBuilder ancillaryVariables = new StringBuilder("current_pixel_state");
-            for (String counter : COUNTER_NAMES) {
-                variable = writeable.addVariable(counter + "_count", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT16), tileSize, dimensions);
-                variable.addAttribute("long_name", "number of " + counter + " observations");
-                variable.addAttribute("standard_name", "surface_bidirectional_reflectance number_of_observations");
-                variable.addAttribute("valid_min", 0);
-                variable.addAttribute("valid_max", 150);
-                variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (short)-1);
-                ancillaryVariables.append(' ');
-                ancillaryVariables.append(counter);
-                ancillaryVariables.append("_count");
-            }
-            */
-
 
             String[] bandNames = product.getBandNames();
             List<String> srMeanBandNames = getSrMeanBandNames(bandNames);
@@ -225,18 +203,12 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 }
             }
 
-            // don't add vegetation_index_mean, because it is not computed by FireMosaicAlgorithm
-
-            /*
-            variable = writeable.addVariable("vegetation_index_mean", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
-            variable.addAttribute("long_name", "mean of vegetation index");
-            variable.addAttribute("standard_name", "normalized_difference_vegetation_index");
-            variable.addAttribute("valid_min", -1.0f);
-            variable.addAttribute("valid_max", 1.0f);
+            variable = writeable.addVariable("ndvi", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, Float.NaN);
-            variable.addAttribute("ancillary_variables", ancillaryVariables.toString());
-
-            */
+            writeable.addVariable("sun_zenith", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("sun_azimuth", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("view_zenith", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
+            writeable.addVariable("view_azimuth", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
         }
 
         private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {

@@ -8,6 +8,7 @@ import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
+import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -43,7 +45,24 @@ import java.util.Map;
  */
 public class CalvalusPortal implements EntryPoint, PortalContext {
 
+    public static final Logger LOG = Logger.getLogger("CalvalusPortal");
+
     public static final String NO_FILTER = "";
+    private static final String[] VIEW_NAMES = {
+            "newsView",
+            "l2View",
+            "maView",
+            "l3View",
+            "taView",
+            "freshmonView",
+            "bootstrappingView",
+            "vicariousCalibrationView",
+            "matchupComparisonView",
+            "l2ToL3ComparisonView",
+            "regionsView",
+            "bundlesView",
+            "productionsView"
+    };
 
     private final BackendServiceAsync backendService;
     private boolean initialised;
@@ -67,25 +86,15 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private RegionMapModel regionMapModel;
     private ManageProductionsView manageProductionsView;
     private boolean productionListFiltered;
-    private Boolean isCalvalusUser = null;
-    private Boolean isCcUser = null;
-    private Boolean isCalEsa = null;
-    private Boolean isCalOpus = null;
+//    private Boolean isCalvalusUser = null;
+//    private Boolean isCcUser = null;
+//    private Boolean isCalEsa = null;
+//    private Boolean isCalOpus = null;
+    private Map<String, Boolean> calvalusConfig = null;
 
     public boolean withPortalFeature(String featureName) {
-        if ("analysistab".equals(featureName)) {
-            return isCalvalusUser;
-        } else if ("othersets".equals(featureName)) {
-            return isCalvalusUser || isCalEsa || isCalOpus;
-        } else if ("catalogue".equals(featureName)) {
-            return isCalvalusUser;
-        } else if ("unlimitedJobSize".equals(featureName)) {
-            return isCalvalusUser || isCalEsa || isCalOpus;
-        } else if ("coretab".equals(featureName)) {
-            return isCalEsa || isCalOpus;
-        } else {
-            return false;
-        }
+        Boolean v = calvalusConfig.get(featureName);
+        return v != null && v;
     }
 
     public CalvalusPortal() {
@@ -131,10 +140,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
-                backendService.isUserInRole("eop_file.modify_calopus_b", new UserRolesCallback("eop_file.modify_calopus_b"));
-                backendService.isUserInRole("calesa", new UserRolesCallback("calesa"));
-                backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
-                backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
+                backendService.getCalvalusConfig(new CalvalusConfigCallback());
+//                backendService.isUserInRole("eop_file.modify_calopus_b", new UserRolesCallback("eop_file.modify_calopus_b"));
+//                backendService.isUserInRole("calesa", new UserRolesCallback("calesa"));
+//                backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
+//                backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
             }
         };
         // load all the libs for use in the maps
@@ -225,47 +235,86 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
     }
 
-    private void initFrontend() {
-
-        regionMapModel = new RegionMapModelImpl(getRegions());
-
-        manageProductionsView = new ManageProductionsView(this);
-        if (withPortalFeature("analysistab")) {
-            views = new PortalView[]{
-                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-                    new OrderL2ProductionView(this),
-                    new OrderMAProductionView(this),
-                    new OrderL3ProductionView(this),
-                    new OrderTAProductionView(this),
-                    new OrderFreshmonProductionView(this),
-                    new BootstrappingView(this),
-                    new OrderVCProductionView(this),
-                    new OrderMACProductionView(this),
-                    new OrderL2toL3ProductionView(this),
-                    new ManageRegionsView(this),
-                    new ManageBundleView(this),
-                    manageProductionsView,
-            };
-        } else if (withPortalFeature("coretab")) {
-            views = new PortalView[]{
-                    //new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-                    new OrderL2ProductionView(this),
-                    new OrderMAProductionView(this),
-                    new OrderL3ProductionView(this),
-                    new OrderTAProductionView(this),
-                    new ManageRegionsView(this),
-                    new ManageBundleView(this),
-                    manageProductionsView,
-            };
-        } else {
-            views = new PortalView[]{
-                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-                    new OrderL2ProductionView(this),
-                    new OrderL3ProductionView(this),
-                    new ManageRegionsView(this),
-                    manageProductionsView,
-            };
+    private PortalView createViewOf(String name) {
+        switch (name) {
+            case "newsView":
+                return new FrameView(this, "NewsView", "News", "calvalus-news.html");
+            case "l2View":
+                return new OrderL2ProductionView(this);
+            case "maView":
+                return new OrderMAProductionView(this);
+            case "l3View":
+                return new OrderL3ProductionView(this);
+            case "taView":
+                return new OrderTAProductionView(this);
+            case "freshmonView":
+                return new OrderFreshmonProductionView(this);
+            case "bootstrappingView":
+                return new BootstrappingView(this);
+            case "vicariousCalibrationView":
+                return new OrderVCProductionView(this);
+            case "matchupComparisonView":
+                return new OrderMACProductionView(this);
+            case "l2ToL3ComparisonView":
+                return new OrderL2toL3ProductionView(this);
+            case "regionsView":
+                return new ManageRegionsView(this);
+            case "bundlesView":
+                return new ManageBundleView(this);
+            case "productionsView":
+                return new ManageProductionsView(this);
+            default:
+                throw new RuntimeException("unknown view " + name);
         }
+    }
+
+    private void initFrontend() {
+        regionMapModel = new RegionMapModelImpl(getRegions());
+        manageProductionsView = new ManageProductionsView(this);
+        List<PortalView> accu = new ArrayList<>();
+        for (String viewName : VIEW_NAMES) {
+             if (withPortalFeature(viewName)) {
+                 accu.add(createViewOf(viewName));
+             }
+        }
+        views = accu.toArray(new PortalView[accu.size()]);
+
+//        if (withPortalFeature("analysistab")) {
+//            views = new PortalView[]{
+//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                    new OrderL2ProductionView(this),
+//                    new OrderMAProductionView(this),
+//                    new OrderL3ProductionView(this),
+//                    new OrderTAProductionView(this),
+//                    new OrderFreshmonProductionView(this),
+//                    new BootstrappingView(this),
+//                    new OrderVCProductionView(this),
+//                    new OrderMACProductionView(this),
+//                    new OrderL2toL3ProductionView(this),
+//                    new ManageRegionsView(this),
+//                    new ManageBundleView(this),
+//                    manageProductionsView,
+//            };
+//        } else if (withPortalFeature("coretab")) {
+//            views = new PortalView[]{
+//                    //new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                    new OrderL2ProductionView(this),
+//                    new OrderMAProductionView(this),
+//                    new OrderL3ProductionView(this),
+//                    new OrderTAProductionView(this),
+//                    new ManageRegionsView(this),
+//                    new ManageBundleView(this),
+//                    manageProductionsView,
+//            };
+//        } else {
+//            views = new PortalView[]{
+//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
+//                    new OrderL2ProductionView(this),
+//                    new OrderL3ProductionView(this),
+//                    new ManageRegionsView(this),
+//                    manageProductionsView,
+//            };
+//        }
 
         viewTabIndices = new HashMap<String, Integer>();
         for (int i = 0; i < views.length; i++) {
@@ -330,10 +379,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                && systemProcessors != null && userProcessors != null && allUserProcessors != null
                && systemAggregators != null && userAggregators != null && allUserAggregators != null
                && productions != null
-               && isCcUser != null
-               && isCalEsa != null
-               && isCalOpus != null
-               && isCalvalusUser != null;
+//               && isCcUser != null
+//               && isCalEsa != null
+//               && isCalOpus != null
+//               && isCalvalusUser != null
+               && calvalusConfig != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -538,28 +588,51 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
     }
 
-    private class UserRolesCallback implements AsyncCallback<Boolean> {
-        String role;
-        public UserRolesCallback(String role) {
-            this.role = role;
+//    private class UserRolesCallback implements AsyncCallback<Boolean> {
+//        String role;
+//        public UserRolesCallback(String role) {
+//            this.role = role;
+//        }
+//
+//        @Override
+//        public void onSuccess(Boolean value) {
+//            if ("calvalus".equals(role)) {
+//                isCalvalusUser = value;
+//                GWT.log("User role " + role + " is " + value);
+//            } else if ("coastcolour".equals(role)) {
+//                isCcUser = value;
+//                GWT.log("User role " + role + " is " + value);
+//            } else if ("calesa".equals(role)) {
+//                isCalEsa = value;
+//                GWT.log("User role " + role + " is " + value);
+//            } else if ("eop_file.modify_calopus_b".equals(role)) {
+//                isCalOpus = value;
+//                GWT.log("User role " + role + " is " + value);
+//            } else {
+//                GWT.log("Unknown user role " + role + " is " + value);
+//            }
+//            maybeInitFrontend();
+//        }
+//
+//        @Override
+//        public void onFailure(Throwable caught) {
+//            caught.printStackTrace(System.err);
+//            GWT.log("Failed to check for user role " + role + " at server", caught);
+//        }
+//    }
+
+    private class CalvalusConfigCallback implements AsyncCallback<DtoCalvalusConfig> {
+        public CalvalusConfigCallback() {
         }
 
         @Override
-        public void onSuccess(Boolean value) {
-            if ("calvalus".equals(role)) {
-                isCalvalusUser = value;
-                GWT.log("User role " + role + " is " + value);
-            } else if ("coastcolour".equals(role)) {
-                isCcUser = value;
-                GWT.log("User role " + role + " is " + value);
-            } else if ("calesa".equals(role)) {
-                isCalEsa = value;
-                GWT.log("User role " + role + " is " + value);
-            } else if ("eop_file.modify_calopus_b".equals(role)) {
-                isCalOpus = value;
-                GWT.log("User role " + role + " is " + value);
-            } else {
-                GWT.log("Unknown user role " + role + " is " + value);
+        public void onSuccess(DtoCalvalusConfig config) {
+            calvalusConfig = new HashMap<>();
+            for (String key : config.getConfig().keySet()) {
+                if (key.startsWith("calvalus.portal.")) {
+                    calvalusConfig.put(key.substring("calvalus.portal.".length()),
+                                       roleSupports(key, config.getRoles(), config.getConfig()));
+                }
             }
             maybeInitFrontend();
         }
@@ -567,7 +640,31 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onFailure(Throwable caught) {
             caught.printStackTrace(System.err);
-            GWT.log("Failed to check for user role " + role + " at server", caught);
+            GWT.log("Failed to read Calvalus config from server", caught);
         }
+    }
+
+    private static boolean roleSupports(String viewName, String[] roles, Map<String, String> config) {
+        final String viewRoles = config.get(viewName);
+        // for debugging
+        final StringBuilder s = new StringBuilder();
+        for (String r : roles) {
+            s.append(r);
+            s.append(' ');
+        }
+        s.setLength(s.length()-1);
+        // end for debugging
+        if (viewRoles != null) {
+            for (String configuredRole : viewRoles.split(" ")) {
+                for (String userRole : roles) {
+                    if (userRole.equals(configuredRole)) {
+                        LOG.fine("prop " + viewName + " (" + viewRoles + ") supported by role " + userRole + " (" + s.toString() + ")");
+                        return true;
+                    }
+                }
+            }
+        }
+        LOG.fine("prop " + viewName + " (" + viewRoles + ") not supported by any role (" + s.toString() + ")");
+        return false;
     }
 }

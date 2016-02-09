@@ -144,6 +144,7 @@ public class ManageProductionsView extends PortalView {
 
         final CheckBox allUsers = new CheckBox("Show productions of all users");
         allUsers.setValue(!getPortal().isProductionListFiltered());
+        allUsers.setEnabled(getPortal().withPortalFeature("otherSets"));
         allUsers.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {

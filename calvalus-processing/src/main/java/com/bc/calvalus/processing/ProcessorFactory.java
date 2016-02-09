@@ -80,6 +80,7 @@ public class ProcessorFactory {
                     FileSystem fs = bundlePath.getFileSystem(conf);
                     HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
                     addBundleArchives(bundlePath, fs, conf);
+                    addBundleLibs(bundlePath, fs, conf);
 
                     String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + "");
                     if (executable != null) {
@@ -99,6 +100,7 @@ public class ProcessorFactory {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
                                 HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
                                 addBundleArchives(includeBundlePath, fs, conf);
+                                addBundleLibs(includeBundlePath, fs, conf);
                             }
                         }
                     } catch (Exception ex) {
@@ -193,6 +195,19 @@ public class ProcessorFactory {
         return null;
     }
 
+    private static void addBundleLibs(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return isLib(path);
+            }
+        });
+        for (FileStatus lib : libs) {
+            URI uri = lib.getPath().toUri();
+            DistributedCache.addCacheFile(uri, conf);
+        }
+    }
+
     private static String[] getBundleProcessorFiles(final String processorName, Path bundlePath, FileSystem fs) throws IOException {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {
             @Override
@@ -215,6 +230,11 @@ public class ProcessorFactory {
         String filename = archivePath.getName();
         return filename.endsWith(".tgz") || filename.endsWith(".tar.gz") ||
                filename.endsWith(".tar") || filename.endsWith(".zip");
+    }
+
+    static boolean isLib(Path libPath) {
+        String filename = libPath.getName();
+        return filename.endsWith(".so");
     }
 
     /**

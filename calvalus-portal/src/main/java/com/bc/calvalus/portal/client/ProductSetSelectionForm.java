@@ -96,15 +96,15 @@ public class ProductSetSelectionForm extends Composite {
         userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
             @Override
             public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                if (portal.withPortalFeature("othersets")) {
+                if (portal.withPortalFeature("otherSets")) {
                     allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
                 }
             }
         });
 
-        if (! portal.withPortalFeature("othersets")) {
-            allProductionProductSets.setEnabled(false);
-        }
+        //if (! portal.withPortalFeature("otherSets")) {
+        allProductionProductSets.setEnabled(false);
+        //}
         updateListBox(portal.getProductSets());
         updateDetailsView();
 

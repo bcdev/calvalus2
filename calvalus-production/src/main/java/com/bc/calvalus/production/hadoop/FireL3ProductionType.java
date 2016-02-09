@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
@@ -53,7 +54,7 @@ import java.util.List;
  */
 public class FireL3ProductionType extends HadoopProductionType {
 
-    public static final int DEFAULT_WINGS_RANGE = 15;
+    public static final int DEFAULT_WINGS_RANGE = 10;
 
     public static class Spi extends HadoopProductionType.Spi {
 
@@ -71,30 +72,32 @@ public class FireL3ProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
+        // production for a third of each month (9-10 days)
+
         final String productionId = Production.createId(productionRequest.getProductionType());
         String defaultProductionName = createLcProductionName("Level 3 Fire ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         DateRange mainRange = productionRequest.createFromMinMax();
-        List<DateRange> individualDayList = getDateRanges(mainRange);
+        List<DateRange> individualDayList = getIndividualDays(mainRange);
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
-        final int mosaicTileSize = 360;
         LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(productionRequest.getString("calvalus.lc.resolution"));
         float temporalCloudFilterThreshold = sensorConfig.getTemporalCloudFilterThreshold();
         String temporalCloudBandName = sensorConfig.getTemporalCloudBandName();
+        final int mosaicTileSize = sensorConfig.getMosaicTileSize();
 
         String cloudMosaicConfigXml = getCloudMosaicConfig(temporalCloudBandName).toXml();
         String mainMosaicConfigXml = getMainMosaicConfig().toXml();
 
-        String period = getLcPeriodName(productionRequest);
-        String meanOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
+        String period = getFirePeriodName(productionRequest);
+        String cloudOutputDir = getOutputPath(productionRequest, productionId, period + "-lc-cloud");
 
         Geometry regionGeometry = productionRequest.getRegionGeometry(null);
         String regionGeometryString = regionGeometry != null ? regionGeometry.toString() : "";
 
         Workflow.Sequential sequence = new Workflow.Sequential();
-        if (productionRequest.getBoolean("firel3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
+        if (productionRequest.getBoolean("firel3.cloud", true) && !successfullyCompleted(cloudOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
@@ -108,7 +111,7 @@ public class FireL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
 
-            jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, meanOutputDir);
+            jobConfigCloud.set(JobConfigNames.CALVALUS_OUTPUT_DIR, cloudOutputDir);
             jobConfigCloud.set(JobConfigNames.CALVALUS_MOSAIC_PARAMETERS, cloudMosaicConfigXml);
             jobConfigCloud.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
             jobConfigCloud.setIfUnset("calvalus.mosaic.macroTileSize", "10");
@@ -119,6 +122,8 @@ public class FireL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("calvalus.lc.temporalCloudBandName", temporalCloudBandName);
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " Cloud", jobConfigCloud));
+        } else {
+            CalvalusLogger.getLogger().info("Not computing cloud product.");
         }
         DateFormat dateFormat = ProductionRequest.getDateFormat();
         Workflow.Parallel parallel = new Workflow.Parallel();
@@ -147,7 +152,7 @@ public class FireL3ProductionType extends HadoopProductionType {
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 if (productionRequest.getBoolean("firel3.cloud", true)) {
                     // if cloud aggregation is disabled, don't set this property
-                    jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, meanOutputDir);
+                    jobConfigSr.set(AbstractLcMosaicAlgorithm.CALVALUS_LC_SDR8_MEAN, cloudOutputDir);
                 }
                 jobConfigSr.setIfUnset("calvalus.mosaic.macroTileSize", "10");
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
@@ -155,6 +160,8 @@ public class FireL3ProductionType extends HadoopProductionType {
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
                 singleDaySequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                              productionName + " SR", jobConfigSr));
+            } else {
+                CalvalusLogger.getLogger().info("Not computing SR product.");
             }
             if (productionRequest.getBoolean("firel3.nc", true) && !successfullyCompleted(ncOutputDir)) {
                 String outputPrefix = String.format("CCI-Fire-MERIS-SDR-L3-300m-v1.0-%s", dateAsString);
@@ -177,6 +184,8 @@ public class FireL3ProductionType extends HadoopProductionType {
                                                                        productionRequest.getUserName(),
                                                                        productionName + " Format",
                                                                        jobConfigFormat));
+            } else {
+                CalvalusLogger.getLogger().info("Not formatting result.");
             }
             parallel.add(singleDaySequence);
         }
@@ -195,11 +204,11 @@ public class FireL3ProductionType extends HadoopProductionType {
 
     static String createLcProductionName(String prefix, ProductionRequest productionRequest) throws ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
-        sb.append(getLcPeriodName(productionRequest));
+        sb.append(getFirePeriodName(productionRequest));
         return sb.toString().trim();
     }
 
-    static String getLcPeriodName(ProductionRequest productionRequest) throws ProductionException {
+    static String getFirePeriodName(ProductionRequest productionRequest) throws ProductionException {
         DateRange minMax = productionRequest.createFromMinMax();
         long diffMillis = minMax.getStopDate().getTime() - minMax.getStartDate().getTime() + L3ProductionType.MILLIS_PER_DAY;
         int periodLength = (int) (diffMillis / L3ProductionType.MILLIS_PER_DAY);
@@ -244,7 +253,7 @@ public class FireL3ProductionType extends HadoopProductionType {
         return new MosaicConfig(FireMosaicAlgorithm.class.getName(), maskExpr, varNames);
     }
 
-    static List<DateRange> getDateRanges(DateRange mainRange) throws ProductionException {
+    static List<DateRange> getIndividualDays(DateRange mainRange) throws ProductionException {
         List<DateRange> dateRangeList = new ArrayList<DateRange>();
 
         Date minDate = mainRange.getStartDate();

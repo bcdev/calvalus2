@@ -22,7 +22,6 @@ import com.bc.ceres.resource.ReaderResource;
 import com.bc.ceres.resource.Resource;
 import com.bc.ceres.resource.ResourceEngine;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.velocity.VelocityContext;
 
@@ -46,7 +45,7 @@ public class ScriptGenerator {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    enum Step {
+    public enum Step {
         PREPARE {
             @Override
             boolean shouldWriteResource(String resourceName) {
@@ -90,6 +89,7 @@ public class ScriptGenerator {
     public void addResource(Resource resource) {
         String path = resource.getPath();
         String name = new File(path).getName();
+        CalvalusLogger.getLogger().info("Adding resource " + name);
         String processedName = createProcessedResourceName(name, executableName);
         if (name.endsWith(VM_SUFFIX)) {
             resourceEngine.processAndAddResource(processedName, resource);

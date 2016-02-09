@@ -54,7 +54,7 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
     private String productTransformation = null;
 
 
-    KeywordHandler(String programName, MapContext mapContext) {
+    public KeywordHandler(String programName, MapContext mapContext) {
         this.programName = programName;
         this.mapContext = mapContext;
 
