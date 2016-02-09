@@ -17,19 +17,20 @@
 package com.bc.calvalus.processing.mosaic.firecci;
 
 import com.bc.calvalus.processing.mosaic.landcover.LcL3Nc4MosaicProductFactory;
-import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
-import org.esa.beam.dataio.netcdf.ProfileWriteContext;
-import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
-import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
-import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
-import org.esa.beam.dataio.netcdf.nc.NVariable;
-import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
-import org.esa.beam.dataio.netcdf.util.Constants;
-import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.jai.ImageManager;
+import org.esa.snap.core.dataio.EncodeQualification;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.image.ImageManager;
+import org.esa.snap.dataio.netcdf.AbstractNetCdfWriterPlugIn;
+import org.esa.snap.dataio.netcdf.ProfileWriteContext;
+import org.esa.snap.dataio.netcdf.metadata.ProfileInitPartWriter;
+import org.esa.snap.dataio.netcdf.metadata.ProfilePartWriter;
+import org.esa.snap.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
+import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
+import org.esa.snap.dataio.netcdf.nc.NVariable;
+import org.esa.snap.dataio.netcdf.nc.NWritableFactory;
+import org.esa.snap.dataio.netcdf.util.Constants;
+import org.esa.snap.dataio.netcdf.util.DataTypeUtils;
 import ucar.ma2.ArrayByte;
 
 import java.awt.Dimension;
@@ -43,8 +44,6 @@ import java.util.TimeZone;
 import java.util.UUID;
 
 public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
-
-    public static final String[] COUNTER_NAMES = { "clear_land", "clear_water", "clear_snow_ice", "cloud", "cloud_shadow" /*, "valid"*/ };
 
     @Override
     public String[] getFormatNames() {
@@ -75,6 +74,16 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     @Override
     public NFileWriteable createWritable(String outputPath) throws IOException {
         return NWritableFactory.create(outputPath, "netcdf4");
+    }
+
+    @Override
+    public EncodeQualification getEncodeQualification(Product product) {
+        int bandCount = getSrMeanBandNames(product.getBandNames()).size();
+        bandCount += getSrMeanBandNames(product.getBandNames()).size();
+        if (bandCount == 26) {
+            return EncodeQualification.FULL;
+        }
+        return new EncodeQualification(EncodeQualification.Preservation.UNABLE);
     }
 
     private class FireMainPart implements ProfileInitPartWriter {
@@ -211,11 +220,6 @@ public class FireL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addVariable("view_azimuth", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32), tileSize, dimensions);
         }
 
-        private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {
-            //writeable.addDimension("time", 1);
-            writeable.addDimension(dimY, p.getSceneRasterHeight());
-            writeable.addDimension(dimX, p.getSceneRasterWidth());
-        }
     }
 
     private static List<String> getSrSigmaBandNames(String[] bandNames) {

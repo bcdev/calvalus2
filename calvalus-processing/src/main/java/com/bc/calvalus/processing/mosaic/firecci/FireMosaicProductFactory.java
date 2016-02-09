@@ -16,8 +16,11 @@
 
 package com.bc.calvalus.processing.mosaic.firecci;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.DefaultMosaicProductFactory;
+import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.ColorPaletteDef;
 import org.esa.snap.core.datamodel.ImageInfo;
@@ -27,9 +30,6 @@ import org.esa.snap.core.datamodel.ProductData;
 
 import java.awt.Color;
 import java.awt.Rectangle;
-import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
-import org.apache.hadoop.conf.Configuration;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;

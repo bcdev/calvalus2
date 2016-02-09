@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.text.ParseException;
@@ -10,9 +10,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-/**
- * Created by thomas on 19.11.15.
- */
 public class FireL3ProductionTypeTest {
 
     @Test
