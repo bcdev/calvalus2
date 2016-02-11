@@ -29,11 +29,13 @@ import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 
 import javax.imageio.stream.ImageInputStream;
-import java.awt.*;
+import java.awt.Dimension;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.logging.Logger;
 
 /**
@@ -85,10 +87,15 @@ public class CalvalusProductIO {
         if (product == null) {
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
+        final Path path = pathConf.getPath();
+        String pathName = path.getName();
+        if (pathName.startsWith("CCI-Fire-MERIS-SDR-L3") && pathName.endsWith(".nc")) {
+            setDate(product, pathName);
+        }
         LOG.info(String.format("Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
         Dimension tiling = product.getPreferredTileSize();
         if (tiling != null) {
-            LOG.info(String.format("Tiling: width = %d height = %d", (int)tiling.getWidth(), (int)tiling.getHeight()));
+            LOG.info(String.format("Tiling: width = %d height = %d", (int) tiling.getWidth(), (int) tiling.getHeight()));
         } else {
             LOG.info("Tiling: NONE");
         }
@@ -125,6 +132,19 @@ public class CalvalusProductIO {
             LOG.info("File already exist");
         }
         return localFile;
+    }
+
+    static void setDate(Product product, String pathName) throws IOException {
+        try {
+            int beginIndex = "CCI-Fire-MERIS-SDR-L3-300m-v1.0-".length();
+            int endIndex = beginIndex + 10;
+            String timeString = pathName.substring(beginIndex, endIndex);
+            ProductData.UTC day = ProductData.UTC.parse(timeString, "yyyy-MM-dd");
+            product.setStartTime(day);
+            product.setEndTime(day);
+        } catch (ParseException e) {
+            throw new IOException(e);
+        }
     }
 
 
