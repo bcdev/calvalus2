@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <ows:Identifier>Combinations</ows:Identifier>
+
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/home/marcoz/avhrr-ac-complete</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>processorBundleName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>avhrr-ac-modtran</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>processorBundleVersion</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>1.0</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>processorName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>modtran</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.combinations.config</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <variables>
+                            <variable>
+                                <name>AEROSOL_TYPES</name>
+                                <values>'___rural', 'maritime', '___urban', '__desert'</values>
+                                <loopLocation>task</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>SURFACE_REFLECTANCES</name>
+                                <values>0.15, 1.00</values>
+                                <loopLocation>task</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>AEROSOL_DEPTHS</name>
+                                <values>0.050, 0.075, 0.100, 0.125, 0.150, 0.175, 0.200, 0.300, 0.400, 0.500, 0.600</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>WATER_VAPOURS</name>
+                                <values>500, 1000, 1500, 2000, 3000, 5000</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>SUN_ZENITH_ANGLES</name>
+                                <values>0, 10, 20, 30, 40, 50, 60, 70</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>VIEW_ZENITH_ANGLES</name>
+                                <values>0, 10, 20, 30, 40, 50, 60</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>RELATIVE_AZIMUTHS</name>
+                                <values>0, 30, 60, 90, 120, 150, 180</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>ALTITUDES</name>
+                                <values>0.0, 0.5, 1.0, 2.0, 3.0, 4.0</values>
+                                <loopLocation>job</loopLocation>
+                            </variable>
+                            <variable>
+                                <name>BANDS</name>
+                                <values>1, 2, 3, 4, 5, 6</values>
+                                <loopLocation>task</loopLocation>
+                            </variable>
+                        </variables>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.hadoop.dfs.replication</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+    <wps:Input>
+      <ows:Identifier>calvalus.hadoop.mapreduce.job.queuename</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>lc</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+
+    </wps:DataInputs>
+
+</wps:Execute>
