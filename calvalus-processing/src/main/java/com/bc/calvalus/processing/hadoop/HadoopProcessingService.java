@@ -22,6 +22,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -32,7 +33,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
@@ -47,9 +47,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -206,7 +203,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     if (processorDescriptors != null) {
                         for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
                             if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
-                                    processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                                processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
                                 descriptors.add(bd);
                             }
                         }
@@ -215,7 +212,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     descriptors.add(bd);
                 }
             } catch (Exception e) {
-                logger.warning("error reading bundle-descriptor (" + file.getPath() +") : "+ e.getMessage());
+                logger.warning("error reading bundle-descriptor (" + file.getPath() + ") : " + e.getMessage());
             }
         }
     }
@@ -228,7 +225,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 if (stati != null) {
                     for (FileStatus status : stati) {
                         if (status.isDirectory()) {
-                            collectAccessibleFiles(fileSystem, pathPattern, pos1+1, status.getPath(), accu);
+                            collectAccessibleFiles(fileSystem, pathPattern, pos1 + 1, status.getPath(), accu);
                         }
                     }
                 }
@@ -260,8 +257,24 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return bd;
     }
 
-    public static void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
-        final FileSystem fileSystem = bundlePath.getFileSystem(configuration);
+    public void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(configuration.get(JobConfigNames.CALVALUS_USER), bundlePath.toString());
+        final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith(".jar");
+            }
+        });
+        for (FileStatus fileStatus : fileStatuses) {
+            // For hadoops sake, skip protocol from path because it contains ':' and that is used
+            // as separator in the job configuration!
+            final Path path = fileStatus.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());
+            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration, fileSystem);
+        }
+    }
+
+    public static void addBundleToClassPathStatic(Path bundlePath, Configuration configuration, FileSystem fileSystem) throws IOException {
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -349,6 +362,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      * @param jobID
      * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
      * @param jobClient
+     *
      * @return The process status.
      */
     private ProcessStatus convertStatus(org.apache.hadoop.mapred.JobID jobID, JobStatus jobStatus, JobClient jobClient) {
@@ -397,6 +411,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     private static class BundleQueryCacheEntry {
+
         private final String userName;
         private final String bundleFilter;
         private final long time;
@@ -411,6 +426,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
     private class BundleCacheEntry {
+
         private final BundleDescriptor bundleDescriptor;
         private final long modificationTime;
 
