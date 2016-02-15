@@ -90,7 +90,9 @@ public class CalvalusProductIO {
         final Path path = pathConf.getPath();
         String pathName = path.getName();
         if (pathName.startsWith("CCI-Fire-MERIS-SDR-L3") && pathName.endsWith(".nc")) {
-            setDate(product, pathName);
+            LOG.info("Product " + pathName + " has no time information...extracting it from file name...");
+            setDateToMerisSdrProduct(product, pathName);
+            LOG.info(String.format("...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
         }
         LOG.info(String.format("Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
         Dimension tiling = product.getPreferredTileSize();
@@ -134,7 +136,7 @@ public class CalvalusProductIO {
         return localFile;
     }
 
-    static void setDate(Product product, String pathName) throws IOException {
+    static void setDateToMerisSdrProduct(Product product, String pathName) throws IOException {
         try {
             int beginIndex = "CCI-Fire-MERIS-SDR-L3-300m-v1.0-".length();
             int endIndex = beginIndex + 10;
