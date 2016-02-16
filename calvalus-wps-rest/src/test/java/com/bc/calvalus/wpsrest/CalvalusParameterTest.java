@@ -1,11 +1,12 @@
 package com.bc.calvalus.wpsrest;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
-import org.junit.*;
+import org.junit.Test;
 
 import java.util.List;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItems;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by hans on 15/09/2015.
@@ -19,7 +20,7 @@ public class CalvalusParameterTest {
         assertThat(calvalusParameters.size(), equalTo(13));
         assertThat(calvalusParameters, hasItems("productionType"));
         assertThat(calvalusParameters, hasItems("calvalus.calvalus.bundle"));
-        assertThat(calvalusParameters, hasItems("calvalus.beam.bundle"));
+        assertThat(calvalusParameters, hasItems("calvalus.snap.bundle"));
         assertThat(calvalusParameters, hasItems("productionName"));
         assertThat(calvalusParameters, hasItems("processorBundleName"));
         assertThat(calvalusParameters, hasItems("processorBundleVersion"));
@@ -39,7 +40,7 @@ public class CalvalusParameterTest {
         assertThat(calvalusParameters.size(), equalTo(4));
         assertThat(calvalusParameters, hasItems("productionType"));
         assertThat(calvalusParameters, hasItems("calvalus.calvalus.bundle"));
-        assertThat(calvalusParameters, hasItems("calvalus.beam.bundle"));
+        assertThat(calvalusParameters, hasItems("calvalus.snap.bundle"));
         assertThat(calvalusParameters, hasItems("productionName"));
     }
 
@@ -72,7 +73,7 @@ public class CalvalusParameterTest {
 
     @Test
     public void canGetAbstractText() throws Exception {
-        assertThat(CalvalusParameter.BEAM_BUNDLE_VERSION.getAbstractText(), equalTo("Beam bundle version"));
+        assertThat(CalvalusParameter.SNAP_BUNDLE_VERSION.getAbstractText(), equalTo("SNAP bundle version"));
     }
 
     @Test

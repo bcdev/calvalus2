@@ -24,7 +24,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 /**
- * A Hadoop writable for a bunch of {@link org.esa.beam.framework.gpf.Tile}s.
+ * A Hadoop writable for a bunch of {@link org.esa.snap.core.gpf.Tile}s.
  *
  * @author MarcoZ
  */

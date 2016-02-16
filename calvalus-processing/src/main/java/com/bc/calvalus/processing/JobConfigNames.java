@@ -22,7 +22,7 @@ package com.bc.calvalus.processing;
 public interface JobConfigNames {
 
     String CALVALUS_CALVALUS_BUNDLE = "calvalus.calvalus.bundle";
-    String CALVALUS_BEAM_BUNDLE = "calvalus.beam.bundle";
+    String CALVALUS_SNAP_BUNDLE = "calvalus.snap.bundle";
 
     String CALVALUS_INPUT_DIR = "calvalus.input.dir";
     String CALVALUS_INPUT_PATH_PATTERNS = "calvalus.input.pathPatterns";
@@ -93,10 +93,10 @@ public interface JobConfigNames {
     String CALVALUS_PROCESS_ALL = "calvalus.processAll";
 
     /**
-     * @deprecated use following syntax to set (BEAM) system properties: calvalus.system.<system-property-name>
+     * @deprecated use following syntax to set (SNAP) system properties: calvalus.system.<system-property-name>
      */
     @Deprecated
-    String CALVALUS_BEAM_TILE_CACHE_SIZE = "calvalus.beam.tileCacheSize";
+    String CALVALUS_SNAP_TILE_CACHE_SIZE = "calvalus.snap.jai.tileCacheSize";
 
     String TA_WITH_TIMESERIES_PLOT = "withTimeseriesPlot";
     String TA_WITH_AGGREGATED_CSV = "withAggregatedCsv";

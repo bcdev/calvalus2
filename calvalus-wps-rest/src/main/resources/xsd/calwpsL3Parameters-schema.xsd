@@ -4,7 +4,7 @@
     <xs:element name="parameters">
         <xs:complexType>
             <xs:sequence>
-                <xs:element name="planetaryGrid" type="xs:string" form="qualified" default="org.esa.beam.binning.support.SEAGrid" minOccurs="0"/>
+                <xs:element name="planetaryGrid" type="xs:string" form="qualified" default="org.esa.snap.binning.support.SEAGrid" minOccurs="0"/>
                 <xs:element name="numRows" type="xs:int" form="qualified" default="2160"/>
                 <xs:element name="compositingType" type="CompositingType" form="qualified" minOccurs="0"/>
                 <xs:element name="superSampling" type="xs:int" form="qualified" default="1" minOccurs="0"/>

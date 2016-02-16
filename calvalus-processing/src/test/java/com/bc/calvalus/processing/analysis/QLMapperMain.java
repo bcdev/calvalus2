@@ -3,8 +3,8 @@ package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.beam.StreamingProductPlugin;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
+import com.bc.calvalus.processing.snap.StreamingProductPlugin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
@@ -17,14 +17,8 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.WindowConstants;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Frame;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.RenderedImage;

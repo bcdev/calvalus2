@@ -16,7 +16,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * A record source that creates records from BEAM placemark XML.
+ * A record source that creates records from SNAP placemark XML.
  *
  * @author MarcoZ
  * @author Norman
@@ -61,7 +61,7 @@ public class PlacemarkRecordSource implements RecordSource {
 
     @Override
     public String getTimeAndLocationColumnDescription() {
-        return "BEAM placemark format";
+        return "SNAP placemark format";
     }
 
     public static class Spi extends RecordSourceSpi {

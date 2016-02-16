@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 /**
- * For formatting the results of a BEAM Level 3 Hadoop Job.
+ * For formatting the results of a SNAP Level 3 Hadoop Job.
  *
  * @author Norman Fomferra
  */

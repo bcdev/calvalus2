@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.snap;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.commons.io.output.NullWriter;
@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 public class StreamingProductWriterTest {
 

@@ -23,7 +23,7 @@
             <artifactId>calvalus-commons</artifactId>
         </dependency>
 
-        <!--  BEAM -->
+        <!--  SNAP -->
 
         <dependency>
             <groupId>org.esa.snap</groupId>

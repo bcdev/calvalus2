@@ -47,12 +47,12 @@ public class ManageProductionsView extends PortalView {
 
     private static final int UPDATE_PERIOD_MILLIS = 2000;
 
-    private static final String BEAM_NAME = "BEAM";
-    private static final String BEAM_URL = "http://www.brockmann-consult.de/cms/web/beam";
+    private static final String SNAP_NAME = "ESA SNAP";
+    private static final String SNAP_URL = "http://step.esa.int/main/toolboxes/snap/";
     private static final String GANGLIA_URL = "http://www.brockmann-consult.de/ganglia/";
     private static final String MERCI_URL = "http://calvalus-merci:8080/merci/";
-    private static final String BEAM_HTML = "<small>Note: all generated data products may be viewed " +
-                                            "and further processed with <a href=\"" + BEAM_URL + "\" target=\"_blank\">" + BEAM_NAME + "</a></small>";
+    private static final String SNAP_HTML = "<small>Note: all generated data products may be viewed " +
+                                            "and further processed with <a href=\"" + SNAP_URL + "\" target=\"_blank\">" + SNAP_NAME + "</a></small>";
     private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a><br><a href=\"" + MERCI_URL + "\" target=\"_blank\">Calvalus-Catalogue</a></small>";
 
     static final String RESTART = "Restart";
@@ -175,7 +175,7 @@ public class ManageProductionsView extends PortalView {
         widget.setWidget(2, 0, pager);
         widget.setWidget(3, 0, new Button("Delete Selected", new DeleteProductionsAction()));
         widget.setWidget(3, 1, manageProductionsHelp);
-        widget.setWidget(4, 0, new HTML(BEAM_HTML));
+        widget.setWidget(4, 0, new HTML(SNAP_HTML));
         if (portalContext.withPortalFeature("catalogue")) {
             widget.setWidget(4, 1, new HTML(GANGLIA_HTML));
         }

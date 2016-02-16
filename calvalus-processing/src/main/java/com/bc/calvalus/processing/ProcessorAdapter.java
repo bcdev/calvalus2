@@ -17,10 +17,10 @@
 package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ParameterizedSplit;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
+import com.bc.calvalus.processing.snap.GpfUtils;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
@@ -36,7 +36,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.runtime.Engine;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
@@ -44,7 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Adapts different processors ( BEAM GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
+ * Adapts different processors ( SNAP GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
  * Usage, simple version:
  * <pre>
  * ProcessorAdapter processorAdapter = ProcessorFactory.create(context);

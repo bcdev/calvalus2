@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.snap;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -20,39 +20,20 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorException;
-import org.esa.snap.core.gpf.graph.Graph;
-import org.esa.snap.core.gpf.graph.GraphContext;
-import org.esa.snap.core.gpf.graph.GraphException;
-import org.esa.snap.core.gpf.graph.GraphIO;
-import org.esa.snap.core.gpf.graph.Header;
-import org.esa.snap.core.gpf.graph.HeaderSource;
-import org.esa.snap.core.gpf.graph.HeaderTarget;
-import org.esa.snap.core.gpf.graph.Node;
-import org.esa.snap.core.gpf.graph.NodeContext;
+import org.esa.snap.core.gpf.graph.*;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
- * A processor adapter that uses a BEAM GPF {@code Graph} to process input products.
+ * A processor adapter that uses a SNAP GPF {@code Graph} to process input products.
  *
  * @author MarcoZ
  */
-public class BeamGraphAdapter extends SubsetProcessorAdapter {
+public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     private static final SimpleDateFormat N1_TIME_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
     private static final SimpleDateFormat YMD_DIR_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
@@ -65,7 +46,7 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
     private GraphContext graphContext;
     private Product targetProduct;
 
-    public BeamGraphAdapter(MapContext mapContext) {
+    public SnapGraphAdapter(MapContext mapContext) {
         super(mapContext);
     }
 
@@ -76,7 +57,7 @@ public class BeamGraphAdapter extends SubsetProcessorAdapter {
 
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
-        pm.setSubTaskName("BEAM Level 2");
+        pm.setSubTaskName("SNAP Level 2");
 
         try {
             Graph graph = createGraph();

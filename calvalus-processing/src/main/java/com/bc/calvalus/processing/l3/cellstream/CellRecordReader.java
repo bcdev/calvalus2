@@ -122,7 +122,7 @@ class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
         if (netcdfFile.findVariable("bl_bin_num") != null &&
                 netcdfFile.findVariable("bl_nscenes") != null &&
                 netcdfFile.findVariable("bl_nobs") != null) {
-            return new BeamSparseCellReader(netcdfFile);
+            return new SnapSparseCellReader(netcdfFile);
         } else if (netcdfFile.findVariable("Level-3_Binned_Data/BinList.bin_num") != null &&
                 netcdfFile.findVariable("Level-3_Binned_Data/BinList.nobs") != null &&
                 netcdfFile.findVariable("Level-3_Binned_Data/BinList.nscenes") != null) {

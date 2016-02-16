@@ -1,9 +1,9 @@
 package com.bc.calvalus.wpsrest;
 
-import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
-
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+
+import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 
 /**
  * Created by hans on 13/08/2015.
@@ -19,7 +19,7 @@ public class Processor {
     private final ProcessorDescriptor processorDescriptor;
 
     private String defaultCalvalusBundle;
-    private String defaultBeamBundle;
+    private String defaultSnapBundle;
 
     public Processor(BundleDescriptor bundleDescriptor, ProcessorDescriptor processorDescriptor) {
         this.bundleDescriptor = bundleDescriptor;
@@ -28,7 +28,7 @@ public class Processor {
         this.title = extractTitle();
         this.abstractText = extractAbstractText();
         this.defaultCalvalusBundle = processorDescriptor.getJobConfiguration().get("calvalus.calvalus.bundle");
-        this.defaultBeamBundle = processorDescriptor.getJobConfiguration().get("calvalus.beam.bundle");
+        this.defaultSnapBundle = processorDescriptor.getJobConfiguration().get("calvalus.snap.bundle");
     }
 
     public String getIdentifier() {
@@ -60,8 +60,8 @@ public class Processor {
         return defaultCalvalusBundle;
     }
 
-    public String getDefaultBeamBundle() {
-        return defaultBeamBundle;
+    public String getDefaultSnapBundle() {
+        return defaultSnapBundle;
     }
 
     public String getBundleName() {

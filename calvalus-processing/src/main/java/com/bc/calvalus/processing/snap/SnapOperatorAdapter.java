@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.snap;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
@@ -32,21 +32,21 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * A processor adapter that uses a BEAM GPF {@code Operator} to process an input product.
+ * A processor adapter that uses a SNAP GPF {@code Operator} to process an input product.
  *
  * @author MarcoZ
  */
-public class BeamOperatorAdapter extends SubsetProcessorAdapter {
+public class SnapOperatorAdapter extends SubsetProcessorAdapter {
 
     private Product targetProduct;
 
-    public BeamOperatorAdapter(MapContext mapContext) {
+    public SnapOperatorAdapter(MapContext mapContext) {
         super(mapContext);
     }
 
     @Override
     public int processSourceProduct(ProgressMonitor pm) throws IOException {
-        pm.setSubTaskName("BEAM Level 2");
+        pm.setSubTaskName("SNAP Level 2");
         try {
             Configuration conf = getConfiguration();
             String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);

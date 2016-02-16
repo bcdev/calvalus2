@@ -13,7 +13,7 @@ public enum CalvalusParameter {
 
     PRODUCTION_TYPE("productionType", "Production type", "productionInfo"),
     CALVALUS_BUNDLE_VERSION("calvalus.calvalus.bundle", "Calvalus bundle version", "productionInfo"),
-    BEAM_BUNDLE_VERSION("calvalus.beam.bundle", "Beam bundle version", "productionInfo"),
+    SNAP_BUNDLE_VERSION("calvalus.snap.bundle", "SNAP bundle version", "productionInfo"),
     PRODUCT_NAME("productionName", "Production name", "productionInfo"),
 
     PROCESSOR_BUNDLE_NAME("processorBundleName", "Processor bundle name", "processorInfo"),

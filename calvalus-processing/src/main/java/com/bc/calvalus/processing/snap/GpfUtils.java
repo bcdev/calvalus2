@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.snap;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 /**
- * This class contains utility methods for dealing with BEAM and GPF
+ * This class contains utility methods for dealing with SNAP and GPF
  */
 public class GpfUtils {
 
@@ -37,7 +37,7 @@ public class GpfUtils {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
-     * Initializes BEAM and GPF based on the configuration.
+     * Initializes SNAP and GPF based on the configuration.
      *
      * @param configuration The Hadoop job configuration
      */
@@ -49,7 +49,7 @@ public class GpfUtils {
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfigNames.CALVALUS_BEAM_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfigNames.CALVALUS_SNAP_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 

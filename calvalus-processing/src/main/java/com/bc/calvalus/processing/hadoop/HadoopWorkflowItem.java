@@ -16,11 +16,7 @@
 
 package com.bc.calvalus.processing.hadoop;
 
-import com.bc.calvalus.commons.AbstractWorkflowItem;
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.commons.*;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -234,9 +230,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         // Add Calvalus modules to classpath of Hadoop jobs
         final String calvalusBundle = configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE);
         addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), configuration);
-        // Add BEAM modules to classpath of Hadoop jobs
-        final String beamBundle = configuration.get(JobConfigNames.CALVALUS_BEAM_BUNDLE, DEFAULT_BEAM_BUNDLE);
-        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, beamBundle), configuration);
+        // Add SNAP modules to classpath of Hadoop jobs
+        final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
+        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

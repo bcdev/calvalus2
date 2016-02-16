@@ -93,7 +93,7 @@ public class ProductRecordSource implements RecordSource {
 
     @Override
     public String getTimeAndLocationColumnDescription() {
-        return "BEAM product format";
+        return "SNAP product format";
     }
 
     private static boolean shallApplyTimeCriterion(MAConfig config) {

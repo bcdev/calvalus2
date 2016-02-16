@@ -19,7 +19,7 @@ package com.bc.calvalus.production.cli;
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;

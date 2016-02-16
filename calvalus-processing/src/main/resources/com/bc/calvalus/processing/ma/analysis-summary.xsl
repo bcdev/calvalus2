@@ -63,9 +63,9 @@
                                     </td>
                                 </tr>
                             </xsl:when>
-                            <xsl:when test="name='calvalus.beam.bundle'">
+                            <xsl:when test="name='calvalus.snap.bundle'">
                                 <tr>
-                                    <td class="name">BEAM software bundle:</td>
+                                    <td class="name">SNAP software bundle:</td>
                                     <td class="value">
                                         <xsl:value-of select="value"/>
                                     </td>

@@ -16,17 +16,14 @@
 
 package com.bc.calvalus.commons;
 
+import org.esa.snap.runtime.EngineConfig;
+
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.Formatter;
-import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
-import java.util.logging.Logger;
+import java.util.logging.*;
 
 /**
  * The logger for calvalus
@@ -47,12 +44,12 @@ public class CalvalusLogger {
         logger.addHandler(handler);
         logger.setLevel(Level.ALL);
 
-        Logger beamLogger = Logger.getLogger("beam");
-        beamLogger.setUseParentHandlers(false);
-        beamLogger.addHandler(handler);
-        beamLogger.setLevel(Level.INFO);
+        Logger snapLogger = EngineConfig.instance().logger();
+        snapLogger.setUseParentHandlers(false);
+        snapLogger.addHandler(handler);
+        snapLogger.setLevel(Level.INFO);
 
-        // this work but results in a lof of noice
+        // this work but results in a lot of noise
 //        Logger ceresLogger = Logger.getLogger("ceres");
 //        ceresLogger.setUseParentHandlers(false);
 //        ceresLogger.addHandler(handler);

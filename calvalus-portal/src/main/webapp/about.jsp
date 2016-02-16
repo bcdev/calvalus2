@@ -127,7 +127,7 @@
                 of <strong>112 TB</strong> at a total cost of <strong>30 k&euro;</strong>. The processing system
                 software is based on
                 <a href="http://hadoop.apache.org/">Apache Hadoop</a>, an open-source
-                implementation of MR and DSF in Java and <a href="http://www.brockmann-consult.de/beam/">BEAM</a>,
+                implementation of MR and DSF in Java and <a href="http://step.esa.int/main/toolboxes/snap/">SNAP</a>,
                 an ESA Earth Observation Toolbox and Development Platform.</p>
 
             <p>Calvalus gains its performance from <strong>massive parallelisation of tasks</strong> and the <strong>data-local

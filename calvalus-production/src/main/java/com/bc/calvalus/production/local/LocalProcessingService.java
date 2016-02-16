@@ -8,14 +8,10 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.ProcessingService;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 /**
- * A processing system that is implemented locally (e.g. using BEAM).
+ * A processing system that is implemented locally (e.g. using SNAP).
  */
 class LocalProcessingService implements ProcessingService<String> {
 

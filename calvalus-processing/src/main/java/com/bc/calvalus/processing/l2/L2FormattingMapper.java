@@ -38,16 +38,12 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
  * A mapper which converts L2 products from the
- * (internal) SequenceFiles into different BEAM product formats.
+ * (internal) SequenceFiles into different SNAP product formats.
  */
 public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 

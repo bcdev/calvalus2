@@ -1,20 +1,22 @@
 package com.bc.calvalus.wpsrest.calvalusfacade;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.*;
-
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wpsrest.ExecuteRequestExtractor;
 import com.bc.calvalus.wpsrest.Processor;
 import com.bc.calvalus.wpsrest.exception.WpsInvalidParameterValueException;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by hans on 15/09/2015.
@@ -46,14 +48,14 @@ public class CalvalusDataInputsTest {
     public void canGetInputMapFormatted() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockProcessor.getDefaultSnapBundle()).thenReturn("snap-2.0.0");
         when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
 
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.beam.bundle"), equalTo("beam-4.11.1-SNAPSHOT"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-2.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
     }
 
@@ -61,14 +63,14 @@ public class CalvalusDataInputsTest {
     public void canGetProductionParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockProcessor.getDefaultSnapBundle()).thenReturn("snap-2.0.0");
         when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getValue("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
-        assertThat(calvalusDataInputs.getValue("calvalus.beam.bundle"), equalTo("beam-4.11.1-SNAPSHOT"));
+        assertThat(calvalusDataInputs.getValue("calvalus.snap.bundle"), equalTo("snap-2.0.0"));
         assertThat(calvalusDataInputs.getValue("productionName"), equalTo("dummyProductionName"));
     }
 
@@ -182,7 +184,7 @@ public class CalvalusDataInputsTest {
     public void canListAllParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockProcessor.getDefaultSnapBundle()).thenReturn("snap-2.0.0");
         when(mockProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockProcessor, productSets);
@@ -191,11 +193,11 @@ public class CalvalusDataInputsTest {
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "autoStaging : true\n" +
                                                           "productionType : L3\n" +
+                                                          "calvalus.snap.bundle : snap-2.0.0\n" +
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
                                                           "productionName : dummyProductionName\n" +
-                                                          "calvalus.beam.bundle : beam-4.11.1-SNAPSHOT\n" +
                                                           "processorBundleVersion : null\n"));
     }
 

@@ -8,11 +8,7 @@
 
 package com.bc.calvalus.wpsrest.jaxb;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
+import javax.xml.bind.annotation.*;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "", propOrder = {
@@ -34,7 +30,7 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "parameters", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
 public class L3Parameters {
 
-    @XmlElement(name = "planetaryGrid", defaultValue = "org.esa.beam.binning.support.SEAGrid", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
+    @XmlElement(name = "planetaryGrid", defaultValue = "org.esa.snap.binning.support.SEAGrid", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected String planetaryGrid;
     @XmlElement(name = "numRows", defaultValue = "2160", namespace = "http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd")
     protected int numRows;

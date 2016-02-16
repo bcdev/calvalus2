@@ -2,15 +2,14 @@ Calvalus Installation Instruction (Version 1.7)
 -----------------------------------------------
 
 Prerequisites:
-To use the Calvalus software a Java JDK 1.6 from Oracle is required.
+To use the Calvalus software a Java JDK 1.8 from Oracle is required.
 Apache Hadoop has to be of Version 1.x.
 Both software packages have to be installed on all nodes of the cluster.
 A Namenode and a Tasktracker service have to be running.
 
-
 The Calvalus software archive consist of:
- - the the Calvalus software bundle
- - the BEAM software bundle
+ - the Calvalus software bundle
+ - the SNAP software bundle
  - the CPT (Calvalus production tool)
  - a sample configuration file for the CPT ("calvalus.config")
 
@@ -32,19 +31,18 @@ java -jar cpt.jar
 For help:
 java -jar cpt.jar --help
 
-The remaining step is to install the BEAM and the Calvalus bundle into the HDFS:
+The remaining step is to install the SNAP and the Calvalus bundle into the HDFS:
 
-java -jar cpt.jar --deploy beam-bundle/*.jar beam-5.0.1
+java -jar cpt.jar --deploy snap-bundle/*.jar snap-2.0.0
 java -jar cpt.jar --deploy calvalus-bundle/*.jar calvalus-2.8-SNAPSHOT
 
-Whereas the name of the BEAM and Calvalus bundle are given in the "calvalus.hadoop.calvalus.calvalus.bundle" and
-the "calvalus.hadoop.calvalus.beam.bundle" configuration property.
+Whereas the name of the SNAP and Calvalus bundle are given in the "calvalus.hadoop.calvalus.calvalus.bundle" and
+the "calvalus.hadoop.calvalus.snap.bundle" configuration property.
 
 To validate the bundle deployment you can use the "hadoop fs" tool:
 hadoop fs -ls /calvalus/software/1.0
 
 This should list two sub-directories.
-
 
 To do actual processing one or more processor bundles are required.
 They are not part of this software archive.

@@ -5,21 +5,10 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.ingestion.IngestionTool;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionResponse;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceConfig;
+import com.bc.calvalus.production.*;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.GnuParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.Parser;
+import org.apache.commons.cli.*;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -48,8 +37,8 @@ import java.util.Map;
  * WPS Execute operation request (see
  * http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may
  * be one or more of the following:
- *  -B,--beam &lt;NAME&gt;       The name of the BEAM software bundle used for the
- *                         production. Defaults to 'beam-5.0.1'.
+ *  -S,--snap &lt;NAME&gt;       The name of the SNAP software bundle used for the
+ *                         production. Defaults to 'snap-2.0.0'.
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
@@ -72,7 +61,7 @@ public class ProductionTool {
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(),
                                                                "calvalus.config").getPath();
 
-    private static final String DEFAULT_BEAM_BUNDLE = HadoopProcessingService.DEFAULT_BEAM_BUNDLE;
+    private static final String DEFAULT_SNAP_BUNDLE = HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
     private static final String CALVALUS_SOFTWARE_HOME = HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
 
@@ -127,7 +116,7 @@ public class ProductionTool {
         defaultConfig.put("production.db.type", "memory");
 
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
-        defaultConfig.put("calvalus.beam.bundle", commandLine.getOptionValue("beam", DEFAULT_BEAM_BUNDLE));
+        defaultConfig.put("calvalus.snap.bundle", commandLine.getOptionValue("snap", DEFAULT_SNAP_BUNDLE));
 
         ProductionService productionService = null;
         try {
@@ -562,12 +551,12 @@ public class ProductionTool {
                                           "The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
                                   .create("C"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("beam")
+                                  .withLongOpt("snap")
                                   .hasArg()
                                   .withArgName("NAME")
                                   .withDescription(
-                                          "The name of the BEAM software bundle used for the production. Defaults to '" + DEFAULT_BEAM_BUNDLE + "'.")
-                                  .create("B"));
+                                          "The name of the SNAP software bundle used for the production. Defaults to '" + DEFAULT_SNAP_BUNDLE + "'.")
+                                  .create("S"));
         options.addOption(OptionBuilder
                                   .withLongOpt("config")
                                   .hasArg()

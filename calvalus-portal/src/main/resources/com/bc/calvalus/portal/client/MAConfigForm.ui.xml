@@ -107,11 +107,11 @@
                     <tr>
                         <td colspan="2">
                             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="63em">
-                                The good-pixel expression is a BEAM band maths expression (refer to BEAM documentation)
+                                The good-pixel expression is a SNAP band maths expression (refer to SNAP documentation)
                                 that is evaluated
                                 for each L2 processor output pixel. If it evaluates to the Boolean TRUE value, the pixel
                                 will be used for further analysis.
-                                For BEAM processors, you usually don't need to specify it, because BEAM products usually
+                                For SNAP processors, you usually don't need to specify it, because SNAP products usually
                                 already
                                 have valid-masks attached to their geo-physical output variables.
                                 <br/>
@@ -132,7 +132,7 @@
                     <tr>
                         <td colspan="2">
                             <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="63em">
-                                The good-record expression also is a BEAM band maths expression
+                                The good-record expression also is a SNAP band maths expression
                                 that is evaluated
                                 for each aggregated macro pixel (= record). For each geo-physical output variable
                                 <i>var</i>

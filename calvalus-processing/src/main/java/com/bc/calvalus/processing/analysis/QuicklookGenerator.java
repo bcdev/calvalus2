@@ -31,20 +31,9 @@ import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.ColorPaletteDef;
-import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.datamodel.ImageInfo;
-import org.esa.snap.core.datamodel.ImageLegend;
-import org.esa.snap.core.datamodel.Mask;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductNodeGroup;
-import org.esa.snap.core.datamodel.RGBChannelDef;
-import org.esa.snap.core.datamodel.RGBImageProfile;
-import org.esa.snap.core.datamodel.Stx;
+import org.esa.snap.core.datamodel.*;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
-import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
 import org.esa.snap.core.util.DefaultPropertyMap;
@@ -53,18 +42,12 @@ import org.esa.snap.core.util.PropertyMap;
 import javax.imageio.ImageIO;
 import javax.media.jai.Interpolation;
 import javax.media.jai.operator.ScaleDescriptor;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -254,7 +237,7 @@ public class QuicklookGenerator {
 //        }
     }
 
-//        // inlined here from org.esa.beam.util.FeatureUtils to allow for smaller clip rect
+//        // inlined here from org.esa.snap.core.util.FeatureUtils to allow for smaller clip rect
 //    private static FeatureCollection<SimpleFeatureType, SimpleFeature> getSimpleFeatureTypeSimpleFeatureFeatureCollection(File shapefile, Product product, ProgressMonitor pm) throws IOException {
 //        pm.beginTask("Loading Shapefile", 100);
 //        try {

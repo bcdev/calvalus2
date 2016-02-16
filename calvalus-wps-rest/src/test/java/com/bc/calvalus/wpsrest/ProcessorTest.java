@@ -1,19 +1,18 @@
 package com.bc.calvalus.wpsrest;
 
-import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.mockito.Mockito.*;
-
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItem;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * @author hans
@@ -111,12 +110,12 @@ public class ProcessorTest {
     }
 
     @Test
-    public void canGetDefaultBeamBundle() throws Exception {
+    public void canGetDefaultSnapBundle() throws Exception {
         when(mockProcessorDescriptor.getJobConfiguration()).thenReturn(getJobConfiguration());
 
         processor = new Processor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getDefaultBeamBundle(), equalTo("beam-5.0.1"));
+        assertThat(processor.getDefaultSnapBundle(), equalTo("snap-2.0.0"));
     }
 
     @Test
@@ -184,7 +183,7 @@ public class ProcessorTest {
     private Map<String, String> getJobConfiguration() {
         Map<String, String> jobConfiguration = new HashMap<>();
         jobConfiguration.put("calvalus.calvalus.bundle", "calvalus-2.7-SNAPSHOT");
-        jobConfiguration.put("calvalus.beam.bundle", "beam-5.0.1");
+        jobConfiguration.put("calvalus.snap.bundle", "snap-2.0.0");
         return jobConfiguration;
     }
 

@@ -207,7 +207,7 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
     private static void addCalvalusMetadata(MetadataElement element, Configuration conf) {
         addAttributeToMetadataElement(element, "operator", conf.get(JobConfigNames.CALVALUS_PRODUCTION_TYPE));
         addAttributeToMetadataElement(element, "calvalusVersion", conf.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE));
-        addAttributeToMetadataElement(element, "beamVersion", conf.get(JobConfigNames.CALVALUS_BEAM_BUNDLE));
+        addAttributeToMetadataElement(element, "snapVersion", conf.get(JobConfigNames.CALVALUS_SNAP_BUNDLE));
         addAttributeToMetadataElement(element, "user", conf.get(JobConfigNames.CALVALUS_USER));
     }
 

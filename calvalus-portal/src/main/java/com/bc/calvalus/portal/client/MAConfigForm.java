@@ -13,16 +13,7 @@ import com.google.gwt.maps.client.overlays.MarkerOptions;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DoubleBox;
-import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.HTMLPanel;
-import com.google.gwt.user.client.ui.IntegerBox;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -91,7 +82,7 @@ public class MAConfigForm extends Composite {
         outputGroupName.setValue("SITE");
 
         HTML description1 = new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
-                                     "and BEAM placemark files (<b>*.placemark</b>).");
+                                     "and SNAP placemark files (<b>*.placemark</b>).");
         HTML description2 = new HTML(
                 "<h4>Standard format:</h4>" +
                 "The first line of the TAB-separated CSV file must contain header names. <br/>" +

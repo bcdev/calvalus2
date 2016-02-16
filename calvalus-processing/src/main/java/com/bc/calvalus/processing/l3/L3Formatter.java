@@ -18,9 +18,9 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
@@ -46,7 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * For formatting the results of a BEAM Level 3 Hadoop Job.
+ * For formatting the results of a SNAP Level 3 Hadoop Job.
  */
 public class L3Formatter {
 

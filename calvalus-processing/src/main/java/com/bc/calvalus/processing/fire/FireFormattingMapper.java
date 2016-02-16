@@ -18,12 +18,12 @@ package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.executable.ScriptGenerator;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.mosaic.TileDataWritable;
 import com.bc.calvalus.processing.mosaic.TileIndexWritable;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -35,12 +35,7 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.velocity.VelocityContext;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

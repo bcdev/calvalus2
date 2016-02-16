@@ -19,14 +19,7 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -40,10 +33,10 @@ import java.util.logging.Logger;
 public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWritable, NullWritable, NullWritable> {
 
     static {
-        System.getProperties().put("org.esa.beam.dataio.bigtiff.compression.type", "LZW");
-        System.getProperties().put("org.esa.beam.dataio.bigtiff.tiling.width", "256");
-        System.getProperties().put("org.esa.beam.dataio.bigtiff.tiling.height", "256");
-        System.getProperties().put("org.esa.beam.dataio.bigtiff.force.bigtiff", "true");
+        System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "256");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "256");
+        System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
     }
 
     protected static final Logger LOG = CalvalusLogger.getLogger();

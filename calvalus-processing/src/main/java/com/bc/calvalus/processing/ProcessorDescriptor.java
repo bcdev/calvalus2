@@ -265,7 +265,7 @@ public class ProcessorDescriptor {
 
     public enum FormattingType {
         IMPLICIT,  // MEGS, l2gen
-        OPTIONAL,  // BEAM Operator -> Sequential or NetCDF or DIMAP or ...
+        OPTIONAL,  // SNAP Operator -> Sequential or NetCDF or DIMAP or ...
         MANDATORY  // Formatting -> NetCDF or DIMAP
     }
 

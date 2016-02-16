@@ -1,13 +1,13 @@
 <!--
    This assembly is part of the "client.xml" assembly.
-   It creates a directory with some required BEAM system modules and their dependencies.
+   It creates a directory with some required SNAP system modules and their dependencies.
 -->
 
 <assembly
         xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
-    <id>beam</id>
+    <id>snap</id>
     <formats>
         <format>dir</format>
     </formats>
@@ -15,17 +15,17 @@
     <dependencySets>
         <dependencySet>
             <includes>
-                <include>org.esa.beam:beam-gpf</include>
-                <include>org.esa.beam:beam-core</include>
-                <include>org.esa.beam:beam-envisat-reader</include>
-                <include>org.esa.beam:beam-avhrr-reader</include>
-                <include>org.esa.beam:beam-geotiff</include>
-                <include>org.esa.beam:beam-bigtiff</include>
-                <include>org.esa.beam:beam-netcdf</include>
-                <include>org.esa.beam:beam-spot-vgt-reader</include>
-                <include>org.esa.beam:beam-landsat-reader</include>
-                <include>gov.nasa.gsfc.seadas:seadas-reader</include>
-                <include>com.bc.ceres:ceres-metadata</include>
+                <include>org.esa.snap:snap-gpf</include>
+                <include>org.esa.snap:snap-core</include>
+                <include>org.esa.snap:snap-envisat-reader</include>
+                <include>org.esa.s3tbx:s3tbx-avhrr-reader</include>
+                <include>org.esa.snap:snap-geotiff</include>
+                <include>org.esa.snap:snap-bigtiff</include>
+                <include>org.esa.snap:snap-netcdf</include>
+                <include>org.esa.s3tbx:s3tbx-spot-vgt-reader</include>
+                <include>org.esa.s3tbx:s3tbx-landsat-reader</include>
+                <include>org.esa.snap.seadas:seadas-reader</include>
+                <include>org.esa.snap:ceres-metadata</include>
                 <include>hsqldb:hsqldb</include>
                 <include>org.geotools:gt-render</include>
             </includes>

@@ -1,6 +1,6 @@
 <!--
    This assembly is part of the "client.xml" assembly.
-   It creates a directory with some required BEAM system modules and their dependencies.
+   It creates a directory with the calvalus modules and some dependencies.
 -->
 
 <assembly

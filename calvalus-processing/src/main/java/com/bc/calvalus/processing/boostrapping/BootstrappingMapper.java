@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.boostrapping;
 
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
+import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;

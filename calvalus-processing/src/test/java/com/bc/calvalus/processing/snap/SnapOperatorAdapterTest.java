@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.beam;
+package com.bc.calvalus.processing.snap;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -35,7 +35,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 
 import static org.junit.Assert.*;
@@ -64,11 +64,11 @@ public class SnapOperatorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
+        SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
+        Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
     }
@@ -84,7 +84,7 @@ public class SnapOperatorAdapterTest {
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, productSplit);
         mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
-        BeamOperatorAdapter beamOperatorAdapter = new BeamOperatorAdapter(mapContext) {
+        SnapOperatorAdapter snapOperatorAdapter = new SnapOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;
@@ -96,7 +96,7 @@ public class SnapOperatorAdapterTest {
             }
         };
 
-        beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
     }
 
     @Test
@@ -104,12 +104,12 @@ public class SnapOperatorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+        SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle(10, 20));
 
-        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
+        Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(10, targetProduct.getSceneRasterWidth());
@@ -121,11 +121,11 @@ public class SnapOperatorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
+        SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
         assertEquals(1, numProducts);
-        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
+        Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
         assertEquals(100, targetProduct.getSceneRasterWidth());
@@ -137,10 +137,10 @@ public class SnapOperatorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
-        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
+        SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle());
         try {
-            beamOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
             fail();
         } catch (IllegalStateException e) {
             assertEquals("Can not create an empty subset.", e.getMessage());
@@ -152,18 +152,18 @@ public class SnapOperatorAdapterTest {
 
         Product sourceProduct = createSourceProduct();
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 10, 20);
-        BeamOperatorAdapter beamOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct);
+        SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct);
 
-        Product targetProduct = beamOperatorAdapter.openProcessedProduct();
-        Rectangle rectangle = beamOperatorAdapter.getInputRectangle();
+        Product targetProduct = snapOperatorAdapter.openProcessedProduct();
+        Rectangle rectangle = snapOperatorAdapter.getInputRectangle();
 
         assertNotSame(sourceProduct, targetProduct);
         assertEquals(100, rectangle.width);
         assertEquals(20, rectangle.height);
     }
 
-    private static BeamOperatorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct,
-                                                               final Rectangle inputRect) {
+    private static SnapOperatorAdapter createProcessorAdapter(final InputSplit inputSplit, final Product sourceProduct,
+                                                              final Rectangle inputRect) {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, "0");
         conf.set(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, "0");
@@ -172,7 +172,7 @@ public class SnapOperatorAdapterTest {
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
         mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
-        return new BeamOperatorAdapter(mapContext) {
+        return new SnapOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;
@@ -185,15 +185,15 @@ public class SnapOperatorAdapterTest {
         };
     }
 
-    private static BeamOperatorAdapter createProcessorAdapter(final InputSplit inputSplit,
-                                                               final Product sourceProduct) {
+    private static SnapOperatorAdapter createProcessorAdapter(final InputSplit inputSplit,
+                                                              final Product sourceProduct) {
         Configuration conf = new Configuration();
         conf.set(JobConfigNames.CALVALUS_L2_OPERATOR, "PassThrough");
         conf.set(JobConfigNames.CALVALUS_L2_PARAMETERS, "<parameters/>");
         TaskAttemptID taskid = new TaskAttemptID();
         MapContext mapContext = new MapContextImpl(conf, taskid, null, null, null, null, inputSplit);
         mapContext.getConfiguration().setBoolean("calvalus.snap.setSnapProperties", false);
-        return new BeamOperatorAdapter(mapContext) {
+        return new SnapOperatorAdapter(mapContext) {
             @Override
             public Product getInputProduct() throws IOException {
                 return sourceProduct;

@@ -1,12 +1,7 @@
 package com.bc.calvalus.experiments.format;
 
-import org.esa.beam.dataio.envisat.EnvisatProductReaderPlugIn;
-import org.esa.beam.dataio.envisat.ProductFile;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.Stx;
-import org.junit.Ignore;
-import org.junit.Test;
+
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import javax.imageio.stream.FileImageInputStream;
 import java.awt.image.Raster;
@@ -15,9 +10,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 @Ignore
 public class LineInterleavedEnvisatReaderTest {

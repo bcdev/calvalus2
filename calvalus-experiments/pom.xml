@@ -28,16 +28,21 @@
             <artifactId>calvalus-processing</artifactId>
         </dependency>
 
-        <!--  BEAM -->
+        <!--  SNAP -->
 
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-gpf</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-gpf</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-envisat-reader</artifactId>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-envisat-reader</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
         </dependency>
 
         <!--  Hadoop -->
@@ -46,23 +51,22 @@
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-client</artifactId>
         </dependency>
-        <!--
         <dependency>
             <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
+            <artifactId>hadoop-common</artifactId>
+            <version>2.6.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-test</artifactId>
-        </dependency>
-        -->
+        <!--<dependency>-->
+            <!--<groupId>org.apache.hadoop</groupId>-->
+            <!--<artifactId>hadoop-test</artifactId>-->
+        <!--</dependency>-->
 
         <!--  Envisat N1 Childgen -->
 
         <dependency>
             <groupId>com.bc.eo</groupId>
             <artifactId>eo-childgen-N1</artifactId>
-            <version>2.2</version>
+            <version>2.3</version>
         </dependency>
 
         <!--  JUnit -->

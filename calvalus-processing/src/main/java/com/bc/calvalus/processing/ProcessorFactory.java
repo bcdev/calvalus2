@@ -16,11 +16,11 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.beam.BeamGraphAdapter;
-import com.bc.calvalus.processing.beam.BeamOperatorAdapter;
-import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.snap.SnapGraphAdapter;
+import com.bc.calvalus.processing.snap.SnapOperatorAdapter;
+import com.bc.calvalus.processing.snap.SubsetProcessorAdapter;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -31,7 +31,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.snap.core.datamodel.Product;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.net.URI;
@@ -56,9 +56,9 @@ public class ProcessorFactory {
         ProcessorType processorType = ProcessorType.valueOf(processorTypeString);
         switch (processorType) {
             case OPERATOR:
-                return new BeamOperatorAdapter(mapContext);
+                return new SnapOperatorAdapter(mapContext);
             case GRAPH:
-                return new BeamGraphAdapter(mapContext);
+                return new SnapGraphAdapter(mapContext);
             case EXEC:
                 return new ExecutableProcessorAdapter(mapContext);
             case NONE:

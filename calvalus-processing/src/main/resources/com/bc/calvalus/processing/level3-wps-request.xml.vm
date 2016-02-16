@@ -55,7 +55,7 @@
 
         <wps:Input>
             <ows:Identifier>calvalus.l2.operator</ows:Identifier>
-            <ows:Title>The name of the Level 2 BEAM processor (GPF operator name)</ows:Title>
+            <ows:Title>The name of the Level 2 SNAP processor (GPF operator name)</ows:Title>
             <wps:Data>
                 <wps:LiteralData>${processorName}</wps:LiteralData>
             </wps:Data>
@@ -63,7 +63,7 @@
 
         <wps:Input>
             <ows:Identifier>calvalus.l2.parameters</ows:Identifier>
-            <ows:Title>The parameters for the Level 2 BEAM processor (GPF operator name)</ows:Title>
+            <ows:Title>The parameters for the Level 2 SNAP processor (GPF operator name)</ows:Title>
             <wps:Data>
                 <wps:ComplexData>${processorParameters}</wps:ComplexData>
             </wps:Data>

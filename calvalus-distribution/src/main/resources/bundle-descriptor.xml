@@ -1,5 +1,5 @@
 <bundleDescriptor>
-    <bundleName>beam-buildin</bundleName>
+    <bundleName>snap-buildin</bundleName>
     <bundleVersion>1.0</bundleVersion>
 
     <aggregatorDescriptors>
@@ -104,7 +104,7 @@
     <processorDescriptors>
         <processorDescriptor>
             <executableName>BandMaths</executableName>
-            <processorName>Band arythmetic processor</processorName>
+            <processorName>Band arithmetic processor</processorName>
             <processorVersion>1.1</processorVersion>
             <defaultParameters><![CDATA[
 <parameters>

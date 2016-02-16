@@ -14,11 +14,11 @@
     <name>Calvalus Processing</name>
     <description>
         Provides various Processor-to-Hadoop adapters, the glue that brings together EO data
-        processors (e.g. from BEAM and shell executables) and Hadoop.
+        processors (e.g. from SNAP and shell executables) and Hadoop.
     </description>
 
     <dependencies>
-        <!-- force this version instead of the BEAM one -->
+        <!-- force this version instead of the SNAP one -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
@@ -35,7 +35,7 @@
             <artifactId>calvalus-inventory</artifactId>
         </dependency>
 
-        <!--  BEAM -->
+        <!--  SNAP -->
 
         <dependency>
             <groupId>org.esa.snap</groupId>

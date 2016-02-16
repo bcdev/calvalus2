@@ -29,7 +29,7 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * the mapper for formatting the results of a BEAM Level 3 Hadoop Job.
+ * the mapper for formatting the results of a SNAP Level 3 Hadoop Job.
  */
 public class L3FormatterMapper extends Mapper<NullWritable, NullWritable, NullWritable, NullWritable> {
 

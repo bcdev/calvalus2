@@ -1,2 +1,2 @@
-com.bc.calvalus.processing.beam.StreamingProductPlugin
-com.bc.calvalus.processing.beam.ModisL1WithGeoReaderPlugin
+snap.StreamingProductPlugin
+snap.ModisL1WithGeoReaderPlugin

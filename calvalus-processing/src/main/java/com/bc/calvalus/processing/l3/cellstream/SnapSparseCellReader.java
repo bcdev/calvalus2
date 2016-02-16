@@ -21,9 +21,9 @@ import java.util.List;
 import java.util.logging.Level;
 
 /**
- * Reads binned product written by the BEAM binner2 in sparse format.
+ * Reads binned product written by the SNAP binner2 in sparse format.
  */
-public class BeamSparseCellReader extends AbstractNetcdfCellReader {
+public class SnapSparseCellReader extends AbstractNetcdfCellReader {
 
     private static final int DEFAULT_READAHEAD = 1000;
     private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
@@ -47,7 +47,7 @@ public class BeamSparseCellReader extends AbstractNetcdfCellReader {
     private int arrayPointer = Integer.MAX_VALUE;
     private int readAhead;
 
-    public BeamSparseCellReader(NetcdfFile netcdfFile) {
+    public SnapSparseCellReader(NetcdfFile netcdfFile) {
         super(netcdfFile);
         numBins = readLargestDimensionSize(netcdfFile);
         List<String> featureNameList = new ArrayList<String>();

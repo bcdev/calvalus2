@@ -16,11 +16,7 @@
 
 package com.bc.calvalus.processing.analysis;
 
-import com.bc.ceres.binding.ConversionException;
-import com.bc.ceres.binding.Property;
-import com.bc.ceres.binding.PropertyContainer;
-import com.bc.ceres.binding.PropertySet;
-import com.bc.ceres.binding.ValidationException;
+import com.bc.ceres.binding.*;
 import com.bc.ceres.binding.dom.DefaultDomConverter;
 import com.bc.ceres.binding.dom.DomConverter;
 import com.bc.ceres.binding.dom.DomElement;
@@ -60,7 +56,7 @@ import java.util.List;
  * The type of a {@link FeatureLayer}.
  */
 @LayerTypeMetadata(name = "FeatureLayerType",
-                   aliasNames = {"org.esa.beam.visat.toolviews.layermanager.layersrc.shapefile.FeatureLayerType"})
+                   aliasNames = {"org.esa.snap.rcp.layermanager.layersrc.shapefile.FeatureLayerType"})
 public class FeatureLayerType extends LayerType {
 
     public static final String PROPERTY_NAME_SLD_STYLE = "sldStyle";

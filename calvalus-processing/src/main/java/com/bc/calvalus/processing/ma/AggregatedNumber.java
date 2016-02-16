@@ -36,7 +36,7 @@ public final class AggregatedNumber extends Number {
 
     /**
      * NT is the total number of values that were not NaN.
-     * In the BEAM data model: the pixels whose "validMask" is set.
+     * In the SNAP data model: the pixels whose "validMask" is set.
      */
     public final int nT;
 

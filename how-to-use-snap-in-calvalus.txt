@@ -27,5 +27,5 @@ Run Calvalus with SNAP (latest version)
 3. Use it!
     a. In your instance, copy cpt.jar and calvalus-production-X.X.jar created in step 2 to the lib directory
     b. Edit your my-script so that:
-        # XXXXX_BEAM_VERSION points to <snap-runtime-environment> set up in step 1
+        # XXXXX_SNAP_VERSION points to <snap-runtime-environment> set up in step 1
         # XXXXX_CALVALUS_VERSION is the name of to the <calvalus-runtime-environment> set up in step 2

@@ -114,7 +114,7 @@
                     <links>
                         <link>http://download.oracle.com/javase/8/docs/api/</link>
                         <link>http://hadoop.apache.org/docs/r2.6.0/api/</link>
-                        <link>http://www.brockmann-consult.de/beam/doc/apidocs/</link>
+                        <link>http://step.esa.int/docs/v2.0/apidoc/engine/</link>
                         <!-- check: really need this? -->
                         <link>http://google-web-toolkit.googlecode.com/svn/javadoc/1.5/</link>
                     </links>
@@ -186,7 +186,7 @@
 
             <!--  Ceres -->
             <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
-            commons-lang:commons-lang of org.apache.velocity:velocity into the BEAM assembly -->
+            commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
             <dependency>
                 <groupId>com.bc.ceres</groupId>
                 <artifactId>ceres-metadata</artifactId>
@@ -204,7 +204,7 @@
                 </exclusions>
             </dependency>
 
-            <!--  BEAM -->
+            <!--  SNAP -->
 
             <dependency>
                 <groupId>org.esa.snap</groupId>

@@ -13,11 +13,7 @@ import ucar.nc2.Structure;
 import ucar.nc2.Variable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Reads binned product written by the SEADAS l2bin.
@@ -220,10 +216,10 @@ public class SeadasBinnnedCellReader extends AbstractNetcdfCellReader {
         }
 
         long seadasBinIndex = binNumArray.getLong(currentBinIndex);
-        long beamBinIndex = seadasGrid.reverseBinIndex(seadasBinIndex);
-        key.set(beamBinIndex);
+        long snapBinIndex = seadasGrid.reverseBinIndex(seadasBinIndex);
+        key.set(snapBinIndex);
 
-        temporalBin.setIndex(beamBinIndex);
+        temporalBin.setIndex(snapBinIndex);
         temporalBin.setNumObs(numObsArray.getInt(currentBinIndex));
         temporalBin.setNumPasses(numSceneArray.getInt(currentBinIndex));
         float[] featureValues = temporalBin.getFeatureValues();

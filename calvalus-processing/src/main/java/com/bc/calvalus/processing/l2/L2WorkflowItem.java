@@ -18,11 +18,11 @@ package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import com.bc.calvalus.processing.hadoop.TableInputFormat;
+import com.bc.calvalus.processing.snap.SimpleOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
@@ -31,7 +31,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * A workflow item creating a Hadoop job for n input products processed to n output products using a BEAM GPF operator.
+ * A workflow item creating a Hadoop job for n input products processed to n output products using a SNAP GPF operator.
  */
 public class L2WorkflowItem extends HadoopWorkflowItem {
 

@@ -1,14 +1,5 @@
 package com.bc.calvalus.wpsrest.calvalusfacade;
 
-import static com.bc.calvalus.wpsrest.CalvalusParameter.BEAM_BUNDLE_VERSION;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.CALVALUS_BUNDLE_VERSION;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.INPUT_DATASET;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.PROCESSOR_NAME;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.getProductionInfoParameters;
-import static com.bc.calvalus.wpsrest.CalvalusParameter.getProductsetParameters;
-
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wpsrest.ExecuteRequestExtractor;
@@ -20,6 +11,8 @@ import org.apache.commons.lang.StringUtils;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static com.bc.calvalus.wpsrest.CalvalusParameter.*;
 
 /**
  * This class transform the input parameters map into a format recognized by Calvalus Production Request.
@@ -81,7 +74,7 @@ public class CalvalusDataInputs {
     private void extractProductionInfoParameters(Processor processor) {
         if (processor != null) {
             inputMapFormatted.put(CALVALUS_BUNDLE_VERSION.getIdentifier(), processor.getDefaultCalvalusBundle());
-            inputMapFormatted.put(BEAM_BUNDLE_VERSION.getIdentifier(), processor.getDefaultBeamBundle());
+            inputMapFormatted.put(SNAP_BUNDLE_VERSION.getIdentifier(), processor.getDefaultSnapBundle());
         }
     }
 

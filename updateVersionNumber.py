@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
-import os
 import fnmatch
+import os
+
 
 def find_files():
     matching_filters = ['pom.xml', 'HowToDeploy.txt', 'calvalus.properties', 'directory-listing.xsl',
@@ -17,21 +18,21 @@ def find_files():
                 matches.append(os.path.join(root, filename))
     return matches
 
-def read_files_litst():
+def read_files_list():
     matches = []
     for line in open('updateVersionNumberFiles.cfg'):
         matches.append(line.strip())
     return matches
 
-def update_verions_numbers():
+def update_version_numbers():
     parser = argparse.ArgumentParser(description='Update version number in code.')
     parser.add_argument('--dry-run', action='store_true', default=False,
                         required=False, help="Don't write any files, just pretend.")
     parser.add_argument('--not-exact', action='store_true', default=False,
-                        required=False, help="Dont' be extremly exact with matching.")
+                        required=False, help="Don't be extremely exact with matching.")
     parser.add_argument('--find-files', action='store_true', default=False,
                         required=False, help="Searches for files containing the given old version number.")
-    parser.add_argument('kind', choices=['calvalus', 'beam'])
+    parser.add_argument('kind', choices=['calvalus', 'snap'])
     parser.add_argument('old_version', action='store')
     parser.add_argument('new_version', action='store')
     args = parser.parse_args()
@@ -41,7 +42,7 @@ def update_verions_numbers():
     if args.find_files:
         filesToChange = find_files()
     else:
-        filesToChange = read_files_litst()
+        filesToChange = read_files_list()
 
     for file in filesToChange:
         print ()
@@ -75,10 +76,10 @@ def update_verions_numbers():
                     line = line.replace(args.old_version, args.new_version)
                     changes = True
                     changedLines.append("new:"+line)
-            elif args.kind == 'beam':
-                if 'beam-' + args.old_version in line:
+            elif args.kind == 'snap':
+                if 'snap-' + args.old_version in line:
                     if exact:
-                        if not 'beam-' + args.old_version + '-' in line:
+                        if not 'snap-' + args.old_version + '-' in line:
                             changedLines.append("old:"+line)
                             line = line.replace(args.old_version, args.new_version)
                             changes = True
@@ -99,4 +100,4 @@ def update_verions_numbers():
                 fileHandle.close()
 
 if __name__ == '__main__':
-    update_verions_numbers()
+    update_version_numbers()
