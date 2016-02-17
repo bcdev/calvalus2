@@ -117,6 +117,9 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
     public static void writeProductInSlices(Product product, Object output, String format, ProgressMonitor pm) throws IOException {
         ProductWriter productWriter = ProductIO.getProductWriter(format);
+        if (productWriter == null) {
+            throw new IllegalArgumentException(String.format("No product writer found for format %s.", format));
+        }
         product.setProductWriter(productWriter);
         productWriter.writeProductNodes(product, output);
         writeAllBandsInSlices(product, pm);

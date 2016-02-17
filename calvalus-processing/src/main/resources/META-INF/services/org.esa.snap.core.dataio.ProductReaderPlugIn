@@ -1,2 +1,2 @@
-snap.StreamingProductPlugin
-snap.ModisL1WithGeoReaderPlugin
+com.bc.calvalus.processing.snap.StreamingProductPlugin
+com.bc.calvalus.processing.snap.ModisL1WithGeoReaderPlugin
