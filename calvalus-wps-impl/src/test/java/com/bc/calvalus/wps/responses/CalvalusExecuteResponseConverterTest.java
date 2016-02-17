@@ -33,6 +33,7 @@ public class CalvalusExecuteResponseConverterTest {
         calvalusExecuteResponse = new CalvalusExecuteResponseConverter();
         mockServerContext = mock(WpsServerContext.class);
         when(mockServerContext.getHostAddress()).thenReturn("dummyUrl.com");
+        when(mockServerContext.getRequestUrl()).thenReturn("http://dummyUrl.com/bc-wps/wps/provider1");
     }
 
     @Test
@@ -46,7 +47,7 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
         assertThat(executeResponse.getStatus().getProcessAccepted(), equalTo("The request has been accepted. The status of the process can be found in the URL."));
-        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com?Service=WPS&Request=GetStatus&JobId=job-01"));
+        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=job-01"));
     }
 
     @Test
@@ -70,7 +71,7 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
         assertThat(executeResponse.getStatus().getProcessAccepted(), equalTo("The request has been accepted. The status of the process can be found in the URL."));
-        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com?Service=WPS&Request=GetStatus&JobId=job-01"));
+        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=job-01"));
         assertThat(executeResponse.getDataInputs().getInput().get(0).getIdentifier().getValue(), equalTo("inputDataSetName"));
         assertThat(executeResponse.getDataInputs().getInput().get(0).getData().getLiteralData().getValue(), equalTo("MERIS FSG v2013 L1b 2002-2012"));
         assertThat(executeResponse.getDataInputs().getInput().get(1).getIdentifier().getValue(), equalTo("maxDate"));

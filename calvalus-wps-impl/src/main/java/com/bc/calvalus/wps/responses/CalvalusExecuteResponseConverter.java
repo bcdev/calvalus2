@@ -75,20 +75,7 @@ public class CalvalusExecuteResponseConverter {
         statusType.setProcessSucceeded("The request has been processed successfully.");
         executeResponse.setStatus(statusType);
 
-        ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
-
-        for (String productionResultUrl : resultUrls) {
-            OutputDataType url = new OutputDataType();
-            CodeType outputId = new CodeType();
-            outputId.setValue("productionResults");
-            url.setIdentifier(outputId);
-            OutputReferenceType urlLink = new OutputReferenceType();
-            urlLink.setHref(productionResultUrl);
-            urlLink.setMimeType("binary");
-            url.setReference(urlLink);
-
-            productUrl.getOutput().add(url);
-        }
+        ExecuteResponse.ProcessOutputs productUrl = getProcessOutputs(resultUrls);
         executeResponse.setProcessOutputs(productUrl);
 
         return executeResponse;
@@ -103,20 +90,7 @@ public class CalvalusExecuteResponseConverter {
         statusType.setProcessSucceeded("The request has been processed successfully.");
         executeResponse.setStatus(statusType);
 
-        ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
-
-        for (String productionResultUrl : resultUrls) {
-            OutputDataType url = new OutputDataType();
-            CodeType outputId = new CodeType();
-            outputId.setValue("productionResults");
-            url.setIdentifier(outputId);
-            OutputReferenceType urlLink = new OutputReferenceType();
-            urlLink.setHref(productionResultUrl);
-            urlLink.setMimeType("binary");
-            url.setReference(urlLink);
-
-            productUrl.getOutput().add(url);
-        }
+        ExecuteResponse.ProcessOutputs productUrl = getProcessOutputs(resultUrls);
         executeResponse.setProcessOutputs(productUrl);
         executeResponse.setDataInputs(dataInputs);
         OutputDefinitionsType outputDefinitionsType = new OutputDefinitionsType();
@@ -158,6 +132,24 @@ public class CalvalusExecuteResponseConverter {
         return executeResponse;
     }
 
+    private ExecuteResponse.ProcessOutputs getProcessOutputs(List<String> resultUrls) {
+        ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
+
+        for (String productionResultUrl : resultUrls) {
+            OutputDataType url = new OutputDataType();
+            CodeType outputId = new CodeType();
+            outputId.setValue("productionResults");
+            url.setIdentifier(outputId);
+            OutputReferenceType urlLink = new OutputReferenceType();
+            urlLink.setHref(productionResultUrl);
+            urlLink.setMimeType("binary");
+            url.setReference(urlLink);
+
+            productUrl.getOutput().add(url);
+        }
+        return productUrl;
+    }
+
     private XMLGregorianCalendar getXmlGregorianCalendar() {
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         try {
@@ -168,7 +160,6 @@ public class CalvalusExecuteResponseConverter {
     }
 
     private String getStatusUrl(String productId, WpsServerContext context) {
-        return "http://" + context.getHostAddress() +
-               "?Service=WPS&Request=GetStatus&JobId=" + productId;
+        return context.getRequestUrl() + "?Service=WPS&Request=GetStatus&JobId=" + productId;
     }
 }

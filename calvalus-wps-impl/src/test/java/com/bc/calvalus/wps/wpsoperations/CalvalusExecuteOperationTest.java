@@ -61,6 +61,7 @@ public class CalvalusExecuteOperationTest {
         mockRequestContext = mock(WpsRequestContext.class);
         mockServerContext = mock(WpsServerContext.class);
         when(mockServerContext.getHostAddress()).thenReturn("dummyHostName");
+        when(mockServerContext.getRequestUrl()).thenReturn("http://dummyUrl.com/bc-wps/wps/provider1");
         when(mockServerContext.getPort()).thenReturn(8000);
         when(mockRequestContext.getServerContext()).thenReturn(mockServerContext);
     }
@@ -87,7 +88,7 @@ public class CalvalusExecuteOperationTest {
 
         assertThat(executeResponse.getStatus().getProcessAccepted(),
                    equalTo("The request has been accepted. The status of the process can be found in the URL."));
-        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyHostName?Service=WPS&Request=GetStatus&JobId=proces-00"));
+        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=proces-00"));
     }
 
     @Test
