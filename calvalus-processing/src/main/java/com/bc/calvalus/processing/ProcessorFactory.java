@@ -153,11 +153,8 @@ public class ProcessorFactory {
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
-//        FileSystem fs = bundlePath.getFileSystem(conf);
         FileSystem fs;
         try {
-            System.err.println("configuration.get(\"userName\") = " + conf.get(JobConfigNames.CALVALUS_USER));
-            System.err.println("bundlePath.toString() = " + bundlePath.toString());
             fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
         } catch (InterruptedException e) {
             throw new IOException(e);
