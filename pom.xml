@@ -11,7 +11,7 @@
     <description>Calvalus root module</description>
 
     <properties>
-        <hadoop.version>2.6.0</hadoop.version>
+        <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.8-SNAPSHOT</calvalus.version>
         <snap.version>3.0.0-SNAPSHOT</snap.version>
         <ceres.version>0.14</ceres.version>
