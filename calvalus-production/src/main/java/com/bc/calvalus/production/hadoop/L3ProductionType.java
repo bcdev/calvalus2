@@ -23,21 +23,14 @@ import com.bc.ceres.binding.PropertySet;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
-import org.esa.snap.binning.AggregatorDescriptor;
 import org.esa.snap.binning.CompositingType;
-import org.esa.snap.binning.TypedDescriptorsRegistry;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.VariableConfig;
 import org.esa.snap.binning.support.SEAGrid;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.TimeZone;
+import java.util.*;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -104,13 +97,13 @@ public class L3ProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, jobConfig);
             processorProductionRequest.configureProcessor(jobConfig);
 
-             if (productionRequest.getParameters().containsKey("inputPath")) {
-                 jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-             } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                 jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-             } else {
-                 throw new ProductionException("missing request parameter inputPath or inputTable");
-             }
+            if (productionRequest.getParameters().containsKey("inputPath")) {
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            } else if (productionRequest.getParameters().containsKey("inputTable")) {
+                jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+            } else {
+                throw new ProductionException("missing request parameter inputPath or inputTable");
+            }
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 
@@ -118,7 +111,7 @@ public class L3ProductionType extends HadoopProductionType {
 
             jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                          regionGeometry != null ? regionGeometry.toString() : "");
+                    regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -159,8 +152,8 @@ public class L3ProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
             WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                                                               productionRequest.getUserName(),
-                                                               productionName + " Format", jobConfig);
+                    productionRequest.getUserName(),
+                    productionName + " Format", jobConfig);
             workflow = new Workflow.Sequential(workflow, formatItem);
 
             if (hasQuicklookParameters) {
@@ -173,7 +166,7 @@ public class L3ProductionType extends HadoopProductionType {
                 qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
                 WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                                                         productionName + " RGB", qlJobConfig);
+                        productionName + " RGB", qlJobConfig);
                 workflow.add(qlItem);
             }
         } else if (singleReducer && requiresFormatting && hasQuicklookParameters) {
@@ -190,26 +183,26 @@ public class L3ProductionType extends HadoopProductionType {
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
             WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                                                     productionName + " RGB", qlJobConfig);
+                    productionName + " RGB", qlJobConfig);
             workflow = new Workflow.Sequential(workflow, qlItem);
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
-                              productionName,
-                              outputDir,
-                              stagingDir,
-                              autoStaging,
-                              productionRequest,
-                              workflow);
+                productionName,
+                outputDir,
+                stagingDir,
+                autoStaging,
+                productionRequest,
+                workflow);
     }
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
+                getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+                getStagingService().getStagingDir());
     }
 
     /**
@@ -218,6 +211,7 @@ public class L3ProductionType extends HadoopProductionType {
      * Monthly means one range per calendar month.
      * Weekly splits the year into weeks starting with 1st January.
      * The week containing the 29th of Feb in leap years and the last week are prolonged to 8 days.
+     *
      * @param productionRequest
      * @param periodLengthDefault
      * @return list of date ranges
@@ -237,7 +231,7 @@ public class L3ProductionType extends HadoopProductionType {
             Date maxDate = productionRequest.getDate("maxDate");
             int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
             int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength",
-                                                                       periodLength); // unit=days
+                    periodLength); // unit=days
 
             final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
 
@@ -277,6 +271,7 @@ public class L3ProductionType extends HadoopProductionType {
     /**
      * Forwards to start of month in case of monthly
      * and start of "week" (beginning with 1st of Jan) in case of weekly.
+     *
      * @param calendar
      * @param periodLength larger than 0 for days, -30 for monthly, -7 for weekly periods
      */
@@ -299,8 +294,9 @@ public class L3ProductionType extends HadoopProductionType {
 
     /**
      * Forwards calendar by period days, or one calendar month, or one "week" (see next method).
+     *
      * @param calendar
-     * @param period  larger than 0 for days, -30 for monthly, -7 for weekly periods
+     * @param period   larger than 0 for days, -30 for monthly, -7 for weekly periods
      */
     private static void forwardCalendarByPeriod(GregorianCalendar calendar, int period) {
         if (period > 0) {
@@ -317,11 +313,12 @@ public class L3ProductionType extends HadoopProductionType {
     /**
      * Proceed calendar by 7 days, and add one additional day for the week containing the
      * 29th of Feb in leap years and for the last week of the year to contain the 31th of Dec.
+     *
      * @param calendar
      */
     private static void forwardByOneWeekOfYear(GregorianCalendar calendar) {
         final int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-        if ((dayOfYear == 8*7+1 && calendar.isLeapYear(calendar.get(Calendar.YEAR))) || dayOfYear >= 51*7+1) {
+        if ((dayOfYear == 8 * 7 + 1 && calendar.isLeapYear(calendar.get(Calendar.YEAR))) || dayOfYear >= 51 * 7 + 1) {
             calendar.add(Calendar.DATE, 8);
         } else {
             calendar.add(Calendar.DATE, 7);
@@ -352,6 +349,11 @@ public class L3ProductionType extends HadoopProductionType {
         if (productionRequest.getParameters().containsKey("planetaryGrid")) {
             binningConfig.setPlanetaryGrid(productionRequest.getString("planetaryGrid"));
         }
+        // todo - detect usable PlanetaryGrid-implementations, and use configured value
+        if (productionRequest.getString("processorBundles").contains("beam")) {
+            String planetaryGrid = "org.esa.beam.binning.support.SEAGrid";
+            binningConfig.setPlanetaryGrid(planetaryGrid);
+        }
         binningConfig.setNumRows(getNumRows(productionRequest));
         binningConfig.setSuperSampling(productionRequest.getInteger("superSampling", 1));
         binningConfig.setMaskExpr(productionRequest.getString("maskExpr", ""));
@@ -376,7 +378,8 @@ public class L3ProductionType extends HadoopProductionType {
                 String pName = request.getString(prefix + ".parameter." + pIndex + ".name");
                 String pValue = request.getString(prefix + ".parameter." + pIndex + ".value");
                 aggregatorConfig.addProperty(Property.create(pName, String.class));
-                aggregatorConfig.setValue(pName, pValue);            }
+                aggregatorConfig.setValue(pName, pValue);
+            }
             aggregatorConfigs[vIndex] = aggregatorConfig;
         }
         return aggregatorConfigs;
@@ -435,7 +438,7 @@ public class L3ProductionType extends HadoopProductionType {
 
         @Override
         public void removeProperty(Property property) {
-             delegate.removeProperty(property);
+            delegate.removeProperty(property);
         }
 
         @Override
