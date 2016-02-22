@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing;
 
-import com.bc.calvalus.processing.snap.SnapOperatorAdapter;
+import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.ceres.binding.dom.DomElement;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;

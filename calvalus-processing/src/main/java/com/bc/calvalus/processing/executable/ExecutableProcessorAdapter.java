@@ -18,8 +18,8 @@ package com.bc.calvalus.processing.executable;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.l2.ProductFormatter;
-import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;

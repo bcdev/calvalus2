@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.snap;
+package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;

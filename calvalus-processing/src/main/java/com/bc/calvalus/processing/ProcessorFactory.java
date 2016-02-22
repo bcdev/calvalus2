@@ -16,11 +16,11 @@
 
 package com.bc.calvalus.processing;
 
+import com.bc.calvalus.processing.beam.SnapGraphAdapter;
+import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
+import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
 import com.bc.calvalus.processing.executable.ExecutableProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.snap.SnapGraphAdapter;
-import com.bc.calvalus.processing.snap.SnapOperatorAdapter;
-import com.bc.calvalus.processing.snap.SubsetProcessorAdapter;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;

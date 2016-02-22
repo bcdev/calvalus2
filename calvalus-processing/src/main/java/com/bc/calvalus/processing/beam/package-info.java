@@ -7,4 +7,4 @@
  * @author Norman Fomferra
  * @author Marco Zuehlke
  */
-package com.bc.calvalus.processing.snap;
+package com.bc.calvalus.processing.beam;

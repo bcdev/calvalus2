@@ -349,11 +349,6 @@ public class L3ProductionType extends HadoopProductionType {
         if (productionRequest.getParameters().containsKey("planetaryGrid")) {
             binningConfig.setPlanetaryGrid(productionRequest.getString("planetaryGrid"));
         }
-        // todo - detect usable PlanetaryGrid-implementations, and use configured value
-        if (productionRequest.getString("processorBundles").contains("beam")) {
-            String planetaryGrid = "org.esa.beam.binning.support.SEAGrid";
-            binningConfig.setPlanetaryGrid(planetaryGrid);
-        }
         binningConfig.setNumRows(getNumRows(productionRequest));
         binningConfig.setSuperSampling(productionRequest.getInteger("superSampling", 1));
         binningConfig.setMaskExpr(productionRequest.getString("maskExpr", ""));

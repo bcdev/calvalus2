@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.snap;
+package com.bc.calvalus.processing.beam;
 
 import org.esa.snap.core.dataio.*;
 import org.esa.snap.core.datamodel.Product;

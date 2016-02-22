@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
-import com.bc.calvalus.processing.snap.MerisProductTestRunner;
+import com.bc.calvalus.processing.beam.MerisProductTestRunner;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;

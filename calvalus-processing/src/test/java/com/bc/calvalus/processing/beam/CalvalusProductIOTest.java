@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

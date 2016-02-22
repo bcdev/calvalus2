@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.snap;
+package com.bc.calvalus.processing.beam;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;

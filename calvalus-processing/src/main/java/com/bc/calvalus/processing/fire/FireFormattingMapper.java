@@ -18,12 +18,12 @@ package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.executable.KeywordHandler;
 import com.bc.calvalus.processing.executable.ScriptGenerator;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.mosaic.TileDataWritable;
 import com.bc.calvalus.processing.mosaic.TileIndexWritable;
-import com.bc.calvalus.processing.snap.CalvalusProductIO;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;

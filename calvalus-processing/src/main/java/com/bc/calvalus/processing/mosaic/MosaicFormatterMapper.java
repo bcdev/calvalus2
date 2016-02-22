@@ -16,7 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
-import com.bc.calvalus.processing.snap.GpfUtils;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;

@@ -17,10 +17,10 @@
 package com.bc.calvalus.processing;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import com.bc.calvalus.processing.hadoop.ParameterizedSplit;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
-import com.bc.calvalus.processing.snap.CalvalusProductIO;
-import com.bc.calvalus.processing.snap.GpfUtils;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;

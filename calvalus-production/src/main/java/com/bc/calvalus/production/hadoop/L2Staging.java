@@ -18,9 +18,9 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
-import com.bc.calvalus.processing.snap.CalvalusProductIO;
-import com.bc.calvalus.processing.snap.StreamingProductPlugin;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionWriter;

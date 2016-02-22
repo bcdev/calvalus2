@@ -64,7 +64,7 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
     public void setConf(Configuration conf) {
         this.conf = conf;
         BinningConfig binningConfig = HadoopBinManager.getBinningConfig(conf);
-        this.planetaryGrid = binningConfig.createPlanetaryGrid();
+        createPlanetaryGrid(binningConfig);
         String regionGeometry = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         Geometry roiGeometry = GeometryUtils.createGeometry(regionGeometry);
         if (roiGeometry != null && !roiGeometry.isEmpty()) {
@@ -77,6 +77,22 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
         } else {
             numRowsCovered = planetaryGrid.getNumRows();
             minRowIndex = 0;
+        }
+    }
+
+    private void createPlanetaryGrid(BinningConfig binningConfig) {
+        // todo - detect usable PlanetaryGrid-implementations, and use configured value
+        try {
+            this.planetaryGrid = binningConfig.createPlanetaryGrid();
+        } catch (IllegalArgumentException e) {
+            // fallback solution
+            String planetaryGrid = binningConfig.getPlanetaryGrid();
+            if (planetaryGrid.contains("beam")) {
+                binningConfig.setPlanetaryGrid("org.esa.beam.binning.support.SEAGrid");
+            } else {
+                binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.SEAGrid");
+            }
+            this.planetaryGrid = binningConfig.createPlanetaryGrid();
         }
     }
 
