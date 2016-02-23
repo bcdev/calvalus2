@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -46,30 +47,47 @@ public class ListBundlesMain {
         printBundles("system", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_SYSTEM)));
         printBundles("users", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_ALL_USERS)));
 
+//        printProductSets(productionService.getProductSets("marcoz", "*"));
+
         productionService.close();
+    }
+
+    private static void printProductSets(ProductSet[] productSets) {
+        System.out.println("productSet count: " + productSets.length);
+        for (ProductSet productSet : productSets) {
+            System.out.println(productSet.getName() +  " = " + productSet.getPath());
+        }
     }
 
     public static void printBundles(String provider, BundleDescriptor[] bundles) {
         System.out.println(provider+ " bundle count: " + bundles.length);
         for (BundleDescriptor bundle : bundles) {
-            System.out.println("bundle = " + bundle.getBundleLocation());
-            AggregatorDescriptor[] aggregatorDescriptors = bundle.getAggregatorDescriptors();
+            boolean printBundle=false;
+//            System.out.println("bundle = " + bundle.getBundleLocation());
+//            AggregatorDescriptor[] aggregatorDescriptors = bundle.getAggregatorDescriptors();
             ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
 
-            if (!bundle.getBundleLocation().endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
-                System.out.println("WARNING: bundle names and version don't match directory");
-            }
+//            if (!bundle.getBundleLocation().endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
+//                System.out.println("WARNING: bundle names and version don't match directory");
+//            }
 
-            if (aggregatorDescriptors != null) {
-                System.out.println(bundle.getBundleName() + " - " + bundle.getBundleVersion() + " : " + bundle.getBundleLocation());
-                for (AggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
-                    System.out.println("  aggregator = " + aggregatorDescriptor.getAggregator());
-                }
-            }
+//            if (aggregatorDescriptors != null) {
+//                System.out.println(bundle.getBundleName() + " - " + bundle.getBundleVersion() + " : " + bundle.getBundleLocation());
+//                for (AggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
+//                    System.out.println("  aggregator = " + aggregatorDescriptor.getAggregator());
+//                }
+//            }
 
             if (processorDescriptors != null) {
                 for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                    System.out.println("  processor = " + processorDescriptor.getProcessorName() + " [version "+processorDescriptor.getProcessorVersion()+"]");
+                    ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
+                    if (formatting != ProcessorDescriptor.FormattingType.OPTIONAL) {
+                        if (!printBundle) {
+                            System.out.println("bundle = " + bundle.getBundleLocation());
+                            printBundle = true;
+                            System.out.println("  processor = " + processorDescriptor.getProcessorName() + " [version " + processorDescriptor.getProcessorVersion() + "] " + formatting);
+                        }
+                    }
                 }
             }
         }

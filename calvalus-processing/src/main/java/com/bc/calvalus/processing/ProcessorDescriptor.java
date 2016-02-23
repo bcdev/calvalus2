@@ -70,6 +70,9 @@ public class ProcessorDescriptor {
     @Parameter(itemAlias = "parameterDescriptor")
     private ParameterDescriptor[] parameterDescriptors;
 
+    @Parameter(defaultValue = "")
+    private String outputRegex;
+
     // empty constructor for XML serialization
     public ProcessorDescriptor() {
     }
@@ -92,6 +95,7 @@ public class ProcessorDescriptor {
         this.formatting = FormattingType.OPTIONAL;
         this.processorCategory = ProcessorCategory.LEVEL2;
         this.isL2Processor = true;
+        this.outputRegex = "";
     }
 
     public String getExecutableName() {
@@ -167,6 +171,10 @@ public class ProcessorDescriptor {
 
     public void setParameterDescriptors(ParameterDescriptor... parameterDescriptors) {
         this.parameterDescriptors = parameterDescriptors;
+    }
+
+    public String getOutputRegex() {
+        return outputRegex == null ? "" : outputRegex;
     }
 
     public static class Variable {

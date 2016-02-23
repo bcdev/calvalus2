@@ -21,6 +21,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.inventory.ProductSetPersistable;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -37,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -146,7 +148,7 @@ public class L2ProductionTypeTest {
         assertEquals("Level 2 BandMaths",
                      productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
                 productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
@@ -220,7 +222,7 @@ public class L2ProductionTypeTest {
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("My Math Production", productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
                 productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
@@ -279,7 +281,7 @@ public class L2ProductionTypeTest {
                 "Level 2 BandMaths 2005-01-01 to 2005-01-31 (Island In The Sun)",
                 productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.*${yyyy}${MM}${dd}.*.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
                 productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
@@ -298,4 +300,71 @@ public class L2ProductionTypeTest {
         return null;
     }
 
+    @Test
+    public void testPathPatternRegex() throws Exception {
+        String[] files = {
+                "MER_20050401X.N1",
+                "L2_of_MER_20050401X.seq",
+                "A2005111X.hdf",
+                "L2_of_A2005111X.seq",
+                ".MER_20050401X.N1",
+                ".L2_of_MER_20050401X.seq",
+                ".A2005111X.hdf",
+                ".L2_of_A2005111X.seq",
+                "_SUCCESS",
+                "product-sets.csv"
+        };
+        // .*${yyyy}${MM}${dd}.*.seq$
+        String pattern = "[^_\\.].*20050401.*\\.seq$";
+        List<String> matches = match(files, pattern);
+        assertEquals(1, matches.size());
+        assertEquals(files[1], matches.get(0));
+
+        // .*${yyyy}${DDD}.*.seq$
+        pattern = "[^_\\.].*2005111.*\\.seq$";
+        matches = match(files, pattern);
+        assertEquals(1, matches.size());
+        assertEquals(files[3], matches.get(0));
+
+        // .*${yyyy}${DDD}.*.seq$ AND .*${yyyy}${MM}${dd}.*.seq$
+        pattern = "[^_\\.].*2005111.*\\.seq$|[^_\\.].*20050401.*\\.seq$";
+        matches = match(files, pattern);
+        assertEquals(2, matches.size());
+        assertEquals(files[1], matches.get(0));
+        assertEquals(files[3], matches.get(1));
+
+
+        // .*${yyyy}${MM}${dd}.*
+        pattern = "[^_\\.].*20050401.*";
+        matches = match(files, pattern);
+        assertEquals(2, matches.size());
+        assertEquals(files[0], matches.get(0));
+        assertEquals(files[1], matches.get(1));
+
+        // .*${yyyy}${DDD}.*
+        pattern = "[^_\\.].*2005111.*";
+        matches = match(files, pattern);
+        assertEquals(2, matches.size());
+        assertEquals(files[2], matches.get(0));
+        assertEquals(files[3], matches.get(1));
+
+        // .*${yyyy}${DDD}.* AND .*${yyyy}${MM}${dd}.*
+        pattern = "[^_\\.].*2005111.*|[^_\\.].*20050401.*";
+        matches = match(files, pattern);
+        assertEquals(4, matches.size());
+        assertEquals(files[0], matches.get(0));
+        assertEquals(files[1], matches.get(1));
+        assertEquals(files[2], matches.get(2));
+        assertEquals(files[3], matches.get(3));
+    }
+
+    private List<String> match(String[] files, String pattern) {
+        List<String> resultList = new ArrayList<>();
+        for (String file : files) {
+            if (file.matches(pattern)) {
+                resultList.add(file);
+            }
+        }
+        return resultList;
+    }
 }
