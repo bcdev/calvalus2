@@ -24,7 +24,10 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -85,7 +88,21 @@ public class OrderL2ProductionView extends OrderProductionView {
         DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
         if (processorDescriptor != null) {
             outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
-            outputParametersForm.setAvailableOutputFormats(processorDescriptor.getOutputFormats());
+            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
+            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
+            String formattingType = processorDescriptor.getFormattingType();
+            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
+            if (!implicitlyFormatted) {
+                add("NetCDF4", outputFormats);
+                add("BigGeoTiff", outputFormats);
+            }
+            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
+        }
+    }
+
+    private static void add(String format, List<String> outputFormats) {
+        if (!outputFormats.contains(format)) {
+            outputFormats.add(format);
         }
     }
 
