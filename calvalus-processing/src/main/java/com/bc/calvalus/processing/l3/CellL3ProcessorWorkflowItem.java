@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
@@ -66,8 +65,6 @@ public class CellL3ProcessorWorkflowItem extends HadoopWorkflowItem {
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
-
-        ProcessorFactory.installProcessorBundles(jobConfig);
 
         CellInputFormat cellInputFormat = new CellInputFormat();
         Path inputDirectory = cellInputFormat.getFirstInputDirectory(job);

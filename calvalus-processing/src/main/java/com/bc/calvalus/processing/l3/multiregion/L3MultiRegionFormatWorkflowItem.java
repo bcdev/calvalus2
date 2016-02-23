@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.l3.multiregion;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
@@ -61,8 +60,6 @@ public class L3MultiRegionFormatWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, numRegions));
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-
-        ProcessorFactory.installProcessorBundles(jobConfig);
 
         Map<String, String> metadata = ProcessingMetadata.read(FileInputFormat.getInputPaths(job)[0], jobConfig);
         ProcessingMetadata.metadata2Config(metadata, jobConfig, JobConfigNames.LEVEL3_METADATA_KEYS);

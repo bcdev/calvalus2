@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
@@ -67,10 +66,7 @@ public class MRWorkflowItem extends HadoopWorkflowItem {
 
     @Override
     protected void configureJob(Job job) throws IOException {
-
-        Configuration jobConfig = job.getConfiguration();
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 
 }

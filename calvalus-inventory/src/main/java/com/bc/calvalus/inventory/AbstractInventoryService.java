@@ -23,15 +23,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
-import org.apache.hadoop.security.UserGroupInformation;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.security.PrivilegedExceptionAction;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -57,16 +50,7 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws Exception {
-        final FileSystem fileSystem;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
-            final UserGroupInformation user = UserGroupInformation.createRemoteUser(username);
-            final PrivilegedExceptionAction<FileSystem> getFileSystemAction = (PrivilegedExceptionAction<FileSystem>) () -> {
-                return FileSystem.get(jobClientsMap.getConfiguration());
-            };
-            fileSystem = user.doAs(getFileSystemAction);
-        } else {
-            fileSystem = FileSystem.get(jobClientsMap.getConfiguration()); // HDFS
-        }
+        FileSystem fileSystem = jobClientsMap.getJobClient(username).getFs();
 
         if (filter != null && filter.startsWith(USER_FILTER)) {
             String filterUserName = filter.substring(USER_FILTER.length());
@@ -186,9 +170,9 @@ public abstract class AbstractInventoryService implements InventoryService {
 
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        FileSystem fileSystem = new Path(commonPathPrefix).getFileSystem(conf);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
-        List<FileStatus> fileStatuses = new ArrayList<FileStatus>(1000);
+        List<FileStatus> fileStatuses = new ArrayList<>(1000);
         collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
         String[] result = new String[fileStatuses.size()];
         for (int i = 0; i < result.length; i++) {

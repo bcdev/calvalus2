@@ -21,7 +21,6 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.fire.BAMapper;
 import com.bc.calvalus.processing.fire.BATilesInputFormat;
@@ -128,9 +127,6 @@ public class FireMERISBAProductionType extends HadoopProductionType {
             job.setMapperClass(BAMapper.class);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-
-            Configuration configuration = job.getConfiguration();
-            ProcessorFactory.installProcessorBundles(configuration);
         }
 
         @Override

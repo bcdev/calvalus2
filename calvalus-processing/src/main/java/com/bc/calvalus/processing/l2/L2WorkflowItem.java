@@ -17,7 +17,6 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -80,6 +79,5 @@ public class L2WorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
         FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 }

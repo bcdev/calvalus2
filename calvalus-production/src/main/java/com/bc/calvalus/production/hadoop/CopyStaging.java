@@ -65,7 +65,7 @@ class CopyStaging extends ProductionStaging {
         LOG.info("staging dir is: " + stagingDir);
 
         Path remoteOutputDir = new Path(production.getOutputPath());
-        FileSystem fileSystem = remoteOutputDir.getFileSystem(hadoopConfiguration);
+        FileSystem fileSystem = FileSystem.get(remoteOutputDir.toUri(), hadoopConfiguration, production.getProductionRequest().getUserName());
 
         // Simply copy entire content of remoteOutputDir
         FileStatus[] fileStatuses = fileSystem.globStatus(new Path(remoteOutputDir, "*.*"));

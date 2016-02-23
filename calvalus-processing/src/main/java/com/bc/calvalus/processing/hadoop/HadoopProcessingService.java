@@ -243,8 +243,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return bd;
     }
 
-    public static void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
-        final FileSystem fileSystem = bundlePath.getFileSystem(configuration);
+    public static void addBundleToClassPath(Path bundlePath, String username, Configuration configuration) throws IOException {
+        final FileSystem fileSystem;
+        try {
+            fileSystem = FileSystem.get(bundlePath.toUri(), configuration, username);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {

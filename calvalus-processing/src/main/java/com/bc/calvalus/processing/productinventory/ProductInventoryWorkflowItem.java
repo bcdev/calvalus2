@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.productinventory;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -83,6 +82,5 @@ public class ProductInventoryWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(TextOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 }

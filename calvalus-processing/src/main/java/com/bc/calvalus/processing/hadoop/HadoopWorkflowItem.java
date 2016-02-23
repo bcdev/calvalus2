@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.hadoop;
 
 import com.bc.calvalus.commons.*;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -30,6 +31,7 @@ import org.apache.hadoop.mapreduce.JobID;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 
 import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
@@ -182,20 +184,26 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             CalvalusLogger.getLogger().info("Submitting Job: " + getJobName());
             Job job = getProcessingService().createJob(getJobName(), jobConfig);
             configureJob(job);
+            ProcessorFactory.installProcessorBundles(userName, jobConfig);
             validateJob(job);
             JobID jobId = submitJob(job);
 
             CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
-            HashMap<String, String> calvaluaConfMap = new HashMap<>();
+            HashMap<String, String> calvalusConfMap = new HashMap<>();
             for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
                 if (keyValue.getKey().startsWith("calvalus")) {
-                    calvaluaConfMap.put(keyValue.getKey(), keyValue.getValue());
+                    calvalusConfMap.put(keyValue.getKey(), keyValue.getValue());
                 }
             }
-            calvaluaConfMap.entrySet().
+            calvalusConfMap.entrySet().
                     stream().
                     sorted(Map.Entry.<String, String>comparingByKey()).
-                    forEach(keyValue -> CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue()));
+                    forEach(new Consumer<Map.Entry<String, String>>() {
+                        @Override
+                        public void accept(Map.Entry<String, String> keyValue) {
+                            CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue());
+                        }
+                    });
 
             setJobId(jobId);
         } catch (Throwable e) {
@@ -229,10 +237,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
         final String calvalusBundle = configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE);
-        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), configuration);
+        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), userName, configuration);
         // Add SNAP modules to classpath of Hadoop jobs
         final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
-        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), configuration);
+        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

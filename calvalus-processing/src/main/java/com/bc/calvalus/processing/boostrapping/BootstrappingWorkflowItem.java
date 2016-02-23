@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.boostrapping;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
@@ -77,7 +76,6 @@ public class BootstrappingWorkflowItem extends HadoopWorkflowItem {
         job.setNumReduceTasks(1);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 
 }

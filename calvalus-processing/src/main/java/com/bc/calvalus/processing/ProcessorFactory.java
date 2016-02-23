@@ -68,7 +68,7 @@ public class ProcessorFactory {
         throw new IllegalArgumentException("Unknown processor type.");
     }
 
-    public static void installProcessorBundles(Configuration conf) throws IOException {
+    public static void installProcessorBundles(String username, Configuration conf) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
         if (conf.get(JobConfigNames.CALVALUS_BUNDLES) != null) {
             final String[] aBundle = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
@@ -77,8 +77,8 @@ public class ProcessorFactory {
                 final String bundleSpec = aBundle[i];
                 Path bundlePath = getBundlePath(bundleSpec, conf);
                 if (bundlePath != null) {
-                    FileSystem fs = bundlePath.getFileSystem(conf);
-                    HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
+                    final FileSystem fs = getFileSystem(username, conf, bundlePath);
+                    HadoopProcessingService.addBundleToClassPath(bundlePath, username, conf);
                     addBundleArchives(bundlePath, fs, conf);
                     addBundleLibs(bundlePath, fs, conf);
 
@@ -94,11 +94,11 @@ public class ProcessorFactory {
                     // check for bundle to include, install it
                     try {
                         Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
-                        if (bundleDesc.getFileSystem(conf).exists(bundleDesc)) {
+                        if (fs.exists(bundleDesc)) {
                             BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
-                                HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
+                                HadoopProcessingService.addBundleToClassPath(includeBundlePath, username, conf);
                                 addBundleArchives(includeBundlePath, fs, conf);
                                 addBundleLibs(includeBundlePath, fs, conf);
                             }
@@ -116,6 +116,14 @@ public class ProcessorFactory {
         }
 
         conf.set(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE + "", processorType.toString());
+    }
+
+    private static FileSystem getFileSystem(String username, Configuration conf, Path bundlePath) throws IOException {
+        try {
+            return FileSystem.get(bundlePath.toUri(), conf, username);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
     }
 
     private static ProcessorType detectProcessorType(Path bundlePath, final String executable, FileSystem fs) throws IOException {

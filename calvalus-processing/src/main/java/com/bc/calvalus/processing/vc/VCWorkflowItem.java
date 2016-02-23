@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.vc;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
-import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -103,7 +102,6 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
         job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
-        ProcessorFactory.installProcessorBundles(jobConfig);
     }
 
 }
