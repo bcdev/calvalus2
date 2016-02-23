@@ -81,17 +81,17 @@ public class ProcessorProductionRequest {
             jobConfig.set(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix, processorName);
             jobConfig.set(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix, processorParameters);
         }
-        String processorBundle = getProcessorBundle();
-        if (processorBundle == null) {
-            if (processorBundles != null) {
-                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles);
-            }
-        } else {
+        String implicitProcessorBundle = getProcessorBundle();
+        if (implicitProcessorBundle != null) {
             if (processorBundleLocation != null) {
                 jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundleLocation);
             } else {
                 jobConfig.set(JobConfigNames.CALVALUS_BUNDLES,
-                              processorBundle + (processorBundles != null ? (","+processorBundles) : ""));
+                              implicitProcessorBundle + (processorBundles != null ? (","+processorBundles) : ""));
+            }
+        } else {
+            if (processorBundles != null) {
+                jobConfig.set(JobConfigNames.CALVALUS_BUNDLES, processorBundles);
             }
         }
     }
@@ -102,8 +102,8 @@ public class ProcessorProductionRequest {
             filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
-            BundleDescriptor[] bundles = processingService.getBundles(userName, filter);
-            for (BundleDescriptor bundle : bundles) {
+
+            for (BundleDescriptor bundle : processingService.getBundles(userName, filter)) {
                 if (bundle.getBundleName().equals(processorBundleName) &&
                     bundle.getBundleVersion().equals(processorBundleVersion) &&
                     bundle.getBundleLocation().equals(processorBundleLocation)) {

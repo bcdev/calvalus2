@@ -38,7 +38,7 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     L2ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                            StagingService stagingService) {
+                     StagingService stagingService) {
         super("L2", inventoryService, processingService, stagingService);
     }
 
@@ -99,9 +99,9 @@ public class L2ProductionType extends HadoopProductionType {
 
         Date startDate = dateRanges.get(0).getStartDate();
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
-        String pathPattern = outputDir + "/.*${yyyy}${MM}${dd}.*.seq$";
         String regionWKT = geometry != null ? geometry.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        String pathPattern = outputDir + "/." + getPathPatternForProcessingResult(processorDesc);
         String[] bandNames = getResultingBandNames(processorDesc);
         String resultingProductionType = getResultingProductionType(processorDesc);
         ProductSet productSet = new ProductSet(resultingProductionType,
@@ -136,4 +136,25 @@ public class L2ProductionType extends HadoopProductionType {
         }
         return bandNames;
     }
+
+    static String getPathPatternForProcessingResult(ProcessorDescriptor processorDescriptor) {
+        String DEFAULT = "[^_\\.].*${yyyy}${MM}${dd}.*|[^_\\.].*${yyyy}${DDD}.*";
+        if (processorDescriptor == null) {
+            return DEFAULT;
+        }
+        ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
+        if (formatting == ProcessorDescriptor.FormattingType.IMPLICIT) {
+            // MEGS, l2gen, polymer, fmask (regex from processor, if given)
+            String outputRegex = processorDescriptor.getOutputRegex();
+            if (outputRegex.isEmpty()) {
+                return DEFAULT;
+            } else {
+                return outputRegex;
+            }
+        } else {
+            // BEAM processor
+            return "[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$";
+        }
+    }
+
 }

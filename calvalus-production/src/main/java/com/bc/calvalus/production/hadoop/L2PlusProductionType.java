@@ -81,7 +81,8 @@ public class L2PlusProductionType extends HadoopProductionType {
             HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
                                                                      productionRequest, processorProductionRequest);
             globalOutputDir = processingItem.getOutputDir();
-            formattingInputDir = createPathPattern(globalOutputDir);
+            ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+            formattingInputDir = globalOutputDir + "/." + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
             l2WorkflowItem.add(processingItem);
         }
 
@@ -233,9 +234,9 @@ public class L2PlusProductionType extends HadoopProductionType {
 
         Date startDate = dateRanges.get(0).getStartDate();
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
-        String pathPattern = createPathPattern(outputDir);
         String regionWKT = regionGeom != null ? regionGeom.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        String pathPattern = outputDir + "/." + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
         ProductSet productSet = new ProductSet(L2ProductionType.getResultingProductionType(processorDesc),
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT,
@@ -245,12 +246,5 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                        productionName, l2JobConfig);
         l2Item.addWorkflowStatusListener(new ProductSetSaver(l2Item, productSet, outputDir));
         return l2Item;
-    }
-
-    // TODO consider l2Gen output here too; this is only valid for sequential and MERIS files
-    // modified to cope with Landsat8 files; output dirs of processing are always fresh flat dirs containing only the to-be-formatted outputs
-    private String createPathPattern(String basePath) {
-        //return basePath + "/.*${yyyy}${MM}${dd}.*.seq$";
-        return basePath + "/.*.seq$";
     }
 }
