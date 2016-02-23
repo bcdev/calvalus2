@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Envelope;
@@ -86,11 +87,12 @@ public class L3Partitioner extends Partitioner<LongWritable, L3SpatialBin> imple
             this.planetaryGrid = binningConfig.createPlanetaryGrid();
         } catch (IllegalArgumentException e) {
             // fallback solution
+            CalvalusLogger.getLogger().warning(e.getMessage());
             String planetaryGrid = binningConfig.getPlanetaryGrid();
             if (planetaryGrid.contains("beam")) {
-                binningConfig.setPlanetaryGrid("org.esa.beam.binning.support.SEAGrid");
-            } else {
                 binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.SEAGrid");
+            } else {
+                binningConfig.setPlanetaryGrid("org.esa.beam.binning.support.SEAGrid");
             }
             this.planetaryGrid = binningConfig.createPlanetaryGrid();
         }
