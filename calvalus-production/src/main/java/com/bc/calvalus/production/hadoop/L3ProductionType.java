@@ -30,7 +30,12 @@ import org.esa.snap.binning.support.SEAGrid;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.TimeZone;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -340,6 +345,15 @@ public class L3ProductionType extends HadoopProductionType {
                 CalvalusLogger.getLogger().warning("Failed to de-serialize l3XML:" + ignore.getMessage());
             }
         }
+
+        // todo - detect usable PlanetaryGrid-implementations, and use configured value
+        CalvalusLogger.getLogger().info("Validating grid....");
+        if (productionRequest.getString("processorBundles").contains("beam")) {
+            l3ConfigXml = l3ConfigXml.replace("<planetaryGrid>org.esa.snap.binning.support.SEAGrid</planetaryGrid>",
+                    "<planetaryGrid>org.esa.beam.binning.support.SEAGrid</planetaryGrid>");
+            CalvalusLogger.getLogger().warning(String.format("Falling back to '%s'", "org.esa.beam.binning.support.SEAGrid"));
+        }
+
         return l3ConfigXml;
     }
 
