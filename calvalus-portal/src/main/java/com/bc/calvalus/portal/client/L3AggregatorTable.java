@@ -203,7 +203,7 @@ public class L3AggregatorTable {
     private Column<ConfiguredAggregator, String> createSelectAggregatorColumn() {
         List<String> aggregatorNameList = new ArrayList<String>();
         for (DtoAggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
-            aggregatorNameList.add(aggregatorDescriptor.getAggregator());
+            aggregatorNameList.add(aggregatorDisplayName(aggregatorDescriptor));
         }
         final SelectionCell aggregatorCell = new SelectionCell(aggregatorNameList);
         Column<ConfiguredAggregator, String> aggregatorColumn = new Column<ConfiguredAggregator, String>(aggregatorCell) {
@@ -213,14 +213,14 @@ public class L3AggregatorTable {
             }
         };
         aggregatorColumn.setFieldUpdater(new FieldUpdater<ConfiguredAggregator, String>() {
-            public void update(int index, ConfiguredAggregator aggregator, String value) {
-                if (aggregator.aggregatorDescriptor.getAggregator().equals(value)) {
+            public void update(int index, ConfiguredAggregator configuredAggregator, String value) {
+                if (aggregatorDisplayName(configuredAggregator.aggregatorDescriptor).equals(value)) {
                     return;
                 }
                 for (DtoAggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
-                    if (aggregatorDescriptor.getAggregator().equals(value)) {
-                        aggregator.setAggregatorDescriptor(aggregatorDescriptor);
-                        showEditDialog(index, aggregator);
+                    if (aggregatorDisplayName(aggregatorDescriptor).equals(value)) {
+                        configuredAggregator.setAggregatorDescriptor(aggregatorDescriptor);
+                        showEditDialog(index, configuredAggregator);
                         dataProvider.refresh();
                         return;
                     }
@@ -228,6 +228,14 @@ public class L3AggregatorTable {
             }
         });
         return aggregatorColumn;
+    }
+
+    private static String aggregatorDisplayName(DtoAggregatorDescriptor aggregatorDescriptor) {
+        String aggregatorName = aggregatorDescriptor.getAggregator();
+        if (!aggregatorDescriptor.getOwner().isEmpty()) {
+            return "(by " + aggregatorDescriptor.getOwner() + ") "  + aggregatorName;
+        }
+        return aggregatorName;
     }
 
     private Column<ConfiguredAggregator, String> createShowParameterColumn() {

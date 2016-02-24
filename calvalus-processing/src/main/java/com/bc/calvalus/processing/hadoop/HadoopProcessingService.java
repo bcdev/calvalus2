@@ -137,21 +137,37 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
-                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", filter.getUserName().toLowerCase(), bundleDirName,
+                String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
                                                              BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
+                List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
+                    bundleDescriptor.setOwner(filter.getUserName().toLowerCase());
+                }
+                descriptors.addAll(singleUserDescriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_ALL_USERS)) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", "*", bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
+                List<BundleDescriptor> allUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                for (BundleDescriptor bundleDescriptor : allUserDescriptors) {
+                    String bundleLocation = bundleDescriptor.getBundleLocation();
+                    String[] pathElems = bundleLocation.split("/");
+                    for (int i = 0; i < pathElems.length; i++) {
+                        if (pathElems[i].equals("home")) {
+                            bundleDescriptor.setOwner(pathElems[i + 1]);
+                            break;
+                        }
+                    }
+                }
+                descriptors.addAll(allUserDescriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
                 final String calvalusSoftwarePath = (jobClientsMap.getConfiguration().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
                 String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
-                collectBundleDescriptors(fileSystem, bundleLocationPattern, filter, descriptors);
+                List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
+                descriptors.addAll(systemDescriptors);
             }
         } catch (IOException e) {
             logger.warning(e.getMessage());
@@ -160,7 +176,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return descriptors.toArray(new BundleDescriptor[descriptors.size()]);
     }
 
-    private void collectBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter, ArrayList<BundleDescriptor> descriptors) throws IOException {
+    private List<BundleDescriptor> getBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
         final FileStatus[] fileStatuses;
         if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
@@ -171,8 +187,9 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             fileStatuses = fileSystem.globStatus(qualifiedPath);
         }
         if (fileStatuses == null) {
-            return;
+            return Collections.EMPTY_LIST;
         }
+        List<BundleDescriptor> descriptors = new ArrayList<>();
         for (FileStatus file : fileStatuses) {
             try {
                 final BundleDescriptor bd;
@@ -198,9 +215,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     descriptors.add(bd);
                 }
             } catch (Exception e) {
-                logger.warning("error reading bundle-descriptor (" + file.getPath() +") : "+ e.getMessage());
+                logger.warning("error reading bundle-descriptor (" + file.getPath() + ") : " + e.getMessage());
             }
         }
+        return descriptors;
     }
 
     private void collectAccessibleFiles(FileSystem fileSystem, String pathPattern, int pos, Path path, ArrayList<FileStatus> accu) throws IOException {
@@ -211,7 +229,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 if (stati != null) {
                     for (FileStatus status : stati) {
                         if (status.isDirectory()) {
-                            collectAccessibleFiles(fileSystem, pathPattern, pos1+1, status.getPath(), accu);
+                            collectAccessibleFiles(fileSystem, pathPattern, pos1 + 1, status.getPath(), accu);
                         }
                     }
                 }

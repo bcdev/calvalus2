@@ -75,7 +75,7 @@ public class L2ConfigForm extends Composite {
     @UiField
     ListBox processorList;
     @UiField
-    Label processorBundleName;
+    HTML processorBundleName;
 
     @UiField
     HTML processorDescriptionHTML;
@@ -193,6 +193,9 @@ public class L2ConfigForm extends Composite {
         boolean productSetChanged = true;
         for (DtoProcessorDescriptor processor : processorDescriptors) {
             String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
+            if (!processor.getOwner().isEmpty()) {
+                label = "(by " + processor.getOwner() +") " + label;
+            }
             processorList.addItem(label);
             if (oldSelection != null && oldSelection.equals(processor)) {
                 newSelectionIndex = processorList.getItemCount() - 1;
@@ -211,7 +214,14 @@ public class L2ConfigForm extends Composite {
         }
         DtoProcessorDescriptor processor = getSelectedProcessorDescriptor();
         if (processor != null) {
-            processorBundleName.setText("Bundle: " + processor.getBundleName() + " v" + processor.getBundleVersion());
+            String owner = "System";
+            if (!processor.getOwner().isEmpty()) {
+                owner = processor.getOwner();
+            }
+            String text = "Bundle: " + processor.getBundleName() + " v" + processor.getBundleVersion();
+            text += "<br>Owner: " + owner;
+            processorBundleName.setHTML(text);
+
             String defaultParameter = processor.getDefaultParameter();
             DtoParameterDescriptor[] parameters = processor.getParameterDescriptors();
             boolean hasParameterDescriptors = parameters.length > 0;
@@ -238,7 +248,7 @@ public class L2ConfigForm extends Composite {
                 });
             }
         } else {
-            processorBundleName.setText("");
+            processorBundleName.setHTML("");
             processorParametersArea.setValue("");
             processorDescriptionHTML.setHTML("");
         }

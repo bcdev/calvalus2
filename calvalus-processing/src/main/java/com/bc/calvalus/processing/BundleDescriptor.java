@@ -20,6 +20,7 @@ public class BundleDescriptor {
     AggregatorDescriptor[] aggregatorDescriptors;
 
     private String bundleLocation;
+    private String owner;
 
 
     public BundleDescriptor() {
@@ -64,5 +65,13 @@ public class BundleDescriptor {
 
     public String getIncludeBundle() {
         return includeBundle;
+    }
+
+    public String getOwner() {
+        return owner == null ? "" : owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 }

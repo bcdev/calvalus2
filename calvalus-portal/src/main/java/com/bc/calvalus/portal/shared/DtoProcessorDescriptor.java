@@ -32,6 +32,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
     private String bundleName;
     private String bundleVersion;
     private String bundleLocation;
+    private String owner;
     private String descriptionHtml;
     private String[] inputProductTypes;
     private DtoProcessorCategory processorCategory;
@@ -55,6 +56,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
                                   String bundleName,
                                   String bundleVersion,
                                   String bundleLocation,
+                                  String owner,
                                   String descriptionHtml,
                                   String[] inputProductTypes,
                                   DtoProcessorCategory processorCategory,
@@ -71,6 +73,7 @@ public class DtoProcessorDescriptor implements IsSerializable {
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
         this.bundleLocation = bundleLocation;
+        this.owner = owner;
         this.descriptionHtml = descriptionHtml;
         this.inputProductTypes = inputProductTypes;
         this.processorCategory = processorCategory;
@@ -108,6 +111,10 @@ public class DtoProcessorDescriptor implements IsSerializable {
 
     public String getBundleLocation() {
         return bundleLocation;
+    }
+
+    public String getOwner() {
+        return owner;
     }
 
     public String getDescriptionHtml() {

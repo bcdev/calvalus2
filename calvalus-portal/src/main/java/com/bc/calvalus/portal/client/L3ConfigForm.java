@@ -209,7 +209,8 @@ public class L3ConfigForm extends Composite {
         if (true) {
             Collections.addAll(allAvailable, portalContext.getAggregators(BundleFilter.PROVIDER_USER));
         }
-        if (true) {
+        if (false) {
+            // for simplicity only show my own aggregators
             Collections.addAll(allAvailable, portalContext.getAggregators(BundleFilter.PROVIDER_ALL_USERS));
         }
 

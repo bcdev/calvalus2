@@ -240,8 +240,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         if (processorDescriptors != null) {
             DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
             for (int i = 0; i < processorDescriptors.length; i++) {
-                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(), processorDescriptors[i]);
+                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
+                                            bundleDescriptor.getBundleVersion(),
+                                            bundleDescriptor.getBundleLocation(),
+                                            bundleDescriptor.getOwner(),
+                                            processorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
@@ -253,6 +256,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                bundleDescriptor.getBundleName(),
                                                bundleDescriptor.getBundleVersion(),
                                                bundleDescriptor.getBundleLocation(),
+                                               "",
                                                null,
                                                null,
                                                DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
@@ -271,8 +275,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         if (aggregatorDescriptors != null) {
             DtoAggregatorDescriptor[] dtoDescriptors = new DtoAggregatorDescriptor[aggregatorDescriptors.length];
             for (int i = 0; i < aggregatorDescriptors.length; i++) {
-                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(), bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(), aggregatorDescriptors[i]);
+                dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
+                                            bundleDescriptor.getBundleVersion(),
+                                            bundleDescriptor.getBundleLocation(),
+                                            bundleDescriptor.getOwner(),
+                                            aggregatorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
@@ -493,7 +500,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getBandNames());
     }
 
-    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
+    private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
                                           processorDescriptor.getProcessorName(),
@@ -502,6 +509,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           bundleName,
                                           bundleVersion,
                                           bundlePath,
+                                          owner,
                                           processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
                                           convert(processorDescriptor.getInputProductTypes()),
                                           convert(processorDescriptor.getProcessorCategory()),
@@ -513,12 +521,13 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                           convert(processorDescriptor.getParameterDescriptors()));
     }
 
-    private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath,
+    private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                             AggregatorDescriptor aggregatorDescriptor) {
         return new DtoAggregatorDescriptor(aggregatorDescriptor.getAggregator(),
                                            bundleName,
                                            bundleVersion,
                                            bundlePath,
+                                           owner,
                                            aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
                                            convert(aggregatorDescriptor.getParameterDescriptors()));
     }

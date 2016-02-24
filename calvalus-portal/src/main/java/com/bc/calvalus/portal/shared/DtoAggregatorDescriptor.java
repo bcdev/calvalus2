@@ -29,6 +29,7 @@ public class DtoAggregatorDescriptor implements IsSerializable {
     private String bundleName;
     private String bundleVersion;
     private String bundleLocation;
+    private String owner;
     private String descriptionHtml;
     private DtoParameterDescriptor[] parameterDescriptors;
 
@@ -42,12 +43,14 @@ public class DtoAggregatorDescriptor implements IsSerializable {
                                    String bundleName,
                                    String bundleVersion,
                                    String bundleLocation,
+                                   String owner,
                                    String descriptionHtml,
                                    DtoParameterDescriptor[] parameterDescriptors) {
         this.aggregator = aggregator;
         this.bundleName = bundleName;
         this.bundleVersion = bundleVersion;
         this.bundleLocation = bundleLocation;
+        this.owner = owner;
         this.descriptionHtml = descriptionHtml;
         this.parameterDescriptors = parameterDescriptors;
     }
@@ -66,6 +69,10 @@ public class DtoAggregatorDescriptor implements IsSerializable {
 
     public String getBundleLocation() {
         return bundleLocation;
+    }
+
+    public String getOwner() {
+        return owner;
     }
 
     public String getDescriptionHtml() {
