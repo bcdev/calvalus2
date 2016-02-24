@@ -150,7 +150,7 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    private static FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
                                                 String inputPathPatterns,
                                                 Date minDate,
                                                 Date maxDate,

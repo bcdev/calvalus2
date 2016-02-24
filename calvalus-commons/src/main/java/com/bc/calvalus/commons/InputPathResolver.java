@@ -110,6 +110,57 @@ public class InputPathResolver {
         return globList;
     }
 
+    public List<String> resolveMultiYear(String inputPathPatterns) {
+        List<String> globList = new ArrayList<String>(128);
+        for (String pattern : inputPathPatterns.split(",")) {
+            if (regionName != null) {
+                pattern = pattern.replace("${region}", regionName);
+            } else {
+                pattern = pattern.replace("${region}", ".*");
+            }
+
+            if (minDate != null && maxDate != null) {
+                Set<String> globSet = new HashSet<String>(517);
+                Calendar calendar = createCalendar();
+                calendar.setTime(minDate);
+                Calendar startCal = createCalendar();
+                startCal.setTime(minDate);
+                Calendar stopCal = createCalendar();
+                stopCal.setTime(maxDate);
+                stopCal.set(Calendar.YEAR, startCal.get(Calendar.YEAR));
+                if (! stopCal.after(startCal)) {
+                    stopCal.add(Calendar.YEAR, 1);
+                }
+                Calendar endOfLoop = createCalendar();
+                endOfLoop.setTime(maxDate);
+                do {
+                    String glob = pattern.replace("${yyyy}", String.format("%tY", calendar));
+                    glob = glob.replace("${MM}", String.format("%tm", calendar));
+                    glob = glob.replace("${dd}", String.format("%td", calendar));
+                    glob = glob.replace("${DDD}", String.format("%tj", calendar));
+                    if (!globSet.contains(glob)) {
+                        globSet.add(glob);
+                        globList.add(glob);
+                    }
+                    calendar.add(Calendar.DAY_OF_WEEK, 1);
+                    // support multi-year
+                    if (calendar.after(stopCal)) {
+                        startCal.add(Calendar.YEAR, 1);
+                        stopCal.add(Calendar.YEAR, 1);
+                        calendar.setTime(startCal.getTime());
+                    }
+                } while (!calendar.after(endOfLoop));
+            } else {
+                String glob = pattern.replace("${yyyy}", ".*");
+                glob = glob.replace("${MM}", ".*");
+                glob = glob.replace("${dd}", ".*");
+                glob = glob.replace("${DDD}", ".*");
+                globList.add(glob);
+            }
+        }
+        return globList;
+    }
+
     private Calendar createCalendar() {
         return GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
     }
