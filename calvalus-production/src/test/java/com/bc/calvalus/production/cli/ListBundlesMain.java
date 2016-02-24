@@ -45,49 +45,48 @@ public class ListBundlesMain {
         ProductionService productionService = productionServiceFactory.create(config, USER_APPDATA_DIR, new File("."));
 
         printBundles("system", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_SYSTEM)));
+        printDivider();
         printBundles("users", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_ALL_USERS)));
-
-//        printProductSets(productionService.getProductSets("marcoz", "*"));
+        printDivider();
+        printProductSets(productionService.getProductSets("marcoz", "*"));
 
         productionService.close();
     }
 
+    private static void printDivider() {
+        System.out.println();
+        System.out.println("================================================================");
+        System.out.println();
+    }
+
     private static void printProductSets(ProductSet[] productSets) {
-        System.out.println("productSet count: " + productSets.length);
+        System.out.println("ProductSet count: " + productSets.length);
         for (ProductSet productSet : productSets) {
-            System.out.println(productSet.getName() +  " = " + productSet.getPath());
+            System.out.println(productSet.getName() + " = " + productSet.getPath());
         }
     }
 
     public static void printBundles(String provider, BundleDescriptor[] bundles) {
-        System.out.println(provider+ " bundle count: " + bundles.length);
+        System.out.println(provider + " Bundle count: " + bundles.length);
         for (BundleDescriptor bundle : bundles) {
-            boolean printBundle=false;
-//            System.out.println("bundle = " + bundle.getBundleLocation());
-//            AggregatorDescriptor[] aggregatorDescriptors = bundle.getAggregatorDescriptors();
+            System.out.println("Bundle = " + bundle.getBundleLocation() + " (" + bundle.getOwner() + ")");
+            AggregatorDescriptor[] aggregatorDescriptors = bundle.getAggregatorDescriptors();
             ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
 
-//            if (!bundle.getBundleLocation().endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
-//                System.out.println("WARNING: bundle names and version don't match directory");
-//            }
+            if (!bundle.getBundleLocation().endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
+                System.out.println("WARNING: bundle names and version don't match directory");
+            }
 
-//            if (aggregatorDescriptors != null) {
-//                System.out.println(bundle.getBundleName() + " - " + bundle.getBundleVersion() + " : " + bundle.getBundleLocation());
-//                for (AggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
-//                    System.out.println("  aggregator = " + aggregatorDescriptor.getAggregator());
-//                }
-//            }
+            if (aggregatorDescriptors != null) {
+                System.out.println(bundle.getBundleName() + " - " + bundle.getBundleVersion() + " : " + bundle.getBundleLocation());
+                for (AggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
+                    System.out.println("  Aggregator = " + aggregatorDescriptor.getAggregator());
+                }
+            }
 
             if (processorDescriptors != null) {
                 for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                    ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
-                    if (formatting != ProcessorDescriptor.FormattingType.OPTIONAL) {
-                        if (!printBundle) {
-                            System.out.println("bundle = " + bundle.getBundleLocation());
-                            printBundle = true;
-                            System.out.println("  processor = " + processorDescriptor.getProcessorName() + " [version " + processorDescriptor.getProcessorVersion() + "] " + formatting);
-                        }
-                    }
+                    System.out.println("  Processor = " + processorDescriptor.getProcessorName() + " [version " + processorDescriptor.getProcessorVersion() + "]");
                 }
             }
         }
