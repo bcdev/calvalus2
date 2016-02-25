@@ -57,7 +57,7 @@ public class CalvalusProcessorExtractor {
 
     private BundleDescriptor[] getBundleDescriptors(ProductionService productionService, String userName)
                 throws ProductionException {
-        BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER");
+        BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER").withTheUser(userName);
         return productionService.getBundles(userName, filter);
     }
 }
