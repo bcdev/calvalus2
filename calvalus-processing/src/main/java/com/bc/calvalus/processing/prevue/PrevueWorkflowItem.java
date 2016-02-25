@@ -67,6 +67,10 @@ public class PrevueWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "50");
         jobConfig.setIfUnset("calvalus.system.snap.pixelGeoCoding.useTiling", "true");
         jobConfig.setIfUnset("calvalus.system.snap.envisat.usePixelGeoCoding", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "50");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "50");
+        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
 
         if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
             job.setInputFormatClass(PatternBasedInputFormat.class);

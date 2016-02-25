@@ -135,6 +135,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
                 jobConfigSr.set(JobConfigNames.CALVALUS_REGION_GEOMETRY, regionGeometryString);
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+                jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
                 sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                     productionName + " SR " + rr, jobConfigSr));

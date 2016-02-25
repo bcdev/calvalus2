@@ -80,6 +80,8 @@ public class MRProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDateStr);
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
 
         final Class defaultInputFormat;
         if (productionRequest.getParameters().containsKey("inputTable")) {

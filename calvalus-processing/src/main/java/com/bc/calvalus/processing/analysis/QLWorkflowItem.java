@@ -60,6 +60,8 @@ public class QLWorkflowItem extends HadoopWorkflowItem {
 
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.snap.dataio.reader.tileWidth", "*");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
 
         if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
             job.setInputFormatClass(PatternBasedInputFormat.class);

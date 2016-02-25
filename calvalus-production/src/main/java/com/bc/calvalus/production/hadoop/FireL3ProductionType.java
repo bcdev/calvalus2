@@ -117,6 +117,7 @@ public class FireL3ProductionType extends HadoopProductionType {
             jobConfigCloud.setIfUnset("calvalus.mosaic.macroTileSize", "10");
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+            jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
             jobConfigCloud.set("calvalus.lc.temporalCloudFilterThreshold", String.valueOf(temporalCloudFilterThreshold));
             jobConfigCloud.set("calvalus.lc.temporalCloudBandName", temporalCloudBandName);
@@ -157,6 +158,7 @@ public class FireL3ProductionType extends HadoopProductionType {
                 jobConfigSr.setIfUnset("calvalus.mosaic.macroTileSize", "10");
                 jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
                 jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+                jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
                 jobConfigSr.set("mapred.job.priority", "NORMAL");
                 singleDaySequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                              productionName + " SR", jobConfigSr));

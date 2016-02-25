@@ -73,6 +73,11 @@ public class MAWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.snap.pixelGeoCoding.useTiling", "true");
         jobConfig.setIfUnset("calvalus.system.snap.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.snap.pixelGeoCoding.fractionAccuracy", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "32");
+        jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "32");
+        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.useTiling", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
+        jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
 
 
         // Enable JVM reuse, to speedup processing.
