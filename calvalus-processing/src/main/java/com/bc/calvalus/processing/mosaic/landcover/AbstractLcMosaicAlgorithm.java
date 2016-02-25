@@ -53,6 +53,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     static final int STATUS_SNOW = 3;
     static final int STATUS_CLOUD = 4;
     static final int STATUS_CLOUD_SHADOW = 5;
+    static final int STATUS_HAZE = 11;
+
 
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
@@ -141,7 +143,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             }
             status = StatusRemapper.remapStatus(statusRemapper, status);
 
-            if (status == STATUS_LAND && sdrCloudDataSamples != null) {
+            if ((status == STATUS_LAND || status == STATUS_HAZE) && sdrCloudDataSamples != null) {
                 status = temporalCloudCheck(samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i], sdrCloudDataSamples[0][i]);
             }
             if (status == STATUS_LAND) {
@@ -193,7 +195,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     }
                     aggregatedSamples[STATUS_WATER][i]++;
                 }
-            } else if (status == STATUS_CLOUD) {
+            } else if (status == STATUS_CLOUD || status == STATUS_HAZE) {
                 // Count CLOUD
                 aggregatedSamples[STATUS_CLOUD][i]++;
             } else if (status == STATUS_CLOUD_SHADOW) {
