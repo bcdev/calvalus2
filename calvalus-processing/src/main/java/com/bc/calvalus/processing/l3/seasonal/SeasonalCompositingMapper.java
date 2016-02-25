@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,13 +76,21 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
+        final Calendar startCalendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        final Calendar stopCalendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        startCalendar.setTime(start);
+        stopCalendar.setTime(stop);
+        stopCalendar.set(Calendar.YEAR, startCalendar.get(Calendar.YEAR));
+        if (stopCalendar.before(startCalendar)) {
+            stopCalendar.add(Calendar.YEAR, 1);
+        }
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
         float[][] accu = null;
         int numInputBands = 0;
         int numTargetBands = 0;
         // loop over weeks
-        for (Date week = start; ! stop.before(week); week = nextWeek(week)) {
+        for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar)) {
 
             // determine and read input tile for the week
             final String weekFileName = String.format(SR_FILENAME_FORMAT, sensorAndResolution, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
@@ -226,10 +235,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    static Date nextWeek(Date week) {
+    static Date nextWeek(Date week, Calendar start, Calendar stop) {
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(week);
         c.add(Calendar.DATE, lengthOfWeek(c));
+        if (c.after(stop)) {
+            start.add(Calendar.YEAR, 1);
+            stop.add(Calendar.YEAR, 1);
+            c.setTime(start.getTime());
+        }
         return c.getTime();
     }
 

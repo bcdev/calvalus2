@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
@@ -21,6 +22,10 @@ public class SeasonalCompositingMapperTest {
     @Test
     public void testNextWeek() throws Exception {
         Date d = DATE_FORMAT.parse("2012-01-01");
+        GregorianCalendar start = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        start.setTime(DATE_FORMAT.parse("2012-01-01"));
+        GregorianCalendar stop = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        stop.setTime(DATE_FORMAT.parse("2012-12-31"));
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(d);
         assertEquals(0, c.get(Calendar.MONTH)) ;
@@ -33,7 +38,7 @@ public class SeasonalCompositingMapperTest {
             } else {
                 assertEquals(7, l);
             }
-            d = SeasonalCompositingMapper.nextWeek(d);
+            d = SeasonalCompositingMapper.nextWeek(d, start, stop);
             c.setTime(d);
         }
         assertEquals("2013-01-01", DATE_FORMAT.format(d));

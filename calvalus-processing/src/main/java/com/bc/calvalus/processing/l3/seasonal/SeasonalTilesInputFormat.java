@@ -1,9 +1,12 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
+import com.bc.calvalus.commons.InputPathResolver;
+import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -11,6 +14,7 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,4 +85,20 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         }
         return matcher.group(1);
     }
+
+    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+                                           String inputPathPatterns,
+                                           Date minDate,
+                                           Date maxDate,
+                                           String regionName,
+                                           Configuration conf) throws IOException {
+        InputPathResolver inputPathResolver = new InputPathResolver();
+        inputPathResolver.setMinDate(minDate);
+        inputPathResolver.setMaxDate(maxDate);
+        inputPathResolver.setRegionName(regionName);
+        List<String> inputPatterns = inputPathResolver.resolveMultiYear(inputPathPatterns);
+        return inventoryService.globFileStatuses(inputPatterns, conf);
+    }
+
+
 }
