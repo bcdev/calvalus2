@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
@@ -42,5 +43,38 @@ public class SeasonalCompositingMapperTest {
             c.setTime(d);
         }
         assertEquals("2013-01-01", DATE_FORMAT.format(d));
+    }
+
+    @Test
+    public void testBandMapping() {
+        String sensorAndResolution = "MERIS-300m";
+        Configuration conf = new Configuration();
+        conf.set("calvalus.seasonal.bands", "sr_2_mean,sr_3_mean,sr_6_mean,sr_7_mean,sr_8_mean");
+
+        String[] sensorBands = SeasonalCompositingMapper.sensorBandsOf(sensorAndResolution);
+        String[] targetBands = SeasonalCompositingMapper.targetBandsOf(conf, sensorBands);
+        int[] targetBandIndex = new int[17];  // desired band for the seasonal composite, as index to sensorBands
+        int[] sourceBandIndex = new int[20];  // corresponding required band of the L3 product, as index to product
+        int numTargetBands = 3;
+        int numSourceBands = 6;
+        for (int j = 0; j < 3; ++j) {
+            targetBandIndex[j] = j;
+        }
+        for (int i = 0; i < 6; ++i) {
+            sourceBandIndex[i] = i;
+        }
+        for (int j = 3; j < sensorBands.length && numTargetBands < targetBands.length; ++j) {
+            if (sensorBands[j].equals(targetBands[numTargetBands])) {  // sequence is important
+                targetBandIndex[numTargetBands++] = j;
+                sourceBandIndex[numSourceBands++] = SeasonalCompositingMapper.sourceBandIndexOf(sensorAndResolution, j);
+            }
+        }
+
+        assertEquals("numTargetBands", 5+3, numTargetBands);
+        assertEquals("numSourceBands", 5+6, numSourceBands);
+        assertEquals("targetBandIndex", 9, targetBandIndex[6]);
+        assertEquals("sourceBandIndex", 18, sourceBandIndex[9]);
+        assertEquals("targetBandIndex", 10, targetBandIndex[7]);
+        assertEquals("sourceBandIndex", 20, sourceBandIndex[10]);
     }
 }
