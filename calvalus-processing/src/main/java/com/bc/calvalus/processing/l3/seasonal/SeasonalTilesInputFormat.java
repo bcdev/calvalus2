@@ -35,14 +35,18 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
     static final Pattern SR_FILENAME_PATTERN =
             Pattern.compile("ESACCI-LC-L3-SR-[^-]*-[^-]*-[^-]*-(h[0-9][0-9]v[0-9][0-9])-........-[^-]*.nc");
 
-    protected void createSplits(FileSystem fs, ProductInventory productInventory,
-                              FileStatus[] fileStatuses, List<InputSplit> splits) throws IOException {
+    @Override
+    protected void createSplits(ProductInventory productInventory,
+                                FileStatus[] fileStatuses,
+                                List<InputSplit> splits,
+                                Configuration conf) throws IOException {
         for (FileStatus file : fileStatuses) {
             if (tileNameIn(tileNameOf(file.getPath().getName()), splits)) {
                 continue;
             }
             LOG.info("tile " + file.getPath().getName() + " represents " + tileNameOf(file.getPath().getName()));
             long fileLength = file.getLen();
+            FileSystem fs = getFileSystem(file, conf);
             BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
             if (blocks != null && blocks.length > 0) {
                 BlockLocation block = blocks[0];
@@ -69,7 +73,11 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         }
     }
 
-    private boolean tileNameIn(String tileName, List<InputSplit> splits) {
+    protected FileSystem getFileSystem(FileStatus file, Configuration conf) throws IOException {
+        return file.getPath().getFileSystem(conf);
+    }
+
+    private static boolean tileNameIn(String tileName, List<InputSplit> splits) {
         for (InputSplit split : splits) {
             if (tileName.equals(tileNameOf(((FileSplit)split).getPath().getName()))) {
                 return true;
@@ -78,7 +86,7 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         return false;
     }
 
-    private String tileNameOf(String fileName) {
+    private static String tileNameOf(String fileName) {
         Matcher matcher = SR_FILENAME_PATTERN.matcher(fileName);
         if (! matcher.matches()) {
             throw new IllegalArgumentException("file name does not match pattern " + SR_FILENAME_PATTERN.pattern() + ": " + fileName);
@@ -86,6 +94,7 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         return matcher.group(1);
     }
 
+    // multi-year variant
     protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
                                            String inputPathPatterns,
                                            Date minDate,
@@ -99,6 +108,4 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         List<String> inputPatterns = inputPathResolver.resolveMultiYear(inputPathPatterns);
         return inventoryService.globFileStatuses(inputPatterns, conf);
     }
-
-
 }
