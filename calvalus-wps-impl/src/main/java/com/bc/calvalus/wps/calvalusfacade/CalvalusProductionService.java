@@ -75,7 +75,7 @@ public class CalvalusProductionService {
                     .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
     }
 
-    private static File getConfigFile() {
+    private static File getConfigFile() throws FileNotFoundException {
         File configFile;
         try {
             URL calvalusConfigUrl = CalvalusProductionService.class.getClassLoader().getResource("calvalus.config");
@@ -85,6 +85,9 @@ public class CalvalusProductionService {
             configFile = new File(calvalusConfigUrl.toURI());
         } catch (URISyntaxException | FileNotFoundException e) {
             configFile = new File(DEFAULT_CONFIG_PATH);
+            if (!configFile.exists()){
+                throw new FileNotFoundException("calvalus.config file is not available.");
+            }
         }
         return configFile;
     }
