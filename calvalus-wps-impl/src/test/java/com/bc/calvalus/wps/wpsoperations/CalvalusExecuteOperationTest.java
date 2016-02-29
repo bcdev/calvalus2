@@ -10,7 +10,6 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.exceptions.FailedRequestException;
 import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
@@ -151,8 +150,8 @@ public class CalvalusExecuteOperationTest {
     public void canThrowFailedRequestExceptionInProcessSync() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenThrow(new InterruptedException("error"));
 
-        thrownException.expect(FailedRequestException.class);
-        thrownException.expectMessage("Unable to process the request synchronously");
+        thrownException.expect(InterruptedException.class);
+        thrownException.expectMessage("error");
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
         executeOperation.processSync(mockExecuteRequest, "process1");
@@ -189,8 +188,8 @@ public class CalvalusExecuteOperationTest {
     public void canCatchIOExceptionInProcessAsync() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenThrow(new IOException("error"));
 
-        thrownException.expect(FailedRequestException.class);
-        thrownException.expectMessage("Unable to process the request asynchronously");
+        thrownException.expect(IOException.class);
+        thrownException.expectMessage("error");
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
         executeOperation.processAsync(mockExecuteRequest, "process1");

@@ -33,7 +33,9 @@ public class CalvalusExecuteOperation {
         this.context = context;
     }
 
-    public ExecuteResponse execute(Execute executeRequest) throws FailedRequestException {
+    public ExecuteResponse execute(Execute executeRequest)
+                throws InterruptedException, InvalidProcessorIdException,
+                       JAXBException, ProductionException, IOException {
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
         boolean isAsynchronous = responseDocumentType.isStatus();
@@ -49,30 +51,25 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    protected List<String> processSync(Execute executeRequest, String processorId) throws FailedRequestException {
-        try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-            ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
+    protected List<String> processSync(Execute executeRequest, String processorId)
+                throws IOException, ProductionException, InvalidProcessorIdException,
+                       JAXBException, InterruptedException {
+        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
+        ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
 
-            Production production = calvalusFacade.orderProductionSynchronous(request);
-            calvalusFacade.stageProduction(production);
-            calvalusFacade.observeStagingStatus(production);
-            return calvalusFacade.getProductResultUrls(production);
-        } catch (InterruptedException | IOException | JAXBException | ProductionException | InvalidProcessorIdException exception) {
-            throw new FailedRequestException("Unable to process the request synchronously", exception);
-        }
+        Production production = calvalusFacade.orderProductionSynchronous(request);
+        calvalusFacade.stageProduction(production);
+        calvalusFacade.observeStagingStatus(production);
+        return calvalusFacade.getProductResultUrls(production);
     }
 
-    protected String processAsync(Execute executeRequest, String processorId) throws FailedRequestException {
-        try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-            ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
+    protected String processAsync(Execute executeRequest, String processorId)
+                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException {
+        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
+        ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
 
-            Production production = calvalusFacade.orderProductionAsynchronous(request);
-            return production.getId();
-        } catch (IOException | JAXBException | ProductionException | InvalidProcessorIdException exception) {
-            throw new FailedRequestException("Unable to process the request asynchronously", exception);
-        }
+        Production production = calvalusFacade.orderProductionAsynchronous(request);
+        return production.getId();
     }
 
     protected ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
@@ -99,7 +96,7 @@ public class CalvalusExecuteOperation {
     }
 
     protected ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
-                                                      CalvalusFacade calvalusFacade)
+                                                        CalvalusFacade calvalusFacade)
                 throws JAXBException, IOException, ProductionException, InvalidProcessorIdException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
