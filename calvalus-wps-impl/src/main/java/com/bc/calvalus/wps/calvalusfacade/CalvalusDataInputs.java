@@ -94,6 +94,7 @@ public class CalvalusDataInputs {
         inputMapFormatted.put(PROCESSOR_BUNDLE_NAME.getIdentifier(), calvalusProcessor.getBundleName());
         inputMapFormatted.put(PROCESSOR_BUNDLE_VERSION.getIdentifier(), calvalusProcessor.getBundleVersion());
         inputMapFormatted.put(PROCESSOR_NAME.getIdentifier(), calvalusProcessor.getName());
+        inputMapFormatted.put("processorBundleLocation", calvalusProcessor.getBundleLocation());
     }
 
     private void extractProductsetParameters(ProductSet[] productSets, CalvalusProcessor calvalusProcessor) {

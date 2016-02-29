@@ -73,6 +73,10 @@ public class CalvalusProcessor implements IWpsProcess {
         return bundleDescriptor.getBundleName();
     }
 
+    public String getBundleLocation() {
+        return bundleDescriptor.getBundleLocation();
+    }
+
     public String getBundleVersion() {
         return bundleDescriptor.getBundleVersion();
     }

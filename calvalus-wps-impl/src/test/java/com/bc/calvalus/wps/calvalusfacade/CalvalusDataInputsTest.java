@@ -183,11 +183,13 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
+        when(mockCalvalusProcessor.getBundleLocation()).thenReturn("hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0");
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                                          "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                                           "autoStaging : true\n" +
                                                           "productionType : L3\n" +
                                                           "processorName : null\n" +
@@ -216,6 +218,7 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                                          "processorBundleLocation : null\n" +
                                                           "autoStaging : true\n" +
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
