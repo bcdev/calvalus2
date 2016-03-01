@@ -349,7 +349,7 @@ public class L3ProductionType extends HadoopProductionType {
 
         // todo - detect usable PlanetaryGrid-implementations, and use configured value
         CalvalusLogger.getLogger().info("Validating grid....");
-        if (productionRequest.getString("processorBundles").contains("beam")) {
+        if (productionRequest.getParameter("processorBundles", false) != null && productionRequest.getString("processorBundles").contains("beam")) {
             l3ConfigXml = l3ConfigXml.replace("<planetaryGrid>org.esa.snap.binning.support.SEAGrid</planetaryGrid>",
                     "<planetaryGrid>org.esa.beam.binning.support.SEAGrid</planetaryGrid>");
             CalvalusLogger.getLogger().warning(String.format("Falling back to '%s'", "org.esa.beam.binning.support.SEAGrid"));
