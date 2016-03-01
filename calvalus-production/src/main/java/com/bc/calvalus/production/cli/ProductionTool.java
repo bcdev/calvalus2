@@ -42,7 +42,7 @@ import java.util.Map;
  *  -c,--config &lt;FILE&gt;     The Calvalus configuration file (Java properties
  *                         format). Defaults to 'C:\Users\Norman\.calvalus\calvalus.config'.
  *  -C,--calvalus &lt;NAME&gt;   The name of the Calvalus software bundle used for
- *                         the production. Defaults to 'calvalus-2.8-SNAPSHOT'
+ *                         the production. Defaults to 'calvalus-2.8'
  *     --copy &lt;FILES&gt;      Copies FILES to '/calvalus/home/&lt;user&gt;' before the
  *                         request is executed.Use the colon ':' to separate paths in FILES.
  *     --deploy &lt;FILES&gt;    Deploys FILES to the Calvalus bundle before the
