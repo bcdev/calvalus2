@@ -143,9 +143,19 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             }
             status = StatusRemapper.remapStatus(statusRemapper, status);
 
-            if ((status == STATUS_LAND || status == STATUS_HAZE) && sdrCloudDataSamples != null) {
-                status = temporalCloudCheck(samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i], sdrCloudDataSamples[0][i]);
+            if (sdrCloudDataSamples != null) {
+                // temporal test
+                if ((status == STATUS_LAND || status == STATUS_HAZE)) {
+                    float sdr8 = samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i];
+                    float sdr8CloudThreshold = sdrCloudDataSamples[0][i];
+                    status = temporalCloudCheck(sdr8, sdr8CloudThreshold);
+                } else if (status == STATUS_CLOUD_SHADOW) {
+                    float sdr8 = samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i];
+                    float sdr8CloudShadowThreshold = sdrCloudDataSamples[1][i];
+                    status = temporalCloudShadowCheck(sdr8, sdr8CloudShadowThreshold);
+                }
             }
+
             if (status == STATUS_LAND) {
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
                 // If we haven't seen LAND so far,
@@ -214,12 +224,21 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
 
     protected int temporalCloudCheck(float sdr8, float sdr8CloudThreshold) {
         // if "ndvi" instead of sdr_B3 (spot only)
-        //if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
         if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
             // treat this as cloud
             return STATUS_CLOUD;
         } else {
             return STATUS_LAND;
+        }
+    }
+
+    protected int temporalCloudShadowCheck(float sdr8, float sdr8CloudShadowThreshold) {
+        // if "ndvi" instead of sdr_B3 (spot only)
+        if (!Float.isNaN(sdr8CloudShadowThreshold) && sdr8 > sdr8CloudShadowThreshold) {
+            // treat this as cloud shadow
+            return STATUS_LAND;
+        } else {
+            return STATUS_CLOUD_SHADOW;
         }
     }
 
