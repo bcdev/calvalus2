@@ -16,17 +16,17 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.WorkflowStatusListener;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
-import com.bc.calvalus.inventory.ProductSetPersistable;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -41,7 +41,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class L2ProductionTypeTest {
 
@@ -56,6 +59,11 @@ public class L2ProductionTypeTest {
                 ProcessorDescriptor processorDescriptor = new ProcessorDescriptor("BandMaths", "Band Arithmetic", "1.0", "");
                 processorDescriptor.setOutputProductType("Generic-L2");
                 return new BundleDescriptor[]{new BundleDescriptor("beam", "4.9-SNAPSHOT", "/software/test/system", processorDescriptor)};
+            }
+
+            @Override
+            public MaskDescriptor[] getMasks(String userName) {
+                return new MaskDescriptor[0];
             }
         };
         productionType = new L2ProductionType(new TestInventoryService(), processingService, new TestStagingService());

@@ -24,6 +24,7 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessState;
 import com.bc.calvalus.portal.shared.DtoProcessStatus;
@@ -36,6 +37,7 @@ import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.ma.Record;
@@ -233,6 +235,29 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         } catch (ProductionException e) {
             throw convert(e);
         }
+    }
+
+    @Override
+    public DtoMaskDescriptor[] getMasks() throws BackendServiceException {
+        try {
+            String userName = getUserName();
+            final MaskDescriptor[] maskDescriptors = productionService.getMasks(userName);
+            return getDtoMaskDescriptors(maskDescriptors);
+        } catch (ProductionException e) {
+            throw convert(e);
+        }
+    }
+
+    private DtoMaskDescriptor[] getDtoMaskDescriptors(MaskDescriptor[] maskDescriptors) {
+        List<DtoMaskDescriptor> dtoMaskDescriptors = new ArrayList<>(maskDescriptors.length);
+        for (MaskDescriptor maskDescriptor : maskDescriptors) {
+            dtoMaskDescriptors.add(convert(maskDescriptor));
+        }
+        return dtoMaskDescriptors.toArray(new DtoMaskDescriptor[0]);
+    }
+
+    private DtoMaskDescriptor convert(MaskDescriptor maskDescriptor) {
+        return new DtoMaskDescriptor(maskDescriptor.getMaskName(), maskDescriptor.getMaskDescriptionHTML());
     }
 
     private DtoProcessorDescriptor[] getDtoProcessorDescriptors(BundleDescriptor bundleDescriptor) {

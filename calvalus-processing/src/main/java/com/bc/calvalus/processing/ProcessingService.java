@@ -24,6 +24,17 @@ public interface ProcessingService<JobId> {
     BundleDescriptor[] getBundles(String username, BundleFilter filter) throws Exception;
 
     /**
+     * Gets the masks available by the service.
+     *
+     * @param userName The name of the user for which the masks shall be retrieved.
+     *
+     * @return The masks available by the service.
+     *
+     * @throws Exception if an error occurs.
+     */
+    MaskDescriptor[] getMasks(String userName) throws Exception;
+
+    /**
      * @return The format used represent job IDs as plain text.
      */
     JobIdFormat<JobId> getJobIdFormat();

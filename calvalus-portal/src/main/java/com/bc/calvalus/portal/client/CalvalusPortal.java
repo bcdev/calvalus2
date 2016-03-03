@@ -9,6 +9,7 @@ import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -61,6 +62,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             "l2ToL3ComparisonView",
             "regionsView",
             "bundlesView",
+            "masksView",
             "productionsView"
     };
 
@@ -76,6 +78,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoAggregatorDescriptor[] systemAggregators;
     private DtoAggregatorDescriptor[] userAggregators;
     private DtoAggregatorDescriptor[] allUserAggregators;
+    private DtoMaskDescriptor[] userMasks;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
     private PortalView[] views;
@@ -139,6 +142,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
+                backendService.getMasks(new InitMasksCallback());
+
                 GWT.log("checking for user roles asynchronously");
                 backendService.getCalvalusConfig(new CalvalusConfigCallback());
 //                backendService.isUserInRole("eop_file.modify_calopus_b", new UserRolesCallback("eop_file.modify_calopus_b"));
@@ -192,6 +197,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return allUserAggregators;
         }
         return new DtoAggregatorDescriptor[0];
+    }
+
+    @Override
+    public DtoMaskDescriptor[] getMasks() {
+        return userMasks;
     }
 
     @Override
@@ -261,6 +271,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new ManageRegionsView(this);
             case "bundlesView":
                 return new ManageBundleView(this);
+            case "masksView":
+                return new ManageMasksView(this);
             case "productionsView":
                 return new ManageProductionsView(this);
             default:
@@ -273,9 +285,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         manageProductionsView = new ManageProductionsView(this);
         List<PortalView> accu = new ArrayList<>();
         for (String viewName : VIEW_NAMES) {
-             if (withPortalFeature(viewName)) {
-                 accu.add(createViewOf(viewName));
-             }
+            if (withPortalFeature(viewName)) {
+                accu.add(createViewOf(viewName));
+            }
         }
         views = accu.toArray(new PortalView[accu.size()]);
 
@@ -316,7 +328,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 //            };
 //        }
 
-        viewTabIndices = new HashMap<String, Integer>();
+        viewTabIndices = new HashMap<>();
         for (int i = 0; i < views.length; i++) {
             viewTabIndices.put(views[i].getViewId(), i);
         }
@@ -375,15 +387,16 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private boolean isAllInputDataAvailable() {
         return regions != null
-               && productSets != null
-               && systemProcessors != null && userProcessors != null && allUserProcessors != null
-               && systemAggregators != null && userAggregators != null && allUserAggregators != null
-               && productions != null
+                && productSets != null
+                && systemProcessors != null && userProcessors != null && allUserProcessors != null
+                && systemAggregators != null && userAggregators != null && allUserAggregators != null
+                && userMasks != null
+                && productions != null
 //               && isCcUser != null
 //               && isCalEsa != null
 //               && isCalOpus != null
 //               && isCalvalusUser != null
-               && calvalusConfig != null;
+                && calvalusConfig != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -526,6 +539,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
     }
 
+    private class InitMasksCallback implements AsyncCallback<DtoMaskDescriptor[]> {
+
+        @Override
+        public void onSuccess(DtoMaskDescriptor[] maskDescriptors) {
+            CalvalusPortal.this.userMasks = maskDescriptors;
+            maybeInitFrontend();
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            caught.printStackTrace(System.err);
+            Dialog.error("Server-side Error", caught.getMessage());
+            CalvalusPortal.this.userMasks = new DtoMaskDescriptor[0];
+        }
+    }
+
     private class InitAggregatorsCallback implements AsyncCallback<DtoAggregatorDescriptor[]> {
 
         private final String filter;
@@ -631,7 +660,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             for (String key : config.getConfig().keySet()) {
                 if (key.startsWith("calvalus.portal.")) {
                     calvalusConfig.put(key.substring("calvalus.portal.".length()),
-                                       roleSupports(key, config.getRoles(), config.getConfig()));
+                            roleSupports(key, config.getRoles(), config.getConfig()));
                 }
             }
             maybeInitFrontend();
@@ -652,7 +681,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             s.append(r);
             s.append(' ');
         }
-        s.setLength(s.length()-1);
+        s.setLength(s.length() - 1);
         // end for debugging
         if (viewRoles != null) {
             for (String configuredRole : viewRoles.split(" ")) {

@@ -23,6 +23,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.ceres.binding.BindingException;
@@ -45,17 +46,31 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.WeakHashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.logging.Logger;
 
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.8";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.9-SNAPSHOT";
     public static final String DEFAULT_SNAP_BUNDLE = "snap-2.0.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
-    private static final long CAHCE_RETENTION = 30 * 1000;
+    private static final long CACHE_RETENTION = 30 * 1000;
 
     private final JobClientsMap jobClientsMap;
     private final Map<JobID, ProcessStatus> jobStatusMap;
@@ -77,7 +92,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             public void run() {
                 synchronized (bundleQueryCache) {
                     long now = System.currentTimeMillis();
-                    long clearIfOlder = now - CAHCE_RETENTION;
+                    long clearIfOlder = now - CACHE_RETENTION;
                     Iterator<BundleQueryCacheEntry> iterator = bundleQueryCache.iterator();
                     while (iterator.hasNext()) {
                         BundleQueryCacheEntry cacheEntry = iterator.next();
@@ -89,8 +104,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
             }
         };
-        this.bundlesQueryCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CAHCE_RETENTION, CAHCE_RETENTION);
-
+        this.bundlesQueryCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CACHE_RETENTION, CACHE_RETENTION);
         this.bundleCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
@@ -125,6 +139,38 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         throw new IOException("Failed to load BundleDescriptor");
     }
 
+    @Override
+    public MaskDescriptor[] getMasks(final String username) throws IOException {
+        Future<MaskDescriptor[]> future = executorService.submit(new Callable<MaskDescriptor[]>() {
+            @Override
+            public MaskDescriptor[] call() throws Exception {
+                return HadoopProcessingService.this.getMaskDescriptorsImpl(username);
+            }
+        });
+        try {
+            return future.get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            logger.warning(e.getMessage());
+        }
+        throw new IOException("Failed to load MaskDescriptor");
+    }
+
+    public MaskDescriptor[] getMaskDescriptorsImpl(String username) throws IOException {
+        try {
+            String maskLocationPattern = String.format("/calvalus/home/%s/masks/*", username);
+            FileSystem fileSystem = getFileSystem(username, maskLocationPattern);
+            List<MaskDescriptor> maskDescriptors = getMaskDescriptors(fileSystem, maskLocationPattern);
+            for (MaskDescriptor maskDescriptor : maskDescriptors) {
+                maskDescriptor.setOwner(username);
+            }
+            return maskDescriptors.toArray(new MaskDescriptor[0]);
+        } catch (IOException e) {
+            logger.warning(e.getMessage());
+            throw e;
+        }
+    }
+
     public BundleDescriptor[] getBundleDescriptorsImpl(String username, BundleFilter filter) throws IOException {
         ArrayList<BundleDescriptor> descriptors = new ArrayList<>();
         String bundleDirName = "*";
@@ -138,7 +184,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_USER) && filter.getUserName() != null) {
                 String bundleLocationPattern = String.format("/calvalus/home/%s/software/%s/%s", username, bundleDirName,
-                                                             BUNDLE_DESCRIPTOR_XML_FILENAME);
+                        BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 List<BundleDescriptor> singleUserDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                 for (BundleDescriptor bundleDescriptor : singleUserDescriptors) {
@@ -221,7 +267,34 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return descriptors;
     }
 
-    private void collectAccessibleFiles(FileSystem fileSystem, String pathPattern, int pos, Path path, ArrayList<FileStatus> accu) throws IOException {
+    private List<MaskDescriptor> getMaskDescriptors(FileSystem fileSystem, String maskLocationPattern) throws IOException {
+        final Path qualifiedPath = fileSystem.makeQualified(new Path(maskLocationPattern));
+        final FileStatus[] fileStatuses;
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+            final List<FileStatus> accu = new ArrayList<>();
+            collectAccessibleFiles(fileSystem, maskLocationPattern, 1, new Path("/"), accu);
+            fileStatuses = accu.toArray(new FileStatus[accu.size()]);
+        } else {
+            fileStatuses = fileSystem.globStatus(qualifiedPath);
+        }
+        if (fileStatuses == null) {
+            return Collections.EMPTY_LIST;
+        }
+        List<MaskDescriptor> descriptors = new ArrayList<>();
+        for (FileStatus file : fileStatuses) {
+            try {
+                final MaskDescriptor md = new MaskDescriptor();
+                md.setMaskName(file.getPath().getName());
+                md.setMaskLocation(file.getPath().getParent().toString());
+                descriptors.add(md);
+            } catch (Exception e) {
+                logger.warning("error reading bundle-descriptor (" + file.getPath() + ") : " + e.getMessage());
+            }
+        }
+        return descriptors;
+    }
+
+    private void collectAccessibleFiles(FileSystem fileSystem, String pathPattern, int pos, Path path, List<FileStatus> accu) throws IOException {
         try {
             final int pos1 = pathPattern.indexOf('/', pos);
             if (pos1 > -1) {
@@ -234,13 +307,25 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     }
                 }
             } else {
-                final FileStatus status = fileSystem.getFileStatus(new Path(path, pathPattern.substring(pos)));
-                if (status.isFile()) {
-                    accu.add(status);
+                try {
+                    final FileStatus status = fileSystem.getFileStatus(new Path(path, pathPattern.substring(pos)));
+                    if (status.isFile()) {
+                        accu.add(status);
+                    }
+                } catch (FileNotFoundException ignore) {
+                    // ok, try to glob in next step
+                }
+                final FileStatus[] stati = fileSystem.globStatus(new Path(path, pathPattern.substring(pos)));
+                if (stati != null) {
+                    for (FileStatus globStatus : stati) {
+                        if (globStatus.isFile()) {
+                            accu.add(globStatus);
+                        }
+                    }
                 }
             }
-        } catch (FileNotFoundException _) {
-        } catch (AccessControlException _) {
+        } catch (FileNotFoundException | AccessControlException ignore) {
+            // ok
         }
 
     }
@@ -363,7 +448,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
         if (jobStatus.getRunState() == JobStatus.FAILED) {
             return new ProcessStatus(ProcessState.ERROR, oldProgress,
-                                     "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
+                    "Hadoop job '" + jobStatus.getJobID() + "' failed, see logs for details");
         } else if (jobStatus.getRunState() == JobStatus.KILLED) {
             return new ProcessStatus(ProcessState.CANCELLED, oldProgress);
         } else if (jobStatus.getRunState() == JobStatus.PREP) {

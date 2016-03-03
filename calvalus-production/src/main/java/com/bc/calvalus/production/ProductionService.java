@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.MaskDescriptor;
 
 import java.io.OutputStream;
 
@@ -36,6 +37,15 @@ public interface ProductionService {
      * @throws ProductionException If a service error occurred.
      */
     BundleDescriptor[] getBundles(String username, BundleFilter filter) throws ProductionException;
+
+    /**
+     * Gets all masks for the given user.
+     *
+     * @param userName The user to fetch the masks for.
+     * @return The masks of that user.
+     * @throws ProductionException If a service error occurred.
+     */
+    MaskDescriptor[] getMasks(String userName) throws ProductionException;
 
     /**
      * Gets all known productions which match the given filter.

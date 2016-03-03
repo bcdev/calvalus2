@@ -11,6 +11,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
@@ -90,6 +91,15 @@ public class ProductionServiceImpl implements ProductionService {
             return processingService.getBundles(username, filter);
         } catch (Exception e) {
             throw new ProductionException("Failed to load list of processors.", e);
+        }
+    }
+
+    @Override
+    public MaskDescriptor[] getMasks(String userName) throws ProductionException {
+        try {
+            return processingService.getMasks(userName);
+        } catch (Exception e) {
+            throw new ProductionException("Failed to load list of masks.", e);
         }
     }
 

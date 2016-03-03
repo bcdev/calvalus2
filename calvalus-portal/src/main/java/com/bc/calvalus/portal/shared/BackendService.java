@@ -66,6 +66,15 @@ public interface BackendService extends RemoteService {
     DtoAggregatorDescriptor[] getAggregators(String filter) throws BackendServiceException;
 
     /**
+     * Gets the user masks.
+     *
+     * @return The masks.
+     *
+     * @throws BackendServiceException If a server error occurred.
+     */
+    DtoMaskDescriptor[] getMasks() throws BackendServiceException;
+
+    /**
      * Gets all known productions.
      *
      * @param filter A filter expression (not yet used).

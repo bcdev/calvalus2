@@ -18,7 +18,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
-import static com.bc.calvalus.portal.server.BackendServiceImpl.*;
+import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
 
 /**
  * Servlet to handle file upload requests.
@@ -60,6 +60,8 @@ public class FileUploadServlet extends HttpServlet {
             fileHandler = new LocalFileHandler(backendConfig.getLocalUploadDir());
         } else if (Boolean.TRUE.equals(Boolean.valueOf(req.getParameter("bundle")))) {
             fileHandler = new BundleFileHandler(getServletContext());
+        } else if (Boolean.TRUE.equals(Boolean.valueOf(req.getParameter("mask")))) {
+            fileHandler = new MaskFileHandler(getServletContext());
         } else {
             fileHandler = new InventoryFileHandler();
         }

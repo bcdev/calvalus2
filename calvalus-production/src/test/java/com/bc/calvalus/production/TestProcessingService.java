@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
+import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import org.junit.Ignore;
 
@@ -30,6 +31,11 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public BundleDescriptor[] getBundles(String username, BundleFilter filter) throws IOException {
         return new BundleDescriptor[0];
+    }
+
+    @Override
+    public MaskDescriptor[] getMasks(String userName) throws Exception {
+        return new MaskDescriptor[0];
     }
 
     @Override
