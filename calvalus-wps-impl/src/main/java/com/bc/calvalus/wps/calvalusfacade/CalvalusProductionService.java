@@ -5,7 +5,10 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.wps.utilities.WpsServletContainer;
 
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -15,6 +18,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
+import java.util.logging.Level;
 
 /**
  * This class handles the production service operations. It has also been extended to include
@@ -22,7 +26,7 @@ import java.util.Timer;
  *
  * @author hans
  */
-public class CalvalusProductionService {
+public class CalvalusProductionService implements ServletContextListener {
 
     private static ProductionService productionService = null;
     private static Timer statusObserver;
@@ -47,6 +51,7 @@ public class CalvalusProductionService {
 
     public synchronized static Timer getStatusObserverSingleton() {
         if (statusObserver == null) {
+            WpsServletContainer.addServletContextListener(new CalvalusProductionService());
             statusObserver = new Timer("StatusObserver" + new Date().toString(), true);
         }
         return statusObserver;
@@ -85,7 +90,7 @@ public class CalvalusProductionService {
             configFile = new File(calvalusConfigUrl.toURI());
         } catch (URISyntaxException | FileNotFoundException e) {
             configFile = new File(DEFAULT_CONFIG_PATH);
-            if (!configFile.exists()){
+            if (!configFile.exists()) {
                 throw new FileNotFoundException("calvalus.config file is not available.");
             }
         }
@@ -95,5 +100,25 @@ public class CalvalusProductionService {
     public static File getUserAppDataCalWpsDir() {
         String userHome = System.getProperty("user.home");
         return userHome != null ? new File(userHome, ".calwps") : null;
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Starting Calvalus WPS *********");
+        System.out.println("*****************************************");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Stopping Calvalus WPS *********");
+        System.out.println("*****************************************");
+        System.out.println("Shutting down statusObserver...");
+        synchronized (CalvalusProductionService.class) {
+            if (statusObserver != null) {
+                statusObserver.cancel();
+            }
+        }
     }
 }
