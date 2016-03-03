@@ -159,7 +159,7 @@ public class CalvalusExecuteResponseConverter {
         }
     }
 
-    private String getStatusUrl(String productId, WpsServerContext context) {
-        return context.getRequestUrl() + "?Service=WPS&Request=GetStatus&JobId=" + productId;
+    private String getStatusUrl(String jobId, WpsServerContext context) {
+        return context.getRequestUrl() + "?Service=WPS&Request=GetStatus&JobId=" + jobId;
     }
 }
