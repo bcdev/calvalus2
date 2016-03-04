@@ -79,8 +79,18 @@ public class ManageMasksForm extends Composite {
     }
 
     private void updateMasksList() {
-        maskDescriptors = portalContext.getMasks();
-        fillMaskList();
+        portalContext.getBackendService().getMasks(new AsyncCallback<DtoMaskDescriptor[]>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                // error is handled elsewhere
+            }
+
+            @Override
+            public void onSuccess(DtoMaskDescriptor[] result) {
+                maskDescriptors = result;
+                fillMaskList();
+            }
+        });
     }
 
     private void fillMaskList() {
@@ -129,7 +139,7 @@ public class ManageMasksForm extends Composite {
         }
 
         private void removeMask(final String maskName) {
-            portalContext.getBackendService().removeUserDirectory(MASK_DIRECTORY + "/" + maskName, new AsyncCallback<Boolean>() {
+            portalContext.getBackendService().removeUserFile(MASK_DIRECTORY + "/" + maskName, new AsyncCallback<Boolean>() {
                 @Override
                 public void onFailure(Throwable caught) {
                     Dialog.error("Remove Mask",
@@ -156,8 +166,6 @@ public class ManageMasksForm extends Composite {
         private MaskUploadHandler() {
             maskFileUpload = new FileUpload();
             maskFileUpload.setName("maskUpload");
-            // this is more like a hint. It is up to the browser how it will consider the MIME type
-            maskFileUpload.getElement().setPropertyString("accept", "application/octet-stream");
             uploadForm = new FormPanel();
             uploadForm.setWidget(maskFileUpload);
 
