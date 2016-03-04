@@ -52,6 +52,7 @@ public class L3ConfigForm extends Composite {
 
     public static final String COMPOSITING_TYPE_BINNING = "BINNING";
     public static final String COMPOSITING_TYPE_MOSAICKING = "MOSAICKING";
+    public static final String COMPOSITING_TYPE_EPSG_3067 = "MOSAICKING-EPSG:3067"; // TODO input field for CRS
 
     private final List<String> l3InputVarNames;
     private final L3AggregatorTable aggregatorTable;
@@ -191,6 +192,7 @@ public class L3ConfigForm extends Composite {
         });
         compositingType.addItem(COMPOSITING_TYPE_BINNING);
         compositingType.addItem(COMPOSITING_TYPE_MOSAICKING);
+        compositingType.addItem(COMPOSITING_TYPE_EPSG_3067);
         compositingType.setSelectedIndex(0);
 
         targetWidth.setEnabled(false);
@@ -436,6 +438,9 @@ public class L3ConfigForm extends Composite {
         parameters.put("compositingType", getCompositingType());
         if (COMPOSITING_TYPE_MOSAICKING.equals(getCompositingType())) {
             parameters.put("planetaryGrid", "org.esa.snap.binning.support.PlateCarreeGrid");
+        } else if (COMPOSITING_TYPE_EPSG_3067.equals(getCompositingType())) {
+            parameters.put("planetaryGrid", "org.esa.snap.binning.support.CrsGridEpsg3067");
+            parameters.put("compositingType", COMPOSITING_TYPE_MOSAICKING);
         }
         parameters.put("resolution", resolution.getValue().toString());
         parameters.put("superSampling", superSampling.getValue().toString());
