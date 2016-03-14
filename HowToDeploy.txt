@@ -86,6 +86,17 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall beam-5.0.1
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/beam-bundle/*.jar beam-5.0.1
 
+For SNAP
+--------
+SNAP_BUNDLE=calvalus-snap3-2.9-SNAPSHOT
+java -jar calvalus-distribution/target/cpt.jar -e --uninstall $SNAP_BUNDLE
+java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar $SNAP_BUNDLE
+
+SNAP_BUNDLE_PATH=/calvalus/software/1.0/$SNAP_BUNDLE
+SPEC="group:calvalus:r-x,default:group:calvalus:r-x,group:calwps:r-x,default:group:calwps:r-x,group:coastcolour:r-x,default:group:coastcolour:r-x"
+ssh hadoop@master00 hdfs dfs -setfacl -R -m $SPEC $SNAP_BUNDLE_PATH
+ssh hadoop@master00 hdfs dfs -getfacl $SNAP_BUNDLE_PATH
+
 WAR (for the portal)
 --------------------
 (cd calvalus-portal/target; scp calvalus-portal.war cvop@bcvm03: )
