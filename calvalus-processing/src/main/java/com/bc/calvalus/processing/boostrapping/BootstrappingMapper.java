@@ -40,7 +40,6 @@ public class BootstrappingMapper extends Mapper<NullWritable, NullWritable, IntW
         velocityProps.put("numberOfIterations", Long.toString(numberOfIterations));
 
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
-        processorAdapter.prepareProcessing();
         Path inputPath = new Path(conf.get(BootstrappingWorkflowItem.INPUT_FILE_PROPRTY));
         File inputFile =  CalvalusProductIO.copyFileToLocal(inputPath, conf);
         String[] outFiles = processorAdapter.processInput(ProgressMonitor.NULL,

@@ -25,7 +25,6 @@ import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -40,7 +39,6 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -104,17 +102,13 @@ public abstract class ProcessorAdapter {
         this.inputSplit = mapContext.getInputSplit();
         this.conf = mapContext.getConfiguration();
         if (conf.getBoolean("calvalus.snap.setSnapProperties", true)) {
-            try {
-                String cacheRootDir = DistributedCache.getLocalCacheFiles(this.conf)[0].getParent().toString();
-                System.setProperty("snap.userdir", cacheRootDir);
-                System.setProperty("snap.home", cacheRootDir);
-                System.setProperty("snap.pythonModuleDir", cacheRootDir);
-            } catch (IOException e) {
-                LOG.log(Level.SEVERE, e.getMessage(), e);
-                throw new RuntimeException(e);
-            }
+            String cwd = new File(".").getAbsolutePath();
+            System.setProperty("snap.userdir", cwd);
+            System.setProperty("snap.home", cwd);
+            System.setProperty("snap.pythonModuleDir", cwd);
         }
-        GpfUtils.init(mapContext.getConfiguration());
+        GpfUtils.init(conf);
+        Engine.start();
     }
 
     protected MapContext getMapContext() {
@@ -130,15 +124,10 @@ public abstract class ProcessorAdapter {
     }
 
     /**
-     * <p>Prepares the processing.</p>
-     * <p>The default implementation starts the SNAP Engine. This enables SNAP modules which rely on activators
-     * (implementations of <code>org.esa.snap.runtime.Activator</code>). If that type of SNAP module is envisaged to be
-     * used, overrides must call <code>super.prepareProcessing()</code>.</p>
-     *
-     * @see org.esa.snap.runtime.Activator
+     * Prepares the processing.
+     * The default implementation does nothing.
      */
     public void prepareProcessing() throws IOException {
-        Engine.start();
     }
 
     /**

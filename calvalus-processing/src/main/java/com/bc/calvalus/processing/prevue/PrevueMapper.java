@@ -80,7 +80,6 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         final MAConfig maConfig = MAConfig.get(jobConfig);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {

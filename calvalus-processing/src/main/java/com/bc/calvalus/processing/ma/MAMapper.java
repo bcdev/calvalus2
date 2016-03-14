@@ -79,7 +79,6 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         t0 = now();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         boolean pullProcessing = processorAdapter.supportsPullProcessing();
         final int progressForProcessing = pullProcessing ? 20 : 80;
         final int progressForSaving = maConfig.getSaveProcessedProducts() ? (pullProcessing ? 80 : 20) : 0;

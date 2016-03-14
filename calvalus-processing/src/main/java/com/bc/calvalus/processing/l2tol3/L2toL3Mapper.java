@@ -98,7 +98,6 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
 
         L2toL3SpatialBinner spatialBinner = null;
         final ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 90;

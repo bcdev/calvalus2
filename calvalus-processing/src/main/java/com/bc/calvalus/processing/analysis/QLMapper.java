@@ -66,7 +66,6 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     @Override
     public void run(Mapper.Context context) throws IOException, InterruptedException {
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Image generation", 100);
         try {

@@ -84,7 +84,6 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
     public void run(Context context) throws IOException, InterruptedException {
         Configuration jobConfig = context.getConfiguration();
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         LOG.info("processing input " + processorAdapter.getInputPath() + " ...");
         final int progressForProcessing = processorAdapter.supportsPullProcessing() ? 5 : 95;

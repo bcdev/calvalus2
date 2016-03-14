@@ -44,7 +44,6 @@ public class CombinationsMapper extends Mapper<NullWritable, NullWritable, NullW
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm .beginTask("combinations", 100);
         ExecutableProcessorAdapter processorAdapter = new ExecutableProcessorAdapter(context);
-        processorAdapter.prepareProcessing();
         String[] outFiles = processorAdapter.processInput(SubProgressMonitor.create(pm, 95),
                                                           null,
                                                           new Path("dummy"),

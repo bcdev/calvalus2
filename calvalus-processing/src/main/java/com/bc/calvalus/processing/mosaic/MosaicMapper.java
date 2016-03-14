@@ -64,7 +64,6 @@ public class MosaicMapper extends Mapper<NullWritable, NullWritable, TileIndexWr
         final MosaicConfig mosaicConfig = MosaicConfig.get(jobConfig);
 
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-        processorAdapter.prepareProcessing();
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Mosaikking", 100);
         try {

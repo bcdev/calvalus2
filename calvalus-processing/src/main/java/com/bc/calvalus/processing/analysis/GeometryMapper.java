@@ -48,7 +48,6 @@ public class GeometryMapper extends Mapper<NullWritable, NullWritable, Text, Tex
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Geometry", 100);
         try {
-            processorAdapter.prepareProcessing();
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
             if (product != null) {
                 Geometry geometry = computeProductGeometry(product);
