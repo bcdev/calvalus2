@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<wps:ProcessDescriptions service="WPS" version="1.0.0" xml:lang="en" xmlns:ows="http://www.opengis.net/ows/1.1" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:wps="http://www.opengis.net/wps/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <wps:ProcessDescription storeSupported="true" statusSupported="true" wps:processVersion="1.0">
+        <ows:Identifier>urbantep-subsetting~1.0~Subset</ows:Identifier>
+        <ows:Title>urbantep-subsetting~1.0~Subset</ows:Title>
+        <ows:Abstract/>
+        <wps:DataInputs>
+            <wps:Input>
+                <ows:Identifier>productionName</ows:Identifier>
+                <ows:Title>Production name</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>geoRegion</ows:Identifier>
+                <ows:Title>The desired subset region in WKT format.</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>String</ows:DataType>
+                    <DefaultValue>POLYGON((8 52,8 55,12 55,12 52,8 52))</DefaultValue>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>inputDataSetName</ows:Identifier>
+                <ows:Title>Input data set name</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                    <ows:AllowedValues>
+                        <wps:Range xsi:type="xs:string">Urban Footprint Global (Urban TEP)</wps:Range>
+                    </ows:AllowedValues>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>minDate</ows:Identifier>
+                <ows:Title>Date from</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>maxDate</ows:Identifier>
+                <ows:Title>Date to</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>periodLength</ows:Identifier>
+                <ows:Title>Period length</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>regionWkt</ows:Identifier>
+                <ows:Title>Region WKT</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                </wps:LiteralData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
+                <wps:ComplexData>
+                    <wps:Default>
+                        <wps:Format>
+                            <Schema>http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd</Schema>
+                        </wps:Format>
+                    </wps:Default>
+                    <wps:Supported>
+                        <wps:Format>
+                            <Schema>http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd</Schema>
+                        </wps:Format>
+                    </wps:Supported>
+                </wps:ComplexData>
+            </wps:Input>
+            <wps:Input>
+                <ows:Identifier>calvalus.output.format</ows:Identifier>
+                <ows:Title>Calvalus output format</ows:Title>
+                <wps:LiteralData>
+                    <ows:DataType>string</ows:DataType>
+                    <ows:AllowedValues>
+                        <wps:Range xsi:type="xs:string">NetCDF</wps:Range>
+                        <wps:Range xsi:type="xs:string">BEAM-DIMAP</wps:Range>
+                        <wps:Range xsi:type="xs:string">GeoTIFF</wps:Range>
+                    </ows:AllowedValues>
+                </wps:LiteralData>
+            </wps:Input>
+        </wps:DataInputs>
+        <wps:ProcessOutputs>
+            <wps:Output>
+                <ows:Identifier>productionResults</ows:Identifier>
+                <ows:Title>URL to the production result(s)</ows:Title>
+                <wps:ComplexOutput>
+                    <wps:Default>
+                        <wps:Format>
+                            <ows:MimeType>binary</ows:MimeType>
+                        </wps:Format>
+                    </wps:Default>
+                    <wps:Supported>
+                        <wps:Format>
+                            <ows:MimeType>binary</ows:MimeType>
+                        </wps:Format>
+                    </wps:Supported>
+                </wps:ComplexOutput>
+            </wps:Output>
+        </wps:ProcessOutputs>
+    </wps:ProcessDescription>
+</wps:ProcessDescriptions>

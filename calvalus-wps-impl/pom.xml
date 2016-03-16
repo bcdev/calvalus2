@@ -121,6 +121,21 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>calvalus-wps-client-subsetting</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-wps-client-subsetting.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-wps-client-subsetting</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
