@@ -13,14 +13,6 @@
                 </wps:LiteralData>
             </wps:Input>
             <wps:Input>
-                <ows:Identifier>geoRegion</ows:Identifier>
-                <ows:Title>The desired subset region in WKT format.</ows:Title>
-                <wps:LiteralData>
-                    <ows:DataType>String</ows:DataType>
-                    <DefaultValue>POLYGON((8 52,8 55,12 55,12 52,8 52))</DefaultValue>
-                </wps:LiteralData>
-            </wps:Input>
-            <wps:Input>
                 <ows:Identifier>inputDataSetName</ows:Identifier>
                 <ows:Title>Input data set name</ows:Title>
                 <wps:LiteralData>
@@ -74,13 +66,12 @@
                 </wps:ComplexData>
             </wps:Input>
             <wps:Input>
-                <ows:Identifier>calvalus.output.format</ows:Identifier>
-                <ows:Title>Calvalus output format</ows:Title>
+                <ows:Identifier>outputFormat</ows:Identifier>
+                <ows:Title>Output file format</ows:Title>
                 <wps:LiteralData>
                     <ows:DataType>string</ows:DataType>
                     <ows:AllowedValues>
-                        <wps:Range xsi:type="xs:string">NetCDF</wps:Range>
-                        <wps:Range xsi:type="xs:string">BEAM-DIMAP</wps:Range>
+                        <wps:Range xsi:type="xs:string">NetCDF4</wps:Range>
                         <wps:Range xsi:type="xs:string">GeoTIFF</wps:Range>
                     </ows:AllowedValues>
                 </wps:LiteralData>

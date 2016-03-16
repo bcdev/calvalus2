@@ -22,15 +22,15 @@
             </wps:Data>
         </wps:Input>
         <wps:Input>
-            <ows:Identifier>geoRegion</ows:Identifier>
-            <wps:Data>
-                <wps:LiteralData>POLYGON((100 -10,100 0,110 0,110 -10,100 -10))</wps:LiteralData>
-            </wps:Data>
-        </wps:Input>
-        <wps:Input>
             <ows:Identifier>inputDataSetName</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>Urban Footprint Global (Urban TEP)</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>regionWKT</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>POLYGON((100 -10,100 0,110 0,110 -10,100 -10))</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
