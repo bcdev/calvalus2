@@ -32,8 +32,9 @@ public class CalvalusProductionService implements ServletContextListener {
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
 
-    private static final String DEFAULT_BEAM_BUNDLE = HadoopProcessingService.DEFAULT_BEAM_BUNDLE;
-    private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+    private static final String DEFAULT_BEAM_BUNDLE = "snap-3.0-bundle";
+    private static final String DEFAULT_SNAP_BUNDLE = "snap-3.0-bundle";
+    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.8";
     private static final String STAGING_DIRECTORY = "staging";
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
     private static final String CALWPS_ROOT = CATALINA_BASE + "/webapps/bc-wps/";
@@ -68,6 +69,7 @@ public class CalvalusProductionService implements ServletContextListener {
         Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         defaultConfig.put("calvalus.calvalus.bundle", DEFAULT_CALVALUS_BUNDLE);
         defaultConfig.put("calvalus.beam.bundle", DEFAULT_BEAM_BUNDLE);
+        defaultConfig.put("calvalus.snap.bundle", DEFAULT_SNAP_BUNDLE);
         defaultConfig.put("calvalus.wps.staging.path", STAGING_DIRECTORY);
         return defaultConfig;
     }
