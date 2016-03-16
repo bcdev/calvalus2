@@ -85,7 +85,8 @@ public class L2PlusProductionType extends HadoopProductionType {
             l2WorkflowItem.add(processingItem);
         }
 
-        String outputFormat = productionRequest.getString("outputFormat", null);
+        String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
+                    JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
 
         ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
         boolean isFormattingImplicit = processorDescriptor != null &&
