@@ -18,6 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.StreamingProductPlugin;
 import com.bc.calvalus.processing.l2.L2WorkflowItem;
@@ -74,7 +75,10 @@ class L2Staging extends ProductionStaging {
             stagingDir.mkdirs();
         }
 
-        String outputFormat = production.getProductionRequest().getString("outputFormat", "BEAM-DIMAP");
+        String outputFormat = production.getProductionRequest().
+                getString("outputFormat",
+                          production.getProductionRequest().getString(
+                                  JobConfigNames.CALVALUS_OUTPUT_FORMAT, "BEAM-DIMAP"));
         String extension;
         if (outputFormat.equals("BEAM-DIMAP")) {
             extension = ".dim";

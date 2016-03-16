@@ -82,7 +82,9 @@ public class L2FProductionType extends HadoopProductionType {
     }
 
     static String createProductionName(ProductionRequest productionRequest) throws ProductionException {
-        String prefix = String.format("Level 2 Format %s ", productionRequest.getString("outputFormat", "NetCDF"));
+        String prefix = String.format("Level 2 Format %s ",
+                                      productionRequest.getString("outputFormat",
+                                                                  productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF")));
         return createProductionName(prefix, productionRequest);
     }
 
