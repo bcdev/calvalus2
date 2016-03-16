@@ -9,8 +9,8 @@ GetCapabilities URL (GET):
 The expected response can be seen in this file calvalus-wps-GetCapabilities-sample-response.xml
 
 DescribeProcess URL (GET):
-[browser] http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=DescribeProcess&Version=1.0.0&Identifier=subsetting
-[script] describeProcess.sh subsetting
+[browser] http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=DescribeProcess&Version=1.0.0&Identifier=urbantep-subsetting~1.0~Subset
+[script] describeProcess.sh urbantep-subsetting~1.0~Subset
 The expected response can be seen in this file calvalus-wps-DescribeProcess-sample-response.xml
 
 Execute URL (POST):
