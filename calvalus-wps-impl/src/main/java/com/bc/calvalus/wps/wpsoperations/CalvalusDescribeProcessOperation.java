@@ -1,6 +1,5 @@
 package com.bc.calvalus.wps.wpsoperations;
 
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_L3_PARAMETERS_SCHEMA_LOCATION;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2CodeType;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2LanguageStringType;
 
@@ -24,6 +23,7 @@ import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.api.schema.SupportedComplexDataInputType;
 import com.bc.wps.api.schema.SupportedComplexDataType;
 import com.bc.wps.api.utils.InputDescriptionTypeBuilder;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -234,7 +234,8 @@ public class CalvalusDescribeProcessOperation {
 
         dataInputs.getInput().add(regionWkt);
 
-        InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(WPS_L3_PARAMETERS_SCHEMA_LOCATION);
+        InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(
+                    PropertiesWrapper.get("wps.l3.parameters.schema.location"));
         dataInputs.getInput().add(l3ParametersComplexType);
 
         List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());

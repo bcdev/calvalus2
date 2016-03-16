@@ -14,6 +14,7 @@ import com.bc.calvalus.wps.responses.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ProcessDescriptionType;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.runner.*;
 import org.powermock.api.mockito.PowerMockito;
@@ -41,6 +42,7 @@ public class CalvalusDescribeProcessOperationTest {
     public void setUp() throws Exception {
         mockCalvalusFacade = mock(CalvalusFacade.class);
         mockRequestContext = mock(WpsRequestContext.class);
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
     }
 
     @Test

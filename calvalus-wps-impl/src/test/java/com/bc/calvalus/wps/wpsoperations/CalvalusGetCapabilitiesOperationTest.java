@@ -14,6 +14,7 @@ import com.bc.wps.api.schema.OperationsMetadata;
 import com.bc.wps.api.schema.ProcessOfferings;
 import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.runner.*;
 import org.powermock.api.mockito.PowerMockito;
@@ -38,7 +39,7 @@ public class CalvalusGetCapabilitiesOperationTest {
     public void setUp() throws Exception {
         WpsRequestContext mockRequestContext = mock(WpsRequestContext.class);
         mockCalvalusFacade = mock(CalvalusFacade.class);
-
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
 
         getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(mockRequestContext);
     }
@@ -50,7 +51,7 @@ public class CalvalusGetCapabilitiesOperationTest {
         Capabilities capabilities = getCapabilitiesOperation.getCapabilities();
 
         assertThat(capabilities.getOperationsMetadata().getOperation().size(), equalTo(4));
-        assertThat(capabilities.getServiceProvider().getProviderName(), equalTo("Brockmann-Consult"));
+        assertThat(capabilities.getServiceProvider().getProviderName(), equalTo("Brockmann Consult GmbH"));
         assertThat(capabilities.getProcessOfferings().getProcess().size(), equalTo(2));
         assertThat(capabilities.getServiceIdentification().getTitle().getValue(), equalTo("Calvalus WPS server"));
         assertThat(capabilities.getLanguages().getDefault().getLanguage(), equalTo("EN"));
@@ -65,29 +66,29 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(operationsMetadata.getOperation().get(0).getName(), equalTo("GetCapabilities"));
         assertThat(operationsMetadata.getOperation().get(0).getDCP().size(), equalTo(1));
         assertThat(operationsMetadata.getOperation().get(0).getDCP().get(0).getHTTP().getGet().getHref(),
-                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
+                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus?"));
 
         assertThat(operationsMetadata.getOperation().get(1).getName(), equalTo("DescribeProcess"));
         assertThat(operationsMetadata.getOperation().get(1).getDCP().size(), equalTo(1));
         assertThat(operationsMetadata.getOperation().get(1).getDCP().get(0).getHTTP().getGet().getHref(),
-                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
+                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus?"));
 
         assertThat(operationsMetadata.getOperation().get(2).getName(), equalTo("Execute"));
         assertThat(operationsMetadata.getOperation().get(2).getDCP().size(), equalTo(1));
         assertThat(operationsMetadata.getOperation().get(2).getDCP().get(0).getHTTP().getPost().getHref(),
-                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus"));
+                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus"));
 
         assertThat(operationsMetadata.getOperation().get(3).getName(), equalTo("GetStatus"));
         assertThat(operationsMetadata.getOperation().get(3).getDCP().size(), equalTo(1));
         assertThat(operationsMetadata.getOperation().get(3).getDCP().get(0).getHTTP().getGet().getHref(),
-                   equalTo("http://www.brockmann-consult.de/bc-wps/calvalus?"));
+                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus?"));
     }
 
     @Test
     public void canGetServiceProvider() throws Exception {
         ServiceProvider serviceProvider = getCapabilitiesOperation.getServiceProvider();
 
-        assertThat(serviceProvider.getProviderName(), equalTo("Brockmann-Consult"));
+        assertThat(serviceProvider.getProviderName(), equalTo("Brockmann Consult GmbH"));
         assertThat(serviceProvider.getProviderSite().getHref(), equalTo("http://www.brockmann-consult.de"));
 
         assertThat(serviceProvider.getServiceContact().getRole().getValue(), equalTo("PointOfContact"));

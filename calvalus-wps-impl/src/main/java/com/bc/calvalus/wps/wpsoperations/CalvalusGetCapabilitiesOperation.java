@@ -1,28 +1,5 @@
 package com.bc.calvalus.wps.wpsoperations;
 
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_ADDRESS;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_ADMINISTRATIVE_AREA;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_CITY;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_CONTACT_INSTRUCTION;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_COUNTRY;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_EMAIL_ADDRESS;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_FAX_NUMBER;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_NAME;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_PHONE_NUMBER;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_POST_CODE;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_SERVICE_HOURS;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.COMPANY_WEBSITE;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.PROJECT_MANAGER_NAME;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.PROJECT_MANAGER_POSITION_NAME;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_DEFAULT_LANG;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_GET_REQUEST_URL;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_POST_REQUEST_URL;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_ABSTRACT;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_ID;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SERVICE_TYPE;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_SUPPORTED_LANG;
-import static com.bc.calvalus.wps.wpsoperations.WpsConstants.WPS_VERSION;
-
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
@@ -48,6 +25,7 @@ import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
 import com.bc.wps.api.schema.TelephoneType;
 import com.bc.wps.api.utils.CapabilitiesBuilder;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -81,22 +59,22 @@ public class CalvalusGetCapabilitiesOperation {
 
         Operation getCapabilitiesOperation = new Operation();
         getCapabilitiesOperation.setName("GetCapabilities");
-        DCP getCapabilitiesDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        DCP getCapabilitiesDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         getCapabilitiesOperation.getDCP().add(getCapabilitiesDcp);
 
         Operation describeProcessOperation = new Operation();
         describeProcessOperation.setName("DescribeProcess");
-        DCP describeProcessDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        DCP describeProcessDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         describeProcessOperation.getDCP().add(describeProcessDcp);
 
         Operation executeOperation = new Operation();
         executeOperation.setName("Execute");
-        DCP executeDcp = getPostDcp(WPS_POST_REQUEST_URL);
+        DCP executeDcp = getPostDcp(PropertiesWrapper.get("wps.post.request.url"));
         executeOperation.getDCP().add(executeDcp);
 
         Operation getStatusOperation = new Operation();
         getStatusOperation.setName("GetStatus");
-        DCP getStatusDcp = getGetDcp(WPS_GET_REQUEST_URL);
+        DCP getStatusDcp = getGetDcp(PropertiesWrapper.get("wps.get.request.url"));
         getStatusOperation.getDCP().add(getStatusDcp);
 
         operationsMetadata.getOperation().add(getCapabilitiesOperation);
@@ -129,35 +107,35 @@ public class CalvalusGetCapabilitiesOperation {
 
     protected ServiceProvider getServiceProvider() {
         ServiceProvider serviceProvider = new ServiceProvider();
-        serviceProvider.setProviderName(COMPANY_NAME);
+        serviceProvider.setProviderName(PropertiesWrapper.get("company.name"));
 
         OnlineResourceType siteUrl = new OnlineResourceType();
-        siteUrl.setHref(COMPANY_WEBSITE);
+        siteUrl.setHref(PropertiesWrapper.get("company.website"));
         serviceProvider.setProviderSite(siteUrl);
 
         ResponsiblePartySubsetType contact = new ResponsiblePartySubsetType();
-        contact.setIndividualName(PROJECT_MANAGER_NAME);
-        contact.setPositionName(PROJECT_MANAGER_POSITION_NAME);
+        contact.setIndividualName(PropertiesWrapper.get("project.manager.name"));
+        contact.setPositionName(PropertiesWrapper.get("project.manager.position.name"));
 
         ContactType contactInfo = new ContactType();
 
         TelephoneType phones = new TelephoneType();
-        phones.getVoice().add(COMPANY_PHONE_NUMBER);
-        phones.getFacsimile().add(COMPANY_FAX_NUMBER);
+        phones.getVoice().add(PropertiesWrapper.get("company.phone.number"));
+        phones.getFacsimile().add(PropertiesWrapper.get("company.fax.number"));
         contactInfo.setPhone(phones);
 
         AddressType address = new AddressType();
-        address.getDeliveryPoint().add(COMPANY_ADDRESS);
-        address.setCity(COMPANY_CITY);
-        address.setAdministrativeArea(COMPANY_ADMINISTRATIVE_AREA);
-        address.setPostalCode(COMPANY_POST_CODE);
-        address.setCountry(COMPANY_COUNTRY);
-        address.getElectronicMailAddress().add(COMPANY_EMAIL_ADDRESS);
+        address.getDeliveryPoint().add(PropertiesWrapper.get("company.address"));
+        address.setCity(PropertiesWrapper.get("company.city"));
+        address.setAdministrativeArea(PropertiesWrapper.get("company.administrative.area"));
+        address.setPostalCode(PropertiesWrapper.get("company.post.code"));
+        address.setCountry(PropertiesWrapper.get("company.country"));
+        address.getElectronicMailAddress().add(PropertiesWrapper.get("company.email.address"));
         contactInfo.setAddress(address);
 
         contactInfo.setOnlineResource(siteUrl);
-        contactInfo.setHoursOfService(COMPANY_SERVICE_HOURS);
-        contactInfo.setContactInstructions(COMPANY_CONTACT_INSTRUCTION);
+        contactInfo.setHoursOfService(PropertiesWrapper.get("company.service.hours"));
+        contactInfo.setContactInstructions(PropertiesWrapper.get("company.contact.instruction"));
 
         contact.setContactInfo(contactInfo);
 
@@ -194,18 +172,18 @@ public class CalvalusGetCapabilitiesOperation {
     protected ServiceIdentification getServiceIdentification() {
         ServiceIdentification serviceIdentification = new ServiceIdentification();
         LanguageStringType title = new LanguageStringType();
-        title.setValue(WPS_SERVICE_ID);
+        title.setValue(PropertiesWrapper.get("wps.service.id"));
         serviceIdentification.setTitle(title);
 
         LanguageStringType abstractText = new LanguageStringType();
-        abstractText.setValue(WPS_SERVICE_ABSTRACT);
+        abstractText.setValue(PropertiesWrapper.get("wps.service.abstract"));
         serviceIdentification.setAbstract(abstractText);
 
         CodeType serviceType = new CodeType();
-        serviceType.setValue(WPS_SERVICE_TYPE);
+        serviceType.setValue(PropertiesWrapper.get("wps.service.type"));
         serviceIdentification.setServiceType(serviceType);
 
-        serviceIdentification.getServiceTypeVersion().add(0, WPS_VERSION);
+        serviceIdentification.getServiceTypeVersion().add(0, PropertiesWrapper.get("wps.version"));
         return serviceIdentification;
     }
 
@@ -213,11 +191,11 @@ public class CalvalusGetCapabilitiesOperation {
         Languages languages = new Languages();
 
         Languages.Default defaultLanguage = new Languages.Default();
-        defaultLanguage.setLanguage(WPS_DEFAULT_LANG);
+        defaultLanguage.setLanguage(PropertiesWrapper.get("wps.default.lang"));
         languages.setDefault(defaultLanguage);
 
         LanguagesType languageType = new LanguagesType();
-        languageType.getLanguage().add(0, WPS_SUPPORTED_LANG);
+        languageType.getLanguage().add(0, PropertiesWrapper.get("wps.supported.lang"));
         languages.setSupported(languageType);
 
         return languages;
