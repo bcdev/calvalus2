@@ -125,12 +125,13 @@ public class CalvalusDataInputs {
         if (processorParameters != null) {
             for (ParameterDescriptor parameterDescriptor : processorParameters) {
                 String processorParameterValue = inputMapRaw.get(parameterDescriptor.getName());
-                if (StringUtils.isNotBlank(processorParameterValue)) {
+                String defaultParameterValue = parameterDescriptor.getDefaultValue();
+                if (StringUtils.isNotBlank(processorParameterValue) || StringUtils.isNotBlank(defaultParameterValue)) {
                     sb.append("<");
                     sb.append(parameterDescriptor.getName());
                     sb.append(">");
 
-                    sb.append(processorParameterValue);
+                    sb.append(StringUtils.isNotBlank(processorParameterValue) ? processorParameterValue : defaultParameterValue);
 
                     sb.append("</");
                     sb.append(parameterDescriptor.getName());

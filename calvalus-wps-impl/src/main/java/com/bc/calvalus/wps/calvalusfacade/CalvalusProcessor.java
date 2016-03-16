@@ -61,6 +61,10 @@ public class CalvalusProcessor implements IWpsProcess {
         return processorDescriptor.getDefaultParameters();
     }
 
+    public String[] getPossibleOutputFormats(){
+        return processorDescriptor.getOutputFormats();
+    }
+
     public String getDefaultCalvalusBundle() {
         return defaultCalvalusBundle;
     }

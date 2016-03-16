@@ -5,7 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.inventory.ProductSet;
-import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.exceptions.WpsInvalidParameterValueException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import org.junit.*;
@@ -111,14 +111,14 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getValue("maxDate"), equalTo("2009-06-30"));
         assertThat(calvalusDataInputs.getValue("periodLength"), equalTo("30"));
         assertThat(calvalusDataInputs.getValue("regionWKT"), equalTo("polygon((10.00 54.00,  14.27 53.47))"));
-        assertThat(calvalusDataInputs.getValue("calvalus.output.format"), equalTo("NetCDF4"));
+        assertThat(calvalusDataInputs.getValue("outputFormat"), equalTo("NetCDF4"));
     }
 
     @Test
     public void canTransformProcessorParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProcessorParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        ProcessorDescriptor.ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
+        ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
@@ -134,13 +134,28 @@ public class CalvalusDataInputsTest {
     public void canIgnoreProcessorParametersThatAreNotProvided() throws Exception {
         Map<String, String> mockInputMapRaw = getLessProcessorParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        ProcessorDescriptor.ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
+        ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
+                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                               "</parameters>"));
+    }
+
+    @Test
+    public void canGetDefaultProcessorParametersWhenNotProvided() throws Exception {
+        Map<String, String> mockInputMapRaw = getNoProcessorParametersRawMap();
+        when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
+        ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
+        when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
+
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+
+        assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
+                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
                                                                                "</parameters>"));
     }
 
@@ -252,26 +267,27 @@ public class CalvalusDataInputsTest {
                "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900";
     }
 
-    private ProcessorDescriptor.ParameterDescriptor[] getMockParameterDescriptorArray() {
-        List<ProcessorDescriptor.ParameterDescriptor> parameterDescriptors = new ArrayList<>();
+    private ParameterDescriptor[] getMockParameterDescriptorArray() {
+        List<ParameterDescriptor> parameterDescriptors = new ArrayList<>();
 
-        ProcessorDescriptor.ParameterDescriptor mockParameterDescriptor = mock(ProcessorDescriptor.ParameterDescriptor.class);
+        ParameterDescriptor mockParameterDescriptor = mock(ParameterDescriptor.class);
         when(mockParameterDescriptor.getName()).thenReturn("doAtmosphericCorrection");
         parameterDescriptors.add(mockParameterDescriptor);
 
-        ProcessorDescriptor.ParameterDescriptor mockParameterDescriptor2 = mock(ProcessorDescriptor.ParameterDescriptor.class);
+        ParameterDescriptor mockParameterDescriptor2 = mock(ParameterDescriptor.class);
         when(mockParameterDescriptor2.getName()).thenReturn("doSmileCorrection");
+        when(mockParameterDescriptor2.getDefaultValue()).thenReturn("false");
         parameterDescriptors.add(mockParameterDescriptor2);
 
-        ProcessorDescriptor.ParameterDescriptor mockParameterDescriptor3 = mock(ProcessorDescriptor.ParameterDescriptor.class);
+        ParameterDescriptor mockParameterDescriptor3 = mock(ParameterDescriptor.class);
         when(mockParameterDescriptor3.getName()).thenReturn("outputNormReflec");
         parameterDescriptors.add(mockParameterDescriptor3);
 
-        ProcessorDescriptor.ParameterDescriptor mockParameterDescriptor4 = mock(ProcessorDescriptor.ParameterDescriptor.class);
+        ParameterDescriptor mockParameterDescriptor4 = mock(ParameterDescriptor.class);
         when(mockParameterDescriptor4.getName()).thenReturn("dummyParameter");
         parameterDescriptors.add(mockParameterDescriptor4);
 
-        return parameterDescriptors.toArray(new ProcessorDescriptor.ParameterDescriptor[parameterDescriptors.size()]);
+        return parameterDescriptors.toArray(new ParameterDescriptor[parameterDescriptors.size()]);
     }
 
     private Map<String, String> getProductionParametersRawMap() {
@@ -289,7 +305,7 @@ public class CalvalusDataInputsTest {
         mockInputMapRaw.put("maxDate", "2009-06-30");
         mockInputMapRaw.put("periodLength", "30");
         mockInputMapRaw.put("regionWKT", "polygon((10.00 54.00,  14.27 53.47))");
-        mockInputMapRaw.put("calvalus.output.format", "NetCDF4");
+        mockInputMapRaw.put("outputFormat", "NetCDF4");
         return mockInputMapRaw;
     }
 
@@ -306,6 +322,12 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = new HashMap<>();
         mockInputMapRaw.put("inputDataSetName", "MERIS RR  r03 L1b 2002-2012");
         mockInputMapRaw.put("doAtmosphericCorrection", "true");
+        return mockInputMapRaw;
+    }
+
+    private Map<String, String> getNoProcessorParametersRawMap() {
+        Map<String, String> mockInputMapRaw = new HashMap<>();
+        mockInputMapRaw.put("inputDataSetName", "MERIS RR  r03 L1b 2002-2012");
         return mockInputMapRaw;
     }
 

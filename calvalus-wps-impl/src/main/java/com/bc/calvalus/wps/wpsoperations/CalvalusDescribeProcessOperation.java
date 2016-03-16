@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -236,11 +237,11 @@ public class CalvalusDescribeProcessOperation {
         InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(WPS_L3_PARAMETERS_SCHEMA_LOCATION);
         dataInputs.getInput().add(l3ParametersComplexType);
 
-        List<String> allowedOutputFormat = getAllowedOutputFormats();
+        List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
         InputDescriptionType calvalusOutputFormat = InputDescriptionTypeBuilder
                     .create()
-                    .withIdentifier("calvalus.output.format")
-                    .withTitle("Calvalus output format")
+                    .withIdentifier("outputFormat")
+                    .withTitle("Output file format")
                     .withDataType("string")
                     .withAllowedValues(allowedOutputFormat)
                     .build();
@@ -267,13 +268,5 @@ public class CalvalusDescribeProcessOperation {
         l3Parameters.setSupported(complexDataCombinationsType);
         l3ParametersComplexType.setComplexData(l3Parameters);
         return l3ParametersComplexType;
-    }
-
-    private List<String> getAllowedOutputFormats() {
-        List<String> allowedOutputFormat = new ArrayList<>();
-        allowedOutputFormat.add("NetCDF");
-        allowedOutputFormat.add("BEAM-DIMAP");
-        allowedOutputFormat.add("GeoTIFF");
-        return allowedOutputFormat;
     }
 }

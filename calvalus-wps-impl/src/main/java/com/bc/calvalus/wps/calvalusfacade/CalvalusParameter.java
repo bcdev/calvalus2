@@ -14,6 +14,7 @@ public enum CalvalusParameter {
     PRODUCTION_TYPE("productionType", "Production type", "productionInfo"),
     CALVALUS_BUNDLE_VERSION("calvalus.calvalus.bundle", "Calvalus bundle version", "productionInfo"),
     BEAM_BUNDLE_VERSION("calvalus.beam.bundle", "Beam bundle version", "productionInfo"),
+    SNAP_BUNDLE_VERSION("calvalus.snap.bundle", "Snap bundle version", "productionInfo"),
     PRODUCT_NAME("productionName", "Production name", "productionInfo"),
 
     PROCESSOR_BUNDLE_NAME("processorBundleName", "Processor bundle name", "processorInfo"),
@@ -26,7 +27,7 @@ public enum CalvalusParameter {
     MAX_DATE("maxDate", "Date to", "productSet"),
     PERIOD_LENGTH("periodLength", "Period length", "productSet"),
     REGION_WKT("regionWKT", "Region WKT", "productSet"),
-    CALVALUS_OUTPUT_FORMAT("calvalus.output.format", "Calvalus output format", "productSet");
+    CALVALUS_OUTPUT_FORMAT("outputFormat", "Calvalus output format", "productSet");
 
     private String identifier;
     private String abstractText;

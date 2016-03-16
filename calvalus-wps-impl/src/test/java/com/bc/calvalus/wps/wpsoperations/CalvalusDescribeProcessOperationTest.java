@@ -183,6 +183,7 @@ public class CalvalusDescribeProcessOperationTest {
         when(process2.getIdentifier()).thenReturn("beam-buildin~1.0~urban-tep-indices");
         when(process2.getTitle()).thenReturn("Urban TEP seasonality indices from MERIS SR");
         when(process2.getAbstractText()).thenReturn("Some description");
+        when(process2.getPossibleOutputFormats()).thenReturn(new String[]{"NetCDF4"});
         when(process2.getInputProductTypes()).thenReturn(new String[]{"inputProductType"});
         return process2;
     }
@@ -192,6 +193,7 @@ public class CalvalusDescribeProcessOperationTest {
         when(process1.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process1.getTitle()).thenReturn("Band arythmetic processor");
         when(process1.getAbstractText()).thenReturn("Some description");
+        when(process1.getPossibleOutputFormats()).thenReturn(new String[]{"NetCDF4"});
         when(process1.getInputProductTypes()).thenReturn(new String[]{"inputProductType"});
         return process1;
     }

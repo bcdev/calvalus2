@@ -17,10 +17,11 @@ public class CalvalusParameterTest {
     public void canGetAllParameters() throws Exception {
         List<String> calvalusParameters = CalvalusParameter.getAllParameters();
 
-        assertThat(calvalusParameters.size(), equalTo(13));
+        assertThat(calvalusParameters.size(), equalTo(14));
         assertThat(calvalusParameters, hasItems("productionType"));
         assertThat(calvalusParameters, hasItems("calvalus.calvalus.bundle"));
         assertThat(calvalusParameters, hasItems("calvalus.beam.bundle"));
+        assertThat(calvalusParameters, hasItems("calvalus.snap.bundle"));
         assertThat(calvalusParameters, hasItems("productionName"));
         assertThat(calvalusParameters, hasItems("processorBundleName"));
         assertThat(calvalusParameters, hasItems("processorBundleVersion"));
@@ -30,17 +31,18 @@ public class CalvalusParameterTest {
         assertThat(calvalusParameters, hasItems("maxDate"));
         assertThat(calvalusParameters, hasItems("periodLength"));
         assertThat(calvalusParameters, hasItems("regionWKT"));
-        assertThat(calvalusParameters, hasItems("calvalus.output.format"));
+        assertThat(calvalusParameters, hasItems("outputFormat"));
     }
 
     @Test
     public void canGetProductionParameters() throws Exception {
         List<String> calvalusParameters = CalvalusParameter.getProductionInfoParameters();
 
-        assertThat(calvalusParameters.size(), equalTo(4));
+        assertThat(calvalusParameters.size(), equalTo(5));
         assertThat(calvalusParameters, hasItems("productionType"));
         assertThat(calvalusParameters, hasItems("calvalus.calvalus.bundle"));
         assertThat(calvalusParameters, hasItems("calvalus.beam.bundle"));
+        assertThat(calvalusParameters, hasItems("calvalus.snap.bundle"));
         assertThat(calvalusParameters, hasItems("productionName"));
     }
 
@@ -53,7 +55,7 @@ public class CalvalusParameterTest {
         assertThat(calvalusParameters, hasItems("maxDate"));
         assertThat(calvalusParameters, hasItems("periodLength"));
         assertThat(calvalusParameters, hasItems("regionWKT"));
-        assertThat(calvalusParameters, hasItems("calvalus.output.format"));
+        assertThat(calvalusParameters, hasItems("outputFormat"));
     }
 
     @Test
@@ -68,7 +70,7 @@ public class CalvalusParameterTest {
 
     @Test
     public void canGetParameterId() throws Exception {
-        assertThat(CalvalusParameter.CALVALUS_OUTPUT_FORMAT.getIdentifier(), equalTo("calvalus.output.format"));
+        assertThat(CalvalusParameter.CALVALUS_OUTPUT_FORMAT.getIdentifier(), equalTo("outputFormat"));
     }
 
     @Test

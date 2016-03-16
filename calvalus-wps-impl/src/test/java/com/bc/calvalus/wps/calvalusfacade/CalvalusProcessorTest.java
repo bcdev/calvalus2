@@ -98,6 +98,17 @@ public class CalvalusProcessorTest {
     }
 
     @Test
+    public void canGetPossibleOutputFormats() throws Exception {
+        when(mockProcessorDescriptor.getOutputFormats()).thenReturn(new String[]{"NetCDF4", "GeoTIFF"});
+
+        calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
+
+        assertThat(calvalusProcessor.getPossibleOutputFormats().length, equalTo(2));
+        assertThat(calvalusProcessor.getPossibleOutputFormats()[0], equalTo("NetCDF4"));
+        assertThat(calvalusProcessor.getPossibleOutputFormats()[1], equalTo("GeoTIFF"));
+    }
+
+    @Test
     public void canGetDefaultCalvalusBundle() throws Exception {
         when(mockProcessorDescriptor.getJobConfiguration()).thenReturn(getJobConfiguration());
 
