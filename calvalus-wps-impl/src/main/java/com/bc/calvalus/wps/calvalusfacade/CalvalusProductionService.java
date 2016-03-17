@@ -1,10 +1,10 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
-import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsServletContainer;
 
 import javax.servlet.ServletContextEvent;
@@ -18,7 +18,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
-import java.util.logging.Level;
 
 /**
  * This class handles the production service operations. It has also been extended to include
@@ -32,12 +31,12 @@ public class CalvalusProductionService implements ServletContextListener {
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
 
-    private static final String DEFAULT_BEAM_BUNDLE = "snap-3.0-bundle";
-    private static final String DEFAULT_SNAP_BUNDLE = "snap-3.0-bundle";
-    private static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.8";
-    private static final String STAGING_DIRECTORY = "staging";
+    private static final String DEFAULT_BEAM_BUNDLE = PropertiesWrapper.get("default.beam.bundle");
+    private static final String DEFAULT_SNAP_BUNDLE = PropertiesWrapper.get("default.snap.bundle");
+    private static final String DEFAULT_CALVALUS_BUNDLE = PropertiesWrapper.get("default.calvalus.bundle");
+    private static final String STAGING_DIRECTORY = PropertiesWrapper.get("staging.directory");
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
-    private static final String CALWPS_ROOT = CATALINA_BASE + "/webapps/bc-wps/";
+    private static final String CALWPS_ROOT = CATALINA_BASE + PropertiesWrapper.get("wps.application.path");
     private static final String DEFAULT_CONFIG_PATH = new File(getUserAppDataCalWpsDir(), "calvalus.config").getPath();
 
     private CalvalusProductionService() {
