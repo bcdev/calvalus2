@@ -1,7 +1,7 @@
 package com.bc.calvalus.wps.responses;
 
 
-import com.bc.calvalus.wps.exceptions.WpsRuntimeException;
+import com.bc.wps.api.WpsRuntimeException;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.DataInputsType;

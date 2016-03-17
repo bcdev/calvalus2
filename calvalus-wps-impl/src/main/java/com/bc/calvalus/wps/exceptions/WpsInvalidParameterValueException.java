@@ -1,5 +1,7 @@
 package com.bc.calvalus.wps.exceptions;
 
+import com.bc.wps.api.WpsRuntimeException;
+
 /**
  * @author hans
  */
