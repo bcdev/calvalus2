@@ -78,8 +78,8 @@ public class LcL3ProductionType extends HadoopProductionType {
         int mosaicTileSize = sensorConfig.getMosaicTileSize();
         String groundResolution = sensorConfig.getGroundResolution();
         String sensorName = sensorConfig.getSensorName();
-        String temporalCloudBandName = sensorConfig.getTemporalCloudBandName();
-        float temporalCloudFilterThreshold = sensorConfig.getTemporalCloudFilterThreshold();
+        String temporalCloudBandName = productionRequest.getString("calvalus.lc.temporalCloudBandName", sensorConfig.getTemporalCloudBandName());
+        float temporalCloudFilterThreshold = productionRequest.getFloat("calvalus.lc.temporalCloudFilterThreshold", sensorConfig.getTemporalCloudFilterThreshold());
 
         String outputVersion = productionRequest.getString("calvalus.output.version", "1.0");
 

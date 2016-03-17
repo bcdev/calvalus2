@@ -83,8 +83,8 @@ public class FireL3ProductionType extends HadoopProductionType {
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(productionRequest.getString("calvalus.lc.resolution"));
-        float temporalCloudFilterThreshold = sensorConfig.getTemporalCloudFilterThreshold();
-        String temporalCloudBandName = sensorConfig.getTemporalCloudBandName();
+        String temporalCloudBandName = productionRequest.getString("calvalus.lc.temporalCloudBandName", sensorConfig.getTemporalCloudBandName());
+        float temporalCloudFilterThreshold = productionRequest.getFloat("calvalus.lc.temporalCloudFilterThreshold", sensorConfig.getTemporalCloudFilterThreshold());
         final int mosaicTileSize = sensorConfig.getMosaicTileSize();
 
         String cloudMosaicConfigXml = getCloudMosaicConfig(temporalCloudBandName).toXml();
