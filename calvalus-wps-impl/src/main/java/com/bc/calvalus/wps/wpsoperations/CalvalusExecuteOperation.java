@@ -6,7 +6,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
-import com.bc.calvalus.wps.exceptions.FailedRequestException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;

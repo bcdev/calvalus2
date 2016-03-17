@@ -15,6 +15,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.runner.*;
 import org.mockito.ArgumentCaptor;
@@ -54,6 +55,7 @@ public class CalvalusFacadeTest {
 
         when(mockRequestContext.getUserName()).thenReturn("mockUserName");
 
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         configureProductionServiceMocking();
     }
 

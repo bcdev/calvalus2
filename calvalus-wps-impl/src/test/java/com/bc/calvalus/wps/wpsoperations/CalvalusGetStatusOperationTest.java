@@ -11,7 +11,6 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.exceptions.FailedRequestException;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;

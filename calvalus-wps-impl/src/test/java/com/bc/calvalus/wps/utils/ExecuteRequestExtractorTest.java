@@ -3,10 +3,12 @@ package com.bc.calvalus.wps.utils;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.bc.calvalus.wps.exceptions.WpsMissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ObjectFactory;
 import com.bc.wps.utilities.JaxbHelper;
 import org.junit.*;
+import org.junit.rules.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -18,6 +20,9 @@ import java.util.Map;
 public class ExecuteRequestExtractorTest {
 
     private ExecuteRequestExtractor requestExtractor;
+
+    @Rule
+    public ExpectedException thrownException = ExpectedException.none();
 
     @Test
     public void canGetParameterValues() throws Exception {
@@ -67,6 +72,18 @@ public class ExecuteRequestExtractorTest {
                                                                        "</aggregators>\n" +
                                                                        "</parameters>"));
 
+    }
+
+    @Test
+    public void canThrowExceptionWhenParameterValueIsMissing() throws Exception {
+        String executeRequestString = getExecuteRequestStringWithEmptyInputValue();
+        InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
+        Execute execute = (Execute) JaxbHelper.unmarshal(requestInputStream, new ObjectFactory());
+
+        thrownException.expect(WpsMissingParameterValueException.class);
+        thrownException.expectMessage("Missing value from parameter : productionType");
+
+        requestExtractor = new ExecuteRequestExtractor(execute);
     }
 
     private String getExecuteRequestString() {
@@ -303,6 +320,37 @@ public class ExecuteRequestExtractorTest {
                "\t\t\t<ows:Identifier>autoStaging</ows:Identifier>\n" +
                "\t\t\t<wps:Data>\n" +
                "\t\t\t\t<wps:LiteralData>true</wps:LiteralData>\n" +
+               "\t\t\t</wps:Data>\n" +
+               "\t\t</wps:Input>\n" +
+               "\t</wps:DataInputs>\n" +
+               "\t<wps:ResponseForm>\n" +
+               "\t\t<wps:ResponseDocument storeExecuteResponse=\"true\" status=\"true\">\n" +
+               "\t\t\t<wps:Output>\n" +
+               "\t\t\t\t<ows:Identifier>productionResults</ows:Identifier>\n" +
+               "\t\t\t</wps:Output>\n" +
+               "\t\t</wps:ResponseDocument>\n" +
+               "\t</wps:ResponseForm>\n" +
+               "\n" +
+               "</wps:Execute>\n";
+    }
+
+    private String getExecuteRequestStringWithEmptyInputValue() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n" +
+               "\n" +
+               "<wps:Execute service=\"WPS\"\n" +
+               "             version=\"1.0.0\"\n" +
+               "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
+               "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
+               "\t\t\t xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
+               "\n" +
+               "\t<ows:Identifier>case2-regional~1.5.3~Meris.Case2Regional</ows:Identifier>\n" +
+               "\n" +
+               "\t<wps:DataInputs>\n" +
+               "\t\t<wps:Input>\n" +
+               "\t\t\t<ows:Identifier>productionType</ows:Identifier>\n" +
+               "\t\t\t<wps:Data>\n" +
+               "\t\t\t\t<wps:LiteralData></wps:LiteralData>\n" +
                "\t\t\t</wps:Data>\n" +
                "\t\t</wps:Input>\n" +
                "\t</wps:DataInputs>\n" +
