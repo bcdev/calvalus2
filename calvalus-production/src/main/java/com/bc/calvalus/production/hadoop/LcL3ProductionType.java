@@ -86,7 +86,7 @@ public class LcL3ProductionType extends HadoopProductionType {
         int cloudBorderWidth = productionRequest.getInteger("cloudBorderWidth", 0);  // was 150
         int mainBorderWidth = productionRequest.getInteger("mainBorderWidth", 0);  // was 250
 
-        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
+        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(temporalCloudBandName, productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
         String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"), mainBorderWidth).toXml();
 
         String period = getLcPeriodName(productionRequest);

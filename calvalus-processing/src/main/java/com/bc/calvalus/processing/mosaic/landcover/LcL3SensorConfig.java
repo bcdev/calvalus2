@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
-import org.apache.commons.lang.StringUtils;
 import org.esa.beam.binning.VariableContext;
 
 import java.util.ArrayList;
@@ -66,7 +65,7 @@ public abstract class LcL3SensorConfig {
 
     public abstract float[] getWavelengths();
 
-    public abstract MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth);
+    public abstract MosaicConfig getCloudMosaicConfig(String temporalCloudBandName, String asLandText, int borderWidth);
 
     public abstract MosaicConfig getMainMosaicConfig(String netCDF4, int borderWidth);
 
@@ -141,8 +140,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
-            String sdrBandName = "sdr_8";
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
             if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
@@ -332,8 +330,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
-            String sdrBandName = "sdr_B3";
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
             if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
@@ -494,8 +491,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
-            String sdrBandName = getTemporalCloudBandName();
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
             if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
@@ -652,8 +648,7 @@ public abstract class LcL3SensorConfig {
             return 0.075f;
         }
 
-        public MosaicConfig getCloudMosaicConfig(String asLandText, int borderWidth) {
-            String sdrBandName = "refl_2_ac";
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
             if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
