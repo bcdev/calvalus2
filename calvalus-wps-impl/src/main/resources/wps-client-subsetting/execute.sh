@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This is a script to send an execute request to Calvalus WPS with a given xml request file
 # Usage : execute.sh [execute request XML] [response XML file]

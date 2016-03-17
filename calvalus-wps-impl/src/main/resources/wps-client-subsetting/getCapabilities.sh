@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # This is a script to send GetCapabilities request to Calvalus WPS. The response is displayed on the screen.
 # Usage : getCapabilities.sh
