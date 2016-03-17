@@ -39,7 +39,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             return getCapabilitiesOperation.getCapabilities();
         } catch (ProcessesNotAvailableException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetCapabilities operation successfully", exception);
-            throw new WpsServiceException("Unable to perform GetCapabilities operation successfully", exception);
+            throw new WpsServiceException(exception);
         }
     }
 
@@ -50,7 +50,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             return describeProcessOperation.getProcesses(processId);
         } catch (ProcessesNotAvailableException exception) {
             logger.log(Level.SEVERE, "Unable to perform DescribeProcess operation successfully", exception);
-            throw new WpsServiceException("Unable to perform DescribeProcess operation successfully", exception);
+            throw new WpsServiceException(exception);
         }
     }
 
@@ -61,7 +61,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             return executeOperation.execute(execute);
         } catch (IOException | InterruptedException | ProductionException | InvalidProcessorIdException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
-            throw new WpsServiceException("Unable to perform Execute operation successfully", exception);
+            throw new WpsServiceException(exception);
         }
     }
 
@@ -72,7 +72,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             return getStatusOperation.getStatus(jobId);
         } catch (JobNotFoundException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetStatus operation successfully", exception);
-            throw new WpsServiceException("Unable to perform GetStatus operation successfully", exception);
+            throw new WpsServiceException(exception);
         }
     }
 
