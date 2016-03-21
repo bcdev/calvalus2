@@ -122,7 +122,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final int numberOfBands = context.getCurrentKey().get() >> 24;
         final String bandName = numberOfBands == 13+1 ? MERIS_BANDS[bandNumber] : numberOfBands == 5+1 ? AVHRR_BANDS[bandNumber] : PROBA_BANDS[bandNumber];
         final String targetFileName = String.format("ESACCI-LC-L3-SR-%s-%sm-P%dW-%s-%s-v%s",
-                                                    numberOfBands == 13+1 ? "MERIS" : numberOfBands == 5+1 ? "AVHRR" : "PROBA",
+                                                    numberOfBands == 13+1 ? "MERIS" : numberOfBands == 5+1 ? "AVHRR" : "VEGETATION",
                                                     bandTileHeight == 1800 ? "300" : "1000",
                                                     noOfWeeks, bandName, COMPACT_DATE_FORMAT.format(start), version);
         final String outputDirName = conf.get("calvalus.output.dir");

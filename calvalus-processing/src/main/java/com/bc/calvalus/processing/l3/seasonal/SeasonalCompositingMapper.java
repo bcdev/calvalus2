@@ -220,8 +220,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             "MERIS-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MERIS-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2* targetBandIndex : targetBandIndex +5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
-            "SPOT-1000m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
-            "PROBA-300m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
+            "VEGETATION-1000m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
+            "VEGETATION-300m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
             -1;
     }
 
@@ -249,8 +249,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 return SeasonalCompositingReducer.MERIS_BANDS;
             case "AVHRR-1000m":
                 return SeasonalCompositingReducer.AVHRR_BANDS;
-            case "SPOT-1000m":
-            case "PROBA-300m":
+            case "VEGETATION-1000m":
+            case "VEGETATION-300m":
                 return SeasonalCompositingReducer.PROBA_BANDS;
             default:
                 throw new IllegalArgumentException("unknown sensor and resolution " + sensorAndResolution);
