@@ -29,16 +29,16 @@ public class MosaicGridTest {
         assertNotNull(rectangle);
         assertEquals(0, rectangle.x);
         assertEquals(0, rectangle.y);
-        assertEquals(370 * 10, rectangle.width);
-        assertEquals(370 * 10, rectangle.height);
+        assertEquals(370 * 10 * 36, rectangle.width);
+        assertEquals(370 * 10 + 1, rectangle.height);
 
         geometry = GeometryUtils.createGeometry("polygon((-179.5 89.5, -179.5 80.5, -170.5 80.5, -170.5 89.5, -179.5 89.5))");
         rectangle = mosaicGrid.computeBounds(geometry);
         assertNotNull(rectangle);
-        assertEquals(185, rectangle.x);
-        assertEquals(185, rectangle.y);
-        assertEquals(370 * 9, rectangle.width);
-        assertEquals(370 * 9, rectangle.height);
+        assertEquals(185 - 1, rectangle.x);
+        assertEquals(185 - 1, rectangle.y);
+        assertEquals(370 * 9 + 2, rectangle.width);
+        assertEquals(370 * 9 + 1, rectangle.height);
     }
 
     @Test
