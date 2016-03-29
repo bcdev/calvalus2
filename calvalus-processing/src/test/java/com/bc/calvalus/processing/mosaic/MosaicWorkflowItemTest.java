@@ -25,7 +25,7 @@ public class MosaicWorkflowItemTest {
 
     @Test
     public void testComputeNumReducers() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
 
@@ -38,7 +38,7 @@ public class MosaicWorkflowItemTest {
         conf.setInt("calvalus.mosaic.numXPartitions", 6);
         assertEquals(3 * 6, MosaicWorkflowItem.computeNumReducers(conf));
 
-        mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
+        mosaicGrid = new MosaicGrid();
         conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
         assertEquals(36, MosaicWorkflowItem.computeNumReducers(conf));
