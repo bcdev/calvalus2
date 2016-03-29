@@ -16,7 +16,7 @@ public class MosaicGridTest {
 
     @Test
     public void testComputeBounds() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         Rectangle rectangle = mosaicGrid.computeBounds(null);
         assertNotNull(rectangle);
         assertEquals(0, rectangle.x);
@@ -43,7 +43,7 @@ public class MosaicGridTest {
 
     @Test
     public void testAlignToTileGrid() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         Rectangle rectangle = new Rectangle(0, 0, 370 * 360, 370 * 180);
         Rectangle aligned = mosaicGrid.alignToTileGrid(rectangle);
         assertNotNull(aligned);
@@ -71,7 +71,7 @@ public class MosaicGridTest {
 
     @Test
     public void testGetTileIndices() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         Geometry geometry;
         List<Point> tilePointIndices = mosaicGrid.getTilePointIndicesGlobal();
         TileIndexWritable[] tileIndices = mosaicGrid.getTileIndices(tilePointIndices);
@@ -119,7 +119,7 @@ public class MosaicGridTest {
 
     @Test
     public void testTileXToDegree() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         assertEquals(-180.0, mosaicGrid.tileXToDegree(0), 1e-5);
         assertEquals(-179.0, mosaicGrid.tileXToDegree(1), 1e-5);
         assertEquals(0.0, mosaicGrid.tileXToDegree(180), 1e-5);
@@ -128,7 +128,7 @@ public class MosaicGridTest {
 
     @Test
     public void testDegreeToTileX() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         assertEquals(0, mosaicGrid.degreeToTileX(-180.0));
         assertEquals(1, mosaicGrid.degreeToTileX(-179.0));
         assertEquals(180, mosaicGrid.degreeToTileX(0.0));
@@ -137,7 +137,7 @@ public class MosaicGridTest {
 
     @Test
     public void testTileYToDegree() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         assertEquals(90.0, mosaicGrid.tileYToDegree(0), 1e-5);
         assertEquals(89.0, mosaicGrid.tileYToDegree(1), 1e-5);
         assertEquals(0.0, mosaicGrid.tileYToDegree(90), 1e-5);
@@ -146,7 +146,7 @@ public class MosaicGridTest {
 
     @Test
     public void testDegreeToTileY() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         assertEquals(0, mosaicGrid.degreeToTileY(90.0), 1e-5);
         assertEquals(1, mosaicGrid.degreeToTileY(89.0), 1e-5);
         assertEquals(90, mosaicGrid.degreeToTileY(0.0), 1e-5);
@@ -155,7 +155,7 @@ public class MosaicGridTest {
 
     @Test
     public void testGetTileGeometry() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
 
         assertTileGeometry(mosaicGrid, 0, 0, -180.0, -179.0, 89.0, 90.0);
         assertTileGeometry(mosaicGrid, 180, 90, 0.0, 1.0, -1.0, 0.0);
@@ -184,7 +184,7 @@ public class MosaicGridTest {
 
     @Test
     public void testGetter() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         assertEquals(360, mosaicGrid.getNumTileX());
         assertEquals(180, mosaicGrid.getNumTileY());
         assertEquals(72, mosaicGrid.getNumMacroTileX());
@@ -204,7 +204,7 @@ public class MosaicGridTest {
         assertNull(configuration.get("calvalus.mosaic.numTileY"));
         assertNull(configuration.get("calvalus.mosaic.tileSize"));
 
-        MosaicGrid mosaicGrid = new MosaicGrid();
+        MosaicGrid mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         mosaicGrid.saveToConfiguration(configuration);
         assertNotNull(configuration.get("calvalus.mosaic.macroTileSize"));
         assertNotNull(configuration.get("calvalus.mosaic.numTileY"));

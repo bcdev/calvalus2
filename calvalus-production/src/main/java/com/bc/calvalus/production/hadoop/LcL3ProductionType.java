@@ -121,6 +121,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("calvalus.lc.temporalCloudFilterThreshold", String.valueOf(temporalCloudFilterThreshold));
             jobConfigCloud.set("calvalus.lc.version", outputVersion);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigCloud.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
@@ -150,6 +153,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set("calvalus.lc.sensor", sensorName);
             jobConfigSr.set("calvalus.lc.version", outputVersion);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigSr.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("calvalus.lc.resolution", resolution);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
@@ -173,6 +179,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set("calvalus.lc.sensor", sensorName);
             jobConfigFormat.set("calvalus.lc.version", outputVersion);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigFormat.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigFormat.set("calvalus.lc.resolution", resolution);
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),

@@ -38,7 +38,7 @@ public class MosaicWorkflowItemTest {
         conf.setInt("calvalus.mosaic.numXPartitions", 6);
         assertEquals(3 * 6, MosaicWorkflowItem.computeNumReducers(conf));
 
-        mosaicGrid = new MosaicGrid();
+        mosaicGrid = new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
         conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
         assertEquals(36, MosaicWorkflowItem.computeNumReducers(conf));
