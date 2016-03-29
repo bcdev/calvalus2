@@ -220,8 +220,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             "MERIS-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MERIS-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2* targetBandIndex : targetBandIndex +5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
-            "VEGETATION-1000m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
-            "VEGETATION-300m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc.
+            "VEGETATION-1000m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc. TODO verify that SPOT has no uncertainties
+            "VEGETATION-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             -1;
     }
 
