@@ -44,7 +44,7 @@
          <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
          commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
          <dependency>
-             <groupId>com.bc.ceres</groupId>
+             <groupId>org.esa.snap</groupId>
              <artifactId>ceres-metadata</artifactId>
          </dependency>
 

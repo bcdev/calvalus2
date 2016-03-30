@@ -14,7 +14,7 @@
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.9-SNAPSHOT</calvalus.version>
         <snap.version>3.0.0-SNAPSHOT</snap.version>
-        <ceres.version>0.14</ceres.version>
+        <ceres.version>3.0.0-SNAPSHOT</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -188,12 +188,12 @@
             <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
             commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
             <dependency>
-                <groupId>com.bc.ceres</groupId>
+                <groupId>org.esa.snap</groupId>
                 <artifactId>ceres-metadata</artifactId>
                 <version>${ceres.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.bc.ceres</groupId>
+                <groupId>org.esa.snap</groupId>
                 <artifactId>ceres-jai</artifactId>
                 <version>${ceres.version}</version>
                 <exclusions>
