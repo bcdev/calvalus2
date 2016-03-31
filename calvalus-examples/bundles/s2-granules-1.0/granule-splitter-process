@@ -7,18 +7,29 @@ set -o pipefail
 
 . /etc/profile
 
+counter=0
+
+num_granules=$(unzip -l ${1}|grep -E "GRANULE.*_[0-9]{8}T[0-9]{6}$"|wc -l)
+echo "num_granules: ${num_granules}"
+
 function handle_stdout() {
   line=$1
   echo $line
   if [[ ${line} =~ writing\ to\:\ (.+) ]]; then
     outputfilename=${BASH_REMATCH[1]}
     echo CALVALUS_OUTPUT_PRODUCT $(basename ${outputfilename})
+
+    counter=$((counter+1))
+    progress=$(echo "scale=3; ${counter} / ${num_granules}" | bc)
+    printf "CALVALUS_PROGRESS %.3f\n" ${progress}
   fi
 }
 
+
+
 jar=calvalus-inventory*jar
 class=com.bc.calvalus.sentinel2.GranuleSplitter
-java -cp ${jar} ${class} ${1} . | while read x ; do handle_stdout "$x" ; done
+java -Xmx265M -cp ${jar} ${class} ${1} . | while read x ; do handle_stdout "$x" ; done
 
 marker=_$(basename ${1})
 touch ${marker}
