@@ -19,6 +19,7 @@ package com.bc.calvalus.sentinel2;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -29,7 +30,7 @@ import java.util.zip.ZipFile;
  */
 public class GranuleLister {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length != 1) {
             System.err.println("usage: GranuleLister <inputFile|inputDir>");
             System.exit(1);
@@ -43,7 +44,9 @@ public class GranuleLister {
             productFiles = input.listFiles(new FilenameFilter() {
                 @Override
                 public boolean accept(File dir, String name) {
-                    return name.startsWith("S2");
+                    return name.startsWith("S2") &&
+                            new File(dir, name).isFile() &&
+                            (name.matches(".*_[0-9]{8}T[0-9]{6}.zip$") || name.matches(".*_[0-9]{8}T[0-9]{6}$"));
                 }
             });
         } else {
@@ -51,7 +54,12 @@ public class GranuleLister {
         }
 
         for (File productFile : productFiles) {
-            findGranules(productFile);
+            try {
+                findGranules(productFile);
+            } catch (IOException e) {
+                System.out.println("productFile = " + productFile);
+                e.printStackTrace();
+            }
         }
     }
 
@@ -75,6 +83,6 @@ public class GranuleLister {
     }
 
     static boolean isGranuleXml(String entryName) {
-        return entryName.contains("GRANULE") && entryName.endsWith(".xml");
+        return entryName.contains("GRANULE") && entryName.matches(".*(_T[0-9]{2}[A-Z]{3}).xml$");
     }
 }
