@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.ceres.core.ProcessObserver;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
+import org.apache.hadoop.io.IOUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
@@ -30,10 +31,18 @@ import org.esa.snap.core.datamodel.ProductData;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.logging.Logger;
+import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * Handles reading of products.
@@ -80,18 +89,18 @@ public class CalvalusProductIO {
                 }
                 product = readProductImpl(localFile, File.class, inputFormat);
                 // unpack product if no reader found for packed product
-                if (product == null) {
-                      if (path.getName().startsWith("S2A") &&
-                          path.getName().length() == "S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914".length()) {
-                          String[] cmdArray = {"unzip", path.getName()};
-                          Process process = Runtime.getRuntime().exec(cmdArray);
-                          String processLogName = "unzip";
-                          new ProcessObserver(process).setName(processLogName).start();
-                          //S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.SAFE/S2A_OPER_MTD_SAFL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.xml
-                          File xmlFile = new File(path.getName()+".SAFE", path.getName().replaceAll("PRD_MSI", "MTD_SAF")+".xml");
-                          product = readProductImpl(xmlFile, File.class, inputFormat);
-                      }
-                }
+//                if (product == null) {
+//                    if (path.getName().startsWith("S2A") &&
+//                            path.getName().length() == "S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914".length()) {
+//                        String[] cmdArray = {"unzip", path.getName()};
+//                        Process process = Runtime.getRuntime().exec(cmdArray);
+//                        String processLogName = "unzip";
+//                        new ProcessObserver(process).setName(processLogName).start();
+//                        //S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.SAFE/S2A_OPER_MTD_SAFL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.xml
+//                        File xmlFile = new File(path.getName() + ".SAFE", path.getName().replaceAll("PRD_MSI", "MTD_SAF") + ".xml");
+//                        product = readProductImpl(xmlFile, File.class, inputFormat);
+//                    }
+//                }
             }
         }
         if (product == null) {
@@ -144,6 +153,31 @@ public class CalvalusProductIO {
             LOG.info("File already exist");
         }
         return localFile;
+    }
+
+    public static File[] unzipFileToLocal(Path path, Configuration conf) throws IOException {
+        FileSystem fs = path.getFileSystem(conf);
+        InputStream inputStream = fs.open(path);
+        List<File> extractedFiles = new ArrayList<>();
+        try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
+            ZipEntry entry;
+            while ((entry = zipIn.getNextEntry()) != null) {
+                File file = new File(".", entry.getName());
+                if (entry.isDirectory()) {
+                    file.mkdirs();
+                } else {
+                    File parentDir = file.getParentFile();
+                    if (parentDir != null && !parentDir.exists()){
+                        parentDir.mkdirs();
+                    }
+                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+                        IOUtils.copyBytes(zipIn, out, 8192);
+                    }
+                }
+                extractedFiles.add(file);
+            }
+        }
+        return extractedFiles.toArray(new File[0]);
     }
 
     static void setDateToMerisSdrProduct(Product product, String pathName) throws IOException {
