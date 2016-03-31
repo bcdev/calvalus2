@@ -9,8 +9,6 @@ outputPath="$2"
 
 marker=_$(basename ${inputPath})
 
-echo hadoop fs -ls ${outputPath}/${marker}
-
 if hadoop fs -ls ${outputPath}/${marker}; then
   # output exist
   echo CALVALUS_SKIP_PROCESSING yes
