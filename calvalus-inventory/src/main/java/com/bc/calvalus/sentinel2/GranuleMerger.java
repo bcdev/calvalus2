@@ -32,8 +32,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-import static jdk.nashorn.internal.objects.NativeString.substring;
-
 /**
  * Merges granules into a product. Only the original product can be re-constructed.
  */
@@ -114,10 +112,6 @@ public class GranuleMerger {
         this.outputFile = outputFile;
     }
 
-    // DONE skip duplicat granule dirs
-    // DONE skip parent-products.txt
-    // DONE rename topdir
-    // TODO rename product xml
     private void run() throws IOException {
         ZipEntry entry;
         try (ZipOutputStream zipOut = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)))) {
