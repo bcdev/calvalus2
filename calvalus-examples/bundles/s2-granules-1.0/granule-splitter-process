@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+set -o pipefail
+
+. /etc/profile
+
+function handle_stdout() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ writing\ to\:\ (.+) ]]; then
+    outputfilename=${BASH_REMATCH[1]}
+    echo CALVALUS_OUTPUT_PRODUCT $(basename ${outputfilename})
+  fi
+}
+
+jar=calvalus-inventory*jar
+class=com.bc.calvalus.sentinel2.GranuleSplitter
+java -cp ${jar} ${class} ${1} . | while read x ; do handle_stdout "$x" ; done
+
+marker=_$(basename ${1})
+touch ${marker}
+echo CALVALUS_OUTPUT_PRODUCT ${marker}
+
+
+
