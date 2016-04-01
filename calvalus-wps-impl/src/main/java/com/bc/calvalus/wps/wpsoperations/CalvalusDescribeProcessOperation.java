@@ -28,6 +28,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -255,11 +256,15 @@ public class CalvalusDescribeProcessOperation {
     private InputDescriptionType getL3ParametersComplexTypeWithSchema(String schemaUrl) {
         InputDescriptionType l3ParametersComplexType = new InputDescriptionType();
 
+        l3ParametersComplexType.setMinOccurs(BigInteger.ZERO);
+        l3ParametersComplexType.setMaxOccurs(BigInteger.ONE);
         l3ParametersComplexType.setIdentifier(str2CodeType("calvalus.l3.parameters"));
+        l3ParametersComplexType.setTitle(str2LanguageStringType("Specific Calvalus parameters for L3 processing"));
 
         SupportedComplexDataInputType l3Parameters = new SupportedComplexDataInputType();
         ComplexDataCombinationType complexDataCombinationType = new ComplexDataCombinationType();
         ComplexDataDescriptionType complexDataDescriptionType = new ComplexDataDescriptionType();
+        complexDataDescriptionType.setMimeType("application/xml");
         complexDataDescriptionType.setSchema(schemaUrl);
         complexDataCombinationType.setFormat(complexDataDescriptionType);
         l3Parameters.setDefault(complexDataCombinationType);

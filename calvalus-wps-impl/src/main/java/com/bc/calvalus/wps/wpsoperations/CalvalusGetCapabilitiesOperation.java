@@ -25,6 +25,7 @@ import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
 import com.bc.wps.api.schema.TelephoneType;
 import com.bc.wps.api.utils.CapabilitiesBuilder;
+import com.bc.wps.api.utils.WpsTypeConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.bind.JAXBException;
@@ -152,17 +153,10 @@ public class CalvalusGetCapabilitiesOperation {
         for (IWpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
 
-            CodeType identifier = new CodeType();
-            identifier.setValue(process.getIdentifier());
-            singleProcessor.setIdentifier(identifier);
-
-            LanguageStringType title = new LanguageStringType();
-            title.setValue(process.getTitle());
-            singleProcessor.setTitle(title);
-
-            LanguageStringType abstractText = new LanguageStringType();
-            abstractText.setValue(process.getAbstractText());
-            singleProcessor.setAbstract(abstractText);
+            singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
+            singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
+            singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
+            singleProcessor.setProcessVersion(process.getVersion());
 
             processOfferings.getProcess().add(singleProcessor);
         }
