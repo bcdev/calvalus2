@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
-import com.bc.ceres.core.ProcessObserver;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
@@ -88,19 +87,6 @@ public class CalvalusProductIO {
                     localFile = copyFileToLocal(path, configuration);
                 }
                 product = readProductImpl(localFile, File.class, inputFormat);
-                // unpack product if no reader found for packed product
-//                if (product == null) {
-//                    if (path.getName().startsWith("S2A") &&
-//                            path.getName().length() == "S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914".length()) {
-//                        String[] cmdArray = {"unzip", path.getName()};
-//                        Process process = Runtime.getRuntime().exec(cmdArray);
-//                        String processLogName = "unzip";
-//                        new ProcessObserver(process).setName(processLogName).start();
-//                        //S2A_OPER_PRD_MSIL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.SAFE/S2A_OPER_MTD_SAFL1C_PDMC_20150812T193334_R108_V20150730T103914_20150730T103914.xml
-//                        File xmlFile = new File(path.getName() + ".SAFE", path.getName().replaceAll("PRD_MSI", "MTD_SAF") + ".xml");
-//                        product = readProductImpl(xmlFile, File.class, inputFormat);
-//                    }
-//                }
             }
         }
         if (product == null) {
