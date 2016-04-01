@@ -16,7 +16,9 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
@@ -35,10 +37,15 @@ import java.util.Locale;
 
 
 /**
- * A reader for handing Sentinel-2 L1C data.
+ * A reader for handing Sentinel-2 data on calvalus.
  * It unzips the products and open from the local file.
  */
-public class Sentinel2L1CReaderPlugin implements ProductReaderPlugIn {
+public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
+
+    private static final String FORMAT_10M = "SENTINEL-2-MSI-10M";
+    private static final String FORMAT_20M = "SENTINEL-2-MSI-20M";
+    private static final String FORMAT_60M = "SENTINEL-2-MSI-60M";
+    private static final String FORMAT_MULTI = "SENTINEL-2-MSI-MultiRes";
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
@@ -59,12 +66,12 @@ public class Sentinel2L1CReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public ProductReader createReaderInstance() {
-        return new Sentinel2L1CReader(this);
+        return new Sentinel2CalvalusReader(this);
     }
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{"SENTINEL2-L1C-CALVALUS"};
+        return new String[]{FORMAT_10M, FORMAT_20M, FORMAT_60M, FORMAT_MULTI};
     }
 
     @Override
@@ -82,9 +89,9 @@ public class Sentinel2L1CReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
-    private static class Sentinel2L1CReader extends AbstractProductReader {
+    private static class Sentinel2CalvalusReader extends AbstractProductReader {
 
-        public Sentinel2L1CReader(ProductReaderPlugIn productReaderPlugIn) {
+        public Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
         }
 
@@ -93,7 +100,8 @@ public class Sentinel2L1CReaderPlugin implements ProductReaderPlugIn {
             Object input = getInput();
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
-                File[] unzippedFiles = CalvalusProductIO.unzipFileToLocal(pathConfig.getPath(), pathConfig.getConfiguration());
+                Configuration configuration = pathConfig.getConfiguration();
+                File[] unzippedFiles = CalvalusProductIO.unzipFileToLocal(pathConfig.getPath(), configuration);
 
                 // find *SAF*xml file
                 File productXML = null;
@@ -105,13 +113,10 @@ public class Sentinel2L1CReaderPlugin implements ProductReaderPlugIn {
                 }
                 System.out.println("productXML = " + productXML);
 
+                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
+                System.out.println("inputFormat = " + inputFormat);
 
-//                String formatResolutionPrefix = "SENTINEL-2-MSI-10M";
-//                String formatResolutionPrefix = "SENTINEL-2-MSI-20M";
-                String formatResolutionPrefix = "SENTINEL-2-MSI-60M";
-//                String formatResolutionPrefix = "SENTINEL-2-MSI-MultiRes";
-
-                return readProduct(productXML, formatResolutionPrefix);
+                return readProduct(productXML, inputFormat);
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }
