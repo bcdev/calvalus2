@@ -42,10 +42,10 @@ import java.util.Locale;
  */
 public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_10M = "SENTINEL-2-MSI-10M";
-    private static final String FORMAT_20M = "SENTINEL-2-MSI-20M";
-    private static final String FORMAT_60M = "SENTINEL-2-MSI-60M";
-    private static final String FORMAT_MULTI = "SENTINEL-2-MSI-MultiRes";
+    private static final String FORMAT_10M = "CALVALUS-SENTINEL-2-MSI-10M";
+    private static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
+    private static final String FORMAT_60M = "CALVALUS-SENTINEL-2-MSI-60M";
+    private static final String FORMAT_MULTI = "CALVALUS-SENTINEL-2-MSI-MultiRes";
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
@@ -115,15 +115,17 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
                 System.out.println("inputFormat = " + inputFormat);
+                String formatPrefix = inputFormat.substring("CALVALUS-".length()) + "-";
+                System.out.println("formatPrefix = " + formatPrefix);
 
-                return readProduct(productXML, inputFormat);
+                return readProduct(productXML, formatPrefix);
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }
         }
 
-        private Product readProduct(File xmlFile, String formatResolutionPrefix) throws IOException {
-            ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatResolutionPrefix);
+        private Product readProduct(File xmlFile, String formatPrefix) throws IOException {
+            ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatPrefix);
             if (productReaderPlugin != null) {
                 ProductReader productReader = productReaderPlugin.createReaderInstance();
                 return productReader.readProductNodes(xmlFile, null);
