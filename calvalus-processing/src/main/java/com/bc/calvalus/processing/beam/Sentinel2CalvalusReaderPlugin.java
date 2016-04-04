@@ -32,8 +32,11 @@ import org.esa.snap.core.util.io.SnapFileFilter;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -89,9 +92,12 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
-    private static class Sentinel2CalvalusReader extends AbstractProductReader {
+    static class Sentinel2CalvalusReader extends AbstractProductReader {
 
-        public Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
+        private static final Pattern NAME_TIME_PATTERN = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
+
+        Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
         }
 
@@ -111,6 +117,9 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                         break;
                     }
                 }
+                if (productXML == null) {
+                    throw new IllegalFileFormatException("input has no MTD_SAF file.");
+                }
                 System.out.println("productXML = " + productXML);
 
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
@@ -118,9 +127,28 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 String formatPrefix = inputFormat.substring("CALVALUS-".length()) + "-";
                 System.out.println("formatPrefix = " + formatPrefix);
 
-                return readProduct(productXML, formatPrefix);
+                Product product = readProduct(productXML, formatPrefix);
+                if (product != null  && product.getStartTime() == null && product.getEndTime() == null) {
+                    setTimeFromFilename(product, productXML.getName());
+                }
+                return product;
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
+            }
+        }
+
+        static void setTimeFromFilename(Product product, String filename) {
+            Matcher matcher = NAME_TIME_PATTERN.matcher(filename);
+            if (matcher.matches()) {
+                try {
+                    ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);
+                    ProductData.UTC end = ProductData.UTC.parse(matcher.group(2), DATE_FORMAT_PATTERN);
+                    product.setStartTime(start);
+                    product.setEndTime(end);
+                    System.out.println("updating time: start = " + start.format() + "  end = " + end.format());
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
             }
         }
 
