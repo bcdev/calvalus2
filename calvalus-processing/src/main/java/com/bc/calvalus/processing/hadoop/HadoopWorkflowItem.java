@@ -237,10 +237,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
         final String calvalusBundle = configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE);
-        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), userName, configuration);
+        addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), userName, configuration);
         // Add SNAP modules to classpath of Hadoop jobs
         final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
-        addBundleToClassPath(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
+        addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
