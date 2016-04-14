@@ -38,6 +38,17 @@ public class ExecuteRequestExtractorTest {
     }
 
     @Test
+    public void canGetBoundingBoxValuesAsPolygon() throws Exception {
+        String executeRequestString = getExecuteRequestStringWithBoundingBoxValue();
+        InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
+        Execute execute = (Execute) JaxbHelper.unmarshal(requestInputStream, new ObjectFactory());
+
+        requestExtractor = new ExecuteRequestExtractor(execute);
+
+        assertThat(requestExtractor.getValue("regionWKT"), equalTo("POLYGON((100.00000 -10.00000,100.00000 0.00000,110.00000 0.00000,110.00000 -10.00000,100.00000 -10.00000))"));
+    }
+
+    @Test
     public void canGetParameterMap() throws Exception {
         String executeRequestString = getExecuteRequestString();
         InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
@@ -107,31 +118,13 @@ public class ExecuteRequestExtractorTest {
                "\t\t\t</Data>\n" +
                "\t\t</Input>\n" +
                "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.calvalus.bundle</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>calvalus-2.0b411</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
                "\t\t\t<ows:Identifier>calvalus.beam.bundle</ows:Identifier>\n" +
                "\t\t\t<Data>\n" +
                "\t\t\t\t<LiteralData>beam-4.11.1-SNAPSHOT</LiteralData>\n" +
                "\t\t\t</Data>\n" +
                "\t\t</Input>\n" +
                "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>productionName</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>Ocean Colour test</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
                "\t\t\t<ows:Identifier>doAtmosphericCorrection</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>true</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>doSmileCorrection</ows:Identifier>\n" +
                "\t\t\t<Data>\n" +
                "\t\t\t\t<LiteralData>true</LiteralData>\n" +
                "\t\t\t</Data>\n" +
@@ -149,25 +142,7 @@ public class ExecuteRequestExtractorTest {
                "\t\t\t</Data>\n" +
                "\t\t</Input>\n" +
                "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>outputReflecAs</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>RADIANCE_REFLECTANCES</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>outputPath</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>true</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
                "\t\t\t<ows:Identifier>outputTransmittance</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>false</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>outputNormReflec</ows:Identifier>\n" +
                "\t\t\t<Data>\n" +
                "\t\t\t\t<LiteralData>false</LiteralData>\n" +
                "\t\t\t</Data>\n" +
@@ -176,84 +151,6 @@ public class ExecuteRequestExtractorTest {
                "\t\t\t<ows:Identifier>landExpression</ows:Identifier>\n" +
                "\t\t\t<Data>\n" +
                "\t\t\t\t<LiteralData>toa_reflec_10 &gt; toa_reflec_6 AND toa_reflec_13 &gt; 0.0475</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>cloudIceExpression</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>toa_reflec_14 &gt; 0.2</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>algorithm</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>REGIONAL</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>tsmConversionExponent</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>1.0</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>tsmConversionFactor</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>1.73</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>chlConversionExponent</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>1.04</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>chlConversionFactor</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>21.0</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>spectrumOutOfScopeThreshold</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>4.0</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>invalidPixelExpression</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>agc_flags.INVALID</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>inputPath</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_RR__1P....${yyyy}${MM}${dd}.*N1$</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>minDate</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>2009-06-01</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>maxDate</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>2009-06-30</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>periodLength</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>30</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>regionWKT</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>polygon((10.00 54.00,  14.27 53.47,  20.00 54.00, 21.68 54.77, 22.00 56.70, 24.84 56.70, 30.86 60.01, 26.00 62.00, 26.00 66.00, 22.00 66.00, 10.00 60.00, 10.00 54.00))</LiteralData>\n" +
                "\t\t\t</Data>\n" +
                "\t\t</Input>\n" +
                "\n" +
@@ -286,43 +183,6 @@ public class ExecuteRequestExtractorTest {
                "\t\t\t</Data>\n" +
                "\t\t</Input>\n" +
                "\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.output.dir</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>/calvalus/home/hans/ocean-colour-test</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.output.format</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>NetCDF4</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.system.beam.pixelGeoCoding.useTiling</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>true</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.hadoop.mapreduce.job.queuename</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>test</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>     \n" +
-               "\t\t<Input>\n" +
-               "\t\t\t<ows:Identifier>calvalus.hadoop.mapreduce.map.maxattempts</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>1</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
-               "      <Input>\n" +
-               "\t\t\t<ows:Identifier>autoStaging</ows:Identifier>\n" +
-               "\t\t\t<Data>\n" +
-               "\t\t\t\t<LiteralData>true</LiteralData>\n" +
-               "\t\t\t</Data>\n" +
-               "\t\t</Input>\n" +
                "\t</DataInputs>\n" +
                "\t<ResponseForm>\n" +
                "\t\t<ResponseDocument storeExecuteResponse=\"true\" status=\"true\">\n" +
@@ -364,6 +224,41 @@ public class ExecuteRequestExtractorTest {
                "\t</ResponseForm>\n" +
                "\n" +
                "</wps:Execute>\n";
+    }
+
+    private String getExecuteRequestStringWithBoundingBoxValue() {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n" +
+               "\n" +
+               "<wps:Execute service=\"WPS\"\n" +
+               "             version=\"1.0.0\"\n" +
+               "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
+               "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
+               "             xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\"\n" +
+               "             xmlns:xlink=\"http://www.w3.org/1999/xlink\">\n" +
+               "\n" +
+               "\t<ows:Identifier>urbantep-subsetting~1.0~Subset</ows:Identifier>\n" +
+               "\n" +
+               "\t<DataInputs>\n" +
+               "      \t<Input>\n" +
+               "\t\t\t<ows:Identifier>regionWKT</ows:Identifier>\n" +
+               "\t\t\t<Data>\n" +
+               "\t\t\t\t<BoundingBoxData>\n" +
+               "                  <LowerCorner>100 -10</LowerCorner>\n" +
+               "                  <UpperCorner>110 0</UpperCorner>\n" +
+               "                  <crs>urn:ogc:def:crs:EPSG:6:6:4326</crs>\n" +
+               "                </BoundingBoxData>\n" +
+               "\t\t\t</Data>\n" +
+               "\t\t</Input>\n" +
+               "\t\t\n" +
+               "\t</DataInputs>\n" +
+               "\t<ResponseForm>\n" +
+               "\t\t<ResponseDocument storeExecuteResponse=\"true\" status=\"true\">\n" +
+               "\t\t\t<Output>\n" +
+               "\t\t\t\t<ows:Identifier>productionResults</ows:Identifier>\n" +
+               "\t\t\t</Output>\n" +
+               "\t\t</ResponseDocument>\n" +
+               "\t</ResponseForm>\n" +
+               "</wps:Execute>";
     }
 
 }

@@ -54,7 +54,19 @@ public class ExecuteRequestExtractor {
                 continue;
             }
             if (!dataInput.getIdentifier().getValue().equals("calvalus.l3.parameters")) {
-                String value = dataInput.getData().getLiteralData().getValue();
+                String value;
+                if (dataInput.getData().getLiteralData() != null) {
+                    value = dataInput.getData().getLiteralData().getValue();
+                } else if (dataInput.getData().getBoundingBoxData() != null) {
+                    Double lon0 = Double.parseDouble(String.valueOf(dataInput.getData().getBoundingBoxData().getLowerCorner().get(0)));
+                    Double lat0 = Double.parseDouble(String.valueOf(dataInput.getData().getBoundingBoxData().getLowerCorner().get(1)));
+                    Double lon1 = Double.parseDouble(String.valueOf(dataInput.getData().getBoundingBoxData().getUpperCorner().get(0)));
+                    Double lat1 = Double.parseDouble(String.valueOf(dataInput.getData().getBoundingBoxData().getUpperCorner().get(1)));
+                    value = String.format("POLYGON((%1$.5f %2$.5f,%1$.5f %4$.5f,%3$.5f %4$.5f,%3$.5f %2$.5f,%1$.5f %2$.5f))",
+                                          lon0, lat0, lon1, lat1);
+                } else{
+                    throw new WpsMissingParameterValueException(dataInput.getIdentifier().getValue() + ". ComplexData not supported.");
+                }
                 if (StringUtils.isBlank(value)) {
                     throw new WpsMissingParameterValueException(dataInput.getIdentifier().getValue());
                 }
