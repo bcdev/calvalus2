@@ -1,5 +1,8 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,11 +12,14 @@ import static org.mockito.Mockito.*;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
@@ -42,6 +48,7 @@ public class CalvalusGetStatusOperationTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockCalvalusFacade = mock(CalvalusFacade.class);
         mockProductionService = mock(ProductionService.class);
         mockProduction = mock(Production.class);
@@ -57,6 +64,8 @@ public class CalvalusGetStatusOperationTest {
         ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
         when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
         when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
+        ProductionRequest mockProductionRequest = getMockProductionRequest();
+        when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
@@ -65,6 +74,8 @@ public class CalvalusGetStatusOperationTest {
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         ExecuteResponse executeResponse = getStatusOperation.getStatus("job-01");
 
+        assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("mockBundle~1.0~mockProcessor"));
+        assertThat(executeResponse.getProcess().getProcessVersion(), equalTo("1.0"));
         assertThat(executeResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
@@ -111,6 +122,8 @@ public class CalvalusGetStatusOperationTest {
     public void canGetFailedStatus() throws Exception {
         ProcessStatus mockFailedStatus = getFailedProcessStatus();
         ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
+        ProductionRequest mockProductionRequest = getMockProductionRequest();
+        when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProduction.getProcessingStatus()).thenReturn(mockFailedStatus);
         when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
@@ -121,6 +134,8 @@ public class CalvalusGetStatusOperationTest {
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         ExecuteResponse getStatusResponse = getStatusOperation.getStatus("job-01");
 
+        assertThat(getStatusResponse.getProcess().getIdentifier().getValue(), equalTo("mockBundle~1.0~mockProcessor"));
+        assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("1.0"));
         assertThat(getStatusResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(getStatusResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(getStatusResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
@@ -133,6 +148,8 @@ public class CalvalusGetStatusOperationTest {
     @Test
     public void canGetSuccessfulStatus() throws Exception {
         ProcessStatus mockCompletedStagingStatus = getDoneAndSuccessfulProcessStatus();
+        ProductionRequest mockProductionRequest = getMockProductionRequest();
+        when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProduction.getStagingStatus()).thenReturn(mockCompletedStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         List<String> mockResultUrlList = new ArrayList<>();
@@ -146,6 +163,8 @@ public class CalvalusGetStatusOperationTest {
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         ExecuteResponse getStatusResponse = getStatusOperation.getStatus("job-01");
 
+        assertThat(getStatusResponse.getProcess().getIdentifier().getValue(), equalTo("mockBundle~1.0~mockProcessor"));
+        assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("1.0"));
         assertThat(getStatusResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(getStatusResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(getStatusResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
@@ -157,6 +176,14 @@ public class CalvalusGetStatusOperationTest {
                    equalTo("productionResults"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
+    }
+
+    private ProductionRequest getMockProductionRequest() throws ProductionException {
+        ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        when(mockProductionRequest.getString(PROCESSOR_BUNDLE_NAME.getIdentifier())).thenReturn("mockBundle");
+        when(mockProductionRequest.getString(PROCESSOR_BUNDLE_VERSION.getIdentifier())).thenReturn("1.0");
+        when(mockProductionRequest.getString(PROCESSOR_NAME.getIdentifier())).thenReturn("mockProcessor");
+        return mockProductionRequest;
     }
 
     private ProcessStatus getInProgressProcessStatus() {

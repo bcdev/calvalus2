@@ -14,8 +14,10 @@ import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
+import com.bc.wps.api.utils.WpsTypeConverter;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -26,7 +28,7 @@ import java.util.List;
  */
 public class CalvalusExecuteOperation {
 
-    protected WpsRequestContext context;
+    private WpsRequestContext context;
 
     public CalvalusExecuteOperation(WpsRequestContext context) {
         this.context = context;
@@ -35,6 +37,7 @@ public class CalvalusExecuteOperation {
     public ExecuteResponse execute(Execute executeRequest)
                 throws InterruptedException, InvalidProcessorIdException,
                        JAXBException, ProductionException, IOException {
+        ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
         boolean isAsynchronous = responseDocumentType.isStatus();
@@ -43,14 +46,18 @@ public class CalvalusExecuteOperation {
 
         if (isAsynchronous) {
             String jobId = processAsync(executeRequest, processId);
-            return createAsyncExecuteResponse(executeRequest, isLineage, jobId);
+            ExecuteResponse asyncExecuteResponse = createAsyncExecuteResponse(executeRequest, isLineage, jobId);
+            asyncExecuteResponse.setProcess(processBriefType);
+            return asyncExecuteResponse;
         } else {
             List<String> results = processSync(executeRequest, processId);
-            return createSyncExecuteResponse(executeRequest, isLineage, results);
+            ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, results);
+            syncExecuteResponse.setProcess(processBriefType);
+            return syncExecuteResponse;
         }
     }
 
-    protected List<String> processSync(Execute executeRequest, String processorId)
+    List<String> processSync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException,
                        JAXBException, InterruptedException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
@@ -62,7 +69,7 @@ public class CalvalusExecuteOperation {
         return calvalusFacade.getProductResultUrls(production);
     }
 
-    protected String processAsync(Execute executeRequest, String processorId)
+    String processAsync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException, JAXBException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
@@ -71,7 +78,7 @@ public class CalvalusExecuteOperation {
         return production.getId();
     }
 
-    protected ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
+    ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
         if (isLineage) {
             CalvalusExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
@@ -83,7 +90,7 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    protected ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, List<String> productResultUrls) {
+    ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, List<String> productResultUrls) {
         if (isLineage) {
             CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
@@ -94,8 +101,8 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    protected ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
-                                                        CalvalusFacade calvalusFacade)
+    private ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
+                                                      CalvalusFacade calvalusFacade)
                 throws JAXBException, IOException, ProductionException, InvalidProcessorIdException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
@@ -107,5 +114,14 @@ public class CalvalusExecuteOperation {
         return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
                                      context.getUserName(),
                                      calvalusDataInputs.getInputMapFormatted());
+    }
+
+    private ProcessBriefType getProcessBriefType(Execute executeRequest) throws InvalidProcessorIdException {
+        ProcessBriefType processBriefType = new ProcessBriefType();
+        processBriefType.setIdentifier(executeRequest.getIdentifier());
+        processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(executeRequest.getIdentifier().getValue()));
+        ProcessorNameParser parser = new ProcessorNameParser(executeRequest.getIdentifier().getValue());
+        processBriefType.setProcessVersion(parser.getBundleVersion());
+        return processBriefType;
     }
 }

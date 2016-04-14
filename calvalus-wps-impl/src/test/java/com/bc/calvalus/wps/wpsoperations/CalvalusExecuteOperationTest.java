@@ -22,6 +22,7 @@ import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
 import com.bc.wps.api.utils.WpsTypeConverter;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
@@ -56,6 +57,7 @@ public class CalvalusExecuteOperationTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockExecuteRequest = mock(Execute.class);
         mockRequestContext = mock(WpsRequestContext.class);
         mockServerContext = mock(WpsServerContext.class);
@@ -78,7 +80,7 @@ public class CalvalusExecuteOperationTest {
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("proces-00");
+        when(mockProduction.getId()).thenReturn("process-00");
         when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
@@ -87,7 +89,8 @@ public class CalvalusExecuteOperationTest {
 
         assertThat(executeResponse.getStatus().getProcessAccepted(),
                    equalTo("The request has been accepted. The status of the process can be found in the URL."));
-        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=proces-00"));
+        assertThat(executeResponse.getStatusLocation(), equalTo("http://dummyUrl.com/bc-wps/wps/provider1?Service=WPS&Request=GetStatus&JobId=process-00"));
+        assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("process1"));
     }
 
     @Test
@@ -103,7 +106,7 @@ public class CalvalusExecuteOperationTest {
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("proces-00");
+        when(mockProduction.getId()).thenReturn("process-00");
         when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
@@ -115,6 +118,7 @@ public class CalvalusExecuteOperationTest {
         ExecuteResponse executeResponse = executeOperation.execute(mockExecuteRequest);
 
         assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been processed successfully."));
+        assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("process1"));
         assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(2));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(), equalTo("resultUrl1"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(), equalTo("resultUrl2"));
@@ -161,7 +165,7 @@ public class CalvalusExecuteOperationTest {
     public void canProcessAsync() throws Exception {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("proces-00");
+        when(mockProduction.getId()).thenReturn("process-00");
         when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         ProductionRequest mockProductionRequest = configureProcessingMock();
@@ -181,7 +185,7 @@ public class CalvalusExecuteOperationTest {
         assertThat(executeRequestCaptor.getValue(), equalTo(mockExecuteRequest));
         assertThat(processIdCaptor.getValue(), equalTo("process1"));
         assertThat(productionRequestCaptor.getValue(), equalTo(mockProductionRequest));
-        assertThat(jobId, equalTo("proces-00"));
+        assertThat(jobId, equalTo("process-00"));
     }
 
     @Test

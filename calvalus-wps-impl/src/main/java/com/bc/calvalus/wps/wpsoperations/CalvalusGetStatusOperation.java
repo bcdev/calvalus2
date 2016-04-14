@@ -1,5 +1,9 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
+
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
@@ -10,6 +14,8 @@ import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.api.schema.ProcessBriefType;
+import com.bc.wps.api.utils.WpsTypeConverter;
 
 import java.io.IOException;
 import java.util.List;
@@ -27,6 +33,21 @@ public class CalvalusGetStatusOperation {
 
     public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
         ExecuteResponse executeResponse;
+        Production production;
+        ProcessBriefType processBriefType = new ProcessBriefType();
+        try{
+            production = getProduction(jobId);
+            String bundleName = production.getProductionRequest().getString(PROCESSOR_BUNDLE_NAME.getIdentifier());
+            String bundleVersion = production.getProductionRequest().getString(PROCESSOR_BUNDLE_VERSION.getIdentifier());
+            String processorName = production.getProductionRequest().getString(PROCESSOR_NAME.getIdentifier());
+            String processId = bundleName.concat("~").concat(bundleVersion).concat("~").concat(processorName);
+            processBriefType.setIdentifier(WpsTypeConverter.str2CodeType(processId));
+            processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
+            processBriefType.setProcessVersion(bundleVersion);
+        } catch (ProductionException | IOException exception) {
+            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+        }
+
         if (isProductionJobFinishedAndSuccessful(jobId)) {
             executeResponse = getExecuteSuccessfulResponse(jobId);
         } else if (isProductionJobFinishedAndFailed(jobId)) {
@@ -34,6 +55,7 @@ public class CalvalusGetStatusOperation {
         } else {
             executeResponse = getExecuteInProgressResponse(jobId);
         }
+        executeResponse.setProcess(processBriefType);
         return executeResponse;
     }
 

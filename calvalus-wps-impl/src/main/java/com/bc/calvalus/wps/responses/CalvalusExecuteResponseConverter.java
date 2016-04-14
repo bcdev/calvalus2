@@ -15,6 +15,8 @@ import com.bc.wps.api.schema.OutputReferenceType;
 import com.bc.wps.api.schema.ProcessFailedType;
 import com.bc.wps.api.schema.ProcessStartedType;
 import com.bc.wps.api.schema.StatusType;
+import com.bc.wps.api.utils.WpsTypeConverter;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -34,6 +36,7 @@ public class CalvalusExecuteResponseConverter {
         this.executeResponse.setService("WPS");
         this.executeResponse.setVersion("1.0.0");
         this.executeResponse.setLang("en");
+        this.executeResponse.setServiceInstance(PropertiesWrapper.get("wps.get.request.url"));
     }
 
     public ExecuteResponse getAcceptedResponse(String jobId, WpsServerContext context) {
@@ -137,12 +140,12 @@ public class CalvalusExecuteResponseConverter {
 
         for (String productionResultUrl : resultUrls) {
             OutputDataType url = new OutputDataType();
-            CodeType outputId = new CodeType();
-            outputId.setValue("productionResults");
-            url.setIdentifier(outputId);
+            url.setIdentifier(WpsTypeConverter.str2CodeType("productionResults"));
+            url.setTitle(WpsTypeConverter.str2LanguageStringType("Production results"));
+            url.setAbstract(WpsTypeConverter.str2LanguageStringType("This is the URL link to the production result"));
             OutputReferenceType urlLink = new OutputReferenceType();
             urlLink.setHref(productionResultUrl);
-            urlLink.setMimeType("binary");
+            urlLink.setMimeType("application/octet-stream");
             url.setReference(urlLink);
 
             productUrl.getOutput().add(url);

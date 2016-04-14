@@ -22,6 +22,7 @@ import com.bc.wps.api.schema.OutputDescriptionType;
 import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.api.schema.SupportedComplexDataInputType;
 import com.bc.wps.api.schema.SupportedComplexDataType;
+import com.bc.wps.api.schema.ValueType;
 import com.bc.wps.api.utils.InputDescriptionTypeBuilder;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.lang.ArrayUtils;
@@ -124,7 +125,7 @@ public class CalvalusDescribeProcessOperation {
         SupportedComplexDataType supportedComplexDataType = new SupportedComplexDataType();
         ComplexDataCombinationType complexDataCombinationType = new ComplexDataCombinationType();
         ComplexDataDescriptionType complexDataDescriptionType = new ComplexDataDescriptionType();
-        complexDataDescriptionType.setMimeType("binary");
+        complexDataDescriptionType.setMimeType("application/octet-stream");
         complexDataCombinationType.setFormat(complexDataDescriptionType);
         supportedComplexDataType.setDefault(complexDataCombinationType);
 
@@ -155,6 +156,7 @@ public class CalvalusDescribeProcessOperation {
                     .create()
                     .withIdentifier("productionName")
                     .withTitle("Production name")
+                    .withAbstract("The name of the product. When not specified, a random unique name is generated")
                     .withDataType("string")
                     .build();
         dataInputs.getInput().add(productionNameInput);
@@ -164,7 +166,8 @@ public class CalvalusDescribeProcessOperation {
                 InputDescriptionType input = InputDescriptionTypeBuilder
                             .create()
                             .withIdentifier(parameterDescriptor.getName())
-                            .withTitle(parameterDescriptor.getDescription())
+                            .withTitle(parameterDescriptor.getName())
+                            .withAbstract(parameterDescriptor.getDescription())
                             .withDefaultValue(parameterDescriptor.getDefaultValue())
                             .withDataType(parameterDescriptor.getType())
                             .build();
@@ -176,6 +179,7 @@ public class CalvalusDescribeProcessOperation {
                         .create()
                         .withIdentifier("processorParameters")
                         .withTitle("Processor parameters")
+                        .withAbstract("Parameters specific to this processor")
                         .withDefaultValue(calvalusProcessor.getDefaultParameters())
                         .withDataType("string")
                         .build();
@@ -183,16 +187,19 @@ public class CalvalusDescribeProcessOperation {
             dataInputs.getInput().add(input);
         }
 
-        List<String> allowedInputDataSets = new ArrayList<>();
+        List<Object> allowedInputDataSets = new ArrayList<>();
         for (ProductSet productSet : productSets) {
             if (ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
-                allowedInputDataSets.add(productSet.getName());
+                ValueType value = new ValueType();
+                value.setValue(productSet.getName());
+                allowedInputDataSets.add(value);
             }
         }
         InputDescriptionType inputDataSetName = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("inputDataSetName")
                     .withTitle("Input data set name")
+                    .withAbstract("The input dataset required for the processing")
                     .withDataType("string")
                     .withAllowedValues(allowedInputDataSets)
                     .build();
@@ -203,6 +210,7 @@ public class CalvalusDescribeProcessOperation {
                     .create()
                     .withIdentifier("minDate")
                     .withTitle("Date from")
+                    .withAbstract("The desired start date of the product")
                     .withDataType("string")
                     .build();
 
@@ -212,6 +220,7 @@ public class CalvalusDescribeProcessOperation {
                     .create()
                     .withIdentifier("maxDate")
                     .withTitle("Date to")
+                    .withAbstract("The desired end date of the product")
                     .withDataType("string")
                     .build();
 
@@ -221,6 +230,7 @@ public class CalvalusDescribeProcessOperation {
                     .create()
                     .withIdentifier("periodLength")
                     .withTitle("Period length")
+                    .withAbstract("The desired temporal range of the product")
                     .withDataType("string")
                     .build();
 
@@ -230,6 +240,7 @@ public class CalvalusDescribeProcessOperation {
                     .create()
                     .withIdentifier("regionWkt")
                     .withTitle("Region WKT")
+                    .withAbstract("The spatial range in the format of text. Example: POLYGON((100 -10,100 0,110 0,110 -10,100 -10))")
                     .withDataType("string")
                     .build();
 
@@ -240,12 +251,19 @@ public class CalvalusDescribeProcessOperation {
         dataInputs.getInput().add(l3ParametersComplexType);
 
         List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        List<Object> allowedValues = new ArrayList<>();
+        for(String outputFormat : allowedOutputFormat){
+            ValueType value = new ValueType();
+            value.setValue(outputFormat);
+            allowedValues.add(value);
+        }
         InputDescriptionType calvalusOutputFormat = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("outputFormat")
                     .withTitle("Output file format")
+                    .withAbstract("The desired format of the product")
                     .withDataType("string")
-                    .withAllowedValues(allowedOutputFormat)
+                    .withAllowedValues(allowedValues)
                     .build();
 
         dataInputs.getInput().add(calvalusOutputFormat);

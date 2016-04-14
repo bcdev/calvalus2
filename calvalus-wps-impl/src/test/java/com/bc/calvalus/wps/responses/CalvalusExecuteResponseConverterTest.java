@@ -13,6 +13,7 @@ import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.InputType;
 import com.bc.wps.api.schema.LiteralDataType;
 import com.bc.wps.api.schema.OutputDefinitionsType;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ public class CalvalusExecuteResponseConverterTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         calvalusExecuteResponse = new CalvalusExecuteResponseConverter();
         mockServerContext = mock(WpsServerContext.class);
         when(mockServerContext.getHostAddress()).thenReturn("dummyUrl.com");
