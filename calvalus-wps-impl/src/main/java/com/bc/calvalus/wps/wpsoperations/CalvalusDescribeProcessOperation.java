@@ -14,12 +14,14 @@ import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.responses.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.schema.CRSsType;
 import com.bc.wps.api.schema.ComplexDataCombinationType;
 import com.bc.wps.api.schema.ComplexDataCombinationsType;
 import com.bc.wps.api.schema.ComplexDataDescriptionType;
 import com.bc.wps.api.schema.InputDescriptionType;
 import com.bc.wps.api.schema.OutputDescriptionType;
 import com.bc.wps.api.schema.ProcessDescriptionType;
+import com.bc.wps.api.schema.SupportedCRSsType;
 import com.bc.wps.api.schema.SupportedComplexDataInputType;
 import com.bc.wps.api.schema.SupportedComplexDataType;
 import com.bc.wps.api.schema.ValueType;
@@ -246,13 +248,34 @@ public class CalvalusDescribeProcessOperation {
 
         dataInputs.getInput().add(regionWkt);
 
+        InputDescriptionType regionBoundingBox = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("regionWkt")
+                    .withTitle("Region with bounding box")
+                    .withAbstract("The spatial range in the format of bounding box. Use LowerCorner and UpperCorner (a pair of double values) " +
+                                  "to specify the box. Example: <LowerCorner>100.74453 -10.0000</LowerCorner><UpperCorner>110.25000 0.12443</UpperCorner>")
+                    .withDataType("string")
+                    .build();
+
+        SupportedCRSsType boundingBox = new SupportedCRSsType();
+        SupportedCRSsType.Default defaultBoundingBox = new SupportedCRSsType.Default();
+        defaultBoundingBox.setCRS("urn:ogc:def:crs:EPSG:6:6:4326");
+        boundingBox.setDefault(defaultBoundingBox);
+        CRSsType supportedBoundingBox = new CRSsType();
+        supportedBoundingBox.getCRS().add("urn:ogc:def:crs:EPSG:6:6:4326");
+        boundingBox.setSupported(supportedBoundingBox);
+        regionBoundingBox.setBoundingBoxData(boundingBox);
+        regionBoundingBox.setLiteralData(null);
+
+        dataInputs.getInput().add(regionBoundingBox);
+
         InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(
                     PropertiesWrapper.get("wps.l3.parameters.schema.location"));
         dataInputs.getInput().add(l3ParametersComplexType);
 
         List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
         List<Object> allowedValues = new ArrayList<>();
-        for(String outputFormat : allowedOutputFormat){
+        for (String outputFormat : allowedOutputFormat) {
             ValueType value = new ValueType();
             value.setValue(outputFormat);
             allowedValues.add(value);
