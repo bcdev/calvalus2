@@ -160,7 +160,7 @@ public class StreamingProductReader extends AbstractProductReader {
             final Band lonBand = product.getBand("longitude");
             final Band latBand = product.getBand("latitude");
             if (latBand != null && lonBand != null) {
-                product.setSceneGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 6));
+                product.setSceneGeoCoding(GeoCodingFactory.createPixelGeoCoding(latBand, lonBand, null, 6));
             }
         }
     }
