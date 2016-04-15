@@ -110,9 +110,10 @@ public class CalvalusExecuteResponseConverter {
 
         ProcessFailedType processFailedType = new ProcessFailedType();
         ExceptionReport exceptionReport = new ExceptionReport();
-        exceptionReport.setVersion("1");
+        exceptionReport.setVersion("1.0.0");
         ExceptionType exceptionType = new ExceptionType();
         exceptionType.getExceptionText().add(exceptionMessage);
+        exceptionType.setExceptionCode("NoApplicableCode");
         exceptionReport.getException().add(exceptionType);
         processFailedType.setExceptionReport(exceptionReport);
         statusType.setProcessFailed(processFailedType);

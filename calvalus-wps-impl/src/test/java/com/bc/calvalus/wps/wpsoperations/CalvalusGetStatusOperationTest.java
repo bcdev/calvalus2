@@ -139,7 +139,9 @@ public class CalvalusGetStatusOperationTest {
         assertThat(getStatusResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(getStatusResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(getStatusResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
-        assertThat(getStatusResponse.getStatus().getProcessFailed().getExceptionReport().getVersion(), equalTo("1"));
+        assertThat(getStatusResponse.getStatus().getProcessFailed().getExceptionReport().getVersion(), equalTo("1.0.0"));
+        assertThat(getStatusResponse.getStatus().getProcessFailed().getExceptionReport().getException().get(0).getExceptionCode(),
+                   equalTo("NoApplicableCode"));
         assertThat(getStatusResponse.getStatus().getProcessFailed().getExceptionReport().getException().get(0).getExceptionText().get(0),
                    equalTo("Error in processing the job"));
 
