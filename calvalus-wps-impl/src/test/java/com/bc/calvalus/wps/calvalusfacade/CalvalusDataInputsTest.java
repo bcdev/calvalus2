@@ -6,8 +6,8 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
-import com.bc.calvalus.wps.exceptions.WpsInvalidParameterValueException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import org.junit.*;
 
 import java.util.ArrayList;
@@ -215,7 +215,7 @@ public class CalvalusDataInputsTest {
                                                           "processorBundleVersion : null\n"));
     }
 
-    @Test(expected = WpsInvalidParameterValueException.class)
+    @Test(expected = InvalidParameterValueException.class)
     public void canThrowExceptionWhenInputDataSetNameNotPresent() throws Exception {
         Map<String, String> mockInputMapRaw = getRawMapWithoutInputDataSetName();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);

@@ -1,6 +1,7 @@
 package com.bc.calvalus.wps.utils;
 
-import com.bc.calvalus.wps.exceptions.WpsMissingParameterValueException;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.DataInputsType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.InputType;
@@ -34,7 +35,8 @@ public class ExecuteRequestExtractor {
 
     private final Map<String, String> inputParametersMapRaw;
 
-    public ExecuteRequestExtractor(Execute execute) throws JAXBException {
+    public ExecuteRequestExtractor(Execute execute)
+                throws JAXBException, MissingParameterValueException, InvalidParameterValueException {
         inputParametersMapRaw = new HashMap<>();
         extractInputParameters(execute);
     }
@@ -47,7 +49,8 @@ public class ExecuteRequestExtractor {
         return inputParametersMapRaw.get(parameterName);
     }
 
-    private void extractInputParameters(Execute execute) throws JAXBException {
+    private void extractInputParameters(Execute execute)
+                throws JAXBException, InvalidParameterValueException, MissingParameterValueException {
         DataInputsType dataInputs = execute.getDataInputs();
         for (InputType dataInput : dataInputs.getInput()) {
             if (dataInput.getIdentifier() == null) {
@@ -64,11 +67,11 @@ public class ExecuteRequestExtractor {
                     Double lat1 = Double.parseDouble(String.valueOf(dataInput.getData().getBoundingBoxData().getUpperCorner().get(1)));
                     value = String.format("POLYGON((%1$.5f %2$.5f,%1$.5f %4$.5f,%3$.5f %4$.5f,%3$.5f %2$.5f,%1$.5f %2$.5f))",
                                           lon0, lat0, lon1, lat1);
-                } else{
-                    throw new WpsMissingParameterValueException(dataInput.getIdentifier().getValue() + ". ComplexData not supported.");
+                } else {
+                    throw new InvalidParameterValueException("ComplexData");
                 }
                 if (StringUtils.isBlank(value)) {
-                    throw new WpsMissingParameterValueException(dataInput.getIdentifier().getValue());
+                    throw new MissingParameterValueException(dataInput.getIdentifier().getValue());
                 }
                 inputParametersMapRaw.put(dataInput.getIdentifier().getValue(), value);
             } else {

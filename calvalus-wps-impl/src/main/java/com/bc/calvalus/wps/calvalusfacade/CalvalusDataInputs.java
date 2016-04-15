@@ -12,8 +12,8 @@ import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.getProductset
 
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
-import com.bc.calvalus.wps.exceptions.WpsInvalidParameterValueException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 
@@ -31,7 +31,7 @@ public class CalvalusDataInputs {
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
 
-    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, CalvalusProcessor calvalusProcessor, ProductSet[] productSets) {
+    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, CalvalusProcessor calvalusProcessor, ProductSet[] productSets) throws InvalidParameterValueException {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
@@ -97,7 +97,7 @@ public class CalvalusDataInputs {
         inputMapFormatted.put("processorBundleLocation", calvalusProcessor.getBundleLocation());
     }
 
-    private void extractProductsetParameters(ProductSet[] productSets, CalvalusProcessor calvalusProcessor) {
+    private void extractProductsetParameters(ProductSet[] productSets, CalvalusProcessor calvalusProcessor) throws InvalidParameterValueException {
         String dataSetName = inputMapRaw.get(INPUT_DATASET.getIdentifier());
         for (ProductSet productSet : productSets) {
             if (productSet.getName().equals(dataSetName)
@@ -107,7 +107,7 @@ public class CalvalusDataInputs {
         }
 
         if (calvalusProcessor != null && StringUtils.isBlank(inputMapFormatted.get("inputPath"))) {
-            throw new WpsInvalidParameterValueException(INPUT_DATASET.getIdentifier());
+            throw new InvalidParameterValueException(INPUT_DATASET.getIdentifier());
         }
 
         List<String> productsetParameterNames = getProductsetParameters();

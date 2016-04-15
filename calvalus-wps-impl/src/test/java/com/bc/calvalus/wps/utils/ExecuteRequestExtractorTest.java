@@ -3,7 +3,7 @@ package com.bc.calvalus.wps.utils;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.bc.calvalus.wps.exceptions.WpsMissingParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ObjectFactory;
 import com.bc.wps.utilities.JaxbHelper;
@@ -91,8 +91,8 @@ public class ExecuteRequestExtractorTest {
         InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
         Execute execute = (Execute) JaxbHelper.unmarshal(requestInputStream, new ObjectFactory());
 
-        thrownException.expect(WpsMissingParameterValueException.class);
-        thrownException.expectMessage("Missing value from parameter : productionType");
+        thrownException.expect(MissingParameterValueException.class);
+        thrownException.expectMessage("The value of parameter 'productionType' is missing.");
 
         requestExtractor = new ExecuteRequestExtractor(execute);
     }

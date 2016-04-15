@@ -11,6 +11,8 @@ import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
@@ -35,8 +37,8 @@ public class CalvalusExecuteOperation {
     }
 
     public ExecuteResponse execute(Execute executeRequest)
-                throws InterruptedException, InvalidProcessorIdException,
-                       JAXBException, ProductionException, IOException {
+                throws InterruptedException, InvalidProcessorIdException, JAXBException,
+                       ProductionException, IOException, InvalidParameterValueException, MissingParameterValueException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -59,7 +61,7 @@ public class CalvalusExecuteOperation {
 
     List<String> processSync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException,
-                       JAXBException, InterruptedException {
+                       JAXBException, InterruptedException, InvalidParameterValueException, MissingParameterValueException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
 
@@ -70,7 +72,7 @@ public class CalvalusExecuteOperation {
     }
 
     String processAsync(Execute executeRequest, String processorId)
-                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException {
+                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException, InvalidParameterValueException, MissingParameterValueException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
 
@@ -103,7 +105,8 @@ public class CalvalusExecuteOperation {
 
     private ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
                                                       CalvalusFacade calvalusFacade)
-                throws JAXBException, IOException, ProductionException, InvalidProcessorIdException {
+                throws JAXBException, IOException, ProductionException, InvalidProcessorIdException,
+                       InvalidParameterValueException, MissingParameterValueException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
         ProcessorNameParser parser = new ProcessorNameParser(processorId);
