@@ -6,7 +6,9 @@ import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
 
@@ -40,14 +42,11 @@ public class CombinationsWorkflowItem extends HadoopWorkflowItem {
 
     @Override
     protected void configureJob(Job job) throws IOException {
-
-        Configuration jobConfig = job.getConfiguration();
-
         job.setInputFormatClass(CombinationsInputFormat.class);
         job.setMapperClass(CombinationsMapper.class);
         job.setNumReduceTasks(0);
         job.setOutputFormatClass(SimpleOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
+        FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
     }
 }

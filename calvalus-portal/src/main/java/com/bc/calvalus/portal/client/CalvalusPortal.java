@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -275,6 +276,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new ManageMasksView(this);
             case "productionsView":
                 return new ManageProductionsView(this);
+            case "emptyView":
+                return new FrameView(this, "EmptyView", "Empty", "empty.html");
             default:
                 throw new RuntimeException("unknown view " + name);
         }
@@ -288,6 +291,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             if (withPortalFeature(viewName)) {
                 accu.add(createViewOf(viewName));
             }
+        }
+        if (accu.isEmpty()) {
+            accu.add(createViewOf("emptyView"));
         }
         views = accu.toArray(new PortalView[accu.size()]);
 
@@ -365,7 +371,15 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         removeSplashScreen();
 
-        showView(OrderL2ProductionView.ID);
+        if (viewTabIndices.containsKey(OrderL2ProductionView.ID)) {
+            showView(OrderL2ProductionView.ID);
+        } else {
+            Set<String> keySet = viewTabIndices.keySet();
+            if (!keySet.isEmpty()) {
+                String firstViewKey = keySet.toArray(new String[0])[0];
+                showView(firstViewKey);
+            }
+        }
         showMainPanel(mainPanel);
 
         productionsUpdateTimer = new Timer() {

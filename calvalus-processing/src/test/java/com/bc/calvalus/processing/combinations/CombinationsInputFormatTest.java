@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.combinations;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.junit.Before;
 import org.junit.Test;
@@ -88,6 +89,27 @@ public class CombinationsInputFormatTest {
         assertSplitEquals(inputSplits.get(1), "A2", "T1,T2,T3");
         assertSplitEquals(inputSplits.get(2), "A3", "T1,T2,T3");
     }
+
+    @Test
+    public void testCreateSplitOutputPath() throws Exception {
+        assertEquals("dir/a_b", create("dir", "a_%s", "b"));
+        assertEquals("dir/a_3", create("dir", "a_%d", "3"));
+        assertEquals("dir/a_4.50", create("dir", "a_%04.2f", "4.5"));
+        assertEquals("dir/a_a", create("dir", "a_%s", "a, b"));
+        assertEquals("dir/a_a", create("dir", "a_%s", "'a', b"));
+
+        String modtranFormat = "AVHRR_AC_aertype%s_surfref%04.2f_aerdepth%05.3f_wv%04d_o3c0.33176_co2m380_sza%02d_vza%02d_azi%03d_alt%03.1f_band%01d.zip";
+        String[] modtranValues = new String[]{"'___rural', 'foo'", "0.15", "0.7", "500", "0", "0", "30", "0.0", "1"};
+        String modtranOutput = create("modtran", modtranFormat, modtranValues);
+
+        String expected = "modtran/AVHRR_AC_aertype___rural_surfref0.15_aerdepth0.700_wv0500_o3c0.33176_co2m380_sza00_vza00_azi030_alt0.0_band1.zip";
+        assertEquals(expected, modtranOutput);
+    }
+
+    public String create(String path, String formatName, String...values) {
+        return CombinationsInputFormat.createSplitOutputPath(new Path(path), formatName, values).toString();
+    }
+
 
     private static void assertSplitEquals(InputSplit inputSplit, String... values) {
         assertSame(CombinationsInputSplit.class, inputSplit.getClass());

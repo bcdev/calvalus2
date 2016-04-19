@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+
+. /etc/profile
+
+counter=0
+
+num_granules=$(unzip -l ${1}|grep -E "GRANULE/.*_T[0-9]{2}[A-Z]{3}.xml"|wc -l)
+echo "num_granules: ${num_granules}"
+
+function handle_stdout() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ writing\ to\:\ (.+) ]]; then
+    outputfilename=${BASH_REMATCH[1]}
+    echo CALVALUS_OUTPUT_PRODUCT $(basename ${outputfilename})
+
+    if [[ ${num_granules} != 0 ]]; then
+      counter=$((counter+1))
+      progress=$(echo "scale=3; ${counter} / ${num_granules}" | bc)
+      printf "CALVALUS_PROGRESS %.3f\n" ${progress}
+    fi
+  fi
+}
+
+
+
+jar=calvalus-inventory*jar
+class=com.bc.calvalus.sentinel2.GranuleSplitter
+java -Xmx265M -cp ${jar} ${class} ${1} . | while read x ; do handle_stdout "$x" ; done
+
+if [[ ${PIPESTATUS[0]} != 0 ]]; then
+  echo "error calling GranuleSplitter"
+  exit ${PIPESTATUS[0]}
+fi
+
+marker=_$(basename ${1})
+touch ${marker}
+echo CALVALUS_OUTPUT_PRODUCT ${marker}
+
+
+

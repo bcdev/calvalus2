@@ -46,6 +46,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -486,6 +488,84 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public FileSystem getFileSystem(String userName, String path) throws IOException {
         return jobClientsMap.getFileSystem(userName, path);
     }
+
+    private static FileSystem getFileSystem(String username, Configuration conf, Path path) throws IOException {
+        try {
+            return FileSystem.get(path.toUri(), conf, username);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+    }
+
+
+    public static void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
+        final FileSystem fs = getFileSystem(username, conf, bundlePath);
+
+        addBundleToClassPath(bundlePath, username, conf);
+        addBundleArchives(bundlePath, fs, conf);
+        addBundleLibs(bundlePath, fs, conf);
+
+    }
+
+    private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] archives = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return isArchive(path);
+            }
+        });
+        for (FileStatus archive : archives) {
+            URI uri = convertPathToURI(archive.getPath());
+            DistributedCache.addCacheArchive(uri, conf);
+        }
+    }
+
+    private static URI convertPathToURI(Path path) {
+        URI uri = path.toUri();
+        String linkName = stripArchiveExtension(path.getName());
+        try {
+            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, linkName);
+        } catch (URISyntaxException ignore) {
+            throw new IllegalArgumentException("could not add fragment to URI for Path: " + path);
+        }
+    }
+
+    /**
+     * Hadoop can handle archives with the following extensions: zip, tar, tar.gz, tgz
+     */
+    public static boolean isArchive(Path archivePath) {
+        String filename = archivePath.getName();
+        return filename.endsWith(".tgz") || filename.endsWith(".tar.gz") ||
+               filename.endsWith(".tar") || filename.endsWith(".zip");
+    }
+
+    static String stripArchiveExtension(String archiveName) {
+        if (archiveName.endsWith(".tgz") || archiveName.endsWith(".tar") || archiveName.endsWith(".zip")) {
+            return archiveName.substring(0, archiveName.length() - 4);
+        } else if (archiveName.endsWith(".tar.gz")) {
+            return archiveName.substring(0, archiveName.length() - 7);
+        }
+        return null;
+    }
+
+    private static void addBundleLibs(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return isLib(path);
+            }
+        });
+        for (FileStatus lib : libs) {
+            URI uri = lib.getPath().toUri();
+            DistributedCache.addCacheFile(uri, conf);
+        }
+    }
+
+    static boolean isLib(Path libPath) {
+        String filename = libPath.getName();
+        return filename.endsWith(".so");
+    }
+
 
     private static class BundleQueryCacheEntry {
         private final String userName;

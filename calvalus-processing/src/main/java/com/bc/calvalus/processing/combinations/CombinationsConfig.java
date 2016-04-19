@@ -49,6 +49,9 @@ public class CombinationsConfig implements XmlConvertible {
     @Parameter(itemAlias = "variable")
     private Variable[] variables;
 
+    @Parameter
+    private String formatName;
+
     // for deserialization
     public CombinationsConfig() {
         this(new Variable[0]);
@@ -68,6 +71,14 @@ public class CombinationsConfig implements XmlConvertible {
             variableNames.add(variable.name);
         }
         return variableNames;
+    }
+
+    public String getFormatName() {
+        if (formatName == null) {
+            return "";
+        } else {
+            return formatName;
+        }
     }
 
     public static CombinationsConfig get(Configuration jobConfig) {

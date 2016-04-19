@@ -26,8 +26,8 @@ public class BATilesInputFormat extends FireInputFormat {
         FileStatus[] sameYearStatuses = super.getFileStatuses(inventoryService, inputPathPatterns, conf);
 
         String[] wingsPathPatterns = BATilesInputFormat.createWingsPathPatterns(inputPathPatterns);
-        FileStatus[] beforeStatuses = super.getFileStatuses(inventoryService, wingsPathPatterns[0], conf);
-        FileStatus[] afterStatuses = super.getFileStatuses(inventoryService, wingsPathPatterns[1], conf);
+        FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
+        FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
 
         FileStatus[] fileStatuses = new FileStatus[sameYearStatuses.length + beforeStatuses.length + afterStatuses.length];
         System.arraycopy(sameYearStatuses, 0, fileStatuses, 0, sameYearStatuses.length);

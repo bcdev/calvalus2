@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+
+inputPath="$1"
+outputPath="$2"
+
+marker=_$(basename ${inputPath})
+
+if hadoop fs -ls ${outputPath}/${marker}; then
+  # output exist
+  echo CALVALUS_SKIP_PROCESSING yes
+fi
+
+
+
