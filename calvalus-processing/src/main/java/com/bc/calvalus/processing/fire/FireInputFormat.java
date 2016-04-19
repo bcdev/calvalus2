@@ -61,10 +61,6 @@ public class FireInputFormat extends InputFormat {
                                         fileLengths.stream().mapToLong(Long::longValue).toArray()));
     }
 
-    static boolean fileMatchesTile(FileStatus file, int tileX, int tileY) {
-        return file.getPath().getName().contains(String.format("-v%02dh%02d", tileX, tileY));
-    }
-
     protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
                                             String inputPathPatterns,
                                             Configuration conf) throws IOException {

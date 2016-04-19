@@ -99,4 +99,8 @@ public class BATilesInputFormat extends FireInputFormat {
         return new String[] {beforeInputPathPatterns, afterInputPathPatterns};
     }
 
+    static boolean fileMatchesTile(FileStatus file, int tileX, int tileY) {
+        return file.getPath().getName().contains(String.format("-v%02dh%02d", tileX, tileY));
+    }
+
 }
