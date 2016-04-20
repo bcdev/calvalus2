@@ -396,13 +396,11 @@ public abstract class LcL3SensorConfig {
                 featureNames[j++] = counter + "_count";
             }
             for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
-                featureNames[j++] = "sr_" + bandSuffix + "_mean";
+                featureNames[j++] = "sr_" + (i+1) + "_mean";
             }
             featureNames[j++] = "ndvi_mean";
             for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
-                featureNames[j++] = "sr_" + bandSuffix + "_sigma";
+                featureNames[j++] = "sr_" + (i+1) + "_sigma";
             }
             return featureNames;
         }
@@ -410,8 +408,8 @@ public abstract class LcL3SensorConfig {
         @Override
         public List<String> getMeanBandNames() {
             ArrayList<String> names = new ArrayList<String>(BANDNAMES.length);
-            for (String name : BANDNAMES) {
-                names.add("sr_" + name + "_mean");
+            for (int i = 0; i < BANDNAMES.length; ++i) {
+                names.add("sr_" + (i+1) + "_mean");
             }
             return names;
         }
@@ -419,8 +417,8 @@ public abstract class LcL3SensorConfig {
         @Override
         public List<String> getUncertaintyBandNames() {
             ArrayList<String> names = new ArrayList<String>(BANDNAMES.length);
-            for (String name : BANDNAMES) {
-                names.add("sr_" + name + "_uncertainty");
+            for (int i = 0; i < BANDNAMES.length; ++i) {
+                names.add("sr_" + (i+1) + "_uncertainty");
             }
             return names;
         }
@@ -433,12 +431,7 @@ public abstract class LcL3SensorConfig {
         @Override
         public int getL2BandIndex(String srBandName) {
             final String name = srBandName.substring("sr_".length(), srBandName.length() - "_mean".length());
-            for (int j=0; j<BANDNAMES.length; ++j) {
-                if (BANDNAMES[j].equals(name)) {
-                    return j+1;
-                }
-            }
-            return -1;
+            return Integer.parseInt(name);
         }
     }
 
@@ -558,12 +551,10 @@ public abstract class LcL3SensorConfig {
                 featureNames[j++] = counter + "_count";
             }
             for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
                 featureNames[j++] = "sr_" + (i+1) + "_mean";
             }
             featureNames[j++] = "ndvi_mean";
             for (int i = 0; i < BANDNAMES.length; i++) {
-                String bandSuffix = BANDNAMES[i];
                 featureNames[j++] = "sr_" + (i+1) + "_uncertainty";
             }
             return featureNames;
@@ -589,7 +580,7 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public boolean isUncertaintiesAreSquares() {
-            return false;
+            return true;
         }
 
         @Override
