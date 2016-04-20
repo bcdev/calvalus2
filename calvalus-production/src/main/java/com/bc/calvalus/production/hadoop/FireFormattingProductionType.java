@@ -21,11 +21,11 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.FireGridInputFormat;
 import com.bc.calvalus.processing.fire.FireGridMapper;
 import com.bc.calvalus.processing.fire.FireGridReducer;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -112,7 +112,7 @@ public class FireFormattingProductionType extends HadoopProductionType {
         @Override
         protected void configureJob(Job job) throws IOException {
             CalvalusLogger.getLogger().info("Configuring job.");
-            job.setInputFormatClass(PatternBasedInputFormat.class);
+            job.setInputFormatClass(FireGridInputFormat.class);
             job.setMapperClass(FireGridMapper.class);
             job.setReducerClass(FireGridReducer.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));

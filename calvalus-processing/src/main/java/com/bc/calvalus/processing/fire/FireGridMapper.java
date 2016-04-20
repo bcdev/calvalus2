@@ -44,11 +44,15 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -58,9 +62,13 @@ import java.util.logging.Logger;
  */
 public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable, GridCell> {
 
+    public static final int TARGET_RASTER_WIDTH = 40;
+    public static final int TARGET_RASTER_HEIGHT = 40;
+
     private static final float ONE_PIXEL_AREA = 300 * 300;
-    private File cwd;
     private static final Logger LOG = CalvalusLogger.getLogger();
+
+    private FireGridDataSource dataSource;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -73,37 +81,44 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        FileSplit inputSplit = (FileSplit) context.getInputSplit();
-        Path path = inputSplit.getPath();
-        LOG.info("inputSplitPath = " + path);
-        File localFile = CalvalusProductIO.copyFileToLocal(path, context.getConfiguration());
-        Product product = ProductIO.readProduct(localFile);
+        CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
+        Path[] paths = inputSplit.getPaths();
+        LOG.info("paths=" + Arrays.toString(paths));
 
-        String tile = getTile(path);
+        String tile = getTile(paths[0]);
+        File centerSourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
+        Product centerSourceProduct = ProductIO.readProduct(centerSourceProductFile);
 
-        Product target = new Product("target", "type", 40, 40);
-        try {
-            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 40, 40, getEasting(tile), getNorthing(tile), 0.25, 0.25));
-        } catch (FactoryException | TransformException e) {
-            throw new IOException(e);
+        Map<Position, Product> neighbourProducts = new HashMap<>();
+        for (int i = 1; i < paths.length; i++) {
+            Path path = paths[i];
+            File localFile = CalvalusProductIO.copyFileToLocal(path, context.getConfiguration());
+            neighbourProducts.put(findPosition(path.getName(), tile), ProductIO.readProduct(localFile));
         }
-        Band band_1 = product.getBand("band_1");
+
+        Product target = createTargetProduct(tile);
+
+        dataSource = new FireGridDataSourceImpl(centerSourceProduct, neighbourProducts);
+
         Band burnedAreaFirstHalf = target.addBand("burned_area_first_half", ProductData.TYPE_FLOAT32);
         Band burnedAreaSecondHalf = target.addBand("burned_area_second_half", ProductData.TYPE_FLOAT32);
         PixelPos pixelPos = new PixelPos();
         GeoPos geoPos = new GeoPos();
-        for (int y = 0; y < 40; y++) {
-            for (int x = 0; x < 40; x++) {
+        int[] pixels = new int[90 * 90];
+        for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
+            for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 pixelPos.x = x;
                 pixelPos.y = y;
                 target.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
-                product.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
+                centerSourceProduct.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
+                Rectangle sourceRect = getSourceRect(pixelPos);
+                Arrays.fill(pixels, -1);
+                dataSource.readPixels(sourceRect, pixels);
+
                 float valueFirstHalf = 0.0F;
                 float valueSecondHalf = 0.0F;
-                float[] pixels = new float[90 * 90];
-                band_1.readPixels((int) (pixelPos.x - 45), (int) (pixelPos.y - 45), 90, 90, pixels);
-                for (int i = 0; i < 90 * 90; i++) {
-                    float pixelFloat = pixels[i];
+
+                for (int pixelFloat : pixels) {
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, pixelFloat)) {
                         valueFirstHalf += ONE_PIXEL_AREA;
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, pixelFloat)) {
@@ -118,12 +133,62 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         ProductIO.writeProduct(target, "/tmp/deleteme/thomas-ba.nc", "NetCDF4-BEAM");
     }
 
-    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, float pixelFloat) {
-        return pixelFloat >= doyFirstOfMonth && pixelFloat < doySecondHalf - 6 && pixelFloat != 999.0;
+    static Position findPosition(String filename, String centerTile) {
+        final int[] tileIndices = FireGridInputFormat.getTileIndices(filename);
+        int centerX = Integer.parseInt(centerTile.substring(4, 6));
+        int centerY = Integer.parseInt(centerTile.substring(1, 3));
+        if (centerX > tileIndices[1]) {
+            // left
+            if (centerY > tileIndices[0]) {
+                return Position.TOP_LEFT;
+            } else if (centerY == tileIndices[0]) {
+                return Position.CENTER_LEFT;
+            } else if (centerY < tileIndices[0]) {
+                return Position.BOTTOM_LEFT;
+            }
+        } else if (centerX == tileIndices[1]) {
+            // center
+            if (centerY > tileIndices[0]) {
+                return Position.TOP_CENTER;
+            } else if (centerY == tileIndices[0]) {
+                return Position.CENTER;
+            } else if (centerY < tileIndices[0]) {
+                return Position.BOTTOM_CENTER;
+            }
+        } else if (centerX < tileIndices[1]) {
+            // right
+            if (centerY > tileIndices[0]) {
+                return Position.TOP_RIGHT;
+            } else if (centerY == tileIndices[0]) {
+                return Position.CENTER_RIGHT;
+            } else if (centerY < tileIndices[0]) {
+                return Position.BOTTOM_RIGHT;
+            }
+        }
+        return null;
     }
 
-    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, float pixelFloat) {
-        return pixelFloat > doyFirstHalf + 8 && pixelFloat <= doyLastOfMonth && pixelFloat != 999.0;
+    private Product createTargetProduct(String tile) throws IOException {
+        Product target = new Product("target", "type", TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT);
+        try {
+            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT, getEasting(tile), getNorthing(tile), 0.25, 0.25));
+        } catch (FactoryException | TransformException e) {
+            throw new IOException(e);
+        }
+        return target;
+    }
+
+    static Rectangle getSourceRect(PixelPos pixelPos) {
+        final int sourcePixelCount = 90; // from 300m resolution to 0.25° -> each target pixel has 90 source pixels in x and y direction -> 8100 pixels
+        return new Rectangle((int) pixelPos.x - sourcePixelCount / 2, (int) pixelPos.y - sourcePixelCount / 2, sourcePixelCount, sourcePixelCount);
+    }
+
+    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
+        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != -1;
+    }
+
+    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != -1;
     }
 
     private float getEasting(String tile) {
@@ -174,7 +239,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         if (!scriptGenerator.hasStepScript()) {
             throw new RuntimeException("No script for step 'process' available.");
         }
-        scriptGenerator.writeScriptFiles(cwd, false);
+//        scriptGenerator.writeScriptFiles(cwd, false);
 
         fetchInputFiles((CombineFileSplit) inputSplit, conf);
         fetchAuxdataFiles((CombineFileSplit) inputSplit, conf);
@@ -194,8 +259,8 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     private void fetchAuxdataFiles(CombineFileSplit inputSplit, Configuration conf) throws IOException {
         // identifies the necessary aux data for the current split, and copies it over
-        File landCoverDir = new File(this.cwd, "landcover");
-        landCoverDir.mkdirs();
+//        File landCoverDir = new File(this.cwd, "landcover");
+//        landCoverDir.mkdirs();
         List<String> tileList = new ArrayList<>();
         for (Path path : inputSplit.getPaths()) {
             // path = hdfs://calvalus/calvalus/projects/fire/meris-ba/2008/BA_PIX_MER_v02h25_200806_v3.0.tif
@@ -216,8 +281,8 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             for (String stub : fileNameStubs) {
                 Path auxDataFile = new Path(String.format("hdfs://calvalus/calvalus/auxiliary/fire/formatting/" + stub, tileXindex, tileYindex));
                 if (auxDataFile.getFileSystem(conf).exists(auxDataFile)) {
-                    File localFile = new File(landCoverDir, String.format(stub, tileXindex, tileYindex));
-                    CalvalusProductIO.copyFileToLocal(auxDataFile, localFile, conf);
+//                    File localFile = new File(landCoverDir, String.format(stub, tileXindex, tileYindex));
+//                    CalvalusProductIO.copyFileToLocal(auxDataFile, localFile, conf);
                 }
             }
             tileList.add(tile);
@@ -243,5 +308,24 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         String year = context.getConfiguration().get("calvalus.year");
         return new Path(path, year);
     }
+
+    public enum Position {
+        TOP_LEFT,
+        CENTER_LEFT,
+        BOTTOM_LEFT,
+        TOP_CENTER,
+        CENTER,
+        BOTTOM_CENTER,
+        TOP_RIGHT,
+        CENTER_RIGHT,
+        BOTTOM_RIGHT,
+    }
+
+    public interface FireGridDataSource {
+
+        void readPixels(Rectangle sourceRect, int[] pixels) throws IOException;
+
+    }
+
 
 }
