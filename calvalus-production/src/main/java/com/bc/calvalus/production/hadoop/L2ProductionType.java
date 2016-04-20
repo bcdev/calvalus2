@@ -101,7 +101,7 @@ public class L2ProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String regionWKT = geometry != null ? geometry.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        String pathPattern = outputDir + "/." + getPathPatternForProcessingResult(processorDesc);
+        String pathPattern = outputDir + "/" + getPathPatternForProcessingResult(processorDesc);
         String[] bandNames = getResultingBandNames(processorDesc);
         String resultingProductionType = getResultingProductionType(processorDesc);
         ProductSet productSet = new ProductSet(resultingProductionType,
@@ -138,22 +138,22 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     static String getPathPatternForProcessingResult(ProcessorDescriptor processorDescriptor) {
-        String DEFAULT = "[^_\\.].*${yyyy}${MM}${dd}.*|[^_\\.].*${yyyy}${DDD}.*";
+        String datePattern = "[^_\\.].*(?:${yyyy}${MM}${dd}|${yyyy}${DDD}).*";
         if (processorDescriptor == null) {
-            return DEFAULT;
+            return datePattern + "\\.seq$";
         }
         ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
         if (formatting == ProcessorDescriptor.FormattingType.IMPLICIT) {
             // MEGS, l2gen, polymer, fmask (regex from processor, if given)
             String outputRegex = processorDescriptor.getOutputRegex();
             if (outputRegex.isEmpty()) {
-                return DEFAULT;
+                return datePattern;
             } else {
                 return outputRegex;
             }
         } else {
             // BEAM processor
-            return "[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$";
+            return datePattern + "\\.seq$";
         }
     }
 
