@@ -48,17 +48,61 @@ public class FireGridDataSourceImplTest {
     public void testReadPixels() throws Exception {
         int[] pixels = new int[4];
 
+        // center
         dataSource.readPixels(new Rectangle(0, 0, 2, 2), pixels);
         int[] expected = {
-                5000, 5001,
-                5004, 5005,
+                5000, 5001, 5004, 5005,
         };
         assertArrayEquals(expected, pixels);
 
+        // top-left
+        dataSource.readPixels(new Rectangle(-1, -1, 2, 2), pixels);
+        expected = new int[] {
+                1015, 2003, 4012, 5000
+        };
+        assertArrayEquals(expected, pixels);
+
+        // center-left
         dataSource.readPixels(new Rectangle(-1, 0, 2, 2), pixels);
         expected = new int[] {
-                1003, 5000,
-                1007, 5004
+                2003, 2007, 5000, 5004
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-left
+        dataSource.readPixels(new Rectangle(-1, 3, 2, 2), pixels);
+        expected = new int[] {
+                2015, 3003, 5012, 6000
+        };
+        assertArrayEquals(expected, pixels);
+
+        pixels = new int[9];
+
+        // center larger
+        dataSource.readPixels(new Rectangle(0, 0, 3, 3), pixels);
+        expected = new int[] {
+                5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
+        };
+        assertArrayEquals(expected, pixels);
+
+        // top-left larger
+        dataSource.readPixels(new Rectangle(-1, -1, 3, 3), pixels);
+        expected = new int[] {
+                1015, 2003, 2007, 4012, 4013, 5000, 5001, 5004, 5005
+        };
+        assertArrayEquals(expected, pixels);
+
+        // center-left larger
+        dataSource.readPixels(new Rectangle(-1, 0, 3, 3), pixels);
+        expected = new int[] {
+                2003, 2007, 2011, 5000, 5001, 5004, 5005, 5008, 5009
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-left larger
+        dataSource.readPixels(new Rectangle(-1, 3, 3, 3), pixels);
+        expected = new int[] {
+                2015, 3003, 3007, 5012, 5013, 6000, 6001, 6004, 6005
         };
         assertArrayEquals(expected, pixels);
     }

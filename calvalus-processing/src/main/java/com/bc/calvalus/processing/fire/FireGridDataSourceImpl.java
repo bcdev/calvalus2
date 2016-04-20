@@ -29,11 +29,11 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
 
         final boolean top = sourceRect.y < 0;
         final boolean bottom = sourceRect.y + sourceRect.height > height;
-        final boolean centerY = sourceRect.y > 0 && sourceRect.y + sourceRect.height <= height;
+        final boolean centerY = sourceRect.y >= 0 && sourceRect.y + sourceRect.height <= height;
 
         final boolean left = sourceRect.x < 0;
         final boolean right = sourceRect.x + sourceRect.width > centerSourceProduct.getSceneRasterWidth();
-        final boolean centerX = sourceRect.x > 0 && sourceRect.x + sourceRect.width <= centerSourceProduct.getSceneRasterWidth();
+        final boolean centerX = sourceRect.x >= 0 && sourceRect.x + sourceRect.width <= centerSourceProduct.getSceneRasterWidth();
 
         final boolean isFullyInCenter = !left && !top && !right && !bottom;
         if (isFullyInCenter) {
@@ -41,18 +41,47 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
         }
         if (left && top) {
             int[] topLeftPixels = getBand(FireGridMapper.Position.TOP_LEFT).readPixels(sourceRect.x + width, sourceRect.y + height, Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
-            int[] topCenterPixels = getBand(FireGridMapper.Position.TOP_CENTER).readPixels(0, sourceRect.y + height, sourceRect.width - Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
             int[] centerLeftPixels = getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(sourceRect.x + width, 0, Math.abs(sourceRect.x), sourceRect.height - Math.abs(sourceRect.y), (int[]) null);
+            int[] topCenterPixels = getBand(FireGridMapper.Position.TOP_CENTER).readPixels(0, sourceRect.y + height, sourceRect.width - Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
             int[] centerPixels = centerSourceProduct.getBand("band_1").readPixels(0, 0, sourceRect.width - Math.abs(sourceRect.x), sourceRect.height - Math.abs(sourceRect.y), (int[]) null);
             System.arraycopy(topLeftPixels, 0, pixels, 0, topLeftPixels.length);
-            System.arraycopy(topCenterPixels, 0, pixels, topLeftPixels.length, topCenterPixels.length);
-            System.arraycopy(centerLeftPixels, 0, pixels, topLeftPixels.length + topCenterPixels.length, centerLeftPixels.length);
+            System.arraycopy(centerLeftPixels, 0, pixels, topLeftPixels.length, centerLeftPixels.length);
+            System.arraycopy(topCenterPixels, 0, pixels, topLeftPixels.length + centerLeftPixels.length, topCenterPixels.length);
             System.arraycopy(centerPixels, 0, pixels, topLeftPixels.length + topCenterPixels.length + centerLeftPixels.length, centerPixels.length);
         } else if (left && centerY) {
             int[] centerLeftPixels = getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(sourceRect.x + width, 0, Math.abs(sourceRect.x), sourceRect.height - Math.abs(sourceRect.y), (int[]) null);
             int[] centerPixels = centerSourceProduct.getBand("band_1").readPixels(0, 0, sourceRect.width - Math.abs(sourceRect.x), sourceRect.height - Math.abs(sourceRect.y), (int[]) null);
             System.arraycopy(centerLeftPixels, 0, pixels, 0, centerLeftPixels.length);
             System.arraycopy(centerPixels, 0, pixels, centerLeftPixels.length, centerPixels.length);
+        } else if (left && bottom) {
+            int[] centerLeftPixels = getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(
+                    (sourceRect.x + width) % width,
+                    (sourceRect.y + height) % height,
+                    Math.abs(sourceRect.x),
+                    height - Math.abs(sourceRect.y),
+                    (int[]) null);
+            int[] bottomLeftPixels = getBand(FireGridMapper.Position.BOTTOM_LEFT).readPixels(
+                    (sourceRect.x + width) % width,
+                    0,
+                    Math.abs(sourceRect.x),
+                    sourceRect.height + sourceRect.y - height,
+                    (int[]) null);
+            int[] centerPixels = centerSourceProduct.getBand("band_1").readPixels(
+                    0,
+                    sourceRect.y,
+                    sourceRect.width - Math.abs(sourceRect.x),
+                    height - sourceRect.y,
+                    (int[]) null);
+            int[] bottomCenterPixels = getBand(FireGridMapper.Position.BOTTOM_CENTER).readPixels(
+                    0,
+                    0,
+                    sourceRect.width - Math.abs(sourceRect.x),
+                    sourceRect.height + sourceRect.y - height,
+                    (int[]) null);
+            System.arraycopy(centerLeftPixels, 0, pixels, 0, centerLeftPixels.length);
+            System.arraycopy(bottomLeftPixels, 0, pixels, centerLeftPixels.length, bottomLeftPixels.length);
+            System.arraycopy(centerPixels, 0, pixels, centerLeftPixels.length + bottomLeftPixels.length, centerPixels.length);
+            System.arraycopy(bottomCenterPixels, 0, pixels, centerLeftPixels.length + bottomLeftPixels.length + centerPixels.length, bottomCenterPixels.length);
         }
     }
 
