@@ -8,6 +8,7 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -174,12 +175,22 @@ public class CalvalusFacadeTest {
     public void testGetProductSets() throws Exception {
         PowerMockito.mockStatic(CalvalusProductionService.class);
         ProductionService mockProductionService = mock(ProductionService.class);
+        ProductSet[] mockProductSets = new ProductSet[]{};
+        when(mockProductionService.getProductSets(anyString(), anyString())).thenReturn(mockProductSets);
         PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ArgumentCaptor<String> arg1 = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> arg2 = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProductSets();
 
-        verify(mockProductionService).getProductSets(anyString(), anyString());
+        verify(mockProductionService, times(2)).getProductSets(arg1.capture(), arg2.capture());
+
+        assertThat((arg1.getAllValues().get(0)), equalTo("mockUserName"));
+        assertThat((arg2.getAllValues().get(0)), equalTo(""));
+
+        assertThat((arg1.getAllValues().get(1)), equalTo("mockUserName"));
+        assertThat((arg2.getAllValues().get(1)), equalTo("user=mockUserName"));
     }
 
     private void configureProductionServiceMocking() throws IOException, ProductionException {

@@ -10,6 +10,8 @@ import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -64,7 +66,10 @@ public class CalvalusFacade {
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {
-        return getProductionService().getProductSets(userName, "");
+        List<ProductSet> productSets = new ArrayList<>();
+        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "")));
+        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "user=" + userName)));
+        return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
 }
