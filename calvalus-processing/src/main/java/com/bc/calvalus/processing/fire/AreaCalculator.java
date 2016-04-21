@@ -14,7 +14,7 @@ import java.awt.geom.Rectangle2D;
 /**
  * @author Marco Peters
  */
-class AreaCalculator {
+public class AreaCalculator {
     private final GeoCoding gc;
     private double earthRadius;
 
@@ -26,7 +26,7 @@ class AreaCalculator {
      *                                  underlying {@link GeoCoding#getMapCRS() map crs} is not
      *                                  {@code meter} or {@code kilometer}
      */
-    AreaCalculator(GeoCoding gc) {
+    public AreaCalculator(GeoCoding gc) {
         this.gc = gc;
         Unit<Length> axisUnit = CRS.getEllipsoid(gc.getMapCRS()).getAxisUnit();
         double toMeter = getUnitConversionFactor(axisUnit);
@@ -34,14 +34,26 @@ class AreaCalculator {
     }
 
     /**
-     * Calculates the size of the area of the rectangle specified. The unit of the size is either
-     * {@code meter} or {@code kilometer} depending on the axis unit of the ellipsoid used by the geo-coding.
-     * The rectangle needs to be specified in geo-graphical latitude/longitude coordinates
+     * Calculates the size of the pixel specified by the given x,y coordinates. The unit of the size is always {@code meter}.
+     *
+     * @param x the x location of the pixel
+     * @param y the y location of the pixel
+     * @return the size in square meters
+     */
+    public double calculatePixelSize(int x, int y) {
+        Rectangle2D geoRectangleForPixel = createGeoRectangleForPixel(x, y);
+        return calculateRectangleSize(geoRectangleForPixel);
+    }
+
+    /**
+     * Calculates the size of the area of the rectangle specified. The rectangle needs to be specified in
+     * geo-graphical latitude/longitude coordinates
+     * The unit of the size is always {@code meter}.
      *
      * @param rectangle rectangle of the area in latitude/longitude coordinates
      * @return the size in square meters
      */
-    double calculateSize(Rectangle2D rectangle) {
+    public double calculateRectangleSize(Rectangle2D rectangle) {
         double deltaLon = rectangle.getWidth();
         double deltaLat = rectangle.getHeight();
         double centerLat = rectangle.getCenterY();

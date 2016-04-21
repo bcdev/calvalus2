@@ -14,6 +14,9 @@ import static org.junit.Assert.assertEquals;
  */
 public class AreaCalculatorTest {
 
+    private static final double SIZE_FIRST_LAST_LINE = 1.0813948123130877E8;
+    private static final double SIZE_CENTER_LINE = 1.2391557179979538E10;
+
     private AreaCalculator areaCalculator;
 
     @Before
@@ -23,32 +26,55 @@ public class AreaCalculatorTest {
     }
 
     @Test
-    public void testCalculate() throws Exception {
+    public void testCalculateRectangleSize() throws Exception {
         Rectangle2D.Double currentRect = new Rectangle2D.Double();
 
-        double upperLineAreaSize = 1.0813948123130877E8;
         currentRect.setFrameFromDiagonal(-180, 90, -179, 89);
-        assertEquals(upperLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(0, 90, 1, 89);
-        assertEquals(upperLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(179, 90, 180, 89);
-        assertEquals(upperLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
 
-        double centerLineAreaSize = 1.2391557179979538E10;
         currentRect.setFrameFromDiagonal(-180, -1, -179, 0);
-        assertEquals(centerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(0, -1, 1, 0);
-        assertEquals(centerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(179, -1, 180, 0);
-        assertEquals(centerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
 
-        double lowerLineAreaSize = 1.0813948123130877E8;
         currentRect.setFrameFromDiagonal(-180, -89, -179, -90);
-        assertEquals(lowerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(0, -89, 1, -90);
-        assertEquals(lowerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
         currentRect.setFrameFromDiagonal(179, -89, 180, -90);
-        assertEquals(lowerLineAreaSize, areaCalculator.calculateSize(currentRect), 1.0e-6);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculateRectangleSize(currentRect), 1.0e-6);
+    }
+
+    @Test
+    public void testCalculatePixelSize() throws Exception {
+        Rectangle2D.Double currentRect = new Rectangle2D.Double();
+
+        currentRect.setFrameFromDiagonal(-180, 90, -179, 89);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(0, 0), 1.0e-6);
+        currentRect.setFrameFromDiagonal(0, 90, 1, 89);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(180, 0), 1.0e-6);
+        currentRect.setFrameFromDiagonal(179, 90, 180, 89);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(359, 0), 1.0e-6);
+
+        currentRect.setFrameFromDiagonal(-180, -1, -179, 0);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculatePixelSize(0, 90), 1.0e-6);
+        currentRect.setFrameFromDiagonal(0, -1, 1, 0);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculatePixelSize(180, 90), 1.0e-6);
+        currentRect.setFrameFromDiagonal(179, -1, 180, 0);
+        assertEquals(SIZE_CENTER_LINE, areaCalculator.calculatePixelSize(359, 90), 1.0e-6);
+
+        currentRect.setFrameFromDiagonal(-180, -89, -179, -90);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(0, 179), 1.0e-6);
+        currentRect.setFrameFromDiagonal(0, -89, 1, -90);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(180, 179), 1.0e-6);
+        currentRect.setFrameFromDiagonal(179, -89, 180, -90);
+        assertEquals(SIZE_FIRST_LAST_LINE, areaCalculator.calculatePixelSize(359, 179), 1.0e-6);
     }
 
     @Test
