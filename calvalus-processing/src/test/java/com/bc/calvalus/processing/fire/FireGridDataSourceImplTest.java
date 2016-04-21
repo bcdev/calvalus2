@@ -76,6 +76,43 @@ public class FireGridDataSourceImplTest {
         };
         assertArrayEquals(expected, pixels);
 
+
+        // top-center
+        dataSource.readPixels(new Rectangle(0, -1, 2, 2), pixels);
+        expected = new int[] {
+                4012, 4013, 5000, 5001,
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-center
+        dataSource.readPixels(new Rectangle(0, 3, 2, 2), pixels);
+        expected = new int[] {
+                5012, 5013, 6000, 6001,
+        };
+        assertArrayEquals(expected, pixels);
+
+        // top-right
+        dataSource.readPixels(new Rectangle(3, -1, 2, 2), pixels);
+        expected = new int[] {
+                4015, 5003, 7012, 8000,
+        };
+        assertArrayEquals(expected, pixels);
+
+        // center-right
+        dataSource.readPixels(new Rectangle(3, 0, 2, 2), pixels);
+        expected = new int[] {
+                5003, 5007, 8000, 8004,
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-right
+        dataSource.readPixels(new Rectangle(3, 3, 2, 2), pixels);
+        expected = new int[] {
+                5015, 6003, 8012, 9000,
+        };
+        assertArrayEquals(expected, pixels);
+
+
         pixels = new int[9];
 
         // center larger
@@ -103,6 +140,48 @@ public class FireGridDataSourceImplTest {
         dataSource.readPixels(new Rectangle(-1, 3, 3, 3), pixels);
         expected = new int[] {
                 2015, 3003, 3007, 5012, 5013, 6000, 6001, 6004, 6005
+        };
+        assertArrayEquals(expected, pixels);
+
+        // top-center larger
+        dataSource.readPixels(new Rectangle(0, -1, 3, 3), pixels);
+        expected = new int[] {
+                4012, 4013, 4014, 5000, 5001, 5002, 5004, 5005, 5006
+        };
+        assertArrayEquals(expected, pixels);
+
+        // center larger
+        dataSource.readPixels(new Rectangle(0, 0, 3, 3), pixels);
+        expected = new int[] {
+                5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-center larger
+        dataSource.readPixels(new Rectangle(0, 3, 3, 3), pixels);
+        expected = new int[] {
+                5012, 5013, 5014, 6000, 6001, 6002, 6004, 6005, 6006
+        };
+        assertArrayEquals(expected, pixels);
+
+        // top-right larger
+        dataSource.readPixels(new Rectangle(3, -1, 3, 3), pixels);
+        expected = new int[] {
+                4015, 5003, 5007, 7012, 7013, 8000, 8001, 8004, 8005
+        };
+        assertArrayEquals(expected, pixels);
+
+        // center-right larger
+        dataSource.readPixels(new Rectangle(3, 0, 3, 3), pixels);
+        expected = new int[] {
+                5003, 5007, 5011, 8000, 8001, 8004, 8005, 8008, 8009
+        };
+        assertArrayEquals(expected, pixels);
+
+        // bottom-right larger
+        dataSource.readPixels(new Rectangle(3, 3, 3, 3), pixels);
+        expected = new int[] {
+                5015, 6003, 6007, 8012, 8013, 9000, 9001, 9004, 9005
         };
         assertArrayEquals(expected, pixels);
     }
