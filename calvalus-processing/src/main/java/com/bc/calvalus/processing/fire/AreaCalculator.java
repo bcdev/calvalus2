@@ -12,6 +12,9 @@ import javax.measure.unit.Unit;
 import java.awt.geom.Rectangle2D;
 
 /**
+ * Calculates the size of an specified area in square meter. The size is computed considering the latitudinal
+ * area correction.
+ *
  * @author Marco Peters
  */
 public class AreaCalculator {
