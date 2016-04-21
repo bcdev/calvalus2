@@ -4,12 +4,16 @@ import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.util.math.MathUtils;
+import org.esa.snap.core.util.math.RsMathUtils;
 import org.geotools.referencing.CRS;
 
 import javax.measure.quantity.Length;
 import javax.measure.unit.SI;
 import javax.measure.unit.Unit;
 import java.awt.geom.Rectangle2D;
+
+// todo mp (2016-04-21) - Is class is also contained in SNAP since version 4 (org.esa.snap.core.util.AreaCalculator).
+// This implementation should be replaced when we switch to this version
 
 /**
  * Calculates the size of an specified area in square meter. The size is computed considering the latitudinal
@@ -18,22 +22,30 @@ import java.awt.geom.Rectangle2D;
  * @author Marco Peters
  */
 public class AreaCalculator {
+
     private final GeoCoding gc;
     private double earthRadius;
 
     /**
      * Initialise the calculator with an {@link GeoCoding}.
+     * The earth radius ist retrieved from the ellipsoid from the underlying {@link GeoCoding#getMapCRS() map crs} of the geo-coding.
+     * If this is not possible a default mean earth radius us used.
      *
      * @param gc the geo-coding
-     * @throws IllegalArgumentException Is thrown if the axis unit of the ellipsoid used by the
-     *                                  underlying {@link GeoCoding#getMapCRS() map crs} is not
-     *                                  {@code meter} or {@code kilometer}
      */
     public AreaCalculator(GeoCoding gc) {
         this.gc = gc;
         Unit<Length> axisUnit = CRS.getEllipsoid(gc.getMapCRS()).getAxisUnit();
-        double toMeter = getUnitConversionFactor(axisUnit);
-        earthRadius = CRS.getEllipsoid(gc.getMapCRS()).getSemiMajorAxis() * toMeter;
+        initEarthRadius(gc, axisUnit);
+    }
+
+    /**
+     * The earth radius used for the calculation
+     *
+     * @return the earth radius in meter
+     */
+    public double getEarthRadius() {
+        return earthRadius;
     }
 
     /**
@@ -81,16 +93,14 @@ public class AreaCalculator {
         return rect;
     }
 
-    private double getUnitConversionFactor(Unit<Length> axisUnit) {
-        double toMeter;
+    private void initEarthRadius(GeoCoding gc, Unit<Length> axisUnit) {
         if (axisUnit.equals(SI.METER)) {
-            toMeter = 1.0;
+            earthRadius = CRS.getEllipsoid(gc.getMapCRS()).getSemiMajorAxis() * 1.0;
         } else if (axisUnit.equals(SI.KILOMETER)) {
-            toMeter = 1000.0;
+            earthRadius = CRS.getEllipsoid(gc.getMapCRS()).getSemiMajorAxis() * 1000.0;
         } else {
-            throw new IllegalArgumentException("Earth axis must be specified either in meter or kilometer");
+            earthRadius = RsMathUtils.MEAN_EARTH_RADIUS;
         }
-        return toMeter;
     }
 
 }
