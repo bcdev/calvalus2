@@ -12,7 +12,7 @@ import javax.measure.unit.SI;
 import javax.measure.unit.Unit;
 import java.awt.geom.Rectangle2D;
 
-// todo mp (2016-04-21) - Is class is also contained in SNAP since version 4 (org.esa.snap.core.util.AreaCalculator).
+// todo mp (2016-04-21) - This class is also contained in SNAP since version 4 (org.esa.snap.core.util.AreaCalculator).
 // This implementation should be replaced when we switch to this version
 
 /**
