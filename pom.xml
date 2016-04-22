@@ -33,9 +33,9 @@
 
     <repositories>
         <repository>
-            <id>bc-mvn-repo-http</id>
-            <name>Public Maven Repository at Brockmann Consult</name>
-            <url>http://www.brockmann-consult.de/mvn/os</url>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -49,19 +49,6 @@
             <id>bc-mvn-repo-closed</id>
             <name>Private Maven Repository at Brockmann Consult</name>
             <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>snap-repo-public</id>
-            <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -449,6 +436,21 @@
                 <version>2.6.0</version>
             </dependency>
 -->
+
+            <!--This needs to be defined before hadoop-client.
+            The renjin-script-engine needs guava in version 17,
+            hadoop-client would pull version 11.* -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>17.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.renjin</groupId>
+                <artifactId>renjin-script-engine</artifactId>
+                <version>0.8.1977</version>
+            </dependency>
+
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client</artifactId>
