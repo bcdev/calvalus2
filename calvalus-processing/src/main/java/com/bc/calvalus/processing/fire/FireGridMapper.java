@@ -59,6 +59,7 @@ import java.util.logging.Logger;
  * Runs the fire formatting grid mapper.
  *
  * @author thomas
+ * @author marcop
  */
 public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable, GridCell> {
 
@@ -67,8 +68,6 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     private static final float ONE_PIXEL_AREA = 300 * 300;
     private static final Logger LOG = CalvalusLogger.getLogger();
-
-    private FireGridDataSource dataSource;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -98,7 +97,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
         Product target = createTargetProduct(tile);
 
-        dataSource = new FireGridDataSourceImpl(centerSourceProduct, neighbourProducts);
+        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, neighbourProducts);
 
         Band burnedAreaFirstHalf = target.addBand("burned_area_first_half", ProductData.TYPE_FLOAT32);
         Band burnedAreaSecondHalf = target.addBand("burned_area_second_half", ProductData.TYPE_FLOAT32);
@@ -106,12 +105,16 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         GeoPos geoPos = new GeoPos();
         int[] pixels = new int[90 * 90];
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
+            LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 pixelPos.x = x;
                 pixelPos.y = y;
                 target.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
+                LOG.info("geoPos=" + geoPos.toString());
                 centerSourceProduct.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
+                LOG.info("pixelPos=" + pixelPos.toString());
                 Rectangle sourceRect = getSourceRect(pixelPos);
+                LOG.info("sourceRect=" + sourceRect.toString());
                 Arrays.fill(pixels, -1);
                 dataSource.readPixels(sourceRect, pixels);
 
@@ -193,12 +196,12 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     private float getEasting(String tile) {
         int hIndex = Integer.parseInt(tile.substring(4));
-        return hIndex * 10;
+        return -180 + hIndex * 10;
     }
 
     private float getNorthing(String tile) {
         int vIndex = Integer.parseInt(tile.substring(1, 3));
-        return vIndex * 10;
+        return 90 - vIndex * 10;
     }
 
     private static String getTile(Path path) {

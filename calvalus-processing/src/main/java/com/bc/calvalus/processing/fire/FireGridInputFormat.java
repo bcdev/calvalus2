@@ -19,6 +19,8 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,6 +32,7 @@ public class FireGridInputFormat extends InputFormat {
 
     private static final int MAX_X_TILE = 34;
     private static final int MAX_Y_TILE = 17;
+    private HdfsInventoryService hdfsInventoryService;
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
@@ -37,7 +40,7 @@ public class FireGridInputFormat extends InputFormat {
         String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
 
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
@@ -63,23 +66,36 @@ public class FireGridInputFormat extends InputFormat {
             fileLengths.add(fileStatus.getLen());
 
             int[] tileIndices = getTileIndices(path.getName());
-            for (int y = Math.max(0, tileIndices[0] - 1); y < Math.min(tileIndices[0] + 1, MAX_Y_TILE); y++) {
-                for (int x = Math.max(0, tileIndices[1] - 1); x < Math.min(tileIndices[0] + 1, MAX_X_TILE); x++) {
+            CalvalusLogger.getLogger().info("tileIndices=" + Arrays.toString(tileIndices));
+            for (int y = Math.max(0, tileIndices[0] - 1); y <= Math.min(tileIndices[0] + 1, MAX_Y_TILE); y++) {
+                for (int x = Math.max(0, tileIndices[1] - 1); x <= Math.min(tileIndices[1] + 1, MAX_X_TILE); x++) {
                     if (y == tileIndices[0] && x == tileIndices[1]) {
                         // center product, already inserted
                         continue;
                     }
-                    String tile = String.format("v%d2h%d2", y, x);
-                    FileStatus neighbour = filenameToStatus.get(path.getName().replace("v\\d\\dh\\d\\d", tile));
-                    if (neighbour != null) {
-                        filePaths.add(neighbour.getPath());
-                        fileLengths.add(neighbour.getLen());
+                    String neighbourName = getNeighbourName(path.getName(), x, y);
+                    CalvalusLogger.getLogger().info("neighbourName = " + neighbourName);
+                    String neighbourPath = fileStatus.getPath().getName().replace(path.getName(), neighbourName);
+                    CalvalusLogger.getLogger().info("neighbourPath = " + neighbourPath);
+                    FileStatus[] neighbours = hdfsInventoryService.globFileStatuses(Collections.singletonList(neighbourPath), conf);
+                    if (neighbours.length > 0) {
+                        FileStatus neighbour = neighbours[0];
+                        CalvalusLogger.getLogger().info("neighbour = " + neighbour);
+                        if (neighbour != null) {
+                            filePaths.add(neighbour.getPath());
+                            fileLengths.add(neighbour.getLen());
+                        }
                     }
                 }
             }
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }
+    }
+
+    static String getNeighbourName(String pathName, int x, int y) {
+        String tile = String.format("v%02dh%02d", y, x);
+        return pathName.replaceAll("v..h..", tile);
     }
 
     protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
