@@ -19,9 +19,7 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -53,11 +51,6 @@ public class FireGridInputFormat extends InputFormat {
     protected void createSplits(FileStatus[] fileStatuses,
                               List<InputSplit> splits,
                               Configuration conf) throws IOException {
-        HashMap<String, FileStatus> filenameToStatus = new HashMap<>();
-        for (FileStatus fileStatus : fileStatuses) {
-            filenameToStatus.put(fileStatus.getPath().getName(), fileStatus);
-        }
-
         for (FileStatus fileStatus : fileStatuses) {
             List<Path> filePaths = new ArrayList<>(9);
             List<Long> fileLengths = new ArrayList<>(9);
@@ -66,7 +59,6 @@ public class FireGridInputFormat extends InputFormat {
             fileLengths.add(fileStatus.getLen());
 
             int[] tileIndices = getTileIndices(path.getName());
-            CalvalusLogger.getLogger().info("tileIndices=" + Arrays.toString(tileIndices));
             for (int y = Math.max(0, tileIndices[0] - 1); y <= Math.min(tileIndices[0] + 1, MAX_Y_TILE); y++) {
                 for (int x = Math.max(0, tileIndices[1] - 1); x <= Math.min(tileIndices[1] + 1, MAX_X_TILE); x++) {
                     if (y == tileIndices[0] && x == tileIndices[1]) {
@@ -74,13 +66,10 @@ public class FireGridInputFormat extends InputFormat {
                         continue;
                     }
                     String neighbourName = getNeighbourName(path.getName(), x, y);
-                    CalvalusLogger.getLogger().info("neighbourName = " + neighbourName);
-                    String neighbourPath = fileStatus.getPath().getName().replace(path.getName(), neighbourName);
-                    CalvalusLogger.getLogger().info("neighbourPath = " + neighbourPath);
+                    String neighbourPath = fileStatus.getPath().toString().replace(path.getName(), neighbourName);
                     FileStatus[] neighbours = hdfsInventoryService.globFileStatuses(Collections.singletonList(neighbourPath), conf);
                     if (neighbours.length > 0) {
                         FileStatus neighbour = neighbours[0];
-                        CalvalusLogger.getLogger().info("neighbour = " + neighbour);
                         if (neighbour != null) {
                             filePaths.add(neighbour.getPath());
                             fileLengths.add(neighbour.getLen());

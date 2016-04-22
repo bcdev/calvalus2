@@ -1,11 +1,15 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.logging.Logger;
 
 /**
  * Offers the standard implementation for reading pixels of arbitrary source rectangles
@@ -14,12 +18,20 @@ import java.util.Map;
  */
 public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
+    private final Band NULL_BAND;
     private final Product centerSourceProduct;
     private final Map<FireGridMapper.Position, Product> neighbourProducts;
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
 
     public FireGridDataSourceImpl(Product centerSourceProduct, Map<FireGridMapper.Position, Product> neighbourProducts) {
         this.centerSourceProduct = centerSourceProduct;
         this.neighbourProducts = neighbourProducts;
+        final int[] emptyValues = new int[centerSourceProduct.getSceneRasterWidth() * centerSourceProduct.getSceneRasterHeight()];
+        Arrays.fill(emptyValues, FireGridMapper.NO_DATA);
+        NULL_BAND = new Band("null", ProductData.TYPE_INT32, centerSourceProduct.getSceneRasterWidth(), centerSourceProduct.getSceneRasterHeight());
+        NULL_BAND.setRasterData(new ProductData.Int(emptyValues));
     }
 
     @Override
@@ -42,7 +54,7 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
         }
         if (left && top) {
             int[] topLeftPixels = getBand(FireGridMapper.Position.TOP_LEFT).readPixels(sourceRect.x + width, sourceRect.y + height, Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
-            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width);
+            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width, height);
             int[] topCenterPixels = getTopCenterPixels(sourceRect, width, height);
             int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
             System.arraycopy(topLeftPixels, 0, pixels, 0, topLeftPixels.length);
@@ -50,7 +62,7 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
             System.arraycopy(topCenterPixels, 0, pixels, topLeftPixels.length + centerLeftPixels.length, topCenterPixels.length);
             System.arraycopy(centerPixels, 0, pixels, topLeftPixels.length + topCenterPixels.length + centerLeftPixels.length, centerPixels.length);
         } else if (left && centerY) {
-            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width);
+            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width, height);
             int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
             System.arraycopy(centerLeftPixels, 0, pixels, 0, centerLeftPixels.length);
             System.arraycopy(centerPixels, 0, pixels, centerLeftPixels.length, centerPixels.length);
@@ -148,8 +160,14 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
                 (int[]) null);
     }
 
-    private int[] getCenterLeftPixels(Rectangle sourceRect, int width) throws IOException {
-        return getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(sourceRect.x + width, 0, Math.abs(sourceRect.x), sourceRect.height - Math.abs(sourceRect.y), (int[]) null);
+    private int[] getCenterLeftPixels(Rectangle sourceRect, int width, int height) throws IOException {
+        boolean overBottom = sourceRect.y + sourceRect.height >= height;
+        int x = sourceRect.x + width;
+        int y = sourceRect.y < 0 ? 0 : sourceRect.y;
+        int w = Math.abs(sourceRect.x);
+        int h = sourceRect.y < 0 ? sourceRect.height - Math.abs(sourceRect.y) :
+                overBottom ? height - sourceRect.y : sourceRect.height;
+        return getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(x, y, w, h, (int[]) null);
     }
 
     private int[] getBottomCenterPixels(Rectangle sourceRect, int width, int height) throws IOException {
@@ -192,6 +210,10 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
     }
 
     private Band getBand(FireGridMapper.Position position) {
-        return neighbourProducts.get(position).getBand("band_1");
+        final Product product = neighbourProducts.get(position);
+        if (product == null) {
+            return NULL_BAND;
+        }
+        return product.getBand("band_1");
     }
 }

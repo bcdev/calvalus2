@@ -43,10 +43,17 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
+import org.renjin.sexp.DoubleArrayVector;
+import org.renjin.sexp.DoubleVector;
+import org.renjin.sexp.SEXP;
+import org.renjin.sexp.Vector;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptException;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,12 +72,30 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     public static final int TARGET_RASTER_WIDTH = 40;
     public static final int TARGET_RASTER_HEIGHT = 40;
+    public static final int NO_DATA = -1;
 
     private static final float ONE_PIXEL_AREA = 300 * 300;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
+    private static ScriptEngine engine;
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+
+//        ScriptEngineManager manager = new ScriptEngineManager();
+        // create a Renjin engine:
+//        engine = manager.getEngineByName("Renjin");
+//        if (engine == null) {
+//            throw new IllegalStateException();
+//        }
+
+//        try {
+//            testMethod1();
+//            testPrediction();
+//        } catch (ScriptException | URISyntaxException e) {
+//            e.printStackTrace();
+//        }
+
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
@@ -104,18 +129,18 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         PixelPos pixelPos = new PixelPos();
         GeoPos geoPos = new GeoPos();
         int[] pixels = new int[90 * 90];
+        burnedAreaFirstHalf.setRasterData(new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT));
+        burnedAreaSecondHalf.setRasterData(new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT));
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 pixelPos.x = x;
                 pixelPos.y = y;
                 target.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
-                LOG.info("geoPos=" + geoPos.toString());
                 centerSourceProduct.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
-                LOG.info("pixelPos=" + pixelPos.toString());
                 Rectangle sourceRect = getSourceRect(pixelPos);
                 LOG.info("sourceRect=" + sourceRect.toString());
-                Arrays.fill(pixels, -1);
+                Arrays.fill(pixels, NO_DATA);
                 dataSource.readPixels(sourceRect, pixels);
 
                 float valueFirstHalf = 0.0F;
@@ -187,11 +212,11 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != -1;
+        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
     }
 
     static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != -1;
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
     private float getEasting(String tile) {
@@ -330,5 +355,39 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     }
 
+
+    public void testMethod1() throws ScriptException {
+
+        engine.eval("df <- data.frame(x=1:10, y=(1:10)+rnorm(n=10))");
+        engine.eval("print(df)");
+        engine.eval("print(lm(y ~ x, df))");
+
+
+        engine.eval("rVector=c(1,2,3,4,5)");
+        engine.eval("meanVal=mean(rVector)");
+        SEXP meanVal = (SEXP) engine.eval("meanVal");
+        double mean = meanVal.asReal();
+
+        LOG.info("mean=" + mean);
+
+        Vector x = (Vector) engine.eval("x <- c(6, 7, 8, 9)");
+        LOG.info("x=" + x);
+        engine.put("y", new double[]{1d, 2d, 3d, 4d});
+        engine.put("z", new DoubleArrayVector(1, 2, 3, 4, 5));
+
+        LOG.info(String.valueOf(((SEXP) engine.eval("out <- sum(y)")).asReal()));
+        LOG.info(String.valueOf(((SEXP) engine.eval("out <- sum(z)")).asReal()));
+    }
+
+    public void testPrediction() throws URISyntaxException, ScriptException {
+        File resFile = new File(getClass().getResource("codiR_cecr_GridProd.RData").toURI());
+        String absolutePath = resFile.getAbsolutePath().replace("\\", "\\\\");
+        engine.eval("load(file = \"" + absolutePath + "\")");
+        engine.put("bap", new double[]{1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
+        engine.eval("nwd = data.frame(gpg=bap)");
+        DoubleVector pred = (DoubleVector) engine.eval("predict(ug, nwd)");
+        double[] predResult = pred.toDoubleArray();
+        LOG.info(Arrays.toString(predResult));
+    }
 
 }

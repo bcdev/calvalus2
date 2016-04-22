@@ -186,6 +186,39 @@ public class FireGridDataSourceImplTest {
         assertArrayEquals(expected, pixels);
     }
 
+
+    @Test
+    public void testReadPixels_WithMissingBand() throws Exception {
+        Map<FireGridMapper.Position, Product> neighbourProducts = new HashMap<>();
+        /*
+
+            MISSING  TC-4  TR-7
+            CL-2  CC-5  CR-8
+            BL-3  BC-6  CB-9
+
+         */
+        neighbourProducts.put(FireGridMapper.Position.CENTER_LEFT, createProduct(2));
+        neighbourProducts.put(FireGridMapper.Position.BOTTOM_LEFT, createProduct(3));
+        neighbourProducts.put(FireGridMapper.Position.TOP_CENTER, createProduct(4));
+        neighbourProducts.put(FireGridMapper.Position.BOTTOM_CENTER, createProduct(6));
+        neighbourProducts.put(FireGridMapper.Position.TOP_RIGHT, createProduct(7));
+        neighbourProducts.put(FireGridMapper.Position.CENTER_RIGHT, createProduct(8));
+        neighbourProducts.put(FireGridMapper.Position.BOTTOM_RIGHT, createProduct(9));
+
+        Product centerProduct = createProduct(5);
+        dataSource = new FireGridDataSourceImpl(centerProduct, neighbourProducts);
+
+
+        int[] pixels = new int[4];
+
+        // upper left
+        dataSource.readPixels(new Rectangle(-1, -1, 2, 2), pixels);
+        int[] expected = {
+                -1, 2003, 4012, 5000,
+        };
+        assertArrayEquals(expected, pixels);
+    }
+
     private static Product createProduct(int value) {
         Product product = new Product("name", "type", 4, 4);
         Band band = product.addBand("band_1", ProductData.TYPE_INT32);
