@@ -33,6 +33,11 @@
 
     <repositories>
         <repository>
+            <id>bedatadriven</id>
+            <name>bedatadriven public repo</name>
+            <url>https://nexus.bedatadriven.com/content/groups/public/</url>
+        </repository>
+        <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
             <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
