@@ -27,8 +27,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -70,7 +69,7 @@ import java.util.logging.Logger;
  * @author thomas
  * @author marcop
  */
-public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable, GridCell> {
+public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
     public static final int TARGET_RASTER_WIDTH = 40;
     public static final int TARGET_RASTER_HEIGHT = 40;
@@ -131,20 +130,21 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
         PixelPos pixelPos = new PixelPos();
         GeoPos geoPos = new GeoPos();
         int[] pixels = new int[90 * 90];
-        burnedAreaFirstHalf.setRasterData(new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT));
-        burnedAreaSecondHalf.setRasterData(new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT));
+        ProductData.Float baFirstHalfRasterData = new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
+        burnedAreaFirstHalf.setRasterData(baFirstHalfRasterData);
+        ProductData.Float baSecondHalfRasterData = new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
+        burnedAreaSecondHalf.setRasterData(baSecondHalfRasterData);
+
+        context.progress();
+
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 pixelPos.x = x;
                 pixelPos.y = y;
-                LOG.info("Target pixelPos:" + pixelPos);
                 targetProduct.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
-                LOG.info(String.format("Target geoPos: lat %f lon %f", geoPos.lat, geoPos.lon));
                 centerSourceProduct.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
-                LOG.info("Source pixelPos:" + pixelPos);
                 Rectangle sourceRect = new Rectangle((int) pixelPos.x, (int) pixelPos.y, 90, 90);
-                LOG.info("sourceRect=" + sourceRect.toString());
                 double[] areas = new double[pixels.length];
                 Arrays.fill(pixels, NO_DATA);
                 Arrays.fill(areas, NO_AREA);
@@ -166,11 +166,20 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             }
         }
 
+        context.progress();
+
         File localFile = new File("./thomas-ba.nc");
         ProductIO.writeProduct(targetProduct, localFile, "NetCDF4-BEAM", false);
-        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/thomas-ba.nc");
+        Path path = new Path(String.format("hdfs://calvalus/calvalus/home/thomas/thomas-ba-%s.nc", tile));
         FileSystem fs = path.getFileSystem(context.getConfiguration());
+        fs.delete(path, true);
         FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
+
+        GridCell gridCell = new GridCell();
+        gridCell.setData(0, baFirstHalfRasterData.getArray());
+        gridCell.setData(1, baSecondHalfRasterData.getArray());
+
+        context.write(new Text(String.format("%d-%d-%s", year, month, tile)), gridCell);
     }
 
     static Position findPosition(String filename, String centerTile) {

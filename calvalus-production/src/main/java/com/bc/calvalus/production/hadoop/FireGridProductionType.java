@@ -24,6 +24,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.FireGridInputFormat;
 import com.bc.calvalus.processing.fire.FireGridMapper;
 import com.bc.calvalus.processing.fire.FireGridReducer;
+import com.bc.calvalus.processing.fire.GridCell;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -35,6 +36,7 @@ import com.bc.calvalus.staging.StagingService;
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
@@ -115,6 +117,8 @@ public class FireGridProductionType extends HadoopProductionType {
             job.setInputFormatClass(FireGridInputFormat.class);
             job.setMapperClass(FireGridMapper.class);
             job.setReducerClass(FireGridReducer.class);
+            job.setMapOutputKeyClass(Text.class);
+            job.setMapOutputValueClass(GridCell.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
 
