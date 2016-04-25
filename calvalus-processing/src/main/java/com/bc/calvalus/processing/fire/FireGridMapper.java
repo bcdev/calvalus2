@@ -24,6 +24,8 @@ import com.bc.calvalus.processing.executable.ScriptGenerator;
 import com.bc.ceres.core.ProcessObserver;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -73,8 +75,8 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
     public static final int TARGET_RASTER_WIDTH = 40;
     public static final int TARGET_RASTER_HEIGHT = 40;
     public static final int NO_DATA = -1;
+    public static final int NO_AREA = 0;
 
-    private static final float ONE_PIXEL_AREA = 300 * 300;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     private static ScriptEngine engine;
@@ -120,12 +122,12 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             neighbourProducts.put(findPosition(path.getName(), tile), ProductIO.readProduct(localFile));
         }
 
-        Product target = createTargetProduct(tile);
+        Product targetProduct = createTargetProduct(tile);
 
         FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, neighbourProducts);
 
-        Band burnedAreaFirstHalf = target.addBand("burned_area_first_half", ProductData.TYPE_FLOAT32);
-        Band burnedAreaSecondHalf = target.addBand("burned_area_second_half", ProductData.TYPE_FLOAT32);
+        Band burnedAreaFirstHalf = targetProduct.addBand("burned_area_first_half", ProductData.TYPE_FLOAT32);
+        Band burnedAreaSecondHalf = targetProduct.addBand("burned_area_second_half", ProductData.TYPE_FLOAT32);
         PixelPos pixelPos = new PixelPos();
         GeoPos geoPos = new GeoPos();
         int[] pixels = new int[90 * 90];
@@ -136,21 +138,27 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 pixelPos.x = x;
                 pixelPos.y = y;
-                target.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
+                LOG.info("Target pixelPos:" + pixelPos);
+                targetProduct.getSceneGeoCoding().getGeoPos(pixelPos, geoPos);
+                LOG.info(String.format("Target geoPos: lat %f lon %f", geoPos.lat, geoPos.lon));
                 centerSourceProduct.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
-                Rectangle sourceRect = getSourceRect(pixelPos);
+                LOG.info("Source pixelPos:" + pixelPos);
+                Rectangle sourceRect = new Rectangle((int) pixelPos.x, (int) pixelPos.y, 90, 90);
                 LOG.info("sourceRect=" + sourceRect.toString());
+                double[] areas = new double[pixels.length];
                 Arrays.fill(pixels, NO_DATA);
-                dataSource.readPixels(sourceRect, pixels);
+                Arrays.fill(areas, NO_AREA);
+                dataSource.readPixels(sourceRect, areas, pixels);
 
                 float valueFirstHalf = 0.0F;
                 float valueSecondHalf = 0.0F;
 
-                for (int pixelFloat : pixels) {
-                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, pixelFloat)) {
-                        valueFirstHalf += ONE_PIXEL_AREA;
-                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, pixelFloat)) {
-                        valueSecondHalf += ONE_PIXEL_AREA;
+                for (int i = 0; i < pixels.length; i++) {
+                    int doy = pixels[i];
+                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
+                        valueFirstHalf += areas[i];
+                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
+                        valueSecondHalf += areas[i];
                     }
                 }
                 burnedAreaFirstHalf.setPixelFloat(x, y, valueFirstHalf);
@@ -158,7 +166,11 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
             }
         }
 
-        ProductIO.writeProduct(target, "/tmp/deleteme/thomas-ba.nc", "NetCDF4-BEAM");
+        File localFile = new File("./thomas-ba.nc");
+        ProductIO.writeProduct(targetProduct, localFile, "NetCDF4-BEAM", false);
+        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/thomas-ba.nc");
+        FileSystem fs = path.getFileSystem(context.getConfiguration());
+        FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
     }
 
     static Position findPosition(String filename, String centerTile) {
@@ -199,7 +211,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
     private Product createTargetProduct(String tile) throws IOException {
         Product target = new Product("target", "type", TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT);
         try {
-            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT, getEasting(tile), getNorthing(tile), 0.25, 0.25));
+            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT, getEasting(tile), getNorthing(tile), 0.25, 0.25, 0.0, 0.0));
         } catch (FactoryException | TransformException e) {
             throw new IOException(e);
         }
@@ -207,7 +219,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
     }
 
     static Rectangle getSourceRect(PixelPos pixelPos) {
-        final int sourcePixelCount = 90; // from 300m resolution to 0.25° -> each target pixel has 90 source pixels in x and y direction -> 8100 pixels
+        final int sourcePixelCount = 90; // from 300m resolution to 0.25° -> each target pixel has 90 source pixels in x and y direction
         return new Rectangle((int) pixelPos.x - sourcePixelCount / 2, (int) pixelPos.y - sourcePixelCount / 2, sourcePixelCount, sourcePixelCount);
     }
 
@@ -351,7 +363,7 @@ public class FireGridMapper extends Mapper<LongWritable, FileSplit, IntWritable,
 
     public interface FireGridDataSource {
 
-        void readPixels(Rectangle sourceRect, int[] pixels) throws IOException;
+        void readPixels(Rectangle sourceRect, double[] areas, int[] pixels) throws IOException;
 
     }
 

@@ -1,15 +1,9 @@
 package com.bc.calvalus.processing.fire;
 
-import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.PixelPos;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.awt.Rectangle;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.*;
 

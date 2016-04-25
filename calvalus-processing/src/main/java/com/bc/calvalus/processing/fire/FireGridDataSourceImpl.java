@@ -35,7 +35,7 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
     }
 
     @Override
-    public void readPixels(Rectangle sourceRect, int[] pixels) throws IOException {
+    public void readPixels(Rectangle sourceRect, double[] areas, int[] pixels) throws IOException {
         final int width = centerSourceProduct.getSceneRasterWidth();
         final int height = centerSourceProduct.getSceneRasterHeight();
 
@@ -49,155 +49,217 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
 
         final boolean isFullyInCenter = !left && !top && !right && !bottom;
         if (isFullyInCenter) {
-            centerSourceProduct.getBand("band_1").readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, pixels);
+            Band band = centerSourceProduct.getBand("band_1");
+            int[] readPixels = band.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, pixels);
+            double[] areas1 = getAreas(band, readPixels);
+            System.arraycopy(areas1, 0, areas, 0, areas1.length);
             return;
         }
         if (left && top) {
-            int[] topLeftPixels = getBand(FireGridMapper.Position.TOP_LEFT).readPixels(sourceRect.x + width, sourceRect.y + height, Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
-            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width, height);
-            int[] topCenterPixels = getTopCenterPixels(sourceRect, width, height);
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            System.arraycopy(topLeftPixels, 0, pixels, 0, topLeftPixels.length);
-            System.arraycopy(centerLeftPixels, 0, pixels, topLeftPixels.length, centerLeftPixels.length);
-            System.arraycopy(topCenterPixels, 0, pixels, topLeftPixels.length + centerLeftPixels.length, topCenterPixels.length);
-            System.arraycopy(centerPixels, 0, pixels, topLeftPixels.length + topCenterPixels.length + centerLeftPixels.length, centerPixels.length);
+            Result topLeft = getTopLeft(sourceRect, width, height);
+            Result centerLeft = getCenterLeftPixels(sourceRect, width, height);
+            Result topCenter = getTopCenterPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+
+            System.arraycopy(topLeft.pixels, 0, pixels, 0, topLeft.pixels.length);
+            System.arraycopy(topLeft.areas, 0, areas, 0, topLeft.areas.length);
+            System.arraycopy(centerLeft.pixels, 0, pixels, topLeft.pixels.length, centerLeft.pixels.length);
+            System.arraycopy(centerLeft.areas, 0, areas, topLeft.areas.length, centerLeft.areas.length);
+            System.arraycopy(topCenter.pixels, 0, pixels, topLeft.pixels.length + centerLeft.pixels.length, topCenter.pixels.length);
+            System.arraycopy(topCenter.areas, 0, areas, topLeft.areas.length + centerLeft.areas.length, topCenter.areas.length);
+            System.arraycopy(center.pixels, 0, pixels, topLeft.pixels.length + topCenter.pixels.length + centerLeft.pixels.length, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, topLeft.pixels.length + topCenter.pixels.length + centerLeft.pixels.length, center.areas.length);
         } else if (left && centerY) {
-            int[] centerLeftPixels = getCenterLeftPixels(sourceRect, width, height);
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            System.arraycopy(centerLeftPixels, 0, pixels, 0, centerLeftPixels.length);
-            System.arraycopy(centerPixels, 0, pixels, centerLeftPixels.length, centerPixels.length);
+            Result centerLeft = getCenterLeftPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+
+            System.arraycopy(centerLeft.pixels, 0, pixels, 0, centerLeft.pixels.length);
+            System.arraycopy(centerLeft.areas, 0, areas, 0, centerLeft.areas.length);
+            System.arraycopy(center.pixels, 0, pixels, centerLeft.pixels.length, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, centerLeft.areas.length, center.areas.length);
         } else if (left && bottom) {
-            int[] centerLeftPixels = getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(
-                    (sourceRect.x + width) % width,
-                    (sourceRect.y + height) % height,
-                    Math.abs(sourceRect.x),
-                    height - Math.abs(sourceRect.y),
-                    (int[]) null);
-            int[] bottomLeftPixels = getBand(FireGridMapper.Position.BOTTOM_LEFT).readPixels(
-                    (sourceRect.x + width) % width,
-                    0,
-                    Math.abs(sourceRect.x),
-                    sourceRect.height + sourceRect.y - height,
-                    (int[]) null);
-            int[] centerPixels = centerSourceProduct.getBand("band_1").readPixels(
-                    0,
-                    sourceRect.y,
-                    sourceRect.width - Math.abs(sourceRect.x),
-                    height - sourceRect.y,
-                    (int[]) null);
-            int[] bottomCenterPixels = getBottomCenterPixels(sourceRect, width, height);
-            System.arraycopy(centerLeftPixels, 0, pixels, 0, centerLeftPixels.length);
-            System.arraycopy(bottomLeftPixels, 0, pixels, centerLeftPixels.length, bottomLeftPixels.length);
-            System.arraycopy(centerPixels, 0, pixels, centerLeftPixels.length + bottomLeftPixels.length, centerPixels.length);
-            System.arraycopy(bottomCenterPixels, 0, pixels, centerLeftPixels.length + bottomLeftPixels.length + centerPixels.length, bottomCenterPixels.length);
+            Result centerLeft = getCenterLeftPixels(sourceRect, width, height);
+            Result bottomLeft = getBottomLeftPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+            Result bottomCenter = getBottomCenterPixels(sourceRect, width, height);
+
+            System.arraycopy(centerLeft.pixels, 0, pixels, 0, centerLeft.pixels.length);
+            System.arraycopy(centerLeft.areas, 0, areas, 0, centerLeft.areas.length);
+            System.arraycopy(bottomLeft.pixels, 0, pixels, centerLeft.pixels.length, bottomLeft.pixels.length);
+            System.arraycopy(bottomLeft.areas, 0, areas, centerLeft.areas.length, bottomLeft.areas.length);
+            System.arraycopy(center.pixels, 0, pixels, centerLeft.pixels.length + bottomLeft.pixels.length, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, centerLeft.areas.length + bottomLeft.areas.length, center.areas.length);
+            System.arraycopy(bottomCenter.pixels, 0, pixels, centerLeft.pixels.length + bottomLeft.pixels.length + center.pixels.length, bottomCenter.pixels.length);
+            System.arraycopy(bottomCenter.areas, 0, areas, centerLeft.pixels.length + bottomLeft.pixels.length + center.pixels.length, bottomCenter.areas.length);
         } else if (top && centerX) {
-            int[] topCenterPixels = getTopCenterPixels(sourceRect, width, height);
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            System.arraycopy(topCenterPixels, 0, pixels, 0, topCenterPixels.length);
-            System.arraycopy(centerPixels, 0, pixels, topCenterPixels.length, centerPixels.length);
+            Result topCenter = getTopCenterPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+
+            System.arraycopy(topCenter.pixels, 0, pixels, 0, topCenter.pixels.length);
+            System.arraycopy(topCenter.areas, 0, areas, 0, topCenter.areas.length);
+            System.arraycopy(center.pixels, 0, pixels, topCenter.pixels.length, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, topCenter.areas.length, center.areas.length);
         } else if (bottom && centerX) {
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            int[] bottomCenterPixels = getBottomCenterPixels(sourceRect, width, height);
-            System.arraycopy(centerPixels, 0, pixels, 0, centerPixels.length);
-            System.arraycopy(bottomCenterPixels, 0, pixels, centerPixels.length, bottomCenterPixels.length);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+            Result bottomCenter = getBottomCenterPixels(sourceRect, width, height);
+
+            System.arraycopy(center.pixels, 0, pixels, 0, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, 0, center.areas.length);
+            System.arraycopy(bottomCenter.pixels, 0, pixels, center.pixels.length, bottomCenter.pixels.length);
+            System.arraycopy(bottomCenter.areas, 0, areas, center.areas.length, bottomCenter.areas.length);
         } else if (top && right) {
-            int[] topCenterPixels = getTopCenterPixels(sourceRect, width, height);
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            int[] topRightPixels = getBand(FireGridMapper.Position.TOP_RIGHT).readPixels(
-                    0,
-                    sourceRect.y + height,
-                    sourceRect.width + sourceRect.x - width,
-                    Math.abs(sourceRect.y),
-                    (int[]) null);
-            int[] centerRightPixels = getCenterRightPixels(sourceRect, width, height);
+            Result topCenter = getTopCenterPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+            Result topRight = getTopRightPixels(sourceRect, width, height);
+            Result centerRight = getCenterRightPixels(sourceRect, width, height);
 
-            System.arraycopy(topCenterPixels, 0, pixels, 0, topCenterPixels.length);
-            System.arraycopy(centerPixels, 0, pixels, topCenterPixels.length, centerPixels.length);
-            System.arraycopy(topRightPixels, 0, pixels, topCenterPixels.length + centerPixels.length, topRightPixels.length);
-            System.arraycopy(centerRightPixels, 0, pixels, topCenterPixels.length + centerPixels.length + topRightPixels.length, centerRightPixels.length);
+            System.arraycopy(topCenter.pixels, 0, pixels, 0, topCenter.pixels.length);
+            System.arraycopy(topCenter.areas, 0, areas, 0, topCenter.areas.length);
+            System.arraycopy(center.pixels, 0, pixels, topCenter.pixels.length, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, topCenter.areas.length, center.areas.length);
+            System.arraycopy(topRight.pixels, 0, pixels, topCenter.pixels.length + center.pixels.length, topRight.pixels.length);
+            System.arraycopy(topRight.areas, 0, areas, topCenter.areas.length + center.areas.length, topRight.areas.length);
+            System.arraycopy(centerRight.pixels, 0, pixels, topCenter.pixels.length + center.pixels.length + topRight.pixels.length, centerRight.pixels.length);
+            System.arraycopy(centerRight.areas, 0, areas, topCenter.areas.length + center.areas.length + topRight.areas.length, centerRight.areas.length);
         } else if (centerY && right) {
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            int[] centerRightPixels = getCenterRightPixels(sourceRect, width, height);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+            Result centerRight = getCenterRightPixels(sourceRect, width, height);
 
-            System.arraycopy(centerPixels, 0, pixels, 0, centerPixels.length);
-            System.arraycopy(centerRightPixels, 0, pixels, centerPixels.length, centerRightPixels.length);
+            System.arraycopy(center.pixels, 0, pixels, 0, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, 0, center.areas.length);
+            System.arraycopy(centerRight.pixels, 0, pixels, center.pixels.length, centerRight.pixels.length);
+            System.arraycopy(centerRight.areas, 0, areas, center.areas.length, centerRight.areas.length);
         } else if (bottom && right) {
-            int[] centerPixels = getCenterPixels(sourceRect, centerSourceProduct, width, height);
-            int[] bottomCenterPixels = getBottomCenterPixels(sourceRect, width, height);
-            int[] centerRightPixels = getCenterRightPixels(sourceRect, width, height);
-            final int x = 0;
-            final int y = 0;
-            final int w = sourceRect.width + sourceRect.x - width;
-            final int h = sourceRect.height + sourceRect.y - height;
-            int[] bottomRightPixels = getBand(FireGridMapper.Position.BOTTOM_RIGHT).readPixels(
-                    x,
-                    y,
-                    w,
-                    h,
-                    (int[]) null);
+            Result center = getCenterPixels(sourceRect, centerSourceProduct, width, height);
+            Result bottomCenter = getBottomCenterPixels(sourceRect, width, height);
+            Result centerRight = getCenterRightPixels(sourceRect, width, height);
+            Result bottomRightPixels = getBottomRightPixels(sourceRect, width, height);
 
-            System.arraycopy(centerPixels, 0, pixels, 0, centerPixels.length);
-            System.arraycopy(bottomCenterPixels, 0, pixels, centerPixels.length, bottomCenterPixels.length);
-            System.arraycopy(centerRightPixels, 0, pixels, centerPixels.length + bottomCenterPixels.length, centerRightPixels.length);
-            System.arraycopy(bottomRightPixels, 0, pixels, centerPixels.length + bottomCenterPixels.length + centerRightPixels.length, bottomRightPixels.length);
+            System.arraycopy(center.pixels, 0, pixels, 0, center.pixels.length);
+            System.arraycopy(center.areas, 0, areas, 0, center.areas.length);
+            System.arraycopy(bottomCenter.pixels, 0, pixels, center.pixels.length, bottomCenter.pixels.length);
+            System.arraycopy(bottomCenter.areas, 0, areas, center.areas.length, bottomCenter.areas.length);
+            System.arraycopy(centerRight.pixels, 0, pixels, center.pixels.length + bottomCenter.pixels.length, centerRight.pixels.length);
+            System.arraycopy(centerRight.areas, 0, areas, center.areas.length + bottomCenter.areas.length, centerRight.areas.length);
+            System.arraycopy(bottomRightPixels.pixels, 0, pixels, center.pixels.length + bottomCenter.pixels.length + centerRight.pixels.length, bottomRightPixels.pixels.length);
+            System.arraycopy(bottomRightPixels.areas, 0, areas, center.areas.length + bottomCenter.areas.length + centerRight.areas.length, bottomRightPixels.areas.length);
         } else {
             throw new IllegalStateException("invalid source rectangle: " + sourceRect);
         }
     }
 
-    private int[] getCenterRightPixels(Rectangle sourceRect, int width, int height) throws IOException {
-        final boolean overBottom = sourceRect.y + sourceRect.height >= height;
+    private Result getBottomRightPixels(Rectangle sourceRect, int width, int height) throws IOException {
         final int x = 0;
-        final int y = sourceRect.y < 0 ? 0 : sourceRect.y;
+        final int y = 0;
         final int w = sourceRect.width + sourceRect.x - width;
-        final int h = sourceRect.y < 0 ? sourceRect.height - Math.abs(sourceRect.y) :
-                overBottom ? height - sourceRect.y : sourceRect.height;
-        return getBand(FireGridMapper.Position.CENTER_RIGHT).readPixels(
+        final int h = sourceRect.height + sourceRect.y - height;
+        Band band = getBand(FireGridMapper.Position.BOTTOM_RIGHT);
+        int[] pixels = band.readPixels(
                 x,
                 y,
                 w,
                 h,
                 (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
     }
 
-    private int[] getCenterLeftPixels(Rectangle sourceRect, int width, int height) throws IOException {
+    private Result getTopRightPixels(Rectangle sourceRect, int width, int height) throws IOException {
+        Band band = getBand(FireGridMapper.Position.TOP_RIGHT);
+        int[] pixels = band.readPixels(
+                0,
+                sourceRect.y + height,
+                sourceRect.width + sourceRect.x - width,
+                Math.abs(sourceRect.y),
+                (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
+    }
+
+    private Result getBottomLeftPixels(Rectangle sourceRect, int width, int height) throws IOException {
+        Band band = getBand(FireGridMapper.Position.BOTTOM_LEFT);
+        int[] pixels = band.readPixels(
+                (sourceRect.x + width) % width,
+                0,
+                Math.abs(sourceRect.x),
+                sourceRect.height + sourceRect.y - height,
+                (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
+    }
+
+    private Result getTopLeft(Rectangle sourceRect, int width, int height) throws IOException {
+        Band band = getBand(FireGridMapper.Position.TOP_LEFT);
+        int[] pixels = band.readPixels(sourceRect.x + width, sourceRect.y + height, Math.abs(sourceRect.x), Math.abs(sourceRect.y), (int[]) null);
+        double[] doubles = getAreas(band, pixels);
+        return new Result(doubles, pixels);
+    }
+
+    private Result getCenterRightPixels(Rectangle sourceRect, int width, int height) throws IOException {
+        boolean overBottom = sourceRect.y + sourceRect.height >= height;
+        int x = 0;
+        int y = sourceRect.y < 0 ? 0 : sourceRect.y;
+        int w = sourceRect.width + sourceRect.x - width;
+        int h = sourceRect.y < 0 ? sourceRect.height - Math.abs(sourceRect.y) :
+                overBottom ? height - sourceRect.y : sourceRect.height;
+        Band band = getBand(FireGridMapper.Position.CENTER_RIGHT);
+        int[] pixels = band.readPixels(
+                x,
+                y,
+                w,
+                h,
+                (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
+    }
+
+    private Result getCenterLeftPixels(Rectangle sourceRect, int width, int height) throws IOException {
         boolean overBottom = sourceRect.y + sourceRect.height >= height;
         int x = sourceRect.x + width;
         int y = sourceRect.y < 0 ? 0 : sourceRect.y;
         int w = Math.abs(sourceRect.x);
         int h = sourceRect.y < 0 ? sourceRect.height - Math.abs(sourceRect.y) :
                 overBottom ? height - sourceRect.y : sourceRect.height;
-        return getBand(FireGridMapper.Position.CENTER_LEFT).readPixels(x, y, w, h, (int[]) null);
+        Band band = getBand(FireGridMapper.Position.CENTER_LEFT);
+        int[] pixels = band.readPixels(x, y, w, h, (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
     }
 
-    private int[] getBottomCenterPixels(Rectangle sourceRect, int width, int height) throws IOException {
-        final boolean overRight = sourceRect.x + sourceRect.width >= width;
-        final int w = sourceRect.x < 0 ? sourceRect.width - Math.abs(sourceRect.x) : overRight ? width - sourceRect.x : sourceRect.width;
-        final int x = sourceRect.x < 0 ? 0 : sourceRect.x;
-        final int h = sourceRect.height + sourceRect.y - height;
-        return getBand(FireGridMapper.Position.BOTTOM_CENTER).readPixels(
+    private Result getBottomCenterPixels(Rectangle sourceRect, int width, int height) throws IOException {
+        boolean overRight = sourceRect.x + sourceRect.width >= width;
+        int w = sourceRect.x < 0 ? sourceRect.width - Math.abs(sourceRect.x) : overRight ? width - sourceRect.x : sourceRect.width;
+        int x = sourceRect.x < 0 ? 0 : sourceRect.x;
+        int h = sourceRect.height + sourceRect.y - height;
+        Band band = getBand(FireGridMapper.Position.BOTTOM_CENTER);
+        int[] pixels = band.readPixels(
                 x,
                 0,
                 w,
                 h,
                 (int[]) null);
+        double[] doubles = getAreas(band, pixels);
+        return new Result(doubles, pixels);
     }
 
-    private int[] getTopCenterPixels(Rectangle sourceRect, int width, int height) throws IOException {
+    private Result getTopCenterPixels(Rectangle sourceRect, int width, int height) throws IOException {
         final boolean overRight = sourceRect.x + sourceRect.width >= width;
         final int x = sourceRect.x < 0 ? 0 : sourceRect.x;
         final int y = sourceRect.y + height;
         final int w = sourceRect.x < 0 ? sourceRect.width - Math.abs(sourceRect.x) : overRight ? width - sourceRect.x : sourceRect.width;
         final int h = height - y;
-        return getBand(FireGridMapper.Position.TOP_CENTER).readPixels(
+        Band band = getBand(FireGridMapper.Position.TOP_CENTER);
+        int[] pixels = band.readPixels(
                 x,
                 y,
                 w,
                 h,
                 (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
     }
 
-    private static int[] getCenterPixels(Rectangle sourceRect, Product centerSourceProduct, int width, int height) throws IOException {
+    private static Result getCenterPixels(Rectangle sourceRect, Product centerSourceProduct, int width, int height) throws IOException {
         final boolean overBottom = sourceRect.y + sourceRect.height >= height;
         final boolean overRight = sourceRect.x + sourceRect.width >= width;
         final int x = sourceRect.x < 0 ? 0 : sourceRect.x;
@@ -206,7 +268,27 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
                 overRight ? width - sourceRect.x: sourceRect.width;
         final int h = sourceRect.y < 0 ? sourceRect.height - Math.abs(sourceRect.y) :
                 overBottom ? height - sourceRect.y : sourceRect.height;
-        return centerSourceProduct.getBand("band_1").readPixels(x, y, w, h, (int[]) null);
+        Band band = centerSourceProduct.getBand("band_1");
+
+        int[] pixels = band.readPixels(x, y, w, h, (int[]) null);
+        double[] areas = getAreas(band, pixels);
+        return new Result(areas, pixels);
+    }
+
+    private static double[] getAreas(Band band, int[] pixels) {
+        int length = pixels.length;
+        double[] areas = new double[length];
+        if (band.getName().equals("null")) {
+            LOG.info(String.format("Skipping band %s because it is empty.", band.getName()));
+            return areas;
+        }
+        AreaCalculator areaCalculator = new AreaCalculator(band.getGeoCoding());
+        for (int i = 0; i < areas.length; i++) {
+            int sourceBandX = i % band.getRasterWidth();
+            int sourceBandY = i / band.getRasterWidth();
+            areas[i] = areaCalculator.calculatePixelSize(sourceBandX, sourceBandY);
+        }
+        return areas;
     }
 
     private Band getBand(FireGridMapper.Position position) {
@@ -215,5 +297,16 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
             return NULL_BAND;
         }
         return product.getBand("band_1");
+    }
+
+    private static class Result {
+
+        double[] areas;
+        int[] pixels;
+
+        Result(double[] areas, int[] pixels) {
+            this.areas = areas;
+            this.pixels = pixels;
+        }
     }
 }
