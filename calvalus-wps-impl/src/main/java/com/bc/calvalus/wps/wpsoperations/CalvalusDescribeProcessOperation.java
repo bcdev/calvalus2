@@ -163,6 +163,22 @@ public class CalvalusDescribeProcessOperation {
                     .build();
         dataInputs.getInput().add(productionNameInput);
 
+        List<Object> allowedProductionTypes = new ArrayList<>();
+        ValueType allowedProductionType = new ValueType();
+        allowedProductionType.setValue("L2Plus");
+        allowedProductionTypes.add(allowedProductionType);
+
+        InputDescriptionType productionType = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("productionType")
+                    .withTitle("Production type")
+                    .withAbstract("The type of the requested product. When not specified, L2Plus type is used")
+                    .withDataType("string")
+                    .withAllowedValues(allowedProductionTypes)
+                    .withDefaultValue("L2Plus")
+                    .build();
+        dataInputs.getInput().add(productionType);
+
         if (parameterDescriptors != null) {
             for (ProcessorDescriptor.ParameterDescriptor parameterDescriptor : parameterDescriptors) {
                 InputDescriptionType input = InputDescriptionTypeBuilder
