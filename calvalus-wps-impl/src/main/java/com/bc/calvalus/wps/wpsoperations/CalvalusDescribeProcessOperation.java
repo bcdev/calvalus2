@@ -256,7 +256,7 @@ public class CalvalusDescribeProcessOperation {
 
         InputDescriptionType regionWkt = InputDescriptionTypeBuilder
                     .create()
-                    .withIdentifier("regionWkt")
+                    .withIdentifier("regionWKT")
                     .withTitle("Region WKT")
                     .withAbstract("The spatial range in the format of text. Example: POLYGON((100 -10,100 0,110 0,110 -10,100 -10))")
                     .withDataType("string")
@@ -266,7 +266,7 @@ public class CalvalusDescribeProcessOperation {
 
         InputDescriptionType regionBoundingBox = InputDescriptionTypeBuilder
                     .create()
-                    .withIdentifier("regionWkt")
+                    .withIdentifier("regionWKT")
                     .withTitle("Region with bounding box")
                     .withAbstract("The spatial range in the format of bounding box. Use LowerCorner and UpperCorner (a pair of double values) " +
                                   "to specify the box. Example: <LowerCorner>100.74453 -10.0000</LowerCorner><UpperCorner>110.25000 0.12443</UpperCorner>")
