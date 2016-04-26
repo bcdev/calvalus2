@@ -41,7 +41,6 @@ public class GridCell implements Writable {
         for (int bandIdx = 0; bandIdx < 2; bandIdx++) {
             float[] band = new float[BAND_SIZE];
             data[bandIdx] = band;
-            System.out.println("Reading some data:");
             for (int i = 0; i < BAND_SIZE; i++) {
                 band[i] = in.readFloat();
             }

@@ -1,29 +1,30 @@
 package com.bc.calvalus.processing.fire;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.image.ResolutionLevel;
-import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.dataio.netcdf.metadata.profiles.cf.CfNetCdf4WriterPlugIn;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Dimension;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author thomas
@@ -32,52 +33,108 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
 
     public static final int SCENE_RASTER_WIDTH = 1440;
     public static final int SCENE_RASTER_HEIGHT = 720;
-    Product result;
+    private Product resultFirstHalf;
+    private Product resultSecondHalf;
+    private final List<int[]> writtenChunksFirstHalf = new ArrayList<>();
+    private final List<int[]> writtenChunksSecondHalf = new ArrayList<>();
 
     @Override
-    protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
-        System.out.println("key = " + key);
-        Iterator<GridCell> iterator = values.iterator();
-        GridCell gridCell = iterator.next();
-        float[] burnedAreaFirstHalfData = gridCell.data[0];
+    protected void setup(Context context) throws IOException, InterruptedException {
+        prepareTargetProducts();
+    }
 
-        Product resultFirstHalf = new Product("target", "type", SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT);
+    private void prepareTargetProducts() throws IOException {
+        resultFirstHalf = new Product("target", "type", SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT);
+        resultSecondHalf = new Product("target", "type", SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT);
         resultFirstHalf.setProductWriter(new CfNetCdf4WriterPlugIn().createWriterInstance());
-        File localFile = new File("./thomas-ba.nc");
-        resultFirstHalf.setFileLocation(localFile);
+        resultSecondHalf.setProductWriter(new CfNetCdf4WriterPlugIn().createWriterInstance());
+        resultFirstHalf.setFileLocation(new File("./thomas-ba-07.nc"));
+        resultSecondHalf.setFileLocation(new File("./thomas-ba-22.nc"));
         try {
-            resultFirstHalf.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, 0, 0, 0.25, 0.25, 0.0, 0.0));
+            resultFirstHalf.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, -180, 90, 0.25, 0.25, 0.0, 0.0));
+            resultSecondHalf.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, -180, 90, 0.25, 0.25, 0.0, 0.0));
         } catch (FactoryException | TransformException e) {
             throw new IOException("Unable to create geo-coding", e);
         }
 
         Band burnedAreaFirstHalf = resultFirstHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
         burnedAreaFirstHalf.setUnit("m^2");
-        burnedAreaFirstHalf.setSourceImage(new SingleBandedOpImage(ProductData.TYPE_FLOAT32, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, new Dimension(40, 40), null, ResolutionLevel.MAXRES) {
-            @Override
-            public Raster computeTile(int tileX, int tileY) {
-                WritableRaster raster = (WritableRaster) super.computeTile(tileX, tileY);
-                raster.setPixels(0, 0, 40, 40, burnedAreaFirstHalfData);
-                return raster;
-            }
-        });
 
-        ProductIO.writeProduct(resultFirstHalf, localFile, "NetCDF4-BEAM", false);
-        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/thomas-ba.nc");
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        fs.delete(path, true);
-        FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
+        Band burnedAreaSecondHalf = resultSecondHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
+        burnedAreaSecondHalf.setUnit("m^2");
+
+        ProductWriter productWriterFH = resultFirstHalf.getProductWriter();
+        ProductWriter productWriterSH = resultSecondHalf.getProductWriter();
+        productWriterFH.writeProductNodes(resultFirstHalf, resultFirstHalf.getFileLocation());
+        productWriterSH.writeProductNodes(resultSecondHalf, resultSecondHalf.getFileLocation());
     }
 
-    private int findX(Text key) {
+    @Override
+    protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
+        Iterator<GridCell> iterator = values.iterator();
+        GridCell gridCell = iterator.next();
+
+        writeData(key, gridCell.data[0], resultFirstHalf, writtenChunksFirstHalf);
+        writeData(key, gridCell.data[1], resultSecondHalf, writtenChunksSecondHalf);
+    }
+
+    private void writeData(Text key, float[] data, Product product, List<int[]> writtenChunks) throws IOException {
+        int x = getX(key);
+        int y = getY(key);
+        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40", x, y));
+        product.getProductWriter().writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(data), ProgressMonitor.NULL);
+        writtenChunks.add(new int[]{x, y});
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        fillBand(resultFirstHalf.getBand("burned_area"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf);
+        fillBand(resultSecondHalf.getBand("burned_area"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf);
+        write(context.getConfiguration(), resultFirstHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-07.nc");
+        write(context.getConfiguration(), resultSecondHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-22.nc");
+    }
+
+    private void write(Configuration configuration, Product product, String pathString) throws IOException {
+        product.closeIO();
+        File fileLocation = product.getFileLocation();
+        Path path = new Path(pathString);
+        FileSystem fs = path.getFileSystem(configuration);
+        fs.delete(path, true);
+        FileUtil.copy(fileLocation, fs, path, false, configuration);
+    }
+
+    private static void fillBand(Band band, ProductWriter productWriter, List<int[]> writtenChunks) throws IOException {
+        // the netcdf4-writer expects the band to be fully populated with data
+        // also, it can write data only once
+        // --> we have to fill remaining pixels here
+        float[] array = new float[40 * 40];
+        Arrays.fill(array, 0.0F);
+        for (int y = 0; y < SCENE_RASTER_HEIGHT; y += 40) {
+            for (int x = 0; x < SCENE_RASTER_WIDTH; x += 40) {
+                if (!alreadyWritten(x, y, writtenChunks)) {
+                    CalvalusLogger.getLogger().info("Filling chunk at: x=" + x + "; y=" + y);
+                    productWriter.writeBandRasterData(band, x, y, 40, 40, new ProductData.Float(array), ProgressMonitor.NULL);
+                }
+            }
+        }
+    }
+
+    private static boolean alreadyWritten(int x, int y, List<int[]> writtenChunks) {
+        for (int[] item : writtenChunks) {
+            if (Arrays.equals(item, new int[]{x, y})) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int getX(Text key) {
         int x = Integer.parseInt(key.toString().substring(12));
-        System.out.println("x = " + x);
         return x * 40;
     }
 
-    private int findY(Text key) {
-        int y = Integer.parseInt(key.toString().substring(8, 10));
-        System.out.println("y = " + y);
+    private int getY(Text key) {
+        int y = Integer.parseInt(key.toString().substring(9, 11));
         return y * 40;
     }
 }

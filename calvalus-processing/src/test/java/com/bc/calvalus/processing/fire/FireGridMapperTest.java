@@ -32,6 +32,8 @@ public class FireGridMapperTest {
         assertTrue(FireGridMapper.isValidSecondHalfPixel(31, 7, 22));
         assertTrue(FireGridMapper.isValidSecondHalfPixel(31, 7, 25));
         assertTrue(FireGridMapper.isValidSecondHalfPixel(31, 7, 31));
+
+        assertTrue(FireGridMapper.isValidSecondHalfPixel(28, 7, 28));
     }
 
     @Test
