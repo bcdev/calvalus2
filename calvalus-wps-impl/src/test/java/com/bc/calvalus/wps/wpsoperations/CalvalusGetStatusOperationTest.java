@@ -18,6 +18,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -27,6 +28,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -95,7 +97,8 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
+        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
+        thrownException.expect(instanceOf(InvalidParameterValueException.class));
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("job-01");
@@ -112,7 +115,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Unable to retrieve the job with jobId 'job-01'.");
+        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("job-01");
@@ -207,12 +210,4 @@ public class CalvalusGetStatusOperationTest {
         when(mockSuccessfulStatus.getState()).thenReturn(ProcessState.COMPLETED);
         return mockSuccessfulStatus;
     }
-
-    private ProcessStatus getDoneAndFailedProcessStatus() {
-        ProcessStatus mockFailedStatus = mock(ProcessStatus.class);
-        when(mockFailedStatus.getState()).thenReturn(ProcessState.ERROR);
-        return mockFailedStatus;
-    }
-
-
 }

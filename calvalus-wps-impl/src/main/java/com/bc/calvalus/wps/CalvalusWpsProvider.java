@@ -3,7 +3,6 @@ package com.bc.calvalus.wps;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
@@ -68,12 +67,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
     @Override
     public ExecuteResponse getStatus(WpsRequestContext wpsRequestContext, String jobId) throws WpsServiceException {
         CalvalusGetStatusOperation getStatusOperation = new CalvalusGetStatusOperation(wpsRequestContext);
-        try {
-            return getStatusOperation.getStatus(jobId);
-        } catch (JobNotFoundException exception) {
-            logger.log(Level.SEVERE, "Unable to perform GetStatus operation successfully", exception);
-            throw new WpsServiceException(exception);
-        }
+        return getStatusOperation.getStatus(jobId);
     }
 
     @Override

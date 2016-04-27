@@ -35,8 +35,11 @@ public class CalvalusGetStatusOperation {
         ExecuteResponse executeResponse;
         Production production;
         ProcessBriefType processBriefType = new ProcessBriefType();
-        try{
+        try {
             production = getProduction(jobId);
+            if (production == null) {
+                throw new JobNotFoundException("JobId");
+            }
             String bundleName = production.getProductionRequest().getString(PROCESSOR_BUNDLE_NAME.getIdentifier());
             String bundleVersion = production.getProductionRequest().getString(PROCESSOR_BUNDLE_VERSION.getIdentifier());
             String processorName = production.getProductionRequest().getString(PROCESSOR_NAME.getIdentifier());
@@ -45,7 +48,7 @@ public class CalvalusGetStatusOperation {
             processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
             processBriefType.setProcessVersion(bundleVersion);
         } catch (ProductionException | IOException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
 
         if (isProductionJobFinishedAndSuccessful(jobId)) {
@@ -66,7 +69,7 @@ public class CalvalusGetStatusOperation {
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
             return executeResponse.getStartedResponse(processingStatus.getState().toString(), 100 * processingStatus.getProgress());
         } catch (IOException | ProductionException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
     }
 
@@ -76,7 +79,7 @@ public class CalvalusGetStatusOperation {
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
             return executeResponse.getFailedResponse(production.getProcessingStatus().getMessage());
         } catch (ProductionException | IOException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
     }
 
@@ -89,7 +92,7 @@ public class CalvalusGetStatusOperation {
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
             return executeResponse.getSuccessfulResponse(productResultUrls);
         } catch (ProductionException | IOException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
     }
 
@@ -98,7 +101,7 @@ public class CalvalusGetStatusOperation {
             Production production = getProduction(jobId);
             return production.getStagingStatus().getState() == ProcessState.COMPLETED;
         } catch (ProductionException | IOException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
     }
 
@@ -107,7 +110,7 @@ public class CalvalusGetStatusOperation {
             Production production = getProduction(jobId);
             return production.getProcessingStatus().getState().isDone();
         } catch (ProductionException | IOException exception) {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.", exception);
+            throw new JobNotFoundException(exception, "JobId");
         }
     }
 
