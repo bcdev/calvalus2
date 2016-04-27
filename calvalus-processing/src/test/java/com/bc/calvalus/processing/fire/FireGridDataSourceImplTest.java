@@ -12,40 +12,25 @@ import org.opengis.referencing.operation.TransformException;
 
 import java.awt.Rectangle;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 /**
- *
  * @author thomas
  */
 public class FireGridDataSourceImplTest {
 
-    private FireGridMapper.FireGridDataSource dataSource;
+    private FireGridDataSourceImpl dataSource;
 
     @Before
     public void setUp() throws Exception {
-        Map<FireGridMapper.Position, Product> neighbourProducts = new HashMap<>();
-        /*
-
-            TL-1  TC-4  TR-7
-            CL-2  CC-5  CR-8
-            BL-3  BC-6  CB-9
-
-         */
-        neighbourProducts.put(FireGridMapper.Position.TOP_LEFT, createProduct(1));
-        neighbourProducts.put(FireGridMapper.Position.CENTER_LEFT, createProduct(2));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_LEFT, createProduct(3));
-        neighbourProducts.put(FireGridMapper.Position.TOP_CENTER, createProduct(4));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_CENTER, createProduct(6));
-        neighbourProducts.put(FireGridMapper.Position.TOP_RIGHT, createProduct(7));
-        neighbourProducts.put(FireGridMapper.Position.CENTER_RIGHT, createProduct(8));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_RIGHT, createProduct(9));
-
         Product centerProduct = createProduct(5);
-        dataSource = new FireGridDataSourceImpl(centerProduct, neighbourProducts);
+        dataSource = new FireGridDataSourceImpl(centerProduct);
+        dataSource.setDoyFirstHalf(7);
+        dataSource.setDoySecondHalf(22);
+        dataSource.setDoyFirstOfMonth(1);
+        dataSource.setDoyLastOfMonth(31);
     }
 
     @Test
@@ -53,177 +38,106 @@ public class FireGridDataSourceImplTest {
         int[] pixels = new int[4];
         double[] areas = new double[4];
 
+        SourceData data = new SourceData(pixels, areas);
+
         // center
-        dataSource.readPixels(new Rectangle(0, 0, 2, 2), areas, pixels);
+        dataSource.readPixels(new Rectangle(0, 0, 2, 2), data);
         int[] expected = {
                 5000, 5001, 5004, 5005,
         };
         assertArrayEquals(expected, pixels);
+    }
 
-        // top-left
-        dataSource.readPixels(new Rectangle(-1, -1, 2, 2), areas, pixels);
-        expected = new int[] {
-                1015, 2003, 4012, 5000
-        };
-        assertArrayEquals(expected, pixels);
+    @Test
+    public void testReadPixelsLarger() throws Exception {
+        int[] pixels = new int[9];
+        double[] areas = new double[9];
 
-        // center-left
-        dataSource.readPixels(new Rectangle(-1, 0, 2, 2), areas, pixels);
-        expected = new int[] {
-                2003, 2007, 5000, 5004
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-left
-        dataSource.readPixels(new Rectangle(-1, 3, 2, 2), areas, pixels);
-        expected = new int[] {
-                2015, 3003, 5012, 6000
-        };
-        assertArrayEquals(expected, pixels);
-
-
-        // top-center
-        dataSource.readPixels(new Rectangle(0, -1, 2, 2), areas, pixels);
-        expected = new int[] {
-                4012, 4013, 5000, 5001,
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-center
-        dataSource.readPixels(new Rectangle(0, 3, 2, 2), areas, pixels);
-        expected = new int[] {
-                5012, 5013, 6000, 6001,
-        };
-        assertArrayEquals(expected, pixels);
-
-        // top-right
-        dataSource.readPixels(new Rectangle(3, -1, 2, 2), areas, pixels);
-        expected = new int[] {
-                4015, 5003, 7012, 8000,
-        };
-        assertArrayEquals(expected, pixels);
-
-        // center-right
-        dataSource.readPixels(new Rectangle(3, 0, 2, 2), areas, pixels);
-        expected = new int[] {
-                5003, 5007, 8000, 8004,
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-right
-        dataSource.readPixels(new Rectangle(3, 3, 2, 2), areas, pixels);
-        expected = new int[] {
-                5015, 6003, 8012, 9000,
-        };
-        assertArrayEquals(expected, pixels);
-
-
-        pixels = new int[9];
-        areas = new double[9];
+        SourceData data = new SourceData(pixels, areas);
 
         // center larger
-        dataSource.readPixels(new Rectangle(0, 0, 3, 3), areas, pixels);
-        expected = new int[] {
+        dataSource.readPixels(new Rectangle(0, 0, 3, 3), data);
+        int[] expected = new int[]{
                 5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
-        };
-        assertArrayEquals(expected, pixels);
-
-        // top-left larger
-        dataSource.readPixels(new Rectangle(-1, -1, 3, 3), areas, pixels);
-        expected = new int[] {
-                1015, 2003, 2007, 4012, 4013, 5000, 5001, 5004, 5005
-        };
-        assertArrayEquals(expected, pixels);
-
-        // center-left larger
-        dataSource.readPixels(new Rectangle(-1, 0, 3, 3), areas, pixels);
-        expected = new int[] {
-                2003, 2007, 2011, 5000, 5001, 5004, 5005, 5008, 5009
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-left larger
-        dataSource.readPixels(new Rectangle(-1, 3, 3, 3), areas, pixels);
-        expected = new int[] {
-                2015, 3003, 3007, 5012, 5013, 6000, 6001, 6004, 6005
-        };
-        assertArrayEquals(expected, pixels);
-
-        // top-center larger
-        dataSource.readPixels(new Rectangle(0, -1, 3, 3), areas, pixels);
-        expected = new int[] {
-                4012, 4013, 4014, 5000, 5001, 5002, 5004, 5005, 5006
-        };
-        assertArrayEquals(expected, pixels);
-
-        // center larger
-        dataSource.readPixels(new Rectangle(0, 0, 3, 3), areas, pixels);
-        expected = new int[] {
-                5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-center larger
-        dataSource.readPixels(new Rectangle(0, 3, 3, 3), areas, pixels);
-        expected = new int[] {
-                5012, 5013, 5014, 6000, 6001, 6002, 6004, 6005, 6006
-        };
-        assertArrayEquals(expected, pixels);
-
-        // top-right larger
-        dataSource.readPixels(new Rectangle(3, -1, 3, 3), areas, pixels);
-        expected = new int[] {
-                4015, 5003, 5007, 7012, 7013, 8000, 8001, 8004, 8005
-        };
-        assertArrayEquals(expected, pixels);
-
-        // center-right larger
-        dataSource.readPixels(new Rectangle(3, 0, 3, 3), areas, pixels);
-        expected = new int[] {
-                5003, 5007, 5011, 8000, 8001, 8004, 8005, 8008, 8009
-        };
-        assertArrayEquals(expected, pixels);
-
-        // bottom-right larger
-        dataSource.readPixels(new Rectangle(3, 3, 3, 3), areas, pixels);
-        expected = new int[] {
-                5015, 6003, 6007, 8012, 8013, 9000, 9001, 9004, 9005
         };
         assertArrayEquals(expected, pixels);
     }
 
+    @Test
+    public void testGetPatches_0() throws Exception {
+        int[] pixels = {
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0
+        };
+        assertEquals(0, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+    }
 
     @Test
-    public void testReadPixels_WithMissingBand() throws Exception {
-        Map<FireGridMapper.Position, Product> neighbourProducts = new HashMap<>();
-        /*
-
-            MISSING  TC-4  TR-7
-            CL-2  CC-5  CR-8
-            BL-3  BC-6  CB-9
-
-         */
-        neighbourProducts.put(FireGridMapper.Position.CENTER_LEFT, createProduct(2));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_LEFT, createProduct(3));
-        neighbourProducts.put(FireGridMapper.Position.TOP_CENTER, createProduct(4));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_CENTER, createProduct(6));
-        neighbourProducts.put(FireGridMapper.Position.TOP_RIGHT, createProduct(7));
-        neighbourProducts.put(FireGridMapper.Position.CENTER_RIGHT, createProduct(8));
-        neighbourProducts.put(FireGridMapper.Position.BOTTOM_RIGHT, createProduct(9));
-
-        Product centerProduct = createProduct(5);
-        dataSource = new FireGridDataSourceImpl(centerProduct, neighbourProducts);
-
-
-        int[] pixels = new int[4];
-        double[] areas = new double[4];
-
-        // upper left
-        dataSource.readPixels(new Rectangle(-1, -1, 2, 2), areas, pixels);
-        int[] expected = {
-                -1, 2003, 4012, 5000,
+    public void testGetPatches_1() throws Exception {
+        int[] pixels = {
+                0, 0, 0, 1,
+                0, 0, 0, 1,
+                1, 0, 0, 0,
+                1, 0, 0, 1
         };
-        assertArrayEquals(expected, pixels);
+        assertEquals(3, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+    }
+
+    @Test
+    public void testGetPatches_2() throws Exception {
+        int[] pixels = {
+                0, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 1, 1, 0,
+                0, 0, 0, 0
+        };
+        assertEquals(1, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+    }
+
+    @Test
+    public void testGetPatches_3() throws Exception {
+        int[] pixels = {
+                1, 0, 1, 1,
+                0, 1, 0, 1,
+                0, 1, 1, 0,
+                0, 0, 0, 1
+        };
+        assertEquals(4, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+    }
+
+    @Test
+    public void testGetPatches_Large() throws Exception {
+        int[] pixels = new int[90 * 90];
+        for (int i = 0; i < pixels.length; i++) {
+            pixels[i] = (int) (Math.random() * 2);
+        }
+        dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testMake2Dims_failing() throws Exception {
+        FireGridDataSourceImpl.make2Dims(new int[]{
+                1, 0, 1, 1,
+                0, 1, 0, 1,
+                0, 1, 1, 0
+        });
+    }
+
+    @Test
+    public void testMake2Dims() throws Exception {
+        int[][] ints = FireGridDataSourceImpl.make2Dims(new int[]{
+                1, 0, 1, 1,
+                0, 1, 0, 1,
+                0, 1, 1, 0,
+                0, 0, 0, 1
+        });
+
+        assertArrayEquals(new int[]{1, 0, 1, 1}, ints[0]);
+        assertArrayEquals(new int[]{0, 1, 0, 1}, ints[1]);
+        assertArrayEquals(new int[]{0, 1, 1, 0}, ints[2]);
+        assertArrayEquals(new int[]{0, 0, 0, 1}, ints[3]);
     }
 
     private static Product createProduct(int value) throws FactoryException, TransformException {

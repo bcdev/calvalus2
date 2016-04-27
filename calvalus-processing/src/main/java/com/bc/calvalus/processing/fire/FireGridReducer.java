@@ -63,6 +63,9 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         Band burnedAreaSecondHalf = resultSecondHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
         burnedAreaSecondHalf.setUnit("m^2");
 
+        resultFirstHalf.addBand("patch_number", ProductData.TYPE_INT32);
+        resultSecondHalf.addBand("patch_number", ProductData.TYPE_INT32);
+
         ProductWriter productWriterFH = resultFirstHalf.getProductWriter();
         ProductWriter productWriterSH = resultSecondHalf.getProductWriter();
         productWriterFH.writeProductNodes(resultFirstHalf, resultFirstHalf.getFileLocation());
@@ -74,24 +77,47 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         Iterator<GridCell> iterator = values.iterator();
         GridCell gridCell = iterator.next();
 
-        writeData(key, gridCell.data[0], resultFirstHalf, writtenChunksFirstHalf);
-        writeData(key, gridCell.data[1], resultSecondHalf, writtenChunksSecondHalf);
+        float[] burnedAreaFirstHalf = gridCell.baFirstHalf;
+        float[] burnedAreaSecondHalf = gridCell.baSecondHalf;
+
+        int[] patchNumbersFirstHalf = gridCell.patchNumberFirstHalf;
+        int[] patchNumbersSecondHalf = gridCell.patchNumberSecondHalf;
+
+        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
+        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
     }
 
-    private void writeData(Text key, float[] data, Product product, List<int[]> writtenChunks) throws IOException {
+    private void writeData(Text key, float[] burnedArea, int[] patchNumbers, Product product, List<int[]> writtenChunks) throws IOException {
         int x = getX(key);
         int y = getY(key);
         CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40", x, y));
-        product.getProductWriter().writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(data), ProgressMonitor.NULL);
-        writtenChunks.add(new int[]{x, y});
+        product.getProductWriter().writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(burnedArea), ProgressMonitor.NULL);
+        product.getProductWriter().writeBandRasterData(product.getBand("patch_number"), x, y, 40, 40, new ProductData.Int(patchNumbers), ProgressMonitor.NULL);
+        if (!alreadyWritten(x, y, writtenChunks)) {
+            writtenChunks.add(new int[]{x, y});
+        }
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        fillBand(resultFirstHalf.getBand("burned_area"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf);
-        fillBand(resultSecondHalf.getBand("burned_area"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf);
+        fillBand(resultFirstHalf.getBand("burned_area"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
+        fillBand(resultSecondHalf.getBand("burned_area"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
+        fillBand(resultFirstHalf.getBand("patch_number"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createIntFillData());
+        fillBand(resultSecondHalf.getBand("patch_number"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createIntFillData());
         write(context.getConfiguration(), resultFirstHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-07.nc");
         write(context.getConfiguration(), resultSecondHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-22.nc");
+    }
+
+    private static ProductData.Int createIntFillData() {
+        int[] array = new int[40 * 40];
+        Arrays.fill(array, 0);
+        return new ProductData.Int(array);
+    }
+
+    private static ProductData.Float createFloatFillData() {
+        float[] array = new float[40 * 40];
+        Arrays.fill(array, 0.0F);
+        return new ProductData.Float(array);
     }
 
     private void write(Configuration configuration, Product product, String pathString) throws IOException {
@@ -103,17 +129,15 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         FileUtil.copy(fileLocation, fs, path, false, configuration);
     }
 
-    private static void fillBand(Band band, ProductWriter productWriter, List<int[]> writtenChunks) throws IOException {
+    private static void fillBand(Band band, ProductWriter productWriter, List<int[]> writtenChunks, ProductData fillData) throws IOException {
         // the netcdf4-writer expects the band to be fully populated with data
         // also, it can write data only once
         // --> we have to fill remaining pixels here
-        float[] array = new float[40 * 40];
-        Arrays.fill(array, 0.0F);
         for (int y = 0; y < SCENE_RASTER_HEIGHT; y += 40) {
             for (int x = 0; x < SCENE_RASTER_WIDTH; x += 40) {
                 if (!alreadyWritten(x, y, writtenChunks)) {
                     CalvalusLogger.getLogger().info("Filling chunk at: x=" + x + "; y=" + y);
-                    productWriter.writeBandRasterData(band, x, y, 40, 40, new ProductData.Float(array), ProgressMonitor.NULL);
+                    productWriter.writeBandRasterData(band, x, y, 40, 40, fillData, ProgressMonitor.NULL);
                 }
             }
         }
