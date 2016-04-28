@@ -31,8 +31,8 @@ import java.util.List;
  */
 public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
 
-    public static final int SCENE_RASTER_WIDTH = 1440;
-    public static final int SCENE_RASTER_HEIGHT = 720;
+    private static final int SCENE_RASTER_WIDTH = 1440;
+    private static final int SCENE_RASTER_HEIGHT = 720;
     private Product resultFirstHalf;
     private Product resultSecondHalf;
     private final List<int[]> writtenChunksFirstHalf = new ArrayList<>();
@@ -63,6 +63,12 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         Band burnedAreaSecondHalf = resultSecondHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
         burnedAreaSecondHalf.setUnit("m^2");
 
+        Band standardErrorFirstHalf = resultFirstHalf.addBand("standard_error", ProductData.TYPE_FLOAT32);
+        standardErrorFirstHalf.setUnit("m^2");
+
+        Band standardErrorSecondHalf = resultSecondHalf.addBand("standard_error", ProductData.TYPE_FLOAT32);
+        standardErrorSecondHalf.setUnit("m^2");
+
         resultFirstHalf.addBand("patch_number", ProductData.TYPE_INT32);
         resultSecondHalf.addBand("patch_number", ProductData.TYPE_INT32);
 
@@ -83,16 +89,20 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         int[] patchNumbersFirstHalf = gridCell.patchNumberFirstHalf;
         int[] patchNumbersSecondHalf = gridCell.patchNumberSecondHalf;
 
-        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
-        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
+        float[] errorsFirstHalf = gridCell.errorsFirstHalf;
+        float[] errorsSecondHalf = gridCell.errorsSecondHalf;
+
+        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, errorsFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
+        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, errorsSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
     }
 
-    private void writeData(Text key, float[] burnedArea, int[] patchNumbers, Product product, List<int[]> writtenChunks) throws IOException {
+    private void writeData(Text key, float[] burnedArea, int[] patchNumbers, float[] errors, Product product, List<int[]> writtenChunks) throws IOException {
         int x = getX(key);
         int y = getY(key);
         CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40", x, y));
         product.getProductWriter().writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(burnedArea), ProgressMonitor.NULL);
         product.getProductWriter().writeBandRasterData(product.getBand("patch_number"), x, y, 40, 40, new ProductData.Int(patchNumbers), ProgressMonitor.NULL);
+        product.getProductWriter().writeBandRasterData(product.getBand("standard_error"), x, y, 40, 40, new ProductData.Float(errors), ProgressMonitor.NULL);
         if (!alreadyWritten(x, y, writtenChunks)) {
             writtenChunks.add(new int[]{x, y});
         }
@@ -104,6 +114,8 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         fillBand(resultSecondHalf.getBand("burned_area"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
         fillBand(resultFirstHalf.getBand("patch_number"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createIntFillData());
         fillBand(resultSecondHalf.getBand("patch_number"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createIntFillData());
+        fillBand(resultFirstHalf.getBand("standard_error"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
+        fillBand(resultSecondHalf.getBand("standard_error"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
         write(context.getConfiguration(), resultFirstHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-07.nc");
         write(context.getConfiguration(), resultSecondHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-22.nc");
     }

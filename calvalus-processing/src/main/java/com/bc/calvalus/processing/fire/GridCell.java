@@ -17,21 +17,31 @@ public class GridCell implements Writable {
     float[] baSecondHalf;
     int[] patchNumberFirstHalf;
     int[] patchNumberSecondHalf;
+    float[] errorsFirstHalf;
+    float[] errorsSecondHalf;
 
-    public void setBaFirstHalf(float[] baFirstHalf) {
+    void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
     }
 
-    public void setBaSecondHalf(float[] baSecondHalf) {
+    void setBaSecondHalf(float[] baSecondHalf) {
         this.baSecondHalf = baSecondHalf;
     }
 
-    public void setPatchNumberFirstHalf(int[] patchNumberFirstHalf) {
+    void setPatchNumberFirstHalf(int[] patchNumberFirstHalf) {
         this.patchNumberFirstHalf = patchNumberFirstHalf;
     }
 
-    public void setPatchNumberSecondHalf(int[] patchNumberSecondHalf) {
+    void setPatchNumberSecondHalf(int[] patchNumberSecondHalf) {
         this.patchNumberSecondHalf = patchNumberSecondHalf;
+    }
+
+    void setErrorsFirstHalf(float[] errorsFirstHalf) {
+        this.errorsFirstHalf = errorsFirstHalf;
+    }
+
+    void setErrorsSecondHalf(float[] errorsSecondHalf) {
+        this.errorsSecondHalf = errorsSecondHalf;
     }
 
     @Override
@@ -48,6 +58,12 @@ public class GridCell implements Writable {
         for (int v : patchNumberSecondHalf) {
             out.writeInt(v);
         }
+        for (float v : errorsFirstHalf) {
+            out.writeFloat(v);
+        }
+        for (float v : errorsSecondHalf) {
+            out.writeFloat(v);
+        }
     }
 
     @Override
@@ -56,6 +72,8 @@ public class GridCell implements Writable {
         baSecondHalf = new float[BAND_SIZE];
         patchNumberFirstHalf = new int[BAND_SIZE];
         patchNumberSecondHalf = new int[BAND_SIZE];
+        errorsFirstHalf = new float[BAND_SIZE];
+        errorsSecondHalf = new float[BAND_SIZE];
 
         for (int i = 0; i < BAND_SIZE; i++) {
             baFirstHalf[i] = in.readFloat();
@@ -68,6 +86,12 @@ public class GridCell implements Writable {
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             patchNumberSecondHalf[i] = in.readInt();
+        }
+        for (int i = 0; i < BAND_SIZE; i++) {
+            errorsFirstHalf[i] = in.readFloat();
+        }
+        for (int i = 0; i < BAND_SIZE; i++) {
+            errorsSecondHalf[i] = in.readFloat();
         }
     }
 }

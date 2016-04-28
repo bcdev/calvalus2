@@ -46,18 +46,4 @@ public class FireGridMapperTest {
         assertEquals(new Rectangle(5, -35, 90, 90), FireGridMapper.getSourceRect(new PixelPos(50, 10)));
     }
 
-    @Test
-    public void testFindPosition() throws Exception {
-        assertEquals(FireGridMapper.Position.TOP_LEFT, FireGridMapper.findPosition("BA_PIX_MER_v05h10_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.CENTER_LEFT, FireGridMapper.findPosition("BA_PIX_MER_v06h10_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.BOTTOM_LEFT, FireGridMapper.findPosition("BA_PIX_MER_v07h10_200806_v4.0.tif", "v06h11"));
-
-        assertEquals(FireGridMapper.Position.TOP_CENTER, FireGridMapper.findPosition("BA_PIX_MER_v05h11_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.CENTER, FireGridMapper.findPosition("BA_PIX_MER_v06h11_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.BOTTOM_CENTER, FireGridMapper.findPosition("BA_PIX_MER_v07h11_200806_v4.0.tif", "v06h11"));
-
-        assertEquals(FireGridMapper.Position.TOP_RIGHT, FireGridMapper.findPosition("BA_PIX_MER_v05h12_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.CENTER_RIGHT, FireGridMapper.findPosition("BA_PIX_MER_v06h12_200806_v4.0.tif", "v06h11"));
-        assertEquals(FireGridMapper.Position.BOTTOM_RIGHT, FireGridMapper.findPosition("BA_PIX_MER_v07h12_200806_v4.0.tif", "v06h11"));
-    }
 }

@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  *
  * @author thomas
  */
-public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
+class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     private final Product sourceProduct;
 
@@ -23,7 +23,7 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
     private int doyFirstHalf;
     private int doySecondHalf;
 
-    public FireGridDataSourceImpl(Product sourceProduct) {
+    FireGridDataSourceImpl(Product sourceProduct) {
         this.sourceProduct = sourceProduct;
     }
 
@@ -34,6 +34,26 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
         getAreas(band, data.areas);
         data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
         data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
+    }
+
+    @Override
+    public void setDoyFirstOfMonth(int doyFirstOfMonth) {
+        this.doyFirstOfMonth = doyFirstOfMonth;
+    }
+
+    @Override
+    public void setDoyLastOfMonth(int doyLastOfMonth) {
+        this.doyLastOfMonth = doyLastOfMonth;
+    }
+
+    @Override
+    public void setDoyFirstHalf(int doyFirstHalf) {
+        this.doyFirstHalf = doyFirstHalf;
+    }
+
+    @Override
+    public void setDoySecondHalf(int doySecondHalf) {
+        this.doySecondHalf = doySecondHalf;
     }
 
     int getPatchNumbers(int[][] pixels, boolean firstHalf) {
@@ -61,7 +81,7 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
         return result;
     }
 
-    boolean clearObjects(int[][] array, int x, int y, boolean firstHalf) {
+    private boolean clearObjects(int[][] array, int x, int y, boolean firstHalf) {
         if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
             return false;
         }
@@ -74,26 +94,6 @@ public class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource
             return true;
         }
         return false;
-    }
-
-    @Override
-    public void setDoyFirstOfMonth(int doyFirstOfMonth) {
-        this.doyFirstOfMonth = doyFirstOfMonth;
-    }
-
-    @Override
-    public void setDoyLastOfMonth(int doyLastOfMonth) {
-        this.doyLastOfMonth = doyLastOfMonth;
-    }
-
-    @Override
-    public void setDoyFirstHalf(int doyFirstHalf) {
-        this.doyFirstHalf = doyFirstHalf;
-    }
-
-    @Override
-    public void setDoySecondHalf(int doySecondHalf) {
-        this.doySecondHalf = doySecondHalf;
     }
 
     private boolean isBurned(int pixel, boolean firstHalf) {

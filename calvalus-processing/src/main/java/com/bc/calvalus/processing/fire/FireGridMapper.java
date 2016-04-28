@@ -35,17 +35,11 @@ import org.esa.snap.core.datamodel.ProductData;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
-import org.renjin.sexp.DoubleArrayVector;
-import org.renjin.sexp.DoubleVector;
-import org.renjin.sexp.SEXP;
-import org.renjin.sexp.Vector;
 
-import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.time.Year;
 import java.util.Arrays;
 import java.util.logging.Logger;
@@ -58,31 +52,15 @@ import java.util.logging.Logger;
  */
 public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
-    public static final int TARGET_RASTER_WIDTH = 40;
-    public static final int TARGET_RASTER_HEIGHT = 40;
-    public static final int NO_DATA = -1;
-    public static final int NO_AREA = 0;
+    private static final int TARGET_RASTER_WIDTH = 40;
+    private static final int TARGET_RASTER_HEIGHT = 40;
+    static final int NO_DATA = -1;
+    static final int NO_AREA = 0;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    private static ScriptEngine engine;
-
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-
-//        ScriptEngineManager manager = new ScriptEngineManager();
-////         create a Renjin engine:
-//        engine = manager.getEngineByName("Renjin");
-//        if (engine == null) {
-//            throw new IllegalStateException();
-//        }
-//
-//        try {
-//            testMethod1();
-//            testPrediction();
-//        } catch (ScriptException | URISyntaxException e) {
-//            e.printStackTrace();
-//        }
 
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
@@ -104,6 +82,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         Product targetProduct = createTargetProduct(tile);
 
         FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct);
+        ErrorPredictor errorPredictor = new ErrorPredictor();
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -113,8 +92,11 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         Band burnedAreaSecondHalf = targetProduct.addBand("burned_area_second_half", ProductData.TYPE_FLOAT32);
         Band patchNumberFirstHalf = targetProduct.addBand("patch_number_first_half", ProductData.TYPE_INT32);
         Band patchNumberSecondHalf = targetProduct.addBand("patch_number_second_half", ProductData.TYPE_INT32);
+        Band errorFirstHalf = targetProduct.addBand("error_first_half", ProductData.TYPE_FLOAT32);
+        Band errorSecondHalf = targetProduct.addBand("error_second_half", ProductData.TYPE_FLOAT32);
 
         SourceData data = new SourceData();
+        double[] areas = new double[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
         PixelPos pixelPos = new PixelPos();
         GeoPos geoPos = new GeoPos();
@@ -122,7 +104,6 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         burnedAreaFirstHalf.setRasterData(baFirstHalfRasterData);
         ProductData.Float baSecondHalfRasterData = new ProductData.Float(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
         burnedAreaSecondHalf.setRasterData(baSecondHalfRasterData);
-
         ProductData.Int patchNumberFirstHalfData = new ProductData.Int(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
         patchNumberFirstHalf.setRasterData(patchNumberFirstHalfData);
         ProductData.Int patchNumberSecondHalfData = new ProductData.Int(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
@@ -130,6 +111,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         context.progress();
 
+        int areaIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
@@ -151,13 +133,27 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         valueSecondHalf += data.areas[i];
                     }
+                    areas[areaIndex] += data.areas[i];
                 }
+                areaIndex++;
+
                 burnedAreaFirstHalf.setPixelFloat(x, y, valueFirstHalf);
                 burnedAreaSecondHalf.setPixelFloat(x, y, valueSecondHalf);
                 patchNumberFirstHalf.setPixelInt(x, y, data.patchCountFirstHalf);
                 patchNumberSecondHalf.setPixelInt(x, y, data.patchCountSecondHalf);
             }
         }
+
+        float[] baFirstHalf = baFirstHalfRasterData.getArray();
+        float[] baSecondHalf = baSecondHalfRasterData.getArray();
+        float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
+        float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
+
+        cleanErrors(baFirstHalf, errorsFirstHalf);
+        cleanErrors(baSecondHalf, errorsSecondHalf);
+
+        errorFirstHalf.setRasterData(new ProductData.Float(errorsFirstHalf));
+        errorSecondHalf.setRasterData(new ProductData.Float(errorsSecondHalf));
 
         context.progress();
 
@@ -170,57 +166,14 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
 
         GridCell gridCell = new GridCell();
-        gridCell.setBaFirstHalf(baFirstHalfRasterData.getArray());
-        gridCell.setBaSecondHalf(baSecondHalfRasterData.getArray());
+        gridCell.setBaFirstHalf(baFirstHalf);
+        gridCell.setBaSecondHalf(baSecondHalf);
         gridCell.setPatchNumberFirstHalf(patchNumberFirstHalfData.getArray());
         gridCell.setPatchNumberSecondHalf(patchNumberSecondHalfData.getArray());
+        gridCell.setErrorsFirstHalf(errorsFirstHalf);
+        gridCell.setErrorsSecondHalf(errorsSecondHalf);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCell);
-    }
-
-    static Position findPosition(String filename, String centerTile) {
-        final int[] tileIndices = FireGridInputFormat.getTileIndices(filename);
-        int centerX = Integer.parseInt(centerTile.substring(4, 6));
-        int centerY = Integer.parseInt(centerTile.substring(1, 3));
-        if (centerX > tileIndices[1]) {
-            // left
-            if (centerY > tileIndices[0]) {
-                return Position.TOP_LEFT;
-            } else if (centerY == tileIndices[0]) {
-                return Position.CENTER_LEFT;
-            } else if (centerY < tileIndices[0]) {
-                return Position.BOTTOM_LEFT;
-            }
-        } else if (centerX == tileIndices[1]) {
-            // center
-            if (centerY > tileIndices[0]) {
-                return Position.TOP_CENTER;
-            } else if (centerY == tileIndices[0]) {
-                return Position.CENTER;
-            } else if (centerY < tileIndices[0]) {
-                return Position.BOTTOM_CENTER;
-            }
-        } else if (centerX < tileIndices[1]) {
-            // right
-            if (centerY > tileIndices[0]) {
-                return Position.TOP_RIGHT;
-            } else if (centerY == tileIndices[0]) {
-                return Position.CENTER_RIGHT;
-            } else if (centerY < tileIndices[0]) {
-                return Position.BOTTOM_RIGHT;
-            }
-        }
-        return null;
-    }
-
-    private Product createTargetProduct(String tile) throws IOException {
-        Product target = new Product("target", "type", TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT);
-        try {
-            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT, getEasting(tile), getNorthing(tile), 0.25, 0.25, 0.0, 0.0));
-        } catch (FactoryException | TransformException e) {
-            throw new IOException(e);
-        }
-        return target;
     }
 
     static Rectangle getSourceRect(PixelPos pixelPos) {
@@ -234,6 +187,32 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
     static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
+    }
+
+    private static void cleanErrors(float[] ba, float[] errors) {
+        for (int i = 0; i < errors.length; i++) {
+            if (ba[i] == 0.0) {
+                errors[i] = 0.0F;
+            }
+        }
+    }
+
+    private float[] predict(ErrorPredictor errorPredictor, float[] ba, double[] areas) {
+        try {
+            return errorPredictor.predictError(ba, areas);
+        } catch (ScriptException e) {
+            throw new RuntimeException(String.format("Unable to predict error from BA %s, areas %s", Arrays.toString(ba), Arrays.toString(areas)), e);
+        }
+    }
+
+    private Product createTargetProduct(String tile) throws IOException {
+        Product target = new Product("target", "type", TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT);
+        try {
+            target.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, TARGET_RASTER_WIDTH, TARGET_RASTER_HEIGHT, getEasting(tile), getNorthing(tile), 0.25, 0.25, 0.0, 0.0));
+        } catch (FactoryException | TransformException e) {
+            throw new IOException(e);
+        }
+        return target;
     }
 
     private float getEasting(String tile) {
@@ -251,19 +230,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         return path.toString().substring(startIndex, startIndex + 6);
     }
 
-    public enum Position {
-        TOP_LEFT,
-        CENTER_LEFT,
-        BOTTOM_LEFT,
-        TOP_CENTER,
-        CENTER,
-        BOTTOM_CENTER,
-        TOP_RIGHT,
-        CENTER_RIGHT,
-        BOTTOM_RIGHT,
-    }
-
-    public interface FireGridDataSource {
+    interface FireGridDataSource {
 
         void readPixels(Rectangle sourceRect, SourceData data) throws IOException;
 
@@ -274,41 +241,6 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         void setDoyFirstHalf(int doyFirstHalf);
 
         void setDoySecondHalf(int doySecondHalf);
-    }
-
-
-    public void testMethod1() throws ScriptException {
-
-        engine.eval("df <- data.frame(x=1:10, y=(1:10)+rnorm(n=10))");
-        engine.eval("print(df)");
-        engine.eval("print(lm(y ~ x, df))");
-
-
-        engine.eval("rVector=c(1,2,3,4,5)");
-        engine.eval("meanVal=mean(rVector)");
-        SEXP meanVal = (SEXP) engine.eval("meanVal");
-        double mean = meanVal.asReal();
-
-        LOG.info("mean=" + mean);
-
-        Vector x = (Vector) engine.eval("x <- c(6, 7, 8, 9)");
-        LOG.info("x=" + x);
-        engine.put("y", new double[]{1d, 2d, 3d, 4d});
-        engine.put("z", new DoubleArrayVector(1, 2, 3, 4, 5));
-
-        LOG.info(String.valueOf(((SEXP) engine.eval("out <- sum(y)")).asReal()));
-        LOG.info(String.valueOf(((SEXP) engine.eval("out <- sum(z)")).asReal()));
-    }
-
-    public void testPrediction() throws URISyntaxException, ScriptException {
-        File resFile = new File(getClass().getResource("codiR_cecr_GridProd.RData").toURI());
-        String absolutePath = resFile.getAbsolutePath().replace("\\", "\\\\");
-        engine.eval("load(file = \"" + absolutePath + "\")");
-        engine.put("bap", new double[]{1, 2, 3, 4, 5, 1, 2, 3, 4, 5});
-        engine.eval("nwd = data.frame(gpg=bap)");
-        DoubleVector pred = (DoubleVector) engine.eval("predict(ug, nwd)");
-        double[] predResult = pred.toDoubleArray();
-        LOG.info(Arrays.toString(predResult));
     }
 
 }
