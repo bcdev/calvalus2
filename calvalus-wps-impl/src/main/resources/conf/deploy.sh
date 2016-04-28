@@ -14,4 +14,6 @@ sudo -u $RUN_AS cp staging/directory-listing.xsl $CATALINA_HOME/webapps/bc-wps/s
 sudo -u $RUN_AS cp staging/directory-listing-readme.txt $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS cp xsd/calwpsL3Parameters-schema.xsd $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS cp *.jar $CATALINA_HOME/webapps/bc-wps/WEB-INF/lib
+sudo -u $RUN_AS cp -r urbantep-quicklooks $CATALINA_HOME/webapps/ROOT
+sudo -u $RUN_AS ln -sf ../ROOT/urbantep-quicklooks $CATALINA_HOME/webapps/bc-wps/urbantep-quicklooks
 sudo service bc-tomcat start
