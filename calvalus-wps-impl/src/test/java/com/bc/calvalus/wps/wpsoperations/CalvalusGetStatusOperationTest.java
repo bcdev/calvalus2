@@ -11,6 +11,7 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -28,10 +29,10 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -156,6 +157,9 @@ public class CalvalusGetStatusOperationTest {
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProduction.getStagingStatus()).thenReturn(mockCompletedStagingStatus);
+        WorkflowItem mockWorkflow = mock(WorkflowItem.class);
+        when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
+        when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         List<String> mockResultUrlList = new ArrayList<>();
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc");
@@ -170,9 +174,7 @@ public class CalvalusGetStatusOperationTest {
 
         assertThat(getStatusResponse.getProcess().getIdentifier().getValue(), equalTo("mockBundle~1.0~mockProcessor"));
         assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("1.0"));
-        assertThat(getStatusResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
-        assertThat(getStatusResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
-        assertThat(getStatusResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
+        assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
                    equalTo("productionResults"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),

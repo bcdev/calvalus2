@@ -18,6 +18,7 @@ import org.junit.*;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -88,7 +89,7 @@ public class CalvalusExecuteResponseConverterTest {
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip");
         Calendar calendar = Calendar.getInstance();
 
-        ExecuteResponse executeResponse = calvalusExecuteResponse.getSuccessfulResponse(mockResultUrlList);
+        ExecuteResponse executeResponse = calvalusExecuteResponse.getSuccessfulResponse(mockResultUrlList, new Date());
 
         assertThat(executeResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0

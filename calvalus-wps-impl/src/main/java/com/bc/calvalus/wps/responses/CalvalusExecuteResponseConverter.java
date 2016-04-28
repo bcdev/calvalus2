@@ -20,6 +20,7 @@ import com.bc.wps.utilities.PropertiesWrapper;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
@@ -40,7 +41,8 @@ public class CalvalusExecuteResponseConverter {
 
     public ExecuteResponse getAcceptedResponse(String jobId, WpsServerContext context) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
         statusType.setProcessAccepted("The request has been accepted. The status of the process can be found in the URL.");
         executeResponse.setStatus(statusType);
@@ -56,7 +58,8 @@ public class CalvalusExecuteResponseConverter {
                                                           List<DocumentOutputDefinitionType> rawDataOutput,
                                                           WpsServerContext context) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
         statusType.setProcessAccepted("The request has been accepted. The status of the process can be found in the URL.");
         executeResponse.setStatus(statusType);
@@ -70,10 +73,12 @@ public class CalvalusExecuteResponseConverter {
         return executeResponse;
     }
 
-    public ExecuteResponse getSuccessfulResponse(List<String> resultUrls) {
+    public ExecuteResponse getSuccessfulResponse(List<String> resultUrls, Date stopTime) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
-        statusType.setCreationTime(currentTime);
+        GregorianCalendar stopTimeGregorian = new GregorianCalendar();
+        stopTimeGregorian.setTime(stopTime);
+        XMLGregorianCalendar stopTimeXmlGregorian = getXmlGregorianCalendar(stopTimeGregorian);
+        statusType.setCreationTime(stopTimeXmlGregorian);
         statusType.setProcessSucceeded("The request has been processed successfully.");
         executeResponse.setStatus(statusType);
 
@@ -87,7 +92,8 @@ public class CalvalusExecuteResponseConverter {
                                                             DataInputsType dataInputs,
                                                             List<DocumentOutputDefinitionType> outputType) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
         statusType.setProcessSucceeded("The request has been processed successfully.");
         executeResponse.setStatus(statusType);
@@ -104,7 +110,8 @@ public class CalvalusExecuteResponseConverter {
 
     public ExecuteResponse getFailedResponse(String exceptionMessage) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
 
         ProcessFailedType processFailedType = new ProcessFailedType();
@@ -123,7 +130,8 @@ public class CalvalusExecuteResponseConverter {
 
     public ExecuteResponse getStartedResponse(String state, float progress) {
         StatusType statusType = new StatusType();
-        XMLGregorianCalendar currentTime = getXmlGregorianCalendar();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+        XMLGregorianCalendar currentTime = getXmlGregorianCalendar(gregorianCalendar);
         statusType.setCreationTime(currentTime);
 
         ProcessStartedType processStartedType = new ProcessStartedType();
@@ -153,8 +161,7 @@ public class CalvalusExecuteResponseConverter {
         return productUrl;
     }
 
-    private XMLGregorianCalendar getXmlGregorianCalendar() {
-        GregorianCalendar gregorianCalendar = new GregorianCalendar();
+    private XMLGregorianCalendar getXmlGregorianCalendar(GregorianCalendar gregorianCalendar) {
         try {
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
         } catch (DatatypeConfigurationException exception) {

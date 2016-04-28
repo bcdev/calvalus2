@@ -6,6 +6,7 @@ import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAM
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
@@ -88,9 +89,10 @@ public class CalvalusGetStatusOperation {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             ProductionService productionService = calvalusFacade.getProductionService();
             Production production = productionService.getProduction(jobId);
+            WorkflowItem workflowItem = production.getWorkflow();
             List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-            return executeResponse.getSuccessfulResponse(productResultUrls);
+            return executeResponse.getSuccessfulResponse(productResultUrls, workflowItem.getStopTime());
         } catch (ProductionException | IOException exception) {
             throw new JobNotFoundException(exception, "JobId");
         }

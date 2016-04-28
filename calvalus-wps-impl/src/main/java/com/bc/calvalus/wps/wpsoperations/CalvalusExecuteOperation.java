@@ -1,8 +1,10 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
@@ -52,14 +54,14 @@ public class CalvalusExecuteOperation {
             asyncExecuteResponse.setProcess(processBriefType);
             return asyncExecuteResponse;
         } else {
-            List<String> results = processSync(executeRequest, processId);
-            ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, results);
+            String jobId = processSync(executeRequest, processId);
+            ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, jobId);
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
         }
     }
 
-    List<String> processSync(Execute executeRequest, String processorId)
+    String processSync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException,
                        JAXBException, InterruptedException, InvalidParameterValueException, MissingParameterValueException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
@@ -68,7 +70,7 @@ public class CalvalusExecuteOperation {
         Production production = calvalusFacade.orderProductionSynchronous(request);
         calvalusFacade.stageProduction(production);
         calvalusFacade.observeStagingStatus(production);
-        return calvalusFacade.getProductResultUrls(production);
+        return production.getId();
     }
 
     String processAsync(Execute executeRequest, String processorId)
@@ -92,14 +94,20 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, List<String> productResultUrls) {
+    ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
+                throws IOException, ProductionException {
+        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
+        ProductionService productionService = calvalusFacade.getProductionService();
+        Production production = productionService.getProduction(jobId);
+        List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
+        WorkflowItem workflowItem = production.getWorkflow();
         if (isLineage) {
             CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
             List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
             return executeSuccessfulResponse.getSuccessfulWithLineageResponse(productResultUrls, executeRequest.getDataInputs(), outputType);
         } else {
             CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
-            return executeSuccessfulResponse.getSuccessfulResponse(productResultUrls);
+            return executeSuccessfulResponse.getSuccessfulResponse(productResultUrls, workflowItem.getStopTime());
         }
     }
 
