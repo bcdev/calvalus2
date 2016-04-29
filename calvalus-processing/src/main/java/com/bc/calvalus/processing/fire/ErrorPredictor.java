@@ -8,9 +8,7 @@ import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
-import java.util.Arrays;
 
 /**
  * @author thomas
@@ -27,8 +25,8 @@ class ErrorPredictor {
         if (engine == null) {
             throw new IllegalStateException("Could not create script engine \"Renjin\"");
         }
-        resFile = new File("./codiR_cecr_GridProd.RData");
-        try (InputStream resourceAsStream = getClass().getResourceAsStream("codiR_cecr_GridProd.RData")) {
+        resFile = new File("./codiR_cecr_GridProd_onlyMERIS.RData");
+        try (InputStream resourceAsStream = getClass().getResourceAsStream("codiR_cecr_GridProd_onlyMERIS.RData")) {
             Files.copy(resourceAsStream, resFile.getAbsoluteFile().toPath());
         }
     }
@@ -43,7 +41,7 @@ class ErrorPredictor {
         double[] burnedAreaPerSquareMeter = computeBAPerSquareMeter(burnedAreaInSquareMeters, cellSizeInSquareMeters);
         engine.put("bap", burnedAreaPerSquareMeter);
         engine.eval("nwd = data.frame(gpg=bap)");
-        DoubleVector pred = (DoubleVector) engine.eval("predict(ug, nwd)");
+        DoubleVector pred = (DoubleVector) engine.eval("predict(ugwi, nwd)");
         double[] predictionResult = pred.toDoubleArray();
         for (int i = 0; i < predictionResult.length; i++) {
             predictionResult[i] = cellSizeInSquareMeters[i] * predictionResult[i];
@@ -56,6 +54,10 @@ class ErrorPredictor {
         return result;
     }
 
+    void dispose() {
+        resFile.delete();
+    }
+
     private double[] computeBAPerSquareMeter(float[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) {
         double[] result = new double[burnedAreaInSquareMeters.length];
         for (int i = 0; i < result.length; i++) {
@@ -63,5 +65,4 @@ class ErrorPredictor {
         }
         return result;
     }
-
 }

@@ -26,18 +26,13 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.CrsGeoCoding;
-import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.PixelPos;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.*;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
 import javax.script.ScriptException;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
@@ -174,6 +169,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setErrorsSecondHalf(errorsSecondHalf);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCell);
+        errorPredictor.dispose();
     }
 
     static Rectangle getSourceRect(PixelPos pixelPos) {
