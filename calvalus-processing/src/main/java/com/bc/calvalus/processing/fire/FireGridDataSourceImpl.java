@@ -4,18 +4,19 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
 import java.util.logging.Logger;
 
 /**
- * Offers the standard implementation for reading pixels of arbitrary source rectangles
+ * Offers the standard implementation for source reading pixels
  *
  * @author thomas
  */
 class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     private final Product sourceProduct;
+    private final Product lcProduct;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private int doyFirstOfMonth;
@@ -23,8 +24,9 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
     private int doyFirstHalf;
     private int doySecondHalf;
 
-    FireGridDataSourceImpl(Product sourceProduct) {
+    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct) {
         this.sourceProduct = sourceProduct;
+        this.lcProduct = lcProduct;
     }
 
     @Override
@@ -34,6 +36,54 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
         getAreas(band, data.areas);
         data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
         data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
+
+        Band lcClassification = lcProduct.getBand("lcclass");
+        lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
+        remapLcClasses(data.lcClasses);
+    }
+
+    private void remapLcClasses(int[] lcClasses) {
+        for (int i = 0; i < lcClasses.length; i++) {
+            switch (lcClasses[i]) {
+                case 10:
+                    lcClasses[i] = 1;
+                case 20:
+                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+//                case 20:
+//                    lcClasses[i] = 1;
+            }
+
+        }
     }
 
     @Override

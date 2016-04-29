@@ -5,13 +5,15 @@ import org.apache.hadoop.io.Writable;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author thomas
  */
 public class GridCell implements Writable {
 
-    private static final int BAND_SIZE = 40 * 40;
+    private static final int BAND_SIZE = FireGridMapper.TARGET_RASTER_WIDTH * FireGridMapper.TARGET_RASTER_HEIGHT;
 
     float[] baFirstHalf;
     float[] baSecondHalf;
@@ -19,6 +21,8 @@ public class GridCell implements Writable {
     int[] patchNumberSecondHalf;
     float[] errorsFirstHalf;
     float[] errorsSecondHalf;
+    List<float[]> baInLcFirstHalf;
+    List<float[]> baInLcSecondHalf;
 
     void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
@@ -44,6 +48,14 @@ public class GridCell implements Writable {
         this.errorsSecondHalf = errorsSecondHalf;
     }
 
+    void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
+        this.baInLcFirstHalf = baInLcFirstHalf;
+    }
+
+    void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
+        this.baInLcSecondHalf = baInLcSecondHalf;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
         for (float v : baFirstHalf) {
@@ -64,6 +76,16 @@ public class GridCell implements Writable {
         for (float v : errorsSecondHalf) {
             out.writeFloat(v);
         }
+        for (float[] lcClass : baInLcFirstHalf) {
+            for (float value : lcClass) {
+                out.writeFloat(value);
+            }
+        }
+        for (float[] lcClass : baInLcSecondHalf) {
+            for (float value : lcClass) {
+                out.writeFloat(value);
+            }
+        }
     }
 
     @Override
@@ -74,6 +96,13 @@ public class GridCell implements Writable {
         patchNumberSecondHalf = new int[BAND_SIZE];
         errorsFirstHalf = new float[BAND_SIZE];
         errorsSecondHalf = new float[BAND_SIZE];
+        baInLcFirstHalf = new ArrayList<>();
+        baInLcSecondHalf = new ArrayList<>();
+        for (int lcClass = 0; lcClass < FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
+            baInLcFirstHalf.add(new float[BAND_SIZE]);
+            baInLcSecondHalf.add(new float[BAND_SIZE]);
+        }
+
 
         for (int i = 0; i < BAND_SIZE; i++) {
             baFirstHalf[i] = in.readFloat();
@@ -92,6 +121,16 @@ public class GridCell implements Writable {
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             errorsSecondHalf[i] = in.readFloat();
+        }
+        for (float[] lcClass : baInLcFirstHalf) {
+            for (int i = 0; i < lcClass.length; i++) {
+                lcClass[i] = in.readFloat();
+            }
+        }
+        for (float[] lcClass : baInLcSecondHalf) {
+            for (int i = 0; i < lcClass.length; i++) {
+                lcClass[i] = in.readFloat();
+            }
         }
     }
 }

@@ -2,31 +2,20 @@ package com.bc.calvalus.processing.fire;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
- * @author thomas
- * @author marcop
  */
 public class FireGridInputFormatTest {
 
     @Test
-    public void testGetTileIndices() throws Exception {
-
-        assertArrayEquals(new int[]{7, 11}, FireGridInputFormat.getTileIndices("BA_PIX_MER_v07h11_200806_v4.0.tif"));
-        assertArrayEquals(new int[]{12, 5}, FireGridInputFormat.getTileIndices("BA_PIX_MER_v12h05_200806_v4.0.tif"));
-        assertArrayEquals(new int[]{5, 5}, FireGridInputFormat.getTileIndices("BA_PIX_MER_v05h05_200806_v4.0.tif"));
-        assertArrayEquals(new int[]{11, 10}, FireGridInputFormat.getTileIndices("BA_PIX_MER_v11h10_200806_v4.0.tif"));
-
+    public void getLcInputPath() throws Exception {
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/meris-ba/aux/lc/lc-2005-v04h01.nc",
+                FireGridInputFormat.getLcInputPath("hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.0.tif"));
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/meris-ba/aux/lc/lc-2005-v12h11.nc",
+                FireGridInputFormat.getLcInputPath("hdfs://calvalus/calvalus/projects/fire/meris-ba/2005/BA_PIX_MER_v12h11_200506_v4.0.tif"));
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/meris-ba/aux/lc/lc-2010-v12h11.nc",
+                FireGridInputFormat.getLcInputPath("hdfs://calvalus/calvalus/projects/fire/meris-ba/2008/BA_PIX_MER_v12h11_200806_v4.0.tif"));
     }
 
-    @Test
-    public void testGetNeighbourPath() throws Exception {
-        assertEquals(".../BA_PIX_MER_v06h11_200806_v4.0.tif", FireGridInputFormat.getNeighbourName(".../BA_PIX_MER_v07h11_200806_v4.0.tif", 11, 6));
-        assertEquals(".../BA_PIX_MER_v06h12_200806_v4.0.tif", FireGridInputFormat.getNeighbourName(".../BA_PIX_MER_v07h11_200806_v4.0.tif", 12, 6));
-        assertEquals(".../BA_PIX_MER_v08h12_200806_v4.0.tif", FireGridInputFormat.getNeighbourName(".../BA_PIX_MER_v07h11_200806_v4.0.tif", 12, 8));
-
-        assertEquals(".../BA_PIX_MER_v08h08_200806_v4.0.tif", FireGridInputFormat.getNeighbourName(".../BA_PIX_MER_v09h09_200806_v4.0.tif", 8, 8));
-        assertEquals(".../BA_PIX_MER_v10h08_200806_v4.0.tif", FireGridInputFormat.getNeighbourName(".../BA_PIX_MER_v09h09_200806_v4.0.tif", 8, 10));
-    }
 }

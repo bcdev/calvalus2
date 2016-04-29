@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -26,7 +26,7 @@ public class FireGridDataSourceImplTest {
     @Before
     public void setUp() throws Exception {
         Product centerProduct = createProduct(5);
-        dataSource = new FireGridDataSourceImpl(centerProduct);
+        dataSource = new FireGridDataSourceImpl(centerProduct, null);
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
@@ -36,9 +36,10 @@ public class FireGridDataSourceImplTest {
     @Test
     public void testReadPixels() throws Exception {
         int[] pixels = new int[4];
+        int[] lcClasses = new int[4];
         double[] areas = new double[4];
 
-        SourceData data = new SourceData(pixels, areas);
+        SourceData data = new SourceData(pixels, areas, lcClasses);
 
         // center
         dataSource.readPixels(new Rectangle(0, 0, 2, 2), data);
@@ -51,9 +52,10 @@ public class FireGridDataSourceImplTest {
     @Test
     public void testReadPixelsLarger() throws Exception {
         int[] pixels = new int[9];
+        int[] lcClasses = new int[9];
         double[] areas = new double[9];
 
-        SourceData data = new SourceData(pixels, areas);
+        SourceData data = new SourceData(pixels, areas, lcClasses);
 
         // center larger
         dataSource.readPixels(new Rectangle(0, 0, 3, 3), data);

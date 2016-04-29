@@ -18,8 +18,6 @@ package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -36,7 +34,9 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -47,8 +47,9 @@ import java.util.logging.Logger;
  */
 public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
-    private static final int TARGET_RASTER_WIDTH = 40;
-    private static final int TARGET_RASTER_HEIGHT = 40;
+    static final int TARGET_RASTER_WIDTH = 40;
+    static final int TARGET_RASTER_HEIGHT = 40;
+    static final int LC_CLASSES_COUNT = 18;
     static final int NO_DATA = -1;
     static final int NO_AREA = 0;
 
@@ -74,9 +75,12 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         File centerSourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
         Product centerSourceProduct = ProductIO.readProduct(centerSourceProductFile);
 
+        File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
+        Product lcProduct = ProductIO.readProduct(lcTile);
+
         Product targetProduct = createTargetProduct(tile);
 
-        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct);
+        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, lcProduct);
         ErrorPredictor errorPredictor = new ErrorPredictor();
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -104,9 +108,16 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         ProductData.Int patchNumberSecondHalfData = new ProductData.Int(TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT);
         patchNumberSecondHalf.setRasterData(patchNumberSecondHalfData);
 
+        List<float[]> baInLcFirstHalf = new ArrayList<>();
+        List<float[]> baInLcSecondHalf = new ArrayList<>();
+        for (int c = 1; c <= LC_CLASSES_COUNT; c++) {
+            baInLcFirstHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
+            baInLcSecondHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
+        }
+
         context.progress();
 
-        int areaIndex = 0;
+        int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
@@ -125,12 +136,14 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     int doy = data.pixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         valueFirstHalf += data.areas[i];
+                        baInLcFirstHalf.get(data.lcClasses[i])[targetPixelIndex] += data.areas[i];
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         valueSecondHalf += data.areas[i];
+                        baInLcSecondHalf.get(data.lcClasses[i])[targetPixelIndex] += data.areas[i];
                     }
-                    areas[areaIndex] += data.areas[i];
+                    areas[targetPixelIndex] += data.areas[i];
                 }
-                areaIndex++;
+                targetPixelIndex++;
 
                 burnedAreaFirstHalf.setPixelFloat(x, y, valueFirstHalf);
                 burnedAreaSecondHalf.setPixelFloat(x, y, valueSecondHalf);
@@ -153,12 +166,12 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         context.progress();
 
         // todo - debug output; remove this
-        File localFile = new File("./thomas-ba.nc");
-        ProductIO.writeProduct(targetProduct, localFile, "NetCDF4-BEAM", false);
-        Path path = new Path(String.format("hdfs://calvalus/calvalus/home/thomas/thomas-ba-%s.nc", tile));
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        fs.delete(path, true);
-        FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
+//        File localFile = new File("./thomas-ba.nc");
+//        ProductIO.writeProduct(targetProduct, localFile, "NetCDF4-BEAM", false);
+//        Path path = new Path(String.format("hdfs://calvalus/calvalus/home/thomas/thomas-ba-%s.nc", tile));
+//        FileSystem fs = path.getFileSystem(context.getConfiguration());
+//        fs.delete(path, true);
+//        FileUtil.copy(localFile, fs, path, false, context.getConfiguration());
 
         GridCell gridCell = new GridCell();
         gridCell.setBaFirstHalf(baFirstHalf);
@@ -167,6 +180,8 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setPatchNumberSecondHalf(patchNumberSecondHalfData.getArray());
         gridCell.setErrorsFirstHalf(errorsFirstHalf);
         gridCell.setErrorsSecondHalf(errorsSecondHalf);
+        gridCell.setBaInLcFirstHalf(baInLcFirstHalf);
+        gridCell.setBaInLcSecondHalf(baInLcSecondHalf);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCell);
         errorPredictor.dispose();
