@@ -39,6 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import static com.bc.calvalus.processing.fire.FireGridLcRemapping.*;
+
 /**
  * Runs the fire formatting grid mapper.
  *
@@ -110,7 +112,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         List<float[]> baInLcFirstHalf = new ArrayList<>();
         List<float[]> baInLcSecondHalf = new ArrayList<>();
-        for (int c = 1; c <= LC_CLASSES_COUNT; c++) {
+        for (int c = 0; c < LC_CLASSES_COUNT; c++) {
             baInLcFirstHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
             baInLcSecondHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
         }
@@ -136,19 +138,47 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     int doy = data.pixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         valueFirstHalf += data.areas[i];
-                        baInLcFirstHalf.get(data.lcClasses[i])[targetPixelIndex] += data.areas[i];
+                        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+                            if (isSingleTarget(lcClass + 1)) {
+                                // for each single target class, check if the pixel is of the class, and add the area to the class
+                                baInLcFirstHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            }
+                        }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         valueSecondHalf += data.areas[i];
-                        baInLcSecondHalf.get(data.lcClasses[i])[targetPixelIndex] += data.areas[i];
+                        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+                            if (isSingleTarget(lcClass + 1)) {
+                                // for each single target class, check if the pixel is of the class, and add the area to the class
+                                baInLcSecondHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            }
+                        }
                     }
                     areas[targetPixelIndex] += data.areas[i];
                 }
-                targetPixelIndex++;
+
+                for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+                    double firstHalfValue = 0;
+                    double secondHalfValue = 0;
+                    if (!isSingleTarget(lcClass + 1) && isInMultiLcClass(lcClass + 1, data.pixels)) {
+                        for (int i = 0; i < data.pixels.length; i++) {
+                            int pixel = data.pixels[i];
+                            if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, pixel) && isPartOfMultiClass(lcClass + 1, pixel)) {
+                                firstHalfValue += areas[i];
+                            } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, pixel) && isPartOfMultiClass(lcClass + 1, pixel)) {
+                                secondHalfValue += areas[i];
+                            }
+                        }
+                        baInLcFirstHalf.get(lcClass)[targetPixelIndex] += firstHalfValue;
+                        baInLcSecondHalf.get(lcClass)[targetPixelIndex] += secondHalfValue;
+                    }
+                }
 
                 burnedAreaFirstHalf.setPixelFloat(x, y, valueFirstHalf);
                 burnedAreaSecondHalf.setPixelFloat(x, y, valueSecondHalf);
                 patchNumberFirstHalf.setPixelInt(x, y, data.patchCountFirstHalf);
                 patchNumberSecondHalf.setPixelInt(x, y, data.patchCountSecondHalf);
+
+                targetPixelIndex++;
             }
         }
 

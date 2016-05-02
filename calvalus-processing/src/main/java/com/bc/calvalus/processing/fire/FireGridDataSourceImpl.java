@@ -39,51 +39,6 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
         Band lcClassification = lcProduct.getBand("lcclass");
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
-        remapLcClasses(data.lcClasses);
-    }
-
-    private void remapLcClasses(int[] lcClasses) {
-        for (int i = 0; i < lcClasses.length; i++) {
-            switch (lcClasses[i]) {
-                case 10:
-                    lcClasses[i] = 1;
-                case 20:
-                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-//                case 20:
-//                    lcClasses[i] = 1;
-            }
-
-        }
     }
 
     @Override

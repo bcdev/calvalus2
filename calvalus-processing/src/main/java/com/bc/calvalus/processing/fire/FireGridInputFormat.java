@@ -69,7 +69,7 @@ public class FireGridInputFormat extends InputFormat {
         String lcYear = lcYear(year);
         int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
-        return baInputPath.substring(0, baInputPath.indexOf("meris-ba") + "meris-ba".length()) + "/aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
+        return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
     }
 
     private static String lcYear(int year) {
