@@ -1,11 +1,9 @@
 package com.bc.calvalus.processing.fire;
 
-import org.esa.snap.core.datamodel.PixelPos;
 import org.junit.Test;
 
-import java.awt.Rectangle;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author thomas
@@ -35,15 +33,4 @@ public class FireGridMapperTest {
 
         assertTrue(FireGridMapper.isValidSecondHalfPixel(28, 7, 28));
     }
-
-    @Test
-    public void testGetSourceRect() throws Exception {
-        assertEquals(new Rectangle(5, 5, 90, 90), FireGridMapper.getSourceRect(new PixelPos(50, 50)));
-
-        assertEquals(new Rectangle(-5, -5, 90, 90), FireGridMapper.getSourceRect(new PixelPos(40, 40)));
-        assertEquals(new Rectangle(15, 15, 90, 90), FireGridMapper.getSourceRect(new PixelPos(60, 60)));
-
-        assertEquals(new Rectangle(5, -35, 90, 90), FireGridMapper.getSourceRect(new PixelPos(50, 10)));
-    }
-
 }
