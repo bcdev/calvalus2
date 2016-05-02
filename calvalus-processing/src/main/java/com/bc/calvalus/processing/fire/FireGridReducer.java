@@ -69,6 +69,12 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         Band standardErrorSecondHalf = resultSecondHalf.addBand("standard_error", ProductData.TYPE_FLOAT32);
         standardErrorSecondHalf.setUnit("m2");
 
+        Band coverageFirstHalf = resultFirstHalf.addBand("observed_area_fraction", ProductData.TYPE_FLOAT32);
+        coverageFirstHalf.setUnit("1");
+
+        Band coverageSecondHalf = resultSecondHalf.addBand("observed_area_fraction", ProductData.TYPE_FLOAT32);
+        coverageSecondHalf.setUnit("1");
+
         resultFirstHalf.addBand("patch_number", ProductData.TYPE_INT32);
         resultSecondHalf.addBand("patch_number", ProductData.TYPE_INT32);
 
@@ -102,11 +108,14 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
         List<float[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
 
-        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, errorsFirstHalf, baInLcFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
-        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, errorsSecondHalf, baInLcSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
+        float[] coverageFirstHalf = gridCell.coverageFirstHalf;
+        float[] coverageSecondHalf = gridCell.coverageSecondHalf;
+
+        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, errorsFirstHalf, baInLcFirstHalf, coverageFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
+        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, errorsSecondHalf, baInLcSecondHalf, coverageSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
     }
 
-    private void writeData(Text key, float[] burnedArea, int[] patchNumbers, float[] errors, List<float[]> baInLc, Product product, List<int[]> writtenChunks) throws IOException {
+    private void writeData(Text key, float[] burnedArea, int[] patchNumbers, float[] errors, List<float[]> baInLc, float[] coverage, Product product, List<int[]> writtenChunks) throws IOException {
         int x = getX(key);
         int y = getY(key);
         CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40", x, y));
@@ -114,6 +123,7 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         productWriter.writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(burnedArea), ProgressMonitor.NULL);
         productWriter.writeBandRasterData(product.getBand("patch_number"), x, y, 40, 40, new ProductData.Int(patchNumbers), ProgressMonitor.NULL);
         productWriter.writeBandRasterData(product.getBand("standard_error"), x, y, 40, 40, new ProductData.Float(errors), ProgressMonitor.NULL);
+        productWriter.writeBandRasterData(product.getBand("observed_area_fraction"), x, y, 40, 40, new ProductData.Float(coverage), ProgressMonitor.NULL);
         for (int lcClass = 1; lcClass <= FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
             productWriter.writeBandRasterData(product.getBand(getBandNameFor(lcClass)), x, y, 40, 40, new ProductData.Float(baInLc.get(lcClass - 1)), ProgressMonitor.NULL);
         }
@@ -130,6 +140,8 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         fillBand(resultSecondHalf.getBand("patch_number"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createIntFillData());
         fillBand(resultFirstHalf.getBand("standard_error"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
         fillBand(resultSecondHalf.getBand("standard_error"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
+        fillBand(resultFirstHalf.getBand("observed_area_fraction"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
+        fillBand(resultSecondHalf.getBand("observed_area_fraction"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
         for (int lcClass = 1; lcClass <= FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
             fillBand(resultFirstHalf.getBand(getBandNameFor(lcClass)), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
             fillBand(resultSecondHalf.getBand(getBandNameFor(lcClass)), resultSecondHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
@@ -139,7 +151,7 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
     }
 
     private static String getBandNameFor(int lcClass) {
-        return String.format("burned_area_in_vegetation_class%d", lcClass);
+        return String.format("burned_area_in_vegetation_class_vegetation_class%d", lcClass);
     }
 
     private static ProductData.Int createIntFillData() {

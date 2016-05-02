@@ -31,11 +31,14 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     @Override
     public void readPixels(Rectangle sourceRect, SourceData data) throws IOException {
-        Band band = sourceProduct.getBand("band_1");
-        band.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
-        getAreas(band, data.areas);
+        Band baBand = sourceProduct.getBand("band_1");
+        baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
+        getAreas(baBand, data.areas);
         data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
         data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
+
+        Band validObsBand = sourceProduct.getBand("band_4");
+        validObsBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.observedArea);
 
         Band lcClassification = lcProduct.getBand("lcclass");
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);

@@ -89,6 +89,8 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         float[] baFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] coverageSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         int[] patchNumberFirstHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         int[] patchNumberSecondHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
@@ -111,6 +113,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
+                float coverage = 0.0F;
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
@@ -118,7 +121,6 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         baValueFirstHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
                             if (isSingleTarget(lcClass + 1)) {
-                                // for each single target class, check if the pixel is of the class, and add the area to the class
                                 baInLcFirstHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                             }
                         }
@@ -126,11 +128,11 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         baValueSecondHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
                             if (isSingleTarget(lcClass + 1)) {
-                                // for each single target class, check if the pixel is of the class, and add the area to the class
                                 baInLcSecondHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                             }
                         }
                     }
+                    coverage += data.observedArea[i] >= 1 ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
                 }
 
@@ -155,6 +157,8 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                 baSecondHalf[targetPixelIndex] = baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
+                coverageFirstHalf[targetPixelIndex] = getCoverage(coverage, areas[targetPixelIndex]);
+                coverageSecondHalf[targetPixelIndex] = getCoverage(coverage, areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }
@@ -177,9 +181,15 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setErrorsSecondHalf(errorsSecondHalf);
         gridCell.setBaInLcFirstHalf(baInLcFirstHalf);
         gridCell.setBaInLcSecondHalf(baInLcSecondHalf);
+        gridCell.setCoverageFirstHalf(coverageFirstHalf);
+        gridCell.setCoverageSecondHalf(coverageSecondHalf);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCell);
         errorPredictor.dispose();
+    }
+
+    private static float getCoverage(float coverage, double area) {
+        return (float) (coverage / area) >= 1.0F ? 1.0F : (float) (coverage / area);
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
