@@ -17,8 +17,8 @@ public class GridCell implements Writable {
 
     float[] baFirstHalf;
     float[] baSecondHalf;
-    int[] patchNumberFirstHalf;
-    int[] patchNumberSecondHalf;
+    float[] patchNumberFirstHalf;
+    float[] patchNumberSecondHalf;
     float[] errorsFirstHalf;
     float[] errorsSecondHalf;
     List<float[]> baInLcFirstHalf;
@@ -34,11 +34,11 @@ public class GridCell implements Writable {
         this.baSecondHalf = baSecondHalf;
     }
 
-    void setPatchNumberFirstHalf(int[] patchNumberFirstHalf) {
+    void setPatchNumberFirstHalf(float[] patchNumberFirstHalf) {
         this.patchNumberFirstHalf = patchNumberFirstHalf;
     }
 
-    void setPatchNumberSecondHalf(int[] patchNumberSecondHalf) {
+    void setPatchNumberSecondHalf(float[] patchNumberSecondHalf) {
         this.patchNumberSecondHalf = patchNumberSecondHalf;
     }
 
@@ -74,11 +74,11 @@ public class GridCell implements Writable {
         for (float v : baSecondHalf) {
             out.writeFloat(v);
         }
-        for (int v : patchNumberFirstHalf) {
-            out.writeInt(v);
+        for (float v : patchNumberFirstHalf) {
+            out.writeFloat(v);
         }
-        for (int v : patchNumberSecondHalf) {
-            out.writeInt(v);
+        for (float v : patchNumberSecondHalf) {
+            out.writeFloat(v);
         }
         for (float v : errorsFirstHalf) {
             out.writeFloat(v);
@@ -108,8 +108,8 @@ public class GridCell implements Writable {
     public void readFields(DataInput in) throws IOException {
         baFirstHalf = new float[BAND_SIZE];
         baSecondHalf = new float[BAND_SIZE];
-        patchNumberFirstHalf = new int[BAND_SIZE];
-        patchNumberSecondHalf = new int[BAND_SIZE];
+        patchNumberFirstHalf = new float[BAND_SIZE];
+        patchNumberSecondHalf = new float[BAND_SIZE];
         errorsFirstHalf = new float[BAND_SIZE];
         errorsSecondHalf = new float[BAND_SIZE];
         baInLcFirstHalf = new ArrayList<>();
@@ -128,10 +128,10 @@ public class GridCell implements Writable {
             baSecondHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            patchNumberFirstHalf[i] = in.readInt();
+            patchNumberFirstHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            patchNumberSecondHalf[i] = in.readInt();
+            patchNumberSecondHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             errorsFirstHalf[i] = in.readFloat();

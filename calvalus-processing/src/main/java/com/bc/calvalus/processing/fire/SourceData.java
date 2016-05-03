@@ -12,27 +12,31 @@ class SourceData {
     final int[] lcClasses;
     int patchCountFirstHalf;
     int patchCountSecondHalf;
-    float[] observedArea;
+    int[] statusPixelsFirstHalf;
+    int[] statusPixelsSecondHalf;
 
     SourceData() {
         pixels = new int[90 * 90];
         lcClasses = new int[90 * 90];
         areas = new double[90 * 90];
-        observedArea = new float[90 * 90];
+        statusPixelsFirstHalf = new int[90 * 90];
+        statusPixelsSecondHalf = new int[90 * 90];
     }
 
-    SourceData(int[] pixels, double[] areas, int[] lcClasses, float[] observedArea) {
+    SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {
         this.pixels = pixels;
         this.areas = areas;
         this.lcClasses = lcClasses;
-        this.observedArea = observedArea;
+        this.statusPixelsFirstHalf = statusPixelsFirstHalf;
+        this.statusPixelsSecondHalf = statusPixelsSecondHalf;
     }
 
     void reset() {
         Arrays.fill(pixels, FireGridMapper.NO_DATA);
         Arrays.fill(lcClasses, 0);
         Arrays.fill(areas, FireGridMapper.NO_AREA);
-        Arrays.fill(observedArea, 0);
+        Arrays.fill(statusPixelsFirstHalf, 0);
+        Arrays.fill(statusPixelsSecondHalf, 0);
     }
 
 }

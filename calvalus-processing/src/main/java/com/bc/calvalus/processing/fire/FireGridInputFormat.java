@@ -51,6 +51,11 @@ public class FireGridInputFormat extends InputFormat {
             FileStatus lcPath = getLcFileStatus(path, path.getFileSystem(conf));
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());
+            FileStatus[] srPath = getSrFileStatuses(path, path.getFileSystem(conf));
+            for (FileStatus status : srPath) {
+                filePaths.add(status.getPath());
+                fileLengths.add(status.getLen());
+            }
 
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
@@ -63,6 +68,12 @@ public class FireGridInputFormat extends InputFormat {
         return fileSystem.getFileStatus(new Path(lcInputPath));
     }
 
+    private FileStatus[] getSrFileStatuses(Path path, FileSystem fileSystem) throws IOException {
+        String baInputPath = path.toString(); // hdfs://calvalus/calvalus/projects/fire/meris-ba/$year/BA_PIX_MER_$tile_$year$month_v4.0.tif
+        String srInputPathPattern = getSrInputPathPattern(baInputPath);
+        return fileSystem.globStatus(new Path(srInputPathPattern));
+    }
+
     static String getLcInputPath(String baInputPath) {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
@@ -70,6 +81,17 @@ public class FireGridInputFormat extends InputFormat {
         int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
+    }
+
+    static String getSrInputPathPattern(String baInputPath) {
+        int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
+        int monthIndex = baInputPath.indexOf("BA_PIX_MER") + 22;
+        int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
+        int month = Integer.parseInt(baInputPath.substring(monthIndex, monthIndex + 2));
+        int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
+        String tile = baInputPath.substring(tileIndex, tileIndex + 6);
+        String basePath = baInputPath.substring(0, baInputPath.indexOf("meris-ba") - 1);
+        return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
     }
 
     private static String lcYear(int year) {

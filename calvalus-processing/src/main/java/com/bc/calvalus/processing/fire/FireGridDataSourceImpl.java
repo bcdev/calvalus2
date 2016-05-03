@@ -6,6 +6,7 @@ import org.esa.snap.core.datamodel.Product;
 
 import java.awt.*;
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -17,6 +18,7 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     private final Product sourceProduct;
     private final Product lcProduct;
+    private final List<Product> srProducts;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private int doyFirstOfMonth;
@@ -24,9 +26,10 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
     private int doyFirstHalf;
     private int doySecondHalf;
 
-    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct) {
+    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct, List<Product> srProducts) {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
+        this.srProducts = srProducts;
     }
 
     @Override
@@ -37,8 +40,20 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
         data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
         data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
 
-        Band validObsBand = sourceProduct.getBand("band_4");
-        validObsBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.observedArea);
+        int[] statusPixelsFirstHalf = new int[sourceRect.width * sourceRect.height];
+        int[] statusPixelsSecondHalf = new int[sourceRect.width * sourceRect.height];
+        for (Product srProduct : srProducts) {
+            int startIndex = "CCI-Fire-MERIS-SDR-L3-300m-v1.0-2002-07-".length();
+            int day = Integer.parseInt(srProduct.getName().substring(startIndex, startIndex + 2));
+            boolean firstHalf = day <= 15;
+            if (firstHalf) {
+                srProduct.getBand("status").readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, statusPixelsFirstHalf);
+            } else {
+                srProduct.getBand("status").readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, statusPixelsSecondHalf);
+            }
+            collectStatusPixels(statusPixelsFirstHalf, data.statusPixelsFirstHalf);
+            collectStatusPixels(statusPixelsSecondHalf, data.statusPixelsSecondHalf);
+        }
 
         Band lcClassification = lcProduct.getBand("lcclass");
         lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
@@ -62,6 +77,14 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
     @Override
     public void setDoySecondHalf(int doySecondHalf) {
         this.doySecondHalf = doySecondHalf;
+    }
+
+    static void collectStatusPixels(int[] statusPixels, int[] statusPixelsTarget) {
+        for (int i = 0; i < statusPixels.length; i++) {
+            if (statusPixels[i] == 1) {
+                statusPixelsTarget[i] = 1;
+            }
+        }
     }
 
     int getPatchNumbers(int[][] pixels, boolean firstHalf) {

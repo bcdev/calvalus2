@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static com.bc.calvalus.processing.fire.FireGridLcRemapping.*;
+import static com.bc.calvalus.processing.fire.FireGridLcRemapping.isInLcClass;
 
 /**
  * Runs the fire formatting grid mapper.
@@ -77,7 +77,13 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcTile);
 
-        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, lcProduct);
+        List<Product> srProducts = new ArrayList<>();
+        for (int i = 2; i < paths.length; i++) {
+            File srProduct = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            srProducts.add(ProductIO.readProduct(srProduct));
+        }
+
+        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, lcProduct, srProducts);
         ErrorPredictor errorPredictor = new ErrorPredictor();
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -91,8 +97,8 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        int[] patchNumberFirstHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        int[] patchNumberSecondHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] patchNumberFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] patchNumberSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
         List<float[]> baInLcFirstHalf = new ArrayList<>();
         List<float[]> baInLcSecondHalf = new ArrayList<>();
@@ -113,52 +119,33 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
-                float coverage = 0.0F;
+                float coverageValueFirstHalf = 0.0F;
+                float coverageValueSecondHalf = 0.0F;
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            if (isSingleTarget(lcClass + 1)) {
-                                baInLcFirstHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
-                            }
+                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            if (isSingleTarget(lcClass + 1)) {
-                                baInLcSecondHalf.get(lcClass)[targetPixelIndex] += isInSingleLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
-                            }
+                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     }
-                    coverage += data.observedArea[i] >= 1 ? data.areas[i] : 0;
+                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
+                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
-                }
-
-                for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                    double firstHalfValue = 0;
-                    double secondHalfValue = 0;
-                    if (!isSingleTarget(lcClass + 1) && isInMultiLcClass(lcClass + 1, data.pixels)) {
-                        for (int i = 0; i < data.pixels.length; i++) {
-                            int pixel = data.pixels[i];
-                            if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, pixel) && isPartOfMultiClass(lcClass + 1, pixel)) {
-                                firstHalfValue += areas[i];
-                            } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, pixel) && isPartOfMultiClass(lcClass + 1, pixel)) {
-                                secondHalfValue += areas[i];
-                            }
-                        }
-                        baInLcFirstHalf.get(lcClass)[targetPixelIndex] += firstHalfValue;
-                        baInLcSecondHalf.get(lcClass)[targetPixelIndex] += secondHalfValue;
-                    }
                 }
 
                 baFirstHalf[targetPixelIndex] = baValueFirstHalf;
                 baSecondHalf[targetPixelIndex] = baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
-                coverageFirstHalf[targetPixelIndex] = getCoverage(coverage, areas[targetPixelIndex]);
-                coverageSecondHalf[targetPixelIndex] = getCoverage(coverage, areas[targetPixelIndex]);
+                coverageFirstHalf[targetPixelIndex] = getCoverage(coverageValueFirstHalf, areas[targetPixelIndex]);
+                coverageSecondHalf[targetPixelIndex] = getCoverage(coverageValueSecondHalf, areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }

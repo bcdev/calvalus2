@@ -11,6 +11,7 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -26,7 +27,7 @@ public class FireGridDataSourceImplTest {
     @Before
     public void setUp() throws Exception {
         Product centerProduct = createProduct(5);
-        dataSource = new FireGridDataSourceImpl(centerProduct, null);
+        dataSource = new FireGridDataSourceImpl(centerProduct, null, new ArrayList<>());
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
@@ -38,8 +39,10 @@ public class FireGridDataSourceImplTest {
         int[] pixels = new int[4];
         int[] lcClasses = new int[4];
         double[] areas = new double[4];
+        int[] observed1 = new int[4];
+        int[] observed2 = new int[4];
 
-        SourceData data = new SourceData(pixels, areas, lcClasses);
+        SourceData data = new SourceData(pixels, areas, lcClasses, observed1, observed2);
 
         // center
         dataSource.readPixels(new Rectangle(0, 0, 2, 2), data);
@@ -54,8 +57,10 @@ public class FireGridDataSourceImplTest {
         int[] pixels = new int[9];
         int[] lcClasses = new int[9];
         double[] areas = new double[9];
+        int[] observed = new int[9];
+        int[] observed2 = new int[9];
 
-        SourceData data = new SourceData(pixels, areas, lcClasses);
+        SourceData data = new SourceData(pixels, areas, lcClasses, observed, observed2);
 
         // center larger
         dataSource.readPixels(new Rectangle(0, 0, 3, 3), data);
@@ -140,6 +145,13 @@ public class FireGridDataSourceImplTest {
         assertArrayEquals(new int[]{0, 1, 0, 1}, ints[1]);
         assertArrayEquals(new int[]{0, 1, 1, 0}, ints[2]);
         assertArrayEquals(new int[]{0, 0, 0, 1}, ints[3]);
+    }
+
+    @Test
+    public void testCollectStatusPixels() throws Exception {
+        int[] target = {0, 1, 0, 0, 0};
+        FireGridDataSourceImpl.collectStatusPixels(new int[]{1, 0, 0, 1, 0}, target);
+        assertArrayEquals(new int[]{1, 1, 0, 1, 0}, target);
     }
 
     private static Product createProduct(int value) throws FactoryException, TransformException {
