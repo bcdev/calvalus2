@@ -1,19 +1,12 @@
 package com.bc.calvalus.processing.fire;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.core.Assert;
-import com.bc.ceres.core.ProgressMonitor;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.snap.core.dataio.ProductWriter;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
@@ -27,7 +20,6 @@ import java.time.LocalDate;
 import java.time.Year;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -38,10 +30,7 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
 
     private static final int SCENE_RASTER_WIDTH = 1440;
     private static final int SCENE_RASTER_HEIGHT = 720;
-    //    private Product resultFirstHalf;
-//    private Product resultSecondHalf;
-//    private final List<int[]> writtenChunksFirstHalf = new ArrayList<>();
-//    private final List<int[]> writtenChunksSecondHalf = new ArrayList<>();
+
     private NetcdfFileWriter ncFirst;
     private NetcdfFileWriter ncSecond;
     private String firstHalfFile;
@@ -89,12 +78,28 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
                 float[] baInClass = baInLcFirstHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
             }
+            for (int i = 0; i < baInLcSecondHalf.size(); i++) {
+                float[] baInClass = baInLcSecondHalf.get(i);
+                writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
+            }
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
+    }
 
-//        writeData(key, burnedAreaFirstHalf, patchNumbersFirstHalf, errorsFirstHalf, baInLcFirstHalf, coverageFirstHalf, resultFirstHalf, writtenChunksFirstHalf);
-//        writeData(key, burnedAreaSecondHalf, patchNumbersSecondHalf, errorsSecondHalf, baInLcSecondHalf, coverageSecondHalf, resultSecondHalf, writtenChunksSecondHalf);
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        ncFirst.close();
+        ncSecond.close();
+
+        File fileLocation = new File("./" + firstHalfFile);
+        File fileLocation2 = new File("./" + secondHalfFile);
+        String outputDir = context.getConfiguration().get("calvalus.output.dir");
+        Path path = new Path(outputDir + "/" + firstHalfFile);
+        Path path2 = new Path(outputDir + "/" + secondHalfFile);
+        FileSystem fs = path.getFileSystem(context.getConfiguration());
+        FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+        FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
     }
 
     private void prepareTargetProducts(Context context) throws IOException {
@@ -108,19 +113,6 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
 
         ncFirst = createNcFile(firstHalfFile);
         ncSecond = createNcFile(secondHalfFile);
-
-//        resultFirstHalf = new Product("target", "type", SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT);
-//        resultSecondHalf = new Product("target", "type", SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT);
-//        resultFirstHalf.setProductWriter(new CfNetCdf4WriterPlugIn().createWriterInstance());
-//        resultSecondHalf.setProductWriter(new CfNetCdf4WriterPlugIn().createWriterInstance());
-//        resultFirstHalf.setFileLocation(new File(createFilename(year, month, true) + "-old.nc"));
-//        resultSecondHalf.setFileLocation(new File("./thomas-ba-22.nc"));
-//        try {
-//            resultFirstHalf.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, -180, 90, 0.25, 0.25, 0.0, 0.0));
-//            resultSecondHalf.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, SCENE_RASTER_WIDTH, SCENE_RASTER_HEIGHT, -180, 90, 0.25, 0.25, 0.0, 0.0));
-//        } catch (FactoryException | TransformException e) {
-//            throw new IOException("Unable to create geo-coding", e);
-//        }
 
         ncFirst.create();
         ncSecond.create();
@@ -151,45 +143,12 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
-
-//        Band burnedAreaFirstHalf = resultFirstHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
-//        burnedAreaFirstHalf.setUnit("m2");
-//
-//        Band burnedAreaSecondHalf = resultSecondHalf.addBand("burned_area", ProductData.TYPE_FLOAT32);
-//        burnedAreaSecondHalf.setUnit("m2");
-//
-//        Band standardErrorFirstHalf = resultFirstHalf.addBand("standard_error", ProductData.TYPE_FLOAT32);
-//        standardErrorFirstHalf.setUnit("m2");
-//
-//        Band standardErrorSecondHalf = resultSecondHalf.addBand("standard_error", ProductData.TYPE_FLOAT32);
-//        standardErrorSecondHalf.setUnit("m2");
-//
-//        Band coverageFirstHalf = resultFirstHalf.addBand("observed_area_fraction", ProductData.TYPE_FLOAT32);
-//        coverageFirstHalf.setUnit("1");
-//
-//        Band coverageSecondHalf = resultSecondHalf.addBand("observed_area_fraction", ProductData.TYPE_FLOAT32);
-//        coverageSecondHalf.setUnit("1");
-//
-//        resultFirstHalf.addBand("patch_number", ProductData.TYPE_FLOAT32);
-//        resultSecondHalf.addBand("patch_number", ProductData.TYPE_FLOAT32);
-//
-//        for (int lcClass = 1; lcClass <= FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
-//            Band band1 = resultFirstHalf.addBand(getBandNameFor(lcClass), ProductData.TYPE_FLOAT32);
-//            Band band2 = resultSecondHalf.addBand(getBandNameFor(lcClass), ProductData.TYPE_FLOAT32);
-//            band1.setUnit("m2");
-//            band2.setUnit("m2");
-//        }
-
-//        ProductWriter productWriterFH = resultFirstHalf.getProductWriter();
-//        ProductWriter productWriterSH = resultSecondHalf.getProductWriter();
-//        productWriterFH.writeProductNodes(resultFirstHalf, resultFirstHalf.getFileLocation());
-//        productWriterSH.writeProductNodes(resultSecondHalf, resultSecondHalf.getFileLocation());
     }
 
     private static void writeFloatChunk(String key, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
-        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
+//        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 40, 40}, data);
@@ -199,7 +158,7 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
     private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, float[] baInClass) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
-        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
+//        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 40, 40}, baInClass);
@@ -323,54 +282,8 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         ncFile.write(lon, values);
     }
 
-    private void writeData(Text key, float[] burnedArea, float[] patchNumbers, float[] errors, List<float[]> baInLc, float[] coverage, Product product, List<int[]> writtenChunks) throws IOException {
-        int x = getX(key.toString());
-        int y = getY(key.toString());
-        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40", x, y));
-        ProductWriter productWriter = product.getProductWriter();
-        productWriter.writeBandRasterData(product.getBand("burned_area"), x, y, 40, 40, new ProductData.Float(burnedArea), ProgressMonitor.NULL);
-        productWriter.writeBandRasterData(product.getBand("patch_number"), x, y, 40, 40, new ProductData.Float(patchNumbers), ProgressMonitor.NULL);
-        productWriter.writeBandRasterData(product.getBand("standard_error"), x, y, 40, 40, new ProductData.Float(errors), ProgressMonitor.NULL);
-        productWriter.writeBandRasterData(product.getBand("observed_area_fraction"), x, y, 40, 40, new ProductData.Float(coverage), ProgressMonitor.NULL);
-        for (int lcClass = 1; lcClass <= FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
-            productWriter.writeBandRasterData(product.getBand(getBandNameFor(lcClass)), x, y, 40, 40, new ProductData.Float(baInLc.get(lcClass - 1)), ProgressMonitor.NULL);
-        }
-        if (!alreadyWritten(x, y, writtenChunks)) {
-            writtenChunks.add(new int[]{x, y});
-        }
-    }
-
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-//        fillBand(resultFirstHalf.getBand("burned_area"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//        fillBand(resultSecondHalf.getBand("burned_area"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
-//        fillBand(resultFirstHalf.getBand("patch_number"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//        fillBand(resultSecondHalf.getBand("patch_number"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
-//        fillBand(resultFirstHalf.getBand("standard_error"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//        fillBand(resultSecondHalf.getBand("standard_error"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
-//        fillBand(resultFirstHalf.getBand("observed_area_fraction"), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//        fillBand(resultSecondHalf.getBand("observed_area_fraction"), resultSecondHalf.getProductWriter(), writtenChunksSecondHalf, createFloatFillData());
-//        for (int lcClass = 1; lcClass <= FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
-//            fillBand(resultFirstHalf.getBand(getBandNameFor(lcClass)), resultFirstHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//            fillBand(resultSecondHalf.getBand(getBandNameFor(lcClass)), resultSecondHalf.getProductWriter(), writtenChunksFirstHalf, createFloatFillData());
-//        }
-//        write(context.getConfiguration(), resultFirstHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-07.nc");
-//        write(context.getConfiguration(), resultSecondHalf, "hdfs://calvalus/calvalus/home/thomas/thomas-ba-2008-06-22.nc");
-
-        ncFirst.close();
-        ncSecond.close();
-
-        File fileLocation = new File("./" + firstHalfFile);
-        File fileLocation2 = new File("./" + secondHalfFile);
-        Path path = new Path("hdfs://calvalus/calvalus/home/thomas/" + firstHalfFile);
-        Path path2 = new Path("hdfs://calvalus/calvalus/home/thomas/" + secondHalfFile);
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-        FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
-    }
-
     private static NetcdfFileWriter createNcFile(String filename) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3c64, filename);
+        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
 
         ncFile.addDimension(null, "vegetation_class", 18);
         ncFile.addDimension(null, "lat", 720);
@@ -443,54 +356,6 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
         return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", year, month, firstHalf ? "07" : "22");
     }
 
-    private static String getBandNameFor(int lcClass) {
-        return String.format("burned_area_in_vegetation_class_vegetation_class%d", lcClass);
-    }
-
-    private static ProductData.Int createIntFillData() {
-        int[] array = new int[40 * 40];
-        Arrays.fill(array, 0);
-        return new ProductData.Int(array);
-    }
-
-    private static ProductData.Float createFloatFillData() {
-        float[] array = new float[40 * 40];
-        Arrays.fill(array, 0.0F);
-        return new ProductData.Float(array);
-    }
-
-    private void write(Configuration configuration, Product product, String pathString) throws IOException {
-        product.closeIO();
-        File fileLocation = product.getFileLocation();
-        Path path = new Path(pathString);
-        FileSystem fs = path.getFileSystem(configuration);
-        fs.delete(path, true);
-        FileUtil.copy(fileLocation, fs, path, false, configuration);
-    }
-
-    private static void fillBand(Band band, ProductWriter productWriter, List<int[]> writtenChunks, ProductData fillData) throws IOException {
-        // the netcdf4-writer expects the band to be fully populated with data
-        // also, it can write data only once
-        // --> we have to fill remaining pixels here
-        for (int y = 0; y < SCENE_RASTER_HEIGHT; y += 40) {
-            for (int x = 0; x < SCENE_RASTER_WIDTH; x += 40) {
-                if (!alreadyWritten(x, y, writtenChunks)) {
-                    CalvalusLogger.getLogger().info("Filling chunk at: x=" + x + "; y=" + y);
-                    productWriter.writeBandRasterData(band, x, y, 40, 40, fillData, ProgressMonitor.NULL);
-                }
-            }
-        }
-    }
-
-    private static boolean alreadyWritten(int x, int y, List<int[]> writtenChunks) {
-        for (int[] item : writtenChunks) {
-            if (Arrays.equals(item, new int[]{x, y})) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     private static int getX(String key) {
         int x = Integer.parseInt(key.substring(12));
         return x * 40;
@@ -499,54 +364,6 @@ public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullW
     private static int getY(String key) {
         int y = Integer.parseInt(key.substring(9, 11));
         return y * 40;
-    }
-
-    public static void main(String[] args) throws IOException, InvalidRangeException {
-        NetcdfFileWriter ncFirst = createNcFile(createFilename("2006", "08", true));
-        NetcdfFileWriter ncSecond = createNcFile(createFilename("2006", "08", false));
-
-        ncFirst.create();
-        ncSecond.create();
-
-        writeLon(ncFirst);
-        writeLon(ncSecond);
-        writeLat(ncFirst);
-        writeLat(ncSecond);
-
-        writeLonBnds(ncFirst);
-        writeLonBnds(ncSecond);
-        writeLatBnds(ncFirst);
-        writeLatBnds(ncSecond);
-
-        writeTime(ncFirst, "2006", "08", true);
-        writeTime(ncSecond, "2006", "08", false);
-
-        writeTimeBnds(ncFirst, "2006", "08", true);
-        writeTimeBnds(ncSecond, "2006", "08", false);
-
-        writeVegetationClasses(ncFirst);
-        writeVegetationClasses(ncSecond);
-
-        writeVegetationClassNames(ncFirst);
-        writeVegetationClassNames(ncSecond);
-
-        try {
-            float[] data = new float[40 * 40];
-            for (int i = 0; i < data.length; i++) {
-                data[i] = i;
-            }
-            float[] data2 = new float[40 * 40];
-            for (int i = 0; i < data2.length; i++) {
-                data2[i] = 10000 + i;
-            }
-            writeFloatChunk(String.format("%d-%02d-%s", 2008, 8, "v03h12"), ncFirst, "burned_area", data);
-            writeFloatChunk(String.format("%d-%02d-%s", 2008, 8, "v03h12"), ncSecond, "burned_area", data2);
-        } catch (InvalidRangeException e) {
-            throw new IOException(e);
-        }
-
-        ncFirst.close();
-        ncSecond.close();
     }
 
 }

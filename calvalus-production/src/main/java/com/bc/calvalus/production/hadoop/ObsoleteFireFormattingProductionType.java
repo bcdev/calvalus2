@@ -23,7 +23,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.fire.FireFormattingMapper;
-import com.bc.calvalus.processing.fire.FireInputFormat;
+import com.bc.calvalus.processing.fire.ObsoleteFireInputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -115,7 +115,7 @@ public class ObsoleteFireFormattingProductionType extends HadoopProductionType {
         @Override
         protected void configureJob(Job job) throws IOException {
             CalvalusLogger.getLogger().info("Configuring job.");
-            job.setInputFormatClass(FireInputFormat.class);
+            job.setInputFormatClass(ObsoleteFireInputFormat.class);
             job.setMapperClass(FireFormattingMapper.class);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));

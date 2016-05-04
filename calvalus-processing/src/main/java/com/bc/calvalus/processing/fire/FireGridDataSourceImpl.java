@@ -3,8 +3,13 @@ package com.bc.calvalus.processing.fire;
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
+import ucar.ma2.Array;
+import ucar.ma2.InvalidRangeException;
+import ucar.nc2.NetcdfFile;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.logging.Logger;
@@ -18,7 +23,7 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     private final Product sourceProduct;
     private final Product lcProduct;
-    private final List<Product> srProducts;
+    private final List<File> srProducts;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private int doyFirstOfMonth;
@@ -26,7 +31,7 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
     private int doyFirstHalf;
     private int doySecondHalf;
 
-    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct, List<Product> srProducts) {
+    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct, List<File> srProducts) {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;
@@ -40,16 +45,26 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
         data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
         data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
 
-        int[] statusPixelsFirstHalf = new int[sourceRect.width * sourceRect.height];
-        int[] statusPixelsSecondHalf = new int[sourceRect.width * sourceRect.height];
-        for (Product srProduct : srProducts) {
+        byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
+        byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];
+        for (File srProduct : srProducts) {
+            NetcdfFile netcdfFile = NetcdfFileOpener.open(srProduct);
             int startIndex = "CCI-Fire-MERIS-SDR-L3-300m-v1.0-2002-07-".length();
             int day = Integer.parseInt(srProduct.getName().substring(startIndex, startIndex + 2));
             boolean firstHalf = day <= 15;
+            Array status;
+            try {
+                status = netcdfFile.findVariable(null, "status").read(new int[]{sourceRect.y, sourceRect.x}, new int[]{sourceRect.height, sourceRect.width});
+            } catch (InvalidRangeException e) {
+                throw new IOException(e);
+            } finally {
+                netcdfFile.close();
+            }
+
             if (firstHalf) {
-                srProduct.getBand("status").readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, statusPixelsFirstHalf);
+                statusPixelsFirstHalf = (byte[]) status.get1DJavaArray(byte.class);
             } else {
-                srProduct.getBand("status").readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, statusPixelsSecondHalf);
+                statusPixelsSecondHalf = (byte[]) status.get1DJavaArray(byte.class);
             }
             collectStatusPixels(statusPixelsFirstHalf, data.statusPixelsFirstHalf);
             collectStatusPixels(statusPixelsSecondHalf, data.statusPixelsSecondHalf);
@@ -79,7 +94,7 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
         this.doySecondHalf = doySecondHalf;
     }
 
-    static void collectStatusPixels(int[] statusPixels, int[] statusPixelsTarget) {
+    static void collectStatusPixels(byte[] statusPixels, int[] statusPixelsTarget) {
         for (int i = 0; i < statusPixels.length; i++) {
             if (statusPixels[i] == 1) {
                 statusPixelsTarget[i] = 1;

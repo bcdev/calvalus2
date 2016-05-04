@@ -23,7 +23,7 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.fire.BAMapper;
-import com.bc.calvalus.processing.fire.BATilesInputFormat;
+import com.bc.calvalus.processing.fire.BATilesInputFormatObsolete;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.mosaic.landcover.LcL3SensorConfig;
@@ -123,7 +123,7 @@ public class FireMERISBAProductionType extends HadoopProductionType {
 
         @Override
         protected void configureJob(Job job) throws IOException {
-            job.setInputFormatClass(BATilesInputFormat.class);
+            job.setInputFormatClass(BATilesInputFormatObsolete.class);
             job.setMapperClass(BAMapper.class);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));

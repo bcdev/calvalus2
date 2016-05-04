@@ -70,20 +70,19 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        String tile = getTile(paths[0]);
-        File centerSourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-        Product centerSourceProduct = ProductIO.readProduct(centerSourceProductFile);
+        File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
+        Product sourceProduct = ProductIO.readProduct(sourceProductFile);
 
         File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcTile);
 
-        List<Product> srProducts = new ArrayList<>();
+        List<File> srProducts = new ArrayList<>();
         for (int i = 2; i < paths.length; i++) {
             File srProduct = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            srProducts.add(ProductIO.readProduct(srProduct));
+            srProducts.add(srProduct);
         }
 
-        FireGridDataSource dataSource = new FireGridDataSourceImpl(centerSourceProduct, lcProduct, srProducts);
+        FireGridDataSource dataSource = new FireGridDataSourceImpl(sourceProduct, lcProduct, srProducts);
         ErrorPredictor errorPredictor = new ErrorPredictor();
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -92,7 +91,6 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         SourceData data = new SourceData();
         double[] areas = new double[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-
         float[] baFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
@@ -107,14 +105,12 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             baInLcSecondHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
         }
 
-        context.progress();
-
         int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d of target raster.", y));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 data.reset();
-                Rectangle sourceRect = new Rectangle(x * TARGET_RASTER_WIDTH, y * TARGET_RASTER_HEIGHT, 90, 90);
+                Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
                 dataSource.readPixels(sourceRect, data);
 
                 float baValueFirstHalf = 0.0F;
@@ -171,7 +167,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setCoverageFirstHalf(coverageFirstHalf);
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[0]))), gridCell);
         errorPredictor.dispose();
     }
 

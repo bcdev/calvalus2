@@ -27,7 +27,8 @@ public class FireGridDataSourceImplTest {
     @Before
     public void setUp() throws Exception {
         Product centerProduct = createProduct(5);
-        dataSource = new FireGridDataSourceImpl(centerProduct, null, new ArrayList<>());
+        Product lcProduct = createProduct(10);
+        dataSource = new FireGridDataSourceImpl(centerProduct, lcProduct, new ArrayList<>());
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
@@ -150,7 +151,7 @@ public class FireGridDataSourceImplTest {
     @Test
     public void testCollectStatusPixels() throws Exception {
         int[] target = {0, 1, 0, 0, 0};
-        FireGridDataSourceImpl.collectStatusPixels(new int[]{1, 0, 0, 1, 0}, target);
+        FireGridDataSourceImpl.collectStatusPixels(new byte[]{1, 0, 0, 1, 0}, target);
         assertArrayEquals(new int[]{1, 1, 0, 1, 0}, target);
     }
 
@@ -158,12 +159,14 @@ public class FireGridDataSourceImplTest {
         Product product = new Product("name", "type", 4, 4);
         product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 4, 4, 0, 0, 0.02, 0.02));
         Band band = product.addBand("band_1", ProductData.TYPE_INT32);
+        Band band2 = product.addBand("lcclass", ProductData.TYPE_INT32);
         int[] pixels = new int[4 * 4];
         Arrays.fill(pixels, value * 1000);
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = pixels[i] + i;
         }
         band.setRasterData(new ProductData.Int(pixels));
+        band2.setRasterData(new ProductData.Int(pixels));
         return product;
     }
 

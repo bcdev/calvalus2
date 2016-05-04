@@ -43,8 +43,8 @@ public class FireGridInputFormat extends InputFormat {
     private void createSplits(FileStatus[] fileStatuses,
                               List<InputSplit> splits, Configuration conf) throws IOException {
         for (FileStatus fileStatus : fileStatuses) {
-            List<Path> filePaths = new ArrayList<>(9);
-            List<Long> fileLengths = new ArrayList<>(9);
+            List<Path> filePaths = new ArrayList<>();
+            List<Long> fileLengths = new ArrayList<>();
             Path path = fileStatus.getPath();
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());

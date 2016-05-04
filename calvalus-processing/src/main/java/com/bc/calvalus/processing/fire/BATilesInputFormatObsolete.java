@@ -17,7 +17,7 @@ import java.util.Map;
  *
  * @author thomas
  */
-public class BATilesInputFormat extends FireInputFormat {
+public class BATilesInputFormatObsolete extends ObsoleteFireInputFormat {
 
     @Override
     protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
@@ -25,7 +25,7 @@ public class BATilesInputFormat extends FireInputFormat {
                                            Configuration conf) throws IOException {
         FileStatus[] sameYearStatuses = super.getFileStatuses(inventoryService, inputPathPatterns, conf);
 
-        String[] wingsPathPatterns = BATilesInputFormat.createWingsPathPatterns(inputPathPatterns);
+        String[] wingsPathPatterns = BATilesInputFormatObsolete.createWingsPathPatterns(inputPathPatterns);
         FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
         FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
 
