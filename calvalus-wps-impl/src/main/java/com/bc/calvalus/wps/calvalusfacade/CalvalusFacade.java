@@ -10,6 +10,7 @@ import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +46,7 @@ public class CalvalusFacade {
         return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
     }
 
-    public List<String> getProductResultUrls(Production production) {
+    public List<String> getProductResultUrls(Production production) throws ProductionException, UnsupportedEncodingException {
         return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
     }
 

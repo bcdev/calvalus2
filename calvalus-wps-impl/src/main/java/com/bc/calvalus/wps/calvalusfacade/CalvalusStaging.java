@@ -7,10 +7,24 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.utils.ProductMetadata;
+import com.bc.calvalus.wps.utils.VelocityWrapper;
 import com.bc.wps.api.WpsServerContext;
+import com.sun.jersey.api.uri.UriBuilderImpl;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
+import javax.ws.rs.core.UriBuilder;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -38,21 +52,40 @@ public class CalvalusStaging {
         productionService.stageProductions(production.getId());
     }
 
-    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) {
+    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production)
+                throws ProductionException, UnsupportedEncodingException {
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
         File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+
         File[] productResultFiles = stagingDirectory.listFiles();
         List<String> productResultUrls = new ArrayList<>();
         if (productResultFiles != null) {
             for (File productResultFile : productResultFiles) {
-                String productUrl = "http://"
-                                    + wpsServerContext.getHostAddress()
-                                    + ":" + wpsServerContext.getPort()
-                                    + "/" + APP_NAME
-                                    + "/" + stagingDirectoryPath
-                                    + "/" + productResultFile.getName();
+                String productFileName = productResultFile.getName().toLowerCase();
+                if (productFileName.endsWith("-metadata") || productFileName.endsWith(".csv")) {
+                    continue;
+                }
+                UriBuilder builder = new UriBuilderImpl();
+                String productUrl = builder.scheme("http")
+                            .host(wpsServerContext.getHostAddress())
+                            .port(wpsServerContext.getPort())
+                            .path(APP_NAME)
+                            .path(stagingDirectoryPath)
+                            .path(productResultFile.getName())
+                            .build().toString();
                 productResultUrls.add(productUrl);
             }
+            UriBuilder builder = new UriBuilderImpl();
+            String metadataUrl = builder.scheme("http")
+                        .host(wpsServerContext.getHostAddress())
+                        .port(wpsServerContext.getPort())
+                        .path(APP_NAME)
+                        .path(stagingDirectoryPath)
+                        .path(production.getName() + "-metadata")
+                        .build().toString();
+            productResultUrls.add(metadataUrl);
+
+            generateProductMetadata(production, stagingDirectory, productResultFiles);
         }
         return productResultUrls;
     }
@@ -74,6 +107,31 @@ public class CalvalusStaging {
         } else {
             logError("Error: Staging did not complete normally: " + production.getStagingStatus().getMessage());
         }
+    }
+
+    private void generateProductMetadata(Production production, File stagingDirectory, File[] productResultFiles) throws ProductionException {
+        ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
+
+        VelocityWrapper velocityWrapper = new VelocityWrapper();
+        String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
+
+        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
+        try (PrintWriter out = new PrintWriter(outputMetadata.getAbsolutePath())) {
+            out.println(mergedMetadata);
+        } catch (FileNotFoundException exception) {
+            LOG.log(Level.SEVERE, "Unable to write metadata file '" + outputMetadata + "'.", exception);
+        }
+    }
+
+    private VelocityEngine getVelocityEngine() {
+        VelocityEngine ve = new VelocityEngine();
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+        ve.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
+        ve.setProperty("runtime.log.logsystem.log4j.category", "velocity");
+        ve.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
+        ve.init();
+        return ve;
     }
 
     private void logError(String errorMessage) {

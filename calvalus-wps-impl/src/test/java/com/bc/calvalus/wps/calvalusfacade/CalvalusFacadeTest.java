@@ -17,6 +17,12 @@ import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.apache.commons.collections.map.HashedMap;
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.apache.velocity.runtime.RuntimeConstants;
+import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.*;
 import org.junit.runner.*;
 import org.mockito.ArgumentCaptor;
@@ -24,7 +30,14 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hans
@@ -191,6 +204,86 @@ public class CalvalusFacadeTest {
 
         assertThat((arg1.getAllValues().get(1)), equalTo("mockUserName"));
         assertThat((arg2.getAllValues().get(1)), equalTo("user=mockUserName"));
+    }
+
+    @Test
+    public void testVelocity() throws Exception {
+        VelocityEngine ve = new VelocityEngine();
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+        ve.init();
+
+        ArrayList<Map> list = new ArrayList();
+        Map<String, String> map = new HashMap<>();
+
+        map.put("name", "Cow");
+        map.put("price", "$100.00");
+        list.add(map);
+
+        map = new HashMap<>();
+        map.put("name", "Eagle");
+        map.put("price", "$59.99");
+        list.add(map);
+
+        map = new HashMap<>();
+        map.put("name", "Shark");
+        map.put("price", "$3.99");
+        list.add(map);
+
+        VelocityContext context = new VelocityContext();
+        context.put("test", "attribute");
+        context.put("petList", list);
+
+        Template t = ve.getTemplate("test-velocity.vm");
+
+        StringWriter writer = new StringWriter();
+
+        t.merge(context, writer);
+
+        System.out.println(writer.toString());
+    }
+
+    @Test
+    public void testMetadataVelocity() throws Exception {
+        VelocityEngine ve = new VelocityEngine();
+        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
+        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
+        ve.init();
+
+        VelocityContext context = new VelocityContext();
+        Template template = ve.getTemplate("test-velocity2.vm");
+        StringWriter writer = new StringWriter();
+
+        context.put("jobUrl", "http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=GetStatus&JobId=20160317105702_L3_8ae4f737a2b6");
+        context.put("jobFinishTime", "2016-03-17T14:00:00.000000Z");
+        context.put("productOutputDir", "Jakarta GUF test/hans/20160317_10000000");
+        context.put("productionName", "Jakarta GUF test");
+        context.put("processName", "Subset");
+        context.put("inputDatasetName", "Urban Footprint Global (Urban TEP)");
+        context.put("stagingDir", "http://www.brockmann-consult.de/bc-wps/staging/hans");
+        context.put("regionWkt", "100 -10 100 0 110 0 110 -10 100 -10");
+        context.put("startDate", "2008-01-01T00:00:00Z");
+        context.put("stopDate", "2012-12-31T23:59:59Z");
+        context.put("collectionUrl", "http://www.brockmann-consult.de/bc-wps/staging/hans/20160317_10000000");
+        context.put("productOutputPath", "Jakarta GUF test/hans/20160317_10000000");
+        context.put("processorVersion", "3.0");
+        context.put("productionType", "L2");
+        context.put("outputFormat", "NetCDF-4");
+
+        List<Map> productList = new ArrayList<>();
+        Map<String, String> product1 = new HashMap<>();
+        product1.put("productUrl","http://www.brockmann-consult.de/bc-wps/staging/hans/20160317092654_L2Plus_85f7236d9c82/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc");
+        product1.put("productFileName","L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc");
+        product1.put("productFileFormat","NetCDF-4");
+        product1.put("productFileSize","123000");
+        product1.put("productQuickLookUrl","http://www.brockmann-consult.de/bc-wps/staging/hans/20160317092654_L2Plus_85f7236d9c82/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.png");
+        productList.add(product1);
+
+        context.put("productList", productList);
+
+        template.merge(context, writer);
+
+        System.out.println(writer);
     }
 
     private void configureProductionServiceMocking() throws IOException, ProductionException {

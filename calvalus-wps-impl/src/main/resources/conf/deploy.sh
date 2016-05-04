@@ -9,6 +9,7 @@ sudo -u $RUN_AS mkdir -p $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp calvalus.config $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp calvalus-wps.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp log4j.properties $CATALINA_HOME/conf/calvalus
+sudo -u $RUN_AS cp metadata-template.vm $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS mkdir -p $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS cp staging/directory-listing.xsl $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS cp staging/directory-listing-readme.txt $CATALINA_HOME/webapps/bc-wps/staging
