@@ -107,7 +107,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
-            LOG.info(String.format("Processing line %d of target raster.", y));
+            LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, TARGET_RASTER_HEIGHT));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 data.reset();
                 Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
