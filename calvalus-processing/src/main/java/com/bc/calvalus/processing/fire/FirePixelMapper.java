@@ -48,6 +48,7 @@ public class FirePixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
     public void run(Context context) throws IOException, InterruptedException {
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
+        FirePixelVariableType variableType = FirePixelVariableType.valueOf(context.getConfiguration().get("variableType"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
@@ -60,16 +61,20 @@ public class FirePixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         Product lcProduct = ProductIO.readProduct(lcTile);
 
         PixelCell pixelCell = new PixelCell();
-        pixelCell.doy = new int[RASTER_WIDTH * RASTER_HEIGHT];
-        pixelCell.error = new int[RASTER_WIDTH * RASTER_HEIGHT];
-        pixelCell.lcClass = new int[RASTER_WIDTH * RASTER_HEIGHT];
-        sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.doy);
-        context.progress();
-        sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.error);
-        context.progress();
-        lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.lcClass);
-        context.progress();
+        pixelCell.values = new int[RASTER_WIDTH * RASTER_HEIGHT];
 
+        switch (variableType) {
+            case DAY_OF_YEAR:
+                sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                break;
+            case CONFIDENCE_LEVEL:
+                sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                break;
+            case LC_CLASS:
+                lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+
+        }
+        context.progress();
         context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[0]))), pixelCell);
     }
 

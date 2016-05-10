@@ -18,10 +18,14 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.*;
+import com.bc.calvalus.processing.fire.FirePixelInputFormat;
+import com.bc.calvalus.processing.fire.FirePixelMapper;
+import com.bc.calvalus.processing.fire.FirePixelProductArea;
+import com.bc.calvalus.processing.fire.FirePixelReducer;
+import com.bc.calvalus.processing.fire.FirePixelVariableType;
+import com.bc.calvalus.processing.fire.PixelCell;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -66,21 +70,20 @@ public class FirePixelProductionType extends HadoopProductionType {
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
-//        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting");
-//        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
+        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
         setRequestParameters(productionRequest, jobConfig);
 
         Workflow merisFormattingWorkflow = new Workflow.Parallel();
         String userName = productionRequest.getUserName();
         for (FirePixelProductArea area : FirePixelProductArea.values()) {
-            FirePixelFormattingWorkflowItem firePixelFormattingWorkflowItem = new FirePixelFormattingWorkflowItem(getProcessingService(), userName, productionName, area, jobConfig);
-            merisFormattingWorkflow.add(firePixelFormattingWorkflowItem);
-        }
-        CalvalusLogger.getLogger().info("Submitting workflow.");
-        try {
-            merisFormattingWorkflow.submit();
-        } catch (WorkflowException e) {
-            throw new ProductionException(e);
+            if (area == FirePixelProductArea.ASIA) {
+                for (FirePixelVariableType type : FirePixelVariableType.values()) {
+                    CalvalusLogger.getLogger().info(String.format("Creating workflow item for area %s and variable %s.", area, type.name()));
+                    FirePixelFormattingWorkflowItem item = new FirePixelFormattingWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_" + type.name(), area, type, jobConfig);
+                    merisFormattingWorkflow.add(item);
+                }
+            }
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -101,10 +104,12 @@ public class FirePixelProductionType extends HadoopProductionType {
     private static class FirePixelFormattingWorkflowItem extends HadoopWorkflowItem {
 
         private final FirePixelProductArea area;
+        private final FirePixelVariableType variableType;
 
-        FirePixelFormattingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, FirePixelProductArea area, Configuration jobConfig) {
+        FirePixelFormattingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, FirePixelProductArea area, FirePixelVariableType variableType, Configuration jobConfig) {
             super(processingService, userName, jobName, jobConfig);
             this.area = area;
+            this.variableType = variableType;
         }
 
         @Override
@@ -121,6 +126,7 @@ public class FirePixelProductionType extends HadoopProductionType {
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(PixelCell.class);
             job.getConfiguration().set("area", area.name());
+            job.getConfiguration().set("variableType", variableType.name());
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
 

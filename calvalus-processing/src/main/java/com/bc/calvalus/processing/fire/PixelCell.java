@@ -13,37 +13,20 @@ public class PixelCell implements Writable {
 
     private static final int BAND_SIZE = FirePixelMapper.RASTER_WIDTH * FirePixelMapper.RASTER_HEIGHT;
 
-    int[] doy;
-    int[] error;
-    int[] lcClass;
+    int[] values;
 
     @Override
     public void write(DataOutput out) throws IOException {
-        for (int v : doy) {
-            out.writeInt(v);
-        }
-        for (int v : error) {
-            out.writeInt(v);
-        }
-        for (int v : lcClass) {
+        for (int v : values) {
             out.writeInt(v);
         }
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        doy = new int[BAND_SIZE];
-        error = new int[BAND_SIZE];
-        lcClass = new int[BAND_SIZE];
-
+        values = new int[BAND_SIZE];
         for (int i = 0; i < BAND_SIZE; i++) {
-            doy[i] = in.readInt();
-        }
-        for (int i = 0; i < BAND_SIZE; i++) {
-            error[i] = in.readInt();
-        }
-        for (int i = 0; i < BAND_SIZE; i++) {
-            lcClass[i] = in.readInt();
+            values[i] = in.readInt();
         }
     }
 }

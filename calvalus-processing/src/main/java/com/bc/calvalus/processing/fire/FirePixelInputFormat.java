@@ -10,7 +10,11 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapreduce.*;
+import org.apache.hadoop.mapreduce.InputFormat;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
@@ -26,7 +30,7 @@ public class FirePixelInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
         FirePixelProductArea area = FirePixelProductArea.valueOf(conf.get("area"));
-        String inputPathPattern = getInputPathPatterns(context.getConfiguration().get("calvalus.year"), area);
+        String inputPathPattern = getInputPathPatterns(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
         CalvalusLogger.getLogger().info("Input path pattern = " + inputPathPattern);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -40,7 +44,7 @@ public class FirePixelInputFormat extends InputFormat {
         return splits;
     }
 
-    static String getInputPathPatterns(String year, FirePixelProductArea area) {
+    static String getInputPathPatterns(String year, String month, FirePixelProductArea area) {
         StringBuilder groupsForArea = new StringBuilder();
         int firstTileV = area.top / 10;
         int firstTileH = area.left / 10;
@@ -52,7 +56,7 @@ public class FirePixelInputFormat extends InputFormat {
                 groupsForArea.append(format);
             }
         }
-        return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1));
+        return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*%s%s.*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1), year, month);
     }
 
     private void createSplits(FileStatus[] fileStatuses,
