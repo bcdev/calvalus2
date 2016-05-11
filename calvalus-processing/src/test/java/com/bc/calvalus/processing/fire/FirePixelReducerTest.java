@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.fire;
 import org.junit.Test;
 
 import java.awt.Rectangle;
-import java.util.Arrays;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -50,6 +49,7 @@ public class FirePixelReducerTest {
     public void testGetLeftTargetXForTile() throws Exception {
         assertEquals(6120, FirePixelReducer.getLeftTargetXForTile(FirePixelProductArea.ASIA, "2006-08-v04h25"));
         assertEquals(0, FirePixelReducer.getLeftTargetXForTile(FirePixelProductArea.ASIA, "2006-08-v04h23"));
+        assertEquals(2520, FirePixelReducer.getLeftTargetXForTile(FirePixelProductArea.ASIA, "2006-08-v04h24"));
 
         assertEquals(9360, FirePixelReducer.getLeftTargetXForTile(FirePixelProductArea.EUROPE, "2006-08-v04h18"));
         assertEquals(0, FirePixelReducer.getLeftTargetXForTile(FirePixelProductArea.EUROPE, "2006-08-v04h15"));
@@ -68,47 +68,29 @@ public class FirePixelReducerTest {
     }
 
     @Test
-    public void testGetMaxX() throws Exception {
-        assertEquals(9719, FirePixelReducer.getMaxX(FirePixelProductArea.ASIA, "2008-08-v04h25"));
-        assertEquals(1079, FirePixelReducer.getMaxX(FirePixelProductArea.ASIA, "2008-08-v04h23"));
-
-        assertEquals(27359, FirePixelReducer.getMaxX(FirePixelProductArea.EUROPE, "2006-08-v04h22"));
-        assertEquals(28439, FirePixelReducer.getMaxX(FirePixelProductArea.EUROPE, "2006-08-v04h23"));
-
-        assertEquals(30599, FirePixelReducer.getMaxX(FirePixelProductArea.AUSTRALIA, "2008-08-v09h35"));
+    public void testGetLeftSourceX() throws Exception {
+        assertEquals(1080, FirePixelReducer.getLeftSourceXForTile(FirePixelProductArea.ASIA, "2008-06-v02h23"));
+        assertEquals(0, FirePixelReducer.getLeftSourceXForTile(FirePixelProductArea.ASIA, "2008-06-v02h24"));
+        assertEquals(0, FirePixelReducer.getLeftSourceXForTile(FirePixelProductArea.ASIA, "2008-06-v02h25"));
     }
 
     @Test
-    public void name() throws Exception {
+    public void testGetTargetValues() throws Exception {
         int[] values = new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 
-        int[] data = getInts(values, 3, 0, 3, 0);
+        int[] data = FirePixelReducer.getTargetValues(0, 3, 0, 3, values);
         assertArrayEquals(new int[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}, data);
 
-        data = getInts(values, 3, 1, 3, 0);
+        data = FirePixelReducer.getTargetValues(1, 3, 0, 3, values);
         assertArrayEquals(new int[]{1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15}, data);
 
-        data = getInts(values, 3, 0, 3, 2);
+        data = FirePixelReducer.getTargetValues(0, 3, 2, 3, values);
         assertArrayEquals(new int[]{8, 9, 10, 11, 12, 13, 14, 15}, data);
 
-        data = getInts(values, 2, 0, 3, 0);
-        System.out.println(Arrays.toString(data));
+        data = FirePixelReducer.getTargetValues(0, 2, 0, 3, values);
         assertArrayEquals(new int[]{0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14}, data);
-    }
 
-    private int[] getInts(int[] values, int maxX, int leftTargetX, int maxY, int topTargetY) {
-        int width;
-        int height;
-        int[] data;
-        width = maxX - leftTargetX + 1;
-        height = maxY - topTargetY + 1;
-        data = new int[(width) * (height)];
-
-        for (int y = topTargetY; y <= maxY; y++) {
-            // continue here; needed: full width of value array in order to determine srcPos
-            int srcPos = y * width + (y + 1) * leftTargetX;
-            System.arraycopy(values, srcPos, data, (y - topTargetY) * width, width);
-        }
-        return data;
+        data = FirePixelReducer.getTargetValues(1, 3, 1, 3, values);
+        assertArrayEquals(new int[]{5, 6, 7, 9, 10, 11, 13, 14, 15}, data);
     }
 }

@@ -1,31 +1,33 @@
 package com.bc.calvalus.processing.fire;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.ceres.binding.ConversionException;
+import com.bc.ceres.core.ProgressMonitor;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
+import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.snap.core.dataio.dimap.DimapProductWriterPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.gpf.common.SubsetOp;
-import org.esa.snap.core.util.converters.JtsGeometryConverter;
-import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
-import ucar.ma2.DataType;
-import ucar.nc2.Attribute;
-import ucar.nc2.NetcdfFileWriter;
-import ucar.nc2.Variable;
 
 import java.awt.Rectangle;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Iterator;
 
 /**
@@ -43,9 +45,9 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
     protected void setup(Context context) throws IOException, InterruptedException {
         area = FirePixelProductArea.valueOf(context.getConfiguration().get("area"));
         variableType = FirePixelVariableType.valueOf(context.getConfiguration().get("variableType"));
-        prepareTargetProduct();
         year = context.getConfiguration().get("calvalus.year");
         month = context.getConfiguration().get("calvalus.month");
+        prepareTargetProduct();
     }
 
     @Override
@@ -53,88 +55,61 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         Iterator<PixelCell> iterator = values.iterator();
         PixelCell pixelCell = iterator.next();
 
-        int leftTargetX = getLeftTargetXForTile(area, key.toString());
-        int topTargetY = getTopTargetYForTile(area, key.toString());
+        int leftTargetXForTile = getLeftTargetXForTile(area, key.toString());
+        int topTargetYForTile = getTopTargetYForTile(area, key.toString());
 
-        int maxX = getMaxX(area, key.toString());
-        int maxY = getMaxY(area, key.toString());
+        int leftXSrc = getLeftSourceXForTile(area, key.toString());
+        int topYSrc = getTopSourceYForTile(area, key.toString());
+
+        int maxXSrc = getMaxSourceXForTile(area, key.toString());
+        int maxYSrc = getMaxSourceYForTile(area, key.toString());
+
+        if (maxXSrc == -1 || maxYSrc == -1) {
+            return;
+        }
+
+        int width = maxXSrc - leftXSrc + 1;
+        int height = maxYSrc - topYSrc + 1;
 
         Band band = product.getBand(variableType.bandName);
-        Rectangle targetRect = computeTargetRect(area);
-        if (band.getData() == null) {
-            band.setData(new ProductData.Int(targetRect.width * targetRect.height));
-        }
 
-        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d (tile %s) into variable '%s'", leftTargetX, topTargetY, maxX - leftTargetX, maxY - topTargetY, key, variableType.bandName));
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d (tile %s) into variable '%s'", leftTargetXForTile, topTargetYForTile, width, height, key, variableType.bandName));
 
-        int[] data = new int[(maxX - leftTargetX) * (maxY - topTargetY)];
-        for (int y = topTargetY; y <= maxY; y++) {
-            System.arraycopy(pixelCell.values, y * leftTargetX, data, y * leftTargetX, maxX - leftTargetX);
-        }
-
-        band.writeRasterData(leftTargetX, topTargetY, maxX - leftTargetX, maxY - topTargetY, new ProductData.Int(data));
+        int[] data = getTargetValues(leftXSrc, maxXSrc, topYSrc, maxYSrc, pixelCell.values);
+        product.getProductWriter().writeBandRasterData(band, leftTargetXForTile, topTargetYForTile, width, height, new ProductData.Int(data), ProgressMonitor.NULL);
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        String baseFilename = createBaseFilename(year, month, area, variableType.bandName);
-        File fileLocation = new File("./" + baseFilename + ".tif");
+        product.closeIO();
+
+        String baseFilename = product.getFileLocation().getName();
+
+        String zipFilename = createBaseFilename(year, month, area, variableType.bandName) + ".tar.gz";
+        String dirPath = baseFilename.substring(0, baseFilename.indexOf(".")) + ".data";
+        createTarGZFromDimap(product.getFileLocation().getName(), dirPath, zipFilename);
 
         CalvalusLogger.getLogger().info("Copying final product...");
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + fileLocation.getName());
+        Path path = new Path(outputDir + "/" + zipFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+        FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
-    }
-
-    private void getGeoRegion(SubsetOp subsetOp) throws IOException {
-        int leftLon = area.left - 180;
-        int upperLat = 90 - area.top;
-        int rightLon = area.right - 180;
-        int lowerLat = 90 - area.bottom;
-        try {
-            subsetOp.setGeoRegion(new JtsGeometryConverter().parse(String.format("POLYGON((%d %d, %d %d, %d %d, %d %d, %d %d))", leftLon, upperLat, leftLon, lowerLat, rightLon, lowerLat, rightLon, upperLat, leftLon, upperLat)));
-        } catch (ConversionException e) {
-            throw new IOException(e);
-        }
     }
 
     private void prepareTargetProduct() throws IOException {
         int sceneRasterWidth = computeTargetWidth(area);
         int sceneRasterHeight = computeTargetHeight(area);
 
-        String baseFilename = createBaseFilename(year, month, area, variableType.bandName);
+        String baseFilename = variableType.bandName;
 
         product = new Product(baseFilename, "Fire_CCI-Pixel Product", sceneRasterWidth, sceneRasterHeight);
         product.addBand(variableType.bandName, ProductData.TYPE_INT32);
         product.setSceneGeoCoding(createGeoCoding(area, sceneRasterWidth, sceneRasterHeight));
-        File fileLocation = new File("./" + baseFilename + ".tif");
+        File fileLocation = new File("./" + baseFilename + ".dim");
         product.setFileLocation(fileLocation);
-        product.setProductWriter(new BigGeoTiffProductWriterPlugIn().createWriterInstance());
+        product.setProductWriter(new DimapProductWriterPlugIn().createWriterInstance());
         product.getProductWriter().writeProductNodes(product, product.getFileLocation());
-    }
-
-    private NetcdfFileWriter createNcFile(String filename, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf4_classic, filename);
-
-        ncFile.addDimension(null, "lat", sceneRasterHeight);
-        ncFile.addDimension(null, "lon", sceneRasterWidth);
-
-        Variable latVar = ncFile.addVariable(null, "lat", DataType.FLOAT, "lat");
-        latVar.addAttribute(new Attribute("units", "degree_north"));
-        latVar.addAttribute(new Attribute("standard_name", "latitude"));
-        latVar.addAttribute(new Attribute("long_name", "latitude"));
-        latVar.addAttribute(new Attribute("bounds", "lat_bnds"));
-        Variable lonVar = ncFile.addVariable(null, "lon", DataType.FLOAT, "lon");
-        lonVar.addAttribute(new Attribute("units", "degree_east"));
-        lonVar.addAttribute(new Attribute("standard_name", "longitude"));
-        lonVar.addAttribute(new Attribute("long_name", "longitude"));
-        lonVar.addAttribute(new Attribute("bounds", "lon_bnds"));
-
-        ncFile.addVariable(null, variableType.bandName, DataType.INT, "lon lat");
-        ncFile.create();
-        return ncFile;
     }
 
     private static CrsGeoCoding createGeoCoding(FirePixelProductArea area, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
@@ -177,32 +152,23 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-v02.0-fv04.0-%s", year, month, area.index, bandName);
     }
 
-    static int getMaxX(FirePixelProductArea area, String key) {
-        int tileX = Integer.parseInt(key.substring(12));
-        if (tileX * 10 + 10 < area.right) {
-            if (tileX * 10 < area.left) {
-                return 360 * (area.left - tileX * 10) - 1;
-            } else {
-                return getLeftTargetXForTile(area, key) + 3600 - 1;
-            }
-        } else if (tileX * 10 + 10 == area.right) {
-            return getLeftTargetXForTile(area, key) + 3600 - 1;
-        }
-        return getLeftTargetXForTile(area, key) + 360 * (area.right - tileX * 10) - 1;
-    }
+    static int[] getTargetValues(int leftXSrc, int maxXSrc, int topYSrc, int maxYSrc, int[] sourceValues) {
+        int fullWidthSrc = (int) Math.sqrt(sourceValues.length);
 
-    static int getMaxY(FirePixelProductArea area, String key) {
-        int tileY = Integer.parseInt(key.substring(9, 11));
-        if (tileY * 10 + 10 < area.bottom) {
-            if (tileY * 10 < area.top) {
-                return 360 * (area.top - tileY * 10) - 1;
-            } else {
-                return getTopTargetYForTile(area, key) + 3600 - 1;
-            }
-        } else if (tileY * 10 + 10 == area.bottom) {
-            return getTopTargetYForTile(area, key) + 3600 - 1;
+        int width = maxXSrc - leftXSrc + 1;
+        int height = maxYSrc - topYSrc + 1;
+
+        int[] data = new int[(width) * (height)];
+        int targetLine = 0;
+        for (int y = topYSrc; y <= maxYSrc; y++) {
+            int xOffset = leftXSrc;
+            int yOffset = y;
+            int srcPos = yOffset * fullWidthSrc + xOffset;
+            int targetPos = targetLine * width;
+            System.arraycopy(sourceValues, srcPos, data, targetPos, width);
+            targetLine++;
         }
-        return getTopTargetYForTile(area, key) + 360 * (area.bottom - tileY * 10) - 1;
+        return data;
     }
 
     static int getLeftTargetXForTile(FirePixelProductArea area, String key) {
@@ -221,15 +187,66 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 0;
     }
 
-    private static int _getX(FirePixelProductArea area, String key) {
-        int x = Integer.parseInt(key.substring(12));
-        int minX = area.left / 10;
-        return (x - minX) * 3600;
+    static int getLeftSourceXForTile(FirePixelProductArea area, String key) {
+        int tileX = Integer.parseInt(key.substring(12));
+        if (tileX * 10 < area.left) {
+            return (area.left - tileX * 10) * 360;
+        }
+        return 0;
     }
 
-    private static int _getY(FirePixelProductArea area, String key) {
-        int y = Integer.parseInt(key.substring(9, 11));
-        int minY = area.top / 10;
-        return (y - minY) * 3600;
+    static int getMaxSourceXForTile(FirePixelProductArea area, String key) {
+        int tileX = Integer.parseInt(key.substring(12));
+        if ((tileX + 1) * 10 > area.right) {
+            return (area.right - tileX * 10) * 360 - 1;
+        }
+        return 3599;
+    }
+
+    static int getTopSourceYForTile(FirePixelProductArea area, String key) {
+        int tileY = Integer.parseInt(key.substring(9, 11));
+        if (tileY * 10 < area.top) {
+            return (area.top - tileY * 10) * 360;
+        }
+        return 0;
+    }
+
+    static int getMaxSourceYForTile(FirePixelProductArea area, String key) {
+        int tileY = Integer.parseInt(key.substring(9, 11));
+        if ((tileY + 1) * 10 > area.bottom) {
+            return (area.bottom - tileY * 10) * 360 - 1;
+        }
+        return 3599;
+    }
+
+    private static void createTarGZFromDimap(String filePath, String dirPath, String outputPath) throws IOException {
+        try (OutputStream fOut = new FileOutputStream(new File(outputPath));
+             OutputStream bOut = new BufferedOutputStream(fOut);
+             OutputStream gzOut = new GzipCompressorOutputStream(bOut);
+             TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
+            addFileToTarGz(tOut, dirPath, "");
+            addFileToTarGz(tOut, filePath, "");
+        }
+    }
+
+    private static void addFileToTarGz(TarArchiveOutputStream tOut, String path, String base)
+            throws IOException {
+        File f = new File(path);
+        String entryName = base + f.getName();
+        TarArchiveEntry tarEntry = new TarArchiveEntry(f, entryName);
+        tOut.putArchiveEntry(tarEntry);
+
+        if (f.isFile()) {
+            IOUtils.copy(new FileInputStream(f), tOut);
+            tOut.closeArchiveEntry();
+        } else {
+            tOut.closeArchiveEntry();
+            File[] children = f.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    addFileToTarGz(tOut, child.getAbsolutePath(), entryName + "/");
+                }
+            }
+        }
     }
 }

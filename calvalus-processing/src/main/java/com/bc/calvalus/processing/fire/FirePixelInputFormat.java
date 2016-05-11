@@ -52,8 +52,8 @@ public class FirePixelInputFormat extends InputFormat {
         int lastTileH = area.right / 10;
         for (int tileV = firstTileV; tileV <= lastTileV; tileV++) {
             for (int tileH = firstTileH; tileH <= lastTileH; tileH++) {
-                String format = String.format("v%02dh%02d|", tileV, tileH);
-                groupsForArea.append(format);
+                String tile = String.format("v%02dh%02d|", tileV, tileH);
+                groupsForArea.append(tile);
             }
         }
         return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*%s%s.*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1), year, month);
