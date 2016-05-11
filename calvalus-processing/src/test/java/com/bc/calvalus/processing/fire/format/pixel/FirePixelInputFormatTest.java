@@ -1,5 +1,6 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -18,7 +19,7 @@ public class FirePixelInputFormatTest {
                 "v05h15|v05h16|v05h17|v05h18|v05h19|v05h20|v05h21|v05h22|v05h23|" +
                 "v06h15|v06h16|v06h17|v06h18|v06h19|v06h20|v06h21|v06h22|v06h23)" +
                 ".*200206.*tif";
-        assertEquals(expected, FirePixelInputFormat.getInputPathPatterns("2002", "06", FirePixelProductArea.EUROPE));
+        Assert.assertEquals(expected, PixelInputFormat.getInputPathPatterns("2002", "06", PixelProductArea.EUROPE));
 
         expected = "hdfs://calvalus/calvalus/projects/fire/meris-ba/2002/.*" +
                 "(v00h15|v00h16|v00h17|v00h18|v00h19|v00h20|v00h21|v00h22|v00h23|" +
@@ -29,7 +30,7 @@ public class FirePixelInputFormatTest {
                 "v05h15|v05h16|v05h17|v05h18|v05h19|v05h20|v05h21|v05h22|v05h23|" +
                 "v06h15|v06h16|v06h17|v06h18|v06h19|v06h20|v06h21|v06h22|v06h23)" +
                 ".*200206.*tif";
-        assertEquals(expected, FirePixelInputFormat.getInputPathPatterns("2002", "06", FirePixelProductArea.NORTH_AMERICA));
+        assertEquals(expected, PixelInputFormat.getInputPathPatterns("2002", "06", PixelProductArea.NORTH_AMERICA));
     }
 
 }

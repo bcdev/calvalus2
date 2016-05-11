@@ -1,6 +1,6 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
-public enum FirePixelProductArea {
+public enum PixelProductArea {
 
     NORTH_AMERICA(0, 7, 130, 71, 1),
     SOUTH_AMERICA(75, 71, 146, 147, 2),
@@ -15,7 +15,7 @@ public enum FirePixelProductArea {
     final int bottom;
     final int index;
 
-    FirePixelProductArea(int left, int top, int right, int bottom, int index) {
+    PixelProductArea(int left, int top, int right, int bottom, int index) {
         this.left = left;
         this.top = top;
         this.right = right;

@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
@@ -27,7 +27,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
 import javax.script.ScriptException;
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.time.Year;
@@ -36,15 +36,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import static com.bc.calvalus.processing.fire.FireGridLcRemapping.isInLcClass;
-
 /**
  * Runs the fire formatting grid mapper.
  *
  * @author thomas
  * @author marcop
  */
-public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
+public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
     static final int TARGET_RASTER_WIDTH = 40;
     static final int TARGET_RASTER_HEIGHT = 40;
@@ -82,7 +80,7 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             srProducts.add(srProduct);
         }
 
-        FireGridDataSource dataSource = new FireGridDataSourceImpl(sourceProduct, lcProduct, srProducts);
+        FireGridDataSource dataSource = new DataSourceImpl(sourceProduct, lcProduct, srProducts);
         ErrorPredictor errorPredictor = new ErrorPredictor();
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
@@ -123,12 +121,12 @@ public class FireGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += GridLcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += GridLcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;

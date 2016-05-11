@@ -1,8 +1,8 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 /**
  */
-class FireGridLcRemapping {
+class GridLcRemapping {
 
     static boolean isInLcClass(int targetLcClass, int sourceLcClass) {
         switch (targetLcClass) {

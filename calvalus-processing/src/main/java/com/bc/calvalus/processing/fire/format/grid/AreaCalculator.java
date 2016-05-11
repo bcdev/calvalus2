@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;

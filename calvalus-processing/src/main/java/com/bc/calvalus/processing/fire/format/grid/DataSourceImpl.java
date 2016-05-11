@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
@@ -8,7 +8,7 @@ import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFile;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  *
  * @author thomas
  */
-class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
+class DataSourceImpl implements GridMapper.FireGridDataSource {
 
     private final Product sourceProduct;
     private final Product lcProduct;
@@ -31,7 +31,7 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
     private int doyFirstHalf;
     private int doySecondHalf;
 
-    FireGridDataSourceImpl(Product sourceProduct, Product lcProduct, List<File> srProducts) {
+    DataSourceImpl(Product sourceProduct, Product lcProduct, List<File> srProducts) {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;
@@ -144,9 +144,9 @@ class FireGridDataSourceImpl implements FireGridMapper.FireGridDataSource {
 
     private boolean isBurned(int pixel, boolean firstHalf) {
         if (firstHalf) {
-            return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != FireGridMapper.NO_DATA;
+            return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != GridMapper.NO_DATA;
         }
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != FireGridMapper.NO_DATA;
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridMapper.NO_DATA;
     }
 
     private static double[] getAreas(Band band, double[] areas) {

@@ -21,10 +21,10 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.FireGridInputFormat;
-import com.bc.calvalus.processing.fire.FireGridMapper;
-import com.bc.calvalus.processing.fire.FireGridReducer;
-import com.bc.calvalus.processing.fire.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.fire.format.grid.GridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.GridMapper;
+import com.bc.calvalus.processing.fire.format.grid.GridReducer;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -114,9 +114,9 @@ public class FireGridProductionType extends HadoopProductionType {
         @Override
         protected void configureJob(Job job) throws IOException {
             CalvalusLogger.getLogger().info("Configuring job.");
-            job.setInputFormatClass(FireGridInputFormat.class);
-            job.setMapperClass(FireGridMapper.class);
-            job.setReducerClass(FireGridReducer.class);
+            job.setInputFormatClass(GridInputFormat.class);
+            job.setMapperClass(GridMapper.class);
+            job.setReducerClass(GridReducer.class);
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(GridCell.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));

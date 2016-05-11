@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -24,12 +24,12 @@ import java.util.List;
 /**
  * @author thomas
  */
-public class FirePixelInputFormat extends InputFormat {
+public class PixelMergeInputFormat extends InputFormat {
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        FirePixelProductArea area = FirePixelProductArea.valueOf(conf.get("area"));
+        PixelProductArea area = PixelProductArea.valueOf(conf.get("area"));
         String inputPathPattern = getInputPathPatterns(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
         CalvalusLogger.getLogger().info("Input path pattern = " + inputPathPattern);
 
@@ -44,7 +44,7 @@ public class FirePixelInputFormat extends InputFormat {
         return splits;
     }
 
-    static String getInputPathPatterns(String year, String month, FirePixelProductArea area) {
+    static String getInputPathPatterns(String year, String month, PixelProductArea area) {
         StringBuilder groupsForArea = new StringBuilder();
         int firstTileV = area.top / 10;
         int firstTileH = area.left / 10;

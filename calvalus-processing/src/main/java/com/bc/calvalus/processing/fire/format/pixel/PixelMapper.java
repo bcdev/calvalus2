@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  * @author thomas
  * @author marcop
  */
-public class FirePixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
+public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
     static final int RASTER_WIDTH = 3600;
     static final int RASTER_HEIGHT = 3600;
@@ -48,7 +48,7 @@ public class FirePixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
     public void run(Context context) throws IOException, InterruptedException {
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
-        FirePixelVariableType variableType = FirePixelVariableType.valueOf(context.getConfiguration().get("variableType"));
+        PixelVariableType variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();

@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import org.apache.hadoop.io.Writable;
 
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class GridCell implements Writable {
 
-    private static final int BAND_SIZE = FireGridMapper.TARGET_RASTER_WIDTH * FireGridMapper.TARGET_RASTER_HEIGHT;
+    private static final int BAND_SIZE = GridMapper.TARGET_RASTER_WIDTH * GridMapper.TARGET_RASTER_HEIGHT;
 
     float[] baFirstHalf;
     float[] baSecondHalf;
@@ -114,7 +114,7 @@ public class GridCell implements Writable {
         errorsSecondHalf = new float[BAND_SIZE];
         baInLcFirstHalf = new ArrayList<>();
         baInLcSecondHalf = new ArrayList<>();
-        for (int lcClass = 0; lcClass < FireGridMapper.LC_CLASSES_COUNT; lcClass++) {
+        for (int lcClass = 0; lcClass < GridMapper.LC_CLASSES_COUNT; lcClass++) {
             baInLcFirstHalf.add(new float[BAND_SIZE]);
             baInLcSecondHalf.add(new float[BAND_SIZE]);
         }

@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
@@ -10,7 +10,7 @@ import org.junit.Test;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -20,15 +20,15 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author thomas
  */
-public class FireGridDataSourceImplTest {
+public class DataSourceImplTest {
 
-    private FireGridDataSourceImpl dataSource;
+    private DataSourceImpl dataSource;
 
     @Before
     public void setUp() throws Exception {
         Product centerProduct = createProduct(5);
         Product lcProduct = createProduct(10);
-        dataSource = new FireGridDataSourceImpl(centerProduct, lcProduct, new ArrayList<>());
+        dataSource = new DataSourceImpl(centerProduct, lcProduct, new ArrayList<>());
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
         dataSource.setDoyFirstOfMonth(1);
@@ -79,7 +79,7 @@ public class FireGridDataSourceImplTest {
                 0, 0, 0, 0,
                 0, 0, 0, 0
         };
-        assertEquals(0, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+        assertEquals(0, dataSource.getPatchNumbers(DataSourceImpl.make2Dims(pixels), true));
     }
 
     @Test
@@ -90,7 +90,7 @@ public class FireGridDataSourceImplTest {
                 1, 0, 0, 0,
                 1, 0, 0, 1
         };
-        assertEquals(3, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+        assertEquals(3, dataSource.getPatchNumbers(DataSourceImpl.make2Dims(pixels), true));
     }
 
     @Test
@@ -101,7 +101,7 @@ public class FireGridDataSourceImplTest {
                 0, 1, 1, 0,
                 0, 0, 0, 0
         };
-        assertEquals(1, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+        assertEquals(1, dataSource.getPatchNumbers(DataSourceImpl.make2Dims(pixels), true));
     }
 
     @Test
@@ -112,7 +112,7 @@ public class FireGridDataSourceImplTest {
                 0, 1, 1, 0,
                 0, 0, 0, 1
         };
-        assertEquals(4, dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true));
+        assertEquals(4, dataSource.getPatchNumbers(DataSourceImpl.make2Dims(pixels), true));
     }
 
     @Test
@@ -121,12 +121,12 @@ public class FireGridDataSourceImplTest {
         for (int i = 0; i < pixels.length; i++) {
             pixels[i] = (int) (Math.random() * 2);
         }
-        dataSource.getPatchNumbers(FireGridDataSourceImpl.make2Dims(pixels), true);
+        dataSource.getPatchNumbers(DataSourceImpl.make2Dims(pixels), true);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testMake2Dims_failing() throws Exception {
-        FireGridDataSourceImpl.make2Dims(new int[]{
+        DataSourceImpl.make2Dims(new int[]{
                 1, 0, 1, 1,
                 0, 1, 0, 1,
                 0, 1, 1, 0
@@ -135,7 +135,7 @@ public class FireGridDataSourceImplTest {
 
     @Test
     public void testMake2Dims() throws Exception {
-        int[][] ints = FireGridDataSourceImpl.make2Dims(new int[]{
+        int[][] ints = DataSourceImpl.make2Dims(new int[]{
                 1, 0, 1, 1,
                 0, 1, 0, 1,
                 0, 1, 1, 0,
@@ -151,7 +151,7 @@ public class FireGridDataSourceImplTest {
     @Test
     public void testCollectStatusPixels() throws Exception {
         int[] target = {0, 1, 0, 0, 0};
-        FireGridDataSourceImpl.collectStatusPixels(new byte[]{1, 0, 0, 1, 0}, target);
+        DataSourceImpl.collectStatusPixels(new byte[]{1, 0, 0, 1, 0}, target);
         assertArrayEquals(new int[]{1, 1, 0, 1, 0}, target);
     }
 

@@ -1,6 +1,6 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
-public enum FirePixelVariableType {
+public enum PixelVariableType {
 
     DAY_OF_YEAR("JD"),
     CONFIDENCE_LEVEL("CL"),
@@ -8,7 +8,7 @@ public enum FirePixelVariableType {
 
     final String bandName;
 
-    FirePixelVariableType(String bandName) {
+    PixelVariableType(String bandName) {
         this.bandName = bandName;
     }
 }

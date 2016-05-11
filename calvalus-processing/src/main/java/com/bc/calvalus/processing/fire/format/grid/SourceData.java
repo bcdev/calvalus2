@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import java.util.Arrays;
 
@@ -32,9 +32,9 @@ class SourceData {
     }
 
     void reset() {
-        Arrays.fill(pixels, FireGridMapper.NO_DATA);
+        Arrays.fill(pixels, GridMapper.NO_DATA);
         Arrays.fill(lcClasses, 0);
-        Arrays.fill(areas, FireGridMapper.NO_AREA);
+        Arrays.fill(areas, GridMapper.NO_AREA);
         Arrays.fill(statusPixelsFirstHalf, 0);
         Arrays.fill(statusPixelsSecondHalf, 0);
     }

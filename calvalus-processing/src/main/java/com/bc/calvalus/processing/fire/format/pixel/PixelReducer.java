@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.core.ProgressMonitor;
@@ -12,11 +12,13 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.dimap.DimapProductWriterPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -33,18 +35,18 @@ import java.util.Iterator;
 /**
  * @author thomas
  */
-public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWritable> {
+public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWritable> {
 
     private Product product;
-    private FirePixelProductArea area;
-    private FirePixelVariableType variableType;
+    private PixelProductArea area;
+    private PixelVariableType variableType;
     private String year;
     private String month;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        area = FirePixelProductArea.valueOf(context.getConfiguration().get("area"));
-        variableType = FirePixelVariableType.valueOf(context.getConfiguration().get("variableType"));
+        area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
+        variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
         year = context.getConfiguration().get("calvalus.year");
         month = context.getConfiguration().get("calvalus.month");
         prepareTargetProduct();
@@ -82,18 +84,23 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         product.closeIO();
+        CalvalusLogger.getLogger().info("Reading intermediate product...");
+        Product dimapProduct = ProductIO.readProduct(this.product.getFileLocation());
+        product.dispose();
 
-        String baseFilename = product.getFileLocation().getName();
+        CalvalusLogger.getLogger().info("...exporting as GeoTIFF...");
+        String tifProduct = createBaseFilename(year, month, area, variableType.bandName) + ".tif";
+        ProductIO.writeProduct(dimapProduct, tifProduct, BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        CalvalusLogger.getLogger().info("...done");
 
-        String zipFilename = createBaseFilename(year, month, area, variableType.bandName) + ".tar.gz";
-        String dirPath = baseFilename.substring(0, baseFilename.indexOf(".")) + ".data";
-        createTarGZFromDimap(product.getFileLocation().getName(), dirPath, zipFilename);
+        String zippedResult = tifProduct.substring(0, tifProduct.indexOf(".")) + ".tar.gz";
+        createTarGZ(tifProduct, zippedResult);
 
         CalvalusLogger.getLogger().info("Copying final product...");
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + zipFilename);
+        Path path = new Path(outputDir + "/" + zippedResult);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
+        FileUtil.copy(new File(zippedResult), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
     }
 
@@ -112,7 +119,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         product.getProductWriter().writeProductNodes(product, product.getFileLocation());
     }
 
-    private static CrsGeoCoding createGeoCoding(FirePixelProductArea area, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
+    private static CrsGeoCoding createGeoCoding(PixelProductArea area, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
         double easting = area.left - 180;
         double northing = 90 - area.top;
         try {
@@ -122,25 +129,25 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         }
     }
 
-    static int computeTargetWidth(FirePixelProductArea area) {
+    static int computeTargetWidth(PixelProductArea area) {
         return (area.right - area.left) * 360;
     }
 
-    static int computeTargetHeight(FirePixelProductArea area) {
+    static int computeTargetHeight(PixelProductArea area) {
         return (area.bottom - area.top) * 360;
     }
 
-    static int computeFullTargetWidth(FirePixelProductArea area) {
+    static int computeFullTargetWidth(PixelProductArea area) {
         boolean exactlyMatchesBorder = area.right % 10.0 == 0.0 || area.left % 10.0 == 0.0;
         return (area.right / 10 - area.left / 10 + (exactlyMatchesBorder ? 0 : 1)) * 3600;
     }
 
-    static int computeFullTargetHeight(FirePixelProductArea area) {
+    static int computeFullTargetHeight(PixelProductArea area) {
         boolean exactlyMatchesBorder = area.top % 10.0 == 0.0 || area.bottom % 10.0 == 0.0;
         return (area.bottom / 10 - area.top / 10 + (exactlyMatchesBorder ? 0 : 1)) * 3600;
     }
 
-    static Rectangle computeTargetRect(FirePixelProductArea area) {
+    static Rectangle computeTargetRect(PixelProductArea area) {
         int x = (area.left - area.left / 10 * 10) * 360;
         int y = (area.top - area.top / 10 * 10) * 360;
         int width = (area.right - area.left) * 360;
@@ -148,7 +155,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return new Rectangle(x, y, width, height);
     }
 
-    static String createBaseFilename(String year, String month, FirePixelProductArea area, String bandName) {
+    static String createBaseFilename(String year, String month, PixelProductArea area, String bandName) {
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-v02.0-fv04.0-%s", year, month, area.index, bandName);
     }
 
@@ -161,9 +168,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         int[] data = new int[(width) * (height)];
         int targetLine = 0;
         for (int y = topYSrc; y <= maxYSrc; y++) {
-            int xOffset = leftXSrc;
-            int yOffset = y;
-            int srcPos = yOffset * fullWidthSrc + xOffset;
+            int srcPos = y * fullWidthSrc + leftXSrc;
             int targetPos = targetLine * width;
             System.arraycopy(sourceValues, srcPos, data, targetPos, width);
             targetLine++;
@@ -171,7 +176,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return data;
     }
 
-    static int getLeftTargetXForTile(FirePixelProductArea area, String key) {
+    static int getLeftTargetXForTile(PixelProductArea area, String key) {
         int tileX = Integer.parseInt(key.substring(12));
         if (tileX * 10 > area.left) {
             return (tileX * 10 - area.left) * 360;
@@ -179,7 +184,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 0;
     }
 
-    static int getTopTargetYForTile(FirePixelProductArea area, String key) {
+    static int getTopTargetYForTile(PixelProductArea area, String key) {
         int tileY = Integer.parseInt(key.substring(9, 11));
         if (tileY * 10 > area.top) {
             return (tileY * 10 - area.top) * 360;
@@ -187,7 +192,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 0;
     }
 
-    static int getLeftSourceXForTile(FirePixelProductArea area, String key) {
+    static int getLeftSourceXForTile(PixelProductArea area, String key) {
         int tileX = Integer.parseInt(key.substring(12));
         if (tileX * 10 < area.left) {
             return (area.left - tileX * 10) * 360;
@@ -195,7 +200,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 0;
     }
 
-    static int getMaxSourceXForTile(FirePixelProductArea area, String key) {
+    private static int getMaxSourceXForTile(PixelProductArea area, String key) {
         int tileX = Integer.parseInt(key.substring(12));
         if ((tileX + 1) * 10 > area.right) {
             return (area.right - tileX * 10) * 360 - 1;
@@ -203,7 +208,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 3599;
     }
 
-    static int getTopSourceYForTile(FirePixelProductArea area, String key) {
+    private static int getTopSourceYForTile(PixelProductArea area, String key) {
         int tileY = Integer.parseInt(key.substring(9, 11));
         if (tileY * 10 < area.top) {
             return (area.top - tileY * 10) * 360;
@@ -211,7 +216,7 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 0;
     }
 
-    static int getMaxSourceYForTile(FirePixelProductArea area, String key) {
+    private static int getMaxSourceYForTile(PixelProductArea area, String key) {
         int tileY = Integer.parseInt(key.substring(9, 11));
         if ((tileY + 1) * 10 > area.bottom) {
             return (area.bottom - tileY * 10) * 360 - 1;
@@ -219,12 +224,11 @@ public class FirePixelReducer extends Reducer<Text, PixelCell, NullWritable, Nul
         return 3599;
     }
 
-    private static void createTarGZFromDimap(String filePath, String dirPath, String outputPath) throws IOException {
+    private static void createTarGZ(String filePath, String outputPath) throws IOException {
         try (OutputStream fOut = new FileOutputStream(new File(outputPath));
              OutputStream bOut = new BufferedOutputStream(fOut);
              OutputStream gzOut = new GzipCompressorOutputStream(bOut);
              TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
-            addFileToTarGz(tOut, dirPath, "");
             addFileToTarGz(tOut, filePath, "");
         }
     }

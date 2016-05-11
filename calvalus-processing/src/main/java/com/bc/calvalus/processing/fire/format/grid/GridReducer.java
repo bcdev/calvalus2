@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire;
+package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.ceres.core.Assert;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * @author thomas
  */
-public class FireGridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
+public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
 
     private static final int SCENE_RASTER_WIDTH = 1440;
     private static final int SCENE_RASTER_HEIGHT = 720;
