@@ -161,7 +161,9 @@ public class FirePixelProductionType extends HadoopProductionType {
 
         @Override
         public String getOutputDir() {
-            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + area.name();
+            String year = getJobConfig().get("calvalus.year");
+            String month = getJobConfig().get("calvalus.month");
+            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "/" + "final";
         }
 
         @Override
