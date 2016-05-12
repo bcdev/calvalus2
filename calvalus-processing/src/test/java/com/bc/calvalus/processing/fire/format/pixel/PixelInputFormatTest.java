@@ -1,10 +1,12 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class PixelInputFormatTest {
 
+    @Ignore
     @Test
     public void getInputPathPatterns() throws Exception {
 

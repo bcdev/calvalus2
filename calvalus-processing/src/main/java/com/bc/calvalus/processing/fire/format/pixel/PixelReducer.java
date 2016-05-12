@@ -82,16 +82,6 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         product.closeIO();
-//        CalvalusLogger.getLogger().info("Reading intermediate product...");
-//        Product dimapProduct = ProductIO.readProduct(this.product.getFileLocation());
-
-//        CalvalusLogger.getLogger().info("...exporting as GeoTIFF...");
-//        String tifProduct = createBaseFilename(year, month, area, variableType.bandName) + ".tif";
-//        ProductIO.writeProduct(dimapProduct, tifProduct, BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
-//        CalvalusLogger.getLogger().info("...done");
-
-//        String zippedResult = tifProduct.substring(0, tifProduct.indexOf(".")) + ".tar.gz";
-//        createTarGZ(tifProduct, zippedResult);
 
         String filename = product.getFileLocation().getName();
         CalvalusLogger.getLogger().info("Zipping product...");
@@ -101,7 +91,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         product.dispose();
         CalvalusLogger.getLogger().info(String.format("...copying product to %s...", zipFilename));
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + zipFilename);
+        Path path = new Path(outputDir + "/" + year + "/" + month + "/" + "/" + area.name() + "/" + zipFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
