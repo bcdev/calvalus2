@@ -86,7 +86,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         String filename = product.getFileLocation().getName();
         CalvalusLogger.getLogger().info("Zipping product...");
         String zipFilename = variableType.bandName + ".tar.gz";
-        createTarGZ(filename, filename.substring(0, filename.indexOf(".")) + "data", zipFilename);
+        createTarGZ(filename, filename.substring(0, filename.indexOf(".")) + ".data", zipFilename);
 
         product.dispose();
         CalvalusLogger.getLogger().info(String.format("...copying product to %s...", zipFilename));
