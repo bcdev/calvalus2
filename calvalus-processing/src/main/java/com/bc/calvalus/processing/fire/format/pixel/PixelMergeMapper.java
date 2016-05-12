@@ -33,6 +33,8 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
+import org.rauschig.jarchivelib.Archiver;
+import org.rauschig.jarchivelib.ArchiverFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -65,13 +67,15 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         File[] variableFiles = new File[3];
 
+        Archiver archiver = ArchiverFactory.createArchiver("tar", "gz");
         for (int i = 0; i < paths.length; i++) {
             variableFiles[i] = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            archiver.extract(variableFiles[i], new File("."));
         }
 
-        Product inputVar1 = ProductIO.readProduct(variableFiles[0]);
-        Product inputVar2 = ProductIO.readProduct(variableFiles[1]);
-        Product inputVar3 = ProductIO.readProduct(variableFiles[2]);
+        Product inputVar1 = ProductIO.readProduct(variableFiles[0].getName().substring(0, variableFiles[0].getName().lastIndexOf(".")) + ".dim");
+        Product inputVar2 = ProductIO.readProduct(variableFiles[1].getName().substring(0, variableFiles[0].getName().lastIndexOf(".")) + ".dim");
+        Product inputVar3 = ProductIO.readProduct(variableFiles[2].getName().substring(0, variableFiles[0].getName().lastIndexOf(".")) + ".dim");
 
         String baseFilename = createBaseFilename(year, month, area);
         Product result = new Product(baseFilename, "fire-cci-pixel-product", inputVar1.getSceneRasterWidth(), inputVar1.getSceneRasterHeight());
