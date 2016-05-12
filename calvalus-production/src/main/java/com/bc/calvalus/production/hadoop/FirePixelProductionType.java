@@ -68,7 +68,9 @@ public class FirePixelProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", productionRequest.getString("calvalus.year"), productionRequest.getString("calvalus.month"));
+        String year = productionRequest.getString("calvalus.year");
+        String month = productionRequest.getString("calvalus.month");
+        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", year, month);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
@@ -87,11 +89,11 @@ public class FirePixelProductionType extends HadoopProductionType {
                     FirePixelFormatVariableWorkflowItem item = new FirePixelFormatVariableWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_" + type.name(), area, type, jobConfig);
                     variableWorkflow.add(item);
                 }
+                areaWorkflow.add(variableWorkflow);
+                FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_merging", area, jobConfig);
+                mergingWorkflowItem.setInputDir(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name());
+                areaWorkflow.add(mergingWorkflowItem);
             }
-            areaWorkflow.add(variableWorkflow);
-            FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_merging", area, jobConfig);
-            mergingWorkflowItem.setInputDir(JobConfigNames.CALVALUS_OUTPUT_DIR + "/" + area.name());
-            areaWorkflow.add(mergingWorkflowItem);
             merisFormattingWorkflow.add(areaWorkflow);
         }
 
@@ -123,7 +125,9 @@ public class FirePixelProductionType extends HadoopProductionType {
 
         @Override
         public String getOutputDir() {
-            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + area.name() + "/" + variableType.name();
+            String year = getJobConfig().get("calvalus.year");
+            String month = getJobConfig().get("calvalus.month");
+            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "/" + variableType.name();
         }
 
         @Override

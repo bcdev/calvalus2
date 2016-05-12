@@ -12,13 +12,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.dimap.DimapProductWriterPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -84,23 +82,28 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         product.closeIO();
-        CalvalusLogger.getLogger().info("Reading intermediate product...");
-        Product dimapProduct = ProductIO.readProduct(this.product.getFileLocation());
+//        CalvalusLogger.getLogger().info("Reading intermediate product...");
+//        Product dimapProduct = ProductIO.readProduct(this.product.getFileLocation());
+
+//        CalvalusLogger.getLogger().info("...exporting as GeoTIFF...");
+//        String tifProduct = createBaseFilename(year, month, area, variableType.bandName) + ".tif";
+//        ProductIO.writeProduct(dimapProduct, tifProduct, BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+//        CalvalusLogger.getLogger().info("...done");
+
+//        String zippedResult = tifProduct.substring(0, tifProduct.indexOf(".")) + ".tar.gz";
+//        createTarGZ(tifProduct, zippedResult);
+
+        String filename = product.getFileLocation().getName();
+        CalvalusLogger.getLogger().info("Zipping product...");
+        String zipFilename = variableType.bandName + ".tar.gz";
+        createTarGZ(filename, filename.substring(0, filename.indexOf(".")), zipFilename);
+
         product.dispose();
-
-        CalvalusLogger.getLogger().info("...exporting as GeoTIFF...");
-        String tifProduct = createBaseFilename(year, month, area, variableType.bandName) + ".tif";
-        ProductIO.writeProduct(dimapProduct, tifProduct, BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
-        CalvalusLogger.getLogger().info("...done");
-
-        String zippedResult = tifProduct.substring(0, tifProduct.indexOf(".")) + ".tar.gz";
-        createTarGZ(tifProduct, zippedResult);
-
-        CalvalusLogger.getLogger().info("Copying final product...");
+        CalvalusLogger.getLogger().info(String.format("...copying product to %s...", zipFilename));
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + zippedResult);
+        Path path = new Path(outputDir + "/" + zipFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(new File(zippedResult), fs, path, false, context.getConfiguration());
+        FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
     }
 
@@ -153,10 +156,6 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         int width = (area.right - area.left) * 360;
         int height = (area.bottom - area.top) * 360;
         return new Rectangle(x, y, width, height);
-    }
-
-    static String createBaseFilename(String year, String month, PixelProductArea area, String bandName) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-v02.0-fv04.0-%s", year, month, area.index, bandName);
     }
 
     static int[] getTargetValues(int leftXSrc, int maxXSrc, int topYSrc, int maxYSrc, int[] sourceValues) {
@@ -224,12 +223,13 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         return 3599;
     }
 
-    private static void createTarGZ(String filePath, String outputPath) throws IOException {
+    private static void createTarGZ(String filePath, String folderPath, String outputPath) throws IOException {
         try (OutputStream fOut = new FileOutputStream(new File(outputPath));
              OutputStream bOut = new BufferedOutputStream(fOut);
              OutputStream gzOut = new GzipCompressorOutputStream(bOut);
              TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
             addFileToTarGz(tOut, filePath, "");
+            addFileToTarGz(tOut, folderPath, "");
         }
     }
 

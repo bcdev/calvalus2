@@ -12,8 +12,8 @@ public class PixelReducerTest {
 
     @Test
     public void testCreateBaseFilename() throws Exception {
-        Assert.assertEquals("20030501-ESACCI-L3S_FIRE-BA-MERIS-AREA_3-v02.0-fv04.0-JD", PixelReducer.createBaseFilename("2003", "05", PixelProductArea.EUROPE, PixelVariableType.DAY_OF_YEAR.bandName));
-        assertEquals("20101001-ESACCI-L3S_FIRE-BA-MERIS-AREA_4-v02.0-fv04.0-CL", PixelReducer.createBaseFilename("2010", "10", PixelProductArea.ASIA, PixelVariableType.CONFIDENCE_LEVEL.bandName));
+        Assert.assertEquals("20030501-ESACCI-L3S_FIRE-BA-MERIS-AREA_3-v02.0-fv04.0-JD", PixelMergeMapper.createBaseFilename("2003", "05", PixelProductArea.EUROPE));
+        assertEquals("20101001-ESACCI-L3S_FIRE-BA-MERIS-AREA_4-v02.0-fv04.0-CL", PixelMergeMapper.createBaseFilename("2010", "10", PixelProductArea.ASIA));
     }
 
     @Test
