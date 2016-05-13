@@ -73,6 +73,9 @@ public class ProductFormatter {
             outputExtension = ".tif";
         } else if (outputFormat.equals("BigGeoTiff")) {
             outputExtension = ".tif";
+        } else if (outputFormat.equals("CSV")) {
+            outputExtension = ".txt";
+            outputCompression = "";
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
