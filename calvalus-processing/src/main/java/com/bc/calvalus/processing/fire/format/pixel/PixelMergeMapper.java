@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.beam.GpfUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -57,6 +58,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        GpfUtils.init(context.getConfiguration());  // set system properties from request
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
         PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
