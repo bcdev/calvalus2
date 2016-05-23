@@ -19,6 +19,9 @@ package com.bc.calvalus.processing.fire.format.pixel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.beam.GpfUtils;
+import com.bc.ceres.resource.FileResource;
+import com.bc.ceres.resource.Resource;
+import com.bc.ceres.resource.ResourceEngine;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -41,9 +44,14 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 /**
@@ -88,9 +96,14 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         CalvalusLogger.getLogger().info("Writing final product...");
         ProductIO.writeProduct(result, baseFilename + ".tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        CalvalusLogger.getLogger().info("...done. Creating metadata...");
+        String metadata = createMetadata(year, month, area);
+        try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
+            fw.write(metadata);
+        }
         CalvalusLogger.getLogger().info("...done. Creating zip of final product...");
         String zipFilename = baseFilename + ".tar.gz";
-        createTarGZ(baseFilename + ".tif", zipFilename);
+        createTarGZ(baseFilename + ".tif", baseFilename + ".xml", zipFilename);
 
         result.dispose();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
@@ -101,16 +114,34 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         CalvalusLogger.getLogger().info("...done.");
     }
 
+    static String createMetadata(String year, String month, PixelProductArea area) {
+
+        ResourceEngine resourceEngine = new ResourceEngine();
+        resourceEngine.getVelocityContext().put("UUID", UUID.randomUUID().toString());
+        resourceEngine.getVelocityContext().put("date", String.format("%s-%s-01", year, month));
+        resourceEngine.getVelocityContext().put("zoneId", area.index);
+        resourceEngine.getVelocityContext().put("zoneName", area.nicename);
+        resourceEngine.getVelocityContext().put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
+        resourceEngine.getVelocityContext().put("westLon", area.left - 180);
+        resourceEngine.getVelocityContext().put("eastLon", area.right - 180);
+        resourceEngine.getVelocityContext().put("southLat", area.bottom - 90);
+        resourceEngine.getVelocityContext().put("northLat", area.top - 90);
+
+        Resource resource = resourceEngine.processResource(new FileResource(PixelMergeMapper.class.getResource("metadata-template.xml").getPath()));
+        return resource.toString();
+    }
+
     static String createBaseFilename(String year, String month, PixelProductArea area) {
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-v02.0-fv04.0", year, month, area.index);
     }
 
-    private static void createTarGZ(String filePath, String outputPath) throws IOException {
+    private static void createTarGZ(String filePath, String xmlPath, String outputPath) throws IOException {
         try (OutputStream fOut = new FileOutputStream(new File(outputPath));
              OutputStream bOut = new BufferedOutputStream(fOut);
              OutputStream gzOut = new GzipCompressorOutputStream(bOut);
              TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
             addFileToTarGz(tOut, filePath, "");
+            addFileToTarGz(tOut, xmlPath, "");
         }
     }
 
