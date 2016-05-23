@@ -1,0 +1,426 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gmi:MI_Metadata
+        xsi:schemaLocation="http://www.isotc211.org/2005/gmd http://schemas.opengis.net/iso/19139/20060504/gmd/gmd.xsd   http://www.isotc211.org/2005/gmi http://www.isotc211.org/2005/gmi/gmi.xsd"
+        xmlns:gmd="http://www.isotc211.org/2005/gmd"
+        xmlns:gco="http://www.isotc211.org/2005/gco"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:gmi="http://www.isotc211.org/2005/gmi"
+>
+
+    <gmd:fileIdentifier>
+        <gco:CharacterString>urn:uuid:esa-cci:fire:pixel:${UUID}</gco:CharacterString>
+    </gmd:fileIdentifier>
+
+    <gmd:language>
+        <gmd:LanguageCode codeList="http://www.loc.gov/standards/iso639-2/" codeListValue="eng">eng</gmd:LanguageCode>
+    </gmd:language>
+
+    <gmd:characterSet>
+        <gmd:MD_CharacterSetCode codeSpace="ISOTC211/19115" codeListValue="MD_CharacterSetCode_utf8"
+                                 codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_CharacterSetCode">
+            MD_CharacterSetCode_utf8
+        </gmd:MD_CharacterSetCode>
+    </gmd:characterSet>
+
+    <gmd:hierarchyLevel>
+        <gmd:MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode"
+                          codeListValue="dataset">dataset
+        </gmd:MD_ScopeCode>
+    </gmd:hierarchyLevel>
+
+    <gmd:contact>
+        <gmd:CI_ResponsibleParty>
+            <gmd:organisationName>
+                <gco:CharacterString>University of Alcala, Spain</gco:CharacterString>
+            </gmd:organisationName>
+            <gmd:contactInfo>
+                <gmd:CI_Contact>
+                    <gmd:address>
+                        <gmd:CI_Address>
+                            <gmd:electronicMailAddress>
+                                <gco:CharacterString>emilio.chuvieco@uah.es></gco:CharacterString>
+                            </gmd:electronicMailAddress>
+                        </gmd:CI_Address>
+                    </gmd:address>
+                    <gmd:onlineResource>
+                        <gmd:CI_OnlineResource>
+                            <gmd:linkage>
+                                <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>
+                            </gmd:linkage>
+                        </gmd:CI_OnlineResource>
+                    </gmd:onlineResource>
+                </gmd:CI_Contact>
+            </gmd:contactInfo>
+            <gmd:role>
+                <gmd:CI_RoleCode
+                        codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode"
+                        codeListValue="resourceProvider">resourceProvider
+                </gmd:CI_RoleCode>
+            </gmd:role>
+        </gmd:CI_ResponsibleParty>
+    </gmd:contact>
+
+    <gmd:dateStamp>
+        <gco:Date>${date}</gco:Date>
+    </gmd:dateStamp>
+
+    <gmd:metadataStandardName>
+        <gco:CharacterString>ISO 19115-1 Geographic Information - Metadata Part 2 Extensions for imagery and gridded
+            data
+        </gco:CharacterString>
+    </gmd:metadataStandardName>
+
+    <gmd:metadataStandardVersion>
+        <gco:CharacterString>ISO 19115-1:2012</gco:CharacterString>
+    </gmd:metadataStandardVersion>
+
+    <gmd:referenceSystemInfo>
+        <gmd:MD_ReferenceSystem>
+            <gmd:referenceSystemIdentifier>
+                <gmd:RS_Identifier>
+                    <gmd:authority>
+                        <CI_citation>
+                            <gco:CharacterString>WGS84</gco:CharacterString>
+                        </CI_citation>
+                    </gmd:authority>
+                    <gmd:code>
+                        <gco:CharacterString>WGS84</gco:CharacterString>
+                    </gmd:code>
+                </gmd:RS_Identifier>
+            </gmd:referenceSystemIdentifier>
+        </gmd:MD_ReferenceSystem>
+    </gmd:referenceSystemInfo>
+
+    <gmd:identificationInfo>
+        <gmd:MD_DataIdentification>
+
+            <gmd:citation>
+                <gmd:CI_Citation>
+                    <gmd:title>
+                        <gco:CharacterString>Fire Disturbance ECV (Fire_cci) Pixel Product – Zone ${zoneId} –
+                            ${zoneName}
+                        </gco:CharacterString>
+                    </gmd:title>
+                    <gmd:date>
+                        <!-- creation date-->
+                        <gmd:CI_Date>
+                            <gmd:date>
+                                <gco:Date>${creationDate}</gco:Date>
+                            </gmd:date>
+                            <gmd:dateType>
+                                <gmd:CI_DateTypeCode
+                                        codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode"
+                                        codeListValue="creation">creation
+                                </gmd:CI_DateTypeCode>
+                            </gmd:dateType>
+                        </gmd:CI_Date>
+                    </gmd:date>
+                    <gmd:date>
+                        <!-- publication date-->
+                        <gmd:CI_Date>
+                            <gmd:date>
+                                <gco:Date>2016-06-08</gco:Date>
+                            </gmd:date>
+                            <gmd:dateType>
+                                <gmd:CI_DateTypeCode
+                                        codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_DateTypeCode"
+                                        codeListValue="publication">publication
+                                </gmd:CI_DateTypeCode>
+                            </gmd:dateType>
+                        </gmd:CI_Date>
+                    </gmd:date>
+
+                    <gmd:identifier>
+                        <gmd:RS_Identifier>
+                            <gmd:code>
+                                <gco:CharacterString>doi:***********</gco:CharacterString>
+                            </gmd:code>
+                        </gmd:RS_Identifier>
+                    </gmd:identifier>
+                </gmd:CI_Citation>
+            </gmd:citation>
+
+            <gmd:abstract>
+                <gco:CharacterString>In support of the IPCC, the ESA Climate Change Initiative (CCI) programme comprises
+                    the generation of thirteen projects, each focusing on the production of global coverage of an
+                    Essential Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated,
+                    error-characterised, global data sets of burnt areas (BA) derived from existing satellite
+                    observations (SPOT-VGT, ENVISAT (A)ATSR, ENVISAT MERIS). The Fire_cci BA products consist of a Pixel
+                    and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem
+                    scientists and researchers supporting their modelling efforts. Further information to the ESA CCI
+                    Programme and a comprehensive documentation on the underlying algorithms, work flow, production
+                    system and product validation is publicly accessible on https://www.esa-fire-cci.org/ .
+                </gco:CharacterString>
+                <gco:CharacterString>The product is a multi-layer TIFF with the following naming convention:<Indicative
+                        Date>-ESACCI-L3S_FIRE-BA-<Indicative sensor>[-<Additional Segregator>]-[-v<GDS version>]-fv
+                    <xx.x>.tif.
+                    <Indicative Date>
+                    is the identifying date for this data set. Format is YYYY[MM[DD]], where YYYY is the four digit
+                    year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to
+                    31. For monthly products the date will be set to 01.
+                    <Indicative sensor>
+                    is MERIS, when data coming from MERIS sensor; MODISVNIR when outputs come from MODIS 250m channels;
+                    MSI, when it comes from Sentinel-2 MSI; OLCI, Sentinel-3; SLSTR, Sentinel-3; PROBA, PROBA-V.
+                    <Additional Segregator>
+                    is the AREA_
+                    <TILE_NUMBER>
+                    being the tile number the subset index described in Extent. v
+                    <GDS version>
+                    is the version number of the GHRSST Data Specification is optional for the CCI file naming
+                    convention. fv
+                    <File Version>
+                    is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional
+                    . and another 1 or more digits.). An example is:
+                    20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-fv04.0.tif.
+                </gco:CharacterString>
+                <gco:CharacterString>Product Specification at: Chuvieco, E. (2013). ESA CCI ECV Fire Disturbance -
+                    Product Specification Document, Fire_cci_Ph2_UAH_D1_2_PSD_v3_0.pdf
+                </gco:CharacterString>
+                <gco:CharacterString>Algorithm Theoretical Basis Document – Pre-Processing:
+                    https://www.esa-fire-cci.org/
+                </gco:CharacterString>
+                <gco:CharacterString>Algorithm Theoretical Basis Document – BA detection:
+                    https://www.esa-fire-cci.org/
+                </gco:CharacterString>
+                <gco:CharacterString>Algorithm Theoretical Basis Document – BA merging: https://www.esa-fire-cci.org/
+                </gco:CharacterString>
+                <gco:CharacterString>Product Validation and Algorithm Selection Report: https://www.esa-fire-cci.org/
+                </gco:CharacterString>
+                <gco:CharacterString>Layer JD: Date of the first detection; Pixel Spacing = 300m; TIFF; A zero (0) will
+                    be included in this field when the pixel is not burned in the month or it is not observed; Pixel
+                    value = Day of the year, from 1 to 365; Data type = REAL; Number of layers = 1; Data depth = 16
+                </gco:CharacterString>
+                <gco:CharacterString>Layer CL: Uncertainty Confidence Layer; Pixel Spacing = 300m; Pixel value = 0 to
+                    100, where the value is the probability in percentage that the pixel is actually burned, as a result
+                    of both the pre-processing and the actual burned area classification. The higher the value, the
+                    higher the confidence that the pixel is actually burned. Data type = REAL; Number of layers = 1;
+                    Data depth = 16
+                </gco:CharacterString>
+                <gco:CharacterString>Layer LC: Land cover of that pixel, extracted from the CCI LandCover (LC). The 2000
+                    LC data is used for 2002 data, the 2005 LC data is used for data from 2003 to 2007, and the 2010 LC
+                    data is used for data from 2008 to 2012. N is the number of land cover categories in the reference
+                    map. It is only valid when layer 1 > 0. Pixel value is 0 to N where under the following codes: 11 =
+                    Post-flooding or irrigated croplands (or aquatic), 14 = Rainfed croplands, 20 = Mosaic cropland
+                    (50-70%) / vegetation (grassland/shrubland/forest) (20-50%), 30 = Mosaic vegetation
+                    (grassland/shrubland/forest) (50-70%) / cropland (20-50%), 40 = Closed to open (>15%) broadleaved
+                    evergreen or semi-deciduous forest (>5m), 50 = Closed (>40%) broadleaved deciduous forest (>5m), 60
+                    = Open (15-40%) broadleaved deciduous forest/woodland (>5m), 70 = Closed (>40%) needleleaved
+                    evergreen forest (>5m), 90 = Open (15-40%) needleleaved deciduous or evergreen forest (>5m), 100 =
+                    Closed to open (>15%) mixed broadleaved and needleleaved forest (>5m), 110 = Mosaic forest or
+                    shrubland (50-70%) / grassland (20-50%), 120 = Mosaic grassland (50-70%) / forest or shrubland
+                    (20-50%) , 130 = Closed to open (>15%) (broadleaved or needleleaved, evergreen or deciduous)
+                    shrubland (<5m), 140 = Closed to open (>15%) herbaceous vegetation (grassland, savannas or
+                    lichens/mosses), 150 = Sparse (<15%) vegetation, 160 = Closed to open (>15%) broadleaved forest
+                    regularly flooded (semi-permanently or temporarily) - Fresh or brackish water, 170 = Closed (>40%)
+                    broadleaved forest or shrubland permanently flooded - Saline or brackish water, 180 = Closed to open
+                    (>15%) grassland or woody vegetation on regularly flooded or waterlogged soil - Fresh, brackish or
+                    saline water, 190 = Others (Artificial surfaces and associated areas (Urban areas >50%), 200 = Bare
+                    areas, 210 = Water bodies, 220 = Permanent snow and ice, 230 = No data (burnt areas, clouds etc.,);
+                    Pixel Spacing = 300m; Data type = REAL; Number of layers = 1; Data depth = 16
+                </gco:CharacterString>
+            </gmd:abstract>
+
+            <gmd:pointOfContact>
+                <gmd:CI_ResponsibleParty>
+                    <!-- resourceProvider-->
+                    <gmd:organisationName>
+                        <gco:CharacterString>European Space Agency</gco:CharacterString>
+                    </gmd:organisationName>
+                    <gmd:contactInfo>
+                        <gmd:CI_Contact>
+                            <gmd:address>
+                                <gmd:CI_Address>
+                                    <gmd:electronicMailAddress>
+                                        <gco:CharacterString>Stephen.plummer@esa.int></gco:CharacterString>
+                                    </gmd:electronicMailAddress>
+                                </gmd:CI_Address>
+                            </gmd:address>
+                            <gmd:onlineResource>
+                                <gmd:CI_OnlineResource>
+                                    <gmd:linkage>
+                                        <gmd:URL>http://www.esa.int</gmd:URL>
+                                    </gmd:linkage>
+                                </gmd:CI_OnlineResource>
+                            </gmd:onlineResource>
+                        </gmd:CI_Contact>
+                    </gmd:contactInfo>
+                    <gmd:role>
+                        <gmd:CI_RoleCode
+                                codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode"
+                                codeListValue="resourceProvider ">resourceProvider
+                        </gmd:CI_RoleCode>
+                    </gmd:role>
+                </gmd:CI_ResponsibleParty>
+            </gmd:pointOfContact>
+
+            <gmd:pointOfContact>
+                <gmd:CI_ResponsibleParty>
+                    <!-- Custodian-->
+                    <gmd:organisationName>
+                        <gco:CharacterString>University of Alcala</gco:CharacterString>
+                    </gmd:organisationName>
+                    <gmd:contactInfo>
+                        <gmd:CI_Contact>
+                            <gmd:address>
+                                <gmd:CI_Address>
+                                    <gmd:electronicMailAddress>
+                                        <gco:CharacterString>emilio.chuvieco@uah.es></gco:CharacterString>
+                                    </gmd:electronicMailAddress>
+                                </gmd:CI_Address>
+                            </gmd:address>
+                            <gmd:onlineResource>
+                                <gmd:CI_OnlineResource>
+                                    <gmd:linkage>
+                                        <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>
+                                    </gmd:linkage>
+                                </gmd:CI_OnlineResource>
+                            </gmd:onlineResource>
+                        </gmd:CI_Contact>
+                    </gmd:contactInfo>
+                    <gmd:role>
+                        <gmd:CI_RoleCode
+                                codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode"
+                                codeListValue="Custodian ">Custodian
+                        </gmd:CI_RoleCode>
+                    </gmd:role>
+                </gmd:CI_ResponsibleParty>
+            </gmd:pointOfContact>
+
+            <gmd:pointOfContact>
+                <gmd:CI_ResponsibleParty>
+                    <!-- Owner-->
+                    <gmd:organisationName>
+                        <gco:CharacterString>European Space Agency</gco:CharacterString>
+                    </gmd:organisationName>
+                    <gmd:contactInfo>
+                        <gmd:CI_Contact>
+                            <gmd:address>
+                                <gmd:CI_Address>
+                                    <gmd:electronicMailAddress>
+                                        <gco:CharacterString>Stephen.plummer@esa.int></gco:CharacterString>
+                                    </gmd:electronicMailAddress>
+                                </gmd:CI_Address>
+                            </gmd:address>
+                            <gmd:onlineResource>
+                                <gmd:CI_OnlineResource>
+                                    <gmd:linkage>
+                                        <gmd:URL>http://www.esa.int</gmd:URL>
+                                    </gmd:linkage>
+                                </gmd:CI_OnlineResource>
+                            </gmd:onlineResource>
+                        </gmd:CI_Contact>
+                    </gmd:contactInfo>
+                    <gmd:role>
+                        <gmd:CI_RoleCode
+                                codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode"
+                                codeListValue="Owner ">Owner
+                        </gmd:CI_RoleCode>
+                    </gmd:role>
+                </gmd:CI_ResponsibleParty>
+            </gmd:pointOfContact>
+
+            <gmd:pointOfContact>
+                <gmd:CI_ResponsibleParty>
+                    <!-- principalInvestigator-->
+                    <gmd:organisationName>
+                        <gco:CharacterString>University of Alcala</gco:CharacterString>
+                    </gmd:organisationName>
+                    <gmd:contactInfo>
+                        <gmd:CI_Contact>
+                            <gmd:address>
+                                <gmd:CI_Address>
+                                    <gmd:electronicMailAddress>
+                                        <gco:CharacterString>emilio.chuvieco@uah.es</gco:CharacterString>
+                                    </gmd:electronicMailAddress>
+                                </gmd:CI_Address>
+                            </gmd:address>
+                            <gmd:onlineResource>
+                                <gmd:CI_OnlineResource>
+                                    <gmd:linkage>
+                                        <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>
+                                    </gmd:linkage>
+                                </gmd:CI_OnlineResource>
+                            </gmd:onlineResource>
+                        </gmd:CI_Contact>
+                    </gmd:contactInfo>
+                    <gmd:role>
+                        <gmd:CI_RoleCode
+                                codeList="http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode"
+                                codeListValue="principalInvestigator">principalInvestigator
+                        </gmd:CI_RoleCode>
+                    </gmd:role>
+                </gmd:CI_ResponsibleParty>
+            </gmd:pointOfContact>
+
+            <gmd:descriptiveKeywords>
+                <gmd:MD_Keywords>
+                    <gmd:keyword>
+                        <gco:CharacterString>Burned Area:Fire:Climate:Change:ESA:GCOS</gco:CharacterString>
+                    </gmd:keyword>
+                    <gmd:type>
+                        <gmd:MD_KeywordTypeCode codeList="./resources/codeList.xml#MD_KeywordTypeCode"
+                                                codeListValue="theme">theme
+                        </gmd:MD_KeywordTypeCode>
+                    </gmd:type>
+                </gmd:MD_Keywords>
+            </gmd:descriptiveKeywords>
+
+            <gmd:resourceConstraints>
+                <gmd:MD_Constraints>
+                    <gmd:useLimitation>
+                        <gco:CharacterString>esaNoMonetaryCharge</gco:CharacterString>
+                    </gmd:useLimitation>
+                </gmd:MD_Constraints>
+            </gmd:resourceConstraints>
+            <gmd:resourceConstraints>
+                <gmd:MD_LegalConstraints>
+                    <gmd:accessConstraints>
+                        <gmd:MD_RestrictionCode
+                                codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_RestrictionCode"
+                                codeListValue="otherRestrictions">otherRestrictions
+                        </gmd:MD_RestrictionCode>
+                    </gmd:accessConstraints>
+                    <gmd:otherConstraints>
+                        <gco:CharacterString>no limitation</gco:CharacterString>
+                    </gmd:otherConstraints>
+                </gmd:MD_LegalConstraints>
+            </gmd:resourceConstraints>
+
+            <gmd:spatialResolution>
+                <gmd:MD_Resolution>
+                    <gmd:distance>
+                        <gco:Distance uom="metres">300</gco:Distance>
+                    </gmd:distance>
+                </gmd:MD_Resolution>
+            </gmd:spatialResolution>
+
+            <gmd:language>
+                <gmd:LanguageCode codeList="http://www.loc.gov/standards/iso639-2/" codeListValue="eng">eng
+                </gmd:LanguageCode>
+            </gmd:language>
+
+            <gmd:extent>
+                <gmd:EX_Extent>
+                    <gmd:geographicElement>
+                        <gmd:EX_GeographicBoundingBox>
+                            <gmd:westBoundLongitude>
+                                <gco:Decimal>${westLon}</gco:Decimal>
+                            </gmd:westBoundLongitude>
+                            <gmd:eastBoundLongitude>
+                                <gco:Decimal>${eastLon}</gco:Decimal>
+                            </gmd:eastBoundLongitude>
+                            <gmd:southBoundLatitude>
+                                <gco:Decimal>${southLat}</gco:Decimal>
+                            </gmd:southBoundLatitude>
+                            <gmd:northBoundLatitude>
+                                <gco:Decimal>${northLat}</gco:Decimal>
+                            </gmd:northBoundLatitude>
+                        </gmd:EX_GeographicBoundingBox>
+                    </gmd:geographicElement>
+                </gmd:EX_Extent>
+            </gmd:extent>
+
+        </gmd:MD_DataIdentification>
+    </gmd:identificationInfo>
+
+</gmi:MI_Metadata>
