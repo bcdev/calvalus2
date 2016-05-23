@@ -23,11 +23,12 @@ import static org.junit.Assert.assertEquals;
 public class DataSourceImplTest {
 
     private DataSourceImpl dataSource;
+    private Product lcProduct;
 
     @Before
     public void setUp() throws Exception {
         Product centerProduct = createProduct(5);
-        Product lcProduct = createProduct(10);
+        lcProduct = createProduct(10);
         dataSource = new DataSourceImpl(centerProduct, lcProduct, new ArrayList<>());
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
@@ -46,7 +47,7 @@ public class DataSourceImplTest {
         SourceData data = new SourceData(pixels, areas, lcClasses, observed1, observed2);
 
         // center
-        dataSource.readPixels(new Rectangle(0, 0, 2, 2), data);
+        dataSource.readPixels(new Rectangle(0, 0, 2, 2), data, lcProduct.getSceneGeoCoding(), lcProduct.getSceneRasterWidth());
         int[] expected = {
                 5000, 5001, 5004, 5005,
         };
@@ -64,7 +65,7 @@ public class DataSourceImplTest {
         SourceData data = new SourceData(pixels, areas, lcClasses, observed, observed2);
 
         // center larger
-        dataSource.readPixels(new Rectangle(0, 0, 3, 3), data);
+        dataSource.readPixels(new Rectangle(0, 0, 3, 3), data, lcProduct.getSceneGeoCoding(), lcProduct.getSceneRasterWidth());
         int[] expected = new int[]{
                 5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
         };

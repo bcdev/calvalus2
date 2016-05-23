@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 
 import javax.script.ScriptException;
@@ -68,12 +69,18 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-        Product sourceProduct = ProductIO.readProduct(sourceProductFile);
+        boolean computeBA = !paths[0].getName().equals("dummy");
+        LOG.info(computeBA ? "Computing BA" : "Only computing coverage");
 
-        File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(lcTile);
+        Product sourceProduct = null;
+        Product lcProduct = null;
+        if (computeBA) {
+            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
+            sourceProduct = ProductIO.readProduct(sourceProductFile);
 
+            File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
+            lcProduct = ProductIO.readProduct(lcTile);
+        }
         List<File> srProducts = new ArrayList<>();
         for (int i = 2; i < paths.length; i++) {
             File srProduct = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
@@ -103,13 +110,15 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             baInLcSecondHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
         }
 
+        Product sourceForGeoCoding = ProductIO.readProduct(srProducts.get(0));
+
         int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, TARGET_RASTER_HEIGHT));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 data.reset();
                 Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
-                dataSource.readPixels(sourceRect, data);
+                dataSource.readPixels(sourceRect, data, sourceForGeoCoding.getSceneGeoCoding(), sourceForGeoCoding.getSceneRasterWidth());
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
@@ -145,6 +154,8 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             }
         }
 
+        sourceForGeoCoding.dispose();
+
         float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
         float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
 
@@ -165,7 +176,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setCoverageFirstHalf(coverageFirstHalf);
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[0]))), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2]))), gridCell);
         errorPredictor.dispose();
     }
 
@@ -198,13 +209,14 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
     }
 
     private static String getTile(Path path) {
-        int startIndex = path.toString().indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
+        // path.toString() = hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v04h07/2008/2008-06-01-fire-nc/CCI-Fire-MERIS-SDR-L3-300m-v1.0-2008-06-01-v04h07.nc
+        int startIndex = path.toString().length() - 9;
         return path.toString().substring(startIndex, startIndex + 6);
     }
 
     interface FireGridDataSource {
 
-        void readPixels(Rectangle sourceRect, SourceData data) throws IOException;
+        void readPixels(Rectangle sourceRect, SourceData data, GeoCoding geoCoding, int rasterWidth) throws IOException;
 
         void setDoyFirstOfMonth(int doyFirstOfMonth);
 

@@ -46,6 +46,8 @@ public class GridInputFormat extends InputFormat {
 
     private void createSplits(FileStatus[] fileStatuses,
                               List<InputSplit> splits, Configuration conf) throws IOException {
+
+        List<String> usedTiles = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
@@ -63,6 +65,31 @@ public class GridInputFormat extends InputFormat {
 
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
+            usedTiles.add(getTile(path.toString()));
+        }
+        for (String tile : getMissingTiles(usedTiles)) {
+            List<Path> filePaths = new ArrayList<>();
+            List<Long> fileLengths = new ArrayList<>();
+            // dummy for BA input
+            filePaths.add(new Path("dummy"));
+            fileLengths.add(0L);
+
+            // dummy for LC input
+            filePaths.add(new Path("dummy"));
+            fileLengths.add(0L);
+
+            // srStatuses
+            FileStatus[] srPaths = getSrFileStatuses(conf.get("calvalus.year"), conf.get("calvalus.month"), tile, FileSystem.get(conf));
+            for (FileStatus status : srPaths) {
+                filePaths.add(status.getPath());
+                fileLengths.add(status.getLen());
+            }
+
+            boolean hasSrData = srPaths.length > 0;
+            if (hasSrData) {
+                splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                        fileLengths.stream().mapToLong(Long::longValue).toArray()));
+            }
         }
     }
 
@@ -78,6 +105,12 @@ public class GridInputFormat extends InputFormat {
         return fileSystem.globStatus(new Path(srInputPathPattern));
     }
 
+    private FileStatus[] getSrFileStatuses(String year, String month, String tile, FileSystem fileSystem) throws IOException {
+        String baInputPath = String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/BA_PIX_MER_%s_%s%s_v4.0.tif", year, tile, year, month);
+        String srInputPathPattern = getSrInputPathPattern(baInputPath);
+        return fileSystem.globStatus(new Path(srInputPathPattern));
+    }
+
     static String getLcInputPath(String baInputPath) {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
@@ -85,6 +118,24 @@ public class GridInputFormat extends InputFormat {
         int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
+    }
+
+    static String getTile(String baPath) {
+        int startIndex = baPath.indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
+        return baPath.substring(startIndex, startIndex + 6);
+    }
+
+    static List<String> getMissingTiles(List<String> usedTiles) {
+        List<String> missingTiles = new ArrayList<>();
+        for (int v = 0; v <= 17; v++) {
+            for (int h = 0; h <= 35; h++) {
+                String tile = String.format("v%02dh%02d", v, h);
+                if (!usedTiles.contains(tile)) {
+                    missingTiles.add(tile);
+                }
+            }
+        }
+        return missingTiles;
     }
 
     static String getSrInputPathPattern(String baInputPath) {

@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
@@ -12,7 +12,6 @@ import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Offers the standard implementation for source reading pixels
@@ -24,8 +23,8 @@ class DataSourceImpl implements GridMapper.FireGridDataSource {
     private final Product sourceProduct;
     private final Product lcProduct;
     private final List<File> srProducts;
+    private final boolean computeBA;
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
     private int doyFirstOfMonth;
     private int doyLastOfMonth;
     private int doyFirstHalf;
@@ -35,15 +34,21 @@ class DataSourceImpl implements GridMapper.FireGridDataSource {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;
+        this.computeBA = sourceProduct != null;
     }
 
     @Override
-    public void readPixels(Rectangle sourceRect, SourceData data) throws IOException {
-        Band baBand = sourceProduct.getBand("band_1");
-        baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
-        getAreas(baBand, data.areas);
-        data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
-        data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
+    public void readPixels(Rectangle sourceRect, SourceData data, GeoCoding gc, int rasterWidth) throws IOException {
+        if (computeBA) {
+            Band baBand = sourceProduct.getBand("band_1");
+            baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
+            data.patchCountFirstHalf = getPatchNumbers(make2Dims(data.pixels), true);
+            data.patchCountSecondHalf = getPatchNumbers(make2Dims(data.pixels), false);
+            Band lcClassification = lcProduct.getBand("lcclass");
+            lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
+        }
+
+        getAreas(gc, rasterWidth, data.areas);
 
         byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
         byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];
@@ -69,9 +74,6 @@ class DataSourceImpl implements GridMapper.FireGridDataSource {
             collectStatusPixels(statusPixelsFirstHalf, data.statusPixelsFirstHalf);
             collectStatusPixels(statusPixelsSecondHalf, data.statusPixelsSecondHalf);
         }
-
-        Band lcClassification = lcProduct.getBand("lcclass");
-        lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
     }
 
     @Override
@@ -149,15 +151,11 @@ class DataSourceImpl implements GridMapper.FireGridDataSource {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridMapper.NO_DATA;
     }
 
-    private static double[] getAreas(Band band, double[] areas) {
-        if (band.getName().equals("null")) {
-            LOG.info(String.format("Skipping band %s because it is empty.", band.getName()));
-            return areas;
-        }
-        AreaCalculator areaCalculator = new AreaCalculator(band.getGeoCoding());
+    private static double[] getAreas(GeoCoding gc, int rasterWidth, double[] areas) {
+        AreaCalculator areaCalculator = new AreaCalculator(gc);
         for (int i = 0; i < areas.length; i++) {
-            int sourceBandX = i % band.getRasterWidth();
-            int sourceBandY = i / band.getRasterWidth();
+            int sourceBandX = i % rasterWidth;
+            int sourceBandY = i / rasterWidth;
             areas[i] = areaCalculator.calculatePixelSize(sourceBandX, sourceBandY);
         }
         return areas;
