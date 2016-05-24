@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.awt.Rectangle;
@@ -12,8 +11,8 @@ public class PixelReducerTest {
 
     @Test
     public void testCreateBaseFilename() throws Exception {
-        Assert.assertEquals("20030501-ESACCI-L3S_FIRE-BA-MERIS-AREA_3-v02.0-fv04.0-JD", PixelMergeMapper.createBaseFilename("2003", "05", PixelProductArea.EUROPE));
-        assertEquals("20101001-ESACCI-L3S_FIRE-BA-MERIS-AREA_4-v02.0-fv04.0-CL", PixelMergeMapper.createBaseFilename("2010", "10", PixelProductArea.ASIA));
+        assertEquals("20030501-ESACCI-L3S_FIRE-BA-MERIS-AREA_3-v02.0-fv04.0", PixelMergeMapper.createBaseFilename("2003", "05", PixelProductArea.EUROPE));
+        assertEquals("20101001-ESACCI-L3S_FIRE-BA-MERIS-AREA_4-v02.0-fv04.0", PixelMergeMapper.createBaseFilename("2010", "10", PixelProductArea.ASIA));
     }
 
     @Test
