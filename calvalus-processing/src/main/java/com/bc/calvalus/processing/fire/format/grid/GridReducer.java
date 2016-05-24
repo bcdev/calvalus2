@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.ceres.core.Assert;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -46,27 +47,27 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         Iterator<GridCell> iterator = values.iterator();
         GridCell gridCell = iterator.next();
 
-        float[] burnedAreaFirstHalf = gridCell.baFirstHalf;
-        float[] burnedAreaSecondHalf = gridCell.baSecondHalf;
+        int[] burnedAreaFirstHalf = gridCell.baFirstHalf;
+        int[] burnedAreaSecondHalf = gridCell.baSecondHalf;
 
         float[] patchNumbersFirstHalf = gridCell.patchNumberFirstHalf;
         float[] patchNumbersSecondHalf = gridCell.patchNumberSecondHalf;
 
-        float[] errorsFirstHalf = gridCell.errorsFirstHalf;
-        float[] errorsSecondHalf = gridCell.errorsSecondHalf;
+        int[] errorsFirstHalf = gridCell.errorsFirstHalf;
+        int[] errorsSecondHalf = gridCell.errorsSecondHalf;
 
-        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
-        List<float[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
+        List<int[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
+        List<int[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
 
         float[] coverageFirstHalf = gridCell.coverageFirstHalf;
         float[] coverageSecondHalf = gridCell.coverageSecondHalf;
 
         try {
-            writeFloatChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
+            writeIntChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
+            writeIntChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
 
-            writeFloatChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
+            writeIntChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
+            writeIntChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
 
             writeFloatChunk(key.toString(), ncFirst, "observed_area_fraction", coverageFirstHalf);
             writeFloatChunk(key.toString(), ncSecond, "observed_area_fraction", coverageSecondHalf);
@@ -75,11 +76,11 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
             writeFloatChunk(key.toString(), ncSecond, "number_of_patches", patchNumbersSecondHalf);
 
             for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-                float[] baInClass = baInLcFirstHalf.get(i);
+                int[] baInClass = baInLcFirstHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
             }
             for (int i = 0; i < baInLcSecondHalf.size(); i++) {
-                float[] baInClass = baInLcSecondHalf.get(i);
+                int[] baInClass = baInLcSecondHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
             }
         } catch (InvalidRangeException e) {
@@ -145,23 +146,33 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         }
     }
 
+    private static void writeIntChunk(String key, NetcdfFileWriter ncFile, String varName, int[] data) throws IOException, InvalidRangeException {
+        int x = getX(key);
+        int y = getY(key);
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
+
+        Variable variable = ncFile.findVariable(varName);
+        Array values = Array.factory(DataType.INT, new int[]{1, 40, 40}, data);
+        ncFile.write(variable, new int[]{0, y, x}, values);
+    }
+
     private static void writeFloatChunk(String key, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
-//        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 40, 40}, data);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 
-    private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, float[] baInClass) throws IOException, InvalidRangeException {
+    private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, int[] baInClass) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
-//        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
+        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 40, 40}, baInClass);
+        Array values = Array.factory(DataType.INT, new int[]{1, 1, 40, 40}, baInClass);
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 
@@ -313,16 +324,16 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         ncFile.addVariable(null, "time_bnds", DataType.FLOAT, "time nv");
         Variable vegetationClassVar = ncFile.addVariable(null, "vegetation_class", DataType.INT, "vegetation_class");
         vegetationClassVar.addAttribute(new Attribute("units", "1"));
-        vegetationClassVar.addAttribute(new Attribute("long_name", "vegetation class"));
+        vegetationClassVar.addAttribute(new Attribute("long_name", "vegetation class number"));
         Variable vegetationClassNameVar = ncFile.addVariable(null, "vegetation_class_name", DataType.CHAR, "vegetation_class strlen");
         vegetationClassNameVar.addAttribute(new Attribute("units", "1"));
         vegetationClassNameVar.addAttribute(new Attribute("long_name", "vegetation class name"));
-        Variable burnedAreaVar = ncFile.addVariable(null, "burned_area", DataType.FLOAT, "time lat lon");
+        Variable burnedAreaVar = ncFile.addVariable(null, "burned_area", DataType.INT, "time lat lon");
         burnedAreaVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaVar.addAttribute(new Attribute("standard_name", "burned_area"));
         burnedAreaVar.addAttribute(new Attribute("long_name", "total burned_area"));
         burnedAreaVar.addAttribute(new Attribute("cell_methods", "time: sum"));
-        Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.FLOAT, "time lat lon");
+        Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.INT, "time lat lon");
         standardErrorVar.addAttribute(new Attribute("units", "m2"));
         standardErrorVar.addAttribute(new Attribute("long_name", "standard error of the estimation of burned area"));
         Variable observedAreaFractionVar = ncFile.addVariable(null, "observed_area_fraction", DataType.FLOAT, "time lat lon");
@@ -333,7 +344,7 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         numberOfPatchesVar.addAttribute(new Attribute("units", "1"));
         numberOfPatchesVar.addAttribute(new Attribute("long_name", "number of burn patches"));
         numberOfPatchesVar.addAttribute(new Attribute("comment", "Number of contiguous groups of burned pixels."));
-        Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.FLOAT, "time vegetation_class lat lon");
+        Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.INT, "time vegetation_class lat lon");
         burnedAreaInVegClassVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
@@ -341,13 +352,13 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
 
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
         ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
-        ncFile.addGroupAttribute(null, new Attribute("version", "MERIS BA Algorithm v4"));
+        ncFile.addGroupAttribute(null, new Attribute("version", "MERIS BA Algorithm v4.0"));
         ncFile.addGroupAttribute(null, new Attribute("source", "Digital image processing of MERIS and MODIS hotspots data"));
-        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala’s consortium for ESA CCI program"));
+        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala's consortium for ESA CCI program"));
         ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative, ECV Fire Disturbance (Fire_cci)"));
-        ncFile.addGroupAttribute(null, new Attribute("references", "see http://dx.doi.org/10.1016/j.rse.2015.03.011"));
-        ncFile.addGroupAttribute(null, new Attribute("acknowledgment", "ESA CCI program"));
-        ncFile.addGroupAttribute(null, new Attribute("contact", "Emilio Chuvieco. emilio.chuvieco@uah.es"));
+        ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
+        ncFile.addGroupAttribute(null, new Attribute("acknowledgment", "ESA CCI programme"));
+        ncFile.addGroupAttribute(null, new Attribute("contact", "Emilio Chuvieco: emilio.chuvieco@uah.es"));
         ncFile.addGroupAttribute(null, new Attribute("history", ""));
         return ncFile;
     }

@@ -15,22 +15,22 @@ public class GridCell implements Writable {
 
     private static final int BAND_SIZE = GridMapper.TARGET_RASTER_WIDTH * GridMapper.TARGET_RASTER_HEIGHT;
 
-    float[] baFirstHalf;
-    float[] baSecondHalf;
+    int[] baFirstHalf;
+    int[] baSecondHalf;
     float[] patchNumberFirstHalf;
     float[] patchNumberSecondHalf;
-    float[] errorsFirstHalf;
-    float[] errorsSecondHalf;
-    List<float[]> baInLcFirstHalf;
-    List<float[]> baInLcSecondHalf;
+    int[] errorsFirstHalf;
+    int[] errorsSecondHalf;
+    List<int[]> baInLcFirstHalf;
+    List<int[]> baInLcSecondHalf;
     float[] coverageFirstHalf;
     float[] coverageSecondHalf;
 
-    void setBaFirstHalf(float[] baFirstHalf) {
+    void setBaFirstHalf(int[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
     }
 
-    void setBaSecondHalf(float[] baSecondHalf) {
+    void setBaSecondHalf(int[] baSecondHalf) {
         this.baSecondHalf = baSecondHalf;
     }
 
@@ -42,19 +42,19 @@ public class GridCell implements Writable {
         this.patchNumberSecondHalf = patchNumberSecondHalf;
     }
 
-    void setErrorsFirstHalf(float[] errorsFirstHalf) {
+    void setErrorsFirstHalf(int[] errorsFirstHalf) {
         this.errorsFirstHalf = errorsFirstHalf;
     }
 
-    void setErrorsSecondHalf(float[] errorsSecondHalf) {
+    void setErrorsSecondHalf(int[] errorsSecondHalf) {
         this.errorsSecondHalf = errorsSecondHalf;
     }
 
-    void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
+    void setBaInLcFirstHalf(List<int[]> baInLcFirstHalf) {
         this.baInLcFirstHalf = baInLcFirstHalf;
     }
 
-    void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
+    void setBaInLcSecondHalf(List<int[]> baInLcSecondHalf) {
         this.baInLcSecondHalf = baInLcSecondHalf;
     }
 
@@ -68,11 +68,11 @@ public class GridCell implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
-        for (float v : baFirstHalf) {
-            out.writeFloat(v);
+        for (int v : baFirstHalf) {
+            out.writeInt(v);
         }
-        for (float v : baSecondHalf) {
-            out.writeFloat(v);
+        for (int v : baSecondHalf) {
+            out.writeInt(v);
         }
         for (float v : patchNumberFirstHalf) {
             out.writeFloat(v);
@@ -80,20 +80,20 @@ public class GridCell implements Writable {
         for (float v : patchNumberSecondHalf) {
             out.writeFloat(v);
         }
-        for (float v : errorsFirstHalf) {
-            out.writeFloat(v);
+        for (int v : errorsFirstHalf) {
+            out.writeInt(v);
         }
-        for (float v : errorsSecondHalf) {
-            out.writeFloat(v);
+        for (int v : errorsSecondHalf) {
+            out.writeInt(v);
         }
-        for (float[] lcClass : baInLcFirstHalf) {
-            for (float value : lcClass) {
-                out.writeFloat(value);
+        for (int[] lcClass : baInLcFirstHalf) {
+            for (int value : lcClass) {
+                out.writeInt(value);
             }
         }
-        for (float[] lcClass : baInLcSecondHalf) {
-            for (float value : lcClass) {
-                out.writeFloat(value);
+        for (int[] lcClass : baInLcSecondHalf) {
+            for (int value : lcClass) {
+                out.writeInt(value);
             }
         }
         for (float v : coverageFirstHalf) {
@@ -106,26 +106,26 @@ public class GridCell implements Writable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        baFirstHalf = new float[BAND_SIZE];
-        baSecondHalf = new float[BAND_SIZE];
+        baFirstHalf = new int[BAND_SIZE];
+        baSecondHalf = new int[BAND_SIZE];
         patchNumberFirstHalf = new float[BAND_SIZE];
         patchNumberSecondHalf = new float[BAND_SIZE];
-        errorsFirstHalf = new float[BAND_SIZE];
-        errorsSecondHalf = new float[BAND_SIZE];
+        errorsFirstHalf = new int[BAND_SIZE];
+        errorsSecondHalf = new int[BAND_SIZE];
         baInLcFirstHalf = new ArrayList<>();
         baInLcSecondHalf = new ArrayList<>();
         for (int lcClass = 0; lcClass < GridMapper.LC_CLASSES_COUNT; lcClass++) {
-            baInLcFirstHalf.add(new float[BAND_SIZE]);
-            baInLcSecondHalf.add(new float[BAND_SIZE]);
+            baInLcFirstHalf.add(new int[BAND_SIZE]);
+            baInLcSecondHalf.add(new int[BAND_SIZE]);
         }
         coverageFirstHalf = new float[BAND_SIZE];
         coverageSecondHalf = new float[BAND_SIZE];
 
         for (int i = 0; i < BAND_SIZE; i++) {
-            baFirstHalf[i] = in.readFloat();
+            baFirstHalf[i] = in.readInt();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            baSecondHalf[i] = in.readFloat();
+            baSecondHalf[i] = in.readInt();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             patchNumberFirstHalf[i] = in.readFloat();
@@ -134,19 +134,19 @@ public class GridCell implements Writable {
             patchNumberSecondHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            errorsFirstHalf[i] = in.readFloat();
+            errorsFirstHalf[i] = in.readInt();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            errorsSecondHalf[i] = in.readFloat();
+            errorsSecondHalf[i] = in.readInt();
         }
-        for (float[] lcClass : baInLcFirstHalf) {
+        for (int[] lcClass : baInLcFirstHalf) {
             for (int i = 0; i < lcClass.length; i++) {
-                lcClass[i] = in.readFloat();
+                lcClass[i] = in.readInt();
             }
         }
-        for (float[] lcClass : baInLcSecondHalf) {
+        for (int[] lcClass : baInLcSecondHalf) {
             for (int i = 0; i < lcClass.length; i++) {
-                lcClass[i] = in.readFloat();
+                lcClass[i] = in.readInt();
             }
         }
         for (int i = 0; i < BAND_SIZE; i++) {

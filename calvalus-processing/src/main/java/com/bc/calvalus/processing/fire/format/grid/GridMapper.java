@@ -96,18 +96,18 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         SourceData data = new SourceData();
         double[] areas = new double[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        float[] baFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        int[] baFirstHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        int[] baSecondHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
-        List<float[]> baInLcFirstHalf = new ArrayList<>();
-        List<float[]> baInLcSecondHalf = new ArrayList<>();
+        List<int[]> baInLcFirstHalf = new ArrayList<>();
+        List<int[]> baInLcSecondHalf = new ArrayList<>();
         for (int c = 0; c < LC_CLASSES_COUNT; c++) {
-            baInLcFirstHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
-            baInLcSecondHalf.add(new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
+            baInLcFirstHalf.add(new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
+            baInLcSecondHalf.add(new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
         }
 
         Product sourceForGeoCoding = ProductIO.readProduct(srProducts.get(0));
@@ -143,8 +143,8 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     areas[targetPixelIndex] += data.areas[i];
                 }
 
-                baFirstHalf[targetPixelIndex] = baValueFirstHalf;
-                baSecondHalf[targetPixelIndex] = baValueSecondHalf;
+                baFirstHalf[targetPixelIndex] = (int) baValueFirstHalf;
+                baSecondHalf[targetPixelIndex] = (int) baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
                 coverageFirstHalf[targetPixelIndex] = getCoverage(coverageValueFirstHalf, areas[targetPixelIndex]);
@@ -156,11 +156,8 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         sourceForGeoCoding.dispose();
 
-        float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
-        float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
-
-        cleanErrors(baFirstHalf, errorsFirstHalf);
-        cleanErrors(baSecondHalf, errorsSecondHalf);
+        int[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
+        int[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
 
         context.progress();
 
@@ -192,15 +189,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
-    private static void cleanErrors(float[] ba, float[] errors) {
-        for (int i = 0; i < errors.length; i++) {
-            if (ba[i] == 0.0) {
-                errors[i] = 0.0F;
-            }
-        }
-    }
-
-    private float[] predict(ErrorPredictor errorPredictor, float[] ba, double[] areas) {
+    private int[] predict(ErrorPredictor errorPredictor, int[] ba, double[] areas) {
         try {
             return errorPredictor.predictError(ba, areas);
         } catch (ScriptException e) {
