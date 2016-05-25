@@ -18,8 +18,6 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.beam.GpfUtils;
-import com.bc.ceres.core.NullProgressMonitor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
@@ -68,7 +66,6 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
-        GpfUtils.init(context.getConfiguration());  // set system properties from request
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
         PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
@@ -112,13 +109,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             fw.write(metadata);
         }
         CalvalusLogger.getLogger().info("...done. Writing final product...");
-        ProductIO.writeProduct(result, baseFilename + ".tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME, new NullProgressMonitor() {
-            @Override
-            public void internalWorked(double work) {
-                CalvalusLogger.getLogger().info("Tile written.");
-                context.progress();
-            }
-        });
+        ProductIO.writeProduct(result, baseFilename + ".tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
         CalvalusLogger.getLogger().info("...done. Creating zip of final product...");
         String zipFilename = baseFilename + ".tar.gz";
         createTarGZ(baseFilename + ".tif", baseFilename + ".xml", zipFilename);
@@ -172,6 +163,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
              OutputStream bOut = new BufferedOutputStream(fOut);
              OutputStream gzOut = new GzipCompressorOutputStream(bOut);
              TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
+            tOut.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
             addFileToTarGz(tOut, filePath, "");
             addFileToTarGz(tOut, xmlPath, "");
         }
