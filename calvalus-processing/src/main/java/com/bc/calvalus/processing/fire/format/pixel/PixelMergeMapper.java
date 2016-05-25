@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
@@ -92,12 +93,18 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         Product inputVar3 = ProductIO.readProduct(variableFiles[2].getName().substring(0, variableFiles[0].getName().indexOf(".")) + ".dim");
         CalvalusLogger.getLogger().info("done.");
 
+        Band JD = findBand(PixelVariableType.DAY_OF_YEAR.bandName, inputVar1, inputVar2, inputVar3);
+        Band CL = findBand(PixelVariableType.CONFIDENCE_LEVEL.bandName, inputVar1, inputVar2, inputVar3);
+        Band LC = findBand(PixelVariableType.LC_CLASS.bandName, inputVar1, inputVar2, inputVar3);
+
+        context.progress();
+
         String baseFilename = createBaseFilename(year, month, area);
         Product result = new Product(baseFilename, "fire-cci-pixel-product", inputVar1.getSceneRasterWidth(), inputVar1.getSceneRasterHeight());
         ProductUtils.copyGeoCoding(inputVar1, result);
-        ProductUtils.copyBand(inputVar1.getBandAt(0).getName(), inputVar1, result, true);
-        ProductUtils.copyBand(inputVar2.getBandAt(0).getName(), inputVar2, result, true);
-        ProductUtils.copyBand(inputVar3.getBandAt(0).getName(), inputVar3, result, true);
+        ProductUtils.copyBand(JD.getName(), JD.getProduct(), result, true);
+        ProductUtils.copyBand(CL.getName(), CL.getProduct(), result, true);
+        ProductUtils.copyBand(LC.getName(), LC.getProduct(), result, true);
 
         CalvalusLogger.getLogger().info("Creating metadata...");
         String metadata = createMetadata(year, month, area);
@@ -123,6 +130,16 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
+    }
+
+    private Band findBand(String bandName, Product... products) {
+        for (Product product : products) {
+            Band band = product.getBand(bandName);
+            if (band != null) {
+                return band;
+            }
+        }
+        throw new IllegalArgumentException(String.format("Cannot find band %s in any of the given products", bandName));
     }
 
     static String createMetadata(String year, String month, PixelProductArea area) {

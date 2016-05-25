@@ -1,10 +1,10 @@
-package com.bc.calvalus.processing.fire.format.grid;
+package com.bc.calvalus.processing.fire.format;
 
 /**
  */
-class GridLcRemapping {
+public class LcRemapping {
 
-    static boolean isInLcClass(int targetLcClass, int sourceLcClass) {
+    public static boolean isInLcClass(int targetLcClass, int sourceLcClass) {
         switch (targetLcClass) {
             case 1:
                 return sourceLcClass == 10;
@@ -44,5 +44,48 @@ class GridLcRemapping {
                 return sourceLcClass == -76;
         }
         throw new IllegalArgumentException(String.format("Illegal single target class: %d", targetLcClass));
+    }
+
+    public static int remap(int sourceLcClass) {
+        switch (sourceLcClass) {
+            case 10:
+                return 10;
+            case 20:
+                return 20;
+            case 30:
+                return 30;
+            case 40:
+                return 40;
+            case 50:
+                return 50;
+            case 60:
+                return 60;
+            case 70:
+                return 70;
+            case 80:
+                return 80;
+            case 90:
+                return 90;
+            case 100:
+                return 100;
+            case 110:
+                return 110;
+            case 120:
+                return 120;
+            case -126:
+                return 130;
+            case -116:
+                return 140;
+            case -106:
+                return 150;
+            case -96:
+                return 160;
+            case -86:
+                return 170;
+            case -76:
+                return 180;
+        }
+        return sourceLcClass;
+//        throw new IllegalArgumentException("Unsupported LC class: " + sourceLcClass);
     }
 }

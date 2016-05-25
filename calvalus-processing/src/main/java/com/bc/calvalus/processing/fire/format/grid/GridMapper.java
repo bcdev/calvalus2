@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -130,12 +131,12 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += GridLcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += GridLcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
                         }
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;

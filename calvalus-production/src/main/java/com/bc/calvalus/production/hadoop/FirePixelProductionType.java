@@ -70,6 +70,7 @@ public class FirePixelProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String year = productionRequest.getString("calvalus.year");
         String month = productionRequest.getString("calvalus.month");
+        PixelProductArea area = PixelProductArea.valueOf(productionRequest.getString("calvalus.area"));
         String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", year, month);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
@@ -80,22 +81,18 @@ public class FirePixelProductionType extends HadoopProductionType {
 
         Workflow merisFormattingWorkflow = new Workflow.Parallel();
         String userName = productionRequest.getUserName();
-        for (PixelProductArea area : PixelProductArea.values()) {
-            Workflow areaWorkflow = new Workflow.Sequential();
-            Workflow variableWorkflow = new Workflow.Parallel();
-            if (area == PixelProductArea.ASIA) {
-                for (PixelVariableType type : PixelVariableType.values()) {
-                    CalvalusLogger.getLogger().info(String.format("Creating workflow item for area %s and variable %s.", area, type.name()));
-                    FirePixelFormatVariableWorkflowItem item = new FirePixelFormatVariableWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_" + type.name(), area, type, jobConfig);
-                    variableWorkflow.add(item);
-                }
-                areaWorkflow.add(variableWorkflow);
-                FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_merging", area, jobConfig);
-                mergingWorkflowItem.setInputDir(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "-to-merge");
-                areaWorkflow.add(mergingWorkflowItem);
-            }
-            merisFormattingWorkflow.add(areaWorkflow);
+        Workflow areaWorkflow = new Workflow.Sequential();
+        Workflow variableWorkflow = new Workflow.Parallel();
+        for (PixelVariableType type : PixelVariableType.values()) {
+            CalvalusLogger.getLogger().info(String.format("Creating workflow item for area %s and variable %s.", area, type.name()));
+            FirePixelFormatVariableWorkflowItem item = new FirePixelFormatVariableWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_" + type.name(), area, type, jobConfig);
+            variableWorkflow.add(item);
         }
+        areaWorkflow.add(variableWorkflow);
+        FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_merging", area, jobConfig);
+        mergingWorkflowItem.setInputDir(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "-to-merge");
+        areaWorkflow.add(mergingWorkflowItem);
+        merisFormattingWorkflow.add(areaWorkflow);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         return new Production(productionId,

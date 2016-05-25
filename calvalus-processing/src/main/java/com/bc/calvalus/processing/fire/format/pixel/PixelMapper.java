@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -62,18 +63,36 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         PixelCell pixelCell = new PixelCell();
         pixelCell.values = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        int[] doy = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
 
         switch (variableType) {
             case DAY_OF_YEAR:
-                sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                System.arraycopy(doy, 0, pixelCell.values, 0, doy.length);
                 break;
             case CONFIDENCE_LEVEL:
                 sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                for (int i = 0; i < pixelCell.values.length; i++) {
+                    pixelCell.values[i] = pixelCell.values[i] / 100;
+                    if (doy[i] == 999) {
+                        pixelCell.values[i] = 999;
+                    }
+                }
                 break;
             case LC_CLASS:
                 lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
-
+                for (int i = 0; i < pixelCell.values.length; i++) {
+                    if (doy[i] == 999) {
+                        pixelCell.values[i] = 999;
+                    } else if (doy[i] == 0) {
+                        pixelCell.values[i] = 0;
+                    } else {
+                        pixelCell.values[i] = LcRemapping.remap(pixelCell.values[i]);
+                    }
+                }
+                break;
         }
+
         context.progress();
         context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[0]))), pixelCell);
     }
