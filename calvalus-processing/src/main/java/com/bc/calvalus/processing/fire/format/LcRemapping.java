@@ -4,6 +4,8 @@ package com.bc.calvalus.processing.fire.format;
  */
 public class LcRemapping {
 
+    public static final int INVALID_LC_CLASS = 0;
+
     public static boolean isInLcClass(int targetLcClass, int sourceLcClass) {
         switch (targetLcClass) {
             case 1:
@@ -43,7 +45,7 @@ public class LcRemapping {
             case 18:
                 return sourceLcClass == -76;
         }
-        throw new IllegalArgumentException(String.format("Illegal single target class: %d", targetLcClass));
+        throw new IllegalArgumentException(String.format("Illegal target class: %d", targetLcClass));
     }
 
     public static int remap(int sourceLcClass) {
@@ -85,7 +87,6 @@ public class LcRemapping {
             case -76:
                 return 180;
         }
-        return sourceLcClass;
-//        throw new IllegalArgumentException("Unsupported LC class: " + sourceLcClass);
+        return INVALID_LC_CLASS;
     }
 }

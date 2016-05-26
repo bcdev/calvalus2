@@ -63,12 +63,22 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         PixelCell pixelCell = new PixelCell();
         pixelCell.values = new int[RASTER_WIDTH * RASTER_HEIGHT];
+
         int[] doy = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        int[] lc = new int[RASTER_WIDTH * RASTER_HEIGHT];
+
         sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
+        lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, lc);
 
         switch (variableType) {
             case DAY_OF_YEAR:
-                System.arraycopy(doy, 0, pixelCell.values, 0, doy.length);
+                for (int i = 0; i < lc.length; i++) {
+                    if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
+                        pixelCell.values[i] = 0;
+                    } else {
+                        pixelCell.values[i] = doy[i];
+                    }
+                }
                 break;
             case CONFIDENCE_LEVEL:
                 sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
@@ -80,7 +90,7 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
                 }
                 break;
             case LC_CLASS:
-                lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                System.arraycopy(lc, 0, pixelCell.values, 0, lc.length);
                 for (int i = 0; i < pixelCell.values.length; i++) {
                     if (doy[i] == 999) {
                         pixelCell.values[i] = 999;
