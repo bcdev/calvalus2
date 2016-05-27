@@ -13,20 +13,20 @@ public class PixelCell implements Writable {
 
     private static final int BAND_SIZE = PixelMapper.RASTER_WIDTH * PixelMapper.RASTER_HEIGHT;
 
-    int[] values;
+    short[] values;
 
     @Override
     public void write(DataOutput out) throws IOException {
-        for (int v : values) {
-            out.writeInt(v);
+        for (short v : values) {
+            out.writeShort(v);
         }
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        values = new int[BAND_SIZE];
+        values = new short[BAND_SIZE];
         for (int i = 0; i < BAND_SIZE; i++) {
-            values[i] = in.readInt();
+            values[i] = in.readShort();
         }
     }
 }

@@ -75,8 +75,8 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
 
         CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d (tile %s) into variable '%s'", leftTargetXForTile, topTargetYForTile, width, height, key, variableType.bandName));
 
-        int[] data = getTargetValues(leftXSrc, maxXSrc, topYSrc, maxYSrc, pixelCell.values);
-        product.getProductWriter().writeBandRasterData(band, leftTargetXForTile, topTargetYForTile, width, height, new ProductData.Int(data), ProgressMonitor.NULL);
+        short[] data = getTargetValues(leftXSrc, maxXSrc, topYSrc, maxYSrc, pixelCell.values);
+        product.getProductWriter().writeBandRasterData(band, leftTargetXForTile, topTargetYForTile, width, height, new ProductData.Short(data), ProgressMonitor.NULL);
     }
 
     @Override
@@ -104,7 +104,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         String baseFilename = variableType.bandName;
 
         product = new Product(baseFilename, "Fire_CCI-Pixel Product", sceneRasterWidth, sceneRasterHeight);
-        product.addBand(variableType.bandName, ProductData.TYPE_INT32);
+        product.addBand(variableType.bandName, ProductData.TYPE_INT16);
         product.setSceneGeoCoding(createGeoCoding(area, sceneRasterWidth, sceneRasterHeight));
         File fileLocation = new File("./" + baseFilename + ".dim");
         product.setFileLocation(fileLocation);
@@ -148,13 +148,13 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         return new Rectangle(x, y, width, height);
     }
 
-    static int[] getTargetValues(int leftXSrc, int maxXSrc, int topYSrc, int maxYSrc, int[] sourceValues) {
+    static short[] getTargetValues(int leftXSrc, int maxXSrc, int topYSrc, int maxYSrc, short[] sourceValues) {
         int fullWidthSrc = (int) Math.sqrt(sourceValues.length);
 
         int width = maxXSrc - leftXSrc + 1;
         int height = maxYSrc - topYSrc + 1;
 
-        int[] data = new int[(width) * (height)];
+        short[] data = new short[(width) * (height)];
         int targetLine = 0;
         for (int y = topYSrc; y <= maxYSrc; y++) {
             int srcPos = y * fullWidthSrc + leftXSrc;

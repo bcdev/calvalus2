@@ -62,10 +62,11 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         Product lcProduct = ProductIO.readProduct(lcTile);
 
         PixelCell pixelCell = new PixelCell();
-        pixelCell.values = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        pixelCell.values = new short[RASTER_WIDTH * RASTER_HEIGHT];
 
         int[] doy = new int[RASTER_WIDTH * RASTER_HEIGHT];
         int[] lc = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        int[] cl = new int[RASTER_WIDTH * RASTER_HEIGHT];
 
         sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
         lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, lc);
@@ -73,31 +74,32 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         switch (variableType) {
             case DAY_OF_YEAR:
                 for (int i = 0; i < lc.length; i++) {
-                    if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
+                    if (doy[i] == 999) {
+                        pixelCell.values[i] = 999;
+                    } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
                         pixelCell.values[i] = 0;
                     } else {
-                        pixelCell.values[i] = doy[i];
+                        pixelCell.values[i] = (short) doy[i];
                     }
                 }
                 break;
             case CONFIDENCE_LEVEL:
-                sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, pixelCell.values);
+                sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, cl);
                 for (int i = 0; i < pixelCell.values.length; i++) {
-                    pixelCell.values[i] = pixelCell.values[i] / 100;
+                    pixelCell.values[i] = (short) (cl[i] / 100);
                     if (doy[i] == 999) {
                         pixelCell.values[i] = 999;
                     }
                 }
                 break;
             case LC_CLASS:
-                System.arraycopy(lc, 0, pixelCell.values, 0, lc.length);
                 for (int i = 0; i < pixelCell.values.length; i++) {
                     if (doy[i] == 999) {
                         pixelCell.values[i] = 999;
                     } else if (doy[i] == 0) {
                         pixelCell.values[i] = 0;
                     } else {
-                        pixelCell.values[i] = LcRemapping.remap(pixelCell.values[i]);
+                        pixelCell.values[i] = (short) LcRemapping.remap(lc[i]);
                     }
                 }
                 break;

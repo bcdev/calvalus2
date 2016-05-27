@@ -32,6 +32,7 @@ import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
@@ -66,6 +67,11 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "256");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "256");
+        System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
         PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
@@ -109,7 +115,11 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             fw.write(metadata);
         }
         CalvalusLogger.getLogger().info("...done. Writing final product...");
-        ProductIO.writeProduct(result, baseFilename + ".tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+
+        final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
+        geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
+
         CalvalusLogger.getLogger().info("...done. Creating zip of final product...");
         String zipFilename = baseFilename + ".tar.gz";
         createTarGZ(baseFilename + ".tif", baseFilename + ".xml", zipFilename);
