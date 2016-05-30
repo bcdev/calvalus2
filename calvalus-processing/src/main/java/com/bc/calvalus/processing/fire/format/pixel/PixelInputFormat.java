@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.bc.calvalus.processing.fire.format.CommonUtils.getTile;
+
 /**
  * @author thomas
  */
@@ -30,7 +32,7 @@ public class PixelInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
         PixelProductArea area = PixelProductArea.valueOf(conf.get("area"));
-        String inputPathPattern = getInputPathPatterns(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
+        String inputPathPattern = getInputPathPattern(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
         CalvalusLogger.getLogger().info("Input path pattern = " + inputPathPattern);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -39,12 +41,12 @@ public class PixelInputFormat extends InputFormat {
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPattern, conf);
 
-        createSplits(fileStatuses, splits, conf);
+        createSplits(fileStatuses, splits, conf, hdfsInventoryService);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    static String getInputPathPatterns(String year, String month, PixelProductArea area) {
+    static String getInputPathPattern(String year, String month, PixelProductArea area) {
         StringBuilder groupsForArea = new StringBuilder();
         int firstTileV = area.top / 10;
         int firstTileH = area.left / 10;
@@ -59,8 +61,23 @@ public class PixelInputFormat extends InputFormat {
         return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*%s%s.*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1), year, month);
     }
 
-    private void createSplits(FileStatus[] fileStatuses,
-                              List<InputSplit> splits, Configuration conf) throws IOException {
+    private static String getLcInputPathPattern(String year, PixelProductArea area) {
+        StringBuilder groupsForArea = new StringBuilder();
+        int firstTileV = area.top / 10;
+        int firstTileH = area.left / 10;
+        int lastTileV = area.bottom / 10;
+        int lastTileH = area.right / 10;
+        for (int tileV = firstTileV; tileV <= lastTileV; tileV++) {
+            for (int tileH = firstTileH; tileH <= lastTileH; tileH++) {
+                String tile = String.format("v%02dh%02d|", tileV, tileH);
+                groupsForArea.append(tile);
+            }
+        }
+        return String.format("hdfs://calvalus/calvalus/projects/fire/aux/lc/lc-%s-(%s).*nc", lcYear(Integer.parseInt(year)), groupsForArea.substring(0, groupsForArea.length() - 1));
+    }
+
+    private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, HdfsInventoryService hdfsInventoryService) throws IOException {
+        List<String> usedTiles = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
@@ -70,6 +87,26 @@ public class PixelInputFormat extends InputFormat {
             FileStatus lcPath = getLcFileStatus(path, path.getFileSystem(conf));
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());
+            splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                    fileLengths.stream().mapToLong(Long::longValue).toArray()));
+            usedTiles.add(getTile(path.toString()));
+        }
+
+        String year = conf.get("calvalus.year");
+        PixelProductArea area = PixelProductArea.valueOf(conf.get("calvalus.area"));
+        String lcInputPathPattern = getLcInputPathPattern(year, area);
+        for (String usedTile : usedTiles) {
+            lcInputPathPattern = lcInputPathPattern.replace(usedTile + "|", "").replace(usedTile, "");
+        }
+        FileStatus[] lcFileStatuses = getFileStatuses(hdfsInventoryService, lcInputPathPattern, conf);
+        for (FileStatus lcFileStatus : lcFileStatuses) {
+            List<Path> filePaths = new ArrayList<>();
+            List<Long> fileLengths = new ArrayList<>();
+            // dummy for BA input
+            filePaths.add(new Path("dummy"));
+            fileLengths.add(0L);
+            filePaths.add(lcFileStatus.getPath());
+            fileLengths.add(lcFileStatus.getLen());
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }

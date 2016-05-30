@@ -55,8 +55,8 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-        Product sourceProduct = ProductIO.readProduct(sourceProductFile);
+        boolean mosaicBA = !paths[0].getName().equals("dummy");
+        LOG.info(mosaicBA ? "Mosaicking BA data" : "Only mosaicking burnable/non-burnable");
 
         File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcTile);
@@ -68,50 +68,64 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         int[] lc = new int[RASTER_WIDTH * RASTER_HEIGHT];
         int[] cl = new int[RASTER_WIDTH * RASTER_HEIGHT];
 
-        sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
         lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, lc);
 
-        switch (variableType) {
-            case DAY_OF_YEAR:
-                for (int i = 0; i < lc.length; i++) {
-                    if (doy[i] == 999) {
-                        pixelCell.values[i] = 999;
-                    } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
-                        pixelCell.values[i] = 0;
-                    } else {
-                        pixelCell.values[i] = (short) doy[i];
+        if (mosaicBA) {
+            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
+            Product sourceProduct = ProductIO.readProduct(sourceProductFile);
+            sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
+
+            switch (variableType) {
+                case DAY_OF_YEAR:
+                    for (int i = 0; i < lc.length; i++) {
+                        if (doy[i] == 999) {
+                            pixelCell.values[i] = 999;
+                        } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
+                            pixelCell.values[i] = 0;
+                        } else {
+                            pixelCell.values[i] = (short) doy[i];
+                        }
                     }
-                }
-                break;
-            case CONFIDENCE_LEVEL:
-                sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, cl);
-                for (int i = 0; i < pixelCell.values.length; i++) {
-                    pixelCell.values[i] = (short) (cl[i] / 100);
-                    if (doy[i] == 999) {
-                        pixelCell.values[i] = 999;
+                    break;
+                case CONFIDENCE_LEVEL:
+                    sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, cl);
+                    for (int i = 0; i < pixelCell.values.length; i++) {
+                        pixelCell.values[i] = (short) (cl[i] / 100);
+                        if (doy[i] == 999) {
+                            pixelCell.values[i] = 999;
+                        }
                     }
-                }
-                break;
-            case LC_CLASS:
-                for (int i = 0; i < pixelCell.values.length; i++) {
-                    if (doy[i] == 999) {
-                        pixelCell.values[i] = 999;
-                    } else if (doy[i] == 0) {
-                        pixelCell.values[i] = 0;
-                    } else {
-                        pixelCell.values[i] = (short) LcRemapping.remap(lc[i]);
+                    break;
+                case LC_CLASS:
+                    for (int i = 0; i < pixelCell.values.length; i++) {
+                        if (doy[i] == 999) {
+                            pixelCell.values[i] = 999;
+                        } else if (doy[i] == 0) {
+                            pixelCell.values[i] = 0;
+                        } else {
+                            pixelCell.values[i] = (short) LcRemapping.remap(lc[i]);
+                        }
                     }
-                }
-                break;
+                    break;
+            }
+        } else {
+            for (int i = 0; i < lc.length; i++) {
+                pixelCell.values[i] = (short) (lc[i] == -46 ? 999 : 0);
+            }
         }
 
         context.progress();
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[0]))), pixelCell);
+        String tile = mosaicBA ? getTileFromBA(paths[0]) : getTileFromLC(paths[1]);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), pixelCell);
     }
 
-    private static String getTile(Path path) {
+    private static String getTileFromBA(Path path) {
         int startIndex = path.toString().indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
         return path.toString().substring(startIndex, startIndex + 6);
+    }
+
+    private static String getTileFromLC(Path path) {
+        return path.toString().substring(path.toString().length() - 9, path.toString().length() - 3);
     }
 
 }

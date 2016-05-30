@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -65,9 +66,9 @@ public class GridInputFormat extends InputFormat {
 
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
-            usedTiles.add(getTile(path.toString()));
+            usedTiles.add(CommonUtils.getTile(path.toString()));
         }
-        for (String tile : getMissingTiles(usedTiles)) {
+        for (String tile : CommonUtils.getMissingTiles(usedTiles)) {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
             // dummy for BA input
@@ -118,24 +119,6 @@ public class GridInputFormat extends InputFormat {
         int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
-    }
-
-    static String getTile(String baPath) {
-        int startIndex = baPath.indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
-        return baPath.substring(startIndex, startIndex + 6);
-    }
-
-    static List<String> getMissingTiles(List<String> usedTiles) {
-        List<String> missingTiles = new ArrayList<>();
-        for (int v = 0; v <= 17; v++) {
-            for (int h = 0; h <= 35; h++) {
-                String tile = String.format("v%02dh%02d", v, h);
-                if (!usedTiles.contains(tile)) {
-                    missingTiles.add(tile);
-                }
-            }
-        }
-        return missingTiles;
     }
 
     static String getSrInputPathPattern(String baInputPath) {

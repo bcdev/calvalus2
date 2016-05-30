@@ -19,7 +19,7 @@ public class PixelInputFormatTest {
                 "v05h15|v05h16|v05h17|v05h18|v05h19|v05h20|v05h21|v05h22|v05h23|" +
                 "v06h15|v06h16|v06h17|v06h18|v06h19|v06h20|v06h21|v06h22|v06h23)" +
                 ".*200206.*tif";
-        Assert.assertEquals(expected, PixelInputFormat.getInputPathPatterns("2002", "06", PixelProductArea.EUROPE));
+        Assert.assertEquals(expected, PixelInputFormat.getInputPathPattern("2002", "06", PixelProductArea.EUROPE));
     }
 
 }
