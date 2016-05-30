@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
@@ -201,6 +202,10 @@ public class CalvalusProductIO {
             ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
             if (canHandle(readerPlugIn, inputClass)) {
                 try {
+                    // TODO Is it ok to set this in the shared configuration?
+                    if (input instanceof PathConfiguration) {
+                        ((PathConfiguration) input).getConfiguration().set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+                    }
                     return productReader.readProductNodes(input, null);
                 } catch (IOException e) {
                     return null;
