@@ -116,7 +116,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         double easting = area.left - 180;
         double northing = 90 - area.top;
         try {
-            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, sceneRasterWidth, sceneRasterHeight, easting, northing, 1 / 360.0, 1 / 360.0);
+            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, sceneRasterWidth, sceneRasterHeight, easting, northing, 1 / 360.0, 1 / 360.0, 0.0, 0.0);
         } catch (FactoryException | TransformException e) {
             throw new IOException("Unable to create geo-coding", e);
         }
