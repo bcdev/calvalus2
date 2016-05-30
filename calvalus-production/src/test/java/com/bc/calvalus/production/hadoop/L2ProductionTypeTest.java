@@ -156,7 +156,7 @@ public class L2ProductionTypeTest {
         assertEquals("Level 2 BandMaths",
                      productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/[^_\\.].*(?:${yyyy}${MM}${dd}|${yyyy}${DDD}).*\\.seq$",
                 productSet.getPath());
         assertNull(productSet.getMinDate());
         assertNull(productSet.getMaxDate());
@@ -230,7 +230,7 @@ public class L2ProductionTypeTest {
         assertEquals("Generic-L2", productSet.getProductType());
         assertEquals("My Math Production", productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/[^_\\.].*(?:${yyyy}${MM}${dd}|${yyyy}${DDD}).*\\.seq$",
                 productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
@@ -289,7 +289,7 @@ public class L2ProductionTypeTest {
                 "Level 2 BandMaths 2005-01-01 to 2005-01-31 (Island In The Sun)",
                 productSet.getName());
         assertEquals(
-                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/.[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$",
+                "hdfs://master00:9000/calvalus/outputs/home/ewa/" + production.getId() + "/[^_\\.].*(?:${yyyy}${MM}${dd}|${yyyy}${DDD}).*\\.seq$",
                 productSet.getPath());
         assertEquals("2005-01-01", ProductionRequest.getDateFormat().format(productSet.getMinDate()));
         assertEquals("2005-01-31", ProductionRequest.getDateFormat().format(productSet.getMaxDate()));
