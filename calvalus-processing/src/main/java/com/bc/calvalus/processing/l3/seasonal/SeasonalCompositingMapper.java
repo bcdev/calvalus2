@@ -54,10 +54,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         // /calvalus/eodata/MERIS_SR_FR/v1.0/2010/2010-01-01/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20100101-v1.0.nc
         final Configuration conf = context.getConfiguration();
         final int mosaicHeight;
+        final boolean withMaxNdvi;
         try {
-            mosaicHeight = BinningConfig.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS)).getNumRows();
+            final BinningConfig binningConfig = BinningConfig.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+            mosaicHeight = binningConfig.getNumRows();
+            withMaxNdvi = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "ON_MAX_SET".equals(binningConfig.getAggregatorConfigs()[0].getName());
+            LOG.info("compositing by " + (withMaxNdvi ? "maximum NDVI" : "averaging"));
         } catch (BindingException e) {
-            throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
+            throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
         final int bandTileHeight = mosaicHeight / 36;  // 64800 / 36 = 1800, 16200 / 36 = 450
         final int bandTileWidth = bandTileHeight;
@@ -162,8 +166,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             final int stateCount = count(state, bandDataS, iSrc);
                             accu[1][iDst] += stateCount;
                             accu[2][iDst] += count(bandDataS, iSrc);
-                            for (int b = 3; b < numTargetBands; ++b) {
-                                accu[b][iDst] += stateCount * bandDataF[b+3][iSrc];
+                            if (withMaxNdvi) {
+                                if (bandDataF[numTargetBands-1 + 3][iSrc] > accu[numTargetBands-1][iDst]) {
+                                    for (int b = 3; b < numTargetBands; ++b) {
+                                        accu[b][iDst] = bandDataF[b + 3][iSrc];
+                                    }
+                                }
+                            } else {
+                                for (int b = 3; b < numTargetBands; ++b) {
+                                    accu[b][iDst] += stateCount * bandDataF[b + 3][iSrc];
+                                }
                             }
                         } else if (rank(state) > rank(accu[0][iDst])) {
                             // better state, e.g. land instead of snow: restart counting ...
@@ -171,8 +183,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             accu[0][iDst] = state;
                             accu[1][iDst] = stateCount;
                             accu[2][iDst] = count(bandDataS, iSrc);
-                            for (int b = 3; b < numTargetBands; ++b) {
-                                accu[b][iDst] = stateCount * bandDataF[b+3][iSrc];
+                            if (withMaxNdvi) {
+                                for (int b = 3; b < numTargetBands; ++b) {
+                                    accu[b][iDst] = bandDataF[b+3][iSrc];
+                                }
+                            } else {
+                                for (int b = 3; b < numTargetBands; ++b) {
+                                    accu[b][iDst] = stateCount * bandDataF[b+3][iSrc];
+                                }
                             }
                         }
                     }
@@ -184,15 +202,17 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
 
         // finish aggregation, divide by stateCount
-        for (int r = 0; r < bandTileHeight; ++r) {
-            for (int c = 0; c < bandTileWidth; ++c) {
-                final int i = r * bandTileWidth + c;
-                final float stateCount = accu[1][i];
-                //if (stateCount > 0) {
+        if (! withMaxNdvi) {
+            for (int r = 0; r < bandTileHeight; ++r) {
+                for (int c = 0; c < bandTileWidth; ++c) {
+                    final int i = r * bandTileWidth + c;
+                    final float stateCount = accu[1][i];
+                    //if (stateCount > 0) {
                     for (int b = 3; b < numTargetBands; ++b) {
                         accu[b][i] /= stateCount;
                     }
-                //}
+                    //}
+                }
             }
         }
 
@@ -219,8 +239,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         return
             "MERIS-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "MERIS-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
-            "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2* targetBandIndex : targetBandIndex +5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
-            "VEGETATION-1000m".equals(sensorAndResolution) ? targetBandIndex + 3 :  // sr_1 is source 6 target 3 etc. TODO verify that SPOT has no uncertainties
+            "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2 * targetBandIndex : targetBandIndex + 5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
+            "VEGETATION-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             -1;
     }
