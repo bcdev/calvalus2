@@ -37,9 +37,18 @@ import org.junit.runner.RunWith;
 import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author MarcoZ
@@ -72,7 +81,7 @@ public class StreamingFormatTest {
         try {
             assertFalse(fileSystem.exists(productPath));
             ProgressMonitor pm = ProgressMonitor.NULL;
-            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath);
+            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath, TILE_HEIGHT);
             assertTrue(fileSystem.exists(productPath));
 
             testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct));

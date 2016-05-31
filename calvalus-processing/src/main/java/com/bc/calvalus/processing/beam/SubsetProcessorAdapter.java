@@ -26,7 +26,8 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.util.io.FileUtils;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.io.IOException;
 
 /**
@@ -58,13 +59,13 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
 
         subsetProduct = createSubset();
         if (subsetProduct == null ||
-            subsetProduct.getSceneRasterWidth() == 0 ||
-            subsetProduct.getSceneRasterHeight() == 0) {
+                subsetProduct.getSceneRasterWidth() == 0 ||
+                subsetProduct.getSceneRasterHeight() == 0) {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                                       subsetProduct.getSceneRasterWidth(),
-                                       subsetProduct.getSceneRasterHeight()));
+                subsetProduct.getSceneRasterWidth(),
+                subsetProduct.getSceneRasterHeight()));
         return 1;
     }
 
@@ -105,7 +106,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         } else {
             product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
         }
-        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath());
+        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
     }
 
     private Path getWorkOutputProductPath() throws IOException {
@@ -113,9 +114,9 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected String getOutputProductFilename() {
-        for (int i=0; i<getInputParameters().length; i+=2) {
+        for (int i = 0; i < getInputParameters().length; i += 2) {
             if ("output".equals(getInputParameters()[i])) {
-                return FileUtils.exchangeExtension(getInputParameters()[i+1], ".seq");
+                return FileUtils.exchangeExtension(getInputParameters()[i + 1], ".seq");
             }
         }
         String inputFilename = getInputPath().getName();
@@ -127,7 +128,7 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         // full region
         Rectangle srcProductRect = getInputRectangle();
         if (srcProductRect == null ||
-            (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
+                (srcProductRect.width == product.getSceneRasterWidth() && srcProductRect.height == product.getSceneRasterHeight())) {
             return product;
         }
         if (srcProductRect.isEmpty()) {
@@ -142,8 +143,8 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         op.setCopyMetadata(true);
         Product subsetProduct = op.getTargetProduct();
         getLogger().info(String.format("Created Subset product width = %d height = %d",
-                                       subsetProduct.getSceneRasterWidth(),
-                                       subsetProduct.getSceneRasterHeight()));
+                subsetProduct.getSceneRasterWidth(),
+                subsetProduct.getSceneRasterHeight()));
         return subsetProduct;
     }
 }
