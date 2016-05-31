@@ -21,6 +21,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionRequest;
 import org.apache.hadoop.conf.Configuration;
 
@@ -106,7 +107,9 @@ public class ProcessorProductionRequest {
             for (BundleDescriptor bundle : processingService.getBundles(userName, filter)) {
                 if (bundle.getBundleName().equals(processorBundleName) &&
                     bundle.getBundleVersion().equals(processorBundleVersion) &&
-                    bundle.getBundleLocation().equals(processorBundleLocation)) {
+                    (processorBundleLocation != null ?
+                     bundle.getBundleLocation().equals(processorBundleLocation) :
+                     bundle.getBundleLocation().endsWith(HadoopProcessingService.CALVALUS_SOFTWARE_PATH+"/"+processorBundleName+"-"+processorBundleVersion))) {
                     ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
                     if (processorDescriptors != null) {
                         for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
