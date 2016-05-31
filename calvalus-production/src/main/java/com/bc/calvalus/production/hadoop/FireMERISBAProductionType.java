@@ -125,6 +125,7 @@ public class FireMERISBAProductionType extends HadoopProductionType {
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(FireBAInputFormat.class);
             job.setMapperClass(BAMapper.class);
+            job.setNumReduceTasks(0);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }

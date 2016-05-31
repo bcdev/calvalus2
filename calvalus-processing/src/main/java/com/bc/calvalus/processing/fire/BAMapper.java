@@ -80,11 +80,10 @@ public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritab
         velocityContext.put("configuration", conf);
         String year = conf.get("calvalus.year");
         velocityContext.put("year", year);
-        velocityContext.put("input_base_dir", conf.get("calvalus.input_base_dir"));
-        velocityContext.put("firms_base_dir", conf.get("calvalus.firms_base_dir"));
-        velocityContext.put("nocomb_base_dir", conf.get("calvalus.nocomb_base_dir"));
         velocityContext.put("tile", tile);
-
+//        velocityContext.put("input_base_dir", conf.get("calvalus.input_base_dir"));
+//        velocityContext.put("firms_base_dir", conf.get("calvalus.firms_base_dir"));
+//        velocityContext.put("nocomb_base_dir", conf.get("calvalus.nocomb_base_dir"));
 //        velocityContext.put("outputPath", conf.getOgetOutputDirectoryPath());
 //        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
