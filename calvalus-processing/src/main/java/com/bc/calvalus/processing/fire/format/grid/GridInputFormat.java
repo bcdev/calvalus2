@@ -116,7 +116,7 @@ public class GridInputFormat extends InputFormat {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
         String lcYear = lcYear(year);
-        int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
+        int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
     }
@@ -126,7 +126,7 @@ public class GridInputFormat extends InputFormat {
         int monthIndex = baInputPath.indexOf("BA_PIX_MER") + 22;
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
         int month = Integer.parseInt(baInputPath.substring(monthIndex, monthIndex + 2));
-        int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
+        int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         String basePath = baInputPath.substring(0, baInputPath.indexOf("meris-ba") - 1);
         return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
