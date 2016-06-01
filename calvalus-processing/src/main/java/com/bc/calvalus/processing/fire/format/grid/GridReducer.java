@@ -39,11 +39,9 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
     private String firstHalfFile;
     private String secondHalfFile;
     private String coverageFile;
-    private boolean onlyCoverage;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        onlyCoverage = Boolean.parseBoolean(context.getConfiguration().get("calvalus.onlyCoverage", "false"));
         prepareTargetProducts(context);
     }
 
@@ -70,28 +68,26 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         float[] coverage = gridCell.coverage;
 
         try {
-            if (!onlyCoverage) {
-                writeIntChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
-                writeIntChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
+            writeIntChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
+            writeIntChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
 
-                writeIntChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
-                writeIntChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
+            writeIntChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
+            writeIntChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
 
-                writeFloatChunk(key.toString(), ncFirst, "observed_area_fraction", coverageFirstHalf);
-                writeFloatChunk(key.toString(), ncSecond, "observed_area_fraction", coverageSecondHalf);
+            writeFloatChunk(key.toString(), ncFirst, "observed_area_fraction", coverageFirstHalf);
+            writeFloatChunk(key.toString(), ncSecond, "observed_area_fraction", coverageSecondHalf);
 
-                writeFloatChunk(key.toString(), ncFirst, "number_of_patches", patchNumbersFirstHalf);
-                writeFloatChunk(key.toString(), ncSecond, "number_of_patches", patchNumbersSecondHalf);
+            writeFloatChunk(key.toString(), ncFirst, "number_of_patches", patchNumbersFirstHalf);
+            writeFloatChunk(key.toString(), ncSecond, "number_of_patches", patchNumbersSecondHalf);
 
 
-                for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-                    int[] baInClass = baInLcFirstHalf.get(i);
-                    writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
-                }
-                for (int i = 0; i < baInLcSecondHalf.size(); i++) {
-                    int[] baInClass = baInLcSecondHalf.get(i);
-                    writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
-                }
+            for (int i = 0; i < baInLcFirstHalf.size(); i++) {
+                int[] baInClass = baInLcFirstHalf.get(i);
+                writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
+            }
+            for (int i = 0; i < baInLcSecondHalf.size(); i++) {
+                int[] baInClass = baInLcSecondHalf.get(i);
+                writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
             }
             writeFloatChunk(key.toString(), ncCoverage, "observed_area_fraction", coverage);
         } catch (InvalidRangeException e) {
@@ -108,17 +104,15 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         FileSystem fs = pathCoverage.getFileSystem(context.getConfiguration());
         FileUtil.copy(fileLocationCoverage, fs, pathCoverage, false, context.getConfiguration());
 
-        if (!onlyCoverage) {
-            ncFirst.close();
-            ncSecond.close();
+        ncFirst.close();
+        ncSecond.close();
 
-            File fileLocation = new File("./" + firstHalfFile);
-            File fileLocation2 = new File("./" + secondHalfFile);
-            Path path = new Path(outputDir + "/" + firstHalfFile);
-            Path path2 = new Path(outputDir + "/" + secondHalfFile);
-            FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-            FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
-        }
+        File fileLocation = new File("./" + firstHalfFile);
+        File fileLocation2 = new File("./" + secondHalfFile);
+        Path path = new Path(outputDir + "/" + firstHalfFile);
+        Path path2 = new Path(outputDir + "/" + secondHalfFile);
+        FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+        FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
     }
 
     private void prepareTargetProducts(Context context) throws IOException {
@@ -127,46 +121,41 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
 
-        if (!onlyCoverage) {
-            firstHalfFile = createFilename(year, month, true);
-            secondHalfFile = createFilename(year, month, false);
+        firstHalfFile = createFilename(year, month, true);
+        secondHalfFile = createFilename(year, month, false);
 
-            ncFirst = createNcFile(firstHalfFile);
-            ncSecond = createNcFile(secondHalfFile);
+        ncFirst = createNcFile(firstHalfFile);
+        ncSecond = createNcFile(secondHalfFile);
 
-            ncFirst.create();
-            ncSecond.create();
-        }
+        ncFirst.create();
+        ncSecond.create();
 
         coverageFile = String.format("%s%s-ESACCI-L4_FIRE-BA-MERIS-fv04.0-OAF.nc", year, month);
         ncCoverage = createCoverageNcFile(coverageFile);
         ncCoverage.create();
 
-
         try {
-            if (!onlyCoverage) {
-                writeLon(ncFirst);
-                writeLon(ncSecond);
-                writeLat(ncFirst);
-                writeLat(ncSecond);
+            writeLon(ncFirst);
+            writeLon(ncSecond);
+            writeLat(ncFirst);
+            writeLat(ncSecond);
 
-                writeLonBnds(ncFirst);
-                writeLonBnds(ncSecond);
-                writeLatBnds(ncFirst);
-                writeLatBnds(ncSecond);
+            writeLonBnds(ncFirst);
+            writeLonBnds(ncSecond);
+            writeLatBnds(ncFirst);
+            writeLatBnds(ncSecond);
 
-                writeTime(ncFirst, year, month, true);
-                writeTime(ncSecond, year, month, false);
+            writeTime(ncFirst, year, month, true);
+            writeTime(ncSecond, year, month, false);
 
-                writeTimeBnds(ncFirst, "2006", "08", true);
-                writeTimeBnds(ncSecond, "2006", "08", false);
+            writeTimeBnds(ncFirst, "2006", "08", true);
+            writeTimeBnds(ncSecond, "2006", "08", false);
 
-                writeVegetationClasses(ncFirst);
-                writeVegetationClasses(ncSecond);
+            writeVegetationClasses(ncFirst);
+            writeVegetationClasses(ncSecond);
 
-                writeVegetationClassNames(ncFirst);
-                writeVegetationClassNames(ncSecond);
-            }
+            writeVegetationClassNames(ncFirst);
+            writeVegetationClassNames(ncSecond);
 
             writeLon(ncCoverage);
             writeLat(ncCoverage);

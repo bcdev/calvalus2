@@ -59,7 +59,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
-        boolean onlyCoverage = Boolean.parseBoolean(context.getConfiguration().get("calvalus.onlyCoverage", "false"));
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
@@ -71,7 +70,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        boolean computeBA = !paths[0].getName().equals("dummy") && !onlyCoverage;
+        boolean computeBA = !paths[0].getName().equals("dummy");
         LOG.info(computeBA ? "Computing BA" : "Only computing coverage");
 
         Product sourceProduct = null;
@@ -144,8 +143,8 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
                     coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
-                    coverageValue += coverageValueFirstHalf;
-                    coverageValue += coverageValueSecondHalf;
+                    coverageValue += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
+                    coverageValue += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
                 }
 
