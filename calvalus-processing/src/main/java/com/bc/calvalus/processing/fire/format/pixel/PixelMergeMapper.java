@@ -163,7 +163,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         velocityContext.put("westLon", area.left - 180);
         velocityContext.put("eastLon", area.right - 180);
         velocityContext.put("southLat", area.bottom - 90);
-        velocityContext.put("northLat", area.top - 90);
+        velocityContext.put("northLat", Math.abs(area.top - 90));
 
         StringWriter stringWriter = new StringWriter();
         velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", TEMPLATE);
@@ -249,7 +249,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "    <gmd:contact>" +
             "        <gmd:CI_ResponsibleParty>" +
             "            <gmd:organisationName>" +
-            "                <gco:CharacterString>University of Alcala, Spain</gco:CharacterString>" +
+            "                <gco:CharacterString>University of Alcala</gco:CharacterString>" +
             "            </gmd:organisationName>" +
             "            <gmd:contactInfo>" +
             "                <gmd:CI_Contact>" +
@@ -263,7 +263,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    <gmd:onlineResource>" +
             "                        <gmd:CI_OnlineResource>" +
             "                            <gmd:linkage>" +
-            "                                <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>" +
+            "                                <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
             "                            </gmd:linkage>" +
             "                        </gmd:CI_OnlineResource>" +
             "                    </gmd:onlineResource>" +
@@ -271,7 +271,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            </gmd:contactInfo>" +
             "            <gmd:role>" +
             "                <gmd:CI_RoleCode" +
-            "                        codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                        codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
             "                        codeListValue=\"resourceProvider\">resourceProvider" +
             "                </gmd:CI_RoleCode>" +
             "            </gmd:role>" +
@@ -283,12 +283,12 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "    </gmd:dateStamp>" +
             "" +
             "    <gmd:metadataStandardName>" +
-            "        <gco:CharacterString>ISO 19115-1 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data" +
+            "        <gco:CharacterString>ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data" +
             "        </gco:CharacterString>" +
             "    </gmd:metadataStandardName>" +
             "" +
             "    <gmd:metadataStandardVersion>" +
-            "        <gco:CharacterString>ISO 19115-1:2012</gco:CharacterString>" +
+            "        <gco:CharacterString>ISO 19115-1:2014</gco:CharacterString>" +
             "    </gmd:metadataStandardVersion>" +
             "" +
             "    <gmd:referenceSystemInfo>" +
@@ -358,10 +358,10 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "" +
             "<gmd:abstract>" +
             "<gco:CharacterString>In support of the IPCC, the ESA Climate Change Initiative (CCI) programme comprises " +
-            "the generation of thirteen projects, each focusing on the production of global coverage of an " +
+            "the generation of different projects, each focusing on the production of global coverage of an " +
             "Essential Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated, " +
-            "error-characterised, global data sets of burnt areas (BA) derived from existing satellite " +
-            "observations (SPOT-VGT, ENVISAT (A)ATSR, ENVISAT MERIS). The Fire_cci BA products consist of a Pixel " +
+            "error-characterised, global data sets of burned areas (BA) derived from existing satellite " +
+            "observations ENVISAT MERIS. The Fire_cci BA products consist of a Pixel " +
             "and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem " +
             "scientists and researchers supporting their modelling efforts. Further information to the ESA CCI " +
             "Programme and a comprehensive documentation on the underlying algorithms, work flow, production " +
@@ -370,101 +370,72 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "<gco:CharacterString>" +
             "#[[" +
             "The product is a multi-layer TIFF with the following naming convention: ${IndicativeDate}-ESACCI-L3S_FIRE-BA-" +
-            "${Indicative sensor}[-${Additional Segregator}]-[-v${GDS version}]-fv${xx.x}.tif. " +
+            "${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif. " +
             "${Indicative Date} is the identifying date for this data set. Format is YYYY[MM[DD]], where YYYY is the " +
             "four digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to " +
             "31. For monthly products the date will be set to 01. " +
-            "${Indicative sensor} is MERIS, when data coming from MERIS sensor; MODISVNIR when outputs come from MODIS 250m channels; " +
-            "MSI, when it comes from Sentinel-2 MSI; OLCI, Sentinel-3; SLSTR, Sentinel-3; PROBA, PROBA-V. ${Additional Segregator} " +
-            "is the AREA_${TILE_NUMBER} being the tile number the subset index described in Extent. v${GDS version} " +
-            "is the version number of the GHRSST Data Specification is optional for the CCI file naming convention. fv" +
+            "${Indicative sensor} is MERIS. ${Additional Segregator} " +
+            "is the AREA_${TILE_NUMBER} being the tile number the subset index described in Extent. fv" +
             "${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional " +
             ". and another 1 or more digits.). An example is: " +
             "20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-fv04.0.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Product Specification at: Chuvieco, E. (2013). ESA CCI ECV Fire Disturbance - " +
-            "Product Specification Document, Fire_cci_Ph2_UAH_D1_2_PSD_v3_0.pdf" +
+            "<gco:CharacterString>Product Specification Document Fire_cci_D1.2_PSD_v5.1.pdf, available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Algorithm Theoretical Basis Document – Pre-Processing: " +
-            "https://www.esa-fire-cci.org/" +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00277778 deg.; Pixel " +
+            "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
+            "the month or it is not observed; a value of 999 is allocated to pixels that are not taken into account in " +
+            "the burned area processing (continuous water, ocean).; Data type = 16bit integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Algorithm Theoretical Basis Document – BA detection:" +
-            "https://www.esa-fire-cci.org/" +
-            "</gco:CharacterString>" +
-            "<gco:CharacterString>Algorithm Theoretical Basis Document – BA merging: https://www.esa-fire-cci.org/" +
-            "</gco:CharacterString>" +
-            "<gco:CharacterString>Product Validation and Algorithm Selection Report: https://www.esa-fire-cci.org/" +
-            "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer JD: Date of the first detection; Pixel Spacing = 300m; TIFF; A zero (0) will " +
-            "be included in this field when the pixel is not burned in the month or it is not observed; Pixel " +
-            "value = Day of the year, from 1 to 365; Data type = REAL; Number of layers = 1; Data depth = 16" +
-            "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer CL: Uncertainty Confidence Layer; Pixel Spacing = 300m; Pixel value = 0 to" +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00277778 deg.; Pixel value = 0 to" +
             "100, where the value is the probability in percentage that the pixel is actually burned, as a result" +
             "of both the pre-processing and the actual burned area classification. The higher the value, the" +
-            "higher the confidence that the pixel is actually burned. Data type = REAL; Number of layers = 1;" +
+            "higher the confidence that the pixel is actually burned. A value of 999 is allocated to pixels that are " +
+            "not taken into account in the burned area processing (continuous water, ocean). Data type = 16bit integer; " +
+            "Number of layers = 1;" +
             "Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer LC: Land cover of that pixel, extracted from the CCI LandCover (LC). The 2000 " +
-            "LC data is used for 2002 data, the 2005 LC data is used for data from 2003 to 2007, and the 2010 LC " +
-            "data is used for data from 2008 to 2012. N is the number of land cover categories in the reference " +
-            "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N where under the following codes: 11 = " +
-            "Post-flooding or irrigated croplands (or aquatic), 14 = Rainfed croplands, 20 = Mosaic cropland " +
-            "(50-70%) / vegetation (grassland/shrubland/forest) (20-50%), 30 = Mosaic vegetation " +
-            "(grassland/shrubland/forest) (50-70%) / cropland (20-50%), 40 = Closed to open (&gt;15%) broadleaved " +
-            "evergreen or semi-deciduous forest (&gt;5m), 50 = Closed (&gt;40%) broadleaved deciduous forest (&gt;5m), 60 " +
-            "= Open (15-40%) broadleaved deciduous forest/woodland (&gt;5m), 70 = Closed (&gt;40%) needleleaved " +
-            "evergreen forest (&gt;5m), 90 = Open (15-40%) needleleaved deciduous or evergreen forest (&gt;5m), 100 = " +
-            "Closed to open (&gt;15%) mixed broadleaved and needleleaved forest (&gt;5m), 110 = Mosaic forest or " +
-            "shrubland (50-70%) / grassland (20-50%), 120 = Mosaic grassland (50-70%) / forest or shrubland " +
-            "(20-50%) , 130 = Closed to open (&gt;15%) (broadleaved or needleleaved, evergreen or deciduous) " +
-            "shrubland (&lt;5m), 140 = Closed to open (&gt;15%) herbaceous vegetation (grassland, savannas or " +
-            "lichens/mosses), 150 = Sparse (&lt;15%) vegetation, 160 = Closed to open (&gt;15%) broadleaved forest " +
-            "regularly flooded (semi-permanently or temporarily) - Fresh or brackish water, 170 = Closed (&gt;40%) " +
-            "broadleaved forest or shrubland permanently flooded - Saline or brackish water, 180 = Closed to open " +
-            "(&gt;15%) grassland or woody vegetation on regularly flooded or waterlogged soil - Fresh, brackish or " +
-            "saline water, 190 = Others (Artificial surfaces and associated areas (Urban areas &gt;50%), 200 = Bare " +
-            "areas, 210 = Water bodies, 220 = Permanent snow and ice, 230 = No data (burnt areas, clouds etc.,); " +
-            "Pixel Spacing = 300m; Data type = REAL; Number of layers = 1; Data depth = 16" +
+            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover (LC). N is the " +
+            "number of the land cover category in the reference " +
+            "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: ; " +
+            "0 = No data" +
+            "10 = Cropland, rainfed / " +
+            "Herbaceous cover / " +
+            "Tree or shrub cover; " +
+            "20 = Cropland, irrigated or post-flooding;" +
+            "30 = Mosaic cropland (&gt;50%) / natural vegetation (tree, shrub, herbaceous cover) (&lt;50%);" +
+            "40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (&gt;50%) / cropland (&lt;50%);" +
+            "50 = Tree cover, broadleaved, evergreen, closed to open (&gt;15%);" +
+            "60 = Tree cover, broadleaved, deciduous, closed to open (&gt;15%) / " +
+            "Tree cover, broadleaved, deciduous, closed (&gt;40%) / " +
+            "Tree cover, broadleaved, deciduous, open (15-40%);" +
+            "70 = Tree cover, needleleaved, evergreen, closed to open (&gt;15%) /" +
+            "Tree cover, needleleaved, evergreen, closed (&gt;40%) / " +
+            "Tree cover, needleleaved, evergreen, open (15-40%); " +
+            "80 = Tree cover, needleleaved, deciduous, closed to open (&gt;15%) /" +
+            "Tree cover, needleleaved, deciduous, closed (&gt;40%) / " +
+            "Tree cover, needleleaved, deciduous, open (15-40%); " +
+            "90 = Tree cover, mixed leaf type (broadleaved and needleleaved); " +
+            "100 = Mosaic tree and shrub (&gt;50%) / herbaceous cover (&lt;50%) ;" +
+            "110 = Mosaic herbaceous cover (&gt;50%) / tree and shrub (&lt;50%) ; " +
+            "120 = Shrubland / " +
+            "Shrubland evergreen / " +
+            "Shrubland deciduous; " +
+            "130 = Grassland; " +
+            "140 = Lichens and mosses; " +
+            "150 = Sparse vegetation (tree, shrub, herbaceous cover) (&lt;15%) / " +
+            "Sparse shrub (&lt;15%) / " +
+            "Sparse herbaceous cover (&lt;15%) ; " +
+            "160 = Tree cover, flooded, fresh or brackish water; " +
+            "170 = Tree cover, flooded, saline water; " +
+            "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
+            "Pixel Spacing = 0.00277778 deg.; Data type = 16bit integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
             "            <gmd:pointOfContact>" +
             "                <gmd:CI_ResponsibleParty>" +
-            "                    <!-- resourceProvider-->" +
-            "                    <gmd:organisationName>" +
-            "                        <gco:CharacterString>European Space Agency</gco:CharacterString>" +
-            "                    </gmd:organisationName>" +
-            "                    <gmd:contactInfo>" +
-            "                        <gmd:CI_Contact>" +
-            "                            <gmd:address>" +
-            "                                <gmd:CI_Address>" +
-            "                                    <gmd:electronicMailAddress>" +
-            "                                        <gco:CharacterString>Stephen.plummer@esa.int></gco:CharacterString>" +
-            "                                    </gmd:electronicMailAddress>" +
-            "                                </gmd:CI_Address>" +
-            "                            </gmd:address>" +
-            "                            <gmd:onlineResource>" +
-            "                                <gmd:CI_OnlineResource>" +
-            "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa.int</gmd:URL>" +
-            "                                    </gmd:linkage>" +
-            "                                </gmd:CI_OnlineResource>" +
-            "                            </gmd:onlineResource>" +
-            "                        </gmd:CI_Contact>" +
-            "                    </gmd:contactInfo>" +
-            "                    <gmd:role>" +
-            "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode\"" +
-            "                                codeListValue=\"resourceProvider \">resourceProvider" +
-            "                        </gmd:CI_RoleCode>" +
-            "                    </gmd:role>" +
-            "                </gmd:CI_ResponsibleParty>" +
-            "            </gmd:pointOfContact>" +
-            "" +
-            "            <gmd:pointOfContact>" +
-            "                <gmd:CI_ResponsibleParty>" +
-            "                    <!-- Custodian-->" +
+            "                    <!-- ResourceProvider-->" +
             "                    <gmd:organisationName>" +
             "                        <gco:CharacterString>University of Alcala</gco:CharacterString>" +
             "                    </gmd:organisationName>" +
@@ -488,8 +459,8 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode\"" +
-            "                                codeListValue=\"Custodian \">Custodian" +
+            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeListValue=\"resourceProvider \">resourceProvider" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
             "                </gmd:CI_ResponsibleParty>" +
@@ -521,7 +492,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    </gmd:contactInfo>" +
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
-            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/Codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
             "                                codeListValue=\"Owner \">Owner" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
@@ -546,7 +517,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>" +
+            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -567,7 +538,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                        <gco:CharacterString>Burned Area:Fire:Climate:Change:ESA:GCOS</gco:CharacterString>" +
             "                    </gmd:keyword>" +
             "                    <gmd:type>" +
-            "                        <gmd:MD_KeywordTypeCode codeList=\"./resources/codeList.xml#MD_KeywordTypeCode\"" +
+            "                        <gmd:MD_KeywordTypeCode codeList=\"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml\"" +
             "                                                codeListValue=\"theme\">theme" +
             "                        </gmd:MD_KeywordTypeCode>" +
             "                    </gmd:type>" +
@@ -590,7 +561,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                        </gmd:MD_RestrictionCode>" +
             "                    </gmd:accessConstraints>" +
             "                    <gmd:otherConstraints>" +
-            "                        <gco:CharacterString>no limitation</gco:CharacterString>" +
+            "                        <gco:CharacterString>no limitations</gco:CharacterString>" +
             "                    </gmd:otherConstraints>" +
             "                </gmd:MD_LegalConstraints>" +
             "            </gmd:resourceConstraints>" +
@@ -598,7 +569,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:spatialResolution>" +
             "                <gmd:MD_Resolution>" +
             "                    <gmd:distance>" +
-            "                        <gco:Distance uom=\"metres\">300</gco:Distance>" +
+            "                        <gco:Distance uom=\"degrees\">0.00277778</gco:Distance>" +
             "                    </gmd:distance>" +
             "                </gmd:MD_Resolution>" +
             "            </gmd:spatialResolution>" +
