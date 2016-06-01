@@ -58,8 +58,6 @@ public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritab
         this.cwd = new File(".");
         this.debugScriptGenerator = context.getConfiguration().getBoolean("calvalus.l2.debugScriptGenerator", false);
         InputSplit inputSplit = context.getInputSplit();
-        Path[] paths = ((CombineFileSplit) inputSplit).getPaths();
-        CalvalusLogger.getLogger().info("paths=" + Arrays.toString(paths));
         KeywordHandler keywordHandler = process(ProgressMonitor.NULL, inputSplit, context);
         String[] outputFilesNames = keywordHandler.getOutputFiles();
         CalvalusLogger.getLogger().info("Writing output files: " + Arrays.toString(outputFilesNames));
@@ -79,10 +77,15 @@ public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritab
         ScriptGenerator scriptGenerator = new ScriptGenerator(ScriptGenerator.Step.PROCESS, executable);
         VelocityContext velocityContext = scriptGenerator.getVelocityContext();
         String tile = getTile(inputSplit);
-        String year = conf.get("calvalus.year");
         velocityContext.put("configuration", conf);
+        String year = conf.get("calvalus.year");
         velocityContext.put("year", year);
         velocityContext.put("tile", tile);
+//        velocityContext.put("input_base_dir", conf.get("calvalus.input_base_dir"));
+//        velocityContext.put("firms_base_dir", conf.get("calvalus.firms_base_dir"));
+//        velocityContext.put("nocomb_base_dir", conf.get("calvalus.nocomb_base_dir"));
+//        velocityContext.put("outputPath", conf.getOgetOutputDirectoryPath());
+//        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
         scriptGenerator.addScriptResources(conf, "");
         if (!scriptGenerator.hasStepScript()) {
@@ -107,29 +110,17 @@ public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritab
 
     private static void fetchInputFiles(CombineFileSplit inputSplit, Configuration conf, String tile) throws IOException {
         for (Path path : inputSplit.getPaths()) {
-            File targetFile;
-            if (path.getName().contains("auxdata")) {
-                int startIndex = path.toString().lastIndexOf("/") + 1;
-                targetFile = new File(path.toString().substring(startIndex));
-            } else {
-                int startIndex = path.toString().indexOf("/" + tile + "/") + 1;
-                targetFile = new File(path.toString().substring(startIndex));
-                targetFile.getParentFile().mkdirs();
-            }
+            int startIndex = path.toString().indexOf("/" + tile + "/") + 1;
+            File targetFile = new File(path.toString().substring(startIndex));
+            targetFile.getParentFile().mkdirs();
             CalvalusProductIO.copyFileToLocal(path, targetFile, conf);
         }
     }
 
     private String getTile(InputSplit inputSplit) {
         CombineFileSplit combineFileSplit = (CombineFileSplit) inputSplit;
-        for (Path path : combineFileSplit.getPaths()) {
-            String name = path.getName();
-            if (name.contains("auxdata")) {
-                continue;
-            }
-            return name.substring(name.length() - "vXXhXX.nc".length(), name.length() - ".nc".length());
-        }
-        throw new IllegalStateException("No input data in input split. Input format implementation must be flawed.");
+        String name = combineFileSplit.getPath(0).getName();    // ok, if there are no paths, there is no input split as well.
+        return name.substring(name.length() - "vXXhXX.nc".length(), name.length() - ".nc".length());
     }
 
     private Path getWorkOutputDirectoryPath(Context context) throws IOException {

@@ -25,13 +25,12 @@ public class LCSplitter {
 
     public static void main(String[] args) throws IOException {
         FileSystem fileSystem = FileSystems.getDefault();
-//        List<String> tiles = readTiles();
-        List<String> tiles = missingTiles();
+        List<String> tiles = readTiles();
 
         String outputPath = "D:\\workspace\\fire-cci\\splitted-lc-data";
-        String year = "2010";
+        String year = "2000";
 
-        Path inputPath = fileSystem.getPath("C:\\temp\\formatting_development", "ESACCI-LC-L4-LCCS-Map-300m-P5Y-2010-v1.6.1.nc");
+        Path inputPath = fileSystem.getPath("C:\\temp\\formatting_development", "ESACCI-LC-L4-LCCS-Map-300m-P5Y-2000-v1.6.1.nc");
         Product product = ProductIO.readProduct(inputPath.toFile());
 
         List<Runnable> tasks = new ArrayList<>();
@@ -75,7 +74,7 @@ public class LCSplitter {
             });
         }
 
-        ExecutorService exec = Executors.newFixedThreadPool(8);
+        ExecutorService exec = Executors.newFixedThreadPool(1);
         try {
             for (Runnable task : tasks) {
                 exec.submit(task);
@@ -83,20 +82,6 @@ public class LCSplitter {
         } finally {
             exec.shutdown();
         }
-    }
-
-    private static List<String> missingTiles() throws IOException {
-        List<String> alreadyExistingTiles = readTiles();
-        List<String> tiles = new ArrayList<>();
-        for (int tileY = 0; tileY < 18; tileY++) {
-            for (int tileX = 0; tileX < 36; tileX++) {
-                String tile = String.format("v%02dh%02d", tileY, tileX);
-                if (!alreadyExistingTiles.contains(tile)) {
-                    tiles.add(tile);
-                }
-            }
-        }
-        return tiles;
     }
 
 

@@ -6,6 +6,7 @@ import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
@@ -40,7 +41,7 @@ public class FireBAInputFormat extends InputFormat {
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getAllFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
 
-        createSplits(fileStatuses, splits);
+        createSplits(fileStatuses, splits, conf);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
@@ -51,10 +52,9 @@ public class FireBAInputFormat extends InputFormat {
         FileStatus[] sameYearStatuses = getFileStatuses(inventoryService, inputPathPattern, conf);
 
         String[] wingsPathPatterns = createWingsPathPatterns(inputPathPattern);
-
         FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? getFileStatuses(inventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
         FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? getFileStatuses(inventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
-        String auxdataPathPattern = createAuxdataPathPattern(inputPathPattern, getTile(sameYearStatuses[0]));
+        String auxdataPathPattern = createAuxdataPathPattern(inputPathPattern);
         FileStatus[] auxdataStatuses = getFileStatuses(inventoryService, auxdataPathPattern, conf);
 
         FileStatus[] allFileStatuses = new FileStatus[sameYearStatuses.length + beforeStatuses.length + afterStatuses.length + auxdataStatuses.length];
@@ -65,17 +65,14 @@ public class FireBAInputFormat extends InputFormat {
         return allFileStatuses;
     }
 
-    private static String getTile(FileStatus fileStatus) {
-        String name = fileStatus.getPath().getName();
-        return name.substring(name.length() - 9, name.length() - 3);
-    }
-
 
     private void createSplits(FileStatus[] fileStatuses,
-                              List<InputSplit> splits) throws IOException {
+                              List<InputSplit> splits,
+                              Configuration conf) throws IOException {
 
-        int numTilesX = 36;
-        int numTilesY = 18;
+        MosaicGrid mosaicGrid = MosaicGrid.create(conf);
+        int numTilesX = mosaicGrid.getNumTileX();
+        int numTilesY = mosaicGrid.getNumTileY();
 
         Map<String, CombineFileSplitDef> splitMap = new HashMap<>();
         for (FileStatus file : fileStatuses) {
@@ -83,7 +80,7 @@ public class FireBAInputFormat extends InputFormat {
                 for (int tileY = 0; tileY < numTilesY; tileY++) {
                     if (fileMatchesTile(file, tileX, tileY)) {
                         CombineFileSplitDef inputSplitDef;
-                        String key = String.format("v%02dh%02d", tileY, tileX);
+                        String key = String.format("v%02dh%02d", tileX, tileY);
                         if (splitMap.containsKey(key)) {
                             inputSplitDef = splitMap.get(key);
                         } else {
@@ -155,20 +152,15 @@ public class FireBAInputFormat extends InputFormat {
         return new String[]{beforeInputPathPatterns, afterInputPathPatterns};
     }
 
-    private static String createAuxdataPathPattern(String inputPathPattern, String tile) throws IOException {
+    private static String createAuxdataPathPattern(String inputPathPattern) throws IOException {
         int year = Integer.parseInt(inputPathPattern.substring(
                 "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length(),
                 "hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/".length() + 4));
-        return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%d/v1/auxdata-%d-%s.*gz", year, year, tile);
+        return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%d/auxdata-%d-.*gz", year, year);
     }
 
     private static boolean fileMatchesTile(FileStatus file, int tileX, int tileY) {
-        String name = file.getPath().getName();
-        return stringMatchesTile(tileX, tileY, name);
-    }
-
-    static boolean stringMatchesTile(int tileX, int tileY, String name) {
-        return name.contains(String.format("-v%02dh%02d", tileY, tileX));
+        return file.getPath().getName().contains(String.format("-v%02dh%02d", tileX, tileY));
     }
 
 }
