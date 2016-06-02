@@ -40,6 +40,8 @@ public class GridInputFormat extends InputFormat {
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
 
+        fileStatuses = CommonUtils.filterFileStatuses(fileStatuses);
+
         createSplits(fileStatuses, splits, conf);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;

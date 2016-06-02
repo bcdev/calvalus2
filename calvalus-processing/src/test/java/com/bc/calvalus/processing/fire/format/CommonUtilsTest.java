@@ -3,8 +3,10 @@ package com.bc.calvalus.processing.fire.format;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +33,31 @@ public class CommonUtilsTest {
         assertFalse(missingTiles.contains("v03h08"));
         assertFalse(missingTiles.contains("v04h08"));
         assertFalse(missingTiles.contains("v05h08"));
+    }
+
+    @Test
+    public void filterPathNames() throws Exception {
+        List<String> filteredPathNames = CommonUtils.filterPathNames(Arrays.asList(
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h05_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h06_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h01_200606_v4.0.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h05_200606_v4.0.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h06_200606_v4.0.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h07_200606_v4.0.tif")
+        );
+
+        String[] filteredPathNamesArray = filteredPathNames.toArray(new String[0]);
+        String[] expected = {
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h05_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h06_200606_v4.1.tif",
+                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h07_200606_v4.0.tif",
+        };
+
+        Arrays.sort(filteredPathNamesArray);
+        Arrays.sort(expected);
+        assertArrayEquals(expected, filteredPathNamesArray);
     }
 
 }

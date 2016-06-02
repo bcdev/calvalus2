@@ -4,6 +4,7 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -40,6 +41,8 @@ public class PixelInputFormat extends InputFormat {
 
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPattern, conf);
+
+        fileStatuses = CommonUtils.filterFileStatuses(fileStatuses);
 
         createSplits(fileStatuses, splits, conf, hdfsInventoryService);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
