@@ -147,10 +147,18 @@ public class CalvalusExecuteResponseConverter {
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
         for (String productionResultUrl : resultUrls) {
+            String identifier = "productionResults";
+            String title = "Production results";
+            String abstractText = "This is the URL link to the production result";
+            if(productionResultUrl.endsWith("-metadata")){
+                identifier = "resultMetadataFile";
+                title = "Result metadata file";
+                abstractText = "This is the URL link to the result metadata file";
+            }
             OutputDataType url = new OutputDataType();
-            url.setIdentifier(WpsTypeConverter.str2CodeType("productionResults"));
-            url.setTitle(WpsTypeConverter.str2LanguageStringType("Production results"));
-            url.setAbstract(WpsTypeConverter.str2LanguageStringType("This is the URL link to the production result"));
+            url.setIdentifier(WpsTypeConverter.str2CodeType(identifier));
+            url.setTitle(WpsTypeConverter.str2LanguageStringType(title));
+            url.setAbstract(WpsTypeConverter.str2LanguageStringType(abstractText));
             OutputReferenceType urlLink = new OutputReferenceType();
             urlLink.setHref(productionResultUrl);
             urlLink.setMimeType("application/octet-stream");

@@ -87,6 +87,7 @@ public class CalvalusExecuteResponseConverterTest {
         List<String> mockResultUrlList = new ArrayList<>();
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc");
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip");
+        mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/zzz-metadata");
         Calendar calendar = Calendar.getInstance();
 
         ExecuteResponse executeResponse = calvalusExecuteResponse.getSuccessfulResponse(mockResultUrlList, new Date());
@@ -94,14 +95,24 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getAbstract().getValue(),
+                   equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(), equalTo("productionResults"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getAbstract().getValue(),
+                   equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getIdentifier().getValue(), equalTo("resultMetadataFile"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getTitle().getValue(), equalTo("Result metadata file"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getAbstract().getValue(),
+                   equalTo("This is the URL link to the result metadata file"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getReference().getHref(),
+                   equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/zzz-metadata"));
 
     }
 

@@ -68,7 +68,7 @@ public class ExecuteRequestExtractor {
                     value = String.format("POLYGON((%1$.5f %2$.5f,%1$.5f %4$.5f,%3$.5f %4$.5f,%3$.5f %2$.5f,%1$.5f %2$.5f))",
                                           lon0, lat0, lon1, lat1);
                 } else {
-                    throw new InvalidParameterValueException("ComplexData");
+                    throw new InvalidParameterValueException(dataInput.getIdentifier().getValue());
                 }
                 if (StringUtils.isBlank(value)) {
                     throw new MissingParameterValueException(dataInput.getIdentifier().getValue());
