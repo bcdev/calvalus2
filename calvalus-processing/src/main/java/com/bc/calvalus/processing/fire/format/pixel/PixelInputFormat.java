@@ -64,7 +64,7 @@ public class PixelInputFormat extends InputFormat {
         return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*%s%s.*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1), year, month);
     }
 
-    private static String getLcInputPathPattern(String year, PixelProductArea area) {
+    static String getLcInputPathPattern(String year, PixelProductArea area) {
         StringBuilder groupsForArea = new StringBuilder();
         int firstTileV = area.top / 10;
         int firstTileH = area.left / 10;
@@ -101,6 +101,8 @@ public class PixelInputFormat extends InputFormat {
         for (String usedTile : usedTiles) {
             lcInputPathPattern = lcInputPathPattern.replace(usedTile + "|", "").replace(usedTile, "");
         }
+        lcInputPathPattern = lcInputPathPattern.replace("|)", ")");
+        CalvalusLogger.getLogger().info("LC input path pattern = " + lcInputPathPattern);
         FileStatus[] lcFileStatuses = getFileStatuses(hdfsInventoryService, lcInputPathPattern, conf);
         for (FileStatus lcFileStatus : lcFileStatuses) {
             List<Path> filePaths = new ArrayList<>();
@@ -125,8 +127,7 @@ public class PixelInputFormat extends InputFormat {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
         String lcYear = lcYear(year);
-        int tileIndex = yearIndex + 4 + "/BA_PIX_MER_".length();
-        String tile = baInputPath.substring(tileIndex, tileIndex + 6);
+        String tile = CommonUtils.getTile(baInputPath);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
     }
 
