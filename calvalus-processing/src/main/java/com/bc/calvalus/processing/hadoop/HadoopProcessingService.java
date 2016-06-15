@@ -315,13 +315,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                         accu.add(status);
                     }
                 } catch (FileNotFoundException ignore) {
-                    // ok, try to glob in next step
-                }
-                final FileStatus[] stati = fileSystem.globStatus(new Path(path, pathPattern.substring(pos)));
-                if (stati != null) {
-                    for (FileStatus globStatus : stati) {
-                        if (globStatus.isFile()) {
-                            accu.add(globStatus);
+                    // ok, try to glob as an alternative (to avoid duplicates)
+                    final FileStatus[] stati = fileSystem.globStatus(new Path(path, pathPattern.substring(pos)));
+                    if (stati != null) {
+                        for (FileStatus globStatus : stati) {
+                            if (globStatus.isFile()) {
+                                accu.add(globStatus);
+                            }
                         }
                     }
                 }
