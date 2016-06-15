@@ -398,7 +398,9 @@ public class L3ConfigForm extends Composite {
 
             // add aggregator bundle to bundles
             final String bundle;
-            if (aggregatorDescriptor.getBundleLocation() != null) {
+            if (isStandardAggregator(aggregatorDescriptor.getAggregator())) {
+                bundle = null;
+            } else if (aggregatorDescriptor.getBundleLocation() != null) {
                 bundle = aggregatorDescriptor.getBundleLocation();
             } else if (aggregatorDescriptor.getBundleName() != null && aggregatorDescriptor.getBundleVersion() != null) {
                 bundle = aggregatorDescriptor.getBundleName() + "-" + aggregatorDescriptor.getBundleVersion();
@@ -445,6 +447,13 @@ public class L3ConfigForm extends Composite {
         parameters.put("resolution", resolution.getValue().toString());
         parameters.put("superSampling", superSampling.getValue().toString());
         return parameters;
+    }
+
+    private static boolean isStandardAggregator(String aggregator) {
+        return "AVG".equals(aggregator)
+                || "MIN_MAX".equals(aggregator)
+                || "PERCENTILE".equals(aggregator)
+                || "ON_MAX_SET".equals(aggregator);
     }
 
     private String getCompositingType() {

@@ -20,6 +20,10 @@
                         <g:CheckBox ui:field="showSystemProcessors" text="System processors" value="true"/>
                     </g:VerticalPanel>
                     <g:CheckBox ui:field="showAllUserProcessors" text="Processors of other users" value="false"/>
+                    <g:VerticalPanel>
+                        <g:CheckBox ui:field="filterProcessorByVersion" text="Highest version" value="false"/>
+                        <g:CheckBox ui:field="filterProcessorByProductType" text="Matching input type" value="false"/>
+                    </g:VerticalPanel>
                 </g:HorizontalPanel>
 
                 <g:ListBox ui:field="processorList" width="28em" visibleItemCount="12"/>

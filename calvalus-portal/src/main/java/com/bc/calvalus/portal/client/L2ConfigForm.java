@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.production.hadoop.ProcessorProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -58,10 +59,9 @@ import java.util.Map;
  */
 public class L2ConfigForm extends Composite {
 
-    public static final String NO_PROCESSOR_SELCTION = "<none>";
+    public static final String NO_PROCESSOR_SELECTION = "<none>";
 
     interface TheUiBinder extends UiBinder<Widget, L2ConfigForm> {
-
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -97,7 +97,17 @@ public class L2ConfigForm extends Composite {
     @UiField
     CheckBox showAllUserProcessors;
     @UiField
+    CheckBox filterProcessorByVersion;
+    @UiField
+    CheckBox filterProcessorByProductType;
+    @UiField
     Anchor showProcessorSelectionHelp;
+
+    private DtoProductSet productSet;
+
+    public void setProductSet(DtoProductSet productSet) {
+        this.productSet = productSet;
+    }
 
     private final boolean selectionMandatory;
     private final PortalContext portalContext;
@@ -154,6 +164,8 @@ public class L2ConfigForm extends Composite {
         showMyProcessors.addValueChangeHandler(valueChangeHandler);
         showAllUserProcessors.addValueChangeHandler(valueChangeHandler);
         showSystemProcessors.addValueChangeHandler(valueChangeHandler);
+        filterProcessorByVersion.addValueChangeHandler(valueChangeHandler);
+        filterProcessorByProductType.addValueChangeHandler(valueChangeHandler);
 
         showAllUserProcessors.setEnabled(portalContext.withPortalFeature("otherSets"));
 
@@ -179,15 +191,17 @@ public class L2ConfigForm extends Composite {
         final Iterator<DtoProcessorDescriptor> iterator = processorDescriptors.iterator();
         while (iterator.hasNext()) {
             DtoProcessorDescriptor processorDescriptor = iterator.next();
-            if (BundleFilter.DUMMY_PROCESSOR_NAME.equals(processorDescriptor.getProcessorName()) ||
-                (processorFilter != null && !processorFilter.accept(processorDescriptor))) {
+            if (BundleFilter.DUMMY_PROCESSOR_NAME.equals(processorDescriptor.getProcessorName())
+                || (processorFilter != null && !processorFilter.accept(processorDescriptor))
+                || (filterProcessorByVersion.getValue() && !isNewestVersion(processorDescriptor, processorDescriptors))
+                || (filterProcessorByProductType.getValue() && !isMatchingInput(productSet, processorDescriptor))) {
                 iterator.remove();
             }
         }
 
         processorList.clear();
         if (!selectionMandatory) {
-            processorList.addItem(NO_PROCESSOR_SELCTION);
+            processorList.addItem(NO_PROCESSOR_SELECTION);
         }
         int newSelectionIndex = 0;
         boolean productSetChanged = true;
@@ -208,6 +222,31 @@ public class L2ConfigForm extends Composite {
         }
     }
 
+    private static boolean isMatchingInput(DtoProductSet productSet, DtoProcessorDescriptor processor) {
+        if (productSet == null) {
+            return true;
+        }
+        if (processor.getInputProductTypes() == null) {
+            return false;
+        }
+        for (String type : processor.getInputProductTypes()) {
+            if ("*".equals(type) || type.equals(productSet.getProductType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isNewestVersion(DtoProcessorDescriptor processor, List<DtoProcessorDescriptor> processorDescriptors) {
+        for (DtoProcessorDescriptor other : processorDescriptors) {
+            if (other.getProcessorName().equals(processor.getProcessorName()) &&
+                other.getProcessorVersion().compareTo(processor.getProcessorVersion()) > 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void updateProcessorDetails() {
         if (editParamsHandlerRegistration != null) {
             editParamsHandlerRegistration.removeHandler();
@@ -218,7 +257,17 @@ public class L2ConfigForm extends Composite {
             if (!processor.getOwner().isEmpty()) {
                 owner = processor.getOwner();
             }
-            String text = "Bundle: " + processor.getBundleName() + " v" + processor.getBundleVersion();
+            StringBuilder types = new StringBuilder();
+            if (processor.getInputProductTypes() != null) {
+                for (String type : processor.getInputProductTypes()) {
+                    if (types.length() != 0) {
+                        types.append(", ");
+                    }
+                    types.append(type);
+                }
+            }
+            String text = "Input Types: " + types.toString();
+            text += "<br>Bundle: " + processor.getBundleName() + " v" + processor.getBundleVersion();
             text += "<br>Owner: " + owner;
             processorBundleName.setHTML(text);
 
