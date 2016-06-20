@@ -256,7 +256,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    <gmd:address>" +
             "                        <gmd:CI_Address>" +
             "                            <gmd:electronicMailAddress>" +
-            "                                <gco:CharacterString>emilio.chuvieco@uah.es></gco:CharacterString>" +
+            "                                <gco:CharacterString>emilio.chuvieco@uah.es</gco:CharacterString>" +
             "                            </gmd:electronicMailAddress>" +
             "                        </gmd:CI_Address>" +
             "                    </gmd:address>" +
@@ -296,9 +296,9 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:referenceSystemIdentifier>" +
             "                <gmd:RS_Identifier>" +
             "                    <gmd:authority>" +
-            "                        <CI_citation>" +
+            "                        <CI_Citation>" +
             "                            <gco:CharacterString>WGS84</gco:CharacterString>" +
-            "                        </CI_citation>" +
+            "                        </CI_Citation>" +
             "                    </gmd:authority>" +
             "                    <gmd:code>" +
             "                        <gco:CharacterString>WGS84</gco:CharacterString>" +
@@ -314,7 +314,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire Disturbance ECV (Fire_cci) Pixel Product – Zone ${zoneId} – ${zoneName}" +
+            "                        <gco:CharacterString>Chuvieco E. et al.: ESA Fire Climate Change Initiative (ESA Fire CCI) data - Pixel Product - Zone ${zoneId}: ${zoneName}." +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -361,7 +361,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "the generation of different projects, each focusing on the production of global coverage of an " +
             "Essential Climate Variable (ECV). The ECV Fire Disturbance (Fire_cci) provides validated, " +
             "error-characterised, global data sets of burned areas (BA) derived from existing satellite " +
-            "observations ENVISAT MERIS. The Fire_cci BA products consist of a Pixel " +
+            "observations. The Fire_cci BA products consist of a Pixel " +
             "and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem " +
             "scientists and researchers supporting their modelling efforts. Further information to the ESA CCI " +
             "Programme and a comprehensive documentation on the underlying algorithms, work flow, production " +
@@ -385,51 +385,38 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00277778 deg.; Pixel " +
             "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
             "the month or it is not observed; a value of 999 is allocated to pixels that are not taken into account in " +
-            "the burned area processing (continuous water, ocean).; Data type = 16bit integer; Number of layers = 1; Data depth = 16" +
+            "the burned area processing (continuous water, ocean).; Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00277778 deg.; Pixel value = 0 to" +
-            "100, where the value is the probability in percentage that the pixel is actually burned, as a result" +
-            "of both the pre-processing and the actual burned area classification. The higher the value, the" +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00277778 deg.; Pixel value = 0 to " +
+            "100, where the value is the probability in percentage that the pixel is actually burned, as a result " +
+            "of both the pre-processing and the actual burned area classification. The higher the value, the " +
             "higher the confidence that the pixel is actually burned. A value of 999 is allocated to pixels that are " +
-            "not taken into account in the burned area processing (continuous water, ocean). Data type = 16bit integer; " +
+            "not taken into account in the burned area processing (continuous water, ocean). Data type = Integer; " +
             "Number of layers = 1;" +
             "Data depth = 16" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover (LC). N is the " +
             "number of the land cover category in the reference " +
-            "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: ; " +
-            "0 = No data" +
-            "10 = Cropland, rainfed / " +
-            "Herbaceous cover / " +
-            "Tree or shrub cover; " +
-            "20 = Cropland, irrigated or post-flooding;" +
-            "30 = Mosaic cropland (&gt;50%) / natural vegetation (tree, shrub, herbaceous cover) (&lt;50%);" +
-            "40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (&gt;50%) / cropland (&lt;50%);" +
-            "50 = Tree cover, broadleaved, evergreen, closed to open (&gt;15%);" +
-            "60 = Tree cover, broadleaved, deciduous, closed to open (&gt;15%) / " +
-            "Tree cover, broadleaved, deciduous, closed (&gt;40%) / " +
-            "Tree cover, broadleaved, deciduous, open (15-40%);" +
-            "70 = Tree cover, needleleaved, evergreen, closed to open (&gt;15%) /" +
-            "Tree cover, needleleaved, evergreen, closed (&gt;40%) / " +
-            "Tree cover, needleleaved, evergreen, open (15-40%); " +
-            "80 = Tree cover, needleleaved, deciduous, closed to open (&gt;15%) /" +
-            "Tree cover, needleleaved, deciduous, closed (&gt;40%) / " +
-            "Tree cover, needleleaved, deciduous, open (15-40%); " +
+            "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
+            "10 = Cropland, rainfed; " +
+            "20 = Cropland, irrigated or post-flooding; " +
+            "30 = Mosaic cropland (&gt;50%) / natural vegetation (tree, shrub, herbaceous cover) (&lt;50%); " +
+            "40 = Mosaic natural vegetation (tree, shrub, herbaceous cover) (&gt;50%) / cropland (&lt;50%); " +
+            "50 = Tree cover, broadleaved, evergreen, closed to open (&gt;15%); " +
+            "60 = Tree cover, broadleaved, deciduous, closed to open (&gt;15%); " +
+            "70 = Tree cover, needleleaved, evergreen, closed to open (&gt;15%); " +
+            "80 = Tree cover, needleleaved, deciduous, closed to open (&gt;15%); " +
             "90 = Tree cover, mixed leaf type (broadleaved and needleleaved); " +
-            "100 = Mosaic tree and shrub (&gt;50%) / herbaceous cover (&lt;50%) ;" +
-            "110 = Mosaic herbaceous cover (&gt;50%) / tree and shrub (&lt;50%) ; " +
-            "120 = Shrubland / " +
-            "Shrubland evergreen / " +
-            "Shrubland deciduous; " +
+            "100 = Mosaic tree and shrub (&gt;50%) / herbaceous cover (&lt;50%); " +
+            "110 = Mosaic herbaceous cover (&gt;50%) / tree and shrub (&lt;50%); " +
+            "120 = Shrubland; " +
             "130 = Grassland; " +
             "140 = Lichens and mosses; " +
-            "150 = Sparse vegetation (tree, shrub, herbaceous cover) (&lt;15%) / " +
-            "Sparse shrub (&lt;15%) / " +
-            "Sparse herbaceous cover (&lt;15%) ; " +
+            "150 = Sparse vegetation (tree, shrub, herbaceous cover) (&lt;15%); " +
             "160 = Tree cover, flooded, fresh or brackish water; " +
             "170 = Tree cover, flooded, saline water; " +
             "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
-            "Pixel Spacing = 0.00277778 deg.; Data type = 16bit integer; Number of layers = 1; Data depth = 16" +
+            "Pixel Spacing = 0.00277778 deg.; Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
@@ -444,14 +431,14 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                            <gmd:address>" +
             "                                <gmd:CI_Address>" +
             "                                    <gmd:electronicMailAddress>" +
-            "                                        <gco:CharacterString>emilio.chuvieco@uah.es></gco:CharacterString>" +
+            "                                        <gco:CharacterString>emilio.chuvieco@uah.es</gco:CharacterString>" +
             "                                    </gmd:electronicMailAddress>" +
             "                                </gmd:CI_Address>" +
             "                            </gmd:address>" +
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.geogra.uah.es/emilio/</gmd:URL>" +
+            "                                        <gmd:URL>http://esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -477,7 +464,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                            <gmd:address>" +
             "                                <gmd:CI_Address>" +
             "                                    <gmd:electronicMailAddress>" +
-            "                                        <gco:CharacterString>Stephen.plummer@esa.int></gco:CharacterString>" +
+            "                                        <gco:CharacterString>Stephen.plummer@esa.int</gco:CharacterString>" +
             "                                    </gmd:electronicMailAddress>" +
             "                                </gmd:CI_Address>" +
             "                            </gmd:address>" +
@@ -535,7 +522,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:descriptiveKeywords>" +
             "                <gmd:MD_Keywords>" +
             "                    <gmd:keyword>" +
-            "                        <gco:CharacterString>Burned Area:Fire:Climate:Change:ESA:GCOS</gco:CharacterString>" +
+            "                        <gco:CharacterString>Burned Area; Fire Disturbance; Climate Change; ESA; GCOS</gco:CharacterString>" +
             "                    </gmd:keyword>" +
             "                    <gmd:type>" +
             "                        <gmd:MD_KeywordTypeCode codeList=\"http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml\"" +
