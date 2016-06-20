@@ -25,7 +25,6 @@ public class GridCell implements Writable {
     List<int[]> baInLcSecondHalf;
     float[] coverageFirstHalf;
     float[] coverageSecondHalf;
-    float[] coverage;
 
     void setBaFirstHalf(int[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
@@ -67,10 +66,6 @@ public class GridCell implements Writable {
         this.coverageSecondHalf = coverageSecondHalf;
     }
 
-    void setCoverage(float[] coverage) {
-        this.coverage = coverage;
-    }
-
     @Override
     public void write(DataOutput out) throws IOException {
         for (int v : baFirstHalf) {
@@ -107,9 +102,6 @@ public class GridCell implements Writable {
         for (float v : coverageSecondHalf) {
             out.writeFloat(v);
         }
-        for (float v : coverage) {
-            out.writeFloat(v);
-        }
     }
 
     @Override
@@ -128,7 +120,6 @@ public class GridCell implements Writable {
         }
         coverageFirstHalf = new float[BAND_SIZE];
         coverageSecondHalf = new float[BAND_SIZE];
-        coverage = new float[BAND_SIZE];
 
         for (int i = 0; i < BAND_SIZE; i++) {
             baFirstHalf[i] = in.readInt();
@@ -163,9 +154,6 @@ public class GridCell implements Writable {
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             coverageSecondHalf[i] = in.readFloat();
-        }
-        for (int i = 0; i < BAND_SIZE; i++) {
-            coverage[i] = in.readFloat();
         }
     }
 }

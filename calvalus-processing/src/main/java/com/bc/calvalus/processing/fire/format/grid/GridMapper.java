@@ -101,7 +101,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         int[] baSecondHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        float[] coverage = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
@@ -126,7 +125,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                 float baValueSecondHalf = 0.0F;
                 float coverageValueFirstHalf = 0.0F;
                 float coverageValueSecondHalf = 0.0F;
-                float coverageValue = 0.0F;
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
@@ -143,8 +141,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
                     coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
-                    coverageValue += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
-                    coverageValue += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
                 }
 
@@ -154,7 +150,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
                 coverageFirstHalf[targetPixelIndex] = getCoverage(coverageValueFirstHalf, areas[targetPixelIndex]);
                 coverageSecondHalf[targetPixelIndex] = getCoverage(coverageValueSecondHalf, areas[targetPixelIndex]);
-                coverage[targetPixelIndex] = getCoverage(coverageValue, areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }
@@ -178,7 +173,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setBaInLcSecondHalf(baInLcSecondHalf);
         gridCell.setCoverageFirstHalf(coverageFirstHalf);
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
-        gridCell.setCoverage(coverage);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2]))), gridCell);
         errorPredictor.dispose();

@@ -17,12 +17,16 @@ import ucar.nc2.Variable;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @author thomas
@@ -34,11 +38,9 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
 
     private NetcdfFileWriter ncFirst;
     private NetcdfFileWriter ncSecond;
-    private NetcdfFileWriter ncCoverage;
 
     private String firstHalfFile;
     private String secondHalfFile;
-    private String coverageFile;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -65,8 +67,6 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         float[] coverageFirstHalf = gridCell.coverageFirstHalf;
         float[] coverageSecondHalf = gridCell.coverageSecondHalf;
 
-        float[] coverage = gridCell.coverage;
-
         try {
             writeIntChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
             writeIntChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
@@ -89,7 +89,6 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
                 int[] baInClass = baInLcSecondHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
             }
-            writeFloatChunk(key.toString(), ncCoverage, "observed_area_fraction", coverage);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -97,12 +96,7 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        ncCoverage.close();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        File fileLocationCoverage = new File("./" + coverageFile);
-        Path pathCoverage = new Path(outputDir + "/" + coverageFile);
-        FileSystem fs = pathCoverage.getFileSystem(context.getConfiguration());
-        FileUtil.copy(fileLocationCoverage, fs, pathCoverage, false, context.getConfiguration());
 
         ncFirst.close();
         ncSecond.close();
@@ -111,6 +105,7 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         File fileLocation2 = new File("./" + secondHalfFile);
         Path path = new Path(outputDir + "/" + firstHalfFile);
         Path path2 = new Path(outputDir + "/" + secondHalfFile);
+        FileSystem fs = path.getFileSystem(context.getConfiguration());
         FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
         FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
     }
@@ -118,21 +113,25 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
     private void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
+        String version = context.getConfiguration().get("calvalus.baversion", "v4.1");
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
+
+        int lastDayOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
+        String timeCoverageStartFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1).atTime(0, 0, 0));
+        String timeCoverageEndFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 15).atTime(23, 59, 59));
+        String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
+        String timeCoverageEndSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
 
         firstHalfFile = createFilename(year, month, true);
         secondHalfFile = createFilename(year, month, false);
 
-        ncFirst = createNcFile(firstHalfFile);
-        ncSecond = createNcFile(secondHalfFile);
+        ncFirst = createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
+        ncSecond = createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);
 
         ncFirst.create();
         ncSecond.create();
-
-        coverageFile = String.format("%s%s-ESACCI-L4_FIRE-BA-MERIS-fv04.0-OAF.nc", year, month);
-        ncCoverage = createCoverageNcFile(coverageFile);
-        ncCoverage.create();
 
         try {
             writeLon(ncFirst);
@@ -156,16 +155,6 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
 
             writeVegetationClassNames(ncFirst);
             writeVegetationClassNames(ncSecond);
-
-            writeLon(ncCoverage);
-            writeLat(ncCoverage);
-            writeLonBnds(ncCoverage);
-            writeLatBnds(ncCoverage);
-            LocalDate current = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1);
-            LocalDate epoch = Year.of(1970).atMonth(1).atDay(1);
-            ncCoverage.write(ncCoverage.findVariable("time"), Array.factory(DataType.DOUBLE, new int[]{1}, new double[]{ChronoUnit.DAYS.between(epoch, current)}));
-            ncCoverage.write(ncCoverage.findVariable("time_bnds"), Array.factory(DataType.FLOAT, new int[]{1, 2}, new float[]{1F, Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()}));
-
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -318,7 +307,7 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         ncFile.write(lon, values);
     }
 
-    private static NetcdfFileWriter createNcFile(String filename) throws IOException {
+    private static NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
 
         ncFile.addDimension(null, "vegetation_class", 18);
@@ -375,62 +364,44 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("comment", "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/"));
 
-        ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
-        ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
-        ncFile.addGroupAttribute(null, new Attribute("version", "MERIS BA Algorithm v4.0"));
-        ncFile.addGroupAttribute(null, new Attribute("source", "Digital image processing of MERIS and MODIS hotspots data"));
-        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala's consortium for ESA CCI program"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative, ECV Fire Disturbance (Fire_cci)"));
-        ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
-        ncFile.addGroupAttribute(null, new Attribute("acknowledgment", "ESA CCI programme"));
-        ncFile.addGroupAttribute(null, new Attribute("contact", "Emilio Chuvieco: emilio.chuvieco@uah.es"));
-        ncFile.addGroupAttribute(null, new Attribute("history", ""));
+        addGroupAttributes(version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
         return ncFile;
     }
 
-    private static NetcdfFileWriter createCoverageNcFile(String filename) throws IOException {
-        NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
-
-        ncFile.addDimension(null, "lat", 720);
-        ncFile.addDimension(null, "lon", 1440);
-        ncFile.addDimension(null, "nv", 2);
-        ncFile.addUnlimitedDimension("time");
-
-        Variable latVar = ncFile.addVariable(null, "lat", DataType.FLOAT, "lat");
-        latVar.addAttribute(new Attribute("units", "degree_north"));
-        latVar.addAttribute(new Attribute("standard_name", "latitude"));
-        latVar.addAttribute(new Attribute("long_name", "latitude"));
-        latVar.addAttribute(new Attribute("bounds", "lat_bnds"));
-        ncFile.addVariable(null, "lat_bnds", DataType.FLOAT, "lat nv");
-        Variable lonVar = ncFile.addVariable(null, "lon", DataType.FLOAT, "lon");
-        lonVar.addAttribute(new Attribute("units", "degree_east"));
-        lonVar.addAttribute(new Attribute("standard_name", "longitude"));
-        lonVar.addAttribute(new Attribute("long_name", "longitude"));
-        lonVar.addAttribute(new Attribute("bounds", "lon_bnds"));
-        ncFile.addVariable(null, "lon_bnds", DataType.FLOAT, "lon nv");
-        Variable timeVar = ncFile.addVariable(null, "time", DataType.DOUBLE, "time");
-        timeVar.addAttribute(new Attribute("units", "days since 1970-01-01 00:00:00"));
-        timeVar.addAttribute(new Attribute("standard_name", "time"));
-        timeVar.addAttribute(new Attribute("long_name", "time"));
-        timeVar.addAttribute(new Attribute("bounds", "time_bnds"));
-        timeVar.addAttribute(new Attribute("calendar", "standard"));
-        Variable observedAreaFractionVar = ncFile.addVariable(null, "observed_area_fraction", DataType.FLOAT, "time lat lon");
-        observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
-        observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of observed area is 1 minus the area fraction of unsuitable/not observable pixels in a given grid. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
-        ncFile.addVariable(null, "time_bnds", DataType.FLOAT, "time nv");
-
-        ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
-        ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product - OAF only"));
-        ncFile.addGroupAttribute(null, new Attribute("version", "MERIS BA Algorithm v4.0"));
-        ncFile.addGroupAttribute(null, new Attribute("source", "Digital image processing of MERIS and MODIS hotspots data"));
-        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala's consortium for ESA CCI program"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative, ECV Fire Disturbance (Fire_cci)"));
+    private static void addGroupAttributes(String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
+        ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
+        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala de Henares"));
+        ncFile.addGroupAttribute(null, new Attribute("source", "Digital image processing of MERIS FR L1B and MODIS hotspots data"));
+        ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
         ncFile.addGroupAttribute(null, new Attribute("acknowledgment", "ESA CCI programme"));
         ncFile.addGroupAttribute(null, new Attribute("contact", "Emilio Chuvieco: emilio.chuvieco@uah.es"));
-        ncFile.addGroupAttribute(null, new Attribute("history", ""));
-        return ncFile;
+        ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
+        ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
+        ncFile.addGroupAttribute(null, new Attribute("product_version", "MERIS BA Algorithm " + version));
+        ncFile.addGroupAttribute(null, new Attribute("summary", "The ECV Fire Disturbance (Fire_cci) provides validated," +
+                " error-characterised, global data sets of burned areas (BA) derived from existing satellite observations."));
+        ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area; Fire Disturbance; Climate Change; ESA; GCOS"));
+        ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "THREDDS"));
+        ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
+        ncFile.addGroupAttribute(null, new Attribute("creator_name", "Thomas Storm"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_url", "http://www.brockmann-consult.de/"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_email", "thomas.storm@brockmann-consult.de"));
+        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative, ECV Fire Disturbance (Fire_cci)"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_max", "180"));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", String.format("P%sD", "" + timeCoverageDuration)));
+        ncFile.addGroupAttribute(null, new Attribute("platform", "Envisat"));
+        ncFile.addGroupAttribute(null, new Attribute("sensor", "MERIS"));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.05°"));
+    }
+
+    static String createTimeString(Instant instant) {
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
     }
 
     static String createFilename(String year, String month, boolean firstHalf) {
