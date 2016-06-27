@@ -1,5 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.ProductUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 import ucar.nc2.NetcdfFileWriter;
@@ -38,4 +41,19 @@ public class NcUtilsTest {
         assertEquals("2007-12-03 11:15:30", localTimeString);
     }
 
+
+    @Ignore
+    @Test
+    public void name() throws Exception {
+        Product product = ProductIO.readProduct("C:\\temp\\20100607-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc");
+        double burnedArea = ProductUtils.getGeophysicalSampleAsDouble(product.getBand("burned_area"), 819, 395, 0);
+        assertEquals(10231083, burnedArea, 1E-5f);
+
+        double burnedAreaInVegClasses = 0.0;
+        for (int i = 1; i <= 18; i++) {
+            burnedAreaInVegClasses += ProductUtils.getGeophysicalSampleAsDouble(product.getBand("burned_area_in_vegetation_class_vegetation_class" + i), 819, 395, 0);
+        }
+
+        assertEquals(10231083, burnedAreaInVegClasses, 1E-5f);
+    }
 }

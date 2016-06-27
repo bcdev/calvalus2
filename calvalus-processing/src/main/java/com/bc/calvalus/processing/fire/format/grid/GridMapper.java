@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
 /**
  * Runs the fire formatting grid mapper.
@@ -60,12 +61,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
-        int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
-        int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
-
-        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
-        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
-
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
@@ -88,8 +83,23 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             srProducts.add(srProduct);
         }
 
-        FireGridDataSource dataSource = new DataSourceImpl(sourceProduct, lcProduct, srProducts);
         ErrorPredictor errorPredictor = new ErrorPredictor();
+        GridCell gridCell = computeGridCell(year, month, sourceProduct, lcProduct, srProducts, errorPredictor);
+
+        context.progress();
+
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2]))), gridCell);
+        errorPredictor.dispose();
+    }
+
+    GridCell computeGridCell(int year, int month, Product sourceProduct, Product lcProduct, List<File> srProducts, ErrorPredictor errorPredictor) throws IOException {
+        int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
+        int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
+
+        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
+        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
+
+        FireGridDataSource dataSource = new DataSourceImpl(sourceProduct, lcProduct, srProducts);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -97,18 +107,22 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         SourceData data = new SourceData();
         double[] areas = new double[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        int[] baFirstHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
-        int[] baSecondHalf = new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] baFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+        float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] coverageSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] patchNumberSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
 
-        List<int[]> baInLcFirstHalf = new ArrayList<>();
-        List<int[]> baInLcSecondHalf = new ArrayList<>();
+        List<float[]> baInLcFirstHalf = new ArrayList<>();
+        List<float[]> baInLcSecondHalf = new ArrayList<>();
         for (int c = 0; c < LC_CLASSES_COUNT; c++) {
-            baInLcFirstHalf.add(new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
-            baInLcSecondHalf.add(new int[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT]);
+            float[] firstHalfBaInLcBuffer = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+            float[] secondHalfBaInLcBuffer = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
+            Arrays.fill(firstHalfBaInLcBuffer, 0);
+            Arrays.fill(secondHalfBaInLcBuffer, 0);
+            baInLcFirstHalf.add(firstHalfBaInLcBuffer);
+            baInLcSecondHalf.add(secondHalfBaInLcBuffer);
         }
 
         Product sourceForGeoCoding = ProductIO.readProduct(srProducts.get(0));
@@ -130,22 +144,40 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     int doy = data.pixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
+                        boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
+                            baInLcFirstHalf.get(lcClass)[targetPixelIndex] += inLcClass ? data.areas[i] : 0.0;
+                            if (inLcClass) {
+                                hasLcClass = true;
+                            }
+                        }
+                        if (!hasLcClass) {
+                            LOG.info("Pixel: " + targetPixelIndex + " with LC class " + data.lcClasses[i] + " is not remappable.");
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
+                        boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]) ? data.areas[i] : 0.0;
+                            boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
+                            baInLcSecondHalf.get(lcClass)[targetPixelIndex] += inLcClass ? data.areas[i] : 0.0;
+                            if (inLcClass) {
+                                hasLcClass = true;
+                            }
+                        }
+                        if (!hasLcClass) {
+                            LOG.info("Pixel: " + i + " with LC class " + data.lcClasses[i] + " is not remappable.");
                         }
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
                     coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
+
+                    validate(areas[targetPixelIndex], targetPixelIndex);
                 }
 
-                baFirstHalf[targetPixelIndex] = (int) baValueFirstHalf;
-                baSecondHalf[targetPixelIndex] = (int) baValueSecondHalf;
+                baFirstHalf[targetPixelIndex] = baValueFirstHalf;
+                baSecondHalf[targetPixelIndex] = baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
                 coverageFirstHalf[targetPixelIndex] = getCoverage(coverageValueFirstHalf, areas[targetPixelIndex]);
@@ -157,10 +189,14 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         sourceForGeoCoding.dispose();
 
-        int[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
-        int[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
+        float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
+        float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
 
-        context.progress();
+        validate(errorsFirstHalf, baFirstHalf);
+        validate(errorsSecondHalf, baSecondHalf);
+
+        validate(baFirstHalf, baInLcFirstHalf);
+        validate(baSecondHalf, baInLcSecondHalf);
 
         GridCell gridCell = new GridCell();
         gridCell.setBaFirstHalf(baFirstHalf);
@@ -173,9 +209,33 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         gridCell.setBaInLcSecondHalf(baInLcSecondHalf);
         gridCell.setCoverageFirstHalf(coverageFirstHalf);
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
+        return gridCell;
+    }
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2]))), gridCell);
-        errorPredictor.dispose();
+    private static void validate(float[] baFirstHalf, List<float[]> baInLcFirstHalf) {
+        float baSum = (float) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).sum();
+        float baInLcSum = 0;
+        for (float[] floats : baInLcFirstHalf) {
+            baInLcSum += IntStream.range(0, floats.length).mapToDouble(i -> floats[i]).sum();
+        }
+        if (Math.abs(baSum - baInLcSum) > baSum * 0.05) {
+            throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
+        }
+    }
+
+    private static void validate(float[] errors, float[] ba) {
+        for (int i = 0; i < errors.length; i++) {
+            float error = errors[i];
+            if (error > 0 && !(ba[i] > 0)) {
+                throw new IllegalStateException("error > 0 && !(ba[i] > 0)");
+            }
+        }
+    }
+
+    private static void validate(double area, int index) {
+        if (area < 0) {
+            throw new IllegalStateException("area < 0 at target pixel " + index);
+        }
     }
 
     private static float getCoverage(float coverage, double area) {
@@ -190,7 +250,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
-    private int[] predict(ErrorPredictor errorPredictor, int[] ba, double[] areas) {
+    private float[] predict(ErrorPredictor errorPredictor, float[] ba, double[] areas) {
         try {
             return errorPredictor.predictError(ba, areas);
         } catch (ScriptException e) {
