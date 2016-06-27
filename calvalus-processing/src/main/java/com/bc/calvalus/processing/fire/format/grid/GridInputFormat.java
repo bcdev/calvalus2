@@ -135,24 +135,22 @@ public class GridInputFormat extends InputFormat {
     }
 
     private static String lcYear(int year) {
-        // 2002 -> 2000
-        // 2003 - 2007 -> 2005
-        // 2008 - 2012 -> 2010
+        // 2002 - 2007 -> 2000
+        // 2008 - 2012 -> 2005
         switch (year) {
             case 2002:
-                return "2000";
             case 2003:
             case 2004:
             case 2005:
             case 2006:
             case 2007:
-                return "2005";
+                return "2000";
             case 2008:
             case 2009:
             case 2010:
             case 2011:
             case 2012:
-                return "2010";
+                return "2005";
         }
         throw new IllegalArgumentException("Illegal year: " + year);
     }
