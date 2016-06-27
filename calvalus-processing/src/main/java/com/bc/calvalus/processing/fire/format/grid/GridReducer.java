@@ -49,27 +49,27 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         Iterator<GridCell> iterator = values.iterator();
         GridCell gridCell = iterator.next();
 
-        int[] burnedAreaFirstHalf = gridCell.baFirstHalf;
-        int[] burnedAreaSecondHalf = gridCell.baSecondHalf;
+        float[] burnedAreaFirstHalf = gridCell.baFirstHalf;
+        float[] burnedAreaSecondHalf = gridCell.baSecondHalf;
 
         float[] patchNumbersFirstHalf = gridCell.patchNumberFirstHalf;
         float[] patchNumbersSecondHalf = gridCell.patchNumberSecondHalf;
 
-        int[] errorsFirstHalf = gridCell.errorsFirstHalf;
-        int[] errorsSecondHalf = gridCell.errorsSecondHalf;
+        float[] errorsFirstHalf = gridCell.errorsFirstHalf;
+        float[] errorsSecondHalf = gridCell.errorsSecondHalf;
 
-        List<int[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
-        List<int[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
+        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
+        List<float[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
 
         float[] coverageFirstHalf = gridCell.coverageFirstHalf;
         float[] coverageSecondHalf = gridCell.coverageSecondHalf;
 
         try {
-            writeIntChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
-            writeIntChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
+            writeFloatChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
+            writeFloatChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
 
-            writeIntChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
-            writeIntChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
+            writeFloatChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
+            writeFloatChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
 
             writeFloatChunk(key.toString(), ncFirst, "observed_area_fraction", coverageFirstHalf);
             writeFloatChunk(key.toString(), ncSecond, "observed_area_fraction", coverageSecondHalf);
@@ -79,11 +79,11 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
 
 
             for (int i = 0; i < baInLcFirstHalf.size(); i++) {
-                int[] baInClass = baInLcFirstHalf.get(i);
+                float[] baInClass = baInLcFirstHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncFirst, baInClass);
             }
             for (int i = 0; i < baInLcSecondHalf.size(); i++) {
-                int[] baInClass = baInLcSecondHalf.get(i);
+                float[] baInClass = baInLcSecondHalf.get(i);
                 writeVegetationChunk(key.toString(), i, ncSecond, baInClass);
             }
         } catch (InvalidRangeException e) {
@@ -154,16 +154,6 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         }
     }
 
-    private static void writeIntChunk(String key, NetcdfFileWriter ncFile, String varName, int[] data) throws IOException, InvalidRangeException {
-        int x = getX(key);
-        int y = getY(key);
-        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
-
-        Variable variable = ncFile.findVariable(varName);
-        Array values = Array.factory(DataType.INT, new int[]{1, 40, 40}, data);
-        ncFile.write(variable, new int[]{0, y, x}, values);
-    }
-
     private static void writeFloatChunk(String key, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
@@ -174,13 +164,13 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 
-    private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, int[] baInClass) throws IOException, InvalidRangeException {
+    private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, float[] baInClass) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
         CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
-        Array values = Array.factory(DataType.INT, new int[]{1, 1, 40, 40}, baInClass);
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 40, 40}, baInClass);
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 

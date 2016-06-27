@@ -31,7 +31,7 @@ class ErrorPredictor {
         }
     }
 
-    int[] predictError(int[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) throws ScriptException {
+    float[] predictError(float[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) throws ScriptException {
         if (burnedAreaInSquareMeters.length != cellSizeInSquareMeters.length) {
             throw new IllegalArgumentException("For each burned area pixel there must be exactly one cell size value.");
         }
@@ -46,9 +46,9 @@ class ErrorPredictor {
         for (int i = 0; i < predictionResult.length; i++) {
             predictionResult[i] = cellSizeInSquareMeters[i] * predictionResult[i];
         }
-        int[] result = new int[predictionResult.length];
+        float[] result = new float[predictionResult.length];
         for (int i = 0; i < predictionResult.length; i++) {
-            result[i] = (int) predictionResult[i];
+            result[i] = (float) predictionResult[i];
 
         }
         return result;
@@ -58,7 +58,7 @@ class ErrorPredictor {
         resFile.delete();
     }
 
-    private double[] computeBAPerSquareMeter(int[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) {
+    private double[] computeBAPerSquareMeter(float[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) {
         double[] result = new double[burnedAreaInSquareMeters.length];
         for (int i = 0; i < result.length; i++) {
             result[i] = burnedAreaInSquareMeters[i] / cellSizeInSquareMeters[i];
