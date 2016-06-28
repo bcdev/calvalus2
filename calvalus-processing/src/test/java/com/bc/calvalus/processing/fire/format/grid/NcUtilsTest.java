@@ -22,17 +22,17 @@ public class NcUtilsTest {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
         String timeCoverageStart = dtf.format(LocalDate.of(2008, 6, 1).atTime(0, 0, 0));
         String timeCoverageEnd = dtf.format(LocalDate.of(2008, 6, 15).atTime(23, 59, 59));
-        NetcdfFileWriter ncFile = NcUtils.createNcFile(".\\" + NcUtils.createFilename("2008", "06", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
+        NetcdfFileWriter ncFile = NcUtils.createNcFile(".\\" + NcUtils.createFilename("2008", "06", "04.1", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
         ncFile.close();
     }
 
     @Test
     public void testCreateFilename() throws Exception {
-        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", true));
-        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", false));
+        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "04.0", true));
+        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "04.0", false));
 
-        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2010", "10", true));
-        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2010", "10", false));
+        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "04.1", true));
+        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "04.1", false));
     }
 
     @Test

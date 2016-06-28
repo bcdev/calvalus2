@@ -153,7 +153,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                             }
                         }
                         if (!hasLcClass) {
-                            LOG.info("Pixel: " + targetPixelIndex + " with LC class " + data.lcClasses[i] + " is not remappable.");
+                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
@@ -166,7 +166,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                             }
                         }
                         if (!hasLcClass) {
-                            LOG.info("Pixel: " + i + " with LC class " + data.lcClasses[i] + " is not remappable.");
+                            LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
                         }
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
@@ -213,12 +213,19 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
     }
 
     private static void validate(float[] baFirstHalf, List<float[]> baInLcFirstHalf) {
+        if (baFirstHalf.length < 80) {
+            // don't throw an error for too few observations
+            return;
+        }
         float baSum = (float) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).sum();
         float baInLcSum = 0;
         for (float[] floats : baInLcFirstHalf) {
             baInLcSum += IntStream.range(0, floats.length).mapToDouble(i -> floats[i]).sum();
         }
         if (Math.abs(baSum - baInLcSum) > baSum * 0.05) {
+            CalvalusLogger.getLogger().warning("Math.abs(baSum - baInLcSum) > baSum * 0.05:");
+            CalvalusLogger.getLogger().warning("baSum = " + baSum);
+            CalvalusLogger.getLogger().warning("baInLcSum " + baInLcSum);
             throw new IllegalStateException("Math.abs(baSum - baInLcSum) > baSum * 0.05");
         }
     }

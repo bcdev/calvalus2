@@ -121,8 +121,8 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
         String timeCoverageEndSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
 
-        firstHalfFile = NcUtils.createFilename(year, month, true);
-        secondHalfFile = NcUtils.createFilename(year, month, false);
+        firstHalfFile = NcUtils.createFilename(year, month, version, true);
+        secondHalfFile = NcUtils.createFilename(year, month, version, false);
 
         ncFirst = NcUtils.createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
         ncSecond = NcUtils.createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);

@@ -107,8 +107,8 @@ class NcUtils {
         ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.05°"));
     }
 
-    static String createFilename(String year, String month, boolean firstHalf) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", year, month, firstHalf ? "07" : "22");
+    static String createFilename(String year, String month, String version, boolean firstHalf) {
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-f%s.nc", year, month, firstHalf ? "07" : "22", version);
     }
 
     static String createTimeString(Instant instant) {
