@@ -28,6 +28,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.beam.framework.datamodel.Product;
 
@@ -77,8 +78,13 @@ public class ProcessorFactory {
                 final String bundleSpec = aBundle[i];
                 Path bundlePath = getBundlePath(bundleSpec, conf);
                 if (bundlePath != null) {
-                    FileSystem fs = bundlePath.getFileSystem(conf);
-                    HadoopProcessingService.addBundleToClassPath(bundlePath, conf);
+                    FileSystem fs;
+                    try {
+                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+                    } catch (InterruptedException e) {
+                        throw new IOException(e);
+                    }
+                    HadoopProcessingService.addBundleToClassPathStatic(bundlePath, conf, fs);
                     addBundleArchives(bundlePath, fs, conf);
                     addBundleLibs(bundlePath, fs, conf);
 
@@ -94,11 +100,11 @@ public class ProcessorFactory {
                     // check for bundle to include, install it
                     try {
                         Path bundleDesc = new Path(bundlePath, HadoopProcessingService.BUNDLE_DESCRIPTOR_XML_FILENAME);
-                        if (bundleDesc.getFileSystem(conf).exists(bundleDesc)) {
+                        if (fs.exists(bundleDesc)) {
                             BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
-                                HadoopProcessingService.addBundleToClassPath(includeBundlePath, conf);
+                                HadoopProcessingService.addBundleToClassPathStatic(includeBundlePath, conf, fs);
                                 addBundleArchives(includeBundlePath, fs, conf);
                                 addBundleLibs(includeBundlePath, fs, conf);
                             }
@@ -149,7 +155,12 @@ public class ProcessorFactory {
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
-        FileSystem fs = bundlePath.getFileSystem(conf);
+        FileSystem fs;
+        try {
+            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
             if (bundleStatus != null && bundleStatus.isDirectory()) {

@@ -101,6 +101,8 @@ public class ProcessorProductionRequest {
             final BundleFilter filter = new BundleFilter();
             filter.withProvider(BundleFilter.PROVIDER_SYSTEM);
             filter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
+            filter.withProvider(BundleFilter.PROVIDER_USER);
+            filter.withTheUser(userName);
             filter.withTheBundle(processorBundleName, processorBundleVersion);
             BundleDescriptor[] bundles = processingService.getBundles(userName, filter);
             for (BundleDescriptor bundle : bundles) {
