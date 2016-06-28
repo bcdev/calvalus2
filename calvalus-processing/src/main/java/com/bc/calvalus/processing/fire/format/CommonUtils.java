@@ -45,9 +45,9 @@ public class CommonUtils {
     static List<String> filterPathNames(List<String> pathNames) {
         List<String> filteredPathNames = new ArrayList<>();
         for (String pathName : pathNames) {
-            boolean isOld = pathName.contains("/v1/");
+            boolean isOld = pathName.contains("_v4.0.tif");
             if (isOld) {
-                boolean isReplacedByNew = pathNames.contains(pathName.replace("/v1/", "/").replace("_v4.0.tif", "_v4.1.tif"));
+                boolean isReplacedByNew = pathNames.contains(pathName.replace("_v4.0.tif", "_v4.1.tif"));
                 if (!isReplacedByNew) {
                     filteredPathNames.add(pathName);
                 }

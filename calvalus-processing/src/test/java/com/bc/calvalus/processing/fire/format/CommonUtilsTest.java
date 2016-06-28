@@ -38,21 +38,21 @@ public class CommonUtilsTest {
     @Test
     public void filterPathNames() throws Exception {
         List<String> filteredPathNames = CommonUtils.filterPathNames(Arrays.asList(
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h05_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h06_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h01_200606_v4.0.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h05_200606_v4.0.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h06_200606_v4.0.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h07_200606_v4.0.tif")
+                "BA_PIX_MER_v04h01_200606_v4.1.tif",
+                "BA_PIX_MER_v04h05_200606_v4.1.tif",
+                "BA_PIX_MER_v04h06_200606_v4.1.tif",
+                "BA_PIX_MER_v04h01_200606_v4.0.tif",
+                "BA_PIX_MER_v04h05_200606_v4.0.tif",
+                "BA_PIX_MER_v04h06_200606_v4.0.tif",
+                "BA_PIX_MER_v04h07_200606_v4.0.tif")
         );
 
         String[] filteredPathNamesArray = filteredPathNames.toArray(new String[0]);
         String[] expected = {
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h05_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h06_200606_v4.1.tif",
-                "hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/v1/BA_PIX_MER_v04h07_200606_v4.0.tif",
+                "BA_PIX_MER_v04h01_200606_v4.1.tif",
+                "BA_PIX_MER_v04h05_200606_v4.1.tif",
+                "BA_PIX_MER_v04h06_200606_v4.1.tif",
+                "BA_PIX_MER_v04h07_200606_v4.0.tif",
         };
 
         Arrays.sort(filteredPathNamesArray);
