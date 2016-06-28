@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.snap.core.datamodel.Product;
 
@@ -74,8 +75,15 @@ public class ProcessorFactory {
                 final String bundleSpec = aBundle[i];
                 Path bundlePath = getBundlePath(bundleSpec, conf);
                 if (bundlePath != null) {
-                    HadoopProcessingService.addBundleToDistributedCache(bundlePath, username, conf);
-                    final FileSystem fs = getFileSystem(username, conf, bundlePath);
+                    FileSystem fs;
+                    try {
+                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+                    } catch (InterruptedException e) {
+                        throw new IOException(e);
+                    }
+                    HadoopProcessingService.addBundleToClassPathStatic(bundlePath, conf, fs);
+                    addBundleArchives(bundlePath, fs, conf);
+                    addBundleLibs(bundlePath, fs, conf);
 
                     String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + "");
                     if (executable != null) {
@@ -93,7 +101,9 @@ public class ProcessorFactory {
                             BundleDescriptor bundleDescriptor = HadoopProcessingService.readBundleDescriptor(fs, bundleDesc);
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
-                                HadoopProcessingService.addBundleToDistributedCache(includeBundlePath, username, conf);
+                                HadoopProcessingService.addBundleToClassPathStatic(includeBundlePath, conf, fs);
+                                addBundleArchives(includeBundlePath, fs, conf);
+                                addBundleLibs(includeBundlePath, fs, conf);
                             }
                         }
                     } catch (Exception ex) {
@@ -150,7 +160,12 @@ public class ProcessorFactory {
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
-        FileSystem fs = bundlePath.getFileSystem(conf);
+        FileSystem fs;
+        try {
+            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
             if (bundleStatus != null && bundleStatus.isDirectory()) {

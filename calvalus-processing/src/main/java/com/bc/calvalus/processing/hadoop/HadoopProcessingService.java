@@ -22,6 +22,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
@@ -33,6 +34,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
@@ -70,7 +72,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.9-SNAPSHOT";
-    public static final String DEFAULT_SNAP_BUNDLE = "snap-2.0.0";
+    public static final String DEFAULT_SNAP_BUNDLE = "snap-3.0.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 
@@ -254,7 +256,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                     if (processorDescriptors != null) {
                         for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
                             if (processorDescriptor.getProcessorName().equals(filter.getProcessorName()) &&
-                                    processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
+                                processorDescriptor.getProcessorVersion().equals(filter.getProcessorVersion())) {
                                 descriptors.add(bd);
                             }
                         }
@@ -348,13 +350,24 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return bd;
     }
 
-    public static void addBundleToClassPath(Path bundlePath, String username, Configuration configuration) throws IOException {
-        final FileSystem fileSystem;
-        try {
-            fileSystem = FileSystem.get(bundlePath.toUri(), configuration, username);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
+    public void addBundleToClassPath(Path bundlePath, Configuration configuration) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(configuration.get(JobConfigNames.CALVALUS_USER), bundlePath.toString());
+        final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return path.getName().endsWith(".jar");
+            }
+        });
+        for (FileStatus fileStatus : fileStatuses) {
+            // For hadoops sake, skip protocol from path because it contains ':' and that is used
+            // as separator in the job configuration!
+            final Path path = fileStatus.getPath();
+            final Path pathWithoutProtocol = new Path(path.toUri().getPath());
+            DistributedCache.addFileToClassPath(pathWithoutProtocol, configuration, fileSystem);
         }
+    }
+
+    public static void addBundleToClassPathStatic(Path bundlePath, Configuration configuration, FileSystem fileSystem) throws IOException {
         final FileStatus[] fileStatuses = fileSystem.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
@@ -442,6 +455,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      * @param jobID
      * @param jobStatus The hadoop job status. May be null, which is interpreted as the job is being done.
      * @param jobClient
+     *
      * @return The process status.
      */
     private ProcessStatus convertStatus(org.apache.hadoop.mapred.JobID jobID, JobStatus jobStatus, JobClient jobClient) {

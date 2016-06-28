@@ -97,9 +97,10 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     @Override
     public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
-        float[][] result = new float[1][numElems];
+        float[][] result = new float[2][numElems];
         for (int i = 0; i < numElems; i++) {
             result[0][i] = Float.NaN;
+            result[1][i] = Float.NaN;
             float count = aggregatedSamples[AGG_INDEX_COUNT][i];
             if (count >= 2) {
                 double sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
@@ -115,8 +116,12 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                     double tau3 = sdrMean * 1.35;
                     double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
                     double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
+                    double tau5 = sdrMean - sdrSigma;
+                    double tau6 = sdrMean * 0.65;
                     double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
+                    double sdrCloudShadowDetector = Math.min(tau5, tau6);
                     result[0][i] = (float) sdrCloudDetector;
+                    result[1][i] = (float) sdrCloudShadowDetector;
                 }
                 // if "ndvi" instead of sdr_B3 (spot only)
                 //if (cloudValue2 > applyFilterThresh) {
@@ -185,6 +190,6 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     }
 
     private static String[] createOutputFeatureNames() {
-        return new String[]{"sdr_cloud_detector"};
+        return new String[]{"sdr_cloud_detector", "sdr_cloud_shadow_detector"};
     }
 }

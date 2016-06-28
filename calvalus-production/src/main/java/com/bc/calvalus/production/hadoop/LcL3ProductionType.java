@@ -78,15 +78,15 @@ public class LcL3ProductionType extends HadoopProductionType {
         int mosaicTileSize = sensorConfig.getMosaicTileSize();
         String groundResolution = sensorConfig.getGroundResolution();
         String sensorName = sensorConfig.getSensorName();
-        String temporalCloudBandName = sensorConfig.getTemporalCloudBandName();
-        float temporalCloudFilterThreshold = sensorConfig.getTemporalCloudFilterThreshold();
+        String temporalCloudBandName = productionRequest.getString("calvalus.lc.temporalCloudBandName", sensorConfig.getTemporalCloudBandName());
+        float temporalCloudFilterThreshold = productionRequest.getFloat("calvalus.lc.temporalCloudFilterThreshold", sensorConfig.getTemporalCloudFilterThreshold());
 
         String outputVersion = productionRequest.getString("calvalus.output.version", "1.0");
 
         int cloudBorderWidth = productionRequest.getInteger("cloudBorderWidth", 0);  // was 150
         int mainBorderWidth = productionRequest.getInteger("mainBorderWidth", 0);  // was 250
 
-        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
+        String cloudMosaicConfigXml = sensorConfig.getCloudMosaicConfig(temporalCloudBandName, productionRequest.getString("calvalus.lc.remapAsLand", null), cloudBorderWidth).toXml();
         String mainMosaicConfigXml = sensorConfig.getMainMosaicConfig(productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4"), mainBorderWidth).toXml();
 
         String period = getLcPeriodName(productionRequest);
@@ -122,6 +122,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("calvalus.lc.version", outputVersion);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigCloud.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
@@ -152,6 +155,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set("calvalus.lc.version", outputVersion);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigSr.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("calvalus.lc.resolution", resolution);
             jobConfigSr.set("mapred.job.priority", "NORMAL");
@@ -175,6 +181,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set("calvalus.lc.sensor", sensorName);
             jobConfigFormat.set("calvalus.lc.version", outputVersion);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("VEGETATION".equals(sensorName)) {
+                jobConfigFormat.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
+            }
             jobConfigFormat.set("calvalus.lc.resolution", resolution);
             jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),

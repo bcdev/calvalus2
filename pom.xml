@@ -28,7 +28,7 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-wps-rest</module>
+        <module>calvalus-wps-impl</module>
     </modules>
 
     <repositories>
@@ -77,7 +77,6 @@
             <url>http://download.osgeo.org/webdav/geotools/</url>
         </repository>
     </repositories>
-
 
     <build>
         <plugins>

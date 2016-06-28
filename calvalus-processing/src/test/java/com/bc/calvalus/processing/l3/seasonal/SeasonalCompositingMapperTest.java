@@ -70,8 +70,8 @@ public class SeasonalCompositingMapperTest {
             }
         }
 
-        assertEquals("numTargetBands", 5+3, numTargetBands);
-        assertEquals("numSourceBands", 5+6, numSourceBands);
+        assertEquals("numTargetBands", 5 + 3, numTargetBands);
+        assertEquals("numSourceBands", 5 + 6, numSourceBands);
         assertEquals("targetBandIndex", 9, targetBandIndex[6]);
         assertEquals("sourceBandIndex", 18, sourceBandIndex[9]);
         assertEquals("targetBandIndex", 10, targetBandIndex[7]);

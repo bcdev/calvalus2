@@ -16,7 +16,11 @@
 
 package com.bc.calvalus.processing.hadoop;
 
-import com.bc.calvalus.commons.*;
+import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import org.apache.hadoop.conf.Configuration;

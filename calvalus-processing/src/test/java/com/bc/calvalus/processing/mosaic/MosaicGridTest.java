@@ -29,16 +29,16 @@ public class MosaicGridTest {
         assertNotNull(rectangle);
         assertEquals(0, rectangle.x);
         assertEquals(0, rectangle.y);
-        assertEquals(370 * 10, rectangle.width);
-        assertEquals(370 * 10, rectangle.height);
+        assertEquals(370 * 10 * 36, rectangle.width);
+        assertEquals(370 * 10 + 2, rectangle.height);
 
         geometry = GeometryUtils.createGeometry("polygon((-179.5 89.5, -179.5 80.5, -170.5 80.5, -170.5 89.5, -179.5 89.5))");
         rectangle = mosaicGrid.computeBounds(geometry);
         assertNotNull(rectangle);
-        assertEquals(185, rectangle.x);
-        assertEquals(185, rectangle.y);
-        assertEquals(370 * 9, rectangle.width);
-        assertEquals(370 * 9, rectangle.height);
+        assertEquals(185 - 1, rectangle.x);
+        assertEquals(185 - 1, rectangle.y);
+        assertEquals(370 * 9 + 3, rectangle.width);
+        assertEquals(370 * 9 + 2, rectangle.height);
     }
 
     @Test
@@ -164,7 +164,7 @@ public class MosaicGridTest {
 
     @Test
     public void testGetTileGeometry_5degree() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid(5, 180 / 5, 370 * 5);
+        MosaicGrid mosaicGrid = new MosaicGrid(5, 180 / 5, 370 * 5, true);
 
         assertTileGeometry(mosaicGrid, 0, 0, -180.0, -175.0, 85.0, 90.0);
         assertTileGeometry(mosaicGrid, 36, 18, 0.0, 5.0, -5.0, 0.0);
@@ -190,7 +190,7 @@ public class MosaicGridTest {
         assertEquals(72, mosaicGrid.getNumMacroTileX());
         assertEquals(36, mosaicGrid.getNumMacroTileY());
 
-        mosaicGrid = new MosaicGrid(10, 180, 360);
+        mosaicGrid = new MosaicGrid(10, 180, 360, true);
         assertEquals(360, mosaicGrid.getNumTileX());
         assertEquals(180, mosaicGrid.getNumTileY());
         assertEquals(36, mosaicGrid.getNumMacroTileX());
@@ -214,7 +214,7 @@ public class MosaicGridTest {
         assertEquals("180", configuration.get("calvalus.mosaic.numTileY"));
         assertEquals("370", configuration.get("calvalus.mosaic.tileSize"));
 
-        mosaicGrid = new MosaicGrid(6, 18, 20);
+        mosaicGrid = new MosaicGrid(6, 18, 20, true);
         mosaicGrid.saveToConfiguration(configuration);
 
         assertEquals("6", configuration.get("calvalus.mosaic.macroTileSize"));

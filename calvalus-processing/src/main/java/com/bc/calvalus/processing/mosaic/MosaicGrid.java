@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -45,6 +46,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Defines the Grid on which the mosaic-ing is happening.
@@ -53,9 +55,12 @@ import java.util.Set;
  */
 public class MosaicGrid {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     private final int gridWidth;
     private final int gridHeight;
     private final int tileSize;
+    private final boolean withIntersectionCheck;
     private final double pixelSize;
     private final int numTileX;
     private final int macroTileSize;
@@ -66,18 +71,20 @@ public class MosaicGrid {
         int macroTileSize = conf.getInt("calvalus.mosaic.macroTileSize", 5);
         int numTileY = conf.getInt("calvalus.mosaic.numTileY", 180);
         int tileSize = conf.getInt("calvalus.mosaic.tileSize", 370);
-        return new MosaicGrid(macroTileSize, numTileY, tileSize);
+        boolean withIntersectionCheck = conf.getBoolean("calvalus.mosaic.withIntersectionCheck", true);
+        return new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
     }
 
     MosaicGrid() {
-        this(5, 180, 370);
+        this(5, 180, 370, true);
     }
 
-    MosaicGrid(int macroTileSize, int numTileY, int tileSize) {
+    MosaicGrid(int macroTileSize, int numTileY, int tileSize, boolean withIntersectionCheck) {
         this.macroTileSize = macroTileSize;
         this.numTileY = numTileY;
         this.numTileX = numTileY * 2;
         this.tileSize = tileSize;
+        this.withIntersectionCheck = withIntersectionCheck;
         this.gridWidth = numTileX * tileSize;
         this.gridHeight = numTileY * tileSize;
         this.pixelSize = 180.0 / gridHeight;
@@ -87,6 +94,7 @@ public class MosaicGrid {
         conf.setInt("calvalus.mosaic.macroTileSize", macroTileSize);
         conf.setInt("calvalus.mosaic.numTileY", numTileY);
         conf.setInt("calvalus.mosaic.tileSize", tileSize);
+        conf.setBoolean("calvalus.mosaic.withIntersectionCheck", withIntersectionCheck);
     }
 
     private GeometryFactory getGeometryFactory() {
@@ -138,13 +146,32 @@ public class MosaicGrid {
                 gymin = Math.min(gymin, coordinate.y);
                 gymax = Math.max(gymax, coordinate.y);
             }
+            // extend by 1/2 pixelSize in all directions
+            // to circumscribe the complete extend of the source
+            // (sourcePixelSize would be even more accurate)
+            gxmin -= pixelSize / 2;
+            gxmax += pixelSize / 2;
+            gymin -= pixelSize / 2;
+            gymax += pixelSize / 2;
+            if (gxmin < -180.0 || gxmax > 180.0) {
+                gxmin = -180.0;
+                gxmax = 180.0;
+            }
+            if (gymin < -90.0) {
+                gymin = -90.0;
+            }
+            if (gymax > 90.0) {
+                gymax = 90.0;
+            }
+
             final int x = (int) Math.floor((180.0 + gxmin) / pixelSize);
             final int y = (int) Math.floor((90.0 - gymax) / pixelSize);
-            final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
-            final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
+            final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize + 1);
+            final int height = (int) Math.ceil((gymax - gymin) / pixelSize + 1);
             final Rectangle unclippedOutputRegion = new Rectangle(x, y, width, height);
             region = unclippedOutputRegion.intersection(region);
         }
+        LOG.info("source product bounds: " + region);
         return region;
     }
 
@@ -291,11 +318,19 @@ public class MosaicGrid {
         final int height = gridRect.height / tileSize;
         List<Point> points = new ArrayList<>(width * height);
 
-        for (int y = yStart; y < yStart + height; y++) {
-            for (int x = xStart; x < xStart + width; x++) {
-                Geometry tileGeometry = getTileGeometry(x, y);
-                Geometry intersection = geometry.intersection(tileGeometry);
-                if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+        if (withIntersectionCheck) {
+            for (int y = yStart; y < yStart + height; y++) {
+                for (int x = xStart; x < xStart + width; x++) {
+                    Geometry tileGeometry = getTileGeometry(x, y);
+                    Geometry intersection = geometry.intersection(tileGeometry);
+                    if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+                        points.add(new Point(x, y));
+                    }
+                }
+            }
+        } else {
+            for (int y = yStart; y < yStart + height; y++) {
+                for (int x = xStart; x < xStart + width; x++) {
                     points.add(new Point(x, y));
                 }
             }

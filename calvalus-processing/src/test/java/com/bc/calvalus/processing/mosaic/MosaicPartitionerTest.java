@@ -48,7 +48,7 @@ public class MosaicPartitionerTest {
 
     @Test
     public void testByMacroTile() {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
         conf.setInt("calvalus.mosaic.numXPartitions", 6);
@@ -74,7 +74,7 @@ public class MosaicPartitionerTest {
 
     @Test
     public void testTwoPerRow() {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
         conf.setInt("calvalus.mosaic.numXPartitions", 2);
