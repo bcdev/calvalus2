@@ -16,6 +16,9 @@
 
 package com.bc.calvalus.processing;
 
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isLib;
+
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
@@ -29,11 +32,14 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.MapContext;
+import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.esa.snap.core.datamodel.Product;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -121,14 +127,6 @@ public class ProcessorFactory {
         conf.set(JobConfigNames.CALVALUS_L2_PROCESSOR_TYPE + "", processorType.toString());
     }
 
-    private static FileSystem getFileSystem(String username, Configuration conf, Path path) throws IOException {
-        try {
-            return FileSystem.get(path.toUri(), conf, username);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
-    }
-
     private static ProcessorType detectProcessorType(Path bundlePath, final String executable, FileSystem fs) throws IOException {
         final FileStatus[] graphFiles = fs.listStatus(bundlePath, new PathFilter() {
             @Override
@@ -179,12 +177,57 @@ public class ProcessorFactory {
         return bundleSpec.charAt(0) == '/';
     }
 
+    private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] archives = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return isArchive(path);
+            }
+        });
+        for (FileStatus archive : archives) {
+            URI uri = convertPathToURI(archive.getPath());
+            DistributedCache.addCacheArchive(uri, conf);
+        }
+    }
+
+    private static URI convertPathToURI(Path path) {
+        URI uri = path.toUri();
+        String linkName = stripArchiveExtension(path.getName());
+        try {
+            return new URI(uri.getScheme(), null, uri.getHost(), uri.getPort(), uri.getPath(), null, linkName);
+        } catch (URISyntaxException ignore) {
+            throw new IllegalArgumentException("could not add fragment to URI for Path: " + path);
+        }
+    }
+
+    static String stripArchiveExtension(String archiveName) {
+        if (archiveName.endsWith(".tgz") || archiveName.endsWith(".tar") || archiveName.endsWith(".zip")) {
+            return archiveName.substring(0, archiveName.length() - 4);
+        } else if (archiveName.endsWith(".tar.gz")) {
+            return archiveName.substring(0, archiveName.length() - 7);
+        }
+        return null;
+    }
+
+    private static void addBundleLibs(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
+        final FileStatus[] libs = fs.listStatus(bundlePath, new PathFilter() {
+            @Override
+            public boolean accept(Path path) {
+                return isLib(path);
+            }
+        });
+        for (FileStatus lib : libs) {
+            URI uri = lib.getPath().toUri();
+            DistributedCache.addCacheFile(uri, conf);
+        }
+    }
+
     private static String[] getBundleProcessorFiles(final String processorName, Path bundlePath, FileSystem fs) throws IOException {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {
             @Override
             public boolean accept(Path path) {
                 String filename = path.getName();
-                return (filename.startsWith("common-") || filename.startsWith(processorName + "-")) && !HadoopProcessingService.isArchive(path);
+                return (filename.startsWith("common-") || filename.startsWith(processorName + "-")) && !isArchive(path);
             }
         });
         String[] processorFiles = new String[processorStatuses.length];

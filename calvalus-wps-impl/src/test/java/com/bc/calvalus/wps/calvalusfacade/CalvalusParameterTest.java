@@ -75,7 +75,6 @@ public class CalvalusParameterTest {
 
     @Test
     public void canGetAbstractText() throws Exception {
-        assertThat(CalvalusParameter.BEAM_BUNDLE_VERSION.getAbstractText(), equalTo("Beam bundle version"));
         assertThat(CalvalusParameter.SNAP_BUNDLE_VERSION.getAbstractText(), equalTo("SNAP bundle version"));
     }
 

@@ -7,6 +7,7 @@ import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.INPUT_DATASET
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.SNAP_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.getProductionInfoParameters;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.getProductsetParameters;
 
@@ -85,8 +86,8 @@ public class CalvalusDataInputs {
             inputMapFormatted.put(CALVALUS_BUNDLE_VERSION.getIdentifier(),
                                   calvalusProcessor.getDefaultCalvalusBundle());
         }
-        if (calvalusProcessor.getDefaultBeamBundle() != null) {
-            inputMapFormatted.put(BEAM_BUNDLE_VERSION.getIdentifier(), calvalusProcessor.getDefaultBeamBundle());
+        if (calvalusProcessor.getDefaultSnapBundle() != null) {
+            inputMapFormatted.put(SNAP_BUNDLE_VERSION.getIdentifier(), calvalusProcessor.getDefaultSnapBundle());
         }
     }
 

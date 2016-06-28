@@ -13,8 +13,8 @@
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.9-SNAPSHOT</calvalus.version>
-        <snap.version>[3.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
-        <ceres.version>[3.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
+        <snap.version>[4.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
+        <ceres.version>[4.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>

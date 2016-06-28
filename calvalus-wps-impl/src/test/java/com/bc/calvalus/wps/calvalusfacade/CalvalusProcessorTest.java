@@ -123,7 +123,7 @@ public class CalvalusProcessorTest {
 
         calvalusProcessor = new CalvalusProcessor(mockBundleDescriptor, mockProcessorDescriptor);
 
-        assertThat(processor.getDefaultSnapBundle(), equalTo("snap-3.0.0"));
+        assertThat(calvalusProcessor.getDefaultSnapBundle(), equalTo("snap-3.0.0"));
     }
 
     @Test

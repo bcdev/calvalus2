@@ -45,7 +45,7 @@ public class CalvalusDataInputsTest {
     public void canGetInputMapFormatted() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
-        when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("beam-4.11.1-SNAPSHOT");
+        when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
@@ -228,7 +228,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn(null);
-        when(mockCalvalusProcessor.getDefaultBeamBundle()).thenReturn(null);
+        when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn(null);
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 

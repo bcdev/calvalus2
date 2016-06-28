@@ -512,10 +512,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     }
 
 
-    public static void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
+    void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
         final FileSystem fs = getFileSystem(username, conf, bundlePath);
 
-        addBundleToClassPath(bundlePath, username, conf);
+        addBundleToClassPath(bundlePath, conf);
         addBundleArchives(bundlePath, fs, conf);
         addBundleLibs(bundlePath, fs, conf);
 
@@ -575,7 +575,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    static boolean isLib(Path libPath) {
+    public static boolean isLib(Path libPath) {
         String filename = libPath.getName();
         return filename.endsWith(".so");
     }
