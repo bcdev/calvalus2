@@ -48,12 +48,12 @@ class NcUtils {
         Variable vegetationClassNameVar = ncFile.addVariable(null, "vegetation_class_name", DataType.CHAR, "vegetation_class strlen");
         vegetationClassNameVar.addAttribute(new Attribute("units", "1"));
         vegetationClassNameVar.addAttribute(new Attribute("long_name", "vegetation class name"));
-        Variable burnedAreaVar = ncFile.addVariable(null, "burned_area", DataType.INT, "time lat lon");
+        Variable burnedAreaVar = ncFile.addVariable(null, "burned_area", DataType.FLOAT, "time lat lon");
         burnedAreaVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaVar.addAttribute(new Attribute("standard_name", "burned_area"));
         burnedAreaVar.addAttribute(new Attribute("long_name", "total burned_area"));
         burnedAreaVar.addAttribute(new Attribute("cell_methods", "time: sum"));
-        Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.INT, "time lat lon");
+        Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.FLOAT, "time lat lon");
         standardErrorVar.addAttribute(new Attribute("units", "m2"));
         standardErrorVar.addAttribute(new Attribute("long_name", "standard error of the estimation of burned area"));
         Variable observedAreaFractionVar = ncFile.addVariable(null, "observed_area_fraction", DataType.FLOAT, "time lat lon");
@@ -64,7 +64,7 @@ class NcUtils {
         numberOfPatchesVar.addAttribute(new Attribute("units", "1"));
         numberOfPatchesVar.addAttribute(new Attribute("long_name", "number of burn patches"));
         numberOfPatchesVar.addAttribute(new Attribute("comment", "Number of contiguous groups of burned pixels."));
-        Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.INT, "time vegetation_class lat lon");
+        Variable burnedAreaInVegClassVar = ncFile.addVariable(null, "burned_area_in_vegetation_class", DataType.FLOAT, "time vegetation_class lat lon");
         burnedAreaInVegClassVar.addAttribute(new Attribute("units", "m2"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));

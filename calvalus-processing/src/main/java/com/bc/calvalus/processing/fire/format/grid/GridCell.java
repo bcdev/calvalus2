@@ -123,10 +123,10 @@ public class GridCell implements Writable {
         coverageSecondHalf = new float[BAND_SIZE];
 
         for (int i = 0; i < BAND_SIZE; i++) {
-            baFirstHalf[i] = in.readInt();
+            baFirstHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            baSecondHalf[i] = in.readInt();
+            baSecondHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
             patchNumberFirstHalf[i] = in.readFloat();
@@ -135,10 +135,10 @@ public class GridCell implements Writable {
             patchNumberSecondHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            errorsFirstHalf[i] = in.readInt();
+            errorsFirstHalf[i] = in.readFloat();
         }
         for (int i = 0; i < BAND_SIZE; i++) {
-            errorsSecondHalf[i] = in.readInt();
+            errorsSecondHalf[i] = in.readFloat();
         }
         for (float[] lcClass : baInLcFirstHalf) {
             for (int i = 0; i < lcClass.length; i++) {

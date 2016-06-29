@@ -28,11 +28,11 @@ public class NcUtilsTest {
 
     @Test
     public void testCreateFilename() throws Exception {
-        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "04.0", true));
-        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "04.0", false));
+        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "v04.0", true));
+        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "v04.0", false));
 
-        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "04.1", true));
-        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "04.1", false));
+        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "v04.1", true));
+        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "v04.1", false));
     }
 
     @Test
