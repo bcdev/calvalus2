@@ -26,7 +26,7 @@ public class ErrorPredictorTest {
     @Test
     public void testPredictError() throws Exception {
         assertArrayEquals(new float[]{0, 0, 0, 0}, errorPredictor.predictError(new float[]{0, 0, 0, 0}, new double[]{10, 10, 10, 10}), 1E-5f);
-        assertArrayEquals(new float[]{3, 3, 32, 1}, errorPredictor.predictError(new float[]{10, 12, 100, 5}, new double[]{1000, 1000, 1000, 1000}), 1E-5f);
+        assertArrayEquals(new float[]{3.267012f, 3.9204144f, 32.67012f, 1.633506f}, errorPredictor.predictError(new float[]{10, 12, 100, 5}, new double[]{1000, 1000, 1000, 1000}), 1E-5f);
     }
 
     @Test(expected = IllegalArgumentException.class)
