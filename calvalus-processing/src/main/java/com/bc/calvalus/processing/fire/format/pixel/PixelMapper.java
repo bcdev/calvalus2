@@ -90,9 +90,12 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
                 case CONFIDENCE_LEVEL:
                     sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, cl);
                     for (int i = 0; i < pixelCell.values.length; i++) {
-                        pixelCell.values[i] = (short) (cl[i] / 100);
                         if (doy[i] == 999) {
                             pixelCell.values[i] = 999;
+                        } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
+                            pixelCell.values[i] = 0;
+                        } else {
+                            pixelCell.values[i] = (short) (cl[i] / 100);
                         }
                     }
                     break;

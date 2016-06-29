@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,8 +17,9 @@ import static org.junit.Assert.assertTrue;
  */
 public class GridMapperTest {
 
+    @Ignore
     @Test
-    public void name() throws Exception {
+    public void acceptanceTestComputeGridCell() throws Exception {
         GridMapper mapper = new GridMapper();
         Product product = ProductIO.readProduct("D:\\workspace\\fire-cci\\temp\\BA_PIX_MER_v04h24_200806_v4.0.tif");
         Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\temp\\lc-2005-v04h24.nc");

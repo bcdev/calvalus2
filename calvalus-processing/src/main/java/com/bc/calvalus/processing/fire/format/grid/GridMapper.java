@@ -52,6 +52,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
     static final int LC_CLASSES_COUNT = 18;
     static final int NO_DATA = -1;
     static final int NO_AREA = 0;
+    private boolean maskUnmappablePixels;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -67,6 +68,10 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         boolean computeBA = !paths[0].getName().equals("dummy");
         LOG.info(computeBA ? "Computing BA" : "Only computing coverage");
+        maskUnmappablePixels = paths[0].getName().contains("v4.0.tif");
+        if (maskUnmappablePixels) {
+            LOG.info("v4.0 file; masking pixels which accidentally fall into unmappable LC class");
+        }
 
         Product sourceProduct = null;
         Product lcProduct = null;
@@ -154,6 +159,9 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         }
                         if (!hasLcClass) {
                             LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
+                            if (maskUnmappablePixels) {
+                                baValueFirstHalf -= data.areas[i];
+                            }
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
@@ -167,6 +175,9 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         }
                         if (!hasLcClass) {
                             LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
+                            if (maskUnmappablePixels) {
+                                baValueSecondHalf -= data.areas[i];
+                            }
                         }
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
@@ -213,10 +224,12 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
     }
 
     private static void validate(float[] baFirstHalf, List<float[]> baInLcFirstHalf) {
-        if (baFirstHalf.length < 80) {
+        int baCount = (int) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).filter(i -> i != 0).count();
+        if (baCount < baFirstHalf.length * 0.05) {
             // don't throw an error for too few observations
             return;
         }
+
         float baSum = (float) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).sum();
         float baInLcSum = 0;
         for (float[] floats : baInLcFirstHalf) {
