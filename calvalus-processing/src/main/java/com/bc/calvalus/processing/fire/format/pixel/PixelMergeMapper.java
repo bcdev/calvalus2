@@ -81,6 +81,8 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
+        String version = context.getConfiguration().get("calvalus.baversion", "v04.1");
+
         PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
@@ -109,7 +111,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
         context.progress();
 
-        String baseFilename = createBaseFilename(year, month, area);
+        String baseFilename = createBaseFilename(year, month, version, area);
         Product result = new Product(baseFilename, "fire-cci-pixel-product", inputVar1.getSceneRasterWidth(), inputVar1.getSceneRasterHeight());
         ProductUtils.copyGeoCoding(inputVar1, result);
         ProductUtils.copyBand(JD.getName(), JD.getProduct(), result, true);
@@ -117,7 +119,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         ProductUtils.copyBand(LC.getName(), LC.getProduct(), result, true);
 
         CalvalusLogger.getLogger().info("Creating metadata...");
-        String metadata = createMetadata(year, month, area);
+        String metadata = createMetadata(year, month, version, area);
         try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
             fw.write(metadata);
         }
@@ -127,16 +129,14 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
 
-        CalvalusLogger.getLogger().info("...done. Creating zip of final product...");
-        String zipFilename = baseFilename + ".tar.gz";
-        createTarGZ(baseFilename + ".tif", baseFilename + ".xml", zipFilename);
-
         result.dispose();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + zipFilename);
-        CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", path.toString()));
-        FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
+        Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
+        Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
+        CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
+        FileSystem fs = tifPath.getFileSystem(context.getConfiguration());
+        FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
+        FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");
     }
 
@@ -150,7 +150,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         throw new IllegalArgumentException(String.format("Cannot find band %s in any of the given products", bandName));
     }
 
-    static String createMetadata(String year, String month, PixelProductArea area) throws IOException {
+    static String createMetadata(String year, String month, String version, PixelProductArea area) throws IOException {
 
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
@@ -166,7 +166,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         velocityContext.put("northLat", Math.abs(area.top - 90));
 
         StringWriter stringWriter = new StringWriter();
-        velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", TEMPLATE);
+        velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", TEMPLATE.replace("${REPLACE_WITH_VERSION}", version));
         String intermediateResult = stringWriter.toString();
 
         try (InputStream stream = new ByteArrayInputStream(intermediateResult.getBytes("UTF-8"))) {
@@ -180,8 +180,8 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         }
     }
 
-    static String createBaseFilename(String year, String month, PixelProductArea area) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-v02.0-fv04.0", year, month, area.index);
+    static String createBaseFilename(String year, String month, String version, PixelProductArea area) {
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-f%s", year, month, area.index, version);
     }
 
     private static void createTarGZ(String filePath, String xmlPath, String outputPath) throws IOException {
@@ -378,7 +378,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "is the AREA_${TILE_NUMBER} being the tile number the subset index described in Extent. fv" +
             "${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional " +
             ". and another 1 or more digits.). An example is: " +
-            "20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-fv04.0.tif.]]#" +
+            "20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-f${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Product Specification Document Fire_cci_D1.2_PSD_v5.1.pdf, available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
