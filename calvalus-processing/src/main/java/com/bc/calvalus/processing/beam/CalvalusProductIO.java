@@ -28,9 +28,13 @@ import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.xeustechnologies.jtar.TarEntry;
+import org.xeustechnologies.jtar.TarInputStream;
+import ucar.unidata.io.bzip2.CBZip2InputStream;
 
 import javax.imageio.stream.ImageInputStream;
 import java.awt.*;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -41,6 +45,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -142,30 +147,74 @@ public class CalvalusProductIO {
         return localFile;
     }
 
-    public static File[] unzipFileToLocal(Path path, Configuration conf) throws IOException {
+    public static File[] uncompressArchiveToLocalDir(Path path, Configuration conf) throws IOException {
         FileSystem fs = path.getFileSystem(conf);
-        InputStream inputStream = fs.open(path);
+        InputStream inputStream = new BufferedInputStream(fs.open(path));
         List<File> extractedFiles = new ArrayList<>();
-        try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
-            ZipEntry entry;
-            while ((entry = zipIn.getNextEntry()) != null) {
-                File file = new File(".", entry.getName());
-                if (entry.isDirectory()) {
-                    file.mkdirs();
-                } else {
-                    File parentDir = file.getParentFile();
-                    if (parentDir != null && !parentDir.exists()){
-                        parentDir.mkdirs();
-                    }
-                    try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
-                        IOUtils.copyBytes(zipIn, out, 8192);
-                    }
+
+        String archiveName = path.getName().toLowerCase();
+        if (archiveName.endsWith(".zip")) {
+            try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
+                ZipEntry entry;
+                while ((entry = zipIn.getNextEntry()) != null) {
+                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), zipIn));
                 }
-                extractedFiles.add(file);
             }
+        } else if (isTarCompressed(archiveName)) {
+            try (TarInputStream tarIn = getTarInputStream(archiveName, inputStream)) {
+                TarEntry entry;
+                while ((entry = tarIn.getNextEntry()) != null) {
+                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), tarIn));
+                }
+            }
+        } else {
+            throw new IOException("unsupported archive format: " + archiveName);
         }
         return extractedFiles.toArray(new File[0]);
     }
+
+    private static File handleEntry(String name, boolean isDirectory, InputStream zipIn) throws IOException {
+        File file = new File(".", name);
+        if (isDirectory) {
+            file.mkdirs();
+        } else {
+            File parentDir = file.getParentFile();
+            if (parentDir != null && !parentDir.exists()) {
+                parentDir.mkdirs();
+            }
+            try (OutputStream out = new BufferedOutputStream(new FileOutputStream(file))) {
+                IOUtils.copyBytes(zipIn, out, 8192);
+            }
+        }
+        return file;
+    }
+
+    private static TarInputStream getTarInputStream(String archiveName, InputStream inputStream) throws IOException {
+        if (isTgz(archiveName)) {
+            return new TarInputStream(new GZIPInputStream(inputStream));
+        } else if (isTbz(archiveName)) {
+            return new TarInputStream(new CBZip2InputStream(inputStream, true));
+        } else {
+            return new TarInputStream(inputStream);
+        }
+    }
+
+    private static boolean isTarCompressed(String name) {
+        return isTar(name) || isTgz(name) || isTbz(name);
+    }
+
+    private static boolean isTar(String name) {
+        return name.endsWith(".tar");
+    }
+
+    private static boolean isTgz(String name) {
+        return name.endsWith(".tar.gz") || name.endsWith(".tgz");
+    }
+
+    static boolean isTbz(String name) {
+        return name.endsWith(".tar.bz") || name.endsWith(".tbz") || name.endsWith(".tar.bz2") || name.endsWith(".tbz2");
+    }
+
 
     static void setDateToMerisSdrProduct(Product product, String pathName) throws IOException {
         try {

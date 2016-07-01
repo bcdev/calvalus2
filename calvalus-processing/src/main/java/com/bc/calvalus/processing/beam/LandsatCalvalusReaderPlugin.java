@@ -35,23 +35,23 @@ import java.util.Locale;
 
 
 /**
- * A reader for handing Sentinel-3 data on calvalus.
+ * A reader for handing Landsat data on calvalus.
  * It unzips the products and open from the local file.
  */
-public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
+public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_NAME = "CALVALUS-SENTINEL-3";
+    private static final String FORMAT_NAME = "CALVALUS-Landsat";
+    private static final String L4_FILENAME_REGEX = "LT4\\d{13}\\w{3}\\d{2}";
+    private static final String L5_FILENAME_REGEX = "LT5\\d{13}.{3}\\d{2}";
+    private static final String L7_FILENAME_REGEX = "LE7\\d{13}.{3}\\d{2}";
+    private static final String L8_FILENAME_REGEX = "L[O,T,C]8\\d{13}.{3}\\d{2}";
+    private static final String COMPR_FILENAME_REGEX = "\\.(tar\\.gz|tgz|tar\\.bz|tbz|tar\\.bz2|tbz2|zip|ZIP)";
+
     private static final String[] FILENAME_PATTERNS = {
-            // Sentinel-3 products
-            "^S3.?_(OL_1_E[FR]R|OL_2_(L[FR]R|W[FR]R)|SL_1_RBT|SL_2_(LST|WCT|WST)|SY_1_SYN|SY_2_(VGP|SYN)|SY_[23]_VG1)_.*.zip",
-            // MERIS Level 1 in Sentinel-3 product format
-            "^ENV_ME_1_(F|R)R(G|P).*.zip",
-            // MERIS Level 2 in Sentinel-3 product format
-            "^ENV_ME_2_(F|R)R(G|P).*.zip",
-            // Sentinel-3 SLSTR L1B products in 1km resolution
-            "^S3.?_SL_1_RBT_.*.zip",
-            // Sentinel-3 SLSTR L1B products in 500 m resolution
-            "^S3.?_SL_1_RBT_.*.zip"
+            L4_FILENAME_REGEX + COMPR_FILENAME_REGEX,
+            L5_FILENAME_REGEX + COMPR_FILENAME_REGEX,
+            L7_FILENAME_REGEX + COMPR_FILENAME_REGEX,
+            L8_FILENAME_REGEX + COMPR_FILENAME_REGEX
     };
 
     @Override
@@ -75,7 +75,7 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public ProductReader createReaderInstance() {
-        return new Sentinel3CalvalusReader(this);
+        return new LandsatCalvalusReader(this);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String getDescription(Locale locale) {
-        return "Sentinel-3 on Calvalus";
+        return "Landsat on Calvalus";
     }
 
     @Override
@@ -98,9 +98,9 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
-    static class Sentinel3CalvalusReader extends AbstractProductReader {
+    static class LandsatCalvalusReader extends AbstractProductReader {
 
-        Sentinel3CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
+        LandsatCalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
         }
 
@@ -113,21 +113,17 @@ public class Sentinel3CalvalusReaderPlugin implements ProductReaderPlugIn {
                 File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
 
                 // find manifest file
-                File productManifest = null;
+                File mtlFile = null;
                 for (File file : unzippedFiles) {
-                    if (file.getName().equalsIgnoreCase("xfdumanifest.xml")) {
-                        productManifest = file;
-                        break;
-                    } else if (file.getName().equalsIgnoreCase("L1c_Manifest.xml")) {
-                        productManifest = file;
+                    if (file.getName().toLowerCase().endsWith("_mtl.txt")) {
+                        mtlFile = file;
                         break;
                     }
                 }
-                if (productManifest == null) {
-                    throw new IllegalFileFormatException("input has no mainfest file.");
+                if (mtlFile == null) {
+                    throw new IllegalFileFormatException("input has no MTL file.");
                 }
-
-                return ProductIO.readProduct(productManifest);
+                return ProductIO.readProduct(mtlFile);
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }

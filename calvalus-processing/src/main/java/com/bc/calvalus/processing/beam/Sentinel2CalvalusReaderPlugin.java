@@ -107,7 +107,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.unzipFileToLocal(pathConfig.getPath(), configuration);
+                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
 
                 // find *SAF*xml file
                 File productXML = null;

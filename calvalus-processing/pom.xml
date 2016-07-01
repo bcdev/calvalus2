@@ -56,6 +56,11 @@
             <artifactId>snap-netcdf</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.xeustechnologies</groupId>
+            <artifactId>jtar</artifactId>
+            <version>1.0.4</version>
+        </dependency>
+        <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-binning</artifactId>
         </dependency>
