@@ -59,7 +59,7 @@ class NcUtils {
         Variable observedAreaFractionVar = ncFile.addVariable(null, "observed_area_fraction", DataType.FLOAT, "time lat lon");
         observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
         observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of observed area is 1 minus the area fraction of unsuitable/not observable pixels in a given grid. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
+        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of observed area is 1 minus the area fraction of unsuitable/not observable pixels in a given grid. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non existing images for that location and period), cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
         Variable numberOfPatchesVar = ncFile.addVariable(null, "number_of_patches", DataType.FLOAT, "time lat lon");
         numberOfPatchesVar.addAttribute(new Attribute("units", "1"));
         numberOfPatchesVar.addAttribute(new Attribute("long_name", "number of burn patches"));
@@ -77,34 +77,47 @@ class NcUtils {
 
     private static void addGroupAttributes(String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
         ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
-        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala de Henares"));
-        ncFile.addGroupAttribute(null, new Attribute("source", "Digital image processing of MERIS FR L1B and MODIS hotspots data"));
+        ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
+        ncFile.addGroupAttribute(null, new Attribute("source", "MERIS FSG 1P, MODIS MCD14ML Collection 5, ESA CCI Land Cover dataset v1.6.1"));
         ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
-        ncFile.addGroupAttribute(null, new Attribute("acknowledgment", "ESA CCI programme"));
-        ncFile.addGroupAttribute(null, new Attribute("contact", "Emilio Chuvieco: emilio.chuvieco@uah.es"));
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
-        ncFile.addGroupAttribute(null, new Attribute("product_version", "MERIS BA Algorithm " + version));
-        ncFile.addGroupAttribute(null, new Attribute("summary", "The ECV Fire Disturbance (Fire_cci) provides validated," +
-                " error-characterised, global data sets of burned areas (BA) derived from existing satellite observations."));
-        ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area; Fire Disturbance; Climate Change; ESA; GCOS"));
-        ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "THREDDS"));
+        ncFile.addGroupAttribute(null, new Attribute("product_version", version));
+        ncFile.addGroupAttribute(null, new Attribute("summary", "The grid product is the result of summing up burned " +
+                "area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in biweekly " +
+                "composites. The attributes stored are sum of burned area, standard error, observed area fraction, " +
+                "number of patches and the burned area for 18 land cover classes of CCI_LC."));
+        ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS"));
+        ncFile.addGroupAttribute(null, new Attribute("id", "doi:10.5285/D80636D4-7DAF-407E-912D-F5BB61C142FA"));
+        ncFile.addGroupAttribute(null, new Attribute("naming_authority", "org.esa-fire-cci"));
+        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", ""));
+        ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
+        ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the ESA Fire_cci programme."));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
-        ncFile.addGroupAttribute(null, new Attribute("creator_name", "Thomas Storm"));
-        ncFile.addGroupAttribute(null, new Attribute("creator_url", "http://www.brockmann-consult.de/"));
-        ncFile.addGroupAttribute(null, new Attribute("creator_email", "thomas.storm@brockmann-consult.de"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative, ECV Fire Disturbance (Fire_cci)"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_name", "University of Alcala"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_url", "www.esa-fire-cci.org"));
+        ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
+        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative - ECV Fire Disturbance (Fire_cci)"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_max", "180"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_vertical_min", "0"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_vertical_max", "0"));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", String.format("P%sD", "" + timeCoverageDuration)));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P01D"));
+        ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
+        ncFile.addGroupAttribute(null, new Attribute("licence", "ESA CCI Data Policy: free and open access"));
         ncFile.addGroupAttribute(null, new Attribute("platform", "Envisat"));
         ncFile.addGroupAttribute(null, new Attribute("sensor", "MERIS"));
-        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.05°"));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25°"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_units", "degrees_east"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
+        ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
     }
 
     static String createFilename(String year, String month, String version, boolean firstHalf) {
@@ -112,6 +125,6 @@ class NcUtils {
     }
 
     static String createTimeString(Instant instant) {
-        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
+        return DateTimeFormatter.ofPattern("yyyyMMddTHHmmssZ").withZone(ZoneId.systemDefault()).format(instant);
     }
 }
