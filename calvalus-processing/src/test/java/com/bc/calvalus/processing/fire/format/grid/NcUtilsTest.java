@@ -38,6 +38,12 @@ public class NcUtilsTest {
     @Test
     public void testCreateTimeString() throws Exception {
         String localTimeString = NcUtils.createTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
+        assertEquals("20071203T111530Z", localTimeString);
+    }
+
+    @Test
+    public void testCreateNiceTimeString() throws Exception {
+        String localTimeString = NcUtils.createNiceTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
         assertEquals("2007-12-03 11:15:30", localTimeString);
     }
 

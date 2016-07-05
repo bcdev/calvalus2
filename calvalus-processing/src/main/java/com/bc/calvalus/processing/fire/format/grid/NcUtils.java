@@ -79,7 +79,7 @@ class NcUtils {
         ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
         ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("source", "MERIS FSG 1P, MODIS MCD14ML Collection 5, ESA CCI Land Cover dataset v1.6.1"));
-        ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createTimeString(Instant.now())));
+        ncFile.addGroupAttribute(null, new Attribute("history", "Created on " + createNiceTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("references", "See www.esa-fire-cci.org"));
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
@@ -125,6 +125,10 @@ class NcUtils {
     }
 
     static String createTimeString(Instant instant) {
-        return DateTimeFormatter.ofPattern("yyyyMMddTHHmmssZ").withZone(ZoneId.systemDefault()).format(instant);
+        return DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault()).format(instant);
+    }
+
+    static String createNiceTimeString(Instant instant) {
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
     }
 }
