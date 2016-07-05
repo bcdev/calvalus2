@@ -70,10 +70,10 @@ public class GridCell implements Writable {
     @Override
     public void write(DataOutput out) throws IOException {
         for (float v : baFirstHalf) {
-            out.writeFloat(v);
+            out.writeFloat((int) v);
         }
         for (float v : baSecondHalf) {
-            out.writeFloat(v);
+            out.writeFloat((int) v);
         }
         for (float v : patchNumberFirstHalf) {
             out.writeFloat(v);
@@ -82,19 +82,19 @@ public class GridCell implements Writable {
             out.writeFloat(v);
         }
         for (float v : errorsFirstHalf) {
-            out.writeFloat(v);
+            out.writeFloat((int) v);
         }
         for (float v : errorsSecondHalf) {
-            out.writeFloat(v);
+            out.writeFloat((int) v);
         }
         for (float[] lcClass : baInLcFirstHalf) {
             for (float value : lcClass) {
-                out.writeFloat(value);
+                out.writeFloat((int) value);
             }
         }
         for (float[] lcClass : baInLcSecondHalf) {
             for (float value : lcClass) {
-                out.writeFloat(value);
+                out.writeFloat((int) value);
             }
         }
         for (float v : coverageFirstHalf) {
