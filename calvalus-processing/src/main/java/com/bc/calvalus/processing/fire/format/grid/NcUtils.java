@@ -99,7 +99,7 @@ class NcUtils {
         ncFile.addGroupAttribute(null, new Attribute("creator_name", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("creator_url", "www.esa-fire-cci.org"));
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "Climate Change Initiative – European Space Agency"));
+        ncFile.addGroupAttribute(null, new Attribute("project", "Climate Change Initiative - European Space Agency"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
