@@ -18,10 +18,6 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -45,17 +41,14 @@ import org.jdom2.output.XMLOutputter;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.StringWriter;
 import java.time.Instant;
+import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -156,14 +149,16 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         velocityEngine.init();
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
-        velocityContext.put("date", String.format("%s-%s-01", year, month));
+        velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
         velocityContext.put("zoneId", area.index);
         velocityContext.put("zoneName", area.nicename);
-        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
+        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2016).atMonth(6).atDay(29)));
         velocityContext.put("westLon", area.left - 180);
         velocityContext.put("eastLon", area.right - 180);
-        velocityContext.put("southLat", area.bottom - 90);
-        velocityContext.put("northLat", Math.abs(area.top - 90));
+        velocityContext.put("northLat", 90 - area.top);
+        velocityContext.put("southLat", 90 - area.bottom);
+        velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
+        velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
 
         StringWriter stringWriter = new StringWriter();
         velocityEngine.evaluate(velocityContext, stringWriter, "pixelFormatting", TEMPLATE.replace("${REPLACE_WITH_VERSION}", version));
@@ -184,38 +179,6 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%d-f%s", year, month, area.index, version);
     }
 
-    private static void createTarGZ(String filePath, String xmlPath, String outputPath) throws IOException {
-        try (OutputStream fOut = new FileOutputStream(new File(outputPath));
-             OutputStream bOut = new BufferedOutputStream(fOut);
-             OutputStream gzOut = new GzipCompressorOutputStream(bOut);
-             TarArchiveOutputStream tOut = new TarArchiveOutputStream(gzOut)) {
-            tOut.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_STAR);
-            addFileToTarGz(tOut, filePath, "");
-            addFileToTarGz(tOut, xmlPath, "");
-        }
-    }
-
-    private static void addFileToTarGz(TarArchiveOutputStream tOut, String path, String base)
-            throws IOException {
-        File f = new File(path);
-        String entryName = base + f.getName();
-        TarArchiveEntry tarEntry = new TarArchiveEntry(f, entryName);
-        tOut.putArchiveEntry(tarEntry);
-
-        if (f.isFile()) {
-            IOUtils.copy(new FileInputStream(f), tOut);
-            tOut.closeArchiveEntry();
-        } else {
-            tOut.closeArchiveEntry();
-            File[] children = f.listFiles();
-            if (children != null) {
-                for (File child : children) {
-                    addFileToTarGz(tOut, child.getAbsolutePath(), entryName + "/");
-                }
-            }
-        }
-    }
-
     private static final String TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
@@ -223,6 +186,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "        xmlns:gmd=\"http://www.isotc211.org/2005/gmd\"" +
             "        xmlns:gco=\"http://www.isotc211.org/2005/gco\"" +
             "        xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
+            "        xmlns:gml=\"http://www.opengis.net/gml\"" +
             "        xmlns:gmi=\"http://www.isotc211.org/2005/gmi\"" +
             ">" +
             "" +
@@ -283,12 +247,12 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "    </gmd:dateStamp>" +
             "" +
             "    <gmd:metadataStandardName>" +
-            "        <gco:CharacterString>ISO 19115-2 Geographic Information - Metadata Part 2 Extensions for imagery and gridded data" +
+            "        <gco:CharacterString>ISO 19115 - Geographic information - Metadata" +
             "        </gco:CharacterString>" +
             "    </gmd:metadataStandardName>" +
             "" +
             "    <gmd:metadataStandardVersion>" +
-            "        <gco:CharacterString>ISO 19115-1:2014</gco:CharacterString>" +
+            "        <gco:CharacterString>ISO 19115:2003(E)</gco:CharacterString>" +
             "    </gmd:metadataStandardVersion>" +
             "" +
             "    <gmd:referenceSystemInfo>" +
@@ -314,7 +278,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Chuvieco E. et al.: ESA Fire Climate Change Initiative (ESA Fire CCI) data - Pixel Product - Zone ${zoneId}: ${zoneName}." +
+            "                        <gco:CharacterString>Fire_cci Pixel MERIS Burned Area product v4.1 - Zone ${zoneId}: ${zoneName}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -335,7 +299,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2016-06-08</gco:Date>" +
+            "                                <gco:Date>2016-07-12</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -347,11 +311,11 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    </gmd:date>" +
             "" +
             "                    <gmd:identifier>" +
-            "                        <gmd:RS_Identifier>" +
+            "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>doi:***********</gco:CharacterString>" +
+            "                                <gco:CharacterString>doi:10.5285/8723B4DD-49A4-4C37-9A3C-BA4392EEE63B</gco:CharacterString>" +
             "                            </gmd:code>" +
-            "                        </gmd:RS_Identifier>" +
+            "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
             "                </gmd:CI_Citation>" +
             "            </gmd:citation>" +
@@ -380,7 +344,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             ". and another 1 or more digits.). An example is: " +
             "20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-f${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Product Specification Document Fire_cci_D1.2_PSD_v5.1.pdf, available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3_PUG_v2 available at: www.esa-fire.cci.org/documents" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00277778 deg.; Pixel " +
             "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
@@ -455,23 +419,23 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "" +
             "            <gmd:pointOfContact>" +
             "                <gmd:CI_ResponsibleParty>" +
-            "                    <!-- Owner-->" +
+            "                    <!-- Distributor-->" +
             "                    <gmd:organisationName>" +
-            "                        <gco:CharacterString>European Space Agency</gco:CharacterString>" +
+            "                        <gco:CharacterString>ESA CCI</gco:CharacterString>" +
             "                    </gmd:organisationName>" +
             "                    <gmd:contactInfo>" +
             "                        <gmd:CI_Contact>" +
             "                            <gmd:address>" +
             "                                <gmd:CI_Address>" +
             "                                    <gmd:electronicMailAddress>" +
-            "                                        <gco:CharacterString>Stephen.plummer@esa.int</gco:CharacterString>" +
+            "                                        <gco:CharacterString>help@esa-portal-cci.org</gco:CharacterString>" +
             "                                    </gmd:electronicMailAddress>" +
             "                                </gmd:CI_Address>" +
             "                            </gmd:address>" +
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://www.esa.int</gmd:URL>" +
+            "                                        <gmd:URL>http://cci.esa.int/data/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -480,7 +444,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                    <gmd:role>" +
             "                        <gmd:CI_RoleCode" +
             "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
-            "                                codeListValue=\"Owner \">Owner" +
+            "                                codeListValue=\"distributor \">distributor" +
             "                        </gmd:CI_RoleCode>" +
             "                    </gmd:role>" +
             "                </gmd:CI_ResponsibleParty>" +
@@ -519,6 +483,39 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                </gmd:CI_ResponsibleParty>" +
             "            </gmd:pointOfContact>" +
             "" +
+            "            <gmd:pointOfContact>" +
+            "                <gmd:CI_ResponsibleParty>" +
+            "                    <!-- Processor-->" +
+            "                    <gmd:organisationName>" +
+            "                        <gco:CharacterString>Brockmann Consult GmbH</gco:CharacterString>" +
+            "                    </gmd:organisationName>" +
+            "                    <gmd:contactInfo>" +
+            "                        <gmd:CI_Contact>" +
+            "                            <gmd:address>" +
+            "                                <gmd:CI_Address>" +
+            "                                    <gmd:electronicMailAddress>" +
+            "                                        <gco:CharacterString>thomas.storm@brockmann-consult.de</gco:CharacterString>" +
+            "                                    </gmd:electronicMailAddress>" +
+            "                                </gmd:CI_Address>" +
+            "                            </gmd:address>" +
+            "                            <gmd:onlineResource>" +
+            "                                <gmd:CI_OnlineResource>" +
+            "                                    <gmd:linkage>" +
+            "                                        <gmd:URL>http://www.brockmann-consult.de</gmd:URL>" +
+            "                                    </gmd:linkage>" +
+            "                                </gmd:CI_OnlineResource>" +
+            "                            </gmd:onlineResource>" +
+            "                        </gmd:CI_Contact>" +
+            "                    </gmd:contactInfo>" +
+            "                    <gmd:role>" +
+            "                        <gmd:CI_RoleCode" +
+            "                                codeList=\"http://standards.iso.org/ittf/PubliclyAvailableStandards/ISO_19139_Schemas/resources/codelist/gmxCodelists.xml#CI_RoleCode\"" +
+            "                                codeListValue=\"Processor\">Processor" +
+            "                        </gmd:CI_RoleCode>" +
+            "                    </gmd:role>" +
+            "                </gmd:CI_ResponsibleParty>" +
+            "            </gmd:pointOfContact>" +
+            "" +
             "            <gmd:descriptiveKeywords>" +
             "                <gmd:MD_Keywords>" +
             "                    <gmd:keyword>" +
@@ -535,7 +532,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "            <gmd:resourceConstraints>" +
             "                <gmd:MD_Constraints>" +
             "                    <gmd:useLimitation>" +
-            "                        <gco:CharacterString>esaNoMonetaryCharge</gco:CharacterString>" +
+            "                        <gco:CharacterString>ESA CCI Data Policy: free and open access</gco:CharacterString>" +
             "                    </gmd:useLimitation>" +
             "                </gmd:MD_Constraints>" +
             "            </gmd:resourceConstraints>" +
@@ -566,6 +563,16 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                </gmd:LanguageCode>" +
             "            </gmd:language>" +
             "" +
+            "            <gmd:topicCategory>" +
+            "                <gmd:MD_TopicCategoryCode>biota</gmd:MD_TopicCategoryCode>" +
+            "            </gmd:topicCategory>" +
+            "            <gmd:topicCategory>" +
+            "                <gmd:MD_TopicCategoryCode>environment</gmd:MD_TopicCategoryCode>" +
+            "            </gmd:topicCategory>" +
+            "            <gmd:topicCategory>" +
+            "                <gmd:MD_TopicCategoryCode>imageryBaseMapsEarthCover</gmd:MD_TopicCategoryCode>" +
+            "            </gmd:topicCategory>" +
+            "" +
             "            <gmd:extent>" +
             "                <gmd:EX_Extent>" +
             "                    <gmd:geographicElement>" +
@@ -584,6 +591,18 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
             "                            </gmd:northBoundLatitude>" +
             "                        </gmd:EX_GeographicBoundingBox>" +
             "                    </gmd:geographicElement>" +
+            "" +
+            "                    <gmd:temporalElement>" +
+            "                        <gmd:EX_TemporalExtent>" +
+            "                            <gmd:extent>\n" +
+            "                                <gml:TimePeriod>" +
+            "                                    <gml:beginPosition>${begin}</gml:beginPosition>" +
+            "                                    <gml:endPosition>${end}</gml:endPosition>" +
+            "                                </gml:TimePeriod>" +
+            "                            </gmd:extent>" +
+            "                        </gmd:EX_TemporalExtent>" +
+            "                    </gmd:temporalElement>" +
+            "" +
             "                </gmd:EX_Extent>" +
             "            </gmd:extent>" +
             "" +

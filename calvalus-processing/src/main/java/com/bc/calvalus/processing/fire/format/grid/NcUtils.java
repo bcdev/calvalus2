@@ -70,12 +70,12 @@ class NcUtils {
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("comment", "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/"));
 
-        addGroupAttributes(version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
+        addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
         ncFile.create();
         return ncFile;
     }
 
-    private static void addGroupAttributes(String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
+    private static void addGroupAttributes(String filename, String version, NetcdfFileWriter ncFile, String timeCoverageStart, String timeCoverageEnd, int timeCoverageDuration) {
         ncFile.addGroupAttribute(null, new Attribute("title", "Fire_cci Gridded MERIS Burned Area product"));
         ncFile.addGroupAttribute(null, new Attribute("institution", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("source", "MERIS FSG 1P, MODIS MCD14ML Collection 5, ESA CCI Land Cover dataset v1.6.1"));
@@ -89,16 +89,17 @@ class NcUtils {
                 "composites. The attributes stored are sum of burned area, standard error, observed area fraction, " +
                 "number of patches and the burned area for 18 land cover classes of CCI_LC."));
         ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS"));
-        ncFile.addGroupAttribute(null, new Attribute("id", "doi:10.5285/D80636D4-7DAF-407E-912D-F5BB61C142FA"));
+        ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", "org.esa-fire-cci"));
-        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", ""));
+        ncFile.addGroupAttribute(null, new Attribute("doi", "doi:10.5285/D80636D4-7DAF-407E-912D-F5BB61C142FA"));
+        ncFile.addGroupAttribute(null, new Attribute("keywords_vocabulary", "none"));
         ncFile.addGroupAttribute(null, new Attribute("cdm_data_type", "Grid"));
         ncFile.addGroupAttribute(null, new Attribute("comment", "These data were produced as part of the ESA Fire_cci programme."));
         ncFile.addGroupAttribute(null, new Attribute("date_created", createTimeString(Instant.now())));
         ncFile.addGroupAttribute(null, new Attribute("creator_name", "University of Alcala"));
         ncFile.addGroupAttribute(null, new Attribute("creator_url", "www.esa-fire-cci.org"));
         ncFile.addGroupAttribute(null, new Attribute("creator_email", "emilio.chuvieco@uah.es"));
-        ncFile.addGroupAttribute(null, new Attribute("project", "ESA Climate Change Initiative - ECV Fire Disturbance (Fire_cci)"));
+        ncFile.addGroupAttribute(null, new Attribute("project", "Climate Change Initiative – European Space Agency"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_min", "-90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_max", "90"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_min", "-180"));
@@ -111,9 +112,9 @@ class NcUtils {
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P01D"));
         ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
         ncFile.addGroupAttribute(null, new Attribute("licence", "ESA CCI Data Policy: free and open access"));
-        ncFile.addGroupAttribute(null, new Attribute("platform", "Envisat"));
-        ncFile.addGroupAttribute(null, new Attribute("sensor", "MERIS"));
-        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25°"));
+        ncFile.addGroupAttribute(null, new Attribute("platform", "Envisat, Terra, Aqua"));
+        ncFile.addGroupAttribute(null, new Attribute("sensor", "MERIS, MODIS"));
+        ncFile.addGroupAttribute(null, new Attribute("spatial_resolution", "0.25 degrees"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_units", "degrees_east"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_units", "degrees_north"));
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lon_resolution", "0.25"));
