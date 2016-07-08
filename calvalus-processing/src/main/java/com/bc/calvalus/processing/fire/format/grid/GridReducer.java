@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.ceres.core.Assert;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -8,6 +9,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
 import ucar.ma2.Array;
 import ucar.ma2.DataType;
 import ucar.ma2.InvalidRangeException;
@@ -42,6 +45,35 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         prepareTargetProducts(context);
+
+        String year = context.getConfiguration().get("calvalus.year");
+        String month = context.getConfiguration().get("calvalus.month");
+        String basePath = "hdfs://calvalus/calvalus/projects/fire/aux/psd-grid-for-oaf/";
+        String firstHalfFilename = year + month + "07-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc";
+        String secondHalfFilename = year + month + "22-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc";
+        Path firstHalfGridPath = new Path(basePath, firstHalfFilename);
+        Path secondHalfGridPath = new Path(basePath, secondHalfFilename);
+        File firstHalfGridFile = CalvalusProductIO.copyFileToLocal(firstHalfGridPath, context.getConfiguration());
+        File secondHalfGridFile = CalvalusProductIO.copyFileToLocal(secondHalfGridPath, context.getConfiguration());
+
+        Product firstHalfGridProduct = ProductIO.readProduct(firstHalfGridFile);
+        Product secondHalfGridProduct = ProductIO.readProduct(secondHalfGridFile);
+
+        float[] buffer = new float[40 * 40];
+
+        try {
+            for (int y = 0; y < 18; y++) {
+                for (int x = 0; x < 36; x++) {
+                    firstHalfGridProduct.getBand("observed_area_fraction").readPixels(x * 40, y * 40, 40, 40, buffer);
+                    writeFloatChunk(x * 40, y * 40, ncFirst, "observed_area_fraction", buffer);
+                    secondHalfGridProduct.getBand("observed_area_fraction").readPixels(x * 40, y * 40, 40, 40, buffer);
+                    writeFloatChunk(x * 40, y * 40, ncSecond, "observed_area_fraction", buffer);
+                }
+            }
+        } catch (InvalidRangeException e) {
+            throw new IOException(e);
+        }
+
     }
 
     @Override
@@ -61,21 +93,16 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
         List<float[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
 
-        float[] coverageFirstHalf = gridCell.coverageFirstHalf;
-        float[] coverageSecondHalf = gridCell.coverageSecondHalf;
 
         try {
-            writeFloatChunk(key.toString(), ncFirst, "burned_area", burnedAreaFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "burned_area", burnedAreaSecondHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "burned_area", burnedAreaFirstHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "burned_area", burnedAreaSecondHalf);
 
-            writeFloatChunk(key.toString(), ncFirst, "standard_error", errorsFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "standard_error", errorsSecondHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "standard_error", errorsFirstHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "standard_error", errorsSecondHalf);
 
-            writeFloatChunk(key.toString(), ncFirst, "observed_area_fraction", coverageFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "observed_area_fraction", coverageSecondHalf);
-
-            writeFloatChunk(key.toString(), ncFirst, "number_of_patches", patchNumbersFirstHalf);
-            writeFloatChunk(key.toString(), ncSecond, "number_of_patches", patchNumbersSecondHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "number_of_patches", patchNumbersFirstHalf);
+            writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "number_of_patches", patchNumbersSecondHalf);
 
 
             for (int i = 0; i < baInLcFirstHalf.size(); i++) {
@@ -115,7 +142,7 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         Assert.notNull(month, "calvalus.month");
 
         int lastDayOfMonth = Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
         String timeCoverageStartFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 1).atTime(0, 0, 0));
         String timeCoverageEndFirstHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 15).atTime(23, 59, 59));
         String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
@@ -154,10 +181,8 @@ public class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWrita
         }
     }
 
-    private static void writeFloatChunk(String key, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
-        int x = getX(key);
-        int y = getY(key);
-        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 (tile %s) into variable %s", x, y, key, varName));
+    private static void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 into variable %s", x, y, varName));
 
         Variable variable = ncFile.findVariable(varName);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 40, 40}, data);

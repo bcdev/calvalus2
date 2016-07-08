@@ -73,27 +73,26 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             LOG.info("v4.0 file; masking pixels which accidentally fall into unmappable LC class");
         }
 
-        Product sourceProduct = null;
-        Product lcProduct = null;
+        Product sourceProduct;
+        Product lcProduct;
         if (computeBA) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
             sourceProduct = ProductIO.readProduct(sourceProductFile);
 
             File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
             lcProduct = ProductIO.readProduct(lcTile);
+        } else {
+            // because coverage is computed in reducer
+            return;
         }
         List<File> srProducts = new ArrayList<>();
-        for (int i = 2; i < paths.length; i++) {
-            File srProduct = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            srProducts.add(srProduct);
-        }
 
         ErrorPredictor errorPredictor = new ErrorPredictor();
         GridCell gridCell = computeGridCell(year, month, sourceProduct, lcProduct, srProducts, errorPredictor);
 
         context.progress();
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2]))), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[1].toString()))), gridCell); // use LC input for determining tile
         errorPredictor.dispose();
     }
 
@@ -130,7 +129,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             baInLcSecondHalf.add(secondHalfBaInLcBuffer);
         }
 
-        Product sourceForGeoCoding = ProductIO.readProduct(srProducts.get(0));
+        GeoCoding gc = sourceProduct.getSceneGeoCoding();
 
         int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
@@ -138,7 +137,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 data.reset();
                 Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
-                dataSource.readPixels(sourceRect, data, sourceForGeoCoding.getSceneGeoCoding(), sourceForGeoCoding.getSceneRasterWidth());
+                dataSource.readPixels(sourceRect, data, gc, 3600);
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
@@ -198,8 +197,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             }
         }
 
-        sourceForGeoCoding.dispose();
-
         float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
         float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
 
@@ -223,16 +220,16 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         return gridCell;
     }
 
-    private static void validate(float[] baFirstHalf, List<float[]> baInLcFirstHalf) {
-        int baCount = (int) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).filter(i -> i != 0).count();
-        if (baCount < baFirstHalf.length * 0.05) {
+    private static void validate(float[] ba, List<float[]> baInLc) {
+        int baCount = (int) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).filter(i -> i != 0).count();
+        if (baCount < ba.length * 0.05) {
             // don't throw an error for too few observations
             return;
         }
 
-        float baSum = (float) IntStream.range(0, baFirstHalf.length).mapToDouble(i -> baFirstHalf[i]).sum();
+        float baSum = (float) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).sum();
         float baInLcSum = 0;
-        for (float[] floats : baInLcFirstHalf) {
+        for (float[] floats : baInLc) {
             baInLcSum += IntStream.range(0, floats.length).mapToDouble(i -> floats[i]).sum();
         }
         if (Math.abs(baSum - baInLcSum) > baSum * 0.05) {
@@ -278,10 +275,10 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         }
     }
 
-    private static String getTile(Path path) {
+    private static String getTile(String path) {
         // path.toString() = hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v04h07/2008/2008-06-01-fire-nc/CCI-Fire-MERIS-SDR-L3-300m-v1.0-2008-06-01-v04h07.nc
-        int startIndex = path.toString().length() - 9;
-        return path.toString().substring(startIndex, startIndex + 6);
+        int startIndex = path.length() - 9;
+        return path.substring(startIndex, startIndex + 6);
     }
 
     interface FireGridDataSource {
