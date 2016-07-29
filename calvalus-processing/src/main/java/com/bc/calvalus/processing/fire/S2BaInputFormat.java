@@ -20,16 +20,20 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 
 public class S2BaInputFormat extends InputFormat {
+
+    private static final int MAX_PRE_IMAGES_COUNT = 4;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
         String inputPathPatterns = conf.get("calvalus.input.pathPatterns");
 
-        List<InputSplit> splits = new ArrayList<>(1000);
+        Set<InputSplit> splits = new HashSet<>(1000);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
         HdfsInventoryService inventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
@@ -42,55 +46,66 @@ public class S2BaInputFormat extends InputFormat {
         createSplits(fileStatuses, splits, inventoryService, conf);
         // here, each split must contain two files: pre and post period.
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d split(s).", splits.size()));
-        return splits;
+        return Arrays.asList(splits.toArray(new InputSplit[0]));
     }
 
     private void createSplits(FileStatus[] fileStatuses,
-                              List<InputSplit> splits, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
+                              Set<InputSplit> splits, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
+        /*
+        for each file status r:
+            take r and (up to) latest 4 matching files d, c, b, a (getPeriodStatuses)
+                create r, d
+                create d, c
+                create c, b
+                create b, a
+         */
         for (FileStatus referenceFileStatus : fileStatuses) {
-            Path path = referenceFileStatus.getPath();
-            FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, path, inventoryService, conf);
-            for (FileStatus preStatus : periodStatuses) {
-                List<Path> filePaths = new ArrayList<>();
-                List<Long> fileLengths = new ArrayList<>();
-                filePaths.add(path);
-                fileLengths.add(referenceFileStatus.getLen());
-                filePaths.add(preStatus.getPath());
-                fileLengths.add(preStatus.getLen());
-                splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
-                        fileLengths.stream().mapToLong(Long::longValue).toArray()));
-                Logger.getLogger("com.bc.calvalus").info(String.format("Added reference file %s and preStatus %s.", referenceFileStatus.getPath().getName(), preStatus.getPath().getName()));
+            FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, inventoryService, conf);
+            for (int i = 0; i < periodStatuses.length - 1; i++) {
+                FileStatus postStatus = periodStatuses[i];
+                FileStatus preStatus = periodStatuses[i + 1];
+                splits.add(createSplit(postStatus, preStatus));
+                Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", getDate(postStatus), getDate(preStatus)));
             }
         }
     }
 
-    private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, Path path, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
-        String s2PrePath = path.toString(); // hdfs://calvalus/calvalus/projects/fire/s2-pre/2016/01/16/S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V20160116T105012_20160116T105012_T30PVR.tif
-        String periodInputPathPattern = getPeriodInputPathPattern(s2PrePath);
+    private static CombineFileSplit createSplit(FileStatus postFileStatus, FileStatus preStatus) {
+        List<Path> filePaths = new ArrayList<>();
+        List<Long> fileLengths = new ArrayList<>();
+        filePaths.add(postFileStatus.getPath());
+        fileLengths.add(postFileStatus.getLen());
+        filePaths.add(preStatus.getPath());
+        fileLengths.add(preStatus.getLen());
+        return new ComparableCombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                fileLengths.stream().mapToLong(Long::longValue).toArray());
+    }
 
-        Logger.getLogger("com.bc.calvalus").info("periodInputPathPattern=" + periodInputPathPattern);
+    private FileStatus[] getPeriodStatuses(FileStatus referenceFileStatus, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
+        String referencePath = referenceFileStatus.getPath().toString(); // hdfs://calvalus/calvalus/projects/fire/s2-pre/2016/01/16/S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V20160116T105012_20160116T105012_T30PVR.tif
+        String periodInputPathPattern = getPeriodInputPathPattern(referencePath);
+
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(periodInputPathPattern);
         FileStatus[] periodStatuses = inventoryService.globFileStatuses(inputPatterns, conf);
-        for (FileStatus periodStatus : periodStatuses) {
-            Logger.getLogger("com.bc.calvalus").info("periodStatus=" + periodStatus);
-        }
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();
+        filteredList.add(referenceFileStatus);
         for (FileStatus periodStatus : periodStatuses) {
             if (getDate(periodStatus).before(getDate(referenceFileStatus))) {
                 filteredList.add(periodStatus);
             }
         }
-        int resultCount = Math.min(4, filteredList.size());
+
+        int resultCount = Math.min(MAX_PRE_IMAGES_COUNT + 1, filteredList.size());
         FileStatus[] result = new FileStatus[resultCount];
         System.arraycopy(filteredList.toArray(new FileStatus[0]), 0, result, 0, resultCount);
         return result;
     }
 
     private static void sort(FileStatus[] periodStatuses) {
-        Arrays.sort(periodStatuses, (fs1, fs2) -> getDate(fs1).after(getDate(fs2)) ? 0 : 1);
+        Arrays.sort(periodStatuses, (fs1, fs2) -> getDate(fs1).after(getDate(fs2)) ? -1 : 1);
     }
 
     private static Date getDate(FileStatus fs) {
@@ -109,6 +124,23 @@ public class S2BaInputFormat extends InputFormat {
         String tile = s2PrePath.substring(tileIndex, tileIndex + 6);
         String basePath = s2PrePath.substring(0, yearIndex);
         return String.format("%s.*/.*/.*/.*%s.tif$", basePath, tile);
+    }
+
+    private static class ComparableCombineFileSplit extends CombineFileSplit {
+
+        public ComparableCombineFileSplit(Path[] files, long[] lengths) {
+            super(files, lengths);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return this.toString().equals(obj.toString());
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(toString().toCharArray());
+        }
     }
 
     public RecordReader createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
