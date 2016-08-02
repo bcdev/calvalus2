@@ -18,7 +18,7 @@ public class NcUtilsTest {
 
     @Ignore
     @Test
-    public void testCreateNcFile() throws Exception {
+    public void acceptanceTestCreateNcFile() throws Exception {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
         String timeCoverageStart = dtf.format(LocalDate.of(2008, 6, 1).atTime(0, 0, 0));
         String timeCoverageEnd = dtf.format(LocalDate.of(2008, 6, 15).atTime(23, 59, 59));
@@ -50,7 +50,7 @@ public class NcUtilsTest {
 
     @Ignore
     @Test
-    public void name() throws Exception {
+    public void acceptanceTestCreateActualOutput() throws Exception {
         Product product = ProductIO.readProduct("C:\\temp\\20100607-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc");
         double burnedArea = ProductUtils.getGeophysicalSampleAsDouble(product.getBand("burned_area"), 819, 395, 0);
         assertEquals(10231083, burnedArea, 1E-5f);
