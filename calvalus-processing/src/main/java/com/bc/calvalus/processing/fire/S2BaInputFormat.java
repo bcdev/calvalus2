@@ -126,7 +126,12 @@ public class S2BaInputFormat extends InputFormat {
         return String.format("%s.*/.*/.*/.*%s.tif$", basePath, tile);
     }
 
-    private static class ComparableCombineFileSplit extends CombineFileSplit {
+    @SuppressWarnings("WeakerAccess")
+    public static class ComparableCombineFileSplit extends CombineFileSplit {
+
+        @SuppressWarnings("unused")
+        public ComparableCombineFileSplit() {
+        }
 
         public ComparableCombineFileSplit(Path[] files, long[] lengths) {
             super(files, lengths);
