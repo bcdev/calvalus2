@@ -289,7 +289,12 @@ public class CalvalusDescribeProcessOperation {
                     PropertiesWrapper.get("wps.l3.parameters.schema.location"));
         dataInputs.getInput().add(l3ParametersComplexType);
 
-        List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        List<String> allowedOutputFormat;
+        if (calvalusProcessor.getPossibleOutputFormats() != null) {
+            allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        } else {
+            allowedOutputFormat = new ArrayList<>();
+        }
         List<Object> allowedValues = new ArrayList<>();
         for (String outputFormat : allowedOutputFormat) {
             ValueType value = new ValueType();

@@ -21,7 +21,7 @@
         <fileSet>
             <directory>${project.basedir}/target</directory>
             <includes>
-                <include>calvalus*.jar</include>
+                <include>calvalus-wps-impl.jar</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>

@@ -24,7 +24,7 @@
         <wps:Input>
             <ows:Identifier>inputDataSetName</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>Urban Footprint Global (Urban TEP)</wps:LiteralData>
+                <wps:LiteralData>DLR GUF 75m Global Tiles (Urban TEP)</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>

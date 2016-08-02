@@ -7,7 +7,7 @@
 
 RESPONSE_FILE=$1
 
-GET_STATUS_URL=`grep "statusLocation=" "${RESPONSE_FILE}" | cut -d'"' -f2`
+GET_STATUS_URL=`grep "statusLocation=" "${RESPONSE_FILE}" | cut -d'"' -f4`
 
 STATUS_URL_FORMATTED=`echo ${GET_STATUS_URL} | sed -e "s/\&amp;/\&/g"`
 
