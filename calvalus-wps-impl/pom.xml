@@ -12,7 +12,7 @@
     <artifactId>calvalus-wps-impl</artifactId>
 
     <properties>
-        <bc-wps-api.version>1.0-SNAPSHOT</bc-wps-api.version>
+        <bc-wps-api.version>1.0</bc-wps-api.version>
         <powermockito.version>1.5.6</powermockito.version>
     </properties>
 
