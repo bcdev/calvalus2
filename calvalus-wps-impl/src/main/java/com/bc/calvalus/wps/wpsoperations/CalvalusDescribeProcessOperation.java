@@ -213,14 +213,16 @@ public class CalvalusDescribeProcessOperation {
                 allowedInputDataSets.add(value);
             }
         }
-        InputDescriptionType inputDataSetName = InputDescriptionTypeBuilder
+        InputDescriptionTypeBuilder inputDataSetNameBuilder = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("inputDataSetName")
                     .withTitle("Input data set name")
                     .withAbstract("The input dataset required for the processing")
-                    .withDataType("string")
-                    .withAllowedValues(allowedInputDataSets)
-                    .build();
+                    .withDataType("string");
+        if (!allowedInputDataSets.isEmpty()) {
+            inputDataSetNameBuilder = inputDataSetNameBuilder.withAllowedValues(allowedInputDataSets);
+        }
+        InputDescriptionType inputDataSetName = inputDataSetNameBuilder.build();
 
         dataInputs.getInput().add(inputDataSetName);
 
@@ -301,14 +303,16 @@ public class CalvalusDescribeProcessOperation {
             value.setValue(outputFormat);
             allowedValues.add(value);
         }
-        InputDescriptionType calvalusOutputFormat = InputDescriptionTypeBuilder
+        InputDescriptionTypeBuilder calvalusOutputFormatBuilder = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("outputFormat")
                     .withTitle("Output file format")
                     .withAbstract("The desired format of the product")
-                    .withDataType("string")
-                    .withAllowedValues(allowedValues)
-                    .build();
+                    .withDataType("string");
+        if (!allowedValues.isEmpty()) {
+            calvalusOutputFormatBuilder = calvalusOutputFormatBuilder.withAllowedValues(allowedValues);
+        }
+        InputDescriptionType calvalusOutputFormat = calvalusOutputFormatBuilder.build();
 
         dataInputs.getInput().add(calvalusOutputFormat);
 
