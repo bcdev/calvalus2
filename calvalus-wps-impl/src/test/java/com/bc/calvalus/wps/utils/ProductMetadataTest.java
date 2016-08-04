@@ -125,6 +125,8 @@ public class ProductMetadataTest {
         when(mockProductionRequest.getString("processorBundleVersion")).thenReturn("1.0");
         when(mockProductionRequest.getString("productionType")).thenReturn("L2Plus");
         when(mockProductionRequest.getString("outputFormat")).thenReturn("NetCDF4");
+        when(mockProductionRequest.getDate("minDate")).thenReturn(new Date(START_DATE));
+        when(mockProductionRequest.getDate("maxDate")).thenReturn(new Date(END_DATE));
         when(mockProductionRequest.getStagingDirectory(anyString())).thenReturn("user/20160317_10000000");
         DateRange mockDateRange = new DateRange(new Date(START_DATE), new Date(END_DATE));
         when(mockProductionRequest.createFromMinMax()).thenReturn(mockDateRange);

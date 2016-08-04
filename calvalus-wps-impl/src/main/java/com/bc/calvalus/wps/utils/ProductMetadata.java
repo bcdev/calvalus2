@@ -1,6 +1,8 @@
 package com.bc.calvalus.wps.utils;
 
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.DATE_FORMAT;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MAX_DATE;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MIN_DATE;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
 
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -93,13 +95,37 @@ public class ProductMetadata {
         inputDatasetName = productionRequest.getString("inputPath");
         stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
         regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
-        startDate = DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
-        stopDate = DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
+        startDate = getStartDate(productionRequest);
+        stopDate = getStopDate(productionRequest);
         collectionUrl = getBaseStagingUrl() + "/" + production.getStagingPath();
         processorVersion = productionRequest.getString("processorBundleVersion");
         productionType = productionRequest.getString("productionType");
         outputFormat = productionRequest.getString("outputFormat");
         productList = createProductList();
+    }
+
+    private String getStartDate(ProductionRequest productionRequest) throws ProductionException {
+        try {
+            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
+        } catch (ProductionException exception) {
+            if (productionRequest.getString("minDateSource") != null) {
+                return productionRequest.getString("minDateSource");
+            } else {
+                return DATE_FORMAT.format(MIN_DATE);
+            }
+        }
+    }
+
+    private String getStopDate(ProductionRequest productionRequest) throws ProductionException {
+        try {
+            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
+        } catch (ProductionException exception) {
+            if (productionRequest.getString("maxDateSource") != null) {
+                return productionRequest.getString("maxDateSource");
+            } else {
+                return DATE_FORMAT.format(MAX_DATE);
+            }
+        }
     }
 
     private String extractRegionWkt(String regionWkt) {

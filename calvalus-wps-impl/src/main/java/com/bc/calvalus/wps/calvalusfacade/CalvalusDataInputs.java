@@ -32,9 +32,9 @@ import java.util.Map;
 public class CalvalusDataInputs {
 
     public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+    public static final int MIN_DATE = 0;
+    public static final long MAX_DATE = 4133894400000L;
 
-    private static final int MIN_DATE = 0;
-    private static final long MAX_DATE = 4133894400000L;
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
 
@@ -114,8 +114,8 @@ public class CalvalusDataInputs {
                 inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
                 Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
                 Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
-                inputMapFormatted.putIfAbsent(CalvalusParameter.MIN_DATE.getIdentifier(), DATE_FORMAT.format(minDate));
-                inputMapFormatted.putIfAbsent(CalvalusParameter.MAX_DATE.getIdentifier(), DATE_FORMAT.format(maxDate));
+                inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
+                inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
                 break;
             }
         }

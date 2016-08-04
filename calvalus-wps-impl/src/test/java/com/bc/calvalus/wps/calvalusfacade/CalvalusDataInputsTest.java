@@ -51,8 +51,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDate"), equalTo("1970-01-01"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDate"), equalTo("2100-12-31"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("1970-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2100-12-31"));
     }
 
     @Test
@@ -69,8 +69,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDate"), equalTo("2000-01-01"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDate"), equalTo("2010-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2000-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2010-01-01"));
     }
 
     @Test
@@ -219,18 +219,18 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("minDate : 1970-01-01\n" +
-                                                          "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
+        assertThat(calvalusDataInputs.toString(), equalTo("processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                                           "productionType : L3\n" +
                                                           "processorBundleVersion : null\n" +
                                                           "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                                          "minDateSource : 1970-01-01\n" +
                                                           "autoStaging : true\n" +
                                                           "calvalus.snap.bundle : snap-3.0.0\nprocessorName : null\n" +
-                                                          "maxDate : 2100-12-31\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
-                                                          "productionName : dummyProductionName\n"));
+                                                          "productionName : dummyProductionName\n" +
+                                                          "maxDateSource : 2100-12-31\n"));
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -250,15 +250,15 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("minDate : 1970-01-01\n" +
-                                                          "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+        assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "processorBundleLocation : null\n" +
+                                                          "minDateSource : 1970-01-01\n" +
                                                           "autoStaging : true\n" +
                                                           "processorName : null\n" +
-                                                          "maxDate : 2100-12-31\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
-                                                          "processorBundleVersion : null\n"));
+                                                          "processorBundleVersion : null\n" +
+                                                          "maxDateSource : 2100-12-31\n"));
     }
 
     private ProductSet[] getMockProductSets() {
