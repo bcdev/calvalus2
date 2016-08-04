@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.utils;
 
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.DATE_FORMAT;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
 
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -8,13 +9,11 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.esa.snap.core.datamodel.ProductData;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -50,8 +49,6 @@ public class ProductMetadata {
     private final WpsServerContext serverContext;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final String DATE_PATTERN = "yyyy-MM-dd";
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
 
     public ProductMetadata(Production production, List<File> productionResults, WpsServerContext serverContext)
                 throws ProductionException {

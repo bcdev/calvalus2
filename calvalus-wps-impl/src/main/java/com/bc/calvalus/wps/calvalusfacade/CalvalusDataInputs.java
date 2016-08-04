@@ -31,12 +31,12 @@ import java.util.Map;
  */
 public class CalvalusDataInputs {
 
+    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+
     private static final int MIN_DATE = 0;
     private static final long MAX_DATE = 4133894400000L;
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
-    private static final String DATE_PATTERN = "yyyy-MM-dd";
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
 
     public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, CalvalusProcessor calvalusProcessor, ProductSet[] productSets) throws InvalidParameterValueException {
         this.inputMapFormatted = new HashMap<>();
