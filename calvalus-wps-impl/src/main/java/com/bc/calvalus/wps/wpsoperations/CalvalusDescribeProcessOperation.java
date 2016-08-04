@@ -11,7 +11,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
-import com.bc.calvalus.wps.responses.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;

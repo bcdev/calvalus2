@@ -1,9 +1,10 @@
-package com.bc.calvalus.wps.responses;
+package com.bc.calvalus.wps.utils;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.DataInputsType;

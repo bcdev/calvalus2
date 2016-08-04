@@ -12,7 +12,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
-import com.bc.calvalus.wps.responses.CalvalusExecuteResponseConverter;
+import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ProcessBriefType;

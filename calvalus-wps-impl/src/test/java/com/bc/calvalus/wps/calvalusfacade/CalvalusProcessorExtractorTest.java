@@ -2,7 +2,6 @@ package com.bc.calvalus.wps.calvalusfacade;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -13,7 +12,6 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.responses.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import org.junit.*;
 

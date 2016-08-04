@@ -8,18 +8,20 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.apache.velocity.VelocityContext;
+import org.esa.snap.core.datamodel.ProductData;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -48,6 +50,8 @@ public class ProductMetadata {
     private final WpsServerContext serverContext;
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final String DATE_PATTERN = "yyyy-MM-dd";
+    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
 
     public ProductMetadata(Production production, List<File> productionResults, WpsServerContext serverContext)
                 throws ProductionException {
@@ -55,28 +59,6 @@ public class ProductMetadata {
         this.productionResults = productionResults;
         this.serverContext = serverContext;
         createProductMetadata();
-    }
-
-    public VelocityContext createVelocityContext() {
-        VelocityContext context = new VelocityContext();
-
-        context.put("jobUrl", jobUrl);
-        context.put("jobFinishTime", jobFinishTime);
-        context.put("productOutputDir", productOutputDir);
-        context.put("productionName", productionName);
-        context.put("processName", processName);
-        context.put("inputDatasetName", inputDatasetName);
-        context.put("stagingDir", stagingDir);
-        context.put("regionWkt", regionWkt);
-        context.put("startDate", startDate);
-        context.put("stopDate", stopDate);
-        context.put("collectionUrl", collectionUrl);
-        context.put("processorVersion", processorVersion);
-        context.put("productionType", productionType);
-        context.put("outputFormat", outputFormat);
-        context.put("productList", productList);
-
-        return context;
     }
 
     public Map<String, Object> getContextMap() {
@@ -102,6 +84,7 @@ public class ProductMetadata {
     }
 
     private void createProductMetadata() throws ProductionException {
+        LOG.info("creating product metadata...");
         ProductionRequest productionRequest = production.getProductionRequest();
 
         jobUrl = serverContext.getRequestUrl();
@@ -113,13 +96,13 @@ public class ProductMetadata {
         inputDatasetName = productionRequest.getString("inputPath");
         stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
         regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
-        startDate = "DUMMY";
-        stopDate = "DUMMY";
+        startDate = DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
+        stopDate = DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
         collectionUrl = getBaseStagingUrl() + "/" + production.getStagingPath();
         processorVersion = productionRequest.getString("processorBundleVersion");
         productionType = productionRequest.getString("productionType");
         outputFormat = productionRequest.getString("outputFormat");
-        createProductList();
+        productList = createProductList();
     }
 
     private String extractRegionWkt(String regionWkt) {
@@ -132,23 +115,23 @@ public class ProductMetadata {
         XMLGregorianCalendar date2 = null;
         try {
             date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        } catch (DatatypeConfigurationException e) {
-            e.printStackTrace();
+        } catch (DatatypeConfigurationException exception) {
+            LOG.log(Level.SEVERE, "cannot instantiate DataType", exception);
         }
         return date2;
     }
 
-    private void createProductList() {
-        productList = new ArrayList<>();
+    private List<Map> createProductList() {
+        List<Map> productList = new ArrayList<>();
         for (File productionResult : productionResults) {
             Map<String, String> productMap = new HashMap<>();
             productMap.put("productUrl", getBaseStagingUrl() + "/" + productionResult.getName());
             productMap.put("productFileName", productionResult.getName());
             productMap.put("productFileFormat", parseFileFormat(productionResult.getName()));
             productMap.put("productFileSize", Long.toString(productionResult.length()));
-            productMap.put("productQuickLookUrl", getBaseStagingUrl() + "/" + "QUICKLOOK");
             productList.add(productMap);
         }
+        return productList;
     }
 
     private String parseFileFormat(String fileName) {

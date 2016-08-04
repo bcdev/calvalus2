@@ -3,7 +3,7 @@ package com.bc.calvalus.wps.wpsoperations;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
-import com.bc.calvalus.wps.responses.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.AddressType;
 import com.bc.wps.api.schema.Capabilities;

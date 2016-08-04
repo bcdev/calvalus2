@@ -73,11 +73,6 @@
                             </ProductInformation>
                         </product>
                     #end
-                    <browse>
-                        <BrowseInformation>
-                            <fileName>$product.productQuickLookUrl</fileName>
-                        </BrowseInformation>
-                    </browse>
                 </EarthObservationResult>
             </result>
             <featureOfInterest xmlns="http://www.opengis.net/om/2.0">

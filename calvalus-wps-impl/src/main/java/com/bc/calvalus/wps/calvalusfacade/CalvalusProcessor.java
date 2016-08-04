@@ -1,10 +1,9 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
+
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.wps.responses.IWpsProcess;
-
-import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 
 /**
  * @author hans
@@ -61,7 +60,7 @@ public class CalvalusProcessor implements IWpsProcess {
         return processorDescriptor.getDefaultParameters();
     }
 
-    public String[] getPossibleOutputFormats(){
+    public String[] getPossibleOutputFormats() {
         return processorDescriptor.getOutputFormats();
     }
 

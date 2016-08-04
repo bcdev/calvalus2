@@ -5,7 +5,6 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.responses.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 
 import java.util.ArrayList;
