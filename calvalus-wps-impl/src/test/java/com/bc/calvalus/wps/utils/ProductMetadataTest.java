@@ -4,6 +4,7 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -11,25 +12,22 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.sun.jersey.api.uri.UriBuilderImpl;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 import org.junit.*;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.File;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hans
  */
 public class ProductMetadataTest {
 
+    private static final long START_DATE = 946684800000L;
+    private static final long END_DATE = 1577836800000L;
     private Production mockProduction;
     private WpsServerContext mockServerContext;
 
@@ -49,49 +47,72 @@ public class ProductMetadataTest {
                     .path("bc-wps")
                     .path("staging")
                     .path("TEP Subset-metadata");
-        System.out.println("builder.toString() = " + builder.build().toString());
+        assertThat(builder.build().toString(), equalTo("http://bc-wps:9080/bc-wps/staging/TEP%20Subset-metadata"));
     }
 
     @Test
-    public void canCreateVelocityContext() throws Exception {
-        List<File> mockProductionResults = getMockProductionResults();
-        ProductMetadata productMetadata = new ProductMetadata(mockProduction, mockProductionResults, mockServerContext);
+    public void canCreateProductMetadata() throws Exception {
+        List<File> mockProductionFileList = new ArrayList<>();
+        File mockFile1 = getMockFile("result1.nc", 1000000000L);
+        mockProductionFileList.add(mockFile1);
+        File mockFile2 = getMockFile("result.zip", 1000000L);
+        mockProductionFileList.add(mockFile2);
+        File mockFile3 = getMockFile("result-metadata", 5000L);
+        mockProductionFileList.add(mockFile3);
+        File mockFile4 = getMockFile("result.xml", 1000L);
+        mockProductionFileList.add(mockFile4);
 
-        VelocityEngine ve = getVelocityEngine();
-        VelocityContext context = productMetadata.createVelocityContext();
-        Template template = ve.getTemplate("test-velocity2.vm");
-        StringWriter writer = new StringWriter();
-        template.merge(context, writer);
+        ProductMetadata productMetadata = new ProductMetadata(mockProduction, mockProductionFileList, mockServerContext);
 
-        assertThat(writer.toString(),
-                   equalTo("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<feed xmlns=\"http://www.w3.org/2005/Atom\" xml:lang=\"en\">\n    <title type=\"text\">Urban TEP catalogue entry</title>\n    <id>http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=GetStatus&JobId=20160429140605_L2Plus_16bd8f26b258fc</id>\n    <updated>2016-01-01T01:00:00.000+01:00</updated>\n    <link rel=\"profile\" href=\"http://www.opengis.net/spec/owc-atom/1.0/req/core\" title=\"This file is compliant with version 1.0 of OGC Context\"/>\n    <entry>\n        <id>TEP Subset test/hans/20160317_10000000</id>\n        <title type=\"text\">TEP Subset test</title>\n        <content type=\"text\">Subset of /calvalus/auxiliary/urban-footprint/ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif</content>\n        <author>\n            <name>Brockmann Consult GmbH</name>\n        </author>\n        <publisher xmlns=\"http://purl.org/dc/elements/1.1/\">ESA Urban TEP</publisher>\n        <updated>2016-01-01T01:00:00.000+01:00</updated>\n        <parentIdentifier xmlns=\"http://purl.org/dc/elements/1.1/\">http://http://www.brockmann-consult.de:80/bc-wps/staging/hans</parentIdentifier>\n        <where xmlns=\"http://www.georss.org/georss/10\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n            <Polygon xmlns=\"http://www.opengis.net/gml\">\n                <exterior>\n                    <LinearRing>\n                        <posList srsDimension=\"2\">100 -10 100 0 110 0 110 -10 100 -10</posList>\n                    </LinearRing>\n                </exterior>\n            </Polygon>\n        </where>\n        <date xmlns=\"http://purl.org/dc/elements/1.1/\">DUMMY/DUMMY</date>\n        <link rel=\"enclosure\" href=\"http://http://www.brockmann-consult.de:80/bc-wps/staging/null\" title=\"TEP Subset test\"/>\n        <EarthObservation xmlns=\"http://www.opengis.net/sar/2.1\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n            <boundedBy xmlns=\"http://www.opengis.net/gml/3.2\" xsi:nil=\"true\"/>\n            <phenomenonTime xmlns=\"http://www.opengis.net/om/2.0\">\n                <TimePeriod xmlns=\"http://www.opengis.net/gml/3.2\">\n                    <beginPosition>DUMMY</beginPosition>\n                    <endPosition>DUMMY</endPosition>\n                </TimePeriod>\n            </phenomenonTime>\n            <observedProperty xmlns=\"http://www.opengis.net/om/2.0\" xsi:nil=\"true\"/>\n            <metaDataProperty xmlns=\"http://www.opengis.net/eop/2.1\">\n                <EarthObservationMetaData>\n                    <identifier>TEP Subset test/hans/20160317_10000000</identifier>\n                    <parentIdentifier>http://http://www.brockmann-consult.de:80/bc-wps/staging/hans</parentIdentifier>\n                    <productType>GUF</productType>\n                    <processing>\n                        <ProcessingInformation>\n                            <processingCenter>Brockmann Consult GmbH</processingCenter>\n                            <processingDate>2016-01-01T01:00:00.000+01:00</processingDate>\n                            <method>Subset Processing</method>\n                            <processorName>Subset</processorName>\n                            <processorVersion>1.0</processorVersion>\n                            <processingLevel>L2Plus</processingLevel>\n                            <nativeProductFormat>NetCDF4</nativeProductFormat>\n                        </ProcessingInformation>\n                    </processing>\n                </EarthObservationMetaData>\n            </metaDataProperty>\n            <result xmlns=\"http://www.opengis.net/om/2.0\">\n                <EarthObservationResult xmlns=\"http://www.opengis.net/eop/2.1\">\n                    <boundedBy xmlns=\"http://www.opengis.net/gml/3.2\" xsi:nil=\"true\"/>\n                                        <product>\n                        <ProductInformation>\n                            <fileName>\n                                <d7p1:ServiceReference d7p1:type=\"simple\"\n                                                       d7p2:href=\"http://http://www.brockmann-consult.de:80/bc-wps/staging/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc\"\n                                                       d7p2:title=\"simple\"\n                                                       xmlns=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p1=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p2=\"http://www.w3.org/1999/xlink\">\n                                    <d7p1:Identifier>L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc</d7p1:Identifier>\n                                    <d7p1:Format>NetCDF4</d7p1:Format>\n                                </d7p1:ServiceReference>\n                            </fileName>\n                            <size>12345</size>\n                        </ProductInformation>\n                    </product>\n                                        <product>\n                        <ProductInformation>\n                            <fileName>\n                                <d7p1:ServiceReference d7p1:type=\"simple\"\n                                                       d7p2:href=\"http://http://www.brockmann-consult.de:80/bc-wps/staging/L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.zip\"\n                                                       d7p2:title=\"simple\"\n                                                       xmlns=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p1=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p2=\"http://www.w3.org/1999/xlink\">\n                                    <d7p1:Identifier>L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.zip</d7p1:Identifier>\n                                    <d7p1:Format>ZIP</d7p1:Format>\n                                </d7p1:ServiceReference>\n                            </fileName>\n                            <size>1234</size>\n                        </ProductInformation>\n                    </product>\n                                        <product>\n                        <ProductInformation>\n                            <fileName>\n                                <d7p1:ServiceReference d7p1:type=\"simple\"\n                                                       d7p2:href=\"http://http://www.brockmann-consult.de:80/bc-wps/staging/output-metadata.xml\"\n                                                       d7p2:title=\"simple\"\n                                                       xmlns=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p1=\"http://www.opengis.net/ows/2.0\"\n                                                       xmlns:d7p2=\"http://www.w3.org/1999/xlink\">\n                                    <d7p1:Identifier>output-metadata.xml</d7p1:Identifier>\n                                    <d7p1:Format>XML</d7p1:Format>\n                                </d7p1:ServiceReference>\n                            </fileName>\n                            <size>34</size>\n                        </ProductInformation>\n                    </product>\n                                        <browse>\n                        <BrowseInformation>\n                            <fileName>$product.productQuickLookUrl</fileName>\n                        </BrowseInformation>\n                    </browse>\n                </EarthObservationResult>\n            </result>\n            <featureOfInterest xmlns=\"http://www.opengis.net/om/2.0\">\n                <Footprint xmlns=\"http://www.opengis.net/eop/2.1\">\n                    <boundedBy xmlns=\"http://www.opengis.net/gml/3.2\" xsi:nil=\"true\"/>\n                    <multiExtentOf>\n                        <MultiSurface xmlns=\"http://www.opengis.net/gml/3.2\">\n                            <surfaceMembers>\n                                <Polygon>\n                                    <exterior>\n                                        <LinearRing>\n                                            <posList count=\"5\" srsDimension=\"2\">100 -10 100 0 110 0 110 -10 100 -10</posList>\n                                        </LinearRing>\n                                    </exterior>\n                                </Polygon>\n                            </surfaceMembers>\n                        </MultiSurface>\n                    </multiExtentOf>\n                </Footprint>\n            </featureOfInterest>\n        </EarthObservation>\n    </entry>\n</feed>\n"));
+        Map<String, Object> contextMap = productMetadata.getContextMap();
+        assertThat(contextMap.get("jobUrl"),
+                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=GetStatus&JobId=20160429140605_L2Plus_16bd8f26b258fc"));
+        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("productOutputDir"), equalTo("TEP Subset test/user/20160317_10000000"));
+        assertThat(contextMap.get("productionName"), equalTo("TEP Subset test"));
+        assertThat(contextMap.get("processName"), equalTo("Subset"));
+        assertThat(contextMap.get("inputDatasetName"), equalTo("/calvalus/auxiliary/urban-footprint/ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif"));
+        assertThat(contextMap.get("stagingDir"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/user"));
+        assertThat(contextMap.get("regionWkt"), equalTo("100 -10 100 0 110 0 110 -10 100 -10"));
+        assertThat(contextMap.get("startDate"), equalTo("2000-01-01"));
+        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01"));
+        assertThat(contextMap.get("collectionUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000"));
+        assertThat(contextMap.get("processorVersion"), equalTo("1.0"));
+        assertThat(contextMap.get("productionType"), equalTo("L2Plus"));
+        assertThat(contextMap.get("outputFormat"), equalTo("NetCDF4"));
+
+        List productionList = (List) contextMap.get("productList");
+        assertThat(productionList.size(), equalTo(4));
+        Map product1 = (Map) productionList.get(0);
+        assertThat(product1.get("productFileName"), equalTo("result1.nc"));
+        assertThat(product1.get("productFileFormat"), equalTo("NetCDF4"));
+        assertThat(product1.get("productFileSize"), equalTo("1000000000"));
+        assertThat(product1.get("productUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/result1.nc"));
+
+        Map product2 = (Map) productionList.get(1);
+        assertThat(product2.get("productFileName"), equalTo("result.zip"));
+        assertThat(product2.get("productFileFormat"), equalTo("ZIP"));
+        assertThat(product2.get("productFileSize"), equalTo("1000000"));
+        assertThat(product2.get("productUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/result.zip"));
+
+        Map product3 = (Map) productionList.get(2);
+        assertThat(product3.get("productFileName"), equalTo("result-metadata"));
+        assertThat(product3.get("productFileFormat"), equalTo("metadata"));
+        assertThat(product3.get("productFileSize"), equalTo("5000"));
+        assertThat(product3.get("productUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/result-metadata"));
+
+        Map product4 = (Map) productionList.get(3);
+        assertThat(product4.get("productFileName"), equalTo("result.xml"));
+        assertThat(product4.get("productFileFormat"), equalTo("XML"));
+        assertThat(product4.get("productFileSize"), equalTo("1000"));
+        assertThat(product4.get("productUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/result.xml"));
     }
 
-    private VelocityEngine getVelocityEngine() {
-        VelocityEngine ve = new VelocityEngine();
-        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
-        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-        ve.init();
-        return ve;
-    }
-
-    private List<File> getMockProductionResults() {
-        List<File> mockProductionResults = new ArrayList<>();
-        File mockResultFile = mock(File.class);
-        when(mockResultFile.getName()).thenReturn("L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.nc");
-        when(mockResultFile.length()).thenReturn(12345L);
-        mockProductionResults.add(mockResultFile);
-
-        File mockResultZipFile = mock(File.class);
-        when(mockResultZipFile.getName()).thenReturn("L2_of_ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.zip");
-        when(mockResultZipFile.length()).thenReturn(1234L);
-        mockProductionResults.add(mockResultZipFile);
-
-        File mockMetadataFile = mock(File.class);
-        when(mockMetadataFile.getName()).thenReturn("output-metadata.xml");
-        when(mockMetadataFile.length()).thenReturn(34L);
-        mockProductionResults.add(mockMetadataFile);
-        return mockProductionResults;
+    private File getMockFile(String name, long size) {
+        File mockFile1 = mock(File.class);
+        when(mockFile1.getName()).thenReturn(name);
+        when(mockFile1.length()).thenReturn(size);
+        return mockFile1;
     }
 
     private void configureMockProduction() throws ProductionException {
@@ -104,11 +125,16 @@ public class ProductMetadataTest {
         when(mockProductionRequest.getString("processorBundleVersion")).thenReturn("1.0");
         when(mockProductionRequest.getString("productionType")).thenReturn("L2Plus");
         when(mockProductionRequest.getString("outputFormat")).thenReturn("NetCDF4");
-        when(mockProductionRequest.getStagingDirectory(anyString())).thenReturn("hans/20160317_10000000");
+        when(mockProductionRequest.getDate("minDate")).thenReturn(new Date(START_DATE));
+        when(mockProductionRequest.getDate("maxDate")).thenReturn(new Date(END_DATE));
+        when(mockProductionRequest.getStagingDirectory(anyString())).thenReturn("user/20160317_10000000");
+        DateRange mockDateRange = new DateRange(new Date(START_DATE), new Date(END_DATE));
+        when(mockProductionRequest.createFromMinMax()).thenReturn(mockDateRange);
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
 
         when(mockProduction.getName()).thenReturn("TEP Subset test");
         when(mockProduction.getId()).thenReturn("20160429140605_L2Plus_16bd8f26b258fc");
+        when(mockProduction.getStagingPath()).thenReturn("user/20160317_10000000");
 
         WorkflowItem mockWorkflowItem = mock(WorkflowItem.class);
         when(mockWorkflowItem.getStopTime()).thenReturn(new Date(1451606400000L));

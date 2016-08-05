@@ -1,7 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
 
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.BEAM_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.CALVALUS_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.INPUT_DATASET;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
@@ -17,7 +16,10 @@ import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.esa.snap.core.datamodel.ProductData;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,10 @@ import java.util.Map;
  * @author hans
  */
 public class CalvalusDataInputs {
+
+    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+    public static final int MIN_DATE = 0;
+    public static final long MAX_DATE = 4133894400000L;
 
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
@@ -41,7 +47,7 @@ public class CalvalusDataInputs {
             extractProcessorInfoParameters(calvalusProcessor);
             transformProcessorParameters(calvalusProcessor);
         }
-        extractProductsetParameters(productSets, calvalusProcessor);
+        extractProductSetParameters(productSets, calvalusProcessor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
     }
@@ -74,11 +80,9 @@ public class CalvalusDataInputs {
 
     private void extractProductionParameters() {
         List<String> productionParameterNames = getProductionInfoParameters();
-        for (String parameterName : productionParameterNames) {
-            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
-                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
-            }
-        }
+        productionParameterNames.stream()
+                    .filter(parameterName -> StringUtils.isNotBlank(inputMapRaw.get(parameterName)))
+                    .forEach(parameterName -> inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName)));
     }
 
     private void extractProductionInfoParameters(CalvalusProcessor calvalusProcessor) {
@@ -98,24 +102,26 @@ public class CalvalusDataInputs {
         inputMapFormatted.put("processorBundleLocation", calvalusProcessor.getBundleLocation());
     }
 
-    private void extractProductsetParameters(ProductSet[] productSets, CalvalusProcessor calvalusProcessor) throws InvalidParameterValueException {
+    private void extractProductSetParameters(ProductSet[] productSets, CalvalusProcessor calvalusProcessor) throws InvalidParameterValueException {
         String dataSetName = inputMapRaw.get(INPUT_DATASET.getIdentifier());
+        List<String> productSetParameterNames = getProductsetParameters();
+        productSetParameterNames.stream()
+                    .filter(parameterName -> StringUtils.isNotBlank(inputMapRaw.get(parameterName)))
+                    .forEach(parameterName -> inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName)));
         for (ProductSet productSet : productSets) {
             if (productSet.getName().equals(dataSetName)
                 && ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
                 inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
+                Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
+                Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
+                inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
+                inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
+                break;
             }
         }
 
         if (calvalusProcessor != null && StringUtils.isBlank(inputMapFormatted.get("inputPath"))) {
             throw new InvalidParameterValueException(INPUT_DATASET.getIdentifier());
-        }
-
-        List<String> productsetParameterNames = getProductsetParameters();
-        for (String parameterName : productsetParameterNames) {
-            if (StringUtils.isNotBlank(inputMapRaw.get(parameterName))) {
-                inputMapFormatted.put(parameterName, inputMapRaw.get(parameterName));
-            }
         }
     }
 

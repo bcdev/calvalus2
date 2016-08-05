@@ -1,4 +1,4 @@
-package com.bc.calvalus.wps.responses;
+package com.bc.calvalus.wps.calvalusfacade;
 
 /**
  * @author hans

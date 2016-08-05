@@ -11,7 +11,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
-import com.bc.calvalus.wps.responses.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;
@@ -213,14 +213,16 @@ public class CalvalusDescribeProcessOperation {
                 allowedInputDataSets.add(value);
             }
         }
-        InputDescriptionType inputDataSetName = InputDescriptionTypeBuilder
+        InputDescriptionTypeBuilder inputDataSetNameBuilder = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("inputDataSetName")
                     .withTitle("Input data set name")
                     .withAbstract("The input dataset required for the processing")
-                    .withDataType("string")
-                    .withAllowedValues(allowedInputDataSets)
-                    .build();
+                    .withDataType("string");
+        if (!allowedInputDataSets.isEmpty()) {
+            inputDataSetNameBuilder = inputDataSetNameBuilder.withAllowedValues(allowedInputDataSets);
+        }
+        InputDescriptionType inputDataSetName = inputDataSetNameBuilder.build();
 
         dataInputs.getInput().add(inputDataSetName);
 
@@ -289,21 +291,28 @@ public class CalvalusDescribeProcessOperation {
                     PropertiesWrapper.get("wps.l3.parameters.schema.location"));
         dataInputs.getInput().add(l3ParametersComplexType);
 
-        List<String> allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        List<String> allowedOutputFormat;
+        if (calvalusProcessor.getPossibleOutputFormats() != null) {
+            allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        } else {
+            allowedOutputFormat = new ArrayList<>();
+        }
         List<Object> allowedValues = new ArrayList<>();
         for (String outputFormat : allowedOutputFormat) {
             ValueType value = new ValueType();
             value.setValue(outputFormat);
             allowedValues.add(value);
         }
-        InputDescriptionType calvalusOutputFormat = InputDescriptionTypeBuilder
+        InputDescriptionTypeBuilder calvalusOutputFormatBuilder = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("outputFormat")
                     .withTitle("Output file format")
                     .withAbstract("The desired format of the product")
-                    .withDataType("string")
-                    .withAllowedValues(allowedValues)
-                    .build();
+                    .withDataType("string");
+        if (!allowedValues.isEmpty()) {
+            calvalusOutputFormatBuilder = calvalusOutputFormatBuilder.withAllowedValues(allowedValues);
+        }
+        InputDescriptionType calvalusOutputFormat = calvalusOutputFormatBuilder.build();
 
         dataInputs.getInput().add(calvalusOutputFormat);
 

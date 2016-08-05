@@ -1,5 +1,8 @@
 package com.bc.calvalus.wps.utils;
 
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.DATE_FORMAT;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MAX_DATE;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MIN_DATE;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
 
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -8,7 +11,6 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.apache.velocity.VelocityContext;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -20,6 +22,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -57,28 +60,6 @@ public class ProductMetadata {
         createProductMetadata();
     }
 
-    public VelocityContext createVelocityContext() {
-        VelocityContext context = new VelocityContext();
-
-        context.put("jobUrl", jobUrl);
-        context.put("jobFinishTime", jobFinishTime);
-        context.put("productOutputDir", productOutputDir);
-        context.put("productionName", productionName);
-        context.put("processName", processName);
-        context.put("inputDatasetName", inputDatasetName);
-        context.put("stagingDir", stagingDir);
-        context.put("regionWkt", regionWkt);
-        context.put("startDate", startDate);
-        context.put("stopDate", stopDate);
-        context.put("collectionUrl", collectionUrl);
-        context.put("processorVersion", processorVersion);
-        context.put("productionType", productionType);
-        context.put("outputFormat", outputFormat);
-        context.put("productList", productList);
-
-        return context;
-    }
-
     public Map<String, Object> getContextMap() {
         Map<String, Object> contextMap = new HashMap<>();
 
@@ -102,6 +83,7 @@ public class ProductMetadata {
     }
 
     private void createProductMetadata() throws ProductionException {
+        LOG.info("creating product metadata...");
         ProductionRequest productionRequest = production.getProductionRequest();
 
         jobUrl = serverContext.getRequestUrl();
@@ -113,13 +95,37 @@ public class ProductMetadata {
         inputDatasetName = productionRequest.getString("inputPath");
         stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
         regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
-        startDate = "DUMMY";
-        stopDate = "DUMMY";
+        startDate = getStartDate(productionRequest);
+        stopDate = getStopDate(productionRequest);
         collectionUrl = getBaseStagingUrl() + "/" + production.getStagingPath();
         processorVersion = productionRequest.getString("processorBundleVersion");
         productionType = productionRequest.getString("productionType");
         outputFormat = productionRequest.getString("outputFormat");
-        createProductList();
+        productList = createProductList();
+    }
+
+    private String getStartDate(ProductionRequest productionRequest) throws ProductionException {
+        try {
+            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
+        } catch (ProductionException exception) {
+            if (productionRequest.getString("minDateSource") != null) {
+                return productionRequest.getString("minDateSource");
+            } else {
+                return DATE_FORMAT.format(MIN_DATE);
+            }
+        }
+    }
+
+    private String getStopDate(ProductionRequest productionRequest) throws ProductionException {
+        try {
+            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
+        } catch (ProductionException exception) {
+            if (productionRequest.getString("maxDateSource") != null) {
+                return productionRequest.getString("maxDateSource");
+            } else {
+                return DATE_FORMAT.format(MAX_DATE);
+            }
+        }
     }
 
     private String extractRegionWkt(String regionWkt) {
@@ -132,23 +138,23 @@ public class ProductMetadata {
         XMLGregorianCalendar date2 = null;
         try {
             date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        } catch (DatatypeConfigurationException e) {
-            e.printStackTrace();
+        } catch (DatatypeConfigurationException exception) {
+            LOG.log(Level.SEVERE, "cannot instantiate DataType", exception);
         }
         return date2;
     }
 
-    private void createProductList() {
-        productList = new ArrayList<>();
+    private List<Map> createProductList() {
+        List<Map> productList = new ArrayList<>();
         for (File productionResult : productionResults) {
             Map<String, String> productMap = new HashMap<>();
             productMap.put("productUrl", getBaseStagingUrl() + "/" + productionResult.getName());
             productMap.put("productFileName", productionResult.getName());
             productMap.put("productFileFormat", parseFileFormat(productionResult.getName()));
             productMap.put("productFileSize", Long.toString(productionResult.length()));
-            productMap.put("productQuickLookUrl", getBaseStagingUrl() + "/" + "QUICKLOOK");
             productList.add(productMap);
         }
+        return productList;
     }
 
     private String parseFileFormat(String fileName) {

@@ -11,17 +11,12 @@ import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.utils.VelocityWrapper;
 import com.bc.wps.api.WpsServerContext;
 import com.sun.jersey.api.uri.UriBuilderImpl;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.VelocityEngine;
-import org.apache.velocity.runtime.RuntimeConstants;
-import org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader;
 
 import javax.ws.rs.core.UriBuilder;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +42,7 @@ public class CalvalusStaging {
         this.wpsServerContext = wpsServerContext;
     }
 
-    protected void stageProduction(ProductionService productionService, Production production) throws ProductionException {
+    protected void stageProduction(ProductionService productionService, Production production) throws ProductionException, IOException {
         logInfo("Staging results...");
         productionService.stageProductions(production.getId());
     }
@@ -110,28 +105,21 @@ public class CalvalusStaging {
     }
 
     private void generateProductMetadata(Production production, File stagingDirectory, File[] productResultFiles) throws ProductionException {
+        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
+        if (outputMetadata.exists()) {
+            return;
+        }
+
         ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
 
         VelocityWrapper velocityWrapper = new VelocityWrapper();
         String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
 
-        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
         try (PrintWriter out = new PrintWriter(outputMetadata.getAbsolutePath())) {
             out.println(mergedMetadata);
         } catch (FileNotFoundException exception) {
             LOG.log(Level.SEVERE, "Unable to write metadata file '" + outputMetadata + "'.", exception);
         }
-    }
-
-    private VelocityEngine getVelocityEngine() {
-        VelocityEngine ve = new VelocityEngine();
-        ve.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
-        ve.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-        ve.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
-        ve.setProperty("runtime.log.logsystem.log4j.category", "velocity");
-        ve.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
-        ve.init();
-        return ve;
     }
 
     private void logError(String errorMessage) {
