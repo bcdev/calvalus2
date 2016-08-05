@@ -56,7 +56,7 @@
                 </div>
             </div>
 
-            <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2013 Brockmann Consult GmbH &nbsp;-&nbsp;<a
+            <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2016 Brockmann Consult GmbH &nbsp;-&nbsp;<a
                     href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
         </td>
