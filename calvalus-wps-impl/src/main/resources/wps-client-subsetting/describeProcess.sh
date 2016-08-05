@@ -7,6 +7,21 @@
 # Example : describeProcess.sh urbantep-subsetting~1.0~Subset
 #           describeProcess.sh all
 
+function usage {
+    echo "---------------------------------------"
+    echo "USAGE: describeProcess.sh <process_id>"
+    echo "---------------------------------------"
+}
+
+if [ "$1" = "-h" ] ; then
+    usage
+    exit 0
+elif [ -z "$1" ] ; then
+    echo "process ID is missing"
+    usage
+    exit 0
+fi
+
 PROCESS_ID=$1
 
 read -p "Enter User Name: " WPS_USER
