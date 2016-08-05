@@ -12,6 +12,7 @@ import org.junit.rules.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -23,6 +24,11 @@ public class ExecuteRequestExtractorTest {
 
     @Rule
     public ExpectedException thrownException = ExpectedException.none();
+
+    @Before
+    public void before() {
+        Locale.setDefault(Locale.ENGLISH);
+    }
 
     @Test
     public void canGetParameterValues() throws Exception {
@@ -244,11 +250,11 @@ public class ExecuteRequestExtractorTest {
                "      \t<wps:Input>\n" +
                "\t\t\t<ows:Identifier>regionWKT</ows:Identifier>\n" +
                "\t\t\t<wps:Data>\n" +
-               "\t\t\t\t<ows:BoundingBoxData>\n" +
+               "\t\t\t\t<wps:BoundingBoxData>\n" +
                "                  <ows:LowerCorner>100 -10</ows:LowerCorner>\n" +
                "                  <ows:UpperCorner>110 0</ows:UpperCorner>\n" +
-               "                  <ows:crs>urn:ogc:def:crs:EPSG:6:6:4326</ows:crs>\n" +
-               "                </ows:BoundingBoxData>\n" +
+               "                  <crs>urn:ogc:def:crs:EPSG:6:6:4326</crs>\n" +
+               "                </wps:BoundingBoxData>\n" +
                "\t\t\t</wps:Data>\n" +
                "\t\t</wps:Input>\n" +
                "\t\t\n" +
