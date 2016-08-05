@@ -11,6 +11,18 @@ or faster:
 mvn clean package --offline -DskipTests=true
 
 ===========================================================================
+Building the SNAP bundle
+
+the snap bundle fromthe distribution module is no longer used. It doesn't contain
+all modules that are required for SNAP.
+
+* Instead us a local SNAP installation.
+* Execute the class org.esa.snap.runtime.BundleCreator in the module
+  snap-engine/snap-runtime this ist best done from a checked out version of snap-engine.
+  this first parameter is the directory of a SNAP installation the second the name of a zip file
+  for the bundle
+
+===========================================================================
 Software archive
 ----------------
 mkdir calvalus-software
