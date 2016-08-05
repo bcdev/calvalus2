@@ -105,12 +105,16 @@ public class CalvalusStaging {
     }
 
     private void generateProductMetadata(Production production, File stagingDirectory, File[] productResultFiles) throws ProductionException {
+        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
+        if (outputMetadata.exists()) {
+            return;
+        }
+
         ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
 
         VelocityWrapper velocityWrapper = new VelocityWrapper();
         String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
 
-        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
         try (PrintWriter out = new PrintWriter(outputMetadata.getAbsolutePath())) {
             out.println(mergedMetadata);
         } catch (FileNotFoundException exception) {
