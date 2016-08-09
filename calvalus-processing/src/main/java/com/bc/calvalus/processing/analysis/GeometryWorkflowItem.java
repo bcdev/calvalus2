@@ -21,8 +21,6 @@ import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
-import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -52,15 +50,7 @@ public class GeometryWorkflowItem extends HadoopWorkflowItem {
     }
 
     protected void configureJob(Job job) throws IOException {
-
-        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
-            job.setInputFormatClass(PatternBasedInputFormat.class);
-        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
-            job.setInputFormatClass(TableInputFormat.class);
-        } else {
-            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
-                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
-        }
+        job.setInputFormatClass(getInputFormatClass(job.getConfiguration()));
 
         job.setMapperClass(GeometryMapper.class);
         job.setMapOutputKeyClass(Text.class);

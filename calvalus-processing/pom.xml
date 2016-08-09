@@ -132,6 +132,13 @@
             <version>1.4.8</version>
         </dependency>
 
+        <!--  BC Geo - Inventory -->
+
+        <dependency>
+            <groupId>com.bc</groupId>
+            <artifactId>geo-inventory</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 </project>

@@ -102,13 +102,7 @@ public class L3ProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, jobConfig);
             processorProductionRequest.configureProcessor(jobConfig);
 
-            if (productionRequest.getParameters().containsKey("inputPath")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-            } else {
-                throw new ProductionException("missing request parameter inputPath or inputTable");
-            }
+            setInputLocationParameters(productionRequest, jobConfig);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 

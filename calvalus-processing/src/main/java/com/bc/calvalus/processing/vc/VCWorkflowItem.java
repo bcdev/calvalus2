@@ -20,8 +20,6 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
-import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import com.bc.calvalus.processing.ma.MAReducer;
 import com.bc.calvalus.processing.ma.RecordWritable;
 import org.apache.hadoop.conf.Configuration;
@@ -89,14 +87,7 @@ public class VCWorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.envisat.usePixelGeoCoding", "true");
         jobConfig.setIfUnset("calvalus.system.beam.pixelGeoCoding.fractionAccuracy", "true");
 
-        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
-            job.setInputFormatClass(PatternBasedInputFormat.class);
-        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
-            job.setInputFormatClass(TableInputFormat.class);
-        } else {
-            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
-                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
-        }
+        job.setInputFormatClass(getInputFormatClass(jobConfig));
         job.setMapperClass(VCMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(RecordWritable.class);

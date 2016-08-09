@@ -34,6 +34,7 @@ public interface JobConfigNames {
     String CALVALUS_INPUT_FORMAT = "calvalus.input.format";
     String CALVALUS_INPUT_INVENTORY = "calvalus.input.productInventory";
     String CALVALUS_INPUT_TABLE = "calvalus.input.table";
+    String CALVALUS_INPUT_GEO_INVENTORY = "calvalus.input.geoInventory";
 
     String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
     String CALVALUS_OUTPUT_FORMAT = "calvalus.output.format";

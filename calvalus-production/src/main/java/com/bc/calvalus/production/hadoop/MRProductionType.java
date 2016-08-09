@@ -68,13 +68,7 @@ public class MRProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-             jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-         } else if (productionRequest.getParameters().containsKey("inputTable")) {
-             jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-         } else {
-             throw new ProductionException("missing request parameter inputPath or inputTable");
-         }
+        setInputLocationParameters(productionRequest, jobConfig);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, minDateStr);
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDateStr);

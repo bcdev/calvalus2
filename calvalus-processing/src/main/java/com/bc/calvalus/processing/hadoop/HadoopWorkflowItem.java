@@ -23,12 +23,14 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.geodb.GeoInventoryInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
+import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
@@ -257,5 +259,21 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         JobClient jobClient = processingService.getJobClient(userName);
         RunningJob runningJob = jobClient.submitJob(jobConf);
         return runningJob.getID();
+    }
+
+    protected Class<? extends InputFormat> getInputFormatClass(Configuration conf) throws IOException {
+        if (conf.get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            return TableInputFormat.class;
+        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null) {
+            return GeoInventoryInputFormat.class;
+        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            return PatternBasedInputFormat.class;
+        } else {
+            throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s hads been set.",
+                                                JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
+                                                JobConfigNames.CALVALUS_INPUT_TABLE,
+                                                JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
+        }
+
     }
 }

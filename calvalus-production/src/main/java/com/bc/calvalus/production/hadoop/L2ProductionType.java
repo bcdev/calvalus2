@@ -84,13 +84,7 @@ public class L2ProductionType extends HadoopProductionType {
         processorProductionRequest.configureProcessor(l2JobConfig);
 
         Geometry geometry = productionRequest.getRegionGeometry(null);
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        } else if (productionRequest.getParameters().containsKey("inputTable")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-        } else {
-            throw new ProductionException("missing request parameter inputPath or inputTable");
-        }
+        setInputLocationParameters(productionRequest, l2JobConfig);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
