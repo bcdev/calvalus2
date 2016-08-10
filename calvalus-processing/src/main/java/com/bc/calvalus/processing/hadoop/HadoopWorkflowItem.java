@@ -23,7 +23,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.geodb.GeoInventoryInputFormat;
+import com.bc.calvalus.processing.geodb.GeodbInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -265,7 +265,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         if (conf.get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
             return TableInputFormat.class;
         } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null) {
-            return GeoInventoryInputFormat.class;
+            return GeodbInputFormat.class;
         } else if (conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
             return PatternBasedInputFormat.class;
         } else {

@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.analysis.ProductDbWorkflowItem;
+import com.bc.calvalus.processing.geodb.GeodbWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -38,25 +38,25 @@ import java.util.List;
  *
  * @author MarcoZ
  */
-public class ProductDbProductionType extends HadoopProductionType {
+public class GeoDbProductionType extends HadoopProductionType {
 
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
         public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new ProductDbProductionType(inventory, processing, staging);
+            return new GeoDbProductionType(inventory, processing, staging);
         }
     }
 
-    ProductDbProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
-                            StagingService stagingService) {
-        super("ProductDB", inventoryService, processingService, stagingService);
+    GeoDbProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+                        StagingService stagingService) {
+        super("GeoDB", inventoryService, processingService, stagingService);
     }
 
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("ProductDB ", productionRequest);
+        String defaultProductionName = createProductionName("GeoDB ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
@@ -70,10 +70,10 @@ public class ProductDbProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
-        ProductDbWorkflowItem workflowItem = new ProductDbWorkflowItem(getProcessingService(),
-                                                                       productionRequest.getUserName(),
-                                                                       productionName,
-                                                                       jobConfig);
+        GeodbWorkflowItem workflowItem = new GeodbWorkflowItem(getProcessingService(),
+                                                               productionRequest.getUserName(),
+                                                               productionName,
+                                                               jobConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = false;

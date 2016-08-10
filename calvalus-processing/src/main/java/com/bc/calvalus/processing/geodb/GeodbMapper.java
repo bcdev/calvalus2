@@ -14,34 +14,36 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.analysis;
+package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.util.ProductUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.IOException;
+import java.net.URI;
 import java.text.DateFormat;
 
 /**
  * A mapper for generating entries for the product-DB
  */
-public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
+public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -51,7 +53,7 @@ public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Te
         try {
             Product product = processorAdapter.getInputProduct();
             if (product != null) {
-                Polygon poylgon = computeProductGeometry2(product);
+                Polygon poylgon = computeProductGeometryDefault(product);
                 if (poylgon != null) {
                     String wkt = poylgon.toString();
                     pm.worked(50);
@@ -67,11 +69,10 @@ public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Te
                     if (endUTC != null) {
                         endTime = dateFormat.format(endUTC.getAsDate());
                     }
-                    String absolutePath = processorAdapter.getInputPath().toString();
+                    String dbPath = getDBPath(processorAdapter.getInputPath(), context.getConfiguration());
 
                     String result = startTime + "\t" + endTime + "\t" + wkt;
-
-                    context.write(new Text(absolutePath), new Text(result));
+                    context.write(new Text(dbPath), new Text(result));
                 }
             }
         } finally {
@@ -80,7 +81,30 @@ public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Te
         }
     }
 
-    public static Polygon computeProductGeometry2(Product product) {
+    /**
+     * Removes the schema and the autority, if they are from the default filesystem
+     */
+    private String getDBPath(Path productPath, Configuration configuration) {
+        URI productURI = productPath.toUri();
+        URI defaultURI = FileSystem.getDefaultUri(configuration);
+
+        boolean sameSchema = false;
+        if (defaultURI.getScheme() != null && defaultURI.getScheme().equals(productURI.getScheme())) {
+            sameSchema = true;
+        }
+        boolean sameAuthority = false;
+        if (defaultURI.getAuthority() != null && defaultURI.getAuthority().equals(productURI.getAuthority())) {
+            sameAuthority = true;
+        }
+
+        String dbPath = productPath.toString();
+        if (sameSchema && sameAuthority) {
+            dbPath = new Path(null, null, productURI.getPath()).toString();
+        }
+        return dbPath;
+    }
+
+    public static Polygon computeProductGeometryDefault(Product product) {
         try {
             final boolean usePixelCenter = true;
             final Rectangle region = new Rectangle(0, 0, product.getSceneRasterWidth(), product.getSceneRasterHeight());
@@ -101,13 +125,4 @@ public class ProductDbMapper extends Mapper<NullWritable, NullWritable, Text, Te
             return null;
         }
     }
-
-
-    public static void main(String[] args) throws IOException {
-        Product product = ProductIO.readProduct(args[0]);
-        System.out.println("product = " + product);
-        Geometry geometry = computeProductGeometry2(product);
-        System.out.println("geometry = " + geometry);
-    }
-
 }

@@ -28,4 +28,4 @@ com.bc.calvalus.production.hadoop.MRProductionType$Spi
 com.bc.calvalus.production.hadoop.MACompareProductionType$Spi
 com.bc.calvalus.production.hadoop.L2toL3ProductionType$Spi
 com.bc.calvalus.production.hadoop.CombinationsProductionType$Spi
-com.bc.calvalus.production.hadoop.ProductDbProductionType$Spi
+com.bc.calvalus.production.hadoop.GeoDbProductionType$Spi

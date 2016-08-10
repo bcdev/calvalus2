@@ -57,7 +57,7 @@ import java.util.logging.Logger;
  * An input format using the geo inventory for quickly finding products that
  * match the given time and/or geo constrains.
  */
-public class GeoInventoryInputFormat extends InputFormat {
+public class GeodbInputFormat extends InputFormat {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 

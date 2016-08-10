@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.analysis;
+package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
@@ -27,9 +27,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import java.io.IOException;
 
-public class ProductDbWorkflowItem extends HadoopWorkflowItem {
+public class GeodbWorkflowItem extends HadoopWorkflowItem {
 
-    public ProductDbWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
+    public GeodbWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
         super(processingService, username, jobName, jobConfig);
     }
 
@@ -49,7 +49,7 @@ public class ProductDbWorkflowItem extends HadoopWorkflowItem {
     protected void configureJob(Job job) throws IOException {
         job.setInputFormatClass(getInputFormatClass(job.getConfiguration()));
 
-        job.setMapperClass(ProductDbMapper.class);
+        job.setMapperClass(GeodbMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
 
