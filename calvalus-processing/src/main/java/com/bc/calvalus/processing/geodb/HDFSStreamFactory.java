@@ -52,4 +52,12 @@ class HDFSStreamFactory implements StreamFactory {
         FileSystem fs = path.getFileSystem(conf);
         return fs.create(path, true);
     }
+
+    @Override
+    public boolean exists(String name) throws IOException {
+        Path path = new Path(dbPath, name);
+        FileSystem fs = path.getFileSystem(conf);
+        return fs.exists(path);
+    }
+
 }

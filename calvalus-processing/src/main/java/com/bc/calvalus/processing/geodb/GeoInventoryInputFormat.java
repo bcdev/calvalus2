@@ -76,7 +76,7 @@ public class GeoInventoryInputFormat extends InputFormat {
                     if (locations == null || locations.length == 0) {
                         LOG.warning("cannot find hosts of input " + stringPath);
                     } else {
-                        LOG.fine("adding input split for " + path.getName());
+                        LOG.fine("adding input split for  " + path.toUri().getPath());
                         splits.add(new ProductSplit(path, status.getLen(), locations[0].getHosts()));
                     }
                 } else {
@@ -95,10 +95,14 @@ public class GeoInventoryInputFormat extends InputFormat {
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
         CoverageInventory inventory = new CoverageInventory(streamFactory);
+        if (!inventory.hasIndex()) {
+            throw new IOException("GeoInventory does not exist: '"+geoInventory+"'");
+        }
         inventory.loadIndex();
         List<Constrain> constrains = parseConstraint(conf);
         Set<String> paths = new HashSet<>();
         for (Constrain constrain : constrains) {
+            LOG.fine("query for constrain: " + constrain.toString());
             paths.addAll(inventory.query(constrain).getPaths());
         }
         return paths;

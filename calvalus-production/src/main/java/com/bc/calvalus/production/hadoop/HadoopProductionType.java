@@ -123,7 +123,7 @@ public abstract class HadoopProductionType implements ProductionType {
         } else if (productionRequestParameters.containsKey("inputPath")) {
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         } else {
-            throw new ProductionException("missing request parameter inputPath or inputTable");
+            throw new ProductionException("Missing request parameter: neither 'inputPath', 'inputTable' nor 'geoInventory' is given.");
         }
     }
 
