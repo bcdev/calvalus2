@@ -23,6 +23,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Progressable;
+import org.esa.snap.core.dataio.ProductIOPlugInManager;
+import org.esa.snap.core.dataio.ProductWriterPlugIn;
 import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.BufferedInputStream;
@@ -33,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
@@ -52,7 +55,7 @@ public class ProductFormatter {
     private File tmpDir;
 
     public ProductFormatter(String productName, String outputFormat, String outputCompression) {
-        String outputExtension;
+        String outputExtension = "";
         if (outputFormat.equals("BEAM-DIMAP")) {
             outputExtension = ".dim";
             outputCompression = "zip";
@@ -61,10 +64,6 @@ public class ProductFormatter {
             outputCompression = ""; // no further compression required
         }  else if (outputFormat.equals("NetCDF4-Fire")) {
             outputExtension = ".nc";
-            outputCompression = ""; // no further compression required
-        } else if (outputFormat.startsWith("NetCDF4")) {
-            outputExtension = ".nc";
-            outputFormat = "NetCDF4-BEAM"; // use NetCDF with BEAM extensions
             outputCompression = ""; // no further compression required
         } else if (outputFormat.equals("NetCDF")) {
             outputExtension = ".nc";
@@ -82,9 +81,23 @@ public class ProductFormatter {
         } else if (outputFormat.equals("CSV")) {
             outputExtension = ".txt";
             outputCompression = "";
+        }
+        // test if writer for output format exists
+        ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
+        Iterator it = registry.getWriterPlugIns(outputFormat);
+        if(it.hasNext()) {
+            ProductWriterPlugIn plugIn = (ProductWriterPlugIn) it.next();
+            if (outputExtension.isEmpty()) {
+                // get output extension from writer
+                String[] defaultFileExtensions = plugIn.getDefaultFileExtensions();
+                if (defaultFileExtensions != null && defaultFileExtensions.length > 0) {
+                    outputExtension = defaultFileExtensions[0];
+                }
+            }
         } else {
             throw new IllegalArgumentException("Unsupported output format: " + outputFormat);
         }
+
 
         if ("zip".equals(outputCompression)) {
             outputFilename = productName + ".zip";
