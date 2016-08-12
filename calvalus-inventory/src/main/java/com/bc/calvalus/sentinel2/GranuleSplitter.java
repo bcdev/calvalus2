@@ -21,6 +21,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
@@ -104,7 +105,7 @@ public class GranuleSplitter {
 
     private void run() throws IOException {
         Map<String, GranuleWriter> granuleWriters = new HashMap<>();
-        String productName = null;
+        String parentProductName = null;
         try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(inputStream))) {
             List<ZipEntryBuffer> zipEntryBuffers = new ArrayList<>();
             ZipEntry entry;
@@ -118,11 +119,11 @@ public class GranuleSplitter {
                         writeBufferToWriter(zipEntryBuffer, granuleWriter);
                     }
                 } else {
-                    if (productName == null) {
-                        productName = entryName.split("/")[0];
-                        int i = productName.indexOf(".SAFE");
+                    if (parentProductName == null) {
+                        parentProductName = entryName.split("/")[0];
+                        int i = parentProductName.indexOf(".SAFE");
                         if (i > -1) {
-                            productName = productName.substring(0, i);
+                            parentProductName = parentProductName.substring(0, i);
                         }
                     }
                     // entry belongs to a specific granule
@@ -147,9 +148,10 @@ public class GranuleSplitter {
             newProductNames.add(granuleWriter.getOutputFile().getName());
         }
         for (GranuleWriter granuleWriter : granuleWriters.values()) {
-            granuleWriter.writeParentProductInfo(productName, newProductNames);
+            granuleWriter.writeParentProductInfo(parentProductName, newProductNames);
             granuleWriter.close();
         }
+        writeMarkerFile(parentProductName, newProductNames);
     }
 
     static String detectGranule(String entryName) {
@@ -190,6 +192,15 @@ public class GranuleSplitter {
             byte[] buffer = zipEntryBuffer.getBuffer();
             writer.write(buffer, buffer.length);
             writer.closeEntry();
+        }
+    }
+
+    private void writeMarkerFile(String parentProductName, List<String> newProductNames) throws IOException {
+        File markerFile = new File(outputDir, "_" + parentProductName);
+        try(FileWriter fileWriter = new FileWriter(markerFile)) {
+            for (String newProductName : newProductNames) {
+                fileWriter.write(newProductName + "\n");
+            }
         }
     }
 
