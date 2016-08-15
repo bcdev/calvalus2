@@ -34,7 +34,7 @@ import org.esa.snap.core.util.StringUtils;
 import java.util.List;
 
 /**
- * A production type used for creating worldmap-images with product boundaries.
+ * A production type used for creating / updating the geo-inventory.
  *
  * @author MarcoZ
  */
@@ -67,8 +67,7 @@ public class GeoDbProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
-        String outputDir = getOutputPath(productionRequest, productionId, "");
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
 
         GeodbWorkflowItem workflowItem = new GeodbWorkflowItem(getProcessingService(),
                                                                productionRequest.getUserName(),

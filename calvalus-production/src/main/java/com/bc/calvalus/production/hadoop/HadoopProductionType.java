@@ -114,14 +114,14 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration jobConfigCloud) throws ProductionException {
+    protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration conf) throws ProductionException {
         Map<String, String> productionRequestParameters = productionRequest.getParameters();
         if (productionRequestParameters.containsKey("inputTable")) {
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+            conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
         } else if (productionRequestParameters.containsKey("geoInventory")) {
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
+            conf.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
         } else if (productionRequestParameters.containsKey("inputPath")) {
-            jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         } else {
             throw new ProductionException("Missing request parameter: neither 'inputPath', 'inputTable' nor 'geoInventory' is given.");
         }
