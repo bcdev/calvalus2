@@ -65,6 +65,13 @@ public class GeodbInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         Collection<String> paths = queryGeoInventory(conf);
+        List<InputSplit> splits = createInputSplits(conf, paths);
+        String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
+        LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
+        return splits;
+    }
+
+    private List<InputSplit> createInputSplits(Configuration conf, Collection<String> paths) throws IOException {
         List<InputSplit> splits = new ArrayList<>();
         for (String stringPath : paths) {
             final Path path = new Path(stringPath);
@@ -86,8 +93,6 @@ public class GeodbInputFormat extends InputFormat {
                 LOG.warning("cannot find input " + stringPath);
             }
         }
-        String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
         return splits;
     }
 

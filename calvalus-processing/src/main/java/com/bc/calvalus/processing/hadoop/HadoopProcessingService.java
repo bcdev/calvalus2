@@ -34,7 +34,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
-import org.apache.hadoop.fs.permission.AclStatus;
 import org.apache.hadoop.io.IOUtils;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobStatus;
@@ -72,7 +71,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
     public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.10-SNAPSHOT";
-    public static final String DEFAULT_SNAP_BUNDLE = "snap-3.0.0";
+    public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0-SNAPSHOT";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 

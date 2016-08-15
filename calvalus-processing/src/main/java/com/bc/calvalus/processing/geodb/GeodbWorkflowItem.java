@@ -17,13 +17,13 @@
 package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 
 import java.io.IOException;
 
@@ -35,30 +35,30 @@ public class GeodbWorkflowItem extends HadoopWorkflowItem {
 
     @Override
     public String getOutputDir() {
-        return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
+        return getJobConfig().get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
     }
 
     @Override
     protected String[][] getJobConfigDefaults() {
         return new String[][]{
+                {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
-                {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
+                {JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, NO_DEFAULT},
         };
     }
 
     protected void configureJob(Job job) throws IOException {
-        job.setInputFormatClass(getInputFormatClass(job.getConfiguration()));
+        job.setInputFormatClass(PatternBasedInputFormat.class);
 
         job.setMapperClass(GeodbMapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
 
-        job.setNumReduceTasks(1);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
 
-        JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
+        job.setNumReduceTasks(1);
+        job.setReducerClass(GeodbReducer.class);
+        job.setOutputFormatClass(NullOutputFormat.class);
     }
 
 }
