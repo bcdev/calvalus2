@@ -56,7 +56,7 @@ public class DimapCalvalusReaderPlugin implements ProductReaderPlugIn {
                     ZipEntry zipEntry = zipIn.getNextEntry(); // only look at the first zip entry
                     if (zipEntry != null) {
                         String entryName = zipEntry.getName().toLowerCase();
-                        if (entryName.endsWith(".data/") || entryName.endsWith(".dim")) {
+                        if (entryName.contains(".data/") || entryName.endsWith(".dim")) {
                             return DecodeQualification.INTENDED;
                         }
                     }
