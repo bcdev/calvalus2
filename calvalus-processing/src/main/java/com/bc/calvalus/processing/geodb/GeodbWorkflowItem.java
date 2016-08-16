@@ -60,5 +60,4 @@ public class GeodbWorkflowItem extends HadoopWorkflowItem {
         job.setReducerClass(GeodbReducer.class);
         job.setOutputFormatClass(NullOutputFormat.class);
     }
-
 }

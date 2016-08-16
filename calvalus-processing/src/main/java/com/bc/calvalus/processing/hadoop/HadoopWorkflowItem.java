@@ -23,7 +23,6 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
-import com.bc.calvalus.processing.geodb.GeodbInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -40,7 +39,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
 
 /**
  * A workflow item that corresponds to a single Hadoop job.
@@ -264,12 +265,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     protected Class<? extends InputFormat> getInputFormatClass(Configuration conf) throws IOException {
         if (conf.get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
             return TableInputFormat.class;
-        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null) {
-            return GeodbInputFormat.class;
-        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null || conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
             return PatternBasedInputFormat.class;
         } else {
-            throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s hads been set.",
+            throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s had been set.",
                                                 JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
                                                 JobConfigNames.CALVALUS_INPUT_TABLE,
                                                 JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));

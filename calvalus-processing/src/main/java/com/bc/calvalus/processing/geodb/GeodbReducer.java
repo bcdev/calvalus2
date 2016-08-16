@@ -43,7 +43,7 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
-        scanFilename = "scan." + ProductData.UTC.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        scanFilename = "scans/scan." + ProductData.UTC.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         Path scanResultPath = new Path(geoInventory, scanFilename);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
     }
@@ -53,7 +53,6 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
         String value = values.iterator().next().toString(); // there is exactly one value
         String scanRecord = key + "\t" + value + "\n";
         scanResultWriter.write(scanRecord);
-
     }
 
     @Override

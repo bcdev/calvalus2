@@ -56,6 +56,9 @@ import java.util.logging.Logger;
 /**
  * An input format using the geo inventory for quickly finding products that
  * match the given time and/or geo constrains.
+ *
+ * For compatibility reasons this input format is ONLY used from within the PatternBasedInputFormat !!!
+ *
  */
 public class GeodbInputFormat extends InputFormat {
 
@@ -64,14 +67,14 @@ public class GeodbInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        Collection<String> paths = queryGeoInventory(conf);
+        Set<String> paths = queryGeoInventory(conf);
         List<InputSplit> splits = createInputSplits(conf, paths);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
         return splits;
     }
 
-    private List<InputSplit> createInputSplits(Configuration conf, Collection<String> paths) throws IOException {
+    public static List<InputSplit> createInputSplits(Configuration conf, Collection<String> paths) throws IOException {
         List<InputSplit> splits = new ArrayList<>();
         for (String stringPath : paths) {
             final Path path = new Path(stringPath);
@@ -96,7 +99,7 @@ public class GeodbInputFormat extends InputFormat {
         return splits;
     }
 
-    private static Collection<String> queryGeoInventory(Configuration conf) throws IOException {
+    public static Set<String> queryGeoInventory(Configuration conf) throws IOException {
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
         CoverageInventory inventory = new CoverageInventory(streamFactory);
