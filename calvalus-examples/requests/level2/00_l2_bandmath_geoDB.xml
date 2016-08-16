@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+
+<wps:Execute service="WPS"
+             version="1.0.0"
+             xmlns:wps="http://www.opengis.net/wps/1.0.0"
+             xmlns:ows="http://www.opengis.net/ows/1.1"
+             xmlns:xlink="http://www.w3.org/1999/xlink">
+
+    <ows:Identifier>L2</ows:Identifier>
+
+    <wps:DataInputs>
+        <wps:Input>
+            <ows:Identifier>productionName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>example level2 00_l2_bandmath</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>geoInventory</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/geoInventory/MER_RR__1P_r03</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>calvalus.output.dir</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/home/marcoz/geoDBtest/00_l2_bandmath_geoDB</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>regionWKT</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>polygon((-19.94 40.00, -20.00 60.00, 0.0 60.00, 0.00 65.00, 13.06 65.00, 12.99 53.99, 0.00 49.22,  0.00 40.00,  -19.94 40.00))</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>minDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2010-03-01</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <wps:Input>
+            <ows:Identifier>maxDate</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>2010-03-31</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>processorName</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>BandMaths</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+
+        <wps:Input>
+            <ows:Identifier>calvalus.l3.parameters</ows:Identifier>
+            <wps:Data>
+                <wps:ComplexData>
+                    <parameters>
+                        <variables>
+                            <variable>
+                                <name>SOLAR_FLUX_13</name>
+                                <type>float32</type>
+                                <value>914.18945</value>
+                            </variable>
+                            <variable>
+                                <name>SOLAR_FLUX_14</name>
+                                <type>float32</type>
+                                <value>882.8275</value>
+                            </variable>
+                            <variable>
+                                <name>PI</name>
+                                <type>float64</type>
+                                <value>3.1415</value>
+                            </variable>
+                        </variables>
+                        <targetBands>
+                            <targetBand>
+                                <name>reflec_13</name>
+                                <expression>radiance_13 / (PI * SOLAR_FLUX_13)</expression>
+                                <description>TOA reflectance in channel 13</description>
+                                <type>float32</type>
+                                <validExpression>reflec_13 >= 0</validExpression>
+                                <noDataValue>-999</noDataValue>
+                                <spectralBandIndex>13</spectralBandIndex>
+                            </targetBand>
+                            <targetBand>
+                                <name>reflec_14</name>
+                                <expression>radiance_14 / (PI * SOLAR_FLUX_14)</expression>
+                                <description>TOA reflectance in channel 14</description>
+                                <type>float32</type>
+                                <unit>myunits</unit>
+                                <validExpression>reflec_14 >= 0</validExpression>
+                                <noDataValue>-999</noDataValue>
+                                <spectralBandIndex>14</spectralBandIndex>
+                            </targetBand>
+                        </targetBands>
+                    </parameters>
+                </wps:ComplexData>
+            </wps:Data>
+         </wps:Input>
+
+    </wps:DataInputs>
+</wps:Execute>
