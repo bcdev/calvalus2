@@ -67,7 +67,7 @@ public class PatternBasedInputFormat extends InputFormat {
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
         if (geoInventory != null && inputPathPatterns == null) {
-            Set<String> paths = GeodbInputFormat.queryGeoInventory(conf);
+            Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
             List<InputSplit> splits = GeodbInputFormat.createInputSplits(conf, paths);
             LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
             return splits;
@@ -103,7 +103,7 @@ public class PatternBasedInputFormat extends InputFormat {
             return splits;
         } else if (geoInventory != null && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
-            Set<String> pathStringInDB = GeodbInputFormat.queryGeoInventory(conf);
+            Set<String> pathStringInDB = GeodbInputFormat.queryGeoInventory(false, conf);
             Set<Path> qualifiedPath = makeQualified(pathStringInDB, conf);
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));

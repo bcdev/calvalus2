@@ -48,6 +48,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -67,7 +68,7 @@ public class GeodbInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        Set<String> paths = queryGeoInventory(conf);
+        Set<String> paths = queryGeoInventory(true, conf);
         List<InputSplit> splits = createInputSplits(conf, paths);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
@@ -99,12 +100,16 @@ public class GeodbInputFormat extends InputFormat {
         return splits;
     }
 
-    public static Set<String> queryGeoInventory(Configuration conf) throws IOException {
+    public static Set<String> queryGeoInventory(boolean failOnMissingDB, Configuration conf) throws IOException {
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
         CoverageInventory inventory = new CoverageInventory(streamFactory);
         if (!inventory.hasIndex()) {
-            throw new IOException("GeoInventory does not exist: '"+geoInventory+"'");
+            if (failOnMissingDB) {
+                throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
+            } else {
+                return Collections.EMPTY_SET;
+            }
         }
         inventory.loadIndex();
         List<Constrain> constrains = parseConstraint(conf);
