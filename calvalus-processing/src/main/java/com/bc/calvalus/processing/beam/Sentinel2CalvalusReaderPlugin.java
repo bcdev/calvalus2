@@ -128,7 +128,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 System.out.println("formatPrefix = " + formatPrefix);
 
                 Product product = readProduct(productXML, formatPrefix);
-                if (product != null  && product.getStartTime() == null && product.getEndTime() == null) {
+                if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, productXML.getName());
                 }
                 return product;
@@ -154,21 +154,17 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
         private Product readProduct(File xmlFile, String formatPrefix) throws IOException {
             ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatPrefix);
-            if (productReaderPlugin != null) {
-                ProductReader productReader = productReaderPlugin.createReaderInstance();
-                return productReader.readProductNodes(xmlFile, null);
-            }
-            return null;
+            return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
         }
 
-        private ProductReaderPlugIn findProductReaderPlugin(File xmlFile, String formatResolutionPrefix) {
+        private ProductReaderPlugIn findProductReaderPlugin(File xmlFile, String formatPrefix) throws IOException {
             ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
             Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
             while (allReaderPlugIns.hasNext()) {
                 ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
                 String[] formatNames = readerPlugIn.getFormatNames();
                 for (String formatName : formatNames) {
-                    if (formatName.startsWith(formatResolutionPrefix)) {
+                    if (formatName.startsWith(formatPrefix)) {
                         DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
                         if (decodeQualification == DecodeQualification.INTENDED) {
                             System.out.println("formatName = " + formatName);
@@ -177,7 +173,8 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     }
                 }
             }
-            return null;
+            String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
+            throw new IllegalFileFormatException(msg);
         }
 
         @Override
