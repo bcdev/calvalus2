@@ -64,9 +64,10 @@ public class L2ProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new L2Staging(production,
-                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                             getStagingService().getStagingDir());
+        throw new UnsupportedOperationException("Staging disabled for L2 use L2Plus instead.");
+//        return new L2Staging(production,
+//                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+//                             getStagingService().getStagingDir());
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,

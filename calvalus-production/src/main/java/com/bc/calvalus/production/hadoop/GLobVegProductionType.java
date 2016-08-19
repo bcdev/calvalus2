@@ -32,7 +32,6 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -163,7 +162,7 @@ public class GLobVegProductionType extends HadoopProductionType {
     // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for old Level3.");
+        throw new UnsupportedOperationException("Staging currently not implemented for old Level3.");
     }
 
 }

@@ -5,14 +5,12 @@ import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.multiband.L3MultiBandFormatWorkflowItem;
-import com.bc.calvalus.processing.l3.multiregion.L3MultiRegionFormatWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -73,6 +71,6 @@ public class L3MultiBandFormatProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging L3MultiBand not yet implemented");
+        throw new UnsupportedOperationException("Staging L3MultiBand not yet implemented");
     }
 }
