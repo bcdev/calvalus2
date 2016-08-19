@@ -54,6 +54,8 @@ public class ProductSetPersistable {
         sb.append(productSet.getRegionWKT());
         sb.append(';');
         sb.append(StringUtils.join(productSet.getBandNames(), ","));
+        sb.append(';');
+        sb.append(productSet.getGeoInventory());
         return sb.toString();
     }
 
@@ -63,31 +65,41 @@ public class ProductSetPersistable {
             return null; //comments are ignored
         }
         String[] splits = trimmedText.split(";");
-        if (splits.length == 7) {
-            String productType = nullAware(splits[0]);
-            String name = nullAware(splits[1]);
-            String path = nullAware(splits[2]);
-            Date date1 = asDate(splits[3]);
-            Date date2 = asDate(splits[4]);
-            String regionName = nullAware(splits[5]);
-            String regionWKT = nullAware(splits[6]);
-            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT,  new String[0]);
-        } else if (splits.length == 8) {
-            String productType = nullAware(splits[0]);
-            String name = nullAware(splits[1]);
-            String path = nullAware(splits[2]);
-            Date date1 = asDate(splits[3]);
-            Date date2 = asDate(splits[4]);
-            String regionName = nullAware(splits[5]);
-            String regionWKT = nullAware(splits[6]);
+
+        String productType;
+        String name;
+        String path;
+        Date date1;
+        Date date2;
+        String regionName = null;
+        String regionWKT = null;
+        String[] bandNames =  new String[0];
+        String geoInventory = null;
+
+        if (splits.length >= 5) {
+            productType = nullAware(splits[0]);
+            name = nullAware(splits[1]);
+            path = nullAware(splits[2]);
+            date1 = asDate(splits[3]);
+            date2 = asDate(splits[4]);
+        } else {
+            // less than 5 fields currently not supported
+            return null;
+        }
+        if (splits.length >= 7) {
+            regionName = nullAware(splits[5]);
+            regionWKT = nullAware(splits[6]);
+        }
+        if (splits.length >= 8) {
             String bandNameCSV = nullAware(splits[7]);
-            String[] bandNames =  new String[0];
             if (bandNameCSV != null) {
                 bandNames = bandNameCSV.split(",");
             }
-            return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT, bandNames);
         }
-        return null;
+        if (splits.length >= 9) {
+            geoInventory = nullAware(splits[8]);
+        }
+        return new ProductSet(productType, name, path, date1, date2, regionName, regionWKT, bandNames, geoInventory);
     }
 
     static String nullAware(String text) {

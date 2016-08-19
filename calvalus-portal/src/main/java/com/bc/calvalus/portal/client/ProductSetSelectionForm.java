@@ -63,6 +63,8 @@ public class ProductSetSelectionForm extends Composite {
     @UiField
     Label productSetRegionName;
     @UiField
+    Label productSetGeoInventory;
+    @UiField
     Anchor showProductSetSelectionHelp;
 
     public ProductSetSelectionForm(PortalContext portal) {
@@ -187,12 +189,15 @@ public class ProductSetSelectionForm extends Composite {
             }
             String regionName = productSet.getRegionName();
             productSetRegionName.setText(regionName != null ? regionName : "");
+            String geoInventory = productSet.getGeoInventory();
+            productSetRegionName.setText(geoInventory != null ? "Yes" : "No");
         } else {
             productSetName.setText("");
             productSetType.setText("");
             productSetStartDate.setText("");
             productSetEndDate.setText("");
             productSetRegionName.setText("");
+            productSetGeoInventory.setText("");
         }
     }
 
@@ -229,7 +234,12 @@ public class ProductSetSelectionForm extends Composite {
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<String, String>();
-        parameters.put("inputPath", getSelectedProductSet().getPath());
+        DtoProductSet selectedProductSet = getSelectedProductSet();
+        if (selectedProductSet.getGeoInventory() != null) {
+            parameters.put("geoInventory", selectedProductSet.getGeoInventory());
+        } else {
+            parameters.put("inputPath", selectedProductSet.getPath());
+        }
         return parameters;
     }
 

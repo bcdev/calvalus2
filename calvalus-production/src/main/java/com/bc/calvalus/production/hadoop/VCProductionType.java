@@ -65,12 +65,11 @@ public class VCProductionType extends HadoopProductionType {
         String geometryWKT = regionGeometry != null ? regionGeometry.toString() : "";
         String regionName = productionRequest.getRegionName();
         String dataRanges = StringUtils.join(productionRequest.getDateRanges(), ",");
-        String level1Input = productionRequest.getString("inputPath");
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         Configuration jobConfig = createJobConfig(productionRequest);
 
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, level1Input);
+        setInputLocationParameters(productionRequest, jobConfig);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, regionName);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dataRanges);
 
