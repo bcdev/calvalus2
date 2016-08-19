@@ -92,7 +92,7 @@ public class ProductSetPersistable {
         }
         if (splits.length >= 8) {
             String bandNameCSV = nullAware(splits[7]);
-            if (bandNameCSV != null) {
+            if (bandNameCSV != null && !bandNameCSV.isEmpty()) {
                 bandNames = bandNameCSV.split(",");
             }
         }

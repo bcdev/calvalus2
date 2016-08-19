@@ -89,7 +89,7 @@ public class ProductSetPersistableTest {
         ProductSet ps0 = new ProductSet("pType", "pName", "pPath");
         String csv = ProductSetPersistable.convertToCSV(ps0);
         assertNotNull(csv);
-        assertEquals("pType;pName;pPath;null;null;null;null;", csv);
+        assertEquals("pType;pName;pPath;null;null;null;null;;null", csv);
 
         ProductSet ps1 = ProductSetPersistable.convertFromCSV(csv);
         assertNotNull(ps1);
