@@ -28,13 +28,16 @@ import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.SnapFileFilter;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -120,16 +123,29 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 if (productXML == null) {
                     throw new IllegalFileFormatException("input has no MTD_SAF file.");
                 }
-                System.out.println("productXML = " + productXML);
+                System.out.println("productXML file = " + productXML);
 
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
                 System.out.println("inputFormat = " + inputFormat);
-                String formatPrefix = inputFormat.substring("CALVALUS-".length()) + "-";
-                System.out.println("formatPrefix = " + formatPrefix);
-
-                Product product = readProduct(productXML, formatPrefix);
+                Product product;
+                product = readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, productXML.getName());
+                }
+                if (!inputFormat.equals(FORMAT_MULTI)) {
+                    product.setProductReader(this);
+                    Map<String, Object> params = new HashMap<>();
+                    if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
+                        params.put("referenceBand", "B2");
+                    } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
+                        params.put("referenceBand", "B5");
+                    } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
+                        params.put("referenceBand", "B1");
+                    } else {
+                        String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
+                        throw new IllegalArgumentException(msg);
+                    }
+                    product = GPF.createProduct("Resample", params, product);
                 }
                 return product;
             } else {
