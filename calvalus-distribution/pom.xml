@@ -43,13 +43,14 @@
         <!--  Ceres -->
          <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
          commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
+        <!--
          <dependency>
              <groupId>org.esa.snap</groupId>
              <artifactId>ceres-metadata</artifactId>
          </dependency>
-
+            -->
          <!--  SNAP -->
-
+        <!--
          <dependency>
              <groupId>org.esa.snap</groupId>
              <artifactId>snap-core</artifactId>
@@ -146,7 +147,7 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-render</artifactId>
         </dependency>
-
+        -->
 
         <!--  JFreeChart -->
 
@@ -159,14 +160,12 @@
             <artifactId>jcommon</artifactId>
         </dependency>
 
-        <!-- geo inventory -->
+        <!--  BC Geo - Inventory -->
+
         <dependency>
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
-
-
     </dependencies>
 
     <build>

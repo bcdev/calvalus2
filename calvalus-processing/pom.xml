@@ -51,10 +51,12 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-gpf</artifactId>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-netcdf</artifactId>
         </dependency>
+        -->
         <dependency>
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>
@@ -67,12 +69,14 @@
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-envisat-reader</artifactId>
+            <scope>test</scope>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.geotools</groupId>
             <artifactId>gt-render</artifactId>
         </dependency>
-
+        -->
         <!--  Hadoop -->
 
 <!--
@@ -137,7 +141,6 @@
         <dependency>
             <groupId>com.bc</groupId>
             <artifactId>geo-inventory</artifactId>
-            <version>0.1-SNAPSHOT</version>
         </dependency>
 
     </dependencies>
