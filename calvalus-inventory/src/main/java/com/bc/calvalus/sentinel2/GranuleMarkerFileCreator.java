@@ -35,7 +35,7 @@ public class GranuleMarkerFileCreator {
 
     private static final boolean ADD_ZIP_SUFFIX = true;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         if (args.length != 1) {
             System.err.println("usage: GranuleMarkerFileCreator <inputFile>");
             System.exit(1);
@@ -45,12 +45,7 @@ public class GranuleMarkerFileCreator {
             throw new IllegalArgumentException("Input file does not exist: " + productFile.getAbsolutePath());
         }
 
-        try {
-            writeMarkerFile(productFile);
-        } catch (IOException e) {
-            System.out.println("productFile = " + productFile);
-            e.printStackTrace();
-        }
+        writeMarkerFile(productFile);
     }
 
     private static void writeMarkerFile(File productFile) throws IOException {
@@ -66,10 +61,10 @@ public class GranuleMarkerFileCreator {
                 }
             }
         }
-        writeMarkerFileContent(productFile.getName(), newProductNames);
+        writeMarkerFileContent(newProductNames);
     }
 
-    private static void writeMarkerFileContent(String parentProductName, List<String> newProductNames) throws IOException {
+    private static void writeMarkerFileContent(List<String> newProductNames) throws IOException {
         try (Writer fileWriter = new PrintWriter(System.out)) {
             for (String newProductName : newProductNames) {
                 fileWriter.write(newProductName + "\n");
