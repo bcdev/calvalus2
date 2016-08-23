@@ -17,9 +17,9 @@
 package com.bc.calvalus.sentinel2;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -28,44 +28,28 @@ import java.util.zip.ZipFile;
 
 
 /**
- * Write marker files for given full products.
+ * Write content of the marker files for given full products.
  * These contain the names of all granules.
  */
 public class GranuleMarkerFileCreator {
 
     private static final boolean ADD_ZIP_SUFFIX = true;
-    private static File outputDir = new File(".");
 
     public static void main(String[] args) {
         if (args.length != 1) {
-            System.err.println("usage: GranuleMarkerFileCreator <inputFile|inputDir>");
+            System.err.println("usage: GranuleMarkerFileCreator <inputFile>");
             System.exit(1);
         }
-        File input = new File(args[0]);
-        if (!input.exists()) {
-            throw new IllegalArgumentException("Input file does not exist: " + input.getAbsolutePath());
-        }
-        File[] productFiles;
-        if (input.isDirectory()) {
-            productFiles = input.listFiles(new FilenameFilter() {
-                @Override
-                public boolean accept(File dir, String name) {
-                    return name.startsWith("S2") &&
-                            new File(dir, name).isFile() &&
-                            (name.matches(".*_[0-9]{8}T[0-9]{6}.zip$") || name.matches(".*_[0-9]{8}T[0-9]{6}$"));
-                }
-            });
-        } else {
-            productFiles = new File[]{input};
+        File productFile = new File(args[0]);
+        if (!productFile.exists()) {
+            throw new IllegalArgumentException("Input file does not exist: " + productFile.getAbsolutePath());
         }
 
-        for (File productFile : productFiles) {
-            try {
-                writeMarkerFile(productFile);
-            } catch (IOException e) {
-                System.out.println("productFile = " + productFile);
-                e.printStackTrace();
-            }
+        try {
+            writeMarkerFile(productFile);
+        } catch (IOException e) {
+            System.out.println("productFile = " + productFile);
+            e.printStackTrace();
         }
     }
 
@@ -82,12 +66,11 @@ public class GranuleMarkerFileCreator {
                 }
             }
         }
-        writeMarkerFile(productFile.getName(), newProductNames);
+        writeMarkerFileContent(productFile.getName(), newProductNames);
     }
 
-    private static void writeMarkerFile(String parentProductName, List<String> newProductNames) throws IOException {
-        File markerFile = new File(outputDir, "_" + parentProductName);
-        try (FileWriter fileWriter = new FileWriter(markerFile)) {
+    private static void writeMarkerFileContent(String parentProductName, List<String> newProductNames) throws IOException {
+        try (Writer fileWriter = new PrintWriter(System.out)) {
             for (String newProductName : newProductNames) {
                 fileWriter.write(newProductName + "\n");
             }
@@ -103,7 +86,7 @@ public class GranuleMarkerFileCreator {
         return filename;
     }
 
-    static boolean isGranuleXml(String entryName) {
+    private static boolean isGranuleXml(String entryName) {
         return entryName.contains("GRANULE") && entryName.matches(".*(_T[0-9]{2}[A-Z]{3}).xml$");
     }
 }
