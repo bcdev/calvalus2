@@ -5,10 +5,9 @@ set -e
 set -m
 
 input_file="${1}"
-input_path="${inputPath}"
 output_path="${outputPath}"
 
-marker_file=_$(basename ${input_path})
+marker_file=_$(basename ${input_file})
 
 . /etc/profile
 
@@ -44,6 +43,7 @@ if [[ ${do_split} == "yes" ]]; then
     echo "granule generation needed"
 else
     echo "granule generation not needed"
+    echo CALVALUS_OUTPUT_PRODUCT ${marker_file}
     exit 0
 fi
 
