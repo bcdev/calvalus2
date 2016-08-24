@@ -65,9 +65,11 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
         StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
         CoverageInventory inventory = new CoverageInventory(streamFactory);
         if (inventory.hasIndex()) {
-            inventory.updateIndex(scanFilename);
+            int indexSize = inventory.updateIndex(scanFilename);
+            System.out.println("updated index. New index size = " + indexSize);
         } else {
-            inventory.createIndex(scanFilename);
+            int indexSize = inventory.createIndex(scanFilename);
+            System.out.println("created index. New index size= " + indexSize);
         }
     }
 }
