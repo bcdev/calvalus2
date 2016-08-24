@@ -197,7 +197,7 @@ public class ProductSetFilterForm extends Composite {
                 }
             }
             if (productSet.getMinDate() == null || productSet.getMaxDate() == null) {
-                temporalFilterOff.setValue(true);
+                temporalFilterOff.setValue(true, true);
             }
         }
     }
