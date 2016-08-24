@@ -93,12 +93,6 @@ public interface JobConfigNames {
     String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";
     String CALVALUS_PROCESS_ALL = "calvalus.processAll";
 
-    /**
-     * @deprecated use following syntax to set (SNAP) system properties: calvalus.system.<system-property-name>
-     */
-    @Deprecated
-    String CALVALUS_SNAP_TILE_CACHE_SIZE = "calvalus.snap.jai.tileCacheSize";
-
     String TA_WITH_TIMESERIES_PLOT = "withTimeseriesPlot";
     String TA_WITH_AGGREGATED_CSV = "withAggregatedCsv";
     String TA_WITH_PIXEL_CSV = "withPixelCsv";
