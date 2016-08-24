@@ -17,7 +17,7 @@ public class CalvalusParameterTest {
     public void canGetAllParameters() throws Exception {
         List<String> calvalusParameters = CalvalusParameter.getAllParameters();
 
-        assertThat(calvalusParameters.size(), equalTo(14));
+        assertThat(calvalusParameters.size(), equalTo(15));
         assertThat(calvalusParameters, hasItems("productionType"));
         assertThat(calvalusParameters, hasItems("calvalus.calvalus.bundle"));
         assertThat(calvalusParameters, hasItems("calvalus.beam.bundle"));
@@ -27,6 +27,7 @@ public class CalvalusParameterTest {
         assertThat(calvalusParameters, hasItems("processorBundleVersion"));
         assertThat(calvalusParameters, hasItems("processorName"));
         assertThat(calvalusParameters, hasItems("inputDataSetName"));
+        assertThat(calvalusParameters, hasItems("geoInventory"));
         assertThat(calvalusParameters, hasItems("minDate"));
         assertThat(calvalusParameters, hasItems("maxDate"));
         assertThat(calvalusParameters, hasItems("periodLength"));
@@ -50,12 +51,14 @@ public class CalvalusParameterTest {
     public void canGetProductSetParameters() throws Exception {
         List<String> calvalusParameters = CalvalusParameter.getProductsetParameters();
 
-        assertThat(calvalusParameters.size(), equalTo(5));
+        assertThat(calvalusParameters.size(), equalTo(7));
         assertThat(calvalusParameters, hasItems("minDate"));
         assertThat(calvalusParameters, hasItems("maxDate"));
         assertThat(calvalusParameters, hasItems("periodLength"));
         assertThat(calvalusParameters, hasItems("regionWKT"));
         assertThat(calvalusParameters, hasItems("outputFormat"));
+        assertThat(calvalusParameters, hasItems("inputDataSetName"));
+        assertThat(calvalusParameters, hasItems("geoInventory"));
     }
 
     @Test

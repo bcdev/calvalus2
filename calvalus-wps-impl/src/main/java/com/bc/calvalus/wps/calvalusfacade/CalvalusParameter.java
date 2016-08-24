@@ -21,8 +21,8 @@ public enum CalvalusParameter {
     PROCESSOR_BUNDLE_VERSION("processorBundleVersion", "Processor bundle version", "processorInfo"),
     PROCESSOR_NAME("processorName", "Processor name", "processorInfo"),
 
-    INPUT_DATASET("inputDataSetName", "Input dataset name", "inputDataSet"),
-
+    INPUT_DATASET("inputDataSetName", "Input dataset name", "productSet"),
+    INPUT_DATASET_GEODB("geoInventory", "Input dataset Geo Inventory", "productSet"),
     MIN_DATE("minDate", "Date from", "productSet"),
     MAX_DATE("maxDate", "Date to", "productSet"),
     PERIOD_LENGTH("periodLength", "Period length", "productSet"),
@@ -62,7 +62,7 @@ public enum CalvalusParameter {
     public static List<String> getProductionInfoParameters() {
         List<String> productionParameters = new ArrayList<>();
         for (CalvalusParameter calvalusParameter : CalvalusParameter.values()) {
-            if(calvalusParameter.getType().equals("productionInfo")){
+            if (calvalusParameter.getType().equals("productionInfo")) {
                 productionParameters.add(calvalusParameter.getIdentifier());
             }
         }
@@ -72,7 +72,7 @@ public enum CalvalusParameter {
     public static List<String> getProductsetParameters() {
         List<String> productionParameters = new ArrayList<>();
         for (CalvalusParameter calvalusParameter : CalvalusParameter.values()) {
-            if(calvalusParameter.getType().equals("productSet")){
+            if (calvalusParameter.getType().equals("productSet")) {
                 productionParameters.add(calvalusParameter.getIdentifier());
             }
         }
@@ -82,7 +82,7 @@ public enum CalvalusParameter {
     public static List<String> getProcessorInfoParameters() {
         List<String> productionParameters = new ArrayList<>();
         for (CalvalusParameter calvalusParameter : CalvalusParameter.values()) {
-            if(calvalusParameter.getType().equals("processorInfo")){
+            if (calvalusParameter.getType().equals("processorInfo")) {
                 productionParameters.add(calvalusParameter.getIdentifier());
             }
         }
