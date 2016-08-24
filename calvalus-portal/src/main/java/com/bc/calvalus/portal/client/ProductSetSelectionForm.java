@@ -190,7 +190,7 @@ public class ProductSetSelectionForm extends Composite {
             String regionName = productSet.getRegionName();
             productSetRegionName.setText(regionName != null ? regionName : "");
             String geoInventory = productSet.getGeoInventory();
-            productSetRegionName.setText(geoInventory != null ? "Yes" : "No");
+            productSetGeoInventory.setText(geoInventory != null ? "Yes" : "No");
         } else {
             productSetName.setText("");
             productSetType.setText("");
