@@ -17,8 +17,10 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ByteArrayWritable;
 import com.bc.ceres.core.ProgressMonitor;
+import com.sun.media.jai.util.SunTileCache;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -35,17 +37,29 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.datamodel.TiePointGrid;
+import org.esa.snap.core.gpf.internal.OperatorImage;
+import org.esa.snap.core.image.RasterDataNodeOpImage;
+import org.esa.snap.core.image.VirtualBandOpImage;
+import org.esa.snap.core.util.DateTimeUtils;
 import org.esa.snap.core.util.ImageUtils;
 
 import javax.imageio.stream.ImageOutputStream;
 import javax.imageio.stream.MemoryCacheImageOutputStream;
-import java.awt.Rectangle;
+import javax.media.jai.CachedTile;
+import javax.media.jai.JAI;
+import javax.media.jai.TileCache;
+import java.awt.*;
 import java.awt.image.Raster;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -60,6 +74,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
     private final Progressable progressable = null; // TODO no longer needed ??, progress through pm
     private SequenceFile.Writer sequenceFileWriter;
     private int tileHeight;
+    private static boolean tileCacheDebugging;
 
 
     public StreamingProductWriter(ProductWriterPlugIn productWriterPlugIn) {
@@ -75,6 +90,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
             PathConfiguration pathConfiguration = (PathConfiguration) output;
             path = pathConfiguration.getPath();
             configuration = pathConfiguration.getConfiguration();
+            tileCacheDebugging = configuration.getBoolean(JobConfigNames.CALVALUS_DEBUG_TILECACHE, false);
         } else {
             throw new IllegalFileFormatException("input is not of the correct type.");
         }
@@ -198,6 +214,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
                     }
                     Rectangle rectangle = new Rectangle(x, y, w, h);
                     Raster tile = band.getSourceImage().getData(rectangle);
+                    tileCacheDebugging(band, rectangle);
                     boolean directMode = tile.getDataBuffer().getSize() == w * h;
                     ProductData productData;
                     if (directMode) {
@@ -222,12 +239,15 @@ public class StreamingProductWriter extends AbstractProductWriter {
             int w = product.getSceneRasterWidth();
             int h = tileHeight;
             int sliceIndex = 0;
+
             for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
                 if (y + h > sceneHeight) {
                     h = sceneHeight - y;
                 }
                 for (Band band : bandsToWrite) {
-                    Raster tile = band.getSourceImage().getData(new Rectangle(x, y, w, h));
+                    Rectangle rectangle = new Rectangle(x, y, w, h);
+                    Raster tile = band.getSourceImage().getData(rectangle);
+                    tileCacheDebugging(band, rectangle);
                     boolean directMode = tile.getDataBuffer().getSize() == w * h;
                     ProductData productData;
                     if (directMode) {
@@ -243,6 +263,25 @@ public class StreamingProductWriter extends AbstractProductWriter {
             }
         } finally {
             pm.done();
+        }
+    }
+
+    private static void tileCacheDebugging(Band band, Rectangle rect) {
+        if (!tileCacheDebugging) {
+            return;
+        }
+        System.out.println("==============================================================");
+        System.out.println(DateTimeUtils.ISO_8601_FORMAT.format(new Date()));
+        System.out.println("writing Band = " + band.getName() + "; Rectangle = " + rect);
+        TileCache tileCache = JAI.getDefaultInstance().getTileCache();
+        if (tileCache instanceof SunTileCache) {
+            SunTileCache sunTileCache = (SunTileCache) tileCache;
+            long cacheTileCount = sunTileCache.getCacheTileCount();
+            System.out.println("Tiles in Cache = " + cacheTileCount);
+            long memUsed = sunTileCache.getCacheMemoryUsed() / (1024 * 1024);
+            long memCapacity = sunTileCache.getMemoryCapacity() / (1024 * 1024);
+            System.out.printf("Memory used %d MB (capacity %d MB)%n", memUsed, memCapacity);
+            printCachedTiles(((Hashtable) sunTileCache.getCachedObject()).values());
         }
     }
 
@@ -318,4 +357,58 @@ public class StreamingProductWriter extends AbstractProductWriter {
         }
     }
 
+    private static void printCachedTiles(Collection<CachedTile> tiles) {
+        final Map<String, Long> numTiles = new HashMap<>(100);
+        final Map<String, Long> sizeTiles = new HashMap<>(100);
+        for (CachedTile sct : tiles) {
+            RenderedImage owner = sct.getOwner();
+            if (owner == null) {
+                continue;
+            }
+            String name = owner.getClass().getSimpleName() + " " + getImageComment(owner);
+            increment(numTiles, name, 1);
+            increment(sizeTiles, name, sct.getTileSize());
+        }
+        List<Map.Entry<String, Long>> sortedBySize = new ArrayList<>(sizeTiles.entrySet());
+        Collections.sort(sortedBySize, (o1, o2) -> (o2.getValue()).compareTo(o1.getValue()));
+        for (Map.Entry<String, Long> entry : sortedBySize) {
+            String name = entry.getKey();
+            Long sizeBytes = entry.getValue();
+            Long tileCount = numTiles.get(name);
+
+            System.out.printf("size=%8.2fMB  ", (sizeBytes / (1024.0 * 1024.0)));
+            System.out.printf("#tiles=%5d   ", tileCount);
+            System.out.print("(" + name + ")  ");
+            System.out.println();
+        }
+    }
+
+    private static String getImageComment(RenderedImage image) {
+        if (image instanceof RasterDataNodeOpImage) {
+            RasterDataNodeOpImage rdnoi = (RasterDataNodeOpImage) image;
+            return rdnoi.getRasterDataNode().getName();
+        } else if (image instanceof VirtualBandOpImage) {
+            VirtualBandOpImage vboi = (VirtualBandOpImage) image;
+            return vboi.getExpression();
+        } else if (image instanceof OperatorImage) {
+            final String s = image.toString();
+            final int p1 = s.indexOf('[');
+            final int p2 = s.indexOf(']', p1 + 1);
+            if (p1 > 0 && p2 > p1) {
+                return s.substring(p1 + 1, p2 - 1);
+            }
+            return s;
+        } else {
+            return "";
+        }
+    }
+
+    private static void increment(Map<String, Long> numImages, String name, long amount) {
+        Long count = numImages.get(name);
+        if (count == null) {
+            numImages.put(name, amount);
+        } else {
+            numImages.put(name, count.intValue() + amount);
+        }
+    }
 }
