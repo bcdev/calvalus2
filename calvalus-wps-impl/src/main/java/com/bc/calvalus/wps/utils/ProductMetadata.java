@@ -92,7 +92,7 @@ public class ProductMetadata {
         productOutputDir = production.getName() + "/" + stagingPath;
         productionName = production.getName();
         processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
-        inputDatasetName = productionRequest.getString("inputPath");
+        inputDatasetName = productionRequest.getString("inputDataSetName");
         stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
         regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
         startDate = getStartDate(productionRequest);

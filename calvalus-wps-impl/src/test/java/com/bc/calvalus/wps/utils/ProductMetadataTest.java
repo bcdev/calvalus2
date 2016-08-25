@@ -71,7 +71,7 @@ public class ProductMetadataTest {
         assertThat(contextMap.get("productOutputDir"), equalTo("TEP Subset test/user/20160317_10000000"));
         assertThat(contextMap.get("productionName"), equalTo("TEP Subset test"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
-        assertThat(contextMap.get("inputDatasetName"), equalTo("/calvalus/auxiliary/urban-footprint/ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif"));
+        assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
         assertThat(contextMap.get("stagingDir"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/user"));
         assertThat(contextMap.get("regionWkt"), equalTo("100 -10 100 0 110 0 110 -10 100 -10"));
         assertThat(contextMap.get("startDate"), equalTo("2000-01-01"));
@@ -120,7 +120,7 @@ public class ProductMetadataTest {
 
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
         when(mockProductionRequest.getString("processorName")).thenReturn("Subset");
-        when(mockProductionRequest.getString("inputPath")).thenReturn("/calvalus/auxiliary/urban-footprint/ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif");
+        when(mockProductionRequest.getString("inputDataSetName")).thenReturn("Urban Footprint Global (Urban TEP)");
         when(mockProductionRequest.getString("regionWKT")).thenReturn("POLYGON((100 -10,100 0,110 0,110 -10,100 -10))");
         when(mockProductionRequest.getString("processorBundleVersion")).thenReturn("1.0");
         when(mockProductionRequest.getString("productionType")).thenReturn("L2Plus");

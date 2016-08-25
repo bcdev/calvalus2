@@ -74,6 +74,25 @@ public class CalvalusDataInputsTest {
     }
 
     @Test
+    public void canGetInputMapFormattedWithProductionSetGeoDb() throws Exception {
+        Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
+        when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
+        when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
+        when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.10-SNAPSHOT");
+        ProductSet[] productSetsWithGeoDb = getMockProductSetsWithGeoDb();
+
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb);
+
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.10-SNAPSHOT"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("1970-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2100-12-31"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("geoInventory"), equalTo("/calvalus/geoInventory/URBAN_FOOTPRINT_GUF_GLOBAL_75m"));
+    }
+
+    @Test
     public void canGetProductionParameters() throws Exception {
         Map<String, String> mockInputMapRaw = getProductionParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
@@ -221,6 +240,7 @@ public class CalvalusDataInputsTest {
 
         assertThat(calvalusDataInputs.toString(), equalTo("processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                                           "productionType : L3\n" +
+                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
                                                           "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
@@ -257,6 +277,7 @@ public class CalvalusDataInputsTest {
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
+                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
                                                           "maxDateSource : 2100-12-31\n"));
     }
@@ -264,6 +285,15 @@ public class CalvalusDataInputsTest {
     private ProductSet[] getMockProductSets() {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
+        when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
+        when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
+        return new ProductSet[]{mockProductSet};
+    }
+
+    private ProductSet[] getMockProductSetsWithGeoDb() {
+        ProductSet mockProductSet = mock(ProductSet.class);
+        when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
+        when(mockProductSet.getGeoInventory()).thenReturn("/calvalus/geoInventory/URBAN_FOOTPRINT_GUF_GLOBAL_75m");
         when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
         when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         return new ProductSet[]{mockProductSet};
