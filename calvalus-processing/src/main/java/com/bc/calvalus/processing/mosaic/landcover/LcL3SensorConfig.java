@@ -885,7 +885,6 @@ public abstract class LcL3SensorConfig {
             // exclude invalid
             maskExpr = "(status == 1 or (status == 2 and not nan(B4_ac)) or (status >= 3))";
             varNames = new String[] {
-                    "status",
                     "B1_ac", "B2_ac", "B3_ac", "B4_ac", "B5_ac", "B6_ac", "B7_ac", "B8_ac", "B8A_ac", "B11_ac", "B12_ac"
 //                    "refl_1_ac_uncertainty", "refl_2_ac_uncertainty"
             };
