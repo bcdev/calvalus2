@@ -119,7 +119,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigCloud.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
             jobConfigCloud.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
-            jobConfigCloud.set("mapred.job.priority", "LOW");
+            //jobConfigCloud.set("mapred.job.priority", "LOW");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " Cloud", jobConfigCloud));
         }
@@ -147,7 +147,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             }
             jobConfigSr.setBoolean("calvalus.system.beam.pixelGeoCoding.useTiling", true);
             jobConfigSr.set("calvalus.lc.resolution", resolution);
-            jobConfigSr.set("mapred.job.priority", "NORMAL");
+            //jobConfigSr.set("mapred.job.priority", "NORMAL");
             sequence.add(new MosaicWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                 productionName + " SR", jobConfigSr));
         }
@@ -172,7 +172,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 jobConfigFormat.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
             jobConfigFormat.set("calvalus.lc.resolution", resolution);
-            jobConfigFormat.set("mapred.job.priority", "HIGH");
+            //jobConfigFormat.set("mapred.job.priority", "HIGH");
             sequence.add(new MosaicFormattingWorkflowItem(getProcessingService(), productionRequest.getUserName(),
                                                           productionName + " Format", jobConfigFormat));
         }

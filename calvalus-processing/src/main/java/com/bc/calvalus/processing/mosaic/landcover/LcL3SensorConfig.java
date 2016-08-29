@@ -20,6 +20,7 @@ public abstract class LcL3SensorConfig {
     static final LcL3SensorConfig LC_L3_SPOT_CONFIG = new LcL3SpotConfig();
     static final LcL3SensorConfig LC_L3_PROBA_CONFIG = new LcL3ProbaConfig();
     static final LcL3SensorConfig LC_L3_AVHRR_CONFIG = new LcL3AvhrrConfig();
+    static final LcL3SensorConfig LC_L3_MSI_CONFIG = new LcL3MsiConfig();
 
     public static LcL3SensorConfig create(String sensor, String spatialResolution) {
         if (LC_L3_FR_CONFIG.getSensorName().equals(sensor) && LC_L3_FR_CONFIG.getGroundResolution().equals(spatialResolution)) {
@@ -32,6 +33,8 @@ public abstract class LcL3SensorConfig {
             return LC_L3_PROBA_CONFIG;
         } else if (LC_L3_AVHRR_CONFIG.getSensorName().equals(sensor) && LC_L3_AVHRR_CONFIG.getGroundResolution().equals(spatialResolution)) {
             return LC_L3_AVHRR_CONFIG;
+        } else if (LC_L3_MSI_CONFIG.getSensorName().equals(sensor) && LC_L3_MSI_CONFIG.getGroundResolution().equals(spatialResolution)) {
+            return LC_L3_MSI_CONFIG;
         } else {
             throw new IllegalArgumentException("unknown sensor resolution combination " + sensor + " " + spatialResolution);
         }
@@ -48,6 +51,8 @@ public abstract class LcL3SensorConfig {
             return LC_L3_PROBA_CONFIG;
         } else if ("HRPT".equals(resolution)) {
             return LC_L3_AVHRR_CONFIG;
+        } else if ("MSI".equals(resolution)) {
+            return LC_L3_MSI_CONFIG;
         } else {
             throw new IllegalArgumentException("unknown resolution " + resolution);
         }
@@ -796,6 +801,168 @@ public abstract class LcL3SensorConfig {
             } else {
                 return srBandName;
             }
+        }
+    }
+    public static class LcL3MsiConfig extends LcL3SensorConfig {
+
+        static final String[] BANDNAMES = new String[] {
+                "B1_ac", "B2_ac", "B3_ac", "B4_ac", "B5_ac", "B6_ac", "B7_ac", "B8_ac", "B8A_ac", "B11_ac", "B12_ac"
+        };
+        static final float[] WAVELENGTH = new float[] {
+            443f, 490f, 560f, 665f, 705f, 740f, 783f, 842f, 865f, 1610f, 2190f
+        };
+
+        @Override
+        public int getMosaicTileSize() {
+            return 2700;
+        }
+        @Override
+        public String getGroundResolution() {
+            return "20m";
+        }
+
+        @Override
+        public String getSensorName() {
+            return "MSI";
+        }
+
+        @Override
+        public String getPlatformName() {
+            return "Sentinel2";
+        }
+
+        @Override
+        public String[] getBandNames() {
+            return BANDNAMES;
+        }
+
+        @Override
+        public float[] getWavelengths() {
+            return WAVELENGTH;
+        }
+
+        public String getTemporalCloudBandName() {
+            return "B5_ac";
+        }
+
+        @Override
+        public int getTemporalCloudBandIndex() {
+            return 5;
+        }
+
+        public float getTemporalCloudFilterThreshold() {
+            return 0.075f;
+        }
+
+        public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
+            String maskExpr;
+            if (asLandText != null) {
+                StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
+                int[] statusesToLand = statusRemapper.getStatusesToLand();
+                StringBuilder sb = new StringBuilder();
+                for (int i : statusesToLand) {
+                    sb.append(" or status == ");
+                    sb.append(i);
+                }
+                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
+            } else {
+                maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
+            }
+            String[] varNames = new String[]{sdrBandName};
+            final String[] virtualVariableName = {
+                    "ndvi"
+            };
+            final String[] virtualVariableExpr = {
+                    "(B11_ac - B4_ac) / (B11_ac + B4_ac)"
+            };
+            String type = LcSDR8MosaicAlgorithm.class.getName();
+            return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);
+        }
+
+        public MosaicConfig getMainMosaicConfig(String outputFormat, int borderWidth) {
+            String maskExpr;
+            String[] varNames;
+            // exclude invalid
+            maskExpr = "(status == 1 or (status == 2 and not nan(B4_ac)) or (status >= 3))";
+            varNames = new String[] {
+                    "status",
+                    "B1_ac", "B2_ac", "B3_ac", "B4_ac", "B5_ac", "B6_ac", "B7_ac", "B8_ac", "B8A_ac", "B11_ac", "B12_ac"
+//                    "refl_1_ac_uncertainty", "refl_2_ac_uncertainty"
+            };
+            final String[] virtualVariableName = {
+                    "ndvi"
+            };
+            //pixel_classif_flags:flag_meanings = "F_INVALID F_CLOUD F_CLOUD_AMBIGUOUS F_CLOUD_SURE F_CLOUD_BUFFER F_CLOUD_SHADOW F_SNOW_ICE F_MIXED_PIXEL F_GLINT_RISK F_COASTLINE F_LAND F_REFL1_ABOVE_THRESH F_REFL2_ABOVE_THRESH F_RATIO_REFL21_ABOVE_THRESH F_RATIO_REFL31_ABOVE_THRESH F_BT4_ABOVE_THRESH F_BT5_ABOVE_THRESH" ;
+            //pixel_classif_flags:flag_masks = 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s, 512s, 1024s, 2048s, 4096s, 8192s, 16384s, -32768s, 0s ;
+            final String[] virtualVariableExpr = {
+                    "(B11_ac - B4_ac) / (B11_ac + B4_ac)"
+            };
+            String type = "NetCDF4-LC".equals(outputFormat)
+                    ? LcL3Nc4MosaicAlgorithm.class.getName()
+                    : LCMosaicAlgorithm.class.getName();
+            return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);
+        }
+
+        public int[] createVariableIndexes(VariableContext varCtx) {
+            int[] varIndexes = new int[2 + BANDNAMES.length];
+            int j = 0;
+            varIndexes[j++] = getVariableIndex(varCtx, "status");
+            for (int i = 0; i < BANDNAMES.length; i++) {
+                String bandSuffix = BANDNAMES[i];
+                varIndexes[j++] = getVariableIndex(varCtx, bandSuffix);
+            }
+            varIndexes[j++] = getVariableIndex(varCtx, "ndvi");
+//            for (int i = 0; i < BANDNAMES.length; i++) {
+//                String bandSuffix = BANDNAMES[i];
+//                varIndexes[j++] = getVariableIndex(varCtx, "sdr_error_" + bandSuffix);
+//            }
+            return varIndexes;
+        }
+
+        public String[] createOutputFeatureNames() {
+            String[] featureNames = new String[2 + COUNTER_NAMES.length + BANDNAMES.length];
+            int j = 0;
+            featureNames[j++] = "status";
+            for (String counter : COUNTER_NAMES) {
+                featureNames[j++] = counter + "_count";
+            }
+            for (int i = 0; i < BANDNAMES.length; i++) {
+                featureNames[j++] = "sr_" + (i+1) + "_mean";
+            }
+            featureNames[j++] = "ndvi_mean";
+//            for (int i = 0; i < BANDNAMES.length; i++) {
+//                featureNames[j++] = "sr_" + (i+1) + "_uncertainty";
+//            }
+            return featureNames;
+        }
+
+        @Override
+        public List<String> getMeanBandNames() {
+            ArrayList<String> names = new ArrayList<String>(BANDNAMES.length);
+            for (int i = 0; i < BANDNAMES.length; ++i) {
+                names.add("sr_" + (i+1) + "_mean");
+            }
+            return names;
+        }
+
+        @Override
+        public List<String> getUncertaintyBandNames() {
+            ArrayList<String> names = new ArrayList<String>(0);
+//            for (int i = 0; i < BANDNAMES.length; ++i) {
+//                names.add("sr_" + (i+1) + "_uncertainty");
+//            }
+            return names;
+        }
+
+        @Override
+        public boolean isUncertaintiesAreSquares() {
+            return true;
+        }
+
+        @Override
+        public int getL2BandIndex(String srBandName) {
+            final String name = srBandName.substring("sr_".length(), srBandName.length() - "_mean".length());
+            return Integer.parseInt(name);
         }
     }
 }

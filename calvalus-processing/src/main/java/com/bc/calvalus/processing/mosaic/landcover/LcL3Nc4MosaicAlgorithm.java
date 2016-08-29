@@ -73,23 +73,24 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
         final int sr15MeanIndex = temporalFeatures.indexOf("sr_15_mean");
         final int sr11SigmaIndex = temporalFeatures.indexOf("sr_11_sigma");
         final int sr15SigmaIndex = temporalFeatures.indexOf("sr_15_sigma");
+        final boolean isMeris = sr15MeanIndex > -1;
         int targetLength = temporalData.length;
-        if (sr11MeanIndex >= 0) {
+        if (isMeris && sr11MeanIndex >= 0) {
             --targetLength;
         }
-        if (sr15MeanIndex >= 0) {
+        if (isMeris && sr15MeanIndex >= 0) {
             --targetLength;
         }
-        if (sr11SigmaIndex >= 0) {
+        if (isMeris && sr11SigmaIndex >= 0) {
             --targetLength;
         }
-        if (sr15SigmaIndex >= 0) {
+        if (isMeris && sr15SigmaIndex >= 0) {
             --targetLength;
         }
         final float[][] targetData = new float[targetLength][];
         int targetI = 0;
         for (int i=0; i<getTemporalFeatures().length; ++i) {
-            if (i == sr11MeanIndex || i == sr15MeanIndex || i == sr11SigmaIndex || i == sr15SigmaIndex) {
+            if (isMeris && (i == sr11MeanIndex || i == sr15MeanIndex || i == sr11SigmaIndex || i == sr15SigmaIndex)) {
                 continue;
             }
             targetData[targetI++] = temporalData[i];
@@ -108,23 +109,24 @@ public class LcL3Nc4MosaicAlgorithm extends AbstractLcMosaicAlgorithm {
         final int sr15MeanIndex = Arrays.asList(getTemporalFeatures()).indexOf("sr_15_mean");
         final int sr11SigmaIndex = Arrays.asList(getTemporalFeatures()).indexOf("sr_11_sigma");
         final int sr15SigmaIndex = Arrays.asList(getTemporalFeatures()).indexOf("sr_15_sigma");
+        final boolean isMeris = sr15MeanIndex > -1;
         int targetLength = temporalFeatures.length;
-        if (sr11MeanIndex >= 0) {
+        if (isMeris && sr11MeanIndex >= 0) {
             --targetLength;
         }
-        if (sr15MeanIndex >= 0) {
+        if (isMeris && sr15MeanIndex >= 0) {
             --targetLength;
         }
-        if (sr11SigmaIndex >= 0) {
+        if (isMeris && sr11SigmaIndex >= 0) {
             --targetLength;
         }
-        if (sr15SigmaIndex >= 0) {
+        if (isMeris && sr15SigmaIndex >= 0) {
             --targetLength;
         }
         final String[] outputFeatures = new String[targetLength];
         int targetI = 0;
         for (int i=0; i<temporalFeatures.length; ++i) {
-            if (i == sr11MeanIndex || i == sr15MeanIndex || i == sr11SigmaIndex || i == sr15SigmaIndex) {
+            if (isMeris && (i == sr11MeanIndex || i == sr15MeanIndex || i == sr11SigmaIndex || i == sr15SigmaIndex)) {
                 //continue;
             } else if (temporalFeatures[i].equals("status")) {
                 outputFeatures[targetI++] = "current_pixel_state";
