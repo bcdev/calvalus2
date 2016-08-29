@@ -150,23 +150,49 @@ public class ParametersEditorGenerator {
         sb.append("<parameters>\n");
         for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
             String value = editorMap.get(parameterDescriptor).getValue();
-            if (value != null) {
-                sb.append("  <");
-                sb.append(parameterDescriptor.getName());
-                sb.append(">");
-                sb.append(encodeXML(value));
-                sb.append("</");
-                sb.append(parameterDescriptor.getName());
-                sb.append(">\n");
-            }
+            formatParameterAsXML(sb, parameterDescriptor.getName(), value);
         }
-
         sb.append("</parameters>\n");
         return sb.toString();
     }
 
-    static String encodeXML(String s) {
+    static String formatAsXMLFromDefaults(DtoParameterDescriptor[] parameterDescriptors) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<parameters>\n");
+        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+            String defaultValue = parameterDescriptor.getDefaultValue();
+            formatParameterAsXML(sb, parameterDescriptor.getName(), defaultValue);
+        }
+        sb.append("</parameters>\n");
+        return sb.toString();
+    }
+
+    private static void formatParameterAsXML(StringBuilder sb, String name, String value) {
+        if (value != null) {
+            sb.append("  <");
+            sb.append(name);
+            sb.append(">");
+            sb.append(encodeXML(value));
+            sb.append("</");
+            sb.append(name);
+            sb.append(">\n");
+        }
+    }
+
+    private static String encodeXML(String s) {
         return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+    }
+
+    private static String decodeXML(String s) {
+        return s.replaceAll("&lt;", "<").replaceAll("&gt;", ">").replaceAll("&amp;", "&");
+    }
+
+    private static String[] decodeXMLArray(String[] valueSet) {
+        String[] decodedValueSet = new String[valueSet.length];
+        for (int i = 0; i < valueSet.length; i++) {
+            decodedValueSet[i] = decodeXML(valueSet[i]);
+        }
+        return decodedValueSet;
     }
 
     private static ParameterEditor createEditor(DtoParameterDescriptor parameterDescriptor) {
@@ -177,17 +203,19 @@ public class ParametersEditorGenerator {
         if (type.equalsIgnoreCase("boolean")) {
             editor = new BooleanParameterEditor(defaultValue);
         } else if (type.equalsIgnoreCase("string")) {
+            String decodedValue = decodeXML(defaultValue);
             String[] valueSet = parameterDescriptor.getValueSet();
             if (valueSet.length > 0) {
-                SelectParameterEditor selectParameterEditor = new SelectParameterEditor(defaultValue, valueSet, false);
-                selectParameterEditor.updateValueSet(valueSet);
+                String[] decodedValueSet = decodeXMLArray(valueSet);
+                SelectParameterEditor selectParameterEditor = new SelectParameterEditor(decodedValue, decodedValueSet, false);
+                selectParameterEditor.updateValueSet(decodedValueSet);
                 editor = selectParameterEditor;
             } else {
-                editor = new TextParameterEditor(defaultValue);
+                editor = new TextParameterEditor(decodedValue);
             }
         } else if (type.equalsIgnoreCase("stringArray")) {
             String[] valueSet = parameterDescriptor.getValueSet();
-            editor = new SelectParameterEditor(defaultValue, valueSet, true);
+            editor = new SelectParameterEditor(defaultValue, decodeXMLArray(valueSet), true);
         } else if (type.equalsIgnoreCase("float")) {
             editor = new FloatParameterEditor(defaultValue);
         } else if (type.equalsIgnoreCase("int")) {
@@ -199,7 +227,7 @@ public class ParametersEditorGenerator {
         }
         if (editor == null) {
             // fallback
-            editor = new TextParameterEditor(defaultValue);
+            editor = new TextParameterEditor(decodeXML(defaultValue));
         }
         return editor;
     }

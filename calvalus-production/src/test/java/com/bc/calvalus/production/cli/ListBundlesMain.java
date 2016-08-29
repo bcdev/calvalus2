@@ -66,7 +66,7 @@ public class ListBundlesMain {
     private static void printProductSets(ProductSet[] productSets) {
         System.out.println("ProductSet count: " + productSets.length);
         for (ProductSet productSet : productSets) {
-            System.out.println(productSet.getName() + " = " + productSet.getPath());
+            System.out.printf("%-55s | %-55s | %s%n", productSet.getName(), productSet.getGeoInventory(), productSet.getPath());
         }
     }
 

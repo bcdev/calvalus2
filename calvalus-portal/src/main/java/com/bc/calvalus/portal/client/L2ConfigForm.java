@@ -275,7 +275,7 @@ public class L2ConfigForm extends Composite {
             DtoParameterDescriptor[] parameters = processor.getParameterDescriptors();
             boolean hasParameterDescriptors = parameters.length > 0;
             if (defaultParameter.isEmpty() && hasParameterDescriptors) {
-                defaultParameter = formatAsXMLDescriptor(parameters);
+                defaultParameter = ParametersEditorGenerator.formatAsXMLFromDefaults(parameters);
             }
             processorParametersArea.setValue(defaultParameter);
             processorDescriptionHTML.setHTML(processor.getDescriptionHtml());
@@ -344,23 +344,6 @@ public class L2ConfigForm extends Composite {
             parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + suffix, getProcessorParameters());
         }
         return parameters;
-    }
-
-    private String formatAsXMLDescriptor(DtoParameterDescriptor[] parameterDescriptors) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("<parameters>\n");
-        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-            sb.append("  <");
-            sb.append(parameterDescriptor.getName());
-            sb.append(">");
-            sb.append(parameterDescriptor.getDefaultValue());
-            sb.append("</");
-            sb.append(parameterDescriptor.getName());
-            sb.append(">\n");
-        }
-
-        sb.append("</parameters>\n");
-        return sb.toString();
     }
 
     private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {
