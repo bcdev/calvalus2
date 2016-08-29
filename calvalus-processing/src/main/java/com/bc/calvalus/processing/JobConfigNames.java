@@ -100,4 +100,6 @@ public interface JobConfigNames {
     String TA_WITH_L3_OUTPUTS = "withL3Outputs";
     String CALVALUS_TA_SKIPL3_FLAG = "skipL3";
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
+
+    String CALVALUS_DEBUG_TILECACHE = "calvalus.debug.tileCache";
 }

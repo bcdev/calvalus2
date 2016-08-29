@@ -3,6 +3,7 @@ package com.bc.calvalus.wps.calvalusfacade;
 
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.CALVALUS_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.INPUT_DATASET;
+import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.INPUT_DATASET_GEODB;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_NAME;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
@@ -14,15 +15,19 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.utilities.WpsLogger;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.esa.snap.core.datamodel.ProductData;
 
 import java.text.DateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * This class transform the input parameters map into a format recognized by Calvalus Production Request.
@@ -111,17 +116,31 @@ public class CalvalusDataInputs {
         for (ProductSet productSet : productSets) {
             if (productSet.getName().equals(dataSetName)
                 && ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
-                inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
-                Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
-                Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
-                inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
-                inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
+                putProductPath(productSet);
+                putDates(productSet);
                 break;
             }
         }
 
-        if (calvalusProcessor != null && StringUtils.isBlank(inputMapFormatted.get("inputPath"))) {
+        if ((calvalusProcessor != null)
+            && StringUtils.isBlank(inputMapFormatted.get("inputPath"))
+            && StringUtils.isBlank(inputMapFormatted.get("geoInventory"))) {
             throw new InvalidParameterValueException(INPUT_DATASET.getIdentifier());
+        }
+    }
+
+    private void putDates(ProductSet productSet) {
+        Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
+        Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
+        inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
+        inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
+    }
+
+    private void putProductPath(ProductSet productSet) {
+        if (StringUtils.isNotBlank(productSet.getGeoInventory())) {
+            inputMapFormatted.put(INPUT_DATASET_GEODB.getIdentifier(), productSet.getGeoInventory());
+        } else {
+            inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
         }
     }
 

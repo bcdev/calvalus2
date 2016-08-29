@@ -21,9 +21,11 @@ import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.simplify.TopologyPreservingSimplifier;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,9 +33,21 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.Mask;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.datamodel.ProductNodeGroup;
+import org.esa.snap.core.datamodel.VectorDataNode;
 import org.esa.snap.core.util.ProductUtils;
+import org.geotools.feature.FeatureIterator;
+import org.geotools.geometry.jts.GeometryCoordinateSequenceTransformer;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
 import java.io.IOException;
@@ -53,7 +67,7 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
         try {
             Product product = processorAdapter.getInputProduct();
             if (product != null) {
-                Polygon poylgon = computeProductGeometryDefault(product);
+                Polygon poylgon = computeProductGeometry(product);
                 if (poylgon != null) {
                     String wkt = poylgon.toString();
                     pm.worked(50);
@@ -79,6 +93,55 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
             pm.done();
             processorAdapter.dispose();
         }
+    }
+
+    private Polygon computeProductGeometry(Product product) {
+        if (product.getProductReader().getClass().getSimpleName().startsWith("Sentinel2OrthoProductReader")) {
+            ProductNodeGroup<Mask> maskGroup = product.getMaskGroup();
+            int nodeCount = maskGroup.getNodeCount();
+            Geometry union = new GeometryFactory().createPolygon((Coordinate[]) null);
+            for (int i = 0; i < nodeCount; i++) {
+                Mask mask = maskGroup.get(i);
+                Mask.ImageType imageType = mask.getImageType();
+                if (imageType == Mask.VectorDataType.INSTANCE) {
+                    CoordinateReferenceSystem mapCRS = mask.getGeoCoding().getMapCRS();
+                    VectorDataNode vectorData = Mask.VectorDataType.getVectorData(mask);
+                    String vectorDataName = vectorData.getName();
+                    if (vectorDataName.startsWith("detector_footprint")) {
+                        FeatureIterator<SimpleFeature> features = vectorData.getFeatureCollection().features();
+                        while (features.hasNext()) {
+                            Geometry sourceGeom = (Geometry) features.next().getDefaultGeometry();
+                            try {
+                                Geometry targetGeom = transformGeometry(sourceGeom, mapCRS, DefaultGeographicCRS.WGS84);
+                                union = union.union(targetGeom);
+                            } catch (Exception ignore) {
+                                ignore.printStackTrace();
+                            }
+                        }
+                    }
+                }
+            }
+            Geometry footprint = TopologyPreservingSimplifier.simplify(union, 0.001);
+            if (!footprint.isEmpty()) {
+                if (footprint instanceof Polygon) {
+                    return (Polygon) footprint;
+                } else {
+                    System.out.println("footprint is not a polygon: " + footprint);
+                }
+            } else {
+                System.out.println("footprint is empty.");
+            }
+        }
+        return computeProductGeometryDefault(product);
+    }
+
+    private Geometry transformGeometry(Geometry sourceGeom,
+                                       CoordinateReferenceSystem sourceCrs,
+                                       CoordinateReferenceSystem targetCrs) throws FactoryException, TransformException {
+        MathTransform mt = CRS.findMathTransform(sourceCrs, targetCrs, true);
+        GeometryCoordinateSequenceTransformer gcst = new GeometryCoordinateSequenceTransformer();
+        gcst.setMathTransform(mt);
+        return gcst.transform(sourceGeom);
     }
 
     /**

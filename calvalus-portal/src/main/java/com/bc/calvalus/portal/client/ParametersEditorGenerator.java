@@ -154,7 +154,7 @@ public class ParametersEditorGenerator {
                 sb.append("  <");
                 sb.append(parameterDescriptor.getName());
                 sb.append(">");
-                sb.append(value);
+                sb.append(encodeXML(value));
                 sb.append("</");
                 sb.append(parameterDescriptor.getName());
                 sb.append(">\n");
@@ -163,6 +163,10 @@ public class ParametersEditorGenerator {
 
         sb.append("</parameters>\n");
         return sb.toString();
+    }
+
+    static String encodeXML(String s) {
+        return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
     }
 
     private static ParameterEditor createEditor(DtoParameterDescriptor parameterDescriptor) {
