@@ -29,7 +29,7 @@ public class GpfProductionService implements ServletContextListener {
 
     private static Logger logger = WpsLogger.getLogger();
 
-    public synchronized static ExecutorService getWorker() {
+    synchronized static ExecutorService getWorker() {
         if (worker == null) {
             logger.log(Level.INFO, "registering GpfProductionService");
             WpsServletContainer.addServletContextListener(new GpfProductionService());
@@ -49,17 +49,20 @@ public class GpfProductionService implements ServletContextListener {
         return userName + "-" + new SimpleDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
     }
 
-    public static List<String> getProductUrls(String hostAddress, int portNumber, File targetDir) {
+    static List<String> getProductUrls(String hostAddress, int portNumber, File targetDir) {
         List<String> resultUrls = new ArrayList<>();
         String[] resultProductNames = targetDir.list();
-        for (String filename : resultProductNames) {
-            String productUrl = "http://"
-                                + hostAddress + ":" + portNumber
-                                + "/" + PropertiesWrapper.get("wps.application.name")
-                                + "/" + PropertiesWrapper.get("utep.output.directory")
-                                + "/" + targetDir.getName()
-                                + "/" + filename;
-            resultUrls.add(productUrl);
+        if(resultProductNames != null){
+            for (String filename : resultProductNames) {
+                String productUrl = "http://"
+                                    + hostAddress + ":" + portNumber
+                                    + "/" + PropertiesWrapper.get("wps.application.name")
+                                    + "/" + PropertiesWrapper.get("utep.output.directory")
+                                    + "/" + targetDir.getParentFile().getName()
+                                    + "/" + targetDir.getName()
+                                    + "/" + filename;
+                resultUrls.add(productUrl);
+            }
         }
         return resultUrls;
     }

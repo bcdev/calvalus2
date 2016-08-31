@@ -94,21 +94,21 @@ public class CalvalusExecuteOperation {
                         .withTargetDirPath(targetDirPath)
                         .withServerContext(context.getServerContext())
                         .withExecuteRequest(executeRequest);
-            Process lcCciProcess = new SubsettingProcess();
+            Process utepProcess = new SubsettingProcess();
 
             if (isAsynchronous) {
-                ProductionStatus status = lcCciProcess.processAsynchronous(processBuilder);
+                ProductionStatus status = utepProcess.processAsynchronous(processBuilder);
                 if (isLineage) {
-                    return lcCciProcess.createLineageAsyncExecuteResponse(status, processBuilder);
+                    return utepProcess.createLineageAsyncExecuteResponse(status, processBuilder);
                 }
                 return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
             } else {
-                ProductionStatus status = lcCciProcess.processSynchronous(processBuilder);
+                ProductionStatus status = utepProcess.processSynchronous(processBuilder);
                 if (status.getState() != ProductionState.SUCCESSFUL) {
                     return executeResponse.getFailedResponse(status.getMessage());
                 }
                 if (isLineage) {
-                    return lcCciProcess.createLineageSyncExecuteResponse(status, processBuilder);
+                    return utepProcess.createLineageSyncExecuteResponse(status, processBuilder);
                 }
                 return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
             }
@@ -153,7 +153,8 @@ public class CalvalusExecuteOperation {
     }
 
     private Path getTargetDirectoryPath(String jobId) throws IOException {
-        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.output.directory"), jobId);
+        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                             PropertiesWrapper.get("utep.output.directory"), context.getUserName(), jobId);
         Files.createDirectories(targetDirectoryPath);
         return targetDirectoryPath;
     }
