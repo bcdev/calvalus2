@@ -100,6 +100,8 @@ public abstract class LcL3SensorConfig {
 
     public abstract boolean isUncertaintiesAreSquares();
 
+    public abstract int getPeriod();
+
 
     public static abstract class LcL3MerisConfig extends LcL3SensorConfig {
 
@@ -245,6 +247,11 @@ public abstract class LcL3SensorConfig {
         @Override
         public boolean isUncertaintiesAreSquares() {
             return true;
+        }
+
+        @Override
+        public int getPeriod() {
+            return 7;
         }
 
         @Override
@@ -430,6 +437,11 @@ public abstract class LcL3SensorConfig {
         public boolean isUncertaintiesAreSquares() { return true; }
 
         @Override
+        public int getPeriod() {
+            return 7;
+        }
+
+        @Override
         public int getL2BandIndex(String srBandName) {
             final String name = srBandName.substring("sr_".length(), srBandName.length() - "_mean".length());
             return Integer.parseInt(name);
@@ -580,6 +592,11 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public boolean isUncertaintiesAreSquares() { return true; }
+
+        @Override
+        public int getPeriod() {
+            return 7;
+        }
 
         @Override
         public int getL2BandIndex(String srBandName) {
@@ -774,6 +791,11 @@ public abstract class LcL3SensorConfig {
         }
 
         @Override
+        public int getPeriod() {
+            return 7;
+        }
+
+        @Override
         public int getL2BandIndex(String srBandName) {
             final String bandname = inputBandNameOf(srBandName);
             final String name = bandname.substring(0, bandname.length() - "_mean".length());
@@ -868,7 +890,7 @@ public abstract class LcL3SensorConfig {
             } else {
                 maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
-            String[] varNames = new String[]{sdrBandName};
+            String[] varNames = new String[] {"status", sdrBandName};
             final String[] virtualVariableName = {
                     "ndvi"
             };
@@ -885,6 +907,7 @@ public abstract class LcL3SensorConfig {
             // exclude invalid
             maskExpr = "(status == 1 or (status == 2 and not nan(B4_ac)) or (status >= 3))";
             varNames = new String[] {
+                    "status",
                     "B1_ac", "B2_ac", "B3_ac", "B4_ac", "B5_ac", "B6_ac", "B7_ac", "B8_ac", "B8A_ac", "B11_ac", "B12_ac"
 //                    "refl_1_ac_uncertainty", "refl_2_ac_uncertainty"
             };
@@ -956,6 +979,11 @@ public abstract class LcL3SensorConfig {
         @Override
         public boolean isUncertaintiesAreSquares() {
             return true;
+        }
+
+        @Override
+        public int getPeriod() {
+            return 10;
         }
 
         @Override

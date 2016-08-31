@@ -103,14 +103,15 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
-            float latMax = 90.0f - 5.0f * tileY;
-            float latMin = latMax - 5.0f;
-            float lonMin = -180.0f + 5.0f * tileX;
-            float lonMax = lonMin + 5.0f;
+            float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            float latMax = 90.0f - macroTileSize * tileY;
+            float latMin = latMax - macroTileSize;
+            float lonMin = -180.0f + macroTileSize * tileX;
+            float lonMax = lonMin + macroTileSize;
 
             String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "NOAA AVHRR HRPT L1B";
-            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "0.011112";
+            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
+            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
@@ -134,6 +135,16 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                         "SDR beam 5.0.1\n" +
                         "SR Calvalus 2.7-SNAPSHOT LCL3 temporalCloudRadius=10d,mainBorderWidth=700\n" +
                         "SR beam 5.0.1\n" +
+                        "SR netcdf-bin 4.1.3 nccopy -k 4");
+            } else if ("MSI".equals(sensor)) {
+                writeable.addGlobalAttribute("history", "INPUT Sentinel 2 MSI L1C\n" +
+                        "Resample referenceBand=B5,downsampling=Mean\n" +
+                        "IdePix 2.2 computeCloudBufferForCloudAmbiguous=false\n" +
+                        "S2AC 1.0\n" +
+                        "S2TBX 5.0-SNAPSHOT\n" +
+                        "SNAP 5.0-SNAPSHOT\n" +
+                        "SR Calvalus 2.10-SNAPSHOT LCL3\n" +
+                        "SR SNAP 5.0-SNAPSHOT\n" +
                         "SR netcdf-bin 4.1.3 nccopy -k 4");
             } else {
                 writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.1, lc-sr-2.1");  // versions
@@ -162,14 +173,14 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             writeable.addGlobalAttribute("time_coverage_start", COMPACT_ISO_FORMAT.format(product.getStartTime().getAsDate()));
             writeable.addGlobalAttribute("time_coverage_end", COMPACT_ISO_FORMAT.format(product.getEndTime().getAsDate()));
-            writeable.addGlobalAttribute("time_coverage_duration", "P" + temporalResolution + "D");
-            writeable.addGlobalAttribute("time_coverage_resolution", "P" + temporalResolution + "D");
+            writeable.addGlobalAttribute("time_coverage_duration", temporalResolution);
+            writeable.addGlobalAttribute("time_coverage_resolution", temporalResolution);
 
             writeable.addGlobalAttribute("geospatial_lat_min", String.valueOf(latMin));
             writeable.addGlobalAttribute("geospatial_lat_max", String.valueOf(latMax));
             writeable.addGlobalAttribute("geospatial_lon_min", String.valueOf(lonMin));
             writeable.addGlobalAttribute("geospatial_lon_max", String.valueOf(lonMax));
-            writeable.addGlobalAttribute("spatial_resolution", spatialResolution + "m");
+            writeable.addGlobalAttribute("spatial_resolution", spatialResolution);
             writeable.addGlobalAttribute("geospatial_lat_units", "degrees_north");
             writeable.addGlobalAttribute("geospatial_lat_resolution", spatialResolutionDegrees);
             writeable.addGlobalAttribute("geospatial_lon_units", "degrees_east");
