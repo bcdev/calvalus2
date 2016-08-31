@@ -48,7 +48,7 @@ import java.util.stream.Stream;
  */
 public class CalvalusDescribeProcessOperation {
 
-    public static final String INPUT_PRODUCT_NAME_PATTERN = "ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif";
+    private static final String INPUT_PRODUCT_NAME_PATTERN = "ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif";
     private WpsRequestContext context;
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
@@ -113,60 +113,18 @@ public class CalvalusDescribeProcessOperation {
     private ProcessDescriptionType.DataInputs getLocalProcessDataInputs() throws IOException {
         ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
 
-        List<Object> allowedRegionNameList = new ArrayList<>();
-        for (PredefinedRegion regionName : PredefinedRegion.values()) {
-            ValueType value = new ValueType();
-            value.setValue(regionName.name());
-            allowedRegionNameList.add(value);
-        }
-
-        InputDescriptionType regionName = InputDescriptionTypeBuilder
+        InputDescriptionType regionWkt = InputDescriptionTypeBuilder
                     .create()
-                    .withIdentifier("regionName")
-                    .withTitle("Predefined region name")
-                    .withAbstract("Specifies one of the available predefined regions.")
+                    .withIdentifier("regionWKT")
+                    .withTitle("Region WKT")
+                    .withAbstract("The spatial range in the format of text. Example: POLYGON((100 -10,100 0,110 0,110 -10,100 -10))")
                     .withDataType("string")
-                    .withAllowedValues(allowedRegionNameList)
                     .build();
-        dataInputs.getInput().add(regionName);
 
-        InputDescriptionType north = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("north")
-                    .withTitle("The northern latitude")
-                    .withAbstract("Specifies north bound of the regional subset.")
-                    .withDataType("float")
-                    .build();
-        dataInputs.getInput().add(north);
+        dataInputs.getInput().add(regionWkt);
 
-        InputDescriptionType south = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("south")
-                    .withTitle("The southern latitude")
-                    .withAbstract("Specifies south bound of the regional subset.")
-                    .withDataType("float")
-                    .build();
-        dataInputs.getInput().add(south);
-
-        InputDescriptionType east = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("east")
-                    .withTitle("The eastern longitude")
-                    .withAbstract("Specifies east bound of the regional subset. If the grid of the source product is " +
-                                  "REGULAR_GAUSSIAN_GRID coordinates the values must be between 0 and 360.")
-                    .withDataType("float")
-                    .build();
-        dataInputs.getInput().add(east);
-
-        InputDescriptionType west = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("west")
-                    .withTitle("The western longitude")
-                    .withAbstract("Specifies west bound of the regional subset. If the grid of the source product is " +
-                                  "REGULAR_GAUSSIAN_GRID coordinates the values must be between 0 and 360.")
-                    .withDataType("float")
-                    .build();
-        dataInputs.getInput().add(west);
+        InputDescriptionType regionBoundingBox = getBoundingBoxInputType();
+        dataInputs.getInput().add(regionBoundingBox);
 
         List<Object> inputSourceProductList = new ArrayList<>();
         Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
@@ -191,6 +149,28 @@ public class CalvalusDescribeProcessOperation {
         dataInputs.getInput().add(sourceProduct);
 
         return dataInputs;
+    }
+
+    private InputDescriptionType getBoundingBoxInputType() {
+        InputDescriptionType regionBoundingBox = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("regionWKT")
+                    .withTitle("Region with bounding box")
+                    .withAbstract("The spatial range in the format of bounding box. Use LowerCorner and UpperCorner (a pair of double values) " +
+                                  "to specify the box. Example: <LowerCorner>100.74453 -10.0000</LowerCorner><UpperCorner>110.25000 0.12443</UpperCorner>")
+                    .withDataType("string")
+                    .build();
+
+        SupportedCRSsType boundingBox = new SupportedCRSsType();
+        SupportedCRSsType.Default defaultBoundingBox = new SupportedCRSsType.Default();
+        defaultBoundingBox.setCRS("urn:ogc:def:crs:EPSG:6:6:4326");
+        boundingBox.setDefault(defaultBoundingBox);
+        CRSsType supportedBoundingBox = new CRSsType();
+        supportedBoundingBox.getCRS().add("urn:ogc:def:crs:EPSG:6:6:4326");
+        boundingBox.setSupported(supportedBoundingBox);
+        regionBoundingBox.setBoundingBoxData(boundingBox);
+        regionBoundingBox.setLiteralData(null);
+        return regionBoundingBox;
     }
 
     private List<ProcessDescriptionType> getMultipleDescribeProcessResponse(List<IWpsProcess> processes)
@@ -381,24 +361,7 @@ public class CalvalusDescribeProcessOperation {
 
         dataInputs.getInput().add(regionWkt);
 
-        InputDescriptionType regionBoundingBox = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("regionWKT")
-                    .withTitle("Region with bounding box")
-                    .withAbstract("The spatial range in the format of bounding box. Use LowerCorner and UpperCorner (a pair of double values) " +
-                                  "to specify the box. Example: <LowerCorner>100.74453 -10.0000</LowerCorner><UpperCorner>110.25000 0.12443</UpperCorner>")
-                    .withDataType("string")
-                    .build();
-
-        SupportedCRSsType boundingBox = new SupportedCRSsType();
-        SupportedCRSsType.Default defaultBoundingBox = new SupportedCRSsType.Default();
-        defaultBoundingBox.setCRS("urn:ogc:def:crs:EPSG:6:6:4326");
-        boundingBox.setDefault(defaultBoundingBox);
-        CRSsType supportedBoundingBox = new CRSsType();
-        supportedBoundingBox.getCRS().add("urn:ogc:def:crs:EPSG:6:6:4326");
-        boundingBox.setSupported(supportedBoundingBox);
-        regionBoundingBox.setBoundingBoxData(boundingBox);
-        regionBoundingBox.setLiteralData(null);
+        InputDescriptionType regionBoundingBox = getBoundingBoxInputType();
 
         dataInputs.getInput().add(regionBoundingBox);
 
