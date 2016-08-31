@@ -8,10 +8,10 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;
@@ -29,19 +29,28 @@ import com.bc.wps.api.utils.InputDescriptionTypeBuilder;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.esa.cci.lc.subset.PredefinedRegion;
 
+import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * @author hans
  */
 public class CalvalusDescribeProcessOperation {
 
+    public static final String INPUT_PRODUCT_NAME_PATTERN = "ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif";
     private WpsRequestContext context;
+    private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
     public CalvalusDescribeProcessOperation(WpsRequestContext context) {
         this.context = context;
@@ -56,6 +65,11 @@ public class CalvalusDescribeProcessOperation {
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
             if (processorId.equalsIgnoreCase("all")) {
                 processDescriptionTypeList.addAll(getMultipleDescribeProcessResponse(calvalusFacade.getProcessors()));
+            } else if (Stream.of(processorIdArray).anyMatch(x -> x.equals("local~0.0.1~Subset"))) {
+                ProcessDescriptionType localProcess = getLocalSubsetProcess();
+                ProcessDescriptionType.ProcessOutputs dataOutputs = getProcessOutputs();
+                localProcess.setProcessOutputs(dataOutputs);
+                processDescriptionTypeList.add(localProcess);
             } else if (processorIdArray.length > 1) {
                 List<IWpsProcess> processors = new ArrayList<>();
                 for (String singleProcessorId : processorIdArray) {
@@ -81,6 +95,102 @@ public class CalvalusDescribeProcessOperation {
         } catch (IOException | ProductionException | ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
             throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es)", exception);
         }
+    }
+
+    private ProcessDescriptionType getLocalSubsetProcess() throws IOException {
+        ProcessDescriptionType localProcess = new ProcessDescriptionType();
+        localProcess.setStoreSupported(true);
+        localProcess.setStatusSupported(true);
+        localProcess.setProcessVersion("1.0");
+        localProcess.setIdentifier(str2CodeType("subsetting"));
+        localProcess.setTitle(str2LanguageStringType("Subsetting service"));
+        localProcess.setAbstract(str2LanguageStringType("This is a local Subsetting Tool for Urban TEP"));
+        ProcessDescriptionType.DataInputs dataInputs = getLocalProcessDataInputs();
+        localProcess.setDataInputs(dataInputs);
+        return localProcess;
+    }
+
+    private ProcessDescriptionType.DataInputs getLocalProcessDataInputs() throws IOException {
+        ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
+
+        List<Object> allowedRegionNameList = new ArrayList<>();
+        for (PredefinedRegion regionName : PredefinedRegion.values()) {
+            ValueType value = new ValueType();
+            value.setValue(regionName.name());
+            allowedRegionNameList.add(value);
+        }
+
+        InputDescriptionType regionName = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("regionName")
+                    .withTitle("Predefined region name")
+                    .withAbstract("Specifies one of the available predefined regions.")
+                    .withDataType("string")
+                    .withAllowedValues(allowedRegionNameList)
+                    .build();
+        dataInputs.getInput().add(regionName);
+
+        InputDescriptionType north = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("north")
+                    .withTitle("The northern latitude")
+                    .withAbstract("Specifies north bound of the regional subset.")
+                    .withDataType("float")
+                    .build();
+        dataInputs.getInput().add(north);
+
+        InputDescriptionType south = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("south")
+                    .withTitle("The southern latitude")
+                    .withAbstract("Specifies south bound of the regional subset.")
+                    .withDataType("float")
+                    .build();
+        dataInputs.getInput().add(south);
+
+        InputDescriptionType east = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("east")
+                    .withTitle("The eastern longitude")
+                    .withAbstract("Specifies east bound of the regional subset. If the grid of the source product is " +
+                                  "REGULAR_GAUSSIAN_GRID coordinates the values must be between 0 and 360.")
+                    .withDataType("float")
+                    .build();
+        dataInputs.getInput().add(east);
+
+        InputDescriptionType west = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("west")
+                    .withTitle("The western longitude")
+                    .withAbstract("Specifies west bound of the regional subset. If the grid of the source product is " +
+                                  "REGULAR_GAUSSIAN_GRID coordinates the values must be between 0 and 360.")
+                    .withDataType("float")
+                    .build();
+        dataInputs.getInput().add(west);
+
+        List<Object> inputSourceProductList = new ArrayList<>();
+        Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
+        List<File> files = new ArrayList<>();
+        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, INPUT_PRODUCT_NAME_PATTERN);
+        for (Path entry : stream) {
+            files.add(entry.toFile());
+        }
+        for (File file : files) {
+            ValueType value = new ValueType();
+            value.setValue(file.getName());
+            inputSourceProductList.add(value);
+        }
+        InputDescriptionType sourceProduct = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("sourceProduct")
+                    .withTitle("Urban map or conditions product")
+                    .withAbstract("The source product to create a regional subset from")
+                    .withDataType("string")
+                    .withAllowedValues(inputSourceProductList)
+                    .build();
+        dataInputs.getInput().add(sourceProduct);
+
+        return dataInputs;
     }
 
     private List<ProcessDescriptionType> getMultipleDescribeProcessResponse(List<IWpsProcess> processes)
@@ -121,6 +231,12 @@ public class CalvalusDescribeProcessOperation {
         ProcessDescriptionType.DataInputs dataInputs = getDataInputs(calvalusProcessor, productSets);
         processDescription.setDataInputs(dataInputs);
 
+        ProcessDescriptionType.ProcessOutputs dataOutputs = getProcessOutputs();
+        processDescription.setProcessOutputs(dataOutputs);
+        return processDescription;
+    }
+
+    private ProcessDescriptionType.ProcessOutputs getProcessOutputs() {
         ProcessDescriptionType.ProcessOutputs dataOutputs = new ProcessDescriptionType.ProcessOutputs();
         OutputDescriptionType output = new OutputDescriptionType();
 
@@ -141,8 +257,7 @@ public class CalvalusDescribeProcessOperation {
         output.setTitle(str2LanguageStringType("URL to the production result(s)"));
 
         dataOutputs.getOutput().add(output);
-        processDescription.setProcessOutputs(dataOutputs);
-        return processDescription;
+        return dataOutputs;
     }
 
     private ProductSet[] getProductSets() throws IOException, ProductionException {

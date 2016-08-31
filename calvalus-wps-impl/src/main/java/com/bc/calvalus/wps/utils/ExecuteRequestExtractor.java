@@ -74,6 +74,8 @@ public class ExecuteRequestExtractor {
                     throw new MissingParameterValueException(dataInput.getIdentifier().getValue());
                 }
                 inputParametersMapRaw.put(dataInput.getIdentifier().getValue(), value);
+                inputParametersMapRaw.put("geoRegion", value);
+                inputParametersMapRaw.put("copyMetadata", "true");
             } else {
                 ElementNSImpl elementNS = null;
                 for (Object object : dataInput.getData().getComplexData().getContent()) {

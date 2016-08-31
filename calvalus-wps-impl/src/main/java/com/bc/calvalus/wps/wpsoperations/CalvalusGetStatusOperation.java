@@ -12,6 +12,9 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
+import com.bc.calvalus.wps.localprocess.GpfProductionService;
+import com.bc.calvalus.wps.localprocess.ProductionState;
+import com.bc.calvalus.wps.localprocess.ProductionStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ExecuteResponse;
@@ -19,6 +22,7 @@ import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.utils.WpsTypeConverter;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -33,6 +37,31 @@ public class CalvalusGetStatusOperation {
     }
 
     public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
+        if (jobId.startsWith("urban1")) {
+            ExecuteResponse executeResponse;
+            ProcessBriefType processBriefType = new ProcessBriefType();
+            String bundleName = "local";
+            String bundleVersion = "0.0.1";
+            String processorName = "Subset";
+            String processId = bundleName.concat("~").concat(bundleVersion).concat("~").concat(processorName);
+            processBriefType.setIdentifier(WpsTypeConverter.str2CodeType(processId));
+            processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
+            processBriefType.setProcessVersion(bundleVersion);
+            ProductionStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
+            if (status != null) {
+                if (status.getState() == ProductionState.SUCCESSFUL) {
+                    executeResponse = getLocalExecuteSuccessfulResponse(status);
+                } else if (status.getState() == ProductionState.FAILED) {
+                    executeResponse = getLocalExecuteFailedResponse(status);
+                } else {
+                    executeResponse = getLocalExecuteInProgressResponse(status);
+                }
+                executeResponse.setProcess(processBriefType);
+            } else {
+                throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.");
+            }
+            return executeResponse;
+        }
         ExecuteResponse executeResponse;
         Production production;
         ProcessBriefType processBriefType = new ProcessBriefType();
@@ -61,6 +90,21 @@ public class CalvalusGetStatusOperation {
         }
         executeResponse.setProcess(processBriefType);
         return executeResponse;
+    }
+
+    private ExecuteResponse getLocalExecuteInProgressResponse(ProductionStatus status) {
+        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+        return executeResponse.getStartedResponse(status.getState().toString(), status.getProgress());
+    }
+
+    private ExecuteResponse getLocalExecuteFailedResponse(ProductionStatus status) {
+        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+        return executeResponse.getFailedResponse(status.getMessage());
+    }
+
+    private ExecuteResponse getLocalExecuteSuccessfulResponse(ProductionStatus status) {
+        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+        return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
     }
 
     private ExecuteResponse getExecuteInProgressResponse(String jobId) throws JobNotFoundException {

@@ -9,6 +9,13 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.MissingInputParameterException;
+import com.bc.calvalus.wps.localprocess.GpfProductionService;
+import com.bc.calvalus.wps.localprocess.Process;
+import com.bc.calvalus.wps.localprocess.ProcessBuilder;
+import com.bc.calvalus.wps.localprocess.ProductionState;
+import com.bc.calvalus.wps.localprocess.ProductionStatus;
+import com.bc.calvalus.wps.localprocess.SubsettingProcess;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
@@ -22,16 +29,33 @@ import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
 import com.bc.wps.api.utils.WpsTypeConverter;
+import com.bc.wps.utilities.PropertiesWrapper;
+import org.esa.cci.lc.subset.PredefinedRegion;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
+import org.esa.snap.core.util.StringUtils;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hans
  */
 public class CalvalusExecuteOperation {
 
+    private static final String CATALINA_BASE = System.getProperty("catalina.base");
     private WpsRequestContext context;
 
     public CalvalusExecuteOperation(WpsRequestContext context) {
@@ -48,7 +72,47 @@ public class CalvalusExecuteOperation {
         boolean isLineage = responseDocumentType.isLineage();
         String processId = executeRequest.getIdentifier().getValue();
 
-        if (isAsynchronous) {
+        if (processId.equals("local~0.0.1~Subset")) {
+            ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
+            Map<String, String> inputParameters = requestExtractor.getInputParametersMapRaw();
+
+            GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
+
+            final Product sourceProduct = getSourceProduct(inputParameters);
+            String jobId = GpfProductionService.createJobId(context.getUserName());
+            Path targetDirPath = getTargetDirectoryPath(jobId);
+//            HashMap<String, Object> parameters = getSubsettingParameters(inputParameters, targetDirPath);
+            HashMap<String, Object> parameters = new HashMap<>();
+            parameters.put("geoRegion", inputParameters.get("regionWKT"));
+            parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
+            parameters.put("targetDir", targetDirPath.toString());
+            CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+            ProcessBuilder processBuilder = ProcessBuilder.create()
+                        .withJobId(jobId)
+                        .withParameters(parameters)
+                        .withSourceProduct(sourceProduct)
+                        .withTargetDirPath(targetDirPath)
+                        .withServerContext(context.getServerContext())
+                        .withExecuteRequest(executeRequest);
+            Process lcCciProcess = new SubsettingProcess();
+
+            if (isAsynchronous) {
+                ProductionStatus status = lcCciProcess.processAsynchronous(processBuilder);
+                if (isLineage) {
+                    return lcCciProcess.createLineageAsyncExecuteResponse(status, processBuilder);
+                }
+                return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
+            } else {
+                ProductionStatus status = lcCciProcess.processSynchronous(processBuilder);
+                if (status.getState() != ProductionState.SUCCESSFUL) {
+                    return executeResponse.getFailedResponse(status.getMessage());
+                }
+                if (isLineage) {
+                    return lcCciProcess.createLineageSyncExecuteResponse(status, processBuilder);
+                }
+                return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
+            }
+        } else if (isAsynchronous) {
             String jobId = processAsync(executeRequest, processId);
             ExecuteResponse asyncExecuteResponse = createAsyncExecuteResponse(executeRequest, isLineage, jobId);
             asyncExecuteResponse.setProcess(processBriefType);
@@ -59,6 +123,59 @@ public class CalvalusExecuteOperation {
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
         }
+    }
+
+    private HashMap<String, Object> getSubsettingParameters(Map<String, String> inputParameters, Path targetDirPath)
+                throws MissingInputParameterException {
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("targetDir", targetDirPath.toString());
+        String predefinedRegionName = inputParameters.get("predefinedRegion");
+        PredefinedRegion predefinedRegion = null;
+        for (PredefinedRegion region : PredefinedRegion.values()) {
+            if (region.name().equals(predefinedRegionName)) {
+                predefinedRegion = region;
+            }
+        }
+        if (predefinedRegion != null) {
+            parameters.put("predefinedRegion", predefinedRegion);
+        } else if (StringUtils.isNotNullAndNotEmpty(inputParameters.get("north")) &&
+                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("west")) &&
+                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("east")) &&
+                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("south"))) {
+            parameters.put("north", inputParameters.get("north"));
+            parameters.put("west", inputParameters.get("west"));
+            parameters.put("east", inputParameters.get("east"));
+            parameters.put("south", inputParameters.get("south"));
+        } else {
+            throw new MissingInputParameterException("The region is not properly defined in the request.");
+        }
+        return parameters;
+    }
+
+    private Path getTargetDirectoryPath(String jobId) throws IOException {
+        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.output.directory"), jobId);
+        Files.createDirectories(targetDirectoryPath);
+        return targetDirectoryPath;
+    }
+
+    private Product getSourceProduct(Map<String, String> inputParameters) throws IOException {
+        final Product sourceProduct;
+        Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
+        List<File> files = new ArrayList<>();
+        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("sourceProduct"));
+        for (Path entry : stream) {
+            files.add(entry.toFile());
+        }
+
+        String sourceProductPath;
+        if (files.size() != 0) {
+            sourceProductPath = files.get(0).getAbsolutePath();
+        } else {
+            throw new FileNotFoundException("The source product '" + inputParameters.get("sourceProduct") + "' cannot be found");
+        }
+
+        sourceProduct = ProductIO.readProduct(sourceProductPath);
+        return sourceProduct;
     }
 
     String processSync(Execute executeRequest, String processorId)

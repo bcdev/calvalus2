@@ -37,6 +37,45 @@
             <artifactId>calvalus-production</artifactId>
         </dependency>
 
+        <!-- Beam dependencies -->
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+            <version>5.0.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-gpf</artifactId>
+            <version>4.0.0</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-jdk14</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.cci.lc</groupId>
+            <artifactId>lc-user-tools</artifactId>
+            <version>3.10</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
+        </dependency>
+
         <!-- Utilities framework dependencies -->
         <dependency>
             <groupId>commons-lang</groupId>
@@ -100,10 +139,10 @@
                                 <!-- required entries in manifest for TA staging -->
                                 <manifestEntries>
                                     <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
-                                    <Specification-Version>1.0-mr</Specification-Version>
+                                    <Specification-Version>1.2</Specification-Version>
                                     <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
                                     <Implementation-Title>com.sun.media.imageio</Implementation-Title>
-                                    <Implementation-Version>1.0_01</Implementation-Version>
+                                    <Implementation-Version>1.2</Implementation-Version>
                                     <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
                                     <Extension-Name>com.sun.media.imageio</Extension-Name>
                                 </manifestEntries>
