@@ -52,12 +52,11 @@ public class ProductMetadata {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
-    public ProductMetadata(Production production, List<File> productionResults, WpsServerContext serverContext)
-                throws ProductionException {
-        this.production = production;
-        this.productionResults = productionResults;
-        this.serverContext = serverContext;
-        createProductMetadata();
+    public ProductMetadata(ProductMetadataBuilder builder) {
+        this.production = builder.getProduction();
+        this.productionResults = builder.getProductionResults();
+        this.serverContext = builder.getServerContext();
+        createProductMetadata(builder);
     }
 
     public Map<String, Object> getContextMap() {
@@ -82,99 +81,22 @@ public class ProductMetadata {
         return contextMap;
     }
 
-    private void createProductMetadata() throws ProductionException {
-        LOG.info("creating product metadata...");
-        ProductionRequest productionRequest = production.getProductionRequest();
-
-        jobUrl = serverContext.getRequestUrl();
-        jobFinishTime = getDateInXmlGregorianCalendarFormat(production.getWorkflow().getStopTime()).toString();
-        String stagingPath = productionRequest.getStagingDirectory(production.getId());
-        productOutputDir = production.getName() + "/" + stagingPath;
-        productionName = production.getName();
-        processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
-        inputDatasetName = productionRequest.getString("inputDataSetName");
-        stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
-        regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
-        startDate = getStartDate(productionRequest);
-        stopDate = getStopDate(productionRequest);
-        collectionUrl = getBaseStagingUrl() + "/" + production.getStagingPath();
-        processorVersion = productionRequest.getString("processorBundleVersion");
-        productionType = productionRequest.getString("productionType");
-        outputFormat = productionRequest.getString("outputFormat");
-        productList = createProductList();
-    }
-
-    private String getStartDate(ProductionRequest productionRequest) throws ProductionException {
-        try {
-            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
-        } catch (ProductionException exception) {
-            if (productionRequest.getString("minDateSource") != null) {
-                return productionRequest.getString("minDateSource");
-            } else {
-                return DATE_FORMAT.format(MIN_DATE);
-            }
-        }
-    }
-
-    private String getStopDate(ProductionRequest productionRequest) throws ProductionException {
-        try {
-            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
-        } catch (ProductionException exception) {
-            if (productionRequest.getString("maxDateSource") != null) {
-                return productionRequest.getString("maxDateSource");
-            } else {
-                return DATE_FORMAT.format(MAX_DATE);
-            }
-        }
-    }
-
-    private String extractRegionWkt(String regionWkt) {
-        return regionWkt.replaceAll("POLYGON\\(\\(", "").replaceAll("\\)\\)", "").replace(",", " ");
-    }
-
-    private XMLGregorianCalendar getDateInXmlGregorianCalendarFormat(Date date) {
-        GregorianCalendar c = new GregorianCalendar();
-        c.setTime(date);
-        XMLGregorianCalendar date2 = null;
-        try {
-            date2 = DatatypeFactory.newInstance().newXMLGregorianCalendar(c);
-        } catch (DatatypeConfigurationException exception) {
-            LOG.log(Level.SEVERE, "cannot instantiate DataType", exception);
-        }
-        return date2;
-    }
-
-    private List<Map> createProductList() {
-        List<Map> productList = new ArrayList<>();
-        for (File productionResult : productionResults) {
-            Map<String, String> productMap = new HashMap<>();
-            productMap.put("productUrl", getBaseStagingUrl() + "/" + productionResult.getName());
-            productMap.put("productFileName", productionResult.getName());
-            productMap.put("productFileFormat", parseFileFormat(productionResult.getName()));
-            productMap.put("productFileSize", Long.toString(productionResult.length()));
-            productList.add(productMap);
-        }
-        return productList;
-    }
-
-    private String parseFileFormat(String fileName) {
-        if (fileName.toLowerCase().endsWith(".zip")) {
-            return "ZIP";
-        } else if (fileName.toLowerCase().endsWith(".xml")) {
-            return "XML";
-        } else if (fileName.toLowerCase().endsWith("-metadata")) {
-            return "metadata";
-        } else {
-            return outputFormat;
-        }
-    }
-
-    private String getBaseStagingUrl() {
-        return "http://"
-               + serverContext.getHostAddress()
-               + ":" + serverContext.getPort()
-               + "/" + PropertiesWrapper.get("wps.application.name")
-               + "/" + PropertiesWrapper.get("staging.directory");
+    private void createProductMetadata(ProductMetadataBuilder builder) {
+        jobUrl = builder.getJobUrl();
+        jobFinishTime = builder.getJobFinishTime();
+        productOutputDir = builder.getProductOutputDir();
+        productionName = builder.getProductionName();
+        processName = builder.getProcessName();
+        inputDatasetName = builder.getInputDatasetName();
+        stagingDir = builder.getStagingDir();
+        regionWkt = builder.getRegionWkt();
+        startDate = builder.getStartDate();
+        stopDate = builder.getStopDate();
+        collectionUrl = builder.getCollectionUrl();
+        processorVersion = builder.getProcessorVersion();
+        productionType = builder.getProductionType();
+        outputFormat = builder.getOutputFormat();
+        productList = builder.getProductList();
     }
 
     public String getJobUrl() {

@@ -47,7 +47,9 @@ public class GpfTask implements Callable<Boolean> {
             GPF.writeProduct(subset, new File(targetDir, sourceProduct.getName() + ".nc"), "Netcdf-BEAM", false, ProgressMonitor.NULL);
             logger.log(Level.INFO, "[" + jobId + "] subsetting operation completed...");
 
-            List<String> resultUrls = GpfProductionService.getProductUrls(hostName, portNumber, targetDir);
+            LocalStaging staging = new LocalStaging();
+            List<String> resultUrls = staging.getProductUrls(hostName, portNumber, targetDir, jobId);
+            staging.generateProductMetadata();
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);
