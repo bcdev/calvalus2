@@ -150,10 +150,12 @@ public class CalvalusExecuteResponseConverter {
             String identifier = "productionResults";
             String title = "Production results";
             String abstractText = "This is the URL link to the production result";
+            String mimeType = "application/octet-stream";
             if(productionResultUrl.endsWith("-metadata")){
-                identifier = "resultMetadataFile";
-                title = "Result metadata file";
-                abstractText = "This is the URL link to the result metadata file";
+                identifier = "result_metadata";
+                title = "Metadata OWS context XML";
+                abstractText = "The URL to the result metadata file";
+                mimeType = "application/atom+xml";
             }
             OutputDataType url = new OutputDataType();
             url.setIdentifier(WpsTypeConverter.str2CodeType(identifier));
@@ -161,7 +163,7 @@ public class CalvalusExecuteResponseConverter {
             url.setAbstract(WpsTypeConverter.str2LanguageStringType(abstractText));
             OutputReferenceType urlLink = new OutputReferenceType();
             urlLink.setHref(productionResultUrl);
-            urlLink.setMimeType("application/octet-stream");
+            urlLink.setMimeType(mimeType);
             url.setReference(urlLink);
 
             productUrl.getOutput().add(url);
