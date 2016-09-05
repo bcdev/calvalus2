@@ -55,6 +55,8 @@ public class ProductMetadataBuilder {
     private WpsServerContext serverContext;
     private Map<String, Object> processParameters;
     private IWpsProcess processor;
+    private String hostName;
+    private int portNumber;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
 
@@ -83,6 +85,8 @@ public class ProductMetadataBuilder {
 
     public ProductMetadataBuilder withServerContext(WpsServerContext serverContext) {
         this.serverContext = serverContext;
+        this.hostName = serverContext.getHostAddress();
+        this.portNumber = serverContext.getPort();
         return this;
     }
 
@@ -98,6 +102,16 @@ public class ProductMetadataBuilder {
 
     public ProductMetadataBuilder withProcessor(IWpsProcess processor) {
         this.processor = processor;
+        return this;
+    }
+
+    public ProductMetadataBuilder withHostName(String hostName) {
+        this.hostName = hostName;
+        return this;
+    }
+
+    public ProductMetadataBuilder withPortNumber(int portNumber) {
+        this.portNumber = portNumber;
         return this;
     }
 
@@ -201,8 +215,8 @@ public class ProductMetadataBuilder {
             this.jobUrl = "anyUrl";
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(new Date()).toString();
             this.productionName = (String) processParameters.get("productionName");
-            this.stagingDir = "url" + "/" + productOutputDir.split("/")[0];
-            this.collectionUrl = "url" + "/" + productOutputDir;
+            this.stagingDir = getBaseStagingUrl() + "/" + productOutputDir.split("/")[0] + "/";
+            this.collectionUrl = getBaseStagingUrl() + "/" + productOutputDir + "/";
             this.processName = processor.getIdentifier().split("~")[2];
             this.inputDatasetName = (String) processParameters.get("sourceProduct");
             this.regionWkt = (String) processParameters.get("geoRegion");
@@ -257,8 +271,8 @@ public class ProductMetadataBuilder {
 
     private String getBaseStagingUrl() {
         return "http://"
-               + serverContext.getHostAddress()
-               + ":" + serverContext.getPort()
+               + hostName
+               + ":" + portNumber
                + "/" + PropertiesWrapper.get("wps.application.name")
                + "/" + PropertiesWrapper.get("staging.directory");
     }

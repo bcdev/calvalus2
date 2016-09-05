@@ -65,7 +65,9 @@ public class LocalStaging {
     public void generateProductMetadata(File targetDir,
                                         String jobid,
                                         Map<String, Object> processParameters,
-                                        IWpsProcess processor)
+                                        IWpsProcess processor,
+                                        String hostName,
+                                        int portNumber)
                 throws ProductionException, ProductMetadataException {
         File outputMetadata = new File(targetDir, jobid + "-metadata");
         if (outputMetadata.exists()) {
@@ -80,9 +82,9 @@ public class LocalStaging {
                     .withProcessParameters(processParameters)
                     .withProductOutputDir(stagingDirectoryName)
                     .withProcessor(processor)
+                    .withHostName(hostName)
+                    .withPortNumber(portNumber)
                     .build();
-
-//        ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
 
         VelocityWrapper velocityWrapper = new VelocityWrapper();
         String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
