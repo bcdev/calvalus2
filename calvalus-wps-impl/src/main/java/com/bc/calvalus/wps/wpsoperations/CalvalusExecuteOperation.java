@@ -9,7 +9,6 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.MissingInputParameterException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.Process;
@@ -31,11 +30,9 @@ import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
 import com.bc.wps.api.utils.WpsTypeConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.esa.cci.lc.subset.PredefinedRegion;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
-import org.esa.snap.core.util.StringUtils;
 
 import javax.xml.bind.JAXBException;
 import java.io.File;
@@ -82,11 +79,11 @@ public class CalvalusExecuteOperation {
             final Product sourceProduct = getSourceProduct(inputParameters);
             String jobId = GpfProductionService.createJobId(context.getUserName());
             Path targetDirPath = getTargetDirectoryPath(jobId);
-//            HashMap<String, Object> parameters = getSubsettingParameters(inputParameters, targetDirPath);
             HashMap<String, Object> parameters = new HashMap<>();
             parameters.put("productionName", inputParameters.get("productionName"));
             parameters.put("geoRegion", inputParameters.get("regionWKT"));
             parameters.put("outputFormat", inputParameters.get("outputFormat"));
+            parameters.put("productionType", inputParameters.get("productionType"));
             parameters.put("sourceProduct", inputParameters.get("sourceProduct"));
             parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
             parameters.put("targetDir", targetDirPath.toString());
@@ -128,33 +125,6 @@ public class CalvalusExecuteOperation {
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
         }
-    }
-
-    private HashMap<String, Object> getSubsettingParameters(Map<String, String> inputParameters, Path targetDirPath)
-                throws MissingInputParameterException {
-        HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("targetDir", targetDirPath.toString());
-        String predefinedRegionName = inputParameters.get("predefinedRegion");
-        PredefinedRegion predefinedRegion = null;
-        for (PredefinedRegion region : PredefinedRegion.values()) {
-            if (region.name().equals(predefinedRegionName)) {
-                predefinedRegion = region;
-            }
-        }
-        if (predefinedRegion != null) {
-            parameters.put("predefinedRegion", predefinedRegion);
-        } else if (StringUtils.isNotNullAndNotEmpty(inputParameters.get("north")) &&
-                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("west")) &&
-                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("east")) &&
-                   StringUtils.isNotNullAndNotEmpty(inputParameters.get("south"))) {
-            parameters.put("north", inputParameters.get("north"));
-            parameters.put("west", inputParameters.get("west"));
-            parameters.put("east", inputParameters.get("east"));
-            parameters.put("south", inputParameters.get("south"));
-        } else {
-            throw new MissingInputParameterException("The region is not properly defined in the request.");
-        }
-        return parameters;
     }
 
     private Path getTargetDirectoryPath(String jobId) throws IOException {
