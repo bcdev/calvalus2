@@ -52,7 +52,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
         assertThat(capabilities.getOperationsMetadata().getOperation().size(), equalTo(4));
         assertThat(capabilities.getServiceProvider().getProviderName(), equalTo("Brockmann Consult GmbH"));
-        assertThat(capabilities.getProcessOfferings().getProcess().size(), equalTo(2));
+        assertThat(capabilities.getProcessOfferings().getProcess().size(), equalTo(3)); // always +1 at the moment due to local process
         assertThat(capabilities.getServiceIdentification().getTitle().getValue(), equalTo("Calvalus WPS server"));
         assertThat(capabilities.getLanguages().getDefault().getLanguage(), equalTo("EN"));
 
@@ -118,7 +118,7 @@ public class CalvalusGetCapabilitiesOperationTest {
 
         ProcessOfferings processOfferings = getCapabilitiesOperation.getProcessOfferings(mockProcessList);
 
-        assertThat(processOfferings.getProcess().size(), equalTo(2));
+        assertThat(processOfferings.getProcess().size(), equalTo(3)); // always +1 at the moment due to local process
         assertThat(processOfferings.getProcess().get(0).getIdentifier().getValue(), equalTo("beam-buildin~1.0~BandMaths"));
         assertThat(processOfferings.getProcess().get(0).getTitle().getValue(), equalTo("Band arythmetic processor"));
         assertThat(processOfferings.getProcess().get(0).getAbstract().getValue(), equalTo("Some description"));
@@ -126,6 +126,10 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(processOfferings.getProcess().get(1).getIdentifier().getValue(), equalTo("beam-buildin~1.0~urban-tep-indices"));
         assertThat(processOfferings.getProcess().get(1).getTitle().getValue(), equalTo("Urban TEP seasonality indices from MERIS SR"));
         assertThat(processOfferings.getProcess().get(1).getAbstract().getValue(), equalTo("Some description"));
+
+        assertThat(processOfferings.getProcess().get(2).getIdentifier().getValue(), equalTo("local~0.0.1~Subset"));
+        assertThat(processOfferings.getProcess().get(2).getTitle().getValue(), equalTo("A local subsetting service for Urban TEP"));
+        assertThat(processOfferings.getProcess().get(2).getAbstract().getValue(), equalTo("A local subsetting service for Urban TEP"));
 
     }
 

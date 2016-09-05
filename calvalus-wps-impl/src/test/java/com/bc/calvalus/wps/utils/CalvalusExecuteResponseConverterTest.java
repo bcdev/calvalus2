@@ -108,10 +108,10 @@ public class CalvalusExecuteResponseConverterTest {
                    equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getIdentifier().getValue(), equalTo("resultMetadataFile"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getTitle().getValue(), equalTo("Result metadata file"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getIdentifier().getValue(), equalTo("result_metadata"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getTitle().getValue(), equalTo("Metadata OWS context XML"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getAbstract().getValue(),
-                   equalTo("This is the URL link to the result metadata file"));
+                   equalTo("The URL to the result metadata file"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(2).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/zzz-metadata"));
 
