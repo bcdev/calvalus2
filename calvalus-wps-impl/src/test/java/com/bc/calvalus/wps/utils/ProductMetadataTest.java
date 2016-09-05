@@ -67,7 +67,6 @@ public class ProductMetadataTest {
                     .withProductionResults(mockProductionFileList)
                     .withServerContext(mockServerContext)
                     .build();
-//        ProductMetadata productMetadata = new ProductMetadata(mockProduction, mockProductionFileList, mockServerContext);
 
         Map<String, Object> contextMap = productMetadata.getContextMap();
         assertThat(contextMap.get("jobUrl"),

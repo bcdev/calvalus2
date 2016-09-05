@@ -40,7 +40,7 @@
             <processingLevel>$productionType</processingLevel>
             <nativeProductFormat>$outputFormat</nativeProductFormat>
         </ProcessingInformation>
-        <box xmlns="http://www.georss.org/georss">-10 100 0 110</box>
+        <box xmlns="http://www.georss.org/georss">$regionBox</box>
         <offering xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/html">
             <content href="$collectionUrl" type="text/html" />
         </offering>

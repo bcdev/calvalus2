@@ -1,29 +1,8 @@
 package com.bc.calvalus.wps.utils;
 
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.DATE_FORMAT;
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MAX_DATE;
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MIN_DATE;
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
-
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.production.Production;
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.wps.api.WpsServerContext;
-import com.bc.wps.utilities.PropertiesWrapper;
-
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * @author hans
@@ -38,6 +17,7 @@ public class ProductMetadata {
     private String inputDatasetName;
     private String stagingDir;
     private String regionWkt;
+    private String regionBox;
     private String startDate;
     private String stopDate;
     private String collectionUrl;
@@ -62,6 +42,7 @@ public class ProductMetadata {
         contextMap.put("inputDatasetName", inputDatasetName);
         contextMap.put("stagingDir", stagingDir);
         contextMap.put("regionWkt", regionWkt);
+        contextMap.put("regionBox", regionBox);
         contextMap.put("startDate", startDate);
         contextMap.put("stopDate", stopDate);
         contextMap.put("collectionUrl", collectionUrl);
@@ -82,6 +63,7 @@ public class ProductMetadata {
         inputDatasetName = builder.getInputDatasetName();
         stagingDir = builder.getStagingDir();
         regionWkt = builder.getRegionWkt();
+        regionBox = builder.parseRegionBox();
         startDate = builder.getStartDate();
         stopDate = builder.getStopDate();
         collectionUrl = builder.getCollectionUrl();

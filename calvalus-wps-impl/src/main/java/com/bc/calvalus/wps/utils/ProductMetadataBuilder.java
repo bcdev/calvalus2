@@ -9,7 +9,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusParameter;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.wps.api.WpsServerContext;
@@ -20,6 +19,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -41,6 +41,7 @@ public class ProductMetadataBuilder {
     private String inputDatasetName;
     private String stagingDir;
     private String regionWkt;
+    private String regionBox;
     private String startDate;
     private String stopDate;
     private String collectionUrl;
@@ -147,6 +148,11 @@ public class ProductMetadataBuilder {
         return regionWkt;
     }
 
+    public String getRegionBox() {
+        return regionBox;
+    }
+
+
     public String getStartDate() {
         return startDate;
     }
@@ -201,7 +207,9 @@ public class ProductMetadataBuilder {
             try {
                 this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
                 this.inputDatasetName = productionRequest.getString("inputDataSetName");
-                this.regionWkt = extractRegionWkt(productionRequest.getString(("regionWKT")));
+                String regionWktRaw = productionRequest.getString(("regionWKT"));
+                this.regionWkt = extractRegionWkt(regionWktRaw);
+                this.regionBox = parseRegionBox();
                 this.startDate = getStartDate(productionRequest);
                 this.stopDate = getStopDate(productionRequest);
                 this.processorVersion = productionRequest.getString("processorBundleVersion");
@@ -219,7 +227,9 @@ public class ProductMetadataBuilder {
             this.collectionUrl = getBaseStagingUrl() + "/" + productOutputDir + "/";
             this.processName = processor.getIdentifier().split("~")[2];
             this.inputDatasetName = (String) processParameters.get("sourceProduct");
-            this.regionWkt = (String) processParameters.get("geoRegion");
+            String regionWktRaw = (String) processParameters.get("geoRegion");
+            this.regionWkt = extractRegionWkt(regionWktRaw);
+            this.regionBox = parseRegionBox();
             this.startDate = DATE_FORMAT.format(MIN_DATE);
             this.stopDate = DATE_FORMAT.format(MAX_DATE);
             this.processorVersion = processor.getVersion();
@@ -231,6 +241,26 @@ public class ProductMetadataBuilder {
 
     private String extractRegionWkt(String regionWkt) {
         return regionWkt.replaceAll("POLYGON\\(\\(", "").replaceAll("\\)\\)", "").replace(",", " ");
+    }
+
+    public String parseRegionBox() {
+        String[] region = this.regionWkt.split(" ");
+        List<Double> longitudes = new ArrayList<>();
+        List<Double> latitudes = new ArrayList<>();
+        try {
+            for (int i = 0; i < region.length; i += 2) {
+                longitudes.add(Double.valueOf(region[i]));
+                latitudes.add(Double.valueOf(region[i + 1]));
+            }
+        } catch (NumberFormatException exception) {
+            LOG.log(Level.WARNING, "Error in parsing the regionBox value.", exception);
+            return this.regionWkt;
+        }
+        return String.format("%1$.5f %2$.5f %3$.5f %4$.5f",
+                             Collections.min(latitudes),
+                             Collections.min(longitudes),
+                             Collections.max(latitudes),
+                             Collections.max(longitudes));
     }
 
     private String getStartDate(ProductionRequest productionRequest) throws ProductionException {
