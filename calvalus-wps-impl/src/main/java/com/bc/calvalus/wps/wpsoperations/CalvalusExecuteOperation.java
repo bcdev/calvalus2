@@ -10,6 +10,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.MissingInputParameterException;
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.Process;
 import com.bc.calvalus.wps.localprocess.ProcessBuilder;
@@ -64,7 +65,7 @@ public class CalvalusExecuteOperation {
 
     public ExecuteResponse execute(Execute executeRequest)
                 throws InterruptedException, InvalidProcessorIdException, JAXBException,
-                       ProductionException, IOException, InvalidParameterValueException, MissingParameterValueException {
+                       ProductionException, IOException, InvalidParameterValueException, MissingParameterValueException, ProductMetadataException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -83,10 +84,14 @@ public class CalvalusExecuteOperation {
             Path targetDirPath = getTargetDirectoryPath(jobId);
 //            HashMap<String, Object> parameters = getSubsettingParameters(inputParameters, targetDirPath);
             HashMap<String, Object> parameters = new HashMap<>();
+            parameters.put("productionName", inputParameters.get("productionName"));
             parameters.put("geoRegion", inputParameters.get("regionWKT"));
+            parameters.put("outputFormat", inputParameters.get("outputFormat"));
+            parameters.put("sourceProduct", inputParameters.get("sourceProduct"));
             parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
             parameters.put("targetDir", targetDirPath.toString());
             CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+            System.out.println("context.getServerContext().getRequestUrl() = " + context.getServerContext().getRequestUrl());
             ProcessBuilder processBuilder = ProcessBuilder.create()
                         .withJobId(jobId)
                         .withParameters(parameters)

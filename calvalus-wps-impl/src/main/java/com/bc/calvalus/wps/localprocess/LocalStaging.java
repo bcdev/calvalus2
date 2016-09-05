@@ -1,7 +1,8 @@
 package com.bc.calvalus.wps.localprocess;
 
-import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.utils.ProductMetadataBuilder;
 import com.bc.calvalus.wps.utils.VelocityWrapper;
@@ -17,6 +18,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,9 +31,9 @@ public class LocalStaging {
 
     public List<String> getProductUrls(String hostAddress, int portNumber, File targetDir, String jobId) {
         List<String> resultUrls = new ArrayList<>();
-        String[] resultProductNames = targetDir.list();
-        if (resultProductNames != null) {
-            for (String filename : resultProductNames) {
+        File[] resultProductFiles = targetDir.listFiles();
+        if (resultProductFiles != null) {
+            for (File resultProductFile : resultProductFiles) {
                 UriBuilder builder = new UriBuilderImpl();
                 String productUrl = builder.scheme("http")
                             .host(hostAddress)
@@ -40,11 +42,9 @@ public class LocalStaging {
                             .path(PropertiesWrapper.get("utep.output.directory"))
                             .path(targetDir.getParentFile().getName())
                             .path(targetDir.getName())
-                            .path(filename).build().toString();
+                            .path(resultProductFile.getName()).build().toString();
                 resultUrls.add(productUrl);
             }
-
-            generateProductMetadata(stagingDirectory, resultUrls);
 
             UriBuilder builder = new UriBuilderImpl();
             String metadataUrl = builder.scheme("http")
@@ -62,15 +62,27 @@ public class LocalStaging {
         return resultUrls;
     }
 
-    public void generateProductMetadata(File stagingDirectory, File[] productResultFiles, String jobid) throws ProductionException {
-        File outputMetadata = new File(stagingDirectory, jobid + "-metadata");
+    public void generateProductMetadata(File targetDir,
+                                        String jobid,
+                                        Map<String, Object> processParameters,
+                                        IWpsProcess processor)
+                throws ProductionException, ProductMetadataException {
+        File outputMetadata = new File(targetDir, jobid + "-metadata");
         if (outputMetadata.exists()) {
             return;
         }
+        File[] resultProductFiles = targetDir.listFiles();
+        String stagingDirectoryName = targetDir.getParentFile().getName() + "/" + targetDir.getName();
 
-        ProductMetadataBuilder builder = ProductMetadataBuilder.create()
-                    .
-        ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
+        ProductMetadata productMetadata = ProductMetadataBuilder.create()
+                    .isLocal()
+                    .withProductionResults(resultProductFiles != null ? Arrays.asList(resultProductFiles) : new ArrayList<>())
+                    .withProcessParameters(processParameters)
+                    .withProductOutputDir(stagingDirectoryName)
+                    .withProcessor(processor)
+                    .build();
+
+//        ProductMetadata productMetadata = new ProductMetadata(production, Arrays.asList(productResultFiles), wpsServerContext);
 
         VelocityWrapper velocityWrapper = new VelocityWrapper();
         String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");

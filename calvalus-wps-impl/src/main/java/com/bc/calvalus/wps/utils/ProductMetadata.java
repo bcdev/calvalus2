@@ -46,16 +46,8 @@ public class ProductMetadata {
     private String outputFormat;
     private List<Map> productList;
 
-    private final Production production;
-    private final List<File> productionResults;
-    private final WpsServerContext serverContext;
-
-    private static final Logger LOG = CalvalusLogger.getLogger();
 
     public ProductMetadata(ProductMetadataBuilder builder) {
-        this.production = builder.getProduction();
-        this.productionResults = builder.getProductionResults();
-        this.serverContext = builder.getServerContext();
         createProductMetadata(builder);
     }
 

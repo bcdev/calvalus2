@@ -9,6 +9,8 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusParameter;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -51,6 +53,8 @@ public class ProductMetadataBuilder {
     private Production production;
     private List<File> productionResults;
     private WpsServerContext serverContext;
+    private Map<String, Object> processParameters;
+    private IWpsProcess processor;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
 
@@ -60,6 +64,11 @@ public class ProductMetadataBuilder {
 
     public static ProductMetadataBuilder create() {
         return new ProductMetadataBuilder();
+    }
+
+    public ProductMetadataBuilder isLocal() {
+        isLocal = true;
+        return this;
     }
 
     public ProductMetadataBuilder withProduction(Production production) {
@@ -74,6 +83,21 @@ public class ProductMetadataBuilder {
 
     public ProductMetadataBuilder withServerContext(WpsServerContext serverContext) {
         this.serverContext = serverContext;
+        return this;
+    }
+
+    public ProductMetadataBuilder withProcessParameters(Map<String, Object> processParameters) {
+        this.processParameters = processParameters;
+        return this;
+    }
+
+    public ProductMetadataBuilder withProductOutputDir(String productOutputDir) {
+        this.productOutputDir = productOutputDir;
+        return this;
+    }
+
+    public ProductMetadataBuilder withProcessor(IWpsProcess processor) {
+        this.processor = processor;
         return this;
     }
 
@@ -149,7 +173,7 @@ public class ProductMetadataBuilder {
         return serverContext;
     }
 
-    public ProductMetadata build(ProductMetadataBuilder builder) throws ProductMetadataException {
+    public ProductMetadata build() throws ProductMetadataException {
         if (!isLocal) {
             ProductionRequest productionRequest = this.production.getProductionRequest();
 
@@ -173,8 +197,22 @@ public class ProductMetadataBuilder {
                 throw new ProductMetadataException("Unable to create product metadata", exception);
             }
             this.productList = createProductList();
+        } else {
+            this.jobUrl = "anyUrl";
+            this.jobFinishTime = getDateInXmlGregorianCalendarFormat(new Date()).toString();
+            this.productionName = (String) processParameters.get("productionName");
+            this.stagingDir = "url" + "/" + productOutputDir.split("/")[0];
+            this.collectionUrl = "url" + "/" + productOutputDir;
+            this.processName = processor.getIdentifier().split("~")[2];
+            this.inputDatasetName = (String) processParameters.get("sourceProduct");
+            this.regionWkt = (String) processParameters.get("geoRegion");
+            this.startDate = DATE_FORMAT.format(MIN_DATE);
+            this.stopDate = DATE_FORMAT.format(MAX_DATE);
+            this.processorVersion = processor.getVersion();
+            this.productionType = (String) processParameters.get("productionType");
+            this.outputFormat = (String) processParameters.get("outputFormat");
         }
-        return new ProductMetadata(builder);
+        return new ProductMetadata(this);
     }
 
     private String extractRegionWkt(String regionWkt) {

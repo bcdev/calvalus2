@@ -62,7 +62,12 @@ public class ProductMetadataTest {
         File mockFile4 = getMockFile("result.xml", 1000L);
         mockProductionFileList.add(mockFile4);
 
-        ProductMetadata productMetadata = new ProductMetadata(mockProduction, mockProductionFileList, mockServerContext);
+        ProductMetadata productMetadata = ProductMetadataBuilder.create()
+                    .withProduction(mockProduction)
+                    .withProductionResults(mockProductionFileList)
+                    .withServerContext(mockServerContext)
+                    .build();
+//        ProductMetadata productMetadata = new ProductMetadata(mockProduction, mockProductionFileList, mockServerContext);
 
         Map<String, Object> contextMap = productMetadata.getContextMap();
         assertThat(contextMap.get("jobUrl"),

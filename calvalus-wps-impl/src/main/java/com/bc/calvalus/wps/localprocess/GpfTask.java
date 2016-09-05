@@ -1,6 +1,9 @@
 package com.bc.calvalus.wps.localprocess;
 
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
@@ -25,15 +28,17 @@ public class GpfTask implements Callable<Boolean> {
     private final File targetDir;
     private final String hostName;
     private final int portNumber;
+    private final String requestUrl;
     private Logger logger = WpsLogger.getLogger();
 
-    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir, String hostName, int portNumber) {
+    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir, String hostName, int portNumber, String requestUrl) {
         this.jobId = jobId;
         this.parameters = parameters;
         this.sourceProduct = sourceProduct;
         this.targetDir = targetDir;
         this.hostName = hostName;
         this.portNumber = portNumber;
+        this.requestUrl = requestUrl;
     }
 
     @Override
@@ -49,7 +54,7 @@ public class GpfTask implements Callable<Boolean> {
 
             LocalStaging staging = new LocalStaging();
             List<String> resultUrls = staging.getProductUrls(hostName, portNumber, targetDir, jobId);
-            staging.generateProductMetadata();
+            staging.generateProductMetadata(targetDir, jobId, parameters, new LocalSubsetProcessor());
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);
@@ -60,6 +65,12 @@ public class GpfTask implements Callable<Boolean> {
             status.setMessage("GPF process failed : " + exception.getMessage());
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             logger.log(Level.SEVERE, "[" + jobId + "] GPF process failed...", exception);
+            return false;
+        } catch (ProductMetadataException exception) {
+            status.setState(ProductionState.FAILED);
+            status.setMessage("Creating product metadata failed : " + exception.getMessage());
+            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
             return false;
         } catch (Exception exception) {
             status.setState(ProductionState.FAILED);

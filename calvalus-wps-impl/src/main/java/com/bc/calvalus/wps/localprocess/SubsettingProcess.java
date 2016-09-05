@@ -28,7 +28,8 @@ public class SubsettingProcess implements Process {
                                       processBuilder.getSourceProduct(),
                                       processBuilder.getTargetDirPath().toFile(),
                                       processBuilder.getServerContext().getHostAddress(),
-                                      processBuilder.getServerContext().getPort());
+                                      processBuilder.getServerContext().getPort(),
+                                      processBuilder.getServerContext().getRequestUrl());
         GpfProductionService.getWorker().submit(gpfTask);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
         return status;

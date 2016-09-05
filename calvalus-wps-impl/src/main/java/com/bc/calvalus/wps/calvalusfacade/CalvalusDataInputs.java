@@ -37,8 +37,8 @@ import java.util.logging.Logger;
 public class CalvalusDataInputs {
 
     public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
-    public static final int MIN_DATE = 0;
-    public static final long MAX_DATE = 4133894400000L;
+    public static final long MIN_DATE = 1451606400000L;
+    public static final long MAX_DATE = 1483228800000L;
 
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;

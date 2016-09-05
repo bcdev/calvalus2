@@ -163,7 +163,7 @@ public class CalvalusGetCapabilitiesOperation {
         ProcessBriefType localSubsetProcessor = new ProcessBriefType();
         localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType("local~0.0.1~Subset"));
         localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
-        localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType("no abstract"));
+        localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
         localSubsetProcessor.setProcessVersion("0.0.1");
         processOfferings.getProcess().add(localSubsetProcessor);
         return processOfferings;
