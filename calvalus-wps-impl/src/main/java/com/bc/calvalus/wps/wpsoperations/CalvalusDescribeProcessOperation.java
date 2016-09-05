@@ -29,7 +29,6 @@ import com.bc.wps.api.utils.InputDescriptionTypeBuilder;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.esa.cci.lc.subset.PredefinedRegion;
 
 import java.io.File;
 import java.io.IOException;
@@ -113,6 +112,31 @@ public class CalvalusDescribeProcessOperation {
     private ProcessDescriptionType.DataInputs getLocalProcessDataInputs() throws IOException {
         ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
 
+        InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("productionName")
+                    .withTitle("Production name")
+                    .withAbstract("The name of this process.")
+                    .withDataType("string")
+                    .build();
+        dataInputs.getInput().add(productionNameInput);
+
+        List<Object> allowedProductionTypes = new ArrayList<>();
+        ValueType allowedProductionType = new ValueType();
+        allowedProductionType.setValue("L2Plus");
+        allowedProductionTypes.add(allowedProductionType);
+
+        InputDescriptionType productionType = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("productionType")
+                    .withTitle("Production type")
+                    .withAbstract("The type of the requested product. When not specified, L2Plus type is used")
+                    .withDataType("string")
+                    .withAllowedValues(allowedProductionTypes)
+                    .withDefaultValue("L2Plus")
+                    .build();
+        dataInputs.getInput().add(productionType);
+
         InputDescriptionType regionWkt = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("regionWKT")
@@ -147,6 +171,20 @@ public class CalvalusDescribeProcessOperation {
                     .withAllowedValues(inputSourceProductList)
                     .build();
         dataInputs.getInput().add(sourceProduct);
+
+        List<Object> allowedValues = new ArrayList<>();
+        allowedValues.add("Netcdf-BEAM");
+        InputDescriptionTypeBuilder outputFormatBuilder = InputDescriptionTypeBuilder
+                    .create()
+                    .withIdentifier("outputFormat")
+                    .withTitle("Output file format")
+                    .withAbstract("The desired format of the product")
+                    .withDataType("string");
+        if (!allowedValues.isEmpty()) {
+            outputFormatBuilder = outputFormatBuilder.withAllowedValues(allowedValues);
+        }
+        InputDescriptionType outputFormat = outputFormatBuilder.build();
+        dataInputs.getInput().add(outputFormat);
 
         return dataInputs;
     }
