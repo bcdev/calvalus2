@@ -12,6 +12,7 @@ import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.utils.ProductMetadataBuilder;
 import com.bc.calvalus.wps.utils.VelocityWrapper;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.sun.jersey.api.uri.UriBuilderImpl;
 
 import javax.ws.rs.core.UriBuilder;
@@ -118,7 +119,7 @@ public class CalvalusStaging {
                         .build();
 
             VelocityWrapper velocityWrapper = new VelocityWrapper();
-            String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
+            String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), PropertiesWrapper.get("metadata.template"));
             out.println(mergedMetadata);
         } catch (ProductMetadataException exception) {
             LOG.log(Level.SEVERE, "Unable to create product metadata.", exception);

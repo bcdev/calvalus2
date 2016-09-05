@@ -87,7 +87,7 @@ public class LocalStaging {
                     .build();
 
         VelocityWrapper velocityWrapper = new VelocityWrapper();
-        String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), "metadata-template.vm");
+        String mergedMetadata = velocityWrapper.merge(productMetadata.getContextMap(), PropertiesWrapper.get("metadata.template"));
 
         try (PrintWriter out = new PrintWriter(outputMetadata.getAbsolutePath())) {
             out.println(mergedMetadata);
