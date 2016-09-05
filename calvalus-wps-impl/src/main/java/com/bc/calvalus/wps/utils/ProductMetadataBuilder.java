@@ -33,13 +33,11 @@ import java.util.logging.Logger;
  */
 public class ProductMetadataBuilder {
 
-    private String jobUrl;
     private String jobFinishTime;
     private String productOutputDir;
     private String productionName;
     private String processName;
     private String inputDatasetName;
-    private String stagingDir;
     private String regionWkt;
     private String regionBox;
     private String startDate;
@@ -116,10 +114,6 @@ public class ProductMetadataBuilder {
         return this;
     }
 
-    public String getJobUrl() {
-        return jobUrl;
-    }
-
     public String getJobFinishTime() {
         return jobFinishTime;
     }
@@ -138,10 +132,6 @@ public class ProductMetadataBuilder {
 
     public String getInputDatasetName() {
         return inputDatasetName;
-    }
-
-    public String getStagingDir() {
-        return stagingDir;
     }
 
     public String getRegionWkt() {
@@ -196,13 +186,10 @@ public class ProductMetadataBuilder {
     public ProductMetadata build() throws ProductMetadataException {
         if (!isLocal) {
             ProductionRequest productionRequest = this.production.getProductionRequest();
-
-            this.jobUrl = serverContext.getRequestUrl();
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(this.production.getWorkflow().getStopTime()).toString();
             String stagingPath = productionRequest.getStagingDirectory(this.production.getId());
             this.productOutputDir = this.production.getName() + "/" + stagingPath;
             this.productionName = this.production.getName();
-            this.stagingDir = getBaseStagingUrl() + "/" + stagingPath.split("/")[0];
             this.collectionUrl = getBaseStagingUrl() + "/" + this.production.getStagingPath();
             try {
                 this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
@@ -220,10 +207,8 @@ public class ProductMetadataBuilder {
             }
             this.productList = createProductList();
         } else {
-            this.jobUrl = "anyUrl";
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(new Date()).toString();
             this.productionName = (String) processParameters.get("productionName");
-            this.stagingDir = getBaseStagingUrl() + "/" + productOutputDir.split("/")[0] + "/";
             this.collectionUrl = getBaseStagingUrl() + "/" + productOutputDir + "/";
             this.processName = processor.getIdentifier().split("~")[2];
             this.inputDatasetName = (String) processParameters.get("sourceProduct");
@@ -243,7 +228,7 @@ public class ProductMetadataBuilder {
         return regionWkt.replaceAll("POLYGON\\(\\(", "").replaceAll("\\)\\)", "").replace(",", " ");
     }
 
-    public String parseRegionBox() {
+    private String parseRegionBox() {
         String[] region = this.regionWkt.split(" ");
         List<Double> longitudes = new ArrayList<>();
         List<Double> latitudes = new ArrayList<>();

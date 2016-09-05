@@ -9,13 +9,11 @@ import java.util.Map;
  */
 public class ProductMetadata {
 
-    private String jobUrl;
     private String jobFinishTime;
     private String productOutputDir;
     private String productionName;
     private String processName;
     private String inputDatasetName;
-    private String stagingDir;
     private String regionWkt;
     private String regionBox;
     private String startDate;
@@ -34,13 +32,11 @@ public class ProductMetadata {
     public Map<String, Object> getContextMap() {
         Map<String, Object> contextMap = new HashMap<>();
 
-        contextMap.put("jobUrl", jobUrl);
         contextMap.put("jobFinishTime", jobFinishTime);
         contextMap.put("productOutputDir", productOutputDir);
         contextMap.put("productionName", productionName);
         contextMap.put("processName", processName);
         contextMap.put("inputDatasetName", inputDatasetName);
-        contextMap.put("stagingDir", stagingDir);
         contextMap.put("regionWkt", regionWkt);
         contextMap.put("regionBox", regionBox);
         contextMap.put("startDate", startDate);
@@ -55,15 +51,13 @@ public class ProductMetadata {
     }
 
     private void createProductMetadata(ProductMetadataBuilder builder) {
-        jobUrl = builder.getJobUrl();
         jobFinishTime = builder.getJobFinishTime();
         productOutputDir = builder.getProductOutputDir();
         productionName = builder.getProductionName();
         processName = builder.getProcessName();
         inputDatasetName = builder.getInputDatasetName();
-        stagingDir = builder.getStagingDir();
         regionWkt = builder.getRegionWkt();
-        regionBox = builder.parseRegionBox();
+        regionBox = builder.getRegionBox();
         startDate = builder.getStartDate();
         stopDate = builder.getStopDate();
         collectionUrl = builder.getCollectionUrl();
@@ -71,10 +65,6 @@ public class ProductMetadata {
         productionType = builder.getProductionType();
         outputFormat = builder.getOutputFormat();
         productList = builder.getProductList();
-    }
-
-    public String getJobUrl() {
-        return jobUrl;
     }
 
     public String getJobFinishTime() {
@@ -95,10 +85,6 @@ public class ProductMetadata {
 
     public String getInputDatasetName() {
         return inputDatasetName;
-    }
-
-    public String getStagingDir() {
-        return stagingDir;
     }
 
     public String getRegionWkt() {

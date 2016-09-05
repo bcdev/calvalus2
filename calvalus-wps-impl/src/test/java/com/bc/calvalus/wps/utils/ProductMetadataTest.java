@@ -69,14 +69,11 @@ public class ProductMetadataTest {
                     .build();
 
         Map<String, Object> contextMap = productMetadata.getContextMap();
-        assertThat(contextMap.get("jobUrl"),
-                   equalTo("http://www.brockmann-consult.de/bc-wps/wps/calvalus?Service=WPS&Request=GetStatus&JobId=20160429140605_L2Plus_16bd8f26b258fc"));
         assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(contextMap.get("productOutputDir"), equalTo("TEP Subset test/user/20160317_10000000"));
         assertThat(contextMap.get("productionName"), equalTo("TEP Subset test"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
         assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
-        assertThat(contextMap.get("stagingDir"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/user"));
         assertThat(contextMap.get("regionWkt"), equalTo("100 -10 100 0 110 0 110 -10 100 -10"));
         assertThat(contextMap.get("startDate"), equalTo("2000-01-01"));
         assertThat(contextMap.get("stopDate"), equalTo("2020-01-01"));
