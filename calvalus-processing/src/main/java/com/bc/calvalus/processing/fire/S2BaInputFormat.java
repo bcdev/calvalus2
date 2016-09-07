@@ -55,17 +55,15 @@ public class S2BaInputFormat extends InputFormat {
         for each file status r:
             take r and (up to) latest 4 matching files d, c, b, a (getPeriodStatuses)
                 create r, d
-                create d, c
-                create c, b
-                create b, a
+                create r, c
+                create r, b
+                create r, a
          */
         for (FileStatus referenceFileStatus : fileStatuses) {
             FileStatus[] periodStatuses = getPeriodStatuses(referenceFileStatus, inventoryService, conf);
-            for (int i = 0; i < periodStatuses.length - 1; i++) {
-                FileStatus postStatus = periodStatuses[i];
-                FileStatus preStatus = periodStatuses[i + 1];
-                splits.add(createSplit(postStatus, preStatus));
-                Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", getDate(postStatus), getDate(preStatus)));
+            for (FileStatus preStatus : periodStatuses) {
+                splits.add(createSplit(referenceFileStatus, preStatus));
+                Logger.getLogger("com.bc.calvalus").info(String.format("Created split with postStatus %s and preStatus %s.", getDate(referenceFileStatus), getDate(preStatus)));
             }
         }
     }
@@ -91,21 +89,20 @@ public class S2BaInputFormat extends InputFormat {
         sort(periodStatuses);
 
         List<FileStatus> filteredList = new ArrayList<>();
-        filteredList.add(referenceFileStatus);
         for (FileStatus periodStatus : periodStatuses) {
-            if (getDate(periodStatus).before(getDate(referenceFileStatus))) {
+            if (getDate(periodStatus).getTime() < getDate(referenceFileStatus).getTime()) {
                 filteredList.add(periodStatus);
             }
         }
 
-        int resultCount = Math.min(MAX_PRE_IMAGES_COUNT + 1, filteredList.size());
+        int resultCount = Math.min(MAX_PRE_IMAGES_COUNT, filteredList.size());
         FileStatus[] result = new FileStatus[resultCount];
         System.arraycopy(filteredList.toArray(new FileStatus[0]), 0, result, 0, resultCount);
         return result;
     }
 
     private static void sort(FileStatus[] periodStatuses) {
-        Arrays.sort(periodStatuses, (fs1, fs2) -> getDate(fs1).after(getDate(fs2)) ? -1 : 1);
+        Arrays.sort(periodStatuses, (fs1, fs2) -> getDate(fs1).getTime() > getDate(fs2).getTime() ? -1 : 1);
     }
 
     private static Date getDate(FileStatus fs) {

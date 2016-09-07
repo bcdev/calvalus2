@@ -16,13 +16,10 @@
 
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.beam.SimpleOutputFormat;
-import com.bc.calvalus.processing.fire.BAMapper;
-import com.bc.calvalus.processing.fire.FireBAInputFormat;
 import com.bc.calvalus.processing.fire.S2BaInputFormat;
 import com.bc.calvalus.processing.fire.S2BaPostInputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -94,11 +91,7 @@ public class FireS2BAProductionType extends HadoopProductionType {
         S2BaPeriodWorkflowItem s2BaPeriodWorkflowItem = new S2BaPeriodWorkflowItem(getProcessingService(), userName, productionName, s2BaPeriodJobConfig);
         S2BaPostWorkflowItem s2BaPostWorkflowItem = new S2BaPostWorkflowItem(getProcessingService(), userName, productionName + " - Post processing", s2BaPostJobConfig);
 
-        if (!onlyDoPostProcessing(productionRequest)) {
-            s2BAWorkflow.add(s2BaPeriodWorkflowItem);
-        } else {
-            CalvalusLogger.getLogger().info("Skipping period workflow.");
-        }
+        s2BAWorkflow.add(s2BaPeriodWorkflowItem);
         s2BAWorkflow.add(s2BaPostWorkflowItem);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -109,10 +102,6 @@ public class FireS2BAProductionType extends HadoopProductionType {
                 false,
                 productionRequest,
                 s2BAWorkflow);
-    }
-
-    private boolean onlyDoPostProcessing(ProductionRequest productionRequest) throws ProductionException {
-        return productionRequest.getBoolean("calvalus.s2ba.onlyPostProcessing", false);
     }
 
     @Override
@@ -164,37 +153,6 @@ public class FireS2BAProductionType extends HadoopProductionType {
         @Override
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(S2BaPostInputFormat.class);
-            job.setNumReduceTasks(0);
-            job.setOutputFormatClass(SimpleOutputFormat.class);
-            FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
-        }
-
-        @Override
-        protected String[][] getJobConfigDefaults() {
-            return new String[][]{
-                /* {JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, NO_DEFAULT}, */
-                    {JobConfigNames.CALVALUS_OUTPUT_DIR, NO_DEFAULT},
-                    {JobConfigNames.CALVALUS_BUNDLES, NO_DEFAULT},
-                    {JobConfigNames.CALVALUS_BUNDLES, NO_DEFAULT},
-            };
-        }
-    }
-
-    private static class S2BaPostPeriodWorkflowItem extends HadoopWorkflowItem {
-
-        S2BaPostPeriodWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, Configuration jobConfig) {
-            super(processingService, userName, jobName, jobConfig);
-        }
-
-        @Override
-        public String getOutputDir() {
-            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR);
-        }
-
-        @Override
-        protected void configureJob(Job job) throws IOException {
-            job.setInputFormatClass(FireBAInputFormat.class);
-            job.setMapperClass(BAMapper.class);
             job.setNumReduceTasks(0);
             job.setOutputFormatClass(SimpleOutputFormat.class);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
