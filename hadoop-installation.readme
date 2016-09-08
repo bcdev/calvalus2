@@ -1,0 +1,46 @@
+Hadoop 2.7.3 installation
+=========================
+
+on feeder01:
+
+sudo apt-get install cmake
+sudo apt-get install g++
+#sudo apt-get libprotobuf-dev libprotobuf-java
+sudo apt-get install protobuf-compiler
+sudo apt-get install findbugs
+
+tar xf ~/Downloads/findbugs-1.3.9.tar.gz
+export FINDBUGS_HOME=/home/boe/tmp/hadoop-2.6.0-src/findbugs-1.3.9
+
+sudo tar xf apache-maven-3.0.5-bin.tar.gz -C /usr/local
+cd /usr/local
+sudo ln -s apache-maven-3.0.5 maven
+# make sure to put this maven into PATH as shown in the following two lines:
+sudo vi /etc/profile.d/maven.sh
+
+export M2_HOME=/usr/local/maven
+export PATH=${M2_HOME}/bin:${PATH}
+
+
+mkdir hadoop
+cd hadoop
+
+wget http://ftp.halifax.rwth-aachen.de/apache/hadoop/common/hadoop-2.7.3/hadoop-2.7.3-src.tar.gz
+
+tar xf hadoop-2.7.3-src.tar.gz
+cd hadoop-2.7.3-src
+
+export M2_HOME=/usr/local/maven
+export PATH=${M2_HOME}/bin:${PATH}
+mvn -DskipTests install -Pnative
+#mvn package -DskipTests -Pdist -Pdocs -Psrc -Dtar
+mvn package -DskipTests -Pdist -Dtar
+
+in bc-it-admin/calvalus:
+
+./cluster_tools.bash 0-95 exec_remote 'scp feeder01:/home/martin/hadoop/hadoop-2.7.3-src/hadoop-dist/target/hadoop-2.7.3.tar.gz .'
+./cluster_tools.bash 0-95 sudo_exec_remote bash -c '"cd /opt; mkdir hadoop-2.7.3; chown hadoop:hadoop hadoop-2.7.3; sudo -u hadoop tar xf /home/hadoop/hadoop-2.7.3.tar.gz"'
+./cluster_tools.bash 0 sudo_exec_remote bash -c '"cd /opt; mv hadoop/{logs,pids,dfs,conf} hadoop-2.7.3; rm -f hadoop; ln -s hadoop-2.7.3 hadoop; hostname"'
+./cluster_tools.bash 91 sudo_exec_remote bash -c '"cd /opt; mv hadoop/{logs,pids,dfs,conf} hadoop-2.7.3; rm -f hadoop; ln -s hadoop-2.7.3 hadoop; hostname"'
+./cluster_tools.bash 1-90 sudo_exec_remote bash -c '"cd /opt; mv hadoop/{logs,pids,conf} hadoop-2.7.3; rm -f hadoop; ln -s hadoop-2.7.3 hadoop; hostname"'
+./cluster_tools.bash 92-95 sudo_exec_remote bash -c '"cd /opt; mv hadoop/{logs,pids,conf} hadoop-2.7.3; rm -f hadoop; ln -s hadoop-2.7.3 hadoop; hostname"'
