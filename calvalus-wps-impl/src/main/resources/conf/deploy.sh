@@ -19,4 +19,5 @@ sudo -u $RUN_AS cp -r urbantep-quicklooks $CATALINA_HOME/webapps/ROOT
 # don't forget to allow sym link in Tomcat directory.
 # How-to: http://stackoverflow.com/questions/22240776/symlinking-tomcat-8-directory-resources
 sudo -u $RUN_AS ln -sf ../ROOT/urbantep-quicklooks $CATALINA_HOME/webapps/bc-wps/urbantep-quicklooks
+sudo -u $RUN_AS ln -sf /data/urban-footprint/utep_input $CATALINA_HOME/webapps/bc-wps/utep_input
 sudo service bc-tomcat start
