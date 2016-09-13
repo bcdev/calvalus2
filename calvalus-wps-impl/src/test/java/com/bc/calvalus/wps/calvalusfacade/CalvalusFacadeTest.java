@@ -13,11 +13,10 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.apache.commons.collections.map.HashedMap;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
@@ -30,10 +29,8 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -168,9 +165,9 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testGetProcessor() throws Exception {
-        ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
-        ArgumentCaptor<ProcessorNameParser> parserCaptor = ArgumentCaptor.forClass(ProcessorNameParser.class);
+        ArgumentCaptor<ProcessorNameConverter> parserCaptor = ArgumentCaptor.forClass(ProcessorNameConverter.class);
         ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 

@@ -18,7 +18,7 @@ import com.bc.calvalus.wps.localprocess.ProductionStatus;
 import com.bc.calvalus.wps.localprocess.SubsettingProcess;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.exceptions.MissingParameterValueException;
@@ -210,7 +210,7 @@ public class CalvalusExecuteOperation {
                        InvalidParameterValueException, MissingParameterValueException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
-        ProcessorNameParser parser = new ProcessorNameParser(processorId);
+        ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
         CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
                                                                        calvalusFacade.getProductSets());
@@ -224,7 +224,7 @@ public class CalvalusExecuteOperation {
         ProcessBriefType processBriefType = new ProcessBriefType();
         processBriefType.setIdentifier(executeRequest.getIdentifier());
         processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(executeRequest.getIdentifier().getValue()));
-        ProcessorNameParser parser = new ProcessorNameParser(executeRequest.getIdentifier().getValue());
+        ProcessorNameConverter parser = new ProcessorNameConverter(executeRequest.getIdentifier().getValue());
         processBriefType.setProcessVersion(parser.getBundleVersion());
         return processBriefType;
     }

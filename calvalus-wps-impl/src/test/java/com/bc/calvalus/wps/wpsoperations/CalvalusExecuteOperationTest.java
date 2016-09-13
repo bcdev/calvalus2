@@ -14,7 +14,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.DataInputsType;
@@ -44,7 +44,7 @@ import java.util.List;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
             CalvalusExecuteOperation.class, CalvalusFacade.class, ExecuteRequestExtractor.class,
-            ProcessorNameParser.class, ProductionRequest.class, CalvalusDataInputs.class,
+            ProcessorNameConverter.class, ProductionRequest.class, CalvalusDataInputs.class,
             CalvalusExecuteResponseConverter.class
 })
 public class CalvalusExecuteOperationTest {
@@ -153,8 +153,8 @@ public class CalvalusExecuteOperationTest {
         String jobId = executeOperation.processSync(mockExecuteRequest, "process1");
 
         PowerMockito.verifyNew(ExecuteRequestExtractor.class).withArguments(executeRequestCaptor.capture());
-        PowerMockito.verifyNew(ProcessorNameParser.class).withArguments(processIdCaptor.capture());
-        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameParser.class));
+        PowerMockito.verifyNew(ProcessorNameConverter.class).withArguments(processIdCaptor.capture());
+        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameConverter.class));
         verify(mockCalvalusFacade).orderProductionSynchronous(productionRequestCaptor.capture());
         verify(mockCalvalusFacade).stageProduction(any(Production.class));
         verify(mockCalvalusFacade).observeStagingStatus(any(Production.class));
@@ -193,8 +193,8 @@ public class CalvalusExecuteOperationTest {
         String jobId = executeOperation.processAsync(mockExecuteRequest, "process1");
 
         PowerMockito.verifyNew(ExecuteRequestExtractor.class).withArguments(executeRequestCaptor.capture());
-        PowerMockito.verifyNew(ProcessorNameParser.class).withArguments(processIdCaptor.capture());
-        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameParser.class));
+        PowerMockito.verifyNew(ProcessorNameConverter.class).withArguments(processIdCaptor.capture());
+        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameConverter.class));
         verify(mockCalvalusFacade).orderProductionAsynchronous(productionRequestCaptor.capture());
 
         assertThat(executeRequestCaptor.getValue(), equalTo(mockExecuteRequest));
@@ -329,8 +329,8 @@ public class CalvalusExecuteOperationTest {
     private ProductionRequest configureProcessingMock() throws Exception {
         ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
         PowerMockito.whenNew(ExecuteRequestExtractor.class).withArguments(any(Execute.class)).thenReturn(mockRequestExtractor);
-        ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
-        PowerMockito.whenNew(ProcessorNameParser.class).withArguments(anyString()).thenReturn(mockParser);
+        ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockParser);
         CalvalusDataInputs mockCalvalusDataInputs = mock(CalvalusDataInputs.class);
         PowerMockito.whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInputs);
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);

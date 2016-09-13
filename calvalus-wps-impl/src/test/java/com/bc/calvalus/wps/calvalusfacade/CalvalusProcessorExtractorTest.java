@@ -12,7 +12,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import org.junit.*;
 
 import java.util.List;
@@ -75,7 +75,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorDescriptor[] mockProcessorDescriptors = getMockProcessorDescriptors();
         BundleDescriptor[] mockBundleDescriptors = getMockBundleDescriptors(mockProcessorDescriptors);
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
-        ProcessorNameParser mockParser = getMatchingParser();
+        ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
         CalvalusProcessor processor = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
@@ -90,7 +90,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorDescriptor[] mockProcessorDescriptors = getMockProcessorDescriptors();
         BundleDescriptor[] mockBundleDescriptors = getMockBundleDescriptors(mockProcessorDescriptors);
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
-        ProcessorNameParser mockParser = getUnmatchingParser();
+        ProcessorNameConverter mockParser = getUnmatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
         CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
@@ -102,7 +102,7 @@ public class CalvalusProcessorExtractorTest {
     public void canReturnNullWhenNoBundleDescriptor() throws Exception {
         BundleDescriptor[] mockBundleDescriptors = new BundleDescriptor[]{};
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
-        ProcessorNameParser mockParser = getMatchingParser();
+        ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
         CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
@@ -113,22 +113,22 @@ public class CalvalusProcessorExtractorTest {
     @Test(expected = ProductionException.class)
     public void canThrowProductionException() throws Exception {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenThrow(new ProductionException("production exception"));
-        ProcessorNameParser mockParser = getMatchingParser();
+        ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
         processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
     }
 
-    private ProcessorNameParser getMatchingParser() {
-        ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
+    private ProcessorNameConverter getMatchingParser() {
+        ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
         when(mockParser.getBundleName()).thenReturn("beam-buildin");
         when(mockParser.getBundleVersion()).thenReturn("1.0");
         when(mockParser.getExecutableName()).thenReturn("urban-tep-indices-meris-l1b");
         return mockParser;
     }
 
-    private ProcessorNameParser getUnmatchingParser() {
-        ProcessorNameParser mockParser = mock(ProcessorNameParser.class);
+    private ProcessorNameConverter getUnmatchingParser() {
+        ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
         when(mockParser.getBundleName()).thenReturn("random-bundle");
         when(mockParser.getBundleVersion()).thenReturn("0.0");
         when(mockParser.getExecutableName()).thenReturn("random-processor");

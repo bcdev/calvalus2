@@ -5,7 +5,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 
 import java.io.IOException;
@@ -60,7 +60,7 @@ public class CalvalusFacade {
         return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
     }
 
-    public CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
+    public CalvalusProcessor getProcessor(ProcessorNameConverter parser) throws IOException, ProductionException {
         return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
     }
 

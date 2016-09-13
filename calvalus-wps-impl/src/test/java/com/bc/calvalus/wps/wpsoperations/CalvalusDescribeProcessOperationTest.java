@@ -11,7 +11,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -29,7 +29,7 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusDescribeProcessOperation.class, CalvalusFacade.class, ProcessorNameParser.class})
+@PrepareForTest({CalvalusDescribeProcessOperation.class, CalvalusFacade.class, ProcessorNameConverter.class})
 public class CalvalusDescribeProcessOperationTest {
 
     private CalvalusDescribeProcessOperation describeProcessOperation;
@@ -49,12 +49,12 @@ public class CalvalusDescribeProcessOperationTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getProductType()).thenReturn("inputProductType");
         ProductSet[] mockProductSets = new ProductSet[]{mockProductSet};
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         CalvalusProcessor calvalusProcessor1 = getProcess1();
-        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameConverter.class))).thenReturn(calvalusProcessor1);
         when(mockCalvalusFacade.getProductSets()).thenReturn(mockProductSets);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         List<ProcessDescriptionType> processes = describeProcessOperation.getProcesses("process1");
@@ -70,12 +70,12 @@ public class CalvalusDescribeProcessOperationTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getProductType()).thenReturn("inputProductType");
         ProductSet[] mockProductSets = new ProductSet[]{mockProductSet};
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
         CalvalusProcessor calvalusProcessor1 = getProcess1();
         CalvalusProcessor calvalusProcessor2 = getProcess2();
-        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1, calvalusProcessor2);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameConverter.class))).thenReturn(calvalusProcessor1, calvalusProcessor2);
         when(mockCalvalusFacade.getProductSets()).thenReturn(mockProductSets);
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
@@ -97,9 +97,9 @@ public class CalvalusDescribeProcessOperationTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getProductType()).thenReturn("inputProductType");
         ProductSet[] mockProductSets = new ProductSet[]{mockProductSet};
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
         List<IWpsProcess> mockProcessorList = getMockProcessList();
         when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessorList);
         when(mockCalvalusFacade.getProductSets()).thenReturn(mockProductSets);
@@ -120,10 +120,10 @@ public class CalvalusDescribeProcessOperationTest {
 
     @Test(expected = ProcessesNotAvailableException.class)
     public void canThrowExceptionWhenProcessorIsNull() throws Exception {
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
-        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(null);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameConverter.class))).thenReturn(null);
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         describeProcessOperation.getProcesses("process1");
@@ -131,12 +131,12 @@ public class CalvalusDescribeProcessOperationTest {
 
     @Test(expected = ProcessesNotAvailableException.class)
     public void canThrowExceptionWhenOneOfProcessorsNotAvailable() throws Exception {
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
         CalvalusProcessor calvalusProcessor1 = getProcess1();
         CalvalusProcessor calvalusProcessor2 = getProcess2();
-        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1, null, calvalusProcessor2);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameConverter.class))).thenReturn(calvalusProcessor1, null, calvalusProcessor2);
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         describeProcessOperation.getProcesses("process1,invalidProcessId,process2");
@@ -145,7 +145,7 @@ public class CalvalusDescribeProcessOperationTest {
     @Test(expected = ProcessesNotAvailableException.class)
     public void canCatchInvalidProcessorIdException() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenThrow(new InvalidProcessorIdException("processorId not found"));
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenThrow(new InvalidProcessorIdException("processorId not found"));
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         describeProcessOperation.getProcesses("process1");
@@ -155,12 +155,12 @@ public class CalvalusDescribeProcessOperationTest {
     public void canCatchIOException() throws Exception {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getProductType()).thenReturn("inputProductType");
-        ProcessorNameParser mockProcessorNameParser = mock(ProcessorNameParser.class);
+        ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         CalvalusProcessor calvalusProcessor1 = getProcess1();
-        when(mockCalvalusFacade.getProcessor(any(ProcessorNameParser.class))).thenReturn(calvalusProcessor1);
+        when(mockCalvalusFacade.getProcessor(any(ProcessorNameConverter.class))).thenReturn(calvalusProcessor1);
         when(mockCalvalusFacade.getProductSets()).thenThrow(new IOException("IO Exception"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        PowerMockito.whenNew(ProcessorNameParser.class).withAnyArguments().thenReturn(mockProcessorNameParser);
+        PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
 
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         describeProcessOperation.getProcesses("process1");

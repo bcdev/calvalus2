@@ -5,7 +5,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +35,7 @@ public class CalvalusProcessorExtractor {
         return processors;
     }
 
-    protected CalvalusProcessor getProcessor(ProcessorNameParser parser, ProductionService productionService, String userName)
+    protected CalvalusProcessor getProcessor(ProcessorNameConverter parser, ProductionService productionService, String userName)
                 throws ProductionException {
         BundleDescriptor[] bundleDescriptor = getBundleDescriptors(productionService, userName);
         for (BundleDescriptor bundle : bundleDescriptor) {

@@ -12,7 +12,7 @@ import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
-import com.bc.calvalus.wps.utils.ProcessorNameParser;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;
 import com.bc.wps.api.schema.ComplexDataCombinationType;
@@ -72,7 +72,7 @@ public class CalvalusDescribeProcessOperation {
             } else if (processorIdArray.length > 1) {
                 List<IWpsProcess> processors = new ArrayList<>();
                 for (String singleProcessorId : processorIdArray) {
-                    ProcessorNameParser parser = new ProcessorNameParser(singleProcessorId);
+                    ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
                     CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
                     if (calvalusProcessor == null) {
                         throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
@@ -82,7 +82,7 @@ public class CalvalusDescribeProcessOperation {
                 }
                 processDescriptionTypeList.addAll(getMultipleDescribeProcessResponse(processors));
             } else {
-                ProcessorNameParser parser = new ProcessorNameParser(processorId);
+                ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
                 CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
                 if (calvalusProcessor == null) {
                     throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
