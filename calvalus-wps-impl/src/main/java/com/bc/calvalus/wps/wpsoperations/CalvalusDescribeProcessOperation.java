@@ -173,7 +173,9 @@ public class CalvalusDescribeProcessOperation {
         dataInputs.getInput().add(sourceProduct);
 
         List<Object> allowedValues = new ArrayList<>();
-        allowedValues.add("Netcdf-BEAM");
+        ValueType valueType = new ValueType();
+        valueType.setValue("Netcdf-BEAM");
+        allowedValues.add(valueType);
         InputDescriptionTypeBuilder outputFormatBuilder = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("outputFormat")
