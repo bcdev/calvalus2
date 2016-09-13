@@ -2,8 +2,8 @@ package com.bc.calvalus.wps.wpsoperations;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.AddressType;
 import com.bc.wps.api.schema.Capabilities;
@@ -28,7 +28,6 @@ import com.bc.wps.api.utils.CapabilitiesBuilder;
 import com.bc.wps.api.utils.WpsTypeConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.List;
 
@@ -43,7 +42,7 @@ public class CalvalusGetCapabilitiesOperation {
         this.context = context;
     }
 
-    public Capabilities getCapabilities() throws ProcessesNotAvailableException, JAXBException {
+    public Capabilities getCapabilities() throws ProcessesNotAvailableException {
         List<IWpsProcess> processes = getProcesses();
 
         return CapabilitiesBuilder.create()

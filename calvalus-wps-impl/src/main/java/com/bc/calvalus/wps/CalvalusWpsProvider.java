@@ -4,8 +4,6 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
-import com.bc.calvalus.wps.exceptions.ProductMetadataException;
-import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
@@ -38,7 +36,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         CalvalusGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsRequestContext);
         try {
             return getCapabilitiesOperation.getCapabilities();
-        } catch (ProcessesNotAvailableException | JAXBException exception) {
+        } catch (ProcessesNotAvailableException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetCapabilities operation successfully", exception);
             throw new WpsServiceException(exception);
         }
@@ -60,7 +58,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
         try {
             return executeOperation.execute(execute);
-        } catch (IOException | InterruptedException | ProductionException | InvalidProcessorIdException | JAXBException |ProductMetadataException exception) {
+        } catch (IOException | InterruptedException | ProductionException | InvalidProcessorIdException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }

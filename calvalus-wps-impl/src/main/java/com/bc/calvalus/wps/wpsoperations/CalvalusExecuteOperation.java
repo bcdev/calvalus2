@@ -9,7 +9,6 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.Process;
 import com.bc.calvalus.wps.localprocess.ProcessBuilder;
@@ -61,8 +60,8 @@ public class CalvalusExecuteOperation {
     }
 
     public ExecuteResponse execute(Execute executeRequest)
-                throws InterruptedException, InvalidProcessorIdException, JAXBException,
-                       ProductionException, IOException, InvalidParameterValueException, MissingParameterValueException, ProductMetadataException {
+                throws InvalidProcessorIdException, MissingParameterValueException, InvalidParameterValueException,
+                       JAXBException, IOException, ProductionException, InterruptedException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
