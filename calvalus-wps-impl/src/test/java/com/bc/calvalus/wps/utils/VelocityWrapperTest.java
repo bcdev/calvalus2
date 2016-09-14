@@ -24,13 +24,13 @@ public class VelocityWrapperTest {
         contextMap.put("key3", "dummy3");
         String mergedString = wrapper.merge(contextMap, "test-velocity3.vm");
 
-        assertThat(mergedString, equalTo("<?xml version=\"1.0\"?>\n" +
-                                         "\n<test testAttr=\"$test\">\n" +
-                                         "    <contents>\n" +
-                                         "        <key>dummy1</key>\n" +
-                                         "        <key>dummy2</key>\n" +
-                                         "        <key>dummy3</key>\n" +
-                                         "    </contents>\n" +
+        assertThat(mergedString, equalTo("<?xml version=\"1.0\"?>\r\n" +
+                                         "\r\n<test testAttr=\"$test\">\r\n" +
+                                         "    <contents>\r\n" +
+                                         "        <key>dummy1</key>\r\n" +
+                                         "        <key>dummy2</key>\r\n" +
+                                         "        <key>dummy3</key>\r\n" +
+                                         "    </contents>\r\n" +
                                          "</test>"));
     }
 
