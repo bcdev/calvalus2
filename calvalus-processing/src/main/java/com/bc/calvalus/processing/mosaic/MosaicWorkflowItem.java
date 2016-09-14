@@ -20,10 +20,13 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
+import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 
 /**
@@ -88,9 +91,18 @@ public class MosaicWorkflowItem extends HadoopWorkflowItem {
     }
 
     static int computeNumReducers(Configuration jobConfig) {
-        int numXPartitions = jobConfig.getInt("calvalus.mosaic.numXPartitions", 1);
-        MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
-        return mosaicGrid.getNumMacroTileY() * numXPartitions;
+        Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get("calvalus.regionGeometry"));
+        if (regionGeometry != null) {
+            jobConfig.set("calvalus.mosaic.regionGeometry", jobConfig.get("calvalus.regionGeometry"));
+            MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
+            final int numPartitions = mosaicGrid.getNumReducers();
+            System.out.println("numPartitions=" + numPartitions);
+            return numPartitions;
+        } else {
+            MosaicGrid mosaicGrid = MosaicGrid.create(jobConfig);
+            int numXPartitions = jobConfig.getInt("calvalus.mosaic.numXPartitions", 1);
+            return mosaicGrid.getNumMacroTileY() * numXPartitions;
+        }
     }
 
 }

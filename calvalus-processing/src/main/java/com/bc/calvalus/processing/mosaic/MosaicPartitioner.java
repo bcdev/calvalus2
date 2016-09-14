@@ -16,9 +16,13 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Partitioner;
+
+import java.awt.Rectangle;
 
 /**
  * Partitions the tiles by their y index.
@@ -29,18 +33,24 @@ import org.apache.hadoop.mapreduce.Partitioner;
 public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWritable> implements Configurable {
 
     private Configuration conf;
+    private MosaicGrid mosaicGrid = null;
     private int numXPartitions;
     private int tileXDivisor;
 
     @Override
     public int getPartition(TileIndexWritable tileIndex, TileDataWritable tileData, int numPartitions) {
-        int partition = tileIndex.getMacroTileY();
+        int partition;
+        if (mosaicGrid != null) {
+            partition = mosaicGrid.getPartition(tileIndex.getMacroTileX(), tileIndex.getMacroTileY());
+        } else {
+            partition = tileIndex.getMacroTileY();
+        }
         if (partition < 0) {
             partition = 0;
         } else if (partition >= numPartitions) {
             partition = numPartitions - 1;
         }
-        if (numXPartitions > 1) {
+        if (mosaicGrid == null && numXPartitions > 1) {
             partition = partition * numXPartitions + tileIndex.getMacroTileX() / tileXDivisor;
         }
         return partition;
@@ -49,8 +59,8 @@ public class MosaicPartitioner extends Partitioner<TileIndexWritable, TileDataWr
     @Override
     public void setConf(Configuration conf) {
         this.conf = conf;
+        mosaicGrid = MosaicGrid.create(conf);
         numXPartitions = conf.getInt("calvalus.mosaic.numXPartitions", 1);
-        MosaicGrid mosaicGrid = MosaicGrid.create(conf);
         tileXDivisor = mosaicGrid.getNumMacroTileX() / numXPartitions;
     }
 
