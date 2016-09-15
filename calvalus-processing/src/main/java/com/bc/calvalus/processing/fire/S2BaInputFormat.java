@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 public class S2BaInputFormat extends InputFormat {
 
-    private static final int MAX_PRE_IMAGES_COUNT = 4;
+    static final int MAX_PRE_IMAGES_COUNT = 4;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();

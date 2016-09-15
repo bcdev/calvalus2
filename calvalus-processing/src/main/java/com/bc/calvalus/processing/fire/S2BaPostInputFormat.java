@@ -15,7 +15,10 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -28,12 +31,11 @@ public class S2BaPostInputFormat extends InputFormat {
     }
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
-        List<InputSplit> preAndPostSplits = delegate.getSplits(jobContext);
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
         String inputPathPatterns = outputDir + "/intermediate.*.nc";
 
-        List<InputSplit> intermediateResultSplits = new ArrayList<>(1000);
+        List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -43,30 +45,35 @@ public class S2BaPostInputFormat extends InputFormat {
         FileStatus[] fileStatuses = inventoryService.globFileStatuses(inputPatterns, conf);
         createSplits(fileStatuses, intermediateResultSplits);
         Logger.getLogger("com.bc.calvalus").info(String.format("Created %d intermediate split(s).", intermediateResultSplits.size()));
+        intermediateResultSplits.sort(new InputSplitComparator());
 
-        for (InputSplit intermediateResultSplit : intermediateResultSplits) {
-            CombineFileSplit intermediateSplit = (CombineFileSplit) intermediateResultSplit;
-            String intermediateName = intermediateSplit.getPath(0).getName();
+        for (InputSplit referenceResultSplit : intermediateResultSplits) {
+            CombineFileSplit split = (CombineFileSplit) referenceResultSplit;
+            String intermediateName = split.getPath(0).getName();
             String tile = intermediateName.substring(intermediateName.indexOf('-') + 1, intermediateName.indexOf('-') + 7);
-            for (InputSplit preAndPostSplit : preAndPostSplits) {
-                CombineFileSplit currentPreAndPostSplit = (CombineFileSplit) preAndPostSplit;
+            String currentPostDateString = intermediateName.substring(intermediateName.lastIndexOf('-') + 1, intermediateName.length() - 3);
+            LocalDate referenceDate = LocalDate.parse(currentPostDateString, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
 
-                Path referencePath = currentPreAndPostSplit.getPath(0);
-                if (referencePath.getName().matches(".*" + tile + "\\.tif") && dateOfReferencePathMatchesPostDateOfIntermediate(referencePath.getName(), intermediateName)) {
+            int count = 0;
+            for (InputSplit comparedResultSplit : intermediateResultSplits) {
+                CombineFileSplit compareSplit = (CombineFileSplit) comparedResultSplit;
+                if (compareSplit == referenceResultSplit) {
+                    continue;
+                }
+                String comparedResultName = compareSplit.getPath(0).getName();
+                boolean tileMatches = comparedResultName.matches(".*" + tile + "\\.tif");
+                boolean notMoreThanFour = count <= S2BaInputFormat.MAX_PRE_IMAGES_COUNT;
+                String comparedResultNamePostDateString = comparedResultName.substring(comparedResultName.lastIndexOf('-') + 1, comparedResultName.length() - 3);
+                LocalDate compareDate = LocalDate.parse(comparedResultNamePostDateString, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+
+                if (tileMatches && compareDate.isBefore(referenceDate) && notMoreThanFour) {
+                    count++;
                     List<Path> filePaths = new ArrayList<>();
                     List<Long> fileLengths = new ArrayList<>();
-                    filePaths.add(intermediateSplit.getPath(0));
-                    fileLengths.add(intermediateSplit.getLength(0));
-
-                    Path[] paths = currentPreAndPostSplit.getPaths();
-                    for (int i = 0; i < paths.length; i++) {
-                        filePaths.add(currentPreAndPostSplit.getPath(i));
-                        fileLengths.add(currentPreAndPostSplit.getLength(i));
-                    }
-
+                    filePaths.add(compareSplit.getPath(0));
+                    fileLengths.add(compareSplit.getLength(0));
                     splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                             fileLengths.stream().mapToLong(Long::longValue).toArray()));
-
                 }
             }
         }
@@ -74,13 +81,7 @@ public class S2BaPostInputFormat extends InputFormat {
         return splits;
     }
 
-    private boolean dateOfReferencePathMatchesPostDateOfIntermediate(String referenceName, String intermediateName) {
-        String intermediateDate = intermediateName.substring(intermediateName.lastIndexOf('-') + 1, intermediateName.length() - 3);
-        String referenceDate = referenceName.substring("S2A_USER_MTD_SAFL2A_PDMC_".length(), "S2A_USER_MTD_SAFL2A_PDMC_".length() + 15);
-        return intermediateDate.equals(referenceDate);
-    }
-
-    private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits) throws IOException {
+    private void createSplits(FileStatus[] fileStatuses, List<CombineFileSplit> splits) throws IOException {
         for (FileStatus fileStatus : fileStatuses) {
             Path path = fileStatus.getPath();
             List<Path> filePaths = new ArrayList<>();
@@ -94,5 +95,18 @@ public class S2BaPostInputFormat extends InputFormat {
 
     public RecordReader createRecordReader(InputSplit inputSplit, TaskAttemptContext taskAttemptContext) throws IOException, InterruptedException {
         return delegate.createRecordReader(inputSplit, taskAttemptContext);
+    }
+
+    private static class InputSplitComparator implements Comparator<CombineFileSplit> {
+        @Override
+        public int compare(CombineFileSplit o1, CombineFileSplit o2) {
+            String o1Name = o1.getPath(0).getName();
+            String o2Name = o2.getPath(0).getName();
+            String o1DateString = o1Name.substring(o1Name.lastIndexOf('-') + 1, o1Name.length() - 3);
+            String o2DateString = o2Name.substring(o2Name.lastIndexOf('-') + 1, o2Name.length() - 3);
+            LocalDate o1Date = LocalDate.parse(o1DateString, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+            LocalDate o2Date = LocalDate.parse(o2DateString, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+            return -1 * o1Date.compareTo(o2Date);
+        }
     }
 }
