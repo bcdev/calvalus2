@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -91,7 +92,11 @@ public class FireS2BAProductionType extends HadoopProductionType {
         S2BaPeriodWorkflowItem s2BaPeriodWorkflowItem = new S2BaPeriodWorkflowItem(getProcessingService(), userName, productionName, s2BaPeriodJobConfig);
         S2BaPostWorkflowItem s2BaPostWorkflowItem = new S2BaPostWorkflowItem(getProcessingService(), userName, productionName + " - Post processing", s2BaPostJobConfig);
 
-        s2BAWorkflow.add(s2BaPeriodWorkflowItem);
+        if (!onlyDoPostProcessing(productionRequest)) {
+            s2BAWorkflow.add(s2BaPeriodWorkflowItem);
+        } else {
+            CalvalusLogger.getLogger().info("Skipping period workflow.");
+        }
         s2BAWorkflow.add(s2BaPostWorkflowItem);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
@@ -102,6 +107,10 @@ public class FireS2BAProductionType extends HadoopProductionType {
                 false,
                 productionRequest,
                 s2BAWorkflow);
+    }
+
+    private boolean onlyDoPostProcessing(ProductionRequest productionRequest) throws ProductionException {
+        return productionRequest.getBoolean("calvalus.s2ba.onlyPostProcessing", false);
     }
 
     @Override
