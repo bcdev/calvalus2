@@ -41,7 +41,7 @@ public class CalvalusWpsProcessStatus implements WpsProcessStatus {
 
     @Override
     public float getProgress() {
-        return progress;
+        return progress * 100;
     }
 
     @Override

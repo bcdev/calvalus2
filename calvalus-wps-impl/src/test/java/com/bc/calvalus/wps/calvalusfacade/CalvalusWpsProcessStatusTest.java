@@ -60,7 +60,7 @@ public class CalvalusWpsProcessStatusTest {
 
     @Test
     public void canGetProgress() throws Exception {
-        assertThat(status.getProgress(), equalTo(0.85f));
+        assertThat(status.getProgress(), equalTo(0.85f * 100));
     }
 
     @Test

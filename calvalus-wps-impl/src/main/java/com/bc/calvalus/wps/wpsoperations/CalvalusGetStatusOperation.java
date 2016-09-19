@@ -23,8 +23,6 @@ import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.utils.WpsTypeConverter;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
 
 /**
  * @author hans
@@ -91,11 +89,11 @@ public class CalvalusGetStatusOperation {
         WpsProcessStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
         if (status != null) {
             if (ProductionState.SUCCESSFUL.toString().equals(status.getState())) {
-                executeResponse = getLocalExecuteSuccessfulResponse(status);
+                executeResponse = getExecuteSuccessfulResponse(status);
             } else if (ProductionState.FAILED.toString().equals(status.getState())) {
-                executeResponse = getLocalExecuteFailedResponse(status);
+                executeResponse = getExecuteFailedResponse(status);
             } else {
-                executeResponse = getLocalExecuteInProgressResponse(status);
+                executeResponse = getExecuteInProgressResponse(status);
             }
             executeResponse.setProcess(processBriefType);
         } else {
@@ -104,42 +102,26 @@ public class CalvalusGetStatusOperation {
         return executeResponse;
     }
 
-    private ExecuteResponse getLocalExecuteInProgressResponse(WpsProcessStatus status) {
+    private ExecuteResponse getExecuteInProgressResponse(WpsProcessStatus status) {
         CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
         return executeResponse.getStartedResponse(status.getState(), status.getProgress());
     }
 
-    private ExecuteResponse getLocalExecuteFailedResponse(WpsProcessStatus status) {
+    private ExecuteResponse getExecuteFailedResponse(WpsProcessStatus status) {
         CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
         return executeResponse.getFailedResponse(status.getMessage());
     }
 
-    private ExecuteResponse getLocalExecuteSuccessfulResponse(WpsProcessStatus status) {
+    private ExecuteResponse getExecuteSuccessfulResponse(WpsProcessStatus status) {
         CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-        return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
+        return executeResponse.getSuccessfulResponse(status.getResultUrls(), status.getStopTime());
     }
 
-    private ExecuteResponse getExecuteInProgressResponse(WpsProcessStatus status) throws JobNotFoundException {
-        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-        return executeResponse.getStartedResponse(status.getState(), 100 * status.getProgress());
-    }
-
-    private ExecuteResponse getExecuteFailedResponse(WpsProcessStatus status) throws JobNotFoundException {
-        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-        return executeResponse.getFailedResponse(status.getMessage());
-    }
-
-    private ExecuteResponse getExecuteSuccessfulResponse(WpsProcessStatus status) throws JobNotFoundException {
-        List<String> productResultUrls = status.getResultUrls();
-        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
-        return executeResponse.getSuccessfulResponse(productResultUrls, status.getStopTime());
-    }
-
-    private boolean isProductionJobFinishedAndSuccessful(WpsProcessStatus status) throws JobNotFoundException {
+    private boolean isProductionJobFinishedAndSuccessful(WpsProcessStatus status) {
         return ProcessState.COMPLETED.toString().equals(status.getState());
     }
 
-    private boolean isProductionJobFinishedAndFailed(WpsProcessStatus status) throws JobNotFoundException {
+    private boolean isProductionJobFinishedAndFailed(WpsProcessStatus status) {
         return status.isDone();
     }
 

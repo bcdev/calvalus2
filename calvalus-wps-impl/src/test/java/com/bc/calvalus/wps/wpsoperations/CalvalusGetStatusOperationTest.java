@@ -10,8 +10,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
@@ -204,7 +202,7 @@ public class CalvalusGetStatusOperationTest {
     private CalvalusWpsProcessStatus getInProgressProcessStatus() {
         CalvalusWpsProcessStatus mockStatus = mock(CalvalusWpsProcessStatus.class);
         when(mockStatus.getState()).thenReturn(ProcessState.RUNNING.toString());
-        when(mockStatus.getProgress()).thenReturn(0.4f);
+        when(mockStatus.getProgress()).thenReturn(40f);
         return mockStatus;
     }
 
