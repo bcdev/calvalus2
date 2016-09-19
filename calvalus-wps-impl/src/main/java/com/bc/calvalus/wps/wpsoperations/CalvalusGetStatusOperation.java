@@ -36,7 +36,10 @@ public class CalvalusGetStatusOperation {
     }
 
     public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
-        if (jobId.startsWith("urban1")) {
+        // to match urban1-20160919_160202392, hans-20150919_999999999, etc.
+        String localJobIdRegex = ".*-((\\d{4}((0[13578]|1[02])(0[1-9]|[12]\\d|3[01])|(0[13456789]|1[012])(0[1-9]|" +
+                                 "[12]\\d|30)|02(0[1-9]|1\\d|2[0-8])))|(\\d{2}[02468][048]|\\d{2}[13579][26])0229){0,8}_.*";
+        if (jobId.matches(localJobIdRegex)) {
             return getLocalProcessExecuteResponse(jobId);
         }
         return getCalvalusExecuteResponse(jobId);
@@ -67,9 +70,9 @@ public class CalvalusGetStatusOperation {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         WpsProcessStatus processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(production));
 
-        if (isProductionJobFinishedAndSuccessful(processStatus)) {
+        if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
             executeResponse = getExecuteSuccessfulResponse(processStatus);
-        } else if (isProductionJobFinishedAndFailed(processStatus)) {
+        } else if (processStatus.isDone()) {
             executeResponse = getExecuteFailedResponse(processStatus);
         } else {
             executeResponse = getExecuteInProgressResponse(processStatus);
@@ -97,7 +100,7 @@ public class CalvalusGetStatusOperation {
             }
             executeResponse.setProcess(processBriefType);
         } else {
-            throw new JobNotFoundException("Unable to retrieve the job with jobId '" + jobId + "'.");
+            throw new JobNotFoundException("JobId");
         }
         return executeResponse;
     }
@@ -115,14 +118,6 @@ public class CalvalusGetStatusOperation {
     private ExecuteResponse getExecuteSuccessfulResponse(WpsProcessStatus status) {
         CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
         return executeResponse.getSuccessfulResponse(status.getResultUrls(), status.getStopTime());
-    }
-
-    private boolean isProductionJobFinishedAndSuccessful(WpsProcessStatus status) {
-        return ProcessState.COMPLETED.toString().equals(status.getState());
-    }
-
-    private boolean isProductionJobFinishedAndFailed(WpsProcessStatus status) {
-        return status.isDone();
     }
 
     private Production getProduction(String jobId) throws IOException, ProductionException {
