@@ -7,12 +7,12 @@ import com.bc.wps.api.schema.ExecuteResponse;
  */
 public interface Process {
 
-    ProductionStatus processAsynchronous(ProcessBuilder processBuilder);
+    LocalProductionStatus processAsynchronous(ProcessBuilder processBuilder);
 
-    ProductionStatus processSynchronous(ProcessBuilder processBuilder);
+    LocalProductionStatus processSynchronous(ProcessBuilder processBuilder);
 
-    ExecuteResponse createLineageAsyncExecuteResponse(ProductionStatus status, ProcessBuilder processBuilder);
+    ExecuteResponse createLineageAsyncExecuteResponse(LocalProductionStatus status, ProcessBuilder processBuilder);
 
-    ExecuteResponse createLineageSyncExecuteResponse(ProductionStatus status, ProcessBuilder processBuilder);
+    ExecuteResponse createLineageSyncExecuteResponse(LocalProductionStatus status, ProcessBuilder processBuilder);
 
 }

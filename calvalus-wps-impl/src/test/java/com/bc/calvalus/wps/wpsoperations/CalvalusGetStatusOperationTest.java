@@ -17,7 +17,9 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
+import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.schema.ExecuteResponse;
@@ -39,7 +41,7 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusGetStatusOperation.class, CalvalusFacade.class})
+@PrepareForTest({CalvalusGetStatusOperation.class, CalvalusFacade.class, WpsProcessStatus.class})
 public class CalvalusGetStatusOperationTest {
 
     private CalvalusGetStatusOperation getStatusOperation;
@@ -63,14 +65,14 @@ public class CalvalusGetStatusOperationTest {
 
     @Test
     public void canGetInProgressStatus() throws Exception {
-        ProcessStatus mockInProgressStatus = getInProgressProcessStatus();
-        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
-        when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
-        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ArrayList<String> dummyList = new ArrayList<>();
+        when(mockCalvalusFacade.getProductResultUrls(mockProduction)).thenReturn(dummyList);
+        CalvalusWpsProcessStatus mockStatus = getInProgressProcessStatus();
+        PowerMockito.whenNew(CalvalusWpsProcessStatus.class).withArguments(mockProduction, dummyList).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         Calendar calendar = Calendar.getInstance();
 
@@ -88,11 +90,20 @@ public class CalvalusGetStatusOperationTest {
     }
 
     @Test
+    public void canThrowJobNotFoundExceptionWhenProductionNull() throws Exception {
+        when(mockProductionService.getProduction(anyString())).thenReturn(null);
+        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
+
+        thrownException.expect(JobNotFoundException.class);
+        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
+
+        getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
+        getStatusOperation.getStatus("job-01");
+    }
+
+    @Test
     public void canCatchIOExceptionWhenGetInProgressStatus() throws Exception {
-        ProcessStatus mockInProgressStatus = getInProgressProcessStatus();
-        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
-        when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
-        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("IOException error"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
@@ -107,10 +118,6 @@ public class CalvalusGetStatusOperationTest {
 
     @Test
     public void canCatchProductionExceptionWhenGetInProgressStatus() throws Exception {
-        ProcessStatus mockInProgressStatus = getInProgressProcessStatus();
-        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
-        when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
-        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("Production error"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
@@ -124,14 +131,14 @@ public class CalvalusGetStatusOperationTest {
 
     @Test
     public void canGetFailedStatus() throws Exception {
-        ProcessStatus mockFailedStatus = getFailedProcessStatus();
-        ProcessStatus mockIncompleteStagingStatus = getInProgressProcessStatus();
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        when(mockProduction.getProcessingStatus()).thenReturn(mockFailedStatus);
-        when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
         when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ArrayList<String> dummyList = new ArrayList<>();
+        when(mockCalvalusFacade.getProductResultUrls(mockProduction)).thenReturn(dummyList);
+        CalvalusWpsProcessStatus mockStatus = getFailedProcessStatus();
+        PowerMockito.whenNew(CalvalusWpsProcessStatus.class).withArguments(mockProduction, dummyList).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         Calendar calendar = Calendar.getInstance();
 
@@ -153,21 +160,15 @@ public class CalvalusGetStatusOperationTest {
 
     @Test
     public void canGetSuccessfulStatus() throws Exception {
-        ProcessStatus mockCompletedStagingStatus = getDoneAndSuccessfulProcessStatus();
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        when(mockProduction.getStagingStatus()).thenReturn(mockCompletedStagingStatus);
-        WorkflowItem mockWorkflow = mock(WorkflowItem.class);
-        when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
-        when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        List<String> mockResultUrlList = new ArrayList<>();
-        mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc");
-        mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip");
+        List<String> mockResultUrlList = getMockResultUrlList();
         when(mockCalvalusFacade.getProductResultUrls(any(Production.class))).thenReturn(mockResultUrlList);
         when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        CalvalusWpsProcessStatus mockStatus = getDoneAndSuccessfulProcessStatus(mockResultUrlList);
+        PowerMockito.whenNew(CalvalusWpsProcessStatus.class).withArguments(mockProduction, mockResultUrlList).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        Calendar calendar = Calendar.getInstance();
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         ExecuteResponse getStatusResponse = getStatusOperation.getStatus("job-01");
@@ -185,6 +186,13 @@ public class CalvalusGetStatusOperationTest {
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
     }
 
+    private List<String> getMockResultUrlList() {
+        List<String> mockResultUrlList = new ArrayList<>();
+        mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc");
+        mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip");
+        return mockResultUrlList;
+    }
+
     private ProductionRequest getMockProductionRequest() throws ProductionException {
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
         when(mockProductionRequest.getString(PROCESSOR_BUNDLE_NAME.getIdentifier())).thenReturn("mockBundle");
@@ -193,23 +201,27 @@ public class CalvalusGetStatusOperationTest {
         return mockProductionRequest;
     }
 
-    private ProcessStatus getInProgressProcessStatus() {
-        ProcessStatus mockInProgressStatus = mock(ProcessStatus.class);
-        when(mockInProgressStatus.getState()).thenReturn(ProcessState.RUNNING);
-        when(mockInProgressStatus.getProgress()).thenReturn(0.4f);
-        return mockInProgressStatus;
+    private CalvalusWpsProcessStatus getInProgressProcessStatus() {
+        CalvalusWpsProcessStatus mockStatus = mock(CalvalusWpsProcessStatus.class);
+        when(mockStatus.getState()).thenReturn(ProcessState.RUNNING.toString());
+        when(mockStatus.getProgress()).thenReturn(0.4f);
+        return mockStatus;
     }
 
-    private ProcessStatus getFailedProcessStatus() {
-        ProcessStatus mockFailedStatus = mock(ProcessStatus.class);
-        when(mockFailedStatus.getMessage()).thenReturn("Error in processing the job");
-        when(mockFailedStatus.getState()).thenReturn(ProcessState.ERROR);
-        return mockFailedStatus;
+    private CalvalusWpsProcessStatus getFailedProcessStatus() {
+        CalvalusWpsProcessStatus mockStatus = mock(CalvalusWpsProcessStatus.class);
+        when(mockStatus.getState()).thenReturn(ProcessState.ERROR.toString());
+        when(mockStatus.getMessage()).thenReturn("Error in processing the job");
+        when(mockStatus.getStopTime()).thenReturn(new Date(1451606400000L));
+        when(mockStatus.isDone()).thenReturn(true);
+        return mockStatus;
     }
 
-    private ProcessStatus getDoneAndSuccessfulProcessStatus() {
-        ProcessStatus mockSuccessfulStatus = mock(ProcessStatus.class);
-        when(mockSuccessfulStatus.getState()).thenReturn(ProcessState.COMPLETED);
-        return mockSuccessfulStatus;
+    private CalvalusWpsProcessStatus getDoneAndSuccessfulProcessStatus(List<String> mockResultUrlList) {
+        CalvalusWpsProcessStatus mockStatus = mock(CalvalusWpsProcessStatus.class);
+        when(mockStatus.getState()).thenReturn(ProcessState.COMPLETED.toString());
+        when(mockStatus.getResultUrls()).thenReturn(mockResultUrlList);
+        when(mockStatus.getStopTime()).thenReturn(new Date(1451606400000L));
+        return mockStatus;
     }
 }

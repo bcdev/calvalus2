@@ -7,6 +7,7 @@ import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 
+import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,24 +20,27 @@ public class SubsettingProcess implements Process {
     private Logger logger = WpsLogger.getLogger();
 
     @Override
-    public ProductionStatus processAsynchronous(ProcessBuilder processBuilder) {
+    public LocalProductionStatus processAsynchronous(ProcessBuilder processBuilder) {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
-        ProductionStatus status = new ProductionStatus(processBuilder.getJobId(), ProductionState.ACCEPTED, 0, "The request has been queued.", null);
+        LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
+                                                                 ProductionState.ACCEPTED,
+                                                                 0,
+                                                                 "The request has been queued.",
+                                                                 null);
         GpfProductionService.getProductionStatusMap().put(processBuilder.getJobId(), status);
         GpfTask gpfTask = new GpfTask(processBuilder.getJobId(),
                                       processBuilder.getParameters(),
                                       processBuilder.getSourceProduct(),
                                       processBuilder.getTargetDirPath().toFile(),
                                       processBuilder.getServerContext().getHostAddress(),
-                                      processBuilder.getServerContext().getPort(),
-                                      processBuilder.getServerContext().getRequestUrl());
+                                      processBuilder.getServerContext().getPort());
         GpfProductionService.getWorker().submit(gpfTask);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
         return status;
     }
 
     @Override
-    public ProductionStatus processSynchronous(ProcessBuilder processBuilder) {
+    public LocalProductionStatus processSynchronous(ProcessBuilder processBuilder) {
         try {
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting synchronous process...");
             GPF.createProduct("Subset", processBuilder.getParameters(), processBuilder.getSourceProduct());
@@ -46,22 +50,26 @@ public class SubsettingProcess implements Process {
                                                                           processBuilder.getServerContext().getPort(),
                                                                           processBuilder.getTargetDirPath().toFile());
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been completed, creating successful response...");
-            return new ProductionStatus(processBuilder.getJobId(),
-                                        ProductionState.SUCCESSFUL,
-                                        100,
-                                        "The request has been processed successfully.",
-                                        resultUrls);
+            LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
+                                                                                    ProductionState.SUCCESSFUL,
+                                                                                    100,
+                                                                                    "The request has been processed successfully.",
+                                                                                    resultUrls);
+            status.setStopDate(new Date());
+            return status;
         } catch (OperatorException exception) {
-            return new ProductionStatus(processBuilder.getJobId(),
-                                        ProductionState.FAILED,
-                                        0,
-                                        "Processing failed : " + exception.getMessage(),
-                                        null);
+            LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
+                                                                                    ProductionState.FAILED,
+                                                                                    0,
+                                                                                    "Processing failed : " + exception.getMessage(),
+                                                                                    null);
+            status.setStopDate(new Date());
+            return status;
         }
     }
 
     @Override
-    public ExecuteResponse createLineageAsyncExecuteResponse(ProductionStatus status, ProcessBuilder processBuilder) {
+    public ExecuteResponse createLineageAsyncExecuteResponse(LocalProductionStatus status, ProcessBuilder processBuilder) {
         CalvalusExecuteResponseConverter executeAcceptedResponse = new CalvalusExecuteResponseConverter();
         List<DocumentOutputDefinitionType> outputType = processBuilder.getExecuteRequest().getResponseForm().getResponseDocument().getOutput();
         return executeAcceptedResponse.getAcceptedWithLineageResponse(status.getJobId(), processBuilder.getExecuteRequest().getDataInputs(),
@@ -69,7 +77,7 @@ public class SubsettingProcess implements Process {
     }
 
     @Override
-    public ExecuteResponse createLineageSyncExecuteResponse(ProductionStatus status, ProcessBuilder processBuilder) {
+    public ExecuteResponse createLineageSyncExecuteResponse(LocalProductionStatus status, ProcessBuilder processBuilder) {
         CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
         List<DocumentOutputDefinitionType> outputType = processBuilder.getExecuteRequest().getResponseForm().getResponseDocument().getOutput();
         return executeSuccessfulResponse.getSuccessfulWithLineageResponse(status.getResultUrls(), processBuilder.getExecuteRequest().getDataInputs(), outputType);

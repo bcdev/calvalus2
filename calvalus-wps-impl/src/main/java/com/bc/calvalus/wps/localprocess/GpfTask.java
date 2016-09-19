@@ -1,15 +1,14 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
-import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 
 import java.io.File;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -28,22 +27,20 @@ public class GpfTask implements Callable<Boolean> {
     private final File targetDir;
     private final String hostName;
     private final int portNumber;
-    private final String requestUrl;
     private Logger logger = WpsLogger.getLogger();
 
-    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir, String hostName, int portNumber, String requestUrl) {
+    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir, String hostName, int portNumber) {
         this.jobId = jobId;
         this.parameters = parameters;
         this.sourceProduct = sourceProduct;
         this.targetDir = targetDir;
         this.hostName = hostName;
         this.portNumber = portNumber;
-        this.requestUrl = requestUrl;
     }
 
     @Override
     public Boolean call() throws Exception {
-        ProductionStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
+        LocalProductionStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
         status.setState(ProductionState.RUNNING);
         status.setProgress(10);
         try {
@@ -58,27 +55,30 @@ public class GpfTask implements Callable<Boolean> {
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);
+            status.setStopDate(new Date());
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             return true;
         } catch (OperatorException exception) {
             status.setState(ProductionState.FAILED);
             status.setMessage("GPF process failed : " + exception.getMessage());
+            status.setStopDate(new Date());
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             logger.log(Level.SEVERE, "[" + jobId + "] GPF process failed...", exception);
             return false;
         } catch (ProductMetadataException exception) {
             status.setState(ProductionState.FAILED);
             status.setMessage("Creating product metadata failed : " + exception.getMessage());
+            status.setStopDate(new Date());
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
             return false;
         } catch (Exception exception) {
             status.setState(ProductionState.FAILED);
             status.setMessage("Processing failed : " + exception.getMessage());
+            status.setStopDate(new Date());
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             logger.log(Level.SEVERE, "[" + jobId + "] Processing failed...", exception);
             return false;
         }
-
     }
 }

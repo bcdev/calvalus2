@@ -13,8 +13,9 @@ import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.Process;
 import com.bc.calvalus.wps.localprocess.ProcessBuilder;
 import com.bc.calvalus.wps.localprocess.ProductionState;
-import com.bc.calvalus.wps.localprocess.ProductionStatus;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.SubsettingProcess;
+import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -98,14 +99,14 @@ public class CalvalusExecuteOperation {
             Process utepProcess = new SubsettingProcess();
 
             if (isAsynchronous) {
-                ProductionStatus status = utepProcess.processAsynchronous(processBuilder);
+                LocalProductionStatus status = utepProcess.processAsynchronous(processBuilder);
                 if (isLineage) {
                     return utepProcess.createLineageAsyncExecuteResponse(status, processBuilder);
                 }
                 return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
             } else {
-                ProductionStatus status = utepProcess.processSynchronous(processBuilder);
-                if (status.getState() != ProductionState.SUCCESSFUL) {
+                LocalProductionStatus status = utepProcess.processSynchronous(processBuilder);
+                if (!ProductionState.SUCCESSFUL.toString().equals(status.getState())) {
                     return executeResponse.getFailedResponse(status.getMessage());
                 }
                 if (isLineage) {
