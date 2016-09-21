@@ -47,7 +47,7 @@ import java.util.stream.Stream;
  */
 public class CalvalusDescribeProcessOperation {
 
-    private static final String INPUT_PRODUCT_NAME_PATTERN = "ESACCI-LC-L4-LCCS-Map-300m-P5Y-20100101-v1.6.1_urban_bit_lzw.tif";
+    private static final String INPUT_PRODUCT_NAME_PATTERN = "*.tif";
     private WpsRequestContext context;
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
