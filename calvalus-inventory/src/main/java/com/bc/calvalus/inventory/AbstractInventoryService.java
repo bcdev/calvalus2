@@ -24,7 +24,12 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -70,7 +75,7 @@ public abstract class AbstractInventoryService implements InventoryService {
             databasePath = makeQualified(fileSystem, archiveRootDir + "/" + ProductSetPersistable.FILENAME);
         }
         if (fileSystem.exists(databasePath)) {
-            final ProductSet[] productSets = readProductSets(fileSystem, new Path[]{databasePath});
+            final ProductSet[] productSets = readProductSets(fileSystem, new Path[]{databasePath}, true);
             if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
                 List<ProductSet> accu = new ArrayList<>();
                 for (ProductSet productSet : productSets) {
@@ -118,10 +123,10 @@ public abstract class AbstractInventoryService implements InventoryService {
             paths = FileUtil.stat2Paths(fileStatuses);
         }
 
-        return readProductSets(fileSystem, paths);
+        return readProductSets(fileSystem, paths, false);
     }
 
-    private ProductSet[] readProductSets(FileSystem fileSystem, Path[] paths) throws IOException {
+    private ProductSet[] readProductSets(FileSystem fileSystem, Path[] paths, boolean failOnIOException) throws IOException {
         if (paths == null || paths.length == 0) {
             return new ProductSet[0];
         } else {
@@ -129,7 +134,11 @@ public abstract class AbstractInventoryService implements InventoryService {
             for (Path path : paths) {
                 try {
                     productSetList.addAll(readProductSetFile(fileSystem, path));
-                } catch (AccessControlException e) {}
+                } catch (IOException e) {
+                    if (failOnIOException) {
+                        throw e;
+                    }
+                }
             }
             return productSetList.toArray(new ProductSet[productSetList.size()]);
         }
