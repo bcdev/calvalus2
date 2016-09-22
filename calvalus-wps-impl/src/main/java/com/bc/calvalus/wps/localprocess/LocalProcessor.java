@@ -5,7 +5,7 @@ import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 /**
  * @author hans
  */
-public class LocalSubsetProcessor implements IWpsProcess {
+public class LocalProcessor implements IWpsProcess {
 
     @Override
     public String getIdentifier() {

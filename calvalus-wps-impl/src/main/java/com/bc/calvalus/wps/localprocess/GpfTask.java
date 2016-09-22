@@ -51,7 +51,7 @@ public class GpfTask implements Callable<Boolean> {
 
             LocalStaging staging = new LocalStaging();
             List<String> resultUrls = staging.getProductUrls(hostName, portNumber, targetDir, jobId);
-            staging.generateProductMetadata(targetDir, jobId, parameters, new LocalSubsetProcessor(), hostName, portNumber);
+            staging.generateProductMetadata(targetDir, jobId, parameters, new LocalProcessor(), hostName, portNumber);
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);

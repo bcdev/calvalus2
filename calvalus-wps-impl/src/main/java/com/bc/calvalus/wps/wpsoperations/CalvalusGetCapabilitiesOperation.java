@@ -1,9 +1,13 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.AddressType;
 import com.bc.wps.api.schema.Capabilities;
@@ -27,8 +31,17 @@ import com.bc.wps.api.schema.TelephoneType;
 import com.bc.wps.api.utils.CapabilitiesBuilder;
 import com.bc.wps.api.utils.WpsTypeConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.apache.commons.io.IOUtils;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -42,7 +55,8 @@ public class CalvalusGetCapabilitiesOperation {
         this.context = context;
     }
 
-    public Capabilities getCapabilities() throws ProcessesNotAvailableException {
+    public Capabilities getCapabilities()
+                throws ProcessesNotAvailableException, BindingException, IOException, URISyntaxException {
         List<IWpsProcess> processes = getProcesses();
 
         return CapabilitiesBuilder.create()
@@ -127,10 +141,13 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceProvider;
     }
 
-    ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
+    ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) throws BindingException, IOException, URISyntaxException {
         ProcessOfferings processOfferings = new ProcessOfferings();
         processOfferings.getProcess().addAll(getCalvalusProcesses(processList));
-        processOfferings.getProcess().add(getLocalProcesses());
+        List<ProcessBriefType> localProcesses = getLocalProcesses();
+        if (!localProcesses.isEmpty()) {
+            processOfferings.getProcess().addAll(localProcesses);
+        }
         return processOfferings;
     }
 
@@ -186,13 +203,37 @@ public class CalvalusGetCapabilitiesOperation {
         return describeProcessDcp;
     }
 
-    private ProcessBriefType getLocalProcesses() {
-        ProcessBriefType localSubsetProcessor = new ProcessBriefType();
-        localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType("local~0.0.1~Subset"));
-        localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
-        localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
-        localSubsetProcessor.setProcessVersion("0.0.1");
-        return localSubsetProcessor;
+    private List<ProcessBriefType> getLocalProcesses() throws URISyntaxException, IOException, BindingException {
+        List<ProcessBriefType> localProcessList = new ArrayList<>();
+        URL descriptorDirUrl = this.getClass().getResource("/local-process-descriptor");
+        if (descriptorDirUrl == null) {
+            return localProcessList;
+        }
+        URI descriptorDirUri = descriptorDirUrl.toURI();
+        File descriptorDirectory = Paths.get(descriptorDirUri).toFile();
+        File[] descriptorFiles = descriptorDirectory.listFiles();
+        if (descriptorFiles != null) {
+            for (File descriptorFile : descriptorFiles) {
+                FileInputStream fileInputStream = new FileInputStream(descriptorFile);
+                String bundleDescriptorXml = IOUtils.toString(fileInputStream);
+                ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
+                BundleDescriptor bundleDescriptor = new BundleDescriptor();
+                parameterBlockConverter.convertXmlToObject(bundleDescriptorXml, bundleDescriptor);
+                ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
+
+                for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                    IWpsProcess process = new CalvalusProcessor(bundleDescriptor, processorDescriptor);
+                    ProcessBriefType localSubsetProcessor = new ProcessBriefType();
+                    localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
+                    localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
+                    localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(
+                                process.getAbstractText() == null ? process.getTitle() : process.getAbstractText()));
+                    localSubsetProcessor.setProcessVersion(process.getVersion());
+                    localProcessList.add(localSubsetProcessor);
+                }
+            }
+        }
+        return localProcessList;
     }
 
     private List<ProcessBriefType> getCalvalusProcesses(List<IWpsProcess> processList) {

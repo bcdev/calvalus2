@@ -60,7 +60,7 @@ public class SubsettingProcess implements Process {
             staging.generateProductMetadata(processBuilder.getTargetDirPath().toFile(),
                                             processBuilder.getJobId(),
                                             processBuilder.getParameters(),
-                                            new LocalSubsetProcessor(),
+                                            new LocalProcessor(),
                                             processBuilder.getServerContext().getHostAddress(),
                                             processBuilder.getServerContext().getPort());
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been completed, creating successful response...");

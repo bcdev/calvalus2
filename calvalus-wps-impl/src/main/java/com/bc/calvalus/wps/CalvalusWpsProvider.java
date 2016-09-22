@@ -8,6 +8,7 @@ import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetStatusOperation;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServiceInstance;
 import com.bc.wps.api.exceptions.WpsServiceException;
@@ -19,6 +20,7 @@ import com.bc.wps.utilities.WpsLogger;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Timer;
 import java.util.logging.Level;
@@ -36,7 +38,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         CalvalusGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsRequestContext);
         try {
             return getCapabilitiesOperation.getCapabilities();
-        } catch (ProcessesNotAvailableException exception) {
+        } catch (ProcessesNotAvailableException | IOException | URISyntaxException | BindingException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetCapabilities operation successfully", exception);
             throw new WpsServiceException(exception);
         }
