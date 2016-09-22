@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
@@ -16,19 +15,13 @@ import com.bc.wps.api.schema.ProcessOfferings;
 import com.bc.wps.api.schema.ServiceIdentification;
 import com.bc.wps.api.schema.ServiceProvider;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.apache.commons.io.IOUtils;
-import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 import org.junit.*;
 import org.junit.runner.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -121,9 +114,8 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test
     public void canGetProcessOfferings() throws Exception {
-        List<IWpsProcess> mockProcessList = getMockWpsProcesses();
-
-        ProcessOfferings processOfferings = getCapabilitiesOperation.getProcessOfferings(mockProcessList);
+        configureMockProcesses();
+        ProcessOfferings processOfferings = getCapabilitiesOperation.getProcessOfferings();
 
         assertThat(processOfferings.getProcess().size(), equalTo(3)); // always +1 at the moment due to local process
         assertThat(processOfferings.getProcess().get(0).getIdentifier().getValue(), equalTo("beam-buildin~1.0~BandMaths"));
@@ -172,42 +164,6 @@ public class CalvalusGetCapabilitiesOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenThrow(new IOException("ProductionException error"));
 
         getCapabilitiesOperation.getCapabilities();
-    }
-
-    @Test
-    public void testTest() throws Exception {
-        URI descriptorDirPath = getClass().getResource("/local-process-descriptor").toURI();
-        File descriptorDirectory = Paths.get(descriptorDirPath).toFile();
-        File[] descriptors = descriptorDirectory.listFiles();
-        List<BundleDescriptor> bundleDescriptors = new ArrayList<>();
-        for (File descriptorFile : descriptors) {
-            FileInputStream fileInputStream = new FileInputStream(descriptorFile);
-            String xmlString = IOUtils.toString(fileInputStream);
-            ParameterBlockConverter parameterBlockConverter = new ParameterBlockConverter();
-            BundleDescriptor bd = new BundleDescriptor();
-            parameterBlockConverter.convertXmlToObject(xmlString, bd);
-            bundleDescriptors.add(bd);
-        }
-
-        System.out.println("successful");
-    }
-
-    private String getXml() {
-        return "<bundleDescriptor>\n" +
-               "    <bundleName>urbantep-local</bundleName>\n" +
-               "    <bundleVersion>1.0</bundleVersion>\n" +
-               "\n" +
-               "    <processorDescriptors>\n" +
-               "        <processorDescriptor>\n" +
-               "            <processorName>Urban TEP local subsetting</processorName>\n" +
-               "            <processorVersion>1.0</processorVersion>\n" +
-               "            <executableName>Subset</executableName>\n" +
-               "            <outputFormats>NetCDF4,GeoTIFF</outputFormats>\n" +
-               "            <inputProductTypes>URBAN_FOOTPRINT</inputProductTypes>\n" +
-               "            <outputProductType>URBAN_FOOTPRINT</outputProductType>\n" +
-               "        </processorDescriptor>\n" +
-               "    </processorDescriptors>\n" +
-               "</bundleDescriptor>";
     }
 
     private void configureMockProcesses() throws Exception {

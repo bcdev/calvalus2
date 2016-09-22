@@ -57,13 +57,11 @@ public class CalvalusGetCapabilitiesOperation {
 
     public Capabilities getCapabilities()
                 throws ProcessesNotAvailableException, BindingException, IOException, URISyntaxException {
-        List<IWpsProcess> processes = getProcesses();
-
         return CapabilitiesBuilder.create()
                     .withOperationsMetadata(getOperationsMetadata())
                     .withServiceIdentification(getServiceIdentification())
                     .withServiceProvider(getServiceProvider())
-                    .withProcessOfferings(getProcessOfferings(processes))
+                    .withProcessOfferings(getProcessOfferings())
                     .withLanguages(getLanguages())
                     .build();
     }
@@ -141,9 +139,11 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceProvider;
     }
 
-    ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) throws BindingException, IOException, URISyntaxException {
+    ProcessOfferings getProcessOfferings()
+                throws BindingException, IOException, URISyntaxException, ProcessesNotAvailableException {
         ProcessOfferings processOfferings = new ProcessOfferings();
-        processOfferings.getProcess().addAll(getCalvalusProcesses(processList));
+        List<ProcessBriefType> calvalusProcesses = getCalvalusProcesses();
+        processOfferings.getProcess().addAll(calvalusProcesses);
         List<ProcessBriefType> localProcesses = getLocalProcesses();
         if (!localProcesses.isEmpty()) {
             processOfferings.getProcess().addAll(localProcesses);
@@ -236,16 +236,15 @@ public class CalvalusGetCapabilitiesOperation {
         return localProcessList;
     }
 
-    private List<ProcessBriefType> getCalvalusProcesses(List<IWpsProcess> processList) {
+    private List<ProcessBriefType> getCalvalusProcesses() throws ProcessesNotAvailableException {
+        List<IWpsProcess> processList = getProcesses();
         ProcessOfferings processOfferings = new ProcessOfferings();
         for (IWpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
-
             singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
             singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
             singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
             singleProcessor.setProcessVersion(process.getVersion());
-
             processOfferings.getProcess().add(singleProcessor);
         }
         return processOfferings.getProcess();
