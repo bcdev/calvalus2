@@ -54,7 +54,7 @@ public class CalvalusGetCapabilitiesOperation {
                     .build();
     }
 
-    protected OperationsMetadata getOperationsMetadata() {
+    OperationsMetadata getOperationsMetadata() {
         OperationsMetadata operationsMetadata = new OperationsMetadata();
 
         Operation getCapabilitiesOperation = new Operation();
@@ -85,27 +85,7 @@ public class CalvalusGetCapabilitiesOperation {
         return operationsMetadata;
     }
 
-    private DCP getPostDcp(String serviceUrl) {
-        DCP executeDcp = new DCP();
-        HTTP executeHttp = new HTTP();
-        RequestMethodType executeRequestMethod = new RequestMethodType();
-        executeRequestMethod.setHref(serviceUrl);
-        executeHttp.setPost(executeRequestMethod);
-        executeDcp.setHTTP(executeHttp);
-        return executeDcp;
-    }
-
-    private DCP getGetDcp(String serviceUrl) {
-        DCP describeProcessDcp = new DCP();
-        HTTP describeProcessHttp = new HTTP();
-        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
-        describeProcessRequestMethod.setHref(serviceUrl);
-        describeProcessHttp.setGet(describeProcessRequestMethod);
-        describeProcessDcp.setHTTP(describeProcessHttp);
-        return describeProcessDcp;
-    }
-
-    protected ServiceProvider getServiceProvider() {
+    ServiceProvider getServiceProvider() {
         ServiceProvider serviceProvider = new ServiceProvider();
         serviceProvider.setProviderName(PropertiesWrapper.get("company.name"));
 
@@ -147,28 +127,14 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceProvider;
     }
 
-    protected ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
+    ProcessOfferings getProcessOfferings(List<IWpsProcess> processList) {
         ProcessOfferings processOfferings = new ProcessOfferings();
-        for (IWpsProcess process : processList) {
-            ProcessBriefType singleProcessor = new ProcessBriefType();
-
-            singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
-            singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
-            singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
-            singleProcessor.setProcessVersion(process.getVersion());
-
-            processOfferings.getProcess().add(singleProcessor);
-        }
-        ProcessBriefType localSubsetProcessor = new ProcessBriefType();
-        localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType("local~0.0.1~Subset"));
-        localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
-        localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
-        localSubsetProcessor.setProcessVersion("0.0.1");
-        processOfferings.getProcess().add(localSubsetProcessor);
+        processOfferings.getProcess().addAll(getCalvalusProcesses(processList));
+        processOfferings.getProcess().add(getLocalProcesses());
         return processOfferings;
     }
 
-    protected ServiceIdentification getServiceIdentification() {
+    ServiceIdentification getServiceIdentification() {
         ServiceIdentification serviceIdentification = new ServiceIdentification();
         LanguageStringType title = new LanguageStringType();
         title.setValue(PropertiesWrapper.get("wps.service.id"));
@@ -186,7 +152,7 @@ public class CalvalusGetCapabilitiesOperation {
         return serviceIdentification;
     }
 
-    protected Languages getLanguages() {
+    Languages getLanguages() {
         Languages languages = new Languages();
 
         Languages.Default defaultLanguage = new Languages.Default();
@@ -198,6 +164,50 @@ public class CalvalusGetCapabilitiesOperation {
         languages.setSupported(languageType);
 
         return languages;
+    }
+
+    private DCP getPostDcp(String serviceUrl) {
+        DCP executeDcp = new DCP();
+        HTTP executeHttp = new HTTP();
+        RequestMethodType executeRequestMethod = new RequestMethodType();
+        executeRequestMethod.setHref(serviceUrl);
+        executeHttp.setPost(executeRequestMethod);
+        executeDcp.setHTTP(executeHttp);
+        return executeDcp;
+    }
+
+    private DCP getGetDcp(String serviceUrl) {
+        DCP describeProcessDcp = new DCP();
+        HTTP describeProcessHttp = new HTTP();
+        RequestMethodType describeProcessRequestMethod = new RequestMethodType();
+        describeProcessRequestMethod.setHref(serviceUrl);
+        describeProcessHttp.setGet(describeProcessRequestMethod);
+        describeProcessDcp.setHTTP(describeProcessHttp);
+        return describeProcessDcp;
+    }
+
+    private ProcessBriefType getLocalProcesses() {
+        ProcessBriefType localSubsetProcessor = new ProcessBriefType();
+        localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType("local~0.0.1~Subset"));
+        localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
+        localSubsetProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType("A local subsetting service for Urban TEP"));
+        localSubsetProcessor.setProcessVersion("0.0.1");
+        return localSubsetProcessor;
+    }
+
+    private List<ProcessBriefType> getCalvalusProcesses(List<IWpsProcess> processList) {
+        ProcessOfferings processOfferings = new ProcessOfferings();
+        for (IWpsProcess process : processList) {
+            ProcessBriefType singleProcessor = new ProcessBriefType();
+
+            singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
+            singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
+            singleProcessor.setAbstract(WpsTypeConverter.str2LanguageStringType(process.getAbstractText()));
+            singleProcessor.setProcessVersion(process.getVersion());
+
+            processOfferings.getProcess().add(singleProcessor);
+        }
+        return processOfferings.getProcess();
     }
 
     private List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
