@@ -74,7 +74,7 @@ public class ProductMetadataTest {
         assertThat(contextMap.get("productionName"), equalTo("TEP Subset test"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
         assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
-        assertThat(contextMap.get("regionWkt"), equalTo("100 -10 100 0 110 0 110 -10 100 -10"));
+        assertThat(contextMap.get("regionWkt"), equalTo("-10 100 0 100 0 110 -10 110 -10 100"));
         assertThat(contextMap.get("startDate"), equalTo("2000-01-01"));
         assertThat(contextMap.get("stopDate"), equalTo("2020-01-01"));
         assertThat(contextMap.get("collectionUrl"), equalTo("http://http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000"));

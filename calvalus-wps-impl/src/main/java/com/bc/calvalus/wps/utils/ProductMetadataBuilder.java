@@ -59,7 +59,7 @@ public class ProductMetadataBuilder {
     private static final Logger LOG = CalvalusLogger.getLogger();
 
 
-    public ProductMetadataBuilder() {
+    private ProductMetadataBuilder() {
         this.isLocal = false;
     }
 
@@ -225,7 +225,20 @@ public class ProductMetadataBuilder {
     }
 
     private String extractRegionWkt(String regionWkt) {
-        return regionWkt.replaceAll("POLYGON\\(\\(", "").replaceAll("\\)\\)", "").replace(",", " ");
+        String[] elements = regionWkt.split("[(, )]+");
+        if (!"polygon".equals(elements[0].toLowerCase())) {
+            throw new IllegalArgumentException(regionWkt);
+        }
+        StringBuilder accu = new StringBuilder();
+        for (int i = 1; i < elements.length; i += 2) {
+            if (accu.length() > 0) {
+                accu.append(" ");
+            }
+            accu.append(elements[i + 1]);
+            accu.append(" ");
+            accu.append(elements[i]);
+        }
+        return accu.toString();
     }
 
     private String parseRegionBox() {
