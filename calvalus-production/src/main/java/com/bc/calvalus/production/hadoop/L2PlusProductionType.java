@@ -174,6 +174,7 @@ public class L2PlusProductionType extends HadoopProductionType {
         Configuration formatJobConfig = createJobConfig(productionRequest);
         setDefaultProcessorParameters(processorProductionRequest, formatJobConfig);
         setRequestParameters(productionRequest, formatJobConfig);
+        formatJobConfig.unset(JobConfigNames.CALVALUS_INPUT_FORMAT);  // the input format of the processing request
 
         String processorBundle = processorProductionRequest.getProcessorBundle();
         if (processorBundle != null) {

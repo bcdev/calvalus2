@@ -144,8 +144,8 @@ public class L3ProductionType extends HadoopProductionType {
             Configuration jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
             setRequestParameters(productionRequest, jobConfig);
+            jobConfig.unset(JobConfigNames.CALVALUS_INPUT_FORMAT);  // the input format of the processing request
             processorProductionRequest.configureProcessor(jobConfig);
-
 
             jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, l3OutputDirs);
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
