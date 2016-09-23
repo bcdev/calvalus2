@@ -1,8 +1,12 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
+import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.ExecuteResponse;
@@ -12,6 +16,8 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,7 +44,8 @@ public class SubsettingProcess implements Process {
                                       processBuilder.getSourceProduct(),
                                       processBuilder.getTargetDirPath().toFile(),
                                       processBuilder.getServerContext().getHostAddress(),
-                                      processBuilder.getServerContext().getPort());
+                                      processBuilder.getServerContext().getPort(),
+                                      processBuilder);
         GpfProductionService.getWorker().submit(gpfTask);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
         return status;
@@ -57,10 +64,12 @@ public class SubsettingProcess implements Process {
                                                              processBuilder.getServerContext().getPort(),
                                                              processBuilder.getTargetDirPath().toFile(),
                                                              processBuilder.getJobId());
+            ProcessorNameConverter nameConverter = new ProcessorNameConverter(processBuilder.getProcessId());
+            ProcessorExtractor processorExtractor = new ProcessorExtractor();
             staging.generateProductMetadata(processBuilder.getTargetDirPath().toFile(),
                                             processBuilder.getJobId(),
                                             processBuilder.getParameters(),
-                                            new LocalProcessor(),
+                                            processorExtractor.getProcessor(nameConverter),
                                             processBuilder.getServerContext().getHostAddress(),
                                             processBuilder.getServerContext().getPort());
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been completed, creating successful response...");
@@ -79,7 +88,8 @@ public class SubsettingProcess implements Process {
                                                null);
             status.setStopDate(new Date());
             return status;
-        } catch (ProductMetadataException exception) {
+        } catch (ProductMetadataException | IOException | URISyntaxException | ProcessesNotAvailableException |
+                    InvalidProcessorIdException | BindingException exception) {
             String jobId = processBuilder.getJobId();
             status = new LocalProductionStatus(jobId,
                                                ProductionState.FAILED,

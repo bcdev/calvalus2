@@ -1,6 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
-import java.util.Date;
+import com.bc.calvalus.processing.ProcessorDescriptor;
 
 /**
  * @author hans
@@ -14,5 +14,13 @@ public interface IWpsProcess {
     String getAbstractText();
 
     String getVersion();
+
+    boolean isLocal();
+
+    ProcessorDescriptor.ParameterDescriptor[] getParameterDescriptors();
+
+    String getDefaultParameters();
+
+    String[] getPossibleOutputFormats();
 
 }

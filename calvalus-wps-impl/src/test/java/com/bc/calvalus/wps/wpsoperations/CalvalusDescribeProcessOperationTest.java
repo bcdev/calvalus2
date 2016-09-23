@@ -8,9 +8,9 @@ import static org.mockito.Mockito.*;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
+import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ProcessDescriptionType;
@@ -186,6 +186,7 @@ public class CalvalusDescribeProcessOperationTest {
         when(process2.getAbstractText()).thenReturn("Some description");
         when(process2.getPossibleOutputFormats()).thenReturn(new String[]{"NetCDF4"});
         when(process2.getInputProductTypes()).thenReturn(new String[]{"inputProductType"});
+        when(process2.isLocal()).thenReturn(false);
         return process2;
     }
 
@@ -196,6 +197,7 @@ public class CalvalusDescribeProcessOperationTest {
         when(process1.getAbstractText()).thenReturn("Some description");
         when(process1.getPossibleOutputFormats()).thenReturn(new String[]{"NetCDF4"});
         when(process1.getInputProductTypes()).thenReturn(new String[]{"inputProductType"});
+        when(process1.isLocal()).thenReturn(false);
         return process1;
     }
 

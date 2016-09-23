@@ -1,6 +1,7 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.datamodel.Product;
@@ -27,15 +28,18 @@ public class GpfTask implements Callable<Boolean> {
     private final File targetDir;
     private final String hostName;
     private final int portNumber;
+    private final ProcessBuilder processBuilder;
     private Logger logger = WpsLogger.getLogger();
 
-    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir, String hostName, int portNumber) {
+    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir,
+                   String hostName, int portNumber, ProcessBuilder processBuilder) {
         this.jobId = jobId;
         this.parameters = parameters;
         this.sourceProduct = sourceProduct;
         this.targetDir = targetDir;
         this.hostName = hostName;
         this.portNumber = portNumber;
+        this.processBuilder = processBuilder;
     }
 
     @Override
@@ -51,7 +55,9 @@ public class GpfTask implements Callable<Boolean> {
 
             LocalStaging staging = new LocalStaging();
             List<String> resultUrls = staging.getProductUrls(hostName, portNumber, targetDir, jobId);
-            staging.generateProductMetadata(targetDir, jobId, parameters, new LocalProcessor(), hostName, portNumber);
+            ProcessorExtractor processorExtractor = new ProcessorExtractor();
+            ProcessorNameConverter nameConverter = new ProcessorNameConverter(processBuilder.getProcessId());
+            staging.generateProductMetadata(targetDir, jobId, parameters, processorExtractor.getProcessor(nameConverter), hostName, portNumber);
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);

@@ -10,12 +10,11 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.Process;
 import com.bc.calvalus.wps.localprocess.ProcessBuilder;
 import com.bc.calvalus.wps.localprocess.ProductionState;
-import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.SubsettingProcess;
-import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -70,7 +69,7 @@ public class CalvalusExecuteOperation {
         boolean isLineage = responseDocumentType.isLineage();
         String processId = executeRequest.getIdentifier().getValue();
 
-        if (processId.equals("local~0.0.1~Subset")) {
+        if (processId.equals("urbantep-local~1.0~Subset")) {
             ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
             Map<String, String> inputParameters = requestExtractor.getInputParametersMapRaw();
 
@@ -91,6 +90,7 @@ public class CalvalusExecuteOperation {
             System.out.println("context.getServerContext().getRequestUrl() = " + context.getServerContext().getRequestUrl());
             ProcessBuilder processBuilder = ProcessBuilder.create()
                         .withJobId(jobId)
+                        .withProcessId(processId)
                         .withParameters(parameters)
                         .withSourceProduct(sourceProduct)
                         .withTargetDirPath(targetDirPath)

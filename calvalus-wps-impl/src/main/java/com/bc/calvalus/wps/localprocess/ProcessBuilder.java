@@ -13,6 +13,7 @@ import java.util.Map;
 public class ProcessBuilder {
 
     private String jobId;
+    private String processId;
     private Map<String, Object> parameters;
     private Product sourceProduct;
     private Path targetDirPath;
@@ -23,17 +24,14 @@ public class ProcessBuilder {
         return new ProcessBuilder();
     }
 
-    public String getJobId() {
-        return jobId;
-    }
-
     public ProcessBuilder withJobId(String jobId) {
         this.jobId = jobId;
         return this;
     }
 
-    public Map<String, Object> getParameters() {
-        return parameters;
+    public ProcessBuilder withProcessId(String processId) {
+        this.processId = processId;
+        return this;
     }
 
     public ProcessBuilder withParameters(Map<String, Object> parameters) {
@@ -41,17 +39,9 @@ public class ProcessBuilder {
         return this;
     }
 
-    public Product getSourceProduct() {
-        return sourceProduct;
-    }
-
     public ProcessBuilder withSourceProduct(Product sourceProduct) {
         this.sourceProduct = sourceProduct;
         return this;
-    }
-
-    public Path getTargetDirPath() {
-        return targetDirPath;
     }
 
     public ProcessBuilder withTargetDirPath(Path targetDirPath) {
@@ -59,21 +49,41 @@ public class ProcessBuilder {
         return this;
     }
 
-    public WpsServerContext getServerContext() {
-        return serverContext;
-    }
-
     public ProcessBuilder withServerContext(WpsServerContext serverContext) {
         this.serverContext = serverContext;
         return this;
     }
 
-    public Execute getExecuteRequest() {
-        return executeRequest;
+    public String getJobId() {
+        return jobId;
+    }
+
+    public String getProcessId() {
+        return processId;
+    }
+
+    public Map<String, Object> getParameters() {
+        return parameters;
     }
 
     public ProcessBuilder withExecuteRequest(Execute executeRequest) {
         this.executeRequest = executeRequest;
         return this;
+    }
+
+    public Product getSourceProduct() {
+        return sourceProduct;
+    }
+
+    public Path getTargetDirPath() {
+        return targetDirPath;
+    }
+
+    public WpsServerContext getServerContext() {
+        return serverContext;
+    }
+
+    public Execute getExecuteRequest() {
+        return executeRequest;
     }
 }

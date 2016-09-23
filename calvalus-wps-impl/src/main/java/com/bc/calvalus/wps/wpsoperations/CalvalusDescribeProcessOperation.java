@@ -12,7 +12,9 @@ import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
+import com.bc.calvalus.wps.localprocess.ProcessorExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
+import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;
 import com.bc.wps.api.schema.ComplexDataCombinationType;
@@ -33,6 +35,7 @@ import org.apache.commons.lang.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,7 +43,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * @author hans
@@ -58,42 +60,75 @@ public class CalvalusDescribeProcessOperation {
     public List<ProcessDescriptionType> getProcesses(String processorId) throws ProcessesNotAvailableException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-
             String[] processorIdArray = processorId.split(",");
-
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
+            List<IWpsProcess> processors = new ArrayList<>();
             if (processorId.equalsIgnoreCase("all")) {
-                processDescriptionTypeList.addAll(getMultipleDescribeProcessResponse(calvalusFacade.getProcessors()));
-            } else if (Stream.of(processorIdArray).anyMatch(x -> x.equals("local~0.0.1~Subset"))) {
-                ProcessDescriptionType localProcess = getLocalSubsetProcess();
-                ProcessDescriptionType.ProcessOutputs dataOutputs = getProcessOutputs();
-                localProcess.setProcessOutputs(dataOutputs);
-                processDescriptionTypeList.add(localProcess);
+                processors.addAll(getAllCalvalusProcessors(calvalusFacade));
+                processors.addAll(getAllLocalProcessors());
+                processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else if (processorIdArray.length > 1) {
-                List<IWpsProcess> processors = new ArrayList<>();
-                for (String singleProcessorId : processorIdArray) {
-                    ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
-                    CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
-                    if (calvalusProcessor == null) {
-                        throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
-                                                                 "due to invalid process ID '" + singleProcessorId + "'");
-                    }
-                    processors.add(calvalusProcessor);
-                }
-                processDescriptionTypeList.addAll(getMultipleDescribeProcessResponse(processors));
+                // TODO: think about a solution if the query is a combination of local and calvalus processors
+                processors.addAll(getMultipleCalvalusProcessors(calvalusFacade, processorIdArray));
+                processors.addAll(getMultipleLocalProcessors(processorIdArray));
+                processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else {
                 ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-                CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
-                if (calvalusProcessor == null) {
+                IWpsProcess processor = calvalusFacade.getProcessor(parser);
+                if (processor == null) {
+                    ProcessorExtractor processorExtractor = new ProcessorExtractor();
+                    processor = processorExtractor.getProcessor(parser);
+                }
+                if (processor == null) {
                     throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
                                                              "due to invalid process ID '" + processorId + "'");
                 }
-                processDescriptionTypeList.add(getSingleDescribeProcessResponse(calvalusProcessor));
+                processDescriptionTypeList.add(getSingleProcess(processor));
             }
             return processDescriptionTypeList;
-        } catch (IOException | ProductionException | ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
+        } catch (IOException | ProductionException | ProductSetsNotAvailableException | InvalidProcessorIdException
+                    | BindingException | URISyntaxException exception) {
             throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es)", exception);
         }
+    }
+
+    private List<IWpsProcess> getAllCalvalusProcessors(CalvalusFacade calvalusFacade) throws IOException, ProductionException {
+        return calvalusFacade.getProcessors();
+    }
+
+    private List<IWpsProcess> getMultipleCalvalusProcessors(CalvalusFacade calvalusFacade, String[] processorIdArray)
+                throws IOException, ProductionException, InvalidProcessorIdException, ProcessesNotAvailableException {
+        List<IWpsProcess> processors = new ArrayList<>();
+        for (String singleProcessorId : processorIdArray) {
+            ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
+            CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+            if (calvalusProcessor == null) {
+                throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
+                                                         "due to invalid process ID '" + singleProcessorId + "'");
+            }
+            processors.add(calvalusProcessor);
+        }
+        return processors;
+    }
+
+    private List<IWpsProcess> getAllLocalProcessors()
+                throws BindingException, IOException, URISyntaxException {
+        ProcessorExtractor processorExtractor = new ProcessorExtractor();
+        return processorExtractor.getProcessors();
+    }
+
+    private List<IWpsProcess> getMultipleLocalProcessors(String[] processorIdArray)
+                throws URISyntaxException, IOException, BindingException, InvalidProcessorIdException, ProcessesNotAvailableException {
+        List<IWpsProcess> localProcessors = new ArrayList<>();
+        ProcessorExtractor processorExtractor = new ProcessorExtractor();
+        for (String singleProcessorId : processorIdArray) {
+            ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
+            IWpsProcess processor = processorExtractor.getProcessor(parser);
+            if (processor != null) {
+                localProcessors.add(processor);
+            }
+        }
+        return localProcessors;
     }
 
     private ProcessDescriptionType getLocalSubsetProcess() throws IOException {
@@ -213,8 +248,8 @@ public class CalvalusDescribeProcessOperation {
         return regionBoundingBox;
     }
 
-    private List<ProcessDescriptionType> getMultipleDescribeProcessResponse(List<IWpsProcess> processes)
-                throws ProductSetsNotAvailableException {
+    private List<ProcessDescriptionType> getMultipleProcessType(List<IWpsProcess> processes)
+                throws ProductSetsNotAvailableException, IOException {
         List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
         for (IWpsProcess process : processes) {
             ProcessDescriptionType processDescription = getSingleProcess(process);
@@ -223,13 +258,8 @@ public class CalvalusDescribeProcessOperation {
         return processDescriptionTypeList;
     }
 
-    private ProcessDescriptionType getSingleDescribeProcessResponse(CalvalusProcessor calvalusProcessor)
-                throws ProductSetsNotAvailableException {
-        return getSingleProcess(calvalusProcessor);
-    }
-
     private ProcessDescriptionType getSingleProcess(IWpsProcess process)
-                throws ProductSetsNotAvailableException {
+                throws ProductSetsNotAvailableException, IOException {
         ProductSet[] productSets;
         try {
             productSets = getProductSets();
@@ -237,18 +267,17 @@ public class CalvalusDescribeProcessOperation {
             throw new ProductSetsNotAvailableException("Unable to get available product sets", exception);
         }
 
-        CalvalusProcessor calvalusProcessor = (CalvalusProcessor) process;
         ProcessDescriptionType processDescription = new ProcessDescriptionType();
 
         processDescription.setStoreSupported(true);
         processDescription.setStatusSupported(true);
-        processDescription.setProcessVersion(calvalusProcessor.getVersion());
+        processDescription.setProcessVersion(process.getVersion());
 
-        processDescription.setIdentifier(str2CodeType(calvalusProcessor.getIdentifier()));
-        processDescription.setTitle(str2LanguageStringType(calvalusProcessor.getIdentifier()));
-        processDescription.setAbstract(str2LanguageStringType(calvalusProcessor.getAbstractText()));
+        processDescription.setIdentifier(str2CodeType(process.getIdentifier()));
+        processDescription.setTitle(str2LanguageStringType(process.getIdentifier()));
+        processDescription.setAbstract(str2LanguageStringType(process.getAbstractText()));
 
-        ProcessDescriptionType.DataInputs dataInputs = getDataInputs(calvalusProcessor, productSets);
+        ProcessDescriptionType.DataInputs dataInputs = getDataInputs(process, productSets);
         processDescription.setDataInputs(dataInputs);
 
         ProcessDescriptionType.ProcessOutputs dataOutputs = getProcessOutputs();
@@ -285,9 +314,8 @@ public class CalvalusDescribeProcessOperation {
         return calvalusFacade.getProductSets();
     }
 
-    private ProcessDescriptionType.DataInputs getDataInputs(CalvalusProcessor calvalusProcessor, ProductSet[] productSets) {
+    private ProcessDescriptionType.DataInputs getDataInputs(IWpsProcess processor, ProductSet[] productSets) throws IOException {
         ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
-        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = calvalusProcessor.getParameterDescriptors();
 
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
                     .create()
@@ -314,6 +342,7 @@ public class CalvalusDescribeProcessOperation {
                     .build();
         dataInputs.getInput().add(productionType);
 
+        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
         if (parameterDescriptors != null) {
             for (ProcessorDescriptor.ParameterDescriptor parameterDescriptor : parameterDescriptors) {
                 InputDescriptionType input = InputDescriptionTypeBuilder
@@ -327,37 +356,62 @@ public class CalvalusDescribeProcessOperation {
 
                 dataInputs.getInput().add(input);
             }
-        } else if (!StringUtils.isBlank(calvalusProcessor.getDefaultParameters())) {
+        } else if (!StringUtils.isBlank(processor.getDefaultParameters())) {
             InputDescriptionType input = InputDescriptionTypeBuilder
                         .create()
                         .withIdentifier("processorParameters")
                         .withTitle("Processor parameters")
                         .withAbstract("Parameters specific to this processor")
-                        .withDefaultValue(calvalusProcessor.getDefaultParameters())
+                        .withDefaultValue(processor.getDefaultParameters())
                         .withDataType("string")
                         .build();
 
             dataInputs.getInput().add(input);
         }
 
-        List<Object> allowedInputDataSets = new ArrayList<>();
-        for (ProductSet productSet : productSets) {
-            if (ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
-                ValueType value = new ValueType();
-                value.setValue(productSet.getName());
-                allowedInputDataSets.add(value);
+        InputDescriptionType inputDataSetName;
+        if (processor.isLocal()) {
+            List<Object> inputSourceProductList = new ArrayList<>();
+            Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
+            List<File> files = new ArrayList<>();
+            DirectoryStream<Path> stream = Files.newDirectoryStream(dir, INPUT_PRODUCT_NAME_PATTERN);
+            for (Path entry : stream) {
+                files.add(entry.toFile());
             }
+            for (File file : files) {
+                ValueType value = new ValueType();
+                value.setValue(file.getName());
+                inputSourceProductList.add(value);
+            }
+            inputDataSetName = InputDescriptionTypeBuilder
+                        .create()
+                        .withIdentifier("sourceProduct")
+                        .withTitle("Urban map or conditions product")
+                        .withAbstract("The source product to create a regional subset from")
+                        .withDataType("string")
+                        .withAllowedValues(inputSourceProductList)
+                        .build();
+        } else {
+            List<Object> allowedInputDataSets = new ArrayList<>();
+            CalvalusProcessor calvalusProcessor = (CalvalusProcessor) processor;
+            for (ProductSet productSet : productSets) {
+                if (ArrayUtils.contains(calvalusProcessor.getInputProductTypes(), productSet.getProductType())) {
+                    ValueType value = new ValueType();
+                    value.setValue(productSet.getName());
+                    allowedInputDataSets.add(value);
+                }
+            }
+            InputDescriptionTypeBuilder inputDataSetNameBuilder = InputDescriptionTypeBuilder
+                        .create()
+                        .withIdentifier("inputDataSetName")
+                        .withTitle("Input data set name")
+                        .withAbstract("The input dataset required for the processing")
+                        .withDataType("string");
+            if (!allowedInputDataSets.isEmpty()) {
+                inputDataSetNameBuilder = inputDataSetNameBuilder.withAllowedValues(allowedInputDataSets);
+            }
+            inputDataSetName = inputDataSetNameBuilder.build();
         }
-        InputDescriptionTypeBuilder inputDataSetNameBuilder = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("inputDataSetName")
-                    .withTitle("Input data set name")
-                    .withAbstract("The input dataset required for the processing")
-                    .withDataType("string");
-        if (!allowedInputDataSets.isEmpty()) {
-            inputDataSetNameBuilder = inputDataSetNameBuilder.withAllowedValues(allowedInputDataSets);
-        }
-        InputDescriptionType inputDataSetName = inputDataSetNameBuilder.build();
 
         dataInputs.getInput().add(inputDataSetName);
 
@@ -410,8 +464,8 @@ public class CalvalusDescribeProcessOperation {
         dataInputs.getInput().add(l3ParametersComplexType);
 
         List<String> allowedOutputFormat;
-        if (calvalusProcessor.getPossibleOutputFormats() != null) {
-            allowedOutputFormat = Arrays.asList(calvalusProcessor.getPossibleOutputFormats());
+        if (processor.getPossibleOutputFormats() != null) {
+            allowedOutputFormat = Arrays.asList(processor.getPossibleOutputFormats());
         } else {
             allowedOutputFormat = new ArrayList<>();
         }
@@ -433,7 +487,6 @@ public class CalvalusDescribeProcessOperation {
         InputDescriptionType calvalusOutputFormat = calvalusOutputFormatBuilder.build();
 
         dataInputs.getInput().add(calvalusOutputFormat);
-
         return dataInputs;
     }
 
