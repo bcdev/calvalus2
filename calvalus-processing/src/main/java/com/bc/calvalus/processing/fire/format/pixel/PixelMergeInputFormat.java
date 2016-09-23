@@ -28,7 +28,6 @@ public class PixelMergeInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        PixelProductArea area = PixelProductArea.valueOf(conf.get("area"));
         String inputBaseDir = context.getConfiguration().get("inputBaseDir"); // hdfs://calvalus/calvalus/projects/fire/meris-PSD/pixel/2008/06/EUROPE
         CalvalusLogger.getLogger().info("Input base dir = " + inputBaseDir);
 
