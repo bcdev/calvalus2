@@ -4,7 +4,6 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.DataInputsType;
@@ -96,14 +95,14 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getCreationTime().getDay(), equalTo(calendar.get(Calendar.DAY_OF_MONTH)));
         assertThat(executeResponse.getStatus().getCreationTime().getMonth(), equalTo(calendar.get(Calendar.MONTH) + 1)); // +1 because month starts from 0
         assertThat(executeResponse.getStatus().getCreationTime().getYear(), equalTo(calendar.get(Calendar.YEAR)));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("production_result"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getAbstract().getValue(),
                    equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(), equalTo("productionResults"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getTitle().getValue(), equalTo("Production results"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(), equalTo("production_result"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getTitle().getValue(), equalTo("Production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getAbstract().getValue(),
                    equalTo("This is the URL link to the production result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
@@ -145,11 +144,11 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getDataInputs().getInput().get(1).getData().getLiteralData().getValue(), equalTo("2009-06-03"));
         assertThat(executeResponse.getOutputDefinitions().getOutput().get(0).getIdentifier().getValue(), equalTo("productionResults"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
 

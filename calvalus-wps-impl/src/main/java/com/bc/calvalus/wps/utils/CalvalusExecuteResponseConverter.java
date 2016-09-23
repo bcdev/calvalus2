@@ -147,8 +147,8 @@ public class CalvalusExecuteResponseConverter {
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
         for (String productionResultUrl : resultUrls) {
-            String identifier = "productionResults";
-            String title = "Production results";
+            String identifier = "production_result";
+            String title = "Production result";
             String abstractText = "This is the URL link to the production result";
             String mimeType = "application/octet-stream";
             if(productionResultUrl.endsWith("-metadata")){

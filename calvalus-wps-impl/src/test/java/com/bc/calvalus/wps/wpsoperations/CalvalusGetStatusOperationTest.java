@@ -229,11 +229,11 @@ public class CalvalusGetStatusOperationTest {
         assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("1.0"));
         assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
     }
@@ -255,11 +255,11 @@ public class CalvalusGetStatusOperationTest {
         assertThat(getStatusResponse.getProcess().getProcessVersion(), equalTo("0.0.1"));
         assertThat(getStatusResponse.getStatus().getCreationTime().toString(), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(1).getIdentifier().getValue(),
-                   equalTo("productionResults"));
+                   equalTo("production_result"));
         assertThat(getStatusResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(),
                    equalTo("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip"));
     }
