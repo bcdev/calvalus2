@@ -30,7 +30,8 @@ public class S2BaPostInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
-        String inputPathPattern = outputDir + "/intermediate.*.nc";
+        String tile = jobContext.getConfiguration().get("calvalus.tile");
+        String inputPathPattern = outputDir + "/intermediate.*" + tile + ".*.nc";
 
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
@@ -48,7 +49,6 @@ public class S2BaPostInputFormat extends InputFormat {
         for (InputSplit referenceResultSplit : intermediateResultSplits) {
             CombineFileSplit split = (CombineFileSplit) referenceResultSplit;
             String referenceName = split.getPath(0).getName();
-            String tile = referenceName.substring(referenceName.indexOf('-') + 1, referenceName.indexOf('-') + 7);
             String currentPostDateString = referenceName.substring(referenceName.lastIndexOf('-') + 1, referenceName.length() - 3);
             if (alreadyHandledDates.contains(currentPostDateString)) {
                 continue;

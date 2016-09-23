@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 
 public class S2BaInputFormat extends InputFormat {
 
-    static final int MAX_PRE_IMAGES_COUNT = 4;
+    private static final int MAX_PRE_IMAGES_COUNT = 4;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
@@ -107,7 +107,7 @@ public class S2BaInputFormat extends InputFormat {
 
     private static Date getDate(FileStatus fs) {
         String fsName = fs.getPath().getName(); // S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V20160116T105012_20160116T105012_T30PVR.tif
-        fsName = fsName.substring("S2A_USER_MTD_SAFL2A_PDMC_".length(), "S2A_USER_MTD_SAFL2A_PDMC_".length() + 15); // 20160116T175154
+        fsName = fsName.substring("S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length(), "S2A_USER_MTD_SAFL2A_PDMC_20160116T175154_R108_V".length() + 15); // 20160116T105012
         try {
             return new SimpleDateFormat("yyyyMMdd'T'HHmmss").parse(fsName);
         } catch (ParseException e) {
