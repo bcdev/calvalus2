@@ -53,9 +53,11 @@ import java.util.Map;
 public class CalvalusExecuteOperation {
 
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
+    private CalvalusFacade calvalusFacade;
     private WpsRequestContext context;
 
-    public CalvalusExecuteOperation(WpsRequestContext context) {
+    public CalvalusExecuteOperation(WpsRequestContext context) throws IOException {
+        this.calvalusFacade = new CalvalusFacade(context);
         this.context = context;
     }
 
@@ -157,8 +159,7 @@ public class CalvalusExecuteOperation {
     String processSync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException,
                        JAXBException, InterruptedException, InvalidParameterValueException, MissingParameterValueException {
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-        ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
+        ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
         Production production = calvalusFacade.orderProductionSynchronous(request);
         calvalusFacade.stageProduction(production);
@@ -167,9 +168,9 @@ public class CalvalusExecuteOperation {
     }
 
     String processAsync(Execute executeRequest, String processorId)
-                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException, InvalidParameterValueException, MissingParameterValueException {
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-        ProductionRequest request = createProductionRequest(executeRequest, processorId, calvalusFacade);
+                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException,
+                       InvalidParameterValueException, MissingParameterValueException {
+        ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
         Production production = calvalusFacade.orderProductionAsynchronous(request);
         return production.getId();
@@ -189,7 +190,6 @@ public class CalvalusExecuteOperation {
 
     ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
                 throws IOException, ProductionException {
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         ProductionService productionService = calvalusFacade.getProductionService();
         Production production = productionService.getProduction(jobId);
         List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
@@ -204,8 +204,7 @@ public class CalvalusExecuteOperation {
         }
     }
 
-    private ProductionRequest createProductionRequest(Execute executeRequest, String processorId,
-                                                      CalvalusFacade calvalusFacade)
+    private ProductionRequest createProductionRequest(Execute executeRequest, String processorId)
                 throws JAXBException, IOException, ProductionException, InvalidProcessorIdException,
                        InvalidParameterValueException, MissingParameterValueException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);

@@ -5,6 +5,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 
@@ -25,8 +26,18 @@ public class CalvalusFacade {
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
-    public CalvalusFacade(WpsRequestContext wpsRequestContext) {
-        this.userName = wpsRequestContext.getUserName();
+    public CalvalusFacade(WpsRequestContext wpsRequestContext) throws IOException {
+        String remoteUserName = wpsRequestContext.getHeaderField("remote_user");
+        if (remoteUserName != null) {
+            remoteUserName = "tep_" + remoteUserName;
+            LdapHelper ldap = new LdapHelper();
+            if (!ldap.isRegistered(remoteUserName)) {
+                ldap.register(remoteUserName);
+            }
+            this.userName = remoteUserName;
+        } else {
+            this.userName = wpsRequestContext.getUserName();
+        }
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(wpsRequestContext.getServerContext());
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();

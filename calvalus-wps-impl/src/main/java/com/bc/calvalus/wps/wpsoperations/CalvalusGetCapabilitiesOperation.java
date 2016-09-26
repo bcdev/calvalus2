@@ -49,10 +49,10 @@ import java.util.List;
  */
 public class CalvalusGetCapabilitiesOperation {
 
-    private WpsRequestContext context;
+    private CalvalusFacade calvalusFacade;
 
-    public CalvalusGetCapabilitiesOperation(WpsRequestContext context) {
-        this.context = context;
+    public CalvalusGetCapabilitiesOperation(WpsRequestContext context) throws IOException {
+        this.calvalusFacade = new CalvalusFacade(context);
     }
 
     public Capabilities getCapabilities()
@@ -252,7 +252,6 @@ public class CalvalusGetCapabilitiesOperation {
 
     private List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
         try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             return calvalusFacade.getProcessors();
         } catch (IOException | ProductionException exception) {
             throw new ProcessesNotAvailableException("Unable to retrieve available processors", exception);

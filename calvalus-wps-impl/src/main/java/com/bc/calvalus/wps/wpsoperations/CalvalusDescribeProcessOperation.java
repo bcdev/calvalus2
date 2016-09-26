@@ -50,16 +50,15 @@ import java.util.List;
 public class CalvalusDescribeProcessOperation {
 
     private static final String INPUT_PRODUCT_NAME_PATTERN = "*.tif";
-    private WpsRequestContext context;
+    private CalvalusFacade calvalusFacade;
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
-    public CalvalusDescribeProcessOperation(WpsRequestContext context) {
-        this.context = context;
+    public CalvalusDescribeProcessOperation(WpsRequestContext context) throws IOException {
+        this.calvalusFacade = new CalvalusFacade(context);
     }
 
     public List<ProcessDescriptionType> getProcesses(String processorId) throws ProcessesNotAvailableException {
         try {
-            CalvalusFacade calvalusFacade = new CalvalusFacade(context);
             String[] processorIdArray = processorId.split(",");
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
             List<IWpsProcess> processors = new ArrayList<>();
@@ -167,7 +166,7 @@ public class CalvalusDescribeProcessOperation {
                 throws ProductSetsNotAvailableException, IOException {
         ProductSet[] productSets;
         try {
-            productSets = getProductSets();
+            productSets = calvalusFacade.getProductSets();
         } catch (IOException | ProductionException exception) {
             throw new ProductSetsNotAvailableException("Unable to get available product sets", exception);
         }
@@ -212,11 +211,6 @@ public class CalvalusDescribeProcessOperation {
 
         dataOutputs.getOutput().add(output);
         return dataOutputs;
-    }
-
-    private ProductSet[] getProductSets() throws IOException, ProductionException {
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-        return calvalusFacade.getProductSets();
     }
 
     private ProcessDescriptionType.DataInputs getDataInputs(IWpsProcess processor, ProductSet[] productSets) throws IOException {

@@ -29,10 +29,10 @@ import java.io.IOException;
  */
 public class CalvalusGetStatusOperation {
 
-    private WpsRequestContext context;
+    private CalvalusFacade calvalusFacade;
 
-    public CalvalusGetStatusOperation(WpsRequestContext context) {
-        this.context = context;
+    public CalvalusGetStatusOperation(WpsRequestContext context) throws IOException {
+        this.calvalusFacade = new CalvalusFacade(context);
     }
 
     public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
@@ -67,7 +67,6 @@ public class CalvalusGetStatusOperation {
             throw new JobNotFoundException(exception, "JobId");
         }
 
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         WpsProcessStatus processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(production));
 
         if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
@@ -121,7 +120,6 @@ public class CalvalusGetStatusOperation {
     }
 
     private Production getProduction(String jobId) throws IOException, ProductionException {
-        CalvalusFacade calvalusFacade = new CalvalusFacade(context);
         ProductionService productionService = calvalusFacade.getProductionService();
         return productionService.getProduction(jobId);
     }
