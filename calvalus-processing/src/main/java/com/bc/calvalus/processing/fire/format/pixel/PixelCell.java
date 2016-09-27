@@ -11,9 +11,13 @@ import java.io.IOException;
  */
 public class PixelCell implements Writable {
 
-    private static final int BAND_SIZE = PixelMapper.RASTER_WIDTH * PixelMapper.RASTER_HEIGHT;
+    private static int BAND_SIZE = 0;
 
     short[] values;
+
+    public PixelCell(int rasterWidth, int rasterHeight) {
+        BAND_SIZE = rasterWidth * rasterHeight;
+    }
 
     @Override
     public void write(DataOutput out) throws IOException {

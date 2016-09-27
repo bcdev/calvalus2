@@ -12,6 +12,16 @@ public interface SensorStrategy {
 
     Class<? extends InputFormat> getInputFormatClass();
 
+    int getRasterWidth();
+
+    int getRasterHeight();
+
+    String getDoyBandName();
+
+    String getClBandName();
+
+    String getTile(boolean mosaicBA, String[] paths);
+
     interface PixelProductAreaProvider {
 
         PixelProductArea getArea(String identifier);

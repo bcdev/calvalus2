@@ -5,6 +5,9 @@ import org.apache.hadoop.mapreduce.InputFormat;
 
 public class MerisStrategy implements SensorStrategy {
 
+    private static final int RASTER_WIDTH = 3600;
+    private static final int RASTER_HEIGHT = 3600;
+
     private final MerisPixelProductAreaProvider areaProvider;
 
     public MerisStrategy() {
@@ -29,6 +32,40 @@ public class MerisStrategy implements SensorStrategy {
     @Override
     public Class<? extends InputFormat> getInputFormatClass() {
         return MerisPixelInputFormat.class;
+    }
+
+    @Override
+    public int getRasterWidth() {
+        return RASTER_WIDTH;
+    }
+
+    @Override
+    public int getRasterHeight() {
+        return RASTER_HEIGHT;
+    }
+
+    @Override
+    public String getDoyBandName() {
+        return "band_1";
+    }
+
+    @Override
+    public String getClBandName() {
+        return "band_2";
+    }
+
+    @Override
+    public String getTile(boolean mosaicBA, String[] paths) {
+        return mosaicBA ? getTileFromBA(paths[0]) : getTileFromLC(paths[1]);
+    }
+
+    private static String getTileFromBA(String path) {
+        int startIndex = path.indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
+        return path.substring(startIndex, startIndex + 6);
+    }
+
+    private static String getTileFromLC(String path) {
+        return path.substring(path.length() - 9, path.length() - 3);
     }
 
     private static class MerisPixelProductAreaProvider implements PixelProductAreaProvider {

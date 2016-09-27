@@ -94,7 +94,7 @@ public class S2PixelInputFormat extends InputFormat {
                 List<Path> filePaths = new ArrayList<>();
                 List<Long> fileLengths = new ArrayList<>();
                 // dummy for BA input
-                filePaths.add(new Path("dummy"));
+                filePaths.add(new Path("dummy_" + granule));
                 fileLengths.add(0L);
                 filePaths.add(lcFileStatus.getPath());
                 fileLengths.add(lcFileStatus.getLen());

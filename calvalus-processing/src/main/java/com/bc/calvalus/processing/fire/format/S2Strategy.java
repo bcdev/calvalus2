@@ -5,6 +5,9 @@ import org.apache.hadoop.mapreduce.InputFormat;
 
 public class S2Strategy implements SensorStrategy {
 
+    private static final int RASTER_HEIGHT = 5490;
+    private static final int RASTER_WIDTH = 5490;
+
     private final PixelProductAreaProvider areaProvider;
 
     public S2Strategy() {
@@ -29,6 +32,37 @@ public class S2Strategy implements SensorStrategy {
     @Override
     public Class<? extends InputFormat> getInputFormatClass() {
         return S2PixelInputFormat.class;
+    }
+
+    @Override
+    public int getRasterWidth() {
+        return RASTER_WIDTH;
+    }
+
+    @Override
+    public int getRasterHeight() {
+        return RASTER_HEIGHT;
+    }
+
+    @Override
+    public String getDoyBandName() {
+        return "result";
+    }
+
+    @Override
+    public String getClBandName() {
+        return "lat"; // todo - this is just a stupid placeholder!
+    }
+
+    @Override
+    public String getTile(boolean hasBA, String[] paths) {
+        if (hasBA) {
+            int startIndex = paths[0].indexOf("BA-") + "BA-".length() + 1;
+            return paths[0].substring(startIndex, startIndex + 5);
+        } else {
+            int startIndex = paths[0].indexOf("dummy_") + "dummy_".length() + 1;
+            return paths[0].substring(startIndex, startIndex + 5);
+        }
     }
 
     private static class S2PixelProductAreaProvider implements PixelProductAreaProvider {

@@ -18,7 +18,9 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -33,53 +35,54 @@ import java.util.Arrays;
 import java.util.logging.Logger;
 
 /**
- * The fire formatting pixel mapper.
+ * The fire formatting pixel mapper. Processes a single tile/granule.
  *
  * @author thomas
  * @author marcop
  */
 public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
-    static final int RASTER_WIDTH = 3600;
-    static final int RASTER_HEIGHT = 3600;
-
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private SensorStrategy strategy;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
+        strategy = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor"));
         PixelVariableType variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        boolean mosaicBA = !paths[0].getName().equals("dummy");
+        boolean mosaicBA = !paths[0].getName().startsWith("dummy");
         LOG.info(mosaicBA ? "Mosaicking BA data" : "Only mosaicking burnable/non-burnable");
 
         File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcTile);
 
-        PixelCell pixelCell = new PixelCell();
-        pixelCell.values = new short[RASTER_WIDTH * RASTER_HEIGHT];
+        PixelCell pixelCell = new PixelCell(strategy.getRasterWidth(), strategy.getRasterHeight());
+        pixelCell.values = new short[strategy.getRasterWidth() * strategy.getRasterHeight()];
 
-        int[] doy = new int[RASTER_WIDTH * RASTER_HEIGHT];
-        int[] lc = new int[RASTER_WIDTH * RASTER_HEIGHT];
-        int[] cl = new int[RASTER_WIDTH * RASTER_HEIGHT];
+        int[] doy = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
+        int[] lc = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
+        int[] cl = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
 
-        lcProduct.getBand("lcclass").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, lc);
+        lcProduct.getBand("lcclass").readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), lc);
 
         if (mosaicBA) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
             Product sourceProduct = ProductIO.readProduct(sourceProductFile);
-            sourceProduct.getBand("band_1").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, doy);
+            sourceProduct.getBand(strategy.getDoyBandName()).readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), doy);
 
             switch (variableType) {
                 case DAY_OF_YEAR:
                     for (int i = 0; i < lc.length; i++) {
                         if (doy[i] == 999) {
                             pixelCell.values[i] = 999;
+                        } else if (doy[i] == 998) {
+                            pixelCell.values[i] = 998;
                         } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
                             pixelCell.values[i] = 0;
                         } else {
@@ -88,10 +91,12 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
                     }
                     break;
                 case CONFIDENCE_LEVEL:
-                    sourceProduct.getBand("band_2").readPixels(0, 0, RASTER_WIDTH, RASTER_HEIGHT, cl);
+                    sourceProduct.getBand(strategy.getClBandName()).readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), cl);
                     for (int i = 0; i < pixelCell.values.length; i++) {
                         if (doy[i] == 999) {
                             pixelCell.values[i] = 999;
+                        } else if (doy[i] == 998) {
+                            pixelCell.values[i] = 998;
                         } else if (LcRemapping.remap(lc[i]) == LcRemapping.INVALID_LC_CLASS) {
                             pixelCell.values[i] = 0;
                         } else {
@@ -103,6 +108,8 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
                     for (int i = 0; i < pixelCell.values.length; i++) {
                         if (doy[i] == 999) {
                             pixelCell.values[i] = 999;
+                        } else if (doy[i] == 998) {
+                            pixelCell.values[i] = 998;
                         } else if (doy[i] == 0) {
                             pixelCell.values[i] = 0;
                         } else {
@@ -118,17 +125,8 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         }
 
         context.progress();
-        String tile = mosaicBA ? getTileFromBA(paths[0]) : getTileFromLC(paths[1]);
+        String tile = strategy.getTile(mosaicBA, (String[]) Arrays.stream(paths).map(Path::toString).toArray());
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), pixelCell);
-    }
-
-    private static String getTileFromBA(Path path) {
-        int startIndex = path.toString().indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
-        return path.toString().substring(startIndex, startIndex + 6);
-    }
-
-    private static String getTileFromLC(Path path) {
-        return path.toString().substring(path.toString().length() - 9, path.toString().length() - 3);
     }
 
 }
