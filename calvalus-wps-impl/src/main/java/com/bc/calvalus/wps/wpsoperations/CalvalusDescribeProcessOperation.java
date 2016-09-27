@@ -63,7 +63,7 @@ public class CalvalusDescribeProcessOperation {
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
             List<IWpsProcess> processors = new ArrayList<>();
             if (processorId.equalsIgnoreCase("all")) {
-                processors.addAll(getAllCalvalusProcessors(calvalusFacade));
+                processors.addAll(getAllCalvalusProcessors());
                 processors.addAll(getAllLocalProcessors());
                 processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else if (processorIdArray.length > 1) {
@@ -91,7 +91,7 @@ public class CalvalusDescribeProcessOperation {
         }
     }
 
-    private List<IWpsProcess> getAllCalvalusProcessors(CalvalusFacade calvalusFacade) throws IOException, ProductionException {
+    private List<IWpsProcess> getAllCalvalusProcessors() throws IOException, ProductionException {
         return calvalusFacade.getProcessors();
     }
 

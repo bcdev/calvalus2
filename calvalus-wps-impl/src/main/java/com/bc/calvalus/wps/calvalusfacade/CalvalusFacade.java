@@ -78,8 +78,15 @@ public class CalvalusFacade {
     public ProductSet[] getProductSets() throws ProductionException, IOException {
         List<ProductSet> productSets = new ArrayList<>();
         productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "")));
-        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "user=" + userName)));
+        try {
+            productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "user=" + userName)));
+        } catch (ProductionException ignored) {
+        }
         return productSets.toArray(new ProductSet[productSets.size()]);
+    }
+
+    public String getUserName() {
+        return this.userName;
     }
 
 }

@@ -131,7 +131,7 @@ public class CalvalusExecuteOperation {
 
     private Path getTargetDirectoryPath(String jobId) throws IOException {
         Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
-                                             PropertiesWrapper.get("utep.output.directory"), context.getUserName(), jobId);
+                                             PropertiesWrapper.get("utep.output.directory"), calvalusFacade.getUserName(), jobId);
         Files.createDirectories(targetDirectoryPath);
         return targetDirectoryPath;
     }
@@ -215,7 +215,7 @@ public class CalvalusExecuteOperation {
                                                                        calvalusFacade.getProductSets());
 
         return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
-                                     context.getUserName(),
+                                     calvalusFacade.getUserName(),
                                      calvalusDataInputs.getInputMapFormatted());
     }
 
