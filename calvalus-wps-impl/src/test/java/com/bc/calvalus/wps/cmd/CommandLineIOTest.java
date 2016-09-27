@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.junit.*;
 
@@ -62,5 +63,15 @@ public class CommandLineIOTest {
         assertThat(outputStringList.get(0), equalTo(""));
         assertThat(errorStringList.size(), equalTo(1));
         assertThat(errorStringList.get(0), equalTo(""));
+    }
+
+    @Test
+    public void canCreateAsynchronousInstance() throws Exception {
+        ExecuteWatchdog mockWatchDog = mock(ExecuteWatchdog.class);
+        CommandLineResultHandler resultHandler = new CommandLineResultHandler(mockWatchDog);
+
+        commandLineIO = new CommandLineIO(new ByteArrayOutputStream(), new ByteArrayOutputStream(), resultHandler);
+
+        assertThat(commandLineIO.getResultHandler(), equalTo(resultHandler));
     }
 }

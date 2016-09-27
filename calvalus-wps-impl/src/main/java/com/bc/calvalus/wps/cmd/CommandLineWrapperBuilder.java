@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.cmd;
 
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 
@@ -8,7 +9,8 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
  */
 public class CommandLineWrapperBuilder {
 
-    private static final int DEFAULT_TIMEOUT = 5000;
+    private static final int DEFAULT_TIMEOUT = PropertiesWrapper.getInteger("default.cmd.timeout");
+
     private String workingDirectoryPath;
     private String command;
     private String[] commandArgs;
@@ -20,7 +22,7 @@ public class CommandLineWrapperBuilder {
         return new CommandLineWrapperBuilder();
     }
 
-    public CommandLineWrapper build(){
+    public CommandLineWrapper build() {
         return new CommandLineWrapper(this);
     }
 
@@ -34,7 +36,7 @@ public class CommandLineWrapperBuilder {
         return this;
     }
 
-    public CommandLineWrapperBuilder withCommandArgs(String ... commandArgs) {
+    public CommandLineWrapperBuilder withCommandArgs(String... commandArgs) {
         this.commandArgs = commandArgs;
         return this;
     }

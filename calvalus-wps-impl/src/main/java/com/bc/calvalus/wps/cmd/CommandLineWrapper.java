@@ -60,7 +60,6 @@ public class CommandLineWrapper {
         try {
             executor.execute(cmdLine);
         } catch (IOException exception) {
-            System.out.println("====ERROR=======");
             // important information is sometimes also in the outputStream
             for (String outputString : commandLineIO.getOutputStringList()) {
                 logger.log(Level.SEVERE, outputString);
@@ -68,7 +67,6 @@ public class CommandLineWrapper {
             for (String errorString : commandLineIO.getErrorStringList()) {
                 logger.log(Level.SEVERE, errorString);
             }
-            System.out.println("====ERROR END===");
             StringBuilder sb = new StringBuilder();
             sb.append(command);
             for (String arg : commandArgs) {
@@ -76,7 +74,7 @@ public class CommandLineWrapper {
                 sb.append(arg);
             }
             logger.log(Level.SEVERE, "command : " + sb.toString(), exception);
-            throw new CommandLineException("Error when adding the user to LDAP.");
+            throw new CommandLineException("Error when executing command line.");
         }
         return commandLineIO;
     }
