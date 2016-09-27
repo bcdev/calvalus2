@@ -20,12 +20,12 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import com.bc.calvalus.processing.fire.format.pixel.PixelCell;
-import com.bc.calvalus.processing.fire.format.pixel.PixelInputFormat;
 import com.bc.calvalus.processing.fire.format.pixel.PixelMapper;
 import com.bc.calvalus.processing.fire.format.pixel.PixelMergeInputFormat;
 import com.bc.calvalus.processing.fire.format.pixel.PixelMergeMapper;
-import com.bc.calvalus.processing.fire.format.pixel.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.pixel.PixelReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelVariableType;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -70,29 +70,31 @@ public class FirePixelProductionType extends HadoopProductionType {
         final String productionId = Production.createId(productionRequest.getProductionType());
         String year = productionRequest.getString("calvalus.year");
         String month = productionRequest.getString("calvalus.month");
-        PixelProductArea area = PixelProductArea.valueOf(productionRequest.getString("calvalus.area"));
-        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", year, month);
+        String area = productionRequest.getString("calvalus.area");
+        String sensor = productionRequest.getString("calvalus.sensor");
+        SensorStrategy strategy = CommonUtils.getStrategy(sensor);
+        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s, %s", year, month, strategy.getSensorName());
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting");
+        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting " + strategy.getSensorName());
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
         setRequestParameters(productionRequest, jobConfig);
 
-        Workflow merisFormattingWorkflow = new Workflow.Parallel();
+        Workflow formattingWorkflow = new Workflow.Parallel();
         String userName = productionRequest.getUserName();
         Workflow areaWorkflow = new Workflow.Sequential();
         Workflow variableWorkflow = new Workflow.Parallel();
         for (PixelVariableType type : PixelVariableType.values()) {
             CalvalusLogger.getLogger().info(String.format("Creating workflow item for area %s and variable %s.", area, type.name()));
-            FirePixelFormatVariableWorkflowItem item = new FirePixelFormatVariableWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_" + type.name(), area, type, jobConfig);
+            FirePixelFormatVariableWorkflowItem item = new FirePixelFormatVariableWorkflowItem(getProcessingService(), userName, productionName + "_" + area + "_" + type.name(), area, type, jobConfig);
             variableWorkflow.add(item);
         }
         areaWorkflow.add(variableWorkflow);
-        FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_" + area.name() + "_merging", area, jobConfig);
-        mergingWorkflowItem.setInputDir(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "-to-merge");
+        FirePixelMergingWorkflowItem mergingWorkflowItem = new FirePixelMergingWorkflowItem(getProcessingService(), userName, productionName + "_" + area + "_merging", area, jobConfig);
+        mergingWorkflowItem.setInputDir(jobConfig.get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area + "-to-merge");
         areaWorkflow.add(mergingWorkflowItem);
-        merisFormattingWorkflow.add(areaWorkflow);
+        formattingWorkflow.add(areaWorkflow);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         return new Production(productionId,
@@ -101,7 +103,7 @@ public class FirePixelProductionType extends HadoopProductionType {
                 stagingDir,
                 false,
                 productionRequest,
-                merisFormattingWorkflow);
+                formattingWorkflow);
     }
 
     @Override
@@ -111,31 +113,33 @@ public class FirePixelProductionType extends HadoopProductionType {
 
     private static class FirePixelFormatVariableWorkflowItem extends HadoopWorkflowItem {
 
-        private final PixelProductArea area;
+        private final String area;
         private final PixelVariableType variableType;
+        private final SensorStrategy strategy;
 
-        FirePixelFormatVariableWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, PixelProductArea area, PixelVariableType variableType, Configuration jobConfig) {
+        FirePixelFormatVariableWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, String area, PixelVariableType variableType, Configuration jobConfig) {
             super(processingService, userName, jobName, jobConfig);
             this.area = area;
             this.variableType = variableType;
+            strategy = CommonUtils.getStrategy(jobConfig.get("calvalus.sensor"));
         }
 
         @Override
         public String getOutputDir() {
             String year = getJobConfig().get("calvalus.year");
             String month = getJobConfig().get("calvalus.month");
-            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "/" + variableType.name();
+            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area + "/" + variableType.name();
         }
 
         @Override
         protected void configureJob(Job job) throws IOException {
             CalvalusLogger.getLogger().info("Configuring job.");
-            job.setInputFormatClass(PixelInputFormat.class);
+            job.setInputFormatClass(strategy.getInputFormatClass());
             job.setMapperClass(PixelMapper.class);
             job.setReducerClass(PixelReducer.class);
             job.setMapOutputKeyClass(Text.class);
             job.setMapOutputValueClass(PixelCell.class);
-            job.getConfiguration().set("area", area.name());
+            job.getConfiguration().set("area", area);
             job.getConfiguration().set("variableType", variableType.name());
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
@@ -149,9 +153,9 @@ public class FirePixelProductionType extends HadoopProductionType {
 
     private class FirePixelMergingWorkflowItem extends HadoopWorkflowItem {
 
-        private final PixelProductArea area;
+        private final String area;
 
-        FirePixelMergingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, PixelProductArea area, Configuration jobConfig) {
+        FirePixelMergingWorkflowItem(HadoopProcessingService processingService, String userName, String jobName, String area, Configuration jobConfig) {
             super(processingService, userName, jobName, jobConfig);
             this.area = area;
         }
@@ -160,7 +164,7 @@ public class FirePixelProductionType extends HadoopProductionType {
         public String getOutputDir() {
             String year = getJobConfig().get("calvalus.year");
             String month = getJobConfig().get("calvalus.month");
-            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area.name() + "/" + "final";
+            return getJobConfig().get(JobConfigNames.CALVALUS_OUTPUT_DIR) + "/" + year + "/" + month + "/" + area + "/" + "final";
         }
 
         @Override
@@ -169,7 +173,7 @@ public class FirePixelProductionType extends HadoopProductionType {
             job.setInputFormatClass(PixelMergeInputFormat.class);
             job.setMapperClass(PixelMergeMapper.class);
             job.setNumReduceTasks(0);
-            job.getConfiguration().set("area", area.name());
+            job.getConfiguration().set("area", area);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }
 

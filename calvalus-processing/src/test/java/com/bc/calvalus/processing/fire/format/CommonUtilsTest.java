@@ -16,7 +16,7 @@ public class CommonUtilsTest {
     @Test
     public void testGetTile() throws Exception {
         assertEquals("v03h08",
-                CommonUtils.getTile("hdfs://calvalus/calvalus/projects/fire/meris-ba/$year/BA_PIX_MER_v03h08_$year$month_v4.0.tif"));
+                CommonUtils.getMerisTile("hdfs://calvalus/calvalus/projects/fire/meris-ba/$year/BA_PIX_MER_v03h08_$year$month_v4.0.tif"));
     }
 
     @Test

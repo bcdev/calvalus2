@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -43,7 +45,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
+        area = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor")).getArea(context.getConfiguration().get("area"));
         variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
         year = context.getConfiguration().get("calvalus.year");
         month = context.getConfiguration().get("calvalus.month");
@@ -91,7 +93,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         product.dispose();
         CalvalusLogger.getLogger().info(String.format("...copying product to %s...", zipFilename));
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + year + "/" + month + "/" + "/" + area.name() + "-to-merge/" + zipFilename);
+        Path path = new Path(outputDir + "/" + year + "/" + month + "/" + "/" + area.nicename + "-to-merge/" + zipFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");

@@ -1,11 +1,12 @@
-package com.bc.calvalus.processing.fire.format.grid;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -27,31 +28,60 @@ import static com.bc.calvalus.processing.fire.format.CommonUtils.getMerisTile;
 
 /**
  * @author thomas
- * @author marcop
  */
-public class GridInputFormat extends InputFormat {
+public class MerisPixelInputFormat extends InputFormat {
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
+        PixelProductArea area = new MerisStrategy().getArea(conf.get("area"));
+        String inputPathPattern = getInputPathPattern(context.getConfiguration().get("calvalus.year"), context.getConfiguration().get("calvalus.month"), area);
+        CalvalusLogger.getLogger().info("Input path pattern = " + inputPathPattern);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
         HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
 
         List<InputSplit> splits = new ArrayList<>(1000);
-        FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
+        FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPattern, conf);
 
         fileStatuses = CommonUtils.filterFileStatuses(fileStatuses);
 
-        createSplits(fileStatuses, splits, conf);
+        createSplits(fileStatuses, splits, conf, hdfsInventoryService);
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    private void createSplits(FileStatus[] fileStatuses,
-                              List<InputSplit> splits, Configuration conf) throws IOException {
+    static String getInputPathPattern(String year, String month, PixelProductArea area) {
+        StringBuilder groupsForArea = new StringBuilder();
+        int firstTileV = area.top / 10;
+        int firstTileH = area.left / 10;
+        int lastTileV = area.bottom / 10;
+        int lastTileH = area.right / 10;
+        for (int tileV = firstTileV; tileV <= lastTileV; tileV++) {
+            for (int tileH = firstTileH; tileH <= lastTileH; tileH++) {
+                String tile = String.format("v%02dh%02d|", tileV, tileH);
+                groupsForArea.append(tile);
+            }
+        }
+        return String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/.*(%s).*%s%s.*tif", year, groupsForArea.substring(0, groupsForArea.length() - 1), year, month);
+    }
 
+    static String getLcInputPathPattern(String year, PixelProductArea area) {
+        StringBuilder groupsForArea = new StringBuilder();
+        int firstTileV = area.top / 10;
+        int firstTileH = area.left / 10;
+        int lastTileV = area.bottom / 10;
+        int lastTileH = area.right / 10;
+        for (int tileV = firstTileV; tileV <= lastTileV; tileV++) {
+            for (int tileH = firstTileH; tileH <= lastTileH; tileH++) {
+                String tile = String.format("v%02dh%02d|", tileV, tileH);
+                groupsForArea.append(tile);
+            }
+        }
+        return String.format("hdfs://calvalus/calvalus/projects/fire/aux/lc/lc-%s-(%s).*nc", lcYear(Integer.parseInt(year)), groupsForArea.substring(0, groupsForArea.length() - 1));
+    }
+
+    private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, HdfsInventoryService hdfsInventoryService) throws IOException {
         List<String> usedTiles = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
             List<Path> filePaths = new ArrayList<>();
@@ -62,39 +92,30 @@ public class GridInputFormat extends InputFormat {
             FileStatus lcPath = getLcFileStatus(path, path.getFileSystem(conf));
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());
-            FileStatus[] srPath = getSrFileStatuses(path, path.getFileSystem(conf));
-            for (FileStatus status : srPath) {
-                filePaths.add(status.getPath());
-                fileLengths.add(status.getLen());
-            }
-
             splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
             usedTiles.add(getMerisTile(path.toString()));
         }
-        for (String tile : CommonUtils.getMissingTiles(usedTiles)) {
+
+        String year = conf.get("calvalus.year");
+        PixelProductArea area = new MerisStrategy().getArea(conf.get("calvalus.area"));
+        String lcInputPathPattern = getLcInputPathPattern(year, area);
+        for (String usedTile : usedTiles) {
+            lcInputPathPattern = lcInputPathPattern.replace(usedTile + "|", "").replace(usedTile, "");
+        }
+        lcInputPathPattern = lcInputPathPattern.replace("|)", ")");
+        CalvalusLogger.getLogger().info("LC input path pattern = " + lcInputPathPattern);
+        FileStatus[] lcFileStatuses = getFileStatuses(hdfsInventoryService, lcInputPathPattern, conf);
+        for (FileStatus lcFileStatus : lcFileStatuses) {
             List<Path> filePaths = new ArrayList<>();
             List<Long> fileLengths = new ArrayList<>();
             // dummy for BA input
             filePaths.add(new Path("dummy"));
             fileLengths.add(0L);
-
-            // dummy for LC input
-            filePaths.add(new Path("dummy"));
-            fileLengths.add(0L);
-
-            // srStatuses
-            FileStatus[] srPaths = getSrFileStatuses(conf.get("calvalus.year"), conf.get("calvalus.month"), tile, FileSystem.get(conf));
-            for (FileStatus status : srPaths) {
-                filePaths.add(status.getPath());
-                fileLengths.add(status.getLen());
-            }
-
-            boolean hasSrData = srPaths.length > 0;
-            if (hasSrData) {
-                splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
-                        fileLengths.stream().mapToLong(Long::longValue).toArray()));
-            }
+            filePaths.add(lcFileStatus.getPath());
+            fileLengths.add(lcFileStatus.getLen());
+            splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+                    fileLengths.stream().mapToLong(Long::longValue).toArray()));
         }
     }
 
@@ -104,55 +125,33 @@ public class GridInputFormat extends InputFormat {
         return fileSystem.getFileStatus(new Path(lcInputPath));
     }
 
-    private FileStatus[] getSrFileStatuses(Path path, FileSystem fileSystem) throws IOException {
-        String baInputPath = path.toString(); // hdfs://calvalus/calvalus/projects/fire/meris-ba/$year/BA_PIX_MER_$tile_$year$month_v4.0.tif
-        String srInputPathPattern = getSrInputPathPattern(baInputPath);
-        return fileSystem.globStatus(new Path(srInputPathPattern));
-    }
-
-    private FileStatus[] getSrFileStatuses(String year, String month, String tile, FileSystem fileSystem) throws IOException {
-        String baInputPath = String.format("hdfs://calvalus/calvalus/projects/fire/meris-ba/%s/BA_PIX_MER_%s_%s%s_v4.0.tif", year, tile, year, month);
-        String srInputPathPattern = getSrInputPathPattern(baInputPath);
-        return fileSystem.globStatus(new Path(srInputPathPattern));
-    }
-
-    static String getLcInputPath(String baInputPath) {
+    private static String getLcInputPath(String baInputPath) {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
         String lcYear = lcYear(year);
-        int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
-        String tile = baInputPath.substring(tileIndex, tileIndex + 6);
+        String tile = getMerisTile(baInputPath);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
     }
 
-    static String getSrInputPathPattern(String baInputPath) {
-        int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
-        int monthIndex = baInputPath.indexOf("BA_PIX_MER") + 22;
-        int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
-        int month = Integer.parseInt(baInputPath.substring(monthIndex, monthIndex + 2));
-        int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
-        String tile = baInputPath.substring(tileIndex, tileIndex + 6);
-        String basePath = baInputPath.substring(0, baInputPath.indexOf("meris-ba") - 1);
-        return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
-    }
-
     private static String lcYear(int year) {
-        // 2002 - 2007 -> 2000
-        // 2008 - 2012 -> 2005
+        // 2002 -> 2000
+        // 2003 - 2007 -> 2005
+        // 2008 - 2012 -> 2010
         switch (year) {
             case 2002:
+                return "2000";
             case 2003:
             case 2004:
             case 2005:
             case 2006:
             case 2007:
-                return "2000";
+                return "2005";
             case 2008:
             case 2009:
             case 2010:
             case 2011:
             case 2012:
-                return "2005";
+                return "2010";
         }
         throw new IllegalArgumentException("Illegal year: " + year);
     }

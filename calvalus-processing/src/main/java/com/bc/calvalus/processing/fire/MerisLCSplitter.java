@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 /**
  * Splits LC map into tiles relevant for Fire-CCI processing.
  */
-public class LCSplitter {
+public class MerisLCSplitter {
 
     private static final int RASTER_LENGTH = 3600;
 

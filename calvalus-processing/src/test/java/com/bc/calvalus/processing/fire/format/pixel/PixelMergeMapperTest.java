@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -14,7 +16,7 @@ public class PixelMergeMapperTest {
         String version = "v04.1";
         for (String year : new String[]{"2005", "2006", "2007", "2008", "2009", "2010", "2011"}) {
             for (String month : new String[]{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"}) {
-                for (PixelProductArea area : PixelProductArea.values()) {
+                for (PixelProductArea area : new MerisStrategy().getAllAreas()) {
                     String baseFilename = PixelMergeMapper.createBaseFilename(year, month, version, area);
                     File file = new File(baseFilename + ".xml");
                     try (FileWriter fileWriter = new FileWriter(file)) {

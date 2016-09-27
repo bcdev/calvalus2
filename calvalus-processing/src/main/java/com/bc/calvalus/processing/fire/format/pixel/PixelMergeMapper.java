@@ -18,6 +18,9 @@ package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -64,6 +67,7 @@ import java.util.logging.Logger;
 public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private SensorStrategy strategy;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -76,7 +80,8 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         String month = context.getConfiguration().get("calvalus.month");
         String version = context.getConfiguration().get("calvalus.baversion", "v04.1");
 
-        PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
+        strategy = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor"));
+        PixelProductArea area = strategy.getArea(context.getConfiguration().get("area"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
