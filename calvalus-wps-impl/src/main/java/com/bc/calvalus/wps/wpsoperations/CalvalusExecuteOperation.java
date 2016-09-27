@@ -4,9 +4,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
@@ -50,14 +48,13 @@ import java.util.Map;
 /**
  * @author hans
  */
-public class CalvalusExecuteOperation {
+public class CalvalusExecuteOperation extends WpsOperation {
 
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
-    private CalvalusFacade calvalusFacade;
     private WpsRequestContext context;
 
     public CalvalusExecuteOperation(WpsRequestContext context) throws IOException {
-        this.calvalusFacade = new CalvalusFacade(context);
+        super(context);
         this.context = context;
     }
 
@@ -190,8 +187,7 @@ public class CalvalusExecuteOperation {
 
     ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
                 throws IOException, ProductionException {
-        ProductionService productionService = calvalusFacade.getProductionService();
-        Production production = productionService.getProduction(jobId);
+        Production production = calvalusFacade.getProduction(jobId);
         List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
         WorkflowItem workflowItem = production.getWorkflow();
         if (isLineage) {

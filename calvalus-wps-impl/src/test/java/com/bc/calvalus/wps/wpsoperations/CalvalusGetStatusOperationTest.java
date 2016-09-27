@@ -72,8 +72,7 @@ public class CalvalusGetStatusOperationTest {
     public void canGetInProgressStatus() throws Exception {
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
         ArrayList<String> dummyList = new ArrayList<>();
         when(mockCalvalusFacade.getProductResultUrls(mockProduction)).thenReturn(dummyList);
         CalvalusWpsProcessStatus mockStatus = getInProgressProcessStatus();
@@ -160,8 +159,7 @@ public class CalvalusGetStatusOperationTest {
     public void canGetFailedStatus() throws Exception {
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
         ArrayList<String> dummyList = new ArrayList<>();
         when(mockCalvalusFacade.getProductResultUrls(mockProduction)).thenReturn(dummyList);
         CalvalusWpsProcessStatus mockStatus = getFailedProcessStatus();
@@ -214,10 +212,9 @@ public class CalvalusGetStatusOperationTest {
     public void canGetSuccessfulStatus() throws Exception {
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
         List<String> mockResultUrlList = getMockResultUrlList();
         when(mockCalvalusFacade.getProductResultUrls(any(Production.class))).thenReturn(mockResultUrlList);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
         CalvalusWpsProcessStatus mockStatus = getDoneAndSuccessfulProcessStatus(mockResultUrlList);
         PowerMockito.whenNew(CalvalusWpsProcessStatus.class).withArguments(mockProduction, mockResultUrlList).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);

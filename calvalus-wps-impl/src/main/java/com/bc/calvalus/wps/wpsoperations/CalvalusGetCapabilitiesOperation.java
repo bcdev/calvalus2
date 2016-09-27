@@ -3,7 +3,6 @@ package com.bc.calvalus.wps.wpsoperations;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
@@ -47,12 +46,10 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusGetCapabilitiesOperation {
-
-    private CalvalusFacade calvalusFacade;
+public class CalvalusGetCapabilitiesOperation extends WpsOperation {
 
     public CalvalusGetCapabilitiesOperation(WpsRequestContext context) throws IOException {
-        this.calvalusFacade = new CalvalusFacade(context);
+        super(context);
     }
 
     public Capabilities getCapabilities()

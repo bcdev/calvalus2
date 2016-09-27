@@ -8,8 +8,6 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
@@ -27,12 +25,10 @@ import java.io.IOException;
 /**
  * @author hans
  */
-public class CalvalusGetStatusOperation {
-
-    private CalvalusFacade calvalusFacade;
+public class CalvalusGetStatusOperation extends WpsOperation {
 
     public CalvalusGetStatusOperation(WpsRequestContext context) throws IOException {
-        this.calvalusFacade = new CalvalusFacade(context);
+        super(context);
     }
 
     public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
@@ -50,7 +46,7 @@ public class CalvalusGetStatusOperation {
         Production production;
         ProcessBriefType processBriefType = new ProcessBriefType();
         try {
-            production = getProduction(jobId);
+            production = calvalusFacade.getProduction(jobId);
             if (production == null) {
                 throw new JobNotFoundException("JobId");
             }
@@ -117,10 +113,5 @@ public class CalvalusGetStatusOperation {
     private ExecuteResponse getExecuteSuccessfulResponse(WpsProcessStatus status) {
         CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
         return executeResponse.getSuccessfulResponse(status.getResultUrls(), status.getStopTime());
-    }
-
-    private Production getProduction(String jobId) throws IOException, ProductionException {
-        ProductionService productionService = calvalusFacade.getProductionService();
-        return productionService.getProduction(jobId);
     }
 }

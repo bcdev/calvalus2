@@ -75,6 +75,10 @@ public class CalvalusFacade {
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
+    public Production getProduction(String jobId) throws IOException, ProductionException {
+        return getProductionService().getProduction(jobId);
+    }
+
     public String getUserName() {
         return this.userName;
     }

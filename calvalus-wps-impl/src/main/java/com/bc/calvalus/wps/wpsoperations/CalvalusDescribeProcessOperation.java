@@ -47,14 +47,13 @@ import java.util.List;
 /**
  * @author hans
  */
-public class CalvalusDescribeProcessOperation {
+public class CalvalusDescribeProcessOperation extends WpsOperation {
 
     private static final String INPUT_PRODUCT_NAME_PATTERN = "*.tif";
-    private CalvalusFacade calvalusFacade;
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
     public CalvalusDescribeProcessOperation(WpsRequestContext context) throws IOException {
-        this.calvalusFacade = new CalvalusFacade(context);
+        super(context);
     }
 
     public List<ProcessDescriptionType> getProcesses(String processorId) throws ProcessesNotAvailableException {
