@@ -27,17 +27,7 @@ public class CalvalusFacade {
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
     public CalvalusFacade(WpsRequestContext wpsRequestContext) throws IOException {
-        String remoteUserName = wpsRequestContext.getHeaderField("remote_user");
-        if (remoteUserName != null) {
-            remoteUserName = "tep_" + remoteUserName;
-            LdapHelper ldap = new LdapHelper();
-            if (!ldap.isRegistered(remoteUserName)) {
-                ldap.register(remoteUserName);
-            }
-            this.userName = remoteUserName;
-        } else {
-            this.userName = wpsRequestContext.getUserName();
-        }
+        this.userName = resolveUserName(wpsRequestContext);
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(wpsRequestContext.getServerContext());
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
@@ -89,4 +79,17 @@ public class CalvalusFacade {
         return this.userName;
     }
 
+    private String resolveUserName(WpsRequestContext wpsRequestContext) throws IOException {
+        String remoteUserName = wpsRequestContext.getHeaderField("remote_user");
+        if (remoteUserName != null) {
+            remoteUserName = "tep_" + remoteUserName;
+            LdapHelper ldap = new LdapHelper();
+            if (!ldap.isRegistered(remoteUserName)) {
+                ldap.register(remoteUserName);
+            }
+            return remoteUserName;
+        } else {
+            return wpsRequestContext.getUserName();
+        }
+    }
 }
