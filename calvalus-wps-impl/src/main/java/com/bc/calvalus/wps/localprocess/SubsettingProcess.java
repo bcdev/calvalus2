@@ -39,11 +39,7 @@ public class SubsettingProcess implements Process {
                                                                  "The request has been queued.",
                                                                  null);
         GpfProductionService.getProductionStatusMap().put(processBuilder.getJobId(), status);
-        GpfTask gpfTask = new GpfTask(processBuilder.getJobId(),
-                                      processBuilder.getParameters(),
-                                      processBuilder.getSourceProduct(),
-                                      processBuilder.getTargetDirPath().toFile(),
-                                      processBuilder.getServerContext().getHostAddress(),
+        GpfTask gpfTask = new GpfTask(processBuilder.getServerContext().getHostAddress(),
                                       processBuilder.getServerContext().getPort(),
                                       processBuilder);
         GpfProductionService.getWorker().submit(gpfTask);

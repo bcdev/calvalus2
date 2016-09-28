@@ -31,12 +31,11 @@ public class GpfTask implements Callable<Boolean> {
     private final ProcessBuilder processBuilder;
     private Logger logger = WpsLogger.getLogger();
 
-    public GpfTask(String jobId, Map<String, Object> parameters, Product sourceProduct, File targetDir,
-                   String hostName, int portNumber, ProcessBuilder processBuilder) {
-        this.jobId = jobId;
-        this.parameters = parameters;
-        this.sourceProduct = sourceProduct;
-        this.targetDir = targetDir;
+    public GpfTask(String hostName, int portNumber, ProcessBuilder processBuilder) {
+        this.jobId = processBuilder.getJobId();
+        this.parameters = processBuilder.getParameters();
+        this.sourceProduct = processBuilder.getSourceProduct();
+        this.targetDir = processBuilder.getTargetDirPath().toFile();
         this.hostName = hostName;
         this.portNumber = portNumber;
         this.processBuilder = processBuilder;
@@ -50,7 +49,9 @@ public class GpfTask implements Callable<Boolean> {
         try {
             logger.log(Level.INFO, "[" + jobId + "] starting subsetting operation...");
             Product subset = GPF.createProduct("Subset", parameters, sourceProduct);
-            GPF.writeProduct(subset, new File(targetDir, sourceProduct.getName() + ".nc"), "Netcdf-BEAM", false, ProgressMonitor.NULL);
+            String outputFormat = (String) parameters.get("outputFormat");
+            GPF.writeProduct(subset, new File(targetDir, sourceProduct.getName() + "-subset" + getFileExtension(outputFormat)), outputFormat,
+                             false, ProgressMonitor.NULL);
             logger.log(Level.INFO, "[" + jobId + "] subsetting operation completed...");
 
             LocalStaging staging = new LocalStaging();
@@ -85,6 +86,16 @@ public class GpfTask implements Callable<Boolean> {
             GpfProductionService.getProductionStatusMap().put(jobId, status);
             logger.log(Level.SEVERE, "[" + jobId + "] Processing failed...", exception);
             return false;
+        }
+    }
+
+    private String getFileExtension(String outputFormat) {
+        if ("netcdf-beam".equalsIgnoreCase(outputFormat)) {
+            return ".nc";
+        } else if ("geotiff".equalsIgnoreCase(outputFormat)) {
+            return ".tif";
+        } else {
+            return "";
         }
     }
 }
