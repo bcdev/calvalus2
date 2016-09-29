@@ -6,6 +6,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -72,12 +73,20 @@ public class CalvalusFacade extends ProcessFacade {
         }
     }
 
-    public List<IWpsProcess> getProcessors() throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
+    public List<IWpsProcess> getProcessors() throws WpsProcessorNotFoundException {
+        try {
+            return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsProcessorNotFoundException(exception);
+        }
     }
 
-    public CalvalusProcessor getProcessor(ProcessorNameConverter parser) throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
+    public CalvalusProcessor getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
+        try {
+            return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "' from Calvalus.", exception);
+        }
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {

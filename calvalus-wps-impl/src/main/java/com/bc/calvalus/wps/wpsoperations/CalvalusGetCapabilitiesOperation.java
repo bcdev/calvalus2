@@ -2,10 +2,9 @@ package com.bc.calvalus.wps.wpsoperations;
 
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.AddressType;
@@ -53,7 +52,7 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
     }
 
     public Capabilities getCapabilities()
-                throws ProcessesNotAvailableException, BindingException, IOException, URISyntaxException {
+                throws BindingException, IOException, URISyntaxException, WpsProcessorNotFoundException {
         return CapabilitiesBuilder.create()
                     .withOperationsMetadata(getOperationsMetadata())
                     .withServiceIdentification(getServiceIdentification())
@@ -137,7 +136,7 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
     }
 
     ProcessOfferings getProcessOfferings()
-                throws BindingException, IOException, URISyntaxException, ProcessesNotAvailableException {
+                throws BindingException, IOException, URISyntaxException, WpsProcessorNotFoundException {
         ProcessOfferings processOfferings = new ProcessOfferings();
         List<ProcessBriefType> calvalusProcesses = getCalvalusProcesses();
         processOfferings.getProcess().addAll(calvalusProcesses);
@@ -233,8 +232,8 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
         return localProcessList;
     }
 
-    private List<ProcessBriefType> getCalvalusProcesses() throws ProcessesNotAvailableException {
-        List<IWpsProcess> processList = getProcesses();
+    private List<ProcessBriefType> getCalvalusProcesses() throws WpsProcessorNotFoundException {
+        List<IWpsProcess> processList = calvalusFacade.getProcessors();
         ProcessOfferings processOfferings = new ProcessOfferings();
         for (IWpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
@@ -245,13 +244,5 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
             processOfferings.getProcess().add(singleProcessor);
         }
         return processOfferings.getProcess();
-    }
-
-    private List<IWpsProcess> getProcesses() throws ProcessesNotAvailableException {
-        try {
-            return calvalusFacade.getProcessors();
-        } catch (IOException | ProductionException exception) {
-            throw new ProcessesNotAvailableException("Unable to retrieve available processors", exception);
-        }
     }
 }

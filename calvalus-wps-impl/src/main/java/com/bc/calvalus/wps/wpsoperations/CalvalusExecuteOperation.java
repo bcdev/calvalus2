@@ -7,6 +7,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
@@ -62,7 +63,8 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
     public ExecuteResponse execute(Execute executeRequest)
                 throws InvalidProcessorIdException, MissingParameterValueException, InvalidParameterValueException,
-                       JAXBException, IOException, ProductionException, WpsProductionException, WpsStagingException {
+                       JAXBException, IOException, ProductionException, WpsProductionException, WpsStagingException,
+                       WpsProcessorNotFoundException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -157,7 +159,8 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
     String processSync(Execute executeRequest, String processorId)
                 throws InvalidProcessorIdException, InvalidParameterValueException, IOException,
-                       JAXBException, ProductionException, MissingParameterValueException, WpsProductionException, WpsStagingException {
+                       JAXBException, ProductionException, MissingParameterValueException,
+                       WpsProductionException, WpsStagingException, WpsProcessorNotFoundException {
         ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
         String jobid = calvalusFacade.orderProductionSynchronous(request);
@@ -168,7 +171,8 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
     String processAsync(Execute executeRequest, String processorId)
                 throws IOException, ProductionException, InvalidProcessorIdException, JAXBException,
-                       InvalidParameterValueException, MissingParameterValueException, WpsProductionException {
+                       InvalidParameterValueException, MissingParameterValueException, WpsProductionException,
+                       WpsProcessorNotFoundException {
         ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
         return calvalusFacade.orderProductionAsynchronous(request);
@@ -203,7 +207,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
     private ProductionRequest createProductionRequest(Execute executeRequest, String processorId)
                 throws JAXBException, IOException, ProductionException, InvalidProcessorIdException,
-                       InvalidParameterValueException, MissingParameterValueException {
+                       InvalidParameterValueException, MissingParameterValueException, WpsProcessorNotFoundException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
 
         ProcessorNameConverter parser = new ProcessorNameConverter(processorId);

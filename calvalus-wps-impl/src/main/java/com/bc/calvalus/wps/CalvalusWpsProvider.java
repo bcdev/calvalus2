@@ -3,7 +3,7 @@ package com.bc.calvalus.wps;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
@@ -40,7 +40,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         try {
             CalvalusGetCapabilitiesOperation getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(wpsRequestContext);
             return getCapabilitiesOperation.getCapabilities();
-        } catch (ProcessesNotAvailableException | IOException | URISyntaxException | BindingException exception) {
+        } catch (WpsProcessorNotFoundException | IOException | URISyntaxException | BindingException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetCapabilities operation successfully", exception);
             throw new WpsServiceException(exception);
         }
@@ -51,7 +51,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         try {
             CalvalusDescribeProcessOperation describeProcessOperation = new CalvalusDescribeProcessOperation(wpsRequestContext);
             return describeProcessOperation.getProcesses(processId);
-        } catch (ProcessesNotAvailableException | IOException exception) {
+        } catch (WpsProcessorNotFoundException | IOException exception) {
             logger.log(Level.SEVERE, "Unable to perform DescribeProcess operation successfully", exception);
             throw new WpsServiceException(exception);
         }
@@ -63,7 +63,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
             return executeOperation.execute(execute);
         } catch (IOException | WpsStagingException | ProductionException | WpsProductionException |
-                    InvalidProcessorIdException | JAXBException exception) {
+                    WpsProcessorNotFoundException | InvalidProcessorIdException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }

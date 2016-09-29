@@ -4,11 +4,9 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.Capabilities;
 import com.bc.wps.api.schema.Languages;
@@ -23,7 +21,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import java.io.IOException;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +29,10 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusFacade.class, ProcessFacade.class})
+@PrepareForTest({
+            CalvalusGetCapabilitiesOperation.class, CalvalusFacade.class,
+            ProcessFacade.class, FileInputStream.class
+})
 public class CalvalusGetCapabilitiesOperationTest {
 
     private CalvalusGetCapabilitiesOperation getCapabilitiesOperation;
@@ -157,34 +158,10 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(languages.getSupported().getLanguage().get(0), equalTo("EN"));
     }
 
-    @Test(expected = ProcessesNotAvailableException.class)
-    public void canCatchIOException() throws Exception {
-        configureMockCalvalusFacadeToThrowIOException();
-
-        getCapabilitiesOperation.getCapabilities();
-    }
-
-    @Test(expected = ProcessesNotAvailableException.class)
-    public void canCatchProductionException() throws Exception {
-        configureMockCalvalusFacadeToThrowProductionException();
-
-        getCapabilitiesOperation.getCapabilities();
-    }
-
     private void configureMockProcesses() throws Exception {
 
         List<IWpsProcess> mockProcessList = getMockWpsProcesses();
         when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessList);
-        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
-    }
-
-    private void configureMockCalvalusFacadeToThrowIOException() throws Exception {
-        when(mockCalvalusFacade.getProcessors()).thenThrow(new IOException("Processors not available"));
-        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
-    }
-
-    private void configureMockCalvalusFacadeToThrowProductionException() throws Exception {
-        when(mockCalvalusFacade.getProcessors()).thenThrow(new ProductionException("Processors not available"));
         PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
     }
 

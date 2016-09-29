@@ -10,7 +10,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.ProcessDescriptionType;
@@ -118,7 +118,7 @@ public class CalvalusDescribeProcessOperationTest {
         assertThat(processes.get(1).getAbstract().getValue(), equalTo("Some description"));
     }
 
-    @Test(expected = ProcessesNotAvailableException.class)
+    @Test(expected = WpsProcessorNotFoundException.class)
     public void canThrowExceptionWhenProcessorIsNull() throws Exception {
         ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
@@ -129,7 +129,7 @@ public class CalvalusDescribeProcessOperationTest {
         describeProcessOperation.getProcesses("process1");
     }
 
-    @Test(expected = ProcessesNotAvailableException.class)
+    @Test(expected = WpsProcessorNotFoundException.class)
     public void canThrowExceptionWhenOneOfProcessorsNotAvailable() throws Exception {
         ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
@@ -142,7 +142,7 @@ public class CalvalusDescribeProcessOperationTest {
         describeProcessOperation.getProcesses("process1,invalidProcessId,process2");
     }
 
-    @Test(expected = ProcessesNotAvailableException.class)
+    @Test(expected = WpsProcessorNotFoundException.class)
     public void canCatchInvalidProcessorIdException() throws Exception {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenThrow(new InvalidProcessorIdException("processorId not found"));
@@ -151,7 +151,7 @@ public class CalvalusDescribeProcessOperationTest {
         describeProcessOperation.getProcesses("process1");
     }
 
-    @Test(expected = ProcessesNotAvailableException.class)
+    @Test(expected = WpsProcessorNotFoundException.class)
     public void canCatchIOException() throws Exception {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getProductType()).thenReturn("inputProductType");

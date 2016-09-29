@@ -10,8 +10,8 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.localprocess.ProcessorExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
@@ -56,7 +56,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         super(context);
     }
 
-    public List<ProcessDescriptionType> getProcesses(String processorId) throws ProcessesNotAvailableException {
+    public List<ProcessDescriptionType> getProcesses(String processorId) throws WpsProcessorNotFoundException {
         try {
             String[] processorIdArray = processorId.split(",");
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
@@ -78,31 +78,30 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     processor = processorExtractor.getProcessor(parser);
                 }
                 if (processor == null) {
-                    throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
-                                                             "due to invalid process ID '" + processorId + "'");
+                    throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "'");
                 }
                 processDescriptionTypeList.add(getSingleProcess(processor));
             }
             return processDescriptionTypeList;
-        } catch (IOException | ProductionException | ProductSetsNotAvailableException | InvalidProcessorIdException
-                    | BindingException | URISyntaxException exception) {
-            throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es)", exception);
+        } catch (IOException | URISyntaxException | BindingException |
+                    ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
+            throw new WpsProcessorNotFoundException("Unable to retrieve the selected process(es)", exception);
         }
     }
 
-    private List<IWpsProcess> getAllCalvalusProcessors() throws IOException, ProductionException {
+    private List<IWpsProcess> getAllCalvalusProcessors() throws WpsProcessorNotFoundException {
         return calvalusFacade.getProcessors();
     }
 
     private List<IWpsProcess> getMultipleCalvalusProcessors(CalvalusFacade calvalusFacade, String[] processorIdArray)
-                throws IOException, ProductionException, InvalidProcessorIdException, ProcessesNotAvailableException {
+                throws InvalidProcessorIdException, WpsProcessorNotFoundException {
         List<IWpsProcess> processors = new ArrayList<>();
         for (String singleProcessorId : processorIdArray) {
             ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
             CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
             if (calvalusProcessor == null) {
-                throw new ProcessesNotAvailableException("Unable to retrieve the selected process(es) " +
-                                                         "due to invalid process ID '" + singleProcessorId + "'");
+                throw new WpsProcessorNotFoundException("Unable to retrieve the selected process(es) " +
+                                                        "due to invalid process ID '" + singleProcessorId + "'");
             }
             processors.add(calvalusProcessor);
         }
@@ -116,7 +115,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
     }
 
     private List<IWpsProcess> getMultipleLocalProcessors(String[] processorIdArray)
-                throws URISyntaxException, IOException, BindingException, InvalidProcessorIdException, ProcessesNotAvailableException {
+                throws URISyntaxException, IOException, BindingException, InvalidProcessorIdException {
         List<IWpsProcess> localProcessors = new ArrayList<>();
         ProcessorExtractor processorExtractor = new ProcessorExtractor();
         for (String singleProcessorId : processorIdArray) {

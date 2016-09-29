@@ -3,7 +3,6 @@ package com.bc.calvalus.wps.localprocess;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -40,7 +39,7 @@ public class ProcessorExtractor {
     }
 
     public IWpsProcess getProcessor(ProcessorNameConverter converter)
-                throws ProcessesNotAvailableException, BindingException, IOException, URISyntaxException {
+                throws BindingException, IOException, URISyntaxException {
         for (BundleDescriptor bundleDescriptor : getLocalBundleDescriptors()) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;

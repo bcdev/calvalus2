@@ -2,7 +2,6 @@ package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -84,7 +83,7 @@ public class SubsettingProcess implements Process {
                                                null);
             status.setStopDate(new Date());
             return status;
-        } catch (ProductMetadataException | IOException | URISyntaxException | ProcessesNotAvailableException |
+        } catch (ProductMetadataException | IOException | URISyntaxException |
                     InvalidProcessorIdException | BindingException exception) {
             String jobId = processBuilder.getJobId();
             status = new LocalProductionStatus(jobId,

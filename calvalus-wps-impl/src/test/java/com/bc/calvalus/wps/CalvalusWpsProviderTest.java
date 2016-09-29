@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
-import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
@@ -59,7 +59,7 @@ public class CalvalusWpsProviderTest {
     @Test(expected = WpsServiceException.class)
     public void canThrowExceptionGetCapabilities() throws Exception {
         CalvalusGetCapabilitiesOperation mockGetCapabilities = mock(CalvalusGetCapabilitiesOperation.class);
-        when(mockGetCapabilities.getCapabilities()).thenThrow(new ProcessesNotAvailableException("process not available"));
+        when(mockGetCapabilities.getCapabilities()).thenThrow(new WpsProcessorNotFoundException("process not available"));
         PowerMockito.whenNew(CalvalusGetCapabilitiesOperation.class).withArguments(mockRequestContext).thenReturn(mockGetCapabilities);
 
         calvalusProvider.getCapabilities(mockRequestContext);
@@ -81,7 +81,7 @@ public class CalvalusWpsProviderTest {
     @Test(expected = WpsServiceException.class)
     public void canThrowExceptionDescribeProcess() throws Exception {
         CalvalusDescribeProcessOperation mockDescribeProcess = mock(CalvalusDescribeProcessOperation.class);
-        when(mockDescribeProcess.getProcesses(DUMMY_ID)).thenThrow(new ProcessesNotAvailableException("process not available"));
+        when(mockDescribeProcess.getProcesses(DUMMY_ID)).thenThrow(new WpsProcessorNotFoundException("process not available"));
         PowerMockito.whenNew(CalvalusDescribeProcessOperation.class).withArguments(mockRequestContext).thenReturn(mockDescribeProcess);
 
         calvalusProvider.describeProcess(mockRequestContext, DUMMY_ID);
@@ -121,7 +121,7 @@ public class CalvalusWpsProviderTest {
         assertThat(jobId.getValue(), equalTo("dummyId"));
     }
 
-    @Test (expected = WpsServiceException.class)
+    @Test(expected = WpsServiceException.class)
     public void canCatchIOExceptionWhenCreatingGetStatus() throws Exception {
         PowerMockito.whenNew(CalvalusGetStatusOperation.class).withArguments(mockRequestContext).thenThrow(new IOException());
 
