@@ -187,7 +187,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
     ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
                 throws IOException, ProductionException {
         Production production = calvalusFacade.getProduction(jobId);
-        List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
+        List<String> productResultUrls = calvalusFacade.getProductResultUrls(jobId);
         WorkflowItem workflowItem = production.getWorkflow();
         if (isLineage) {
             CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();

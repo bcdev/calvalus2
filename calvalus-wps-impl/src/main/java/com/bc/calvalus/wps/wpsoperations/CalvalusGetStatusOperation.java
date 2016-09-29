@@ -44,6 +44,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
     private ExecuteResponse getCalvalusExecuteResponse(String jobId) throws JobNotFoundException {
         ExecuteResponse executeResponse;
         Production production;
+        WpsProcessStatus processStatus;
         ProcessBriefType processBriefType = new ProcessBriefType();
         try {
             production = calvalusFacade.getProduction(jobId);
@@ -59,11 +60,10 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             processBriefType.setIdentifier(WpsTypeConverter.str2CodeType(processId));
             processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
             processBriefType.setProcessVersion(processorConverter.getBundleVersion());
+            processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(jobId));
         } catch (ProductionException | IOException exception) {
             throw new JobNotFoundException(exception, "JobId");
         }
-
-        WpsProcessStatus processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(production));
 
         if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
             executeResponse = getExecuteSuccessfulResponse(processStatus);

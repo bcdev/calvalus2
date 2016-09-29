@@ -116,7 +116,7 @@ public class CalvalusExecuteOperationTest {
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
         resultUrlList.add("resultUrl2");
-        when(mockCalvalusFacade.getProductResultUrls(any(Production.class))).thenReturn(resultUrlList);
+        when(mockCalvalusFacade.getProductResultUrls("process-00")).thenReturn(resultUrlList);
         when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 

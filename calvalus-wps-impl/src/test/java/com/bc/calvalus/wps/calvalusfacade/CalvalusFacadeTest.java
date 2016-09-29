@@ -103,10 +103,11 @@ public class CalvalusFacadeTest {
     public void testGetProductResultUrls() throws Exception {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
+        when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
         ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.getProductResultUrls(mockProduction);
+        calvalusFacade.getProductResultUrls("job-00");
 
         verify(mockCalvalusStaging).getProductResultUrls(anyMapOf(String.class, String.class), productionCaptor.capture());
 

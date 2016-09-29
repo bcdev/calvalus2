@@ -45,7 +45,8 @@ public class CalvalusFacade {
         return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
     }
 
-    public List<String> getProductResultUrls(Production production) {
+    public List<String> getProductResultUrls(String jobId) throws IOException, ProductionException {
+        Production production = getProduction(jobId);
         return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
     }
 
