@@ -1,11 +1,11 @@
 package com.bc.calvalus.wps;
 
-import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
@@ -49,7 +49,7 @@ public abstract class ProcessFacade {
 
     public abstract String orderProductionSynchronous(ProductionRequest request) throws WpsProductionException;
 
-    public abstract List<String> getProductResultUrls(String jobId) throws IOException, ProductionException;
+    public abstract List<String> getProductResultUrls(String jobId) throws WpsResultProductException;
 
     public abstract void stageProduction(String jobId) throws WpsStagingException;
 

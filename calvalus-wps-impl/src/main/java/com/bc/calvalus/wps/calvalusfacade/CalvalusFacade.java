@@ -8,6 +8,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
@@ -51,9 +52,13 @@ public class CalvalusFacade extends ProcessFacade {
         }
     }
 
-    public List<String> getProductResultUrls(String jobId) throws IOException, ProductionException {
-        Production production = getProduction(jobId);
-        return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
+    public List<String> getProductResultUrls(String jobId) throws WpsResultProductException {
+        try {
+            Production production = getProduction(jobId);
+            return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsResultProductException(exception);
+        }
     }
 
     public void stageProduction(String jobId) throws WpsStagingException {

@@ -5,6 +5,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
@@ -63,7 +64,8 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
             return executeOperation.execute(execute);
         } catch (IOException | WpsStagingException | ProductionException | WpsProductionException |
-                    WpsProcessorNotFoundException | InvalidProcessorIdException | JAXBException exception) {
+                    WpsProcessorNotFoundException | WpsResultProductException | InvalidProcessorIdException |
+                    JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }

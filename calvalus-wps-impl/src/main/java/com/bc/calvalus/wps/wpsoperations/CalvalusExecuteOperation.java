@@ -9,6 +9,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
@@ -64,7 +65,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
     public ExecuteResponse execute(Execute executeRequest)
                 throws InvalidProcessorIdException, MissingParameterValueException, InvalidParameterValueException,
                        JAXBException, IOException, ProductionException, WpsProductionException, WpsStagingException,
-                       WpsProcessorNotFoundException {
+                       WpsProcessorNotFoundException, WpsResultProductException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -191,7 +192,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
     }
 
     ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
-                throws IOException, ProductionException {
+                throws IOException, ProductionException, WpsResultProductException {
         Production production = calvalusFacade.getProduction(jobId);
         List<String> productResultUrls = calvalusFacade.getProductResultUrls(jobId);
         WorkflowItem workflowItem = production.getWorkflow();

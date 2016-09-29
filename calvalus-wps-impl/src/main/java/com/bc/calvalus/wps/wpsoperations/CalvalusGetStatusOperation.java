@@ -10,6 +10,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
@@ -61,7 +62,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
             processBriefType.setProcessVersion(processorConverter.getBundleVersion());
             processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(jobId));
-        } catch (ProductionException | IOException exception) {
+        } catch (ProductionException | IOException | WpsResultProductException exception) {
             throw new JobNotFoundException(exception, "JobId");
         }
 
