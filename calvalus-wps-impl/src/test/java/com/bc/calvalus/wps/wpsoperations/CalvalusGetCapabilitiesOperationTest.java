@@ -4,6 +4,8 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
+import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
 import com.bc.calvalus.wps.exceptions.ProcessesNotAvailableException;
@@ -29,7 +31,7 @@ import java.util.List;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusFacade.class})
+@PrepareForTest({CalvalusGetCapabilitiesOperation.class, CalvalusFacade.class, ProcessFacade.class})
 public class CalvalusGetCapabilitiesOperationTest {
 
     private CalvalusGetCapabilitiesOperation getCapabilitiesOperation;
@@ -157,14 +159,14 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Test(expected = ProcessesNotAvailableException.class)
     public void canCatchIOException() throws Exception {
-        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenThrow(new IOException("IOException error"));
+        configureMockCalvalusFacadeToThrowIOException();
 
         getCapabilitiesOperation.getCapabilities();
     }
 
     @Test(expected = ProcessesNotAvailableException.class)
     public void canCatchProductionException() throws Exception {
-        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenThrow(new IOException("ProductionException error"));
+        configureMockCalvalusFacadeToThrowProductionException();
 
         getCapabilitiesOperation.getCapabilities();
     }
@@ -173,6 +175,16 @@ public class CalvalusGetCapabilitiesOperationTest {
 
         List<IWpsProcess> mockProcessList = getMockWpsProcesses();
         when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessList);
+        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
+    }
+
+    private void configureMockCalvalusFacadeToThrowIOException() throws Exception {
+        when(mockCalvalusFacade.getProcessors()).thenThrow(new IOException("Processors not available"));
+        PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
+    }
+
+    private void configureMockCalvalusFacadeToThrowProductionException() throws Exception {
+        when(mockCalvalusFacade.getProcessors()).thenThrow(new ProductionException("Processors not available"));
         PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
     }
 

@@ -35,7 +35,7 @@ import java.util.Timer;
 })
 public class CalvalusWpsProviderTest {
 
-    public static final String DUMMY_ID = "dummyId";
+    private static final String DUMMY_ID = "dummyId";
     private WpsRequestContext mockRequestContext;
 
     private CalvalusWpsProvider calvalusProvider;
@@ -119,6 +119,13 @@ public class CalvalusWpsProviderTest {
         verify(mockGetStatus, times(1)).getStatus(jobId.capture());
 
         assertThat(jobId.getValue(), equalTo("dummyId"));
+    }
+
+    @Test (expected = WpsServiceException.class)
+    public void canCatchIOExceptionWhenCreatingGetStatus() throws Exception {
+        PowerMockito.whenNew(CalvalusGetStatusOperation.class).withArguments(mockRequestContext).thenThrow(new IOException());
+
+        calvalusProvider.getStatus(mockRequestContext, DUMMY_ID);
     }
 
     @Test

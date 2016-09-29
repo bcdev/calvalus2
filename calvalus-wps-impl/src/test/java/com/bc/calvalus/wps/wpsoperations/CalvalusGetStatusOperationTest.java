@@ -22,7 +22,6 @@ import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.wps.api.WpsRequestContext;
-import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -117,26 +116,11 @@ public class CalvalusGetStatusOperationTest {
 
     @Test
     public void canThrowJobNotFoundExceptionWhenProductionNull() throws Exception {
-        when(mockProductionService.getProduction(anyString())).thenReturn(null);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(null);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
         thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
-
-        getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
-        getStatusOperation.getStatus("job-01");
-    }
-
-    @Test
-    public void canCatchIOExceptionWhenGetInProgressStatus() throws Exception {
-        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("IOException error"));
-        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-
-        thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
-        thrownException.expect(instanceOf(InvalidParameterValueException.class));
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("job-01");
@@ -145,7 +129,7 @@ public class CalvalusGetStatusOperationTest {
     @Test
     public void canCatchProductionExceptionWhenGetInProgressStatus() throws Exception {
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("Production error"));
+        when(mockCalvalusFacade.getProduction(anyString())).thenThrow(new IOException("Production error"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);

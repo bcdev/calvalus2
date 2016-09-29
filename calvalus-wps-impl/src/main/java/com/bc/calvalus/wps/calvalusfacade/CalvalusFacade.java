@@ -5,7 +5,9 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.cmd.LdapHelper;
+import com.bc.calvalus.wps.ProcessFacade;
+import com.bc.calvalus.wps.exceptions.WpsProductionException;
+import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 
@@ -19,30 +21,33 @@ import java.util.List;
  *
  * @author hans
  */
-public class CalvalusFacade {
+public class CalvalusFacade extends ProcessFacade {
 
-    private final String userName;
     private final CalvalusProduction calvalusProduction;
     private final CalvalusStaging calvalusStaging;
     private final CalvalusProcessorExtractor calvalusProcessorExtractor;
 
     public CalvalusFacade(WpsRequestContext wpsRequestContext) throws IOException {
-        this.userName = resolveUserName(wpsRequestContext);
+        super(wpsRequestContext);
         this.calvalusProduction = new CalvalusProduction();
         this.calvalusStaging = new CalvalusStaging(wpsRequestContext.getServerContext());
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
-    public ProductionService getProductionService() throws ProductionException, IOException {
-        return CalvalusProductionService.getProductionServiceSingleton();
+    public String orderProductionAsynchronous(ProductionRequest request) throws WpsProductionException {
+        try {
+            return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsProductionException(exception);
+        }
     }
 
-    public String orderProductionAsynchronous(ProductionRequest request) throws ProductionException, IOException {
-        return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
-    }
-
-    public String orderProductionSynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
-        return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+    public String orderProductionSynchronous(ProductionRequest request) throws WpsProductionException {
+        try {
+            return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+        } catch (ProductionException | IOException | InterruptedException exception) {
+            throw new WpsProductionException(exception);
+        }
     }
 
     public List<String> getProductResultUrls(String jobId) throws IOException, ProductionException {
@@ -50,13 +55,21 @@ public class CalvalusFacade {
         return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
     }
 
-    public void stageProduction(String jobId) throws ProductionException, IOException {
-        calvalusStaging.stageProduction(getProductionService(), jobId);
+    public void stageProduction(String jobId) throws WpsStagingException {
+        try {
+            calvalusStaging.stageProduction(getProductionService(), jobId);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsStagingException(exception);
+        }
     }
 
-    public void observeStagingStatus(String jobId) throws InterruptedException, IOException, ProductionException {
-        Production production = getProduction(jobId);
-        calvalusStaging.observeStagingStatus(getProductionService(), production);
+    public void observeStagingStatus(String jobId) throws WpsStagingException {
+        try {
+            Production production = getProduction(jobId);
+            calvalusStaging.observeStagingStatus(getProductionService(), production);
+        } catch (ProductionException | IOException | InterruptedException exception) {
+            throw new WpsStagingException(exception);
+        }
     }
 
     public List<IWpsProcess> getProcessors() throws IOException, ProductionException {
@@ -81,21 +94,7 @@ public class CalvalusFacade {
         return getProductionService().getProduction(jobId);
     }
 
-    public String getUserName() {
-        return this.userName;
-    }
-
-    private String resolveUserName(WpsRequestContext wpsRequestContext) throws IOException {
-        String remoteUserName = wpsRequestContext.getHeaderField("remote_user");
-        if (remoteUserName != null) {
-            remoteUserName = "tep_" + remoteUserName;
-            LdapHelper ldap = new LdapHelper();
-            if (!ldap.isRegistered(remoteUserName)) {
-                ldap.register(remoteUserName);
-            }
-            return remoteUserName;
-        } else {
-            return wpsRequestContext.getUserName();
-        }
+    private ProductionService getProductionService() throws ProductionException, IOException {
+        return CalvalusProductionService.getProductionServiceSingleton();
     }
 }
