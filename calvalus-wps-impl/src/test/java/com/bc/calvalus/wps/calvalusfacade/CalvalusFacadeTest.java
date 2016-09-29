@@ -115,26 +115,26 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testStageProduction() throws Exception {
-        Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        ArgumentCaptor<String> jobidCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.stageProduction(mockProduction);
+        calvalusFacade.stageProduction("job-00");
 
-        verify(mockCalvalusStaging).stageProduction(any(ProductionService.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).stageProduction(any(ProductionService.class), jobidCaptor.capture());
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobidCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
     public void testObserveStagingStatus() throws Exception {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
+        when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
         ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.observeStagingStatus(mockProduction);
+        calvalusFacade.observeStagingStatus("job-00");
 
         verify(mockCalvalusStaging).observeStagingStatus(any(ProductionService.class), productionCaptor.capture());
 

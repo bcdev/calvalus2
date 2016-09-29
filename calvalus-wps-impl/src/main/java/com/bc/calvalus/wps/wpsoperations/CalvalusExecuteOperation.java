@@ -158,10 +158,10 @@ public class CalvalusExecuteOperation extends WpsOperation {
                        JAXBException, InterruptedException, InvalidParameterValueException, MissingParameterValueException {
         ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
-        Production production = calvalusFacade.orderProductionSynchronous(request);
-        calvalusFacade.stageProduction(production);
-        calvalusFacade.observeStagingStatus(production);
-        return production.getId();
+        String jobid = calvalusFacade.orderProductionSynchronous(request);
+        calvalusFacade.stageProduction(jobid);
+        calvalusFacade.observeStagingStatus(jobid);
+        return jobid;
     }
 
     String processAsync(Execute executeRequest, String processorId)
@@ -169,8 +169,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
                        InvalidParameterValueException, MissingParameterValueException {
         ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
-        Production production = calvalusFacade.orderProductionAsynchronous(request);
-        return production.getId();
+        return calvalusFacade.orderProductionAsynchronous(request);
     }
 
     ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {

@@ -37,11 +37,11 @@ public class CalvalusFacade {
         return CalvalusProductionService.getProductionServiceSingleton();
     }
 
-    public Production orderProductionAsynchronous(ProductionRequest request) throws ProductionException, IOException {
+    public String orderProductionAsynchronous(ProductionRequest request) throws ProductionException, IOException {
         return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
     }
 
-    public Production orderProductionSynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
+    public String orderProductionSynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
         return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
     }
 
@@ -49,11 +49,12 @@ public class CalvalusFacade {
         return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
     }
 
-    public void stageProduction(Production production) throws ProductionException, IOException {
-        calvalusStaging.stageProduction(getProductionService(), production);
+    public void stageProduction(String jobId) throws ProductionException, IOException {
+        calvalusStaging.stageProduction(getProductionService(), jobId);
     }
 
-    public void observeStagingStatus(Production production) throws InterruptedException, IOException, ProductionException {
+    public void observeStagingStatus(String jobId) throws InterruptedException, IOException, ProductionException {
+        Production production = getProduction(jobId);
         calvalusStaging.observeStagingStatus(getProductionService(), production);
     }
 

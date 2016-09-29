@@ -83,7 +83,7 @@ public class CalvalusExecuteOperationTest {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
         when(mockProduction.getId()).thenReturn("process-00");
-        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
+        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn("process-00");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
@@ -112,7 +112,7 @@ public class CalvalusExecuteOperationTest {
         WorkflowItem mockWorkflow = mock(WorkflowItem.class);
         when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
         when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
-        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
+        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn("process-00");
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
         resultUrlList.add("resultUrl2");
@@ -138,7 +138,7 @@ public class CalvalusExecuteOperationTest {
         when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
         Production mockProduction = mock(Production.class);
         when(mockProduction.getId()).thenReturn("job-id");
-        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
+        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn("job-id");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         ProductionRequest mockProductionRequest = configureProcessingMock();
 
@@ -153,8 +153,8 @@ public class CalvalusExecuteOperationTest {
         PowerMockito.verifyNew(ProcessorNameConverter.class).withArguments(processIdCaptor.capture());
         verify(mockCalvalusFacade).getProcessor(any(ProcessorNameConverter.class));
         verify(mockCalvalusFacade).orderProductionSynchronous(productionRequestCaptor.capture());
-        verify(mockCalvalusFacade).stageProduction(any(Production.class));
-        verify(mockCalvalusFacade).observeStagingStatus(any(Production.class));
+        verify(mockCalvalusFacade).stageProduction("job-id");
+        verify(mockCalvalusFacade).observeStagingStatus("job-id");
 
         assertThat(executeRequestCaptor.getValue(), equalTo(mockExecuteRequest));
         assertThat(processIdCaptor.getValue(), equalTo("process1"));
@@ -178,7 +178,7 @@ public class CalvalusExecuteOperationTest {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
         when(mockProduction.getId()).thenReturn("process-00");
-        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn(mockProduction);
+        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn("process-00");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         ProductionRequest mockProductionRequest = configureProcessingMock();
 

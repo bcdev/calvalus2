@@ -70,7 +70,7 @@ public class CalvalusStagingTest {
         ArgumentCaptor<String> productId = ArgumentCaptor.forClass(String.class);
 
         calvalusStaging = new CalvalusStaging(mockServerContext);
-        calvalusStaging.stageProduction(mockProductionService, mockProduction);
+        calvalusStaging.stageProduction(mockProductionService, "productId");
 
         verify(mockProductionService).stageProductions(productId.capture());
         assertThat(productId.getValue(), equalTo("productId"));

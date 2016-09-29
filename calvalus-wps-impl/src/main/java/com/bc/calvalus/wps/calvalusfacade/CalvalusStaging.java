@@ -44,9 +44,9 @@ public class CalvalusStaging {
         this.wpsServerContext = wpsServerContext;
     }
 
-    protected void stageProduction(ProductionService productionService, Production production) throws ProductionException, IOException {
+    protected void stageProduction(ProductionService productionService, String jobid) throws ProductionException, IOException {
         logInfo("Staging results...");
-        productionService.stageProductions(production.getId());
+        productionService.stageProductions(jobid);
     }
 
     protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) {
