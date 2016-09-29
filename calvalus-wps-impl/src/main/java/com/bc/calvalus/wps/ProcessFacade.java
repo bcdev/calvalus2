@@ -9,6 +9,7 @@ import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,6 +20,8 @@ import java.util.List;
 public abstract class ProcessFacade {
 
     protected final String userName;
+    private static final String REMOTE_USER_KEY = PropertiesWrapper.get("remote.user.key");
+    private static final String REMOTE_USER_PREFIX = PropertiesWrapper.get("remote.user.prefix");
 
     public ProcessFacade(WpsRequestContext wpsRequestContext) throws IOException {
         this.userName = resolveUserName(wpsRequestContext);
@@ -29,9 +32,9 @@ public abstract class ProcessFacade {
     }
 
     private String resolveUserName(WpsRequestContext wpsRequestContext) throws IOException {
-        String remoteUserName = wpsRequestContext.getHeaderField("remote_user");
+        String remoteUserName = wpsRequestContext.getHeaderField(REMOTE_USER_KEY);
         if (remoteUserName != null) {
-            remoteUserName = "tep_" + remoteUserName;
+            remoteUserName = REMOTE_USER_PREFIX + remoteUserName;
             LdapHelper ldap = new LdapHelper();
             if (!ldap.isRegistered(remoteUserName)) {
                 ldap.register(remoteUserName);

@@ -39,9 +39,9 @@ public class CalvalusDescribeProcessOperationTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockCalvalusFacade = mock(CalvalusFacade.class);
         mockRequestContext = mock(WpsRequestContext.class);
-        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
     }
 
     @Test

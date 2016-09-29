@@ -41,9 +41,9 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockRequestContext = mock(WpsRequestContext.class);
         mockCalvalusFacade = mock(CalvalusFacade.class);
-        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
 
         getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(mockRequestContext);
     }
