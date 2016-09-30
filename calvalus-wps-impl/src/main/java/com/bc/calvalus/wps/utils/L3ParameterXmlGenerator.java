@@ -70,6 +70,7 @@ public class L3ParameterXmlGenerator {
                 createOpeningTag("aggregator");
                 sb.append("\n");
                 constructSingleElement("type", aggregatorConfig.getType());
+                constructSingleElement("percentage", aggregatorConfig.getPercentage());
                 constructSingleElement("varName", aggregatorConfig.getVarName());
                 createClosingTag("aggregator");
             }
