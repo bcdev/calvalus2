@@ -17,11 +17,11 @@ import java.util.List;
  */
 public class CalvalusProcessorExtractor {
 
-    protected List<IWpsProcess> getProcessors(ProductionService productionService, String userName)
+    protected List<WpsProcess> getProcessors(ProductionService productionService, String userName)
                 throws ProductionException {
         BundleDescriptor[] bundleDescriptors = getBundleDescriptors(productionService, userName);
 
-        List<IWpsProcess> processors = new ArrayList<>();
+        List<WpsProcess> processors = new ArrayList<>();
         for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;

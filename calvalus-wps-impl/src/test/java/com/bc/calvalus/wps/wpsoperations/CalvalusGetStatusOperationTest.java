@@ -22,6 +22,7 @@ import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -62,6 +63,8 @@ public class CalvalusGetStatusOperationTest {
         mockProductionService = mock(ProductionService.class);
         mockProduction = mock(Production.class);
         mockRequestContext = mock(WpsRequestContext.class);
+        WpsServerContext mockServerContext = mock(WpsServerContext.class);
+        when(mockRequestContext.getServerContext()).thenReturn(mockServerContext);
     }
 
     @Rule

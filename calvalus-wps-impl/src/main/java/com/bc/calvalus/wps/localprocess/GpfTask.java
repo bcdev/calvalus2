@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.localprocess;
 
+import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.core.ProgressMonitor;
@@ -28,16 +29,18 @@ public class GpfTask implements Callable<Boolean> {
     private final File targetDir;
     private final String hostName;
     private final int portNumber;
+    private final ProcessFacade localFacade;
     private final ProcessBuilder processBuilder;
     private Logger logger = WpsLogger.getLogger();
 
-    public GpfTask(String hostName, int portNumber, ProcessBuilder processBuilder) {
+    public GpfTask(ProcessFacade localFacade, String hostName, int portNumber, ProcessBuilder processBuilder) {
         this.jobId = processBuilder.getJobId();
         this.parameters = processBuilder.getParameters();
         this.sourceProduct = processBuilder.getSourceProduct();
         this.targetDir = processBuilder.getTargetDirPath().toFile();
         this.hostName = hostName;
         this.portNumber = portNumber;
+        this.localFacade = localFacade;
         this.processBuilder = processBuilder;
     }
 
@@ -54,11 +57,11 @@ public class GpfTask implements Callable<Boolean> {
                              false, ProgressMonitor.NULL);
             logger.log(Level.INFO, "[" + jobId + "] subsetting operation completed...");
 
-            LocalStaging staging = new LocalStaging();
-            List<String> resultUrls = staging.getProductUrls(hostName, portNumber, targetDir, jobId);
+            List<String> resultUrls = localFacade.getProductResultUrls(jobId);
             ProcessorExtractor processorExtractor = new ProcessorExtractor();
             ProcessorNameConverter nameConverter = new ProcessorNameConverter(processBuilder.getProcessId());
-            staging.generateProductMetadata(targetDir, jobId, parameters, processorExtractor.getProcessor(nameConverter), hostName, portNumber);
+            LocalMetadata localMetadata = new LocalMetadata();
+            localMetadata.generateProductMetadata(targetDir, jobId, parameters, processorExtractor.getProcessor(nameConverter), hostName, portNumber);
             status.setState(ProductionState.SUCCESSFUL);
             status.setProgress(100);
             status.setResultUrls(resultUrls);

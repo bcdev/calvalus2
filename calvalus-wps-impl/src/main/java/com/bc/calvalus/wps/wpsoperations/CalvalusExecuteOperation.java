@@ -103,13 +103,13 @@ public class CalvalusExecuteOperation extends WpsOperation {
             Process utepProcess = new SubsettingProcess();
 
             if (isAsynchronous) {
-                LocalProductionStatus status = utepProcess.processAsynchronous(processBuilder);
+                LocalProductionStatus status = utepProcess.processAsynchronous(localFacade, processBuilder);
                 if (isLineage) {
                     return utepProcess.createLineageAsyncExecuteResponse(status, processBuilder);
                 }
                 return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
             } else {
-                LocalProductionStatus status = utepProcess.processSynchronous(processBuilder);
+                LocalProductionStatus status = utepProcess.processSynchronous(localFacade, processBuilder);
                 if (!ProductionState.SUCCESSFUL.toString().equals(status.getState())) {
                     return executeResponse.getFailedResponse(status.getMessage());
                 }

@@ -6,8 +6,9 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.Capabilities;
 import com.bc.wps.api.schema.Languages;
 import com.bc.wps.api.schema.OperationsMetadata;
@@ -44,6 +45,8 @@ public class CalvalusGetCapabilitiesOperationTest {
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockRequestContext = mock(WpsRequestContext.class);
         mockCalvalusFacade = mock(CalvalusFacade.class);
+        WpsServerContext mockServerContext = mock(WpsServerContext.class);
+        when(mockRequestContext.getServerContext()).thenReturn(mockServerContext);
 
         getCapabilitiesOperation = new CalvalusGetCapabilitiesOperation(mockRequestContext);
     }
@@ -160,20 +163,20 @@ public class CalvalusGetCapabilitiesOperationTest {
 
     private void configureMockProcesses() throws Exception {
 
-        List<IWpsProcess> mockProcessList = getMockWpsProcesses();
+        List<WpsProcess> mockProcessList = getMockWpsProcesses();
         when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessList);
         PowerMockito.whenNew(CalvalusFacade.class).withAnyArguments().thenReturn(mockCalvalusFacade);
     }
 
-    private List<IWpsProcess> getMockWpsProcesses() {
-        List<IWpsProcess> mockProcessList = new ArrayList<>();
+    private List<WpsProcess> getMockWpsProcesses() {
+        List<WpsProcess> mockProcessList = new ArrayList<>();
 
-        IWpsProcess process1 = mock(IWpsProcess.class);
+        WpsProcess process1 = mock(WpsProcess.class);
         when(process1.getIdentifier()).thenReturn("beam-buildin~1.0~BandMaths");
         when(process1.getTitle()).thenReturn("Band arythmetic processor");
         when(process1.getAbstractText()).thenReturn("Some description");
 
-        IWpsProcess process2 = mock(IWpsProcess.class);
+        WpsProcess process2 = mock(WpsProcess.class);
         when(process2.getIdentifier()).thenReturn("beam-buildin~1.0~urban-tep-indices");
         when(process2.getTitle()).thenReturn("Urban TEP seasonality indices from MERIS SR");
         when(process2.getAbstractText()).thenReturn("Some description");

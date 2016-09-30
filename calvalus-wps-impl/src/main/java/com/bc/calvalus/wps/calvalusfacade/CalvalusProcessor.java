@@ -8,7 +8,7 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 /**
  * @author hans
  */
-public class CalvalusProcessor implements IWpsProcess {
+public class CalvalusProcessor implements WpsProcess {
 
     public static final String DELIMITER = "~";
 

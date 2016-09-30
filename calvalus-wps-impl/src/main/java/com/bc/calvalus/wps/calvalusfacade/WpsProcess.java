@@ -5,7 +5,7 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 /**
  * @author hans
  */
-public interface IWpsProcess {
+public interface WpsProcess {
 
     String getIdentifier();
 

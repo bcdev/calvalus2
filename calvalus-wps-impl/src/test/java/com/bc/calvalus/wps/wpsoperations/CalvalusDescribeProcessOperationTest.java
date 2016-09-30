@@ -8,11 +8,12 @@ import static org.mockito.Mockito.*;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -42,6 +43,8 @@ public class CalvalusDescribeProcessOperationTest {
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockCalvalusFacade = mock(CalvalusFacade.class);
         mockRequestContext = mock(WpsRequestContext.class);
+        WpsServerContext mockServerContext = mock(WpsServerContext.class);
+        when(mockRequestContext.getServerContext()).thenReturn(mockServerContext);
     }
 
     @Test
@@ -100,7 +103,7 @@ public class CalvalusDescribeProcessOperationTest {
         ProcessorNameConverter mockProcessorNameConverter = mock(ProcessorNameConverter.class);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         PowerMockito.whenNew(ProcessorNameConverter.class).withAnyArguments().thenReturn(mockProcessorNameConverter);
-        List<IWpsProcess> mockProcessorList = getMockProcessList();
+        List<WpsProcess> mockProcessorList = getMockProcessList();
         when(mockCalvalusFacade.getProcessors()).thenReturn(mockProcessorList);
         when(mockCalvalusFacade.getProductSets()).thenReturn(mockProductSets);
 
@@ -167,8 +170,8 @@ public class CalvalusDescribeProcessOperationTest {
     }
 
 
-    private List<IWpsProcess> getMockProcessList() {
-        List<IWpsProcess> mockProcessList = new ArrayList<>();
+    private List<WpsProcess> getMockProcessList() {
+        List<WpsProcess> mockProcessList = new ArrayList<>();
 
         CalvalusProcessor process1 = getProcess1();
         CalvalusProcessor process2 = getProcess2();

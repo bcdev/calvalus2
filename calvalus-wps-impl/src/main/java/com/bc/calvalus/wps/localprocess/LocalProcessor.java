@@ -2,12 +2,12 @@ package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 
 /**
  * @author hans
  */
-public class LocalProcessor implements IWpsProcess {
+public class LocalProcessor implements WpsProcess {
 
     private static final String DELIMITER = "~";
 

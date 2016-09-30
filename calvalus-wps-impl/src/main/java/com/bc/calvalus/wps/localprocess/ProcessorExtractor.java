@@ -2,7 +2,7 @@ package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -24,8 +24,8 @@ import java.util.List;
  */
 public class ProcessorExtractor {
 
-    public List<IWpsProcess> getProcessors() throws BindingException, IOException, URISyntaxException {
-        List<IWpsProcess> processors = new ArrayList<>();
+    public List<WpsProcess> getProcessors() throws BindingException, IOException, URISyntaxException {
+        List<WpsProcess> processors = new ArrayList<>();
         for (BundleDescriptor bundleDescriptor : getLocalBundleDescriptors()) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;
@@ -38,7 +38,7 @@ public class ProcessorExtractor {
         return processors;
     }
 
-    public IWpsProcess getProcessor(ProcessorNameConverter converter)
+    public WpsProcess getProcessor(ProcessorNameConverter converter)
                 throws BindingException, IOException, URISyntaxException {
         for (BundleDescriptor bundleDescriptor : getLocalBundleDescriptors()) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {

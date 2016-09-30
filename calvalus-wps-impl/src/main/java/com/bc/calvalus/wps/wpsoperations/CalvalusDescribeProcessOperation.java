@@ -8,13 +8,11 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
-import com.bc.calvalus.wps.localprocess.ProcessorExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
-import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.CRSsType;
 import com.bc.wps.api.schema.ComplexDataCombinationType;
@@ -35,7 +33,6 @@ import org.apache.commons.lang.StringUtils;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -60,10 +57,10 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         try {
             String[] processorIdArray = processorId.split(",");
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
-            List<IWpsProcess> processors = new ArrayList<>();
+            List<WpsProcess> processors = new ArrayList<>();
             if (processorId.equalsIgnoreCase("all")) {
-                processors.addAll(getAllCalvalusProcessors());
-                processors.addAll(getAllLocalProcessors());
+                processors.addAll(calvalusFacade.getProcessors());
+                processors.addAll(localFacade.getProcessors());
                 processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else if (processorIdArray.length > 1) {
                 // TODO: think about a solution if the query is a combination of local and calvalus processors
@@ -72,10 +69,9 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                 processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else {
                 ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-                IWpsProcess processor = calvalusFacade.getProcessor(parser);
+                WpsProcess processor = calvalusFacade.getProcessor(parser);
                 if (processor == null) {
-                    ProcessorExtractor processorExtractor = new ProcessorExtractor();
-                    processor = processorExtractor.getProcessor(parser);
+                    processor = localFacade.getProcessor(parser);
                 }
                 if (processor == null) {
                     throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "'");
@@ -83,19 +79,14 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                 processDescriptionTypeList.add(getSingleProcess(processor));
             }
             return processDescriptionTypeList;
-        } catch (IOException | URISyntaxException | BindingException |
-                    ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
+        } catch (IOException | ProductSetsNotAvailableException | InvalidProcessorIdException exception) {
             throw new WpsProcessorNotFoundException("Unable to retrieve the selected process(es)", exception);
         }
     }
 
-    private List<IWpsProcess> getAllCalvalusProcessors() throws WpsProcessorNotFoundException {
-        return calvalusFacade.getProcessors();
-    }
-
-    private List<IWpsProcess> getMultipleCalvalusProcessors(CalvalusFacade calvalusFacade, String[] processorIdArray)
+    private List<WpsProcess> getMultipleCalvalusProcessors(CalvalusFacade calvalusFacade, String[] processorIdArray)
                 throws InvalidProcessorIdException, WpsProcessorNotFoundException {
-        List<IWpsProcess> processors = new ArrayList<>();
+        List<WpsProcess> processors = new ArrayList<>();
         for (String singleProcessorId : processorIdArray) {
             ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
             CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
@@ -108,19 +99,12 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         return processors;
     }
 
-    private List<IWpsProcess> getAllLocalProcessors()
-                throws BindingException, IOException, URISyntaxException {
-        ProcessorExtractor processorExtractor = new ProcessorExtractor();
-        return processorExtractor.getProcessors();
-    }
-
-    private List<IWpsProcess> getMultipleLocalProcessors(String[] processorIdArray)
-                throws URISyntaxException, IOException, BindingException, InvalidProcessorIdException {
-        List<IWpsProcess> localProcessors = new ArrayList<>();
-        ProcessorExtractor processorExtractor = new ProcessorExtractor();
+    private List<WpsProcess> getMultipleLocalProcessors(String[] processorIdArray)
+                throws InvalidProcessorIdException, WpsProcessorNotFoundException {
+        List<WpsProcess> localProcessors = new ArrayList<>();
         for (String singleProcessorId : processorIdArray) {
             ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
-            IWpsProcess processor = processorExtractor.getProcessor(parser);
+            WpsProcess processor = localFacade.getProcessor(parser);
             if (processor != null) {
                 localProcessors.add(processor);
             }
@@ -150,17 +134,17 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         return regionBoundingBox;
     }
 
-    private List<ProcessDescriptionType> getMultipleProcessType(List<IWpsProcess> processes)
+    private List<ProcessDescriptionType> getMultipleProcessType(List<WpsProcess> processes)
                 throws ProductSetsNotAvailableException, IOException {
         List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
-        for (IWpsProcess process : processes) {
+        for (WpsProcess process : processes) {
             ProcessDescriptionType processDescription = getSingleProcess(process);
             processDescriptionTypeList.add(processDescription);
         }
         return processDescriptionTypeList;
     }
 
-    private ProcessDescriptionType getSingleProcess(IWpsProcess process)
+    private ProcessDescriptionType getSingleProcess(WpsProcess process)
                 throws ProductSetsNotAvailableException, IOException {
         ProductSet[] productSets;
         try {
@@ -211,7 +195,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         return dataOutputs;
     }
 
-    private ProcessDescriptionType.DataInputs getDataInputs(IWpsProcess processor, ProductSet[] productSets) throws IOException {
+    private ProcessDescriptionType.DataInputs getDataInputs(WpsProcess processor, ProductSet[] productSets) throws IOException {
         ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
 
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder

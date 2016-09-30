@@ -3,7 +3,7 @@ package com.bc.calvalus.wps.wpsoperations;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
@@ -218,7 +218,7 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
                 ProcessorDescriptor[] processorDescriptors = bundleDescriptor.getProcessorDescriptors();
 
                 for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
-                    IWpsProcess process = new CalvalusProcessor(bundleDescriptor, processorDescriptor);
+                    WpsProcess process = new CalvalusProcessor(bundleDescriptor, processorDescriptor);
                     ProcessBriefType localSubsetProcessor = new ProcessBriefType();
                     localSubsetProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
                     localSubsetProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));
@@ -233,9 +233,9 @@ public class CalvalusGetCapabilitiesOperation extends WpsOperation {
     }
 
     private List<ProcessBriefType> getCalvalusProcesses() throws WpsProcessorNotFoundException {
-        List<IWpsProcess> processList = calvalusFacade.getProcessors();
+        List<WpsProcess> processList = calvalusFacade.getProcessors();
         ProcessOfferings processOfferings = new ProcessOfferings();
-        for (IWpsProcess process : processList) {
+        for (WpsProcess process : processList) {
             ProcessBriefType singleProcessor = new ProcessBriefType();
             singleProcessor.setIdentifier(WpsTypeConverter.str2CodeType(process.getIdentifier()));
             singleProcessor.setTitle(WpsTypeConverter.str2LanguageStringType(process.getTitle()));

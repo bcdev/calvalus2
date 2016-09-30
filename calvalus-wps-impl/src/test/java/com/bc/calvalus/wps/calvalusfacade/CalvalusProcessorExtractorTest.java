@@ -4,8 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -38,7 +37,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<IWpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
 
         assertThat(processors.size(), equalTo(1));
         assertThat(processors.get(0).getTitle(), equalTo("Urban TEP indices Meris L1b"));
@@ -54,7 +53,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<IWpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
 
         assertThat(processors.size(), equalTo(0));
     }
@@ -65,7 +64,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<IWpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
 
         assertThat(processors.size(), equalTo(0));
     }

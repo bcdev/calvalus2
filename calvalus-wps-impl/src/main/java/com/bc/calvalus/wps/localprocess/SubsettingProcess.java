@@ -1,8 +1,10 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
@@ -30,7 +32,7 @@ public class SubsettingProcess implements Process {
     private Logger logger = WpsLogger.getLogger();
 
     @Override
-    public LocalProductionStatus processAsynchronous(ProcessBuilder processBuilder) {
+    public LocalProductionStatus processAsynchronous(ProcessFacade localFacade, ProcessBuilder processBuilder) {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
         LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
                                                                  ProductionState.ACCEPTED,
@@ -38,7 +40,8 @@ public class SubsettingProcess implements Process {
                                                                  "The request has been queued.",
                                                                  null);
         GpfProductionService.getProductionStatusMap().put(processBuilder.getJobId(), status);
-        GpfTask gpfTask = new GpfTask(processBuilder.getServerContext().getHostAddress(),
+        GpfTask gpfTask = new GpfTask(localFacade,
+                                      processBuilder.getServerContext().getHostAddress(),
                                       processBuilder.getServerContext().getPort(),
                                       processBuilder);
         GpfProductionService.getWorker().submit(gpfTask);
@@ -47,21 +50,18 @@ public class SubsettingProcess implements Process {
     }
 
     @Override
-    public LocalProductionStatus processSynchronous(ProcessBuilder processBuilder) {
+    public LocalProductionStatus processSynchronous(ProcessFacade localFacade, ProcessBuilder processBuilder) {
         LocalProductionStatus status;
         try {
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting synchronous process...");
             Product subset = GPF.createProduct("Subset", processBuilder.getParameters(), processBuilder.getSourceProduct());
             GPF.writeProduct(subset, new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + ".nc"), "Netcdf-BEAM", false, ProgressMonitor.NULL);
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] constructing result URLs...");
-            LocalStaging staging = new LocalStaging();
-            List<String> resultUrls = staging.getProductUrls(processBuilder.getServerContext().getHostAddress(),
-                                                             processBuilder.getServerContext().getPort(),
-                                                             processBuilder.getTargetDirPath().toFile(),
-                                                             processBuilder.getJobId());
+            List<String> resultUrls = localFacade.getProductResultUrls(processBuilder.getJobId());
             ProcessorNameConverter nameConverter = new ProcessorNameConverter(processBuilder.getProcessId());
             ProcessorExtractor processorExtractor = new ProcessorExtractor();
-            staging.generateProductMetadata(processBuilder.getTargetDirPath().toFile(),
+            LocalMetadata localMetadata = new LocalMetadata();
+            localMetadata.generateProductMetadata(processBuilder.getTargetDirPath().toFile(),
                                             processBuilder.getJobId(),
                                             processBuilder.getParameters(),
                                             processorExtractor.getProcessor(nameConverter),
@@ -75,7 +75,7 @@ public class SubsettingProcess implements Process {
                                                resultUrls);
             status.setStopDate(new Date());
             return status;
-        } catch (OperatorException | ProductionException exception) {
+        } catch (WpsResultProductException | OperatorException | ProductionException exception) {
             status = new LocalProductionStatus(processBuilder.getJobId(),
                                                ProductionState.FAILED,
                                                0,

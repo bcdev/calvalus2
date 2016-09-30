@@ -78,7 +78,7 @@ public class CalvalusFacade extends ProcessFacade {
         }
     }
 
-    public List<IWpsProcess> getProcessors() throws WpsProcessorNotFoundException {
+    public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
         try {
             return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
         } catch (ProductionException | IOException exception) {

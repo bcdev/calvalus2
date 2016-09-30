@@ -1,7 +1,7 @@
 package com.bc.calvalus.wps;
 
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
@@ -55,8 +55,8 @@ public abstract class ProcessFacade {
 
     public abstract void observeStagingStatus(String jobId) throws WpsStagingException;
 
-    public abstract List<IWpsProcess> getProcessors() throws WpsProcessorNotFoundException;
+    public abstract List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException;
 
-    public abstract IWpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException;
+    public abstract WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException;
 
 }

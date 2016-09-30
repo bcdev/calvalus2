@@ -9,7 +9,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.wps.calvalusfacade.IWpsProcess;
+import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -53,7 +53,7 @@ public class ProductMetadataBuilder {
     private List<File> productionResults;
     private WpsServerContext serverContext;
     private Map<String, Object> processParameters;
-    private IWpsProcess processor;
+    private WpsProcess processor;
     private String hostName;
     private int portNumber;
     private static final Logger LOG = CalvalusLogger.getLogger();
@@ -99,7 +99,7 @@ public class ProductMetadataBuilder {
         return this;
     }
 
-    public ProductMetadataBuilder withProcessor(IWpsProcess processor) {
+    public ProductMetadataBuilder withProcessor(WpsProcess processor) {
         this.processor = processor;
         return this;
     }
