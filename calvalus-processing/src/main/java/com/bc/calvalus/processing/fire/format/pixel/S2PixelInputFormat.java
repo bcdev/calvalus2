@@ -43,7 +43,7 @@ public class S2PixelInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
-        SensorStrategy strategy = CommonUtils.getStrategy(conf.get("calvalus.sensor"));
+        SensorStrategy strategy = CommonUtils.getStrategy(conf);
         area = strategy.getArea(conf.get("area"));
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");

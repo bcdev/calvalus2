@@ -15,7 +15,7 @@ public class PixelCell implements Writable {
 
     short[] values;
 
-    public PixelCell(int rasterWidth, int rasterHeight) {
+    PixelCell(int rasterWidth, int rasterHeight) {
         BAND_SIZE = rasterWidth * rasterHeight;
     }
 

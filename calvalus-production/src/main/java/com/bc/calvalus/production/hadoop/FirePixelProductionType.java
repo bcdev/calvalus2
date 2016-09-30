@@ -72,12 +72,11 @@ public class FirePixelProductionType extends HadoopProductionType {
         String month = productionRequest.getString("calvalus.month");
         String area = productionRequest.getString("calvalus.area");
         String sensor = productionRequest.getString("calvalus.sensor");
-        SensorStrategy strategy = CommonUtils.getStrategy(sensor);
-        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s, %s", year, month, strategy.getSensorName());
+        String defaultProductionName = String.format("Fire Pixel Formatting %s/%s, %s", year, month, sensor);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
-        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting " + strategy.getSensorName());
+        String outputPath = getOutputPath(productionRequest, productionId, "Fire-Pixel-Formatting " + sensor);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
         setRequestParameters(productionRequest, jobConfig);
 
@@ -121,7 +120,7 @@ public class FirePixelProductionType extends HadoopProductionType {
             super(processingService, userName, jobName, jobConfig);
             this.area = area;
             this.variableType = variableType;
-            strategy = CommonUtils.getStrategy(jobConfig.get("calvalus.sensor"));
+            strategy = CommonUtils.getStrategy(jobConfig);
         }
 
         @Override

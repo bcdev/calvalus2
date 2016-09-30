@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.pixel;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -23,7 +24,6 @@ import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Rectangle;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,10 +42,12 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
     private PixelVariableType variableType;
     private String year;
     private String month;
+    private SensorStrategy strategy;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        area = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor")).getArea(context.getConfiguration().get("area"));
+        strategy = CommonUtils.getStrategy(context.getConfiguration());
+        area = strategy.getArea(context.getConfiguration().get("area"));
         variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
         year = context.getConfiguration().get("calvalus.year");
         month = context.getConfiguration().get("calvalus.month");
@@ -100,8 +102,8 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
     }
 
     private void prepareTargetProduct() throws IOException {
-        int sceneRasterWidth = computeTargetWidth(area);
-        int sceneRasterHeight = computeTargetHeight(area);
+        int sceneRasterWidth = strategy.computeTargetWidth(area);
+        int sceneRasterHeight = strategy.computeTargetHeight(area);
 
         String baseFilename = variableType.bandName;
 
@@ -114,40 +116,16 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         product.getProductWriter().writeProductNodes(product, product.getFileLocation());
     }
 
-    private static CrsGeoCoding createGeoCoding(PixelProductArea area, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
+    private CrsGeoCoding createGeoCoding(PixelProductArea area, int sceneRasterWidth, int sceneRasterHeight) throws IOException {
         double easting = area.left - 180;
         double northing = 90 - area.top;
+        double pixelSize = strategy.getTargetPixelSize(area);
+
         try {
-            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, sceneRasterWidth, sceneRasterHeight, easting, northing, 1 / 360.0, 1 / 360.0, 0.0, 0.0);
+            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, sceneRasterWidth, sceneRasterHeight, easting, northing, pixelSize, pixelSize, 0.0, 0.0);
         } catch (FactoryException | TransformException e) {
             throw new IOException("Unable to create geo-coding", e);
         }
-    }
-
-    static int computeTargetWidth(PixelProductArea area) {
-        return (area.right - area.left) * 360;
-    }
-
-    static int computeTargetHeight(PixelProductArea area) {
-        return (area.bottom - area.top) * 360;
-    }
-
-    static int computeFullTargetWidth(PixelProductArea area) {
-        boolean exactlyMatchesBorder = area.right % 10.0 == 0.0 || area.left % 10.0 == 0.0;
-        return (area.right / 10 - area.left / 10 + (exactlyMatchesBorder ? 0 : 1)) * 3600;
-    }
-
-    static int computeFullTargetHeight(PixelProductArea area) {
-        boolean exactlyMatchesBorder = area.top % 10.0 == 0.0 || area.bottom % 10.0 == 0.0;
-        return (area.bottom / 10 - area.top / 10 + (exactlyMatchesBorder ? 0 : 1)) * 3600;
-    }
-
-    static Rectangle computeTargetRect(PixelProductArea area) {
-        int x = (area.left - area.left / 10 * 10) * 360;
-        int y = (area.top - area.top / 10 * 10) * 360;
-        int width = (area.right - area.left) * 360;
-        int height = (area.bottom - area.top) * 360;
-        return new Rectangle(x, y, width, height);
     }
 
     static short[] getTargetValues(int leftXSrc, int maxXSrc, int topYSrc, int maxYSrc, short[] sourceValues) {
@@ -167,52 +145,28 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         return data;
     }
 
-    static int getLeftTargetXForTile(PixelProductArea area, String key) {
-        int tileX = Integer.parseInt(key.substring(12));
-        if (tileX * 10 > area.left) {
-            return (tileX * 10 - area.left) * 360;
-        }
-        return 0;
+    private int getLeftTargetXForTile(PixelProductArea area, String key) {
+        return strategy.getLeftTargetXForTile(area, key);
     }
 
-    static int getTopTargetYForTile(PixelProductArea area, String key) {
-        int tileY = Integer.parseInt(key.substring(9, 11));
-        if (tileY * 10 > area.top) {
-            return (tileY * 10 - area.top) * 360;
-        }
-        return 0;
+    private int getTopTargetYForTile(PixelProductArea area, String key) {
+        return strategy.getTopTargetYForTile(area, key);
     }
 
-    static int getLeftSourceXForTile(PixelProductArea area, String key) {
-        int tileX = Integer.parseInt(key.substring(12));
-        if (tileX * 10 < area.left) {
-            return (area.left - tileX * 10) * 360;
-        }
-        return 0;
+    private int getLeftSourceXForTile(PixelProductArea area, String key) {
+        return strategy.getLeftSourceXForTile(area, key);
     }
 
-    private static int getMaxSourceXForTile(PixelProductArea area, String key) {
-        int tileX = Integer.parseInt(key.substring(12));
-        if ((tileX + 1) * 10 > area.right) {
-            return (area.right - tileX * 10) * 360 - 1;
-        }
-        return 3599;
+    private int getMaxSourceXForTile(PixelProductArea area, String key) {
+        return strategy.getMaxSourceXForTile(area, key);
     }
 
-    private static int getTopSourceYForTile(PixelProductArea area, String key) {
-        int tileY = Integer.parseInt(key.substring(9, 11));
-        if (tileY * 10 < area.top) {
-            return (area.top - tileY * 10) * 360;
-        }
-        return 0;
+    private int getTopSourceYForTile(PixelProductArea area, String key) {
+        return strategy.getTopSourceYForTile(area, key);
     }
 
-    private static int getMaxSourceYForTile(PixelProductArea area, String key) {
-        int tileY = Integer.parseInt(key.substring(9, 11));
-        if ((tileY + 1) * 10 > area.bottom) {
-            return (area.bottom - tileY * 10) * 360 - 1;
-        }
-        return 3599;
+    private int getMaxSourceYForTile(PixelProductArea area, String key) {
+        return strategy.getMaxSourceYForTile(area, key);
     }
 
     private static void createTarGZ(String filePath, String folderPath, String outputPath) throws IOException {

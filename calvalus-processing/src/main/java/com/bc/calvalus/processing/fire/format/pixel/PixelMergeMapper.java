@@ -80,7 +80,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         String month = context.getConfiguration().get("calvalus.month");
         String version = context.getConfiguration().get("calvalus.baversion", "v04.1");
 
-        strategy = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor"));
+        strategy = CommonUtils.getStrategy(context.getConfiguration());
         PixelProductArea area = strategy.getArea(context.getConfiguration().get("area"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();

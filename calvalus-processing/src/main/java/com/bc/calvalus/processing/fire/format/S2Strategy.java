@@ -1,17 +1,22 @@
 package com.bc.calvalus.processing.fire.format;
 
+import com.bc.calvalus.processing.fire.format.pixel.S2GeometryLUT;
 import com.bc.calvalus.processing.fire.format.pixel.S2PixelInputFormat;
+import org.apache.commons.lang.NotImplementedException;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.InputFormat;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 
 public class S2Strategy implements SensorStrategy {
 
-    private static final int RASTER_HEIGHT = 5490;
-    private static final int RASTER_WIDTH = 5490;
-
     private final PixelProductAreaProvider areaProvider;
+    private final S2GeometryLUT s2GeometryLUT;
+    private S2Geometry s2Geometry;
 
-    public S2Strategy() {
+    public S2Strategy(Configuration conf) {
         areaProvider = new S2PixelProductAreaProvider();
+        s2GeometryLUT = new S2GeometryLUT(conf);
     }
 
     @Override
@@ -25,23 +30,16 @@ public class S2Strategy implements SensorStrategy {
     }
 
     @Override
-    public String getSensorName() {
-        return "MSI";
-    }
-
-    @Override
     public Class<? extends InputFormat> getInputFormatClass() {
         return S2PixelInputFormat.class;
     }
 
     @Override
-    public int getRasterWidth() {
-        return RASTER_WIDTH;
-    }
-
-    @Override
-    public int getRasterHeight() {
-        return RASTER_HEIGHT;
+    public SensorGeometry getGeometry(boolean mosaicBA, String pathName) {
+        if (s2Geometry == null) {
+            s2Geometry = new S2Geometry(mosaicBA, pathName, s2GeometryLUT, this);
+        }
+        return s2Geometry;
     }
 
     @Override
@@ -62,6 +60,103 @@ public class S2Strategy implements SensorStrategy {
         } else {
             int startIndex = paths[0].indexOf("dummy_") + "dummy_".length() + 1;
             return paths[0].substring(startIndex, startIndex + 5);
+        }
+    }
+
+    @Override
+    public Product reproject(Product sourceProduct) {
+        ReprojectionOp reprojectionOp = new ReprojectionOp();
+        reprojectionOp.setSourceProduct(sourceProduct);
+        reprojectionOp.setParameter("crs", "EPSG:4326");
+        reprojectionOp.getTargetProduct();
+        return sourceProduct;
+    }
+
+    private static class S2Geometry implements SensorGeometry {
+
+        private final boolean mosaicBA;
+        private final String pathName;
+        private S2GeometryLUT s2GeometryLUT;
+        private final S2Strategy s2Strategy;
+
+        private S2Geometry(boolean mosaicBA, String pathName, S2GeometryLUT s2GeometryLUT, S2Strategy s2Strategy) {
+            this.mosaicBA = mosaicBA;
+            this.pathName = pathName;
+            this.s2GeometryLUT = s2GeometryLUT;
+            this.s2Strategy = s2Strategy;
+        }
+
+        @Override
+        public int getRasterWidth() {
+            String tile = s2Strategy.getTile(mosaicBA, new String[]{pathName});
+            return s2GeometryLUT.getRasterWidth(tile);
+        }
+
+        @Override
+        public int getRasterHeight() {
+            String tile = s2Strategy.getTile(mosaicBA, new String[]{pathName});
+            return s2GeometryLUT.getRasterHeight(tile);
+        }
+
+        @Override
+        public int computeTargetWidth(PixelProductArea area) {
+        /*
+        reasoning:
+            MERIS 300m / pix, S2 20m/pix
+            -> factor 15 higher than MERIS (360px / degree)
+	        -> 5400 px / 1°
+         */
+            return (area.right - area.left) * 5400;
+        }
+
+        @Override
+        public int computeTargetHeight(PixelProductArea area) {
+        /*
+        reasoning:
+            MERIS 300m / pix, S2 20m/pix
+            -> factor 15 higher than MERIS (360px / degree)
+	        -> 5400 px / 1°
+         */
+            return (area.bottom - area.top) * 5400;
+        }
+
+        @Override
+        public int getLeftTargetXForTile(PixelProductArea area, String key) {
+            if (-1 > area.left) {
+                return (-area.left) * getTargetPixelSize(easting, northing);
+            }
+            return 0;
+        }
+
+        @Override
+        public int getTopTargetYForTile(PixelProductArea area, String key) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public int getLeftSourceXForTile(PixelProductArea area, String key) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public int getMaxSourceXForTile(PixelProductArea area, String key) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public int getTopSourceYForTile(PixelProductArea area, String key) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public int getMaxSourceYForTile(PixelProductArea area, String key) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public double getTargetPixelSize(PixelProductArea area) {
+            double easting = area.left - 180;
+            double northing = 90 - area.top;
         }
     }
 
@@ -174,7 +269,6 @@ public class S2Strategy implements SensorStrategy {
         private static PixelProductArea translate(S2PixelProductArea mppa) {
             return new PixelProductArea(mppa.left, mppa.top, mppa.right, mppa.bottom, mppa.index, mppa.nicename);
         }
-
         @Override
         public PixelProductArea[] getAllAreas() {
             PixelProductArea[] result = new PixelProductArea[S2PixelProductArea.values().length];
@@ -185,7 +279,7 @@ public class S2Strategy implements SensorStrategy {
             }
             return result;
         }
+
+
     }
-
-
 }

@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 
 import java.util.ArrayList;
@@ -59,11 +60,12 @@ public class CommonUtils {
         return filteredPathNames;
     }
 
-    public static SensorStrategy getStrategy(String sensor) {
+    public static SensorStrategy getStrategy(Configuration conf) {
+        String sensor = conf.get("calvalus.sensor");
         if (sensor.equals("MERIS")) {
             return new MerisStrategy();
         } else if (sensor.equals("S2")) {
-            return new S2Strategy();
+            return new S2Strategy(conf);
         }
         throw new IllegalStateException("Missing configuration item 'calvalus.sensor'");
     }

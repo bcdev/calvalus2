@@ -49,7 +49,7 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
     public void run(Context context) throws IOException, InterruptedException {
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
-        strategy = CommonUtils.getStrategy(context.getConfiguration().get("calvalus.sensor"));
+        strategy = CommonUtils.getStrategy(context.getConfiguration());
         PixelVariableType variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
@@ -59,22 +59,27 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         boolean mosaicBA = !paths[0].getName().startsWith("dummy");
         LOG.info(mosaicBA ? "Mosaicking BA data" : "Only mosaicking burnable/non-burnable");
 
-        File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(lcTile);
+        File lcFile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
+        Product lcProduct = ProductIO.readProduct(lcFile);
 
-        PixelCell pixelCell = new PixelCell(strategy.getRasterWidth(), strategy.getRasterHeight());
-        pixelCell.values = new short[strategy.getRasterWidth() * strategy.getRasterHeight()];
+        int rasterWidth = strategy.getGeometry(mosaicBA, paths[0].getName()).getRasterWidth();
+        int rasterHeight = strategy.getGeometry(mosaicBA, paths[0].getName()).getRasterHeight();
+        PixelCell pixelCell = new PixelCell(rasterWidth, rasterHeight);
+        pixelCell.values = new short[rasterWidth * rasterHeight];
 
-        int[] doy = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
-        int[] lc = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
-        int[] cl = new int[strategy.getRasterWidth() * strategy.getRasterHeight()];
+        int[] doy = new int[rasterWidth * rasterHeight];
+        int[] lc = new int[rasterWidth * rasterHeight];
+        int[] cl = new int[rasterWidth * rasterHeight];
 
-        lcProduct.getBand("lcclass").readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), lc);
+        lcProduct.getBand("lcclass").readPixels(0, 0, rasterWidth, rasterHeight, lc);
 
         if (mosaicBA) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-            Product sourceProduct = ProductIO.readProduct(sourceProductFile);
-            sourceProduct.getBand(strategy.getDoyBandName()).readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), doy);
+            Product sourceProduct = getSourceProduct(sourceProductFile);
+
+            validateGeometry(rasterWidth, rasterHeight, sourceProduct);
+
+            sourceProduct.getBand(strategy.getDoyBandName()).readPixels(0, 0, rasterWidth, rasterHeight, doy);
 
             switch (variableType) {
                 case DAY_OF_YEAR:
@@ -91,7 +96,7 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
                     }
                     break;
                 case CONFIDENCE_LEVEL:
-                    sourceProduct.getBand(strategy.getClBandName()).readPixels(0, 0, strategy.getRasterWidth(), strategy.getRasterHeight(), cl);
+                    sourceProduct.getBand(strategy.getClBandName()).readPixels(0, 0, rasterWidth, rasterWidth, cl);
                     for (int i = 0; i < pixelCell.values.length; i++) {
                         if (doy[i] == 999) {
                             pixelCell.values[i] = 999;
@@ -127,6 +132,20 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         context.progress();
         String tile = strategy.getTile(mosaicBA, (String[]) Arrays.stream(paths).map(Path::toString).toArray());
         context.write(new Text(String.format("%d-%02d-%s", year, month, tile)), pixelCell);
+    }
+
+    private static void validateGeometry(int rasterWidth, int rasterHeight, Product sourceProduct) {
+        if (sourceProduct.getSceneRasterWidth() != rasterWidth) {
+            throw new IllegalStateException("sourceProduct.getSceneRasterWidth() != rasterWidth (" + sourceProduct.getSceneRasterWidth() + " != " + rasterWidth + ")");
+        }
+        if (sourceProduct.getSceneRasterHeight() != rasterHeight) {
+            throw new IllegalStateException("sourceProduct.getSceneRasterHeight() != rasterHeight (" + sourceProduct.getSceneRasterHeight() + " != " + rasterHeight + ")");
+        }
+    }
+
+    private Product getSourceProduct(File sourceProductFile) throws IOException {
+        Product sourceProduct = ProductIO.readProduct(sourceProductFile);
+        return strategy.reproject(sourceProduct);
     }
 
 }

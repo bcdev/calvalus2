@@ -8,6 +8,8 @@ import org.junit.Test;
 import java.io.File;
 import java.io.FileWriter;
 
+import static org.junit.Assert.assertEquals;
+
 public class PixelMergeMapperTest {
 
     @Ignore
@@ -27,4 +29,15 @@ public class PixelMergeMapperTest {
             }
         }
     }
+
+    @Test
+    public void testCreateBaseFilename() throws Exception {
+        assertEquals("20030501-ESACCI-L3S_FIRE-BA-MERIS-AREA_3-fv04.1", PixelMergeMapper.createBaseFilename("2003", "05", "v04.1", getArea("EUROPE")));
+        assertEquals("20101001-ESACCI-L3S_FIRE-BA-MERIS-AREA_4-fv04.1", PixelMergeMapper.createBaseFilename("2010", "10", "v04.1", getArea("ASIA")));
+    }
+
+    private static PixelProductArea getArea(String id) {
+        return new MerisStrategy().getArea(id);
+    }
+
 }
