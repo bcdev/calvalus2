@@ -1,6 +1,5 @@
 package com.bc.calvalus.wps.localprocess;
 
-import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
@@ -11,6 +10,7 @@ import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.schema.Execute;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -36,12 +36,12 @@ public class LocalFacade extends ProcessFacade {
     }
 
     @Override
-    public String orderProductionAsynchronous(ProductionRequest request) throws WpsProductionException {
+    public String orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         return null;
     }
 
     @Override
-    public String orderProductionSynchronous(ProductionRequest request) throws WpsProductionException {
+    public String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         return null;
     }
 

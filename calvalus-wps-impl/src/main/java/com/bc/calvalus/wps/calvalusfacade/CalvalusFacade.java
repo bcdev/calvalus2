@@ -6,13 +6,19 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
+import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
+import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
+import com.bc.wps.api.schema.Execute;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,18 +42,22 @@ public class CalvalusFacade extends ProcessFacade {
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
-    public String orderProductionAsynchronous(ProductionRequest request) throws WpsProductionException {
+    public String orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         try {
+            ProductionRequest request = createProductionRequest(executeRequest);
             return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
-        } catch (ProductionException | IOException exception) {
+        } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
+                    MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException(exception);
         }
     }
 
-    public String orderProductionSynchronous(ProductionRequest request) throws WpsProductionException {
+    public String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         try {
+            ProductionRequest request = createProductionRequest(executeRequest);
             return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
-        } catch (ProductionException | IOException | InterruptedException exception) {
+        } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
+                    MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException(exception);
         }
     }
@@ -92,6 +102,19 @@ public class CalvalusFacade extends ProcessFacade {
         } catch (ProductionException | IOException exception) {
             throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "' from Calvalus.", exception);
         }
+    }
+
+    private ProductionRequest createProductionRequest(Execute executeRequest)
+                throws MissingParameterValueException, InvalidParameterValueException, JAXBException,
+                       InvalidProcessorIdException, WpsProcessorNotFoundException, IOException, ProductionException {
+        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
+        String processorId = executeRequest.getIdentifier().getValue();
+        ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
+        CalvalusProcessor calvalusProcessor = getProcessor(parser);
+        CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor, getProductSets());
+        return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
+                                     getUserName(),
+                                     calvalusDataInputs.getInputMapFormatted());
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {
