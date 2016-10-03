@@ -48,12 +48,14 @@ import java.util.Map;
 
 public class StreamingProductReader extends AbstractProductReader {
 
+    private enum Format {V1, V2}
+
     private Path path;
     private Configuration configuration;
     private Map<String, Long> keyIndex;
 
-    private SequenceFile.Reader reader;
-    private int sliceHeight;
+    private SequenceFile.Reader seqReader;
+    private Format format;
     private Document dom;
 
     StreamingProductReader(ProductReaderPlugIn readerPlugIn) {
@@ -71,12 +73,11 @@ public class StreamingProductReader extends AbstractProductReader {
             throw new IllegalFileFormatException("input is not of the correct type.");
         }
         FileSystem fileSystem = path.getFileSystem(configuration);
-        reader = new SequenceFile.Reader(fileSystem, path, configuration);
+        seqReader = new SequenceFile.Reader(fileSystem, path, configuration);
         Product product = readHeader();
-        product.setPreferredTileSize(product.getSceneRasterWidth(), sliceHeight);
         Band[] bands = product.getBands();
         for (Band band : bands) {
-            band.setSourceImage(new BandImage(band, product.getPreferredTileSize()));
+            band.setSourceImage(new BandImage(band, product.getPreferredTileSize(), seqReader, keyIndex, format));
         }
         initGeoCodings(dom, product);
         return product;
@@ -94,27 +95,37 @@ public class StreamingProductReader extends AbstractProductReader {
     }
 
     public void close() throws IOException {
-        reader.close();
+        seqReader.close();
         keyIndex.clear();
     }
 
     private Product readHeader() throws IOException {
-        SequenceFile.Metadata metadata = reader.getMetadata();
-        long startPos = reader.getPosition();
-        Text sliceHeightText = metadata.get(new Text("slice.height"));
-        sliceHeight = Integer.parseInt(sliceHeightText.toString());
+        SequenceFile.Metadata metadata = seqReader.getMetadata();
+        long startPos = seqReader.getPosition();
 
         dom = createDOM(metadata.get(new Text("dim")));
         Product product = DimapProductHelpers.createProduct(dom);
         readTiepoints(product);
 
+        int tileHeight;
+        int tileWidth;
+        if (metadata.getMetadata().containsKey(new Text("slice.height"))) {
+            tileHeight = Integer.parseInt(metadata.get(new Text("slice.height")).toString());
+            tileWidth = product.getSceneRasterWidth();
+            format = Format.V1;
+        } else {
+            tileHeight = Integer.parseInt(metadata.get(new Text("tile.height")).toString());
+            tileWidth = Integer.parseInt(metadata.get(new Text("tile.width")).toString());
+            format = Format.V2;
+        }
+        product.setPreferredTileSize(tileWidth, tileHeight);
 
         Path indexPath = StreamingProductIndex.getIndexPath(path);
         StreamingProductIndex streamingProductIndex = new StreamingProductIndex(indexPath, configuration);
         keyIndex = streamingProductIndex.readIndex();
         if (keyIndex.isEmpty()) {
-            reader.seek(startPos);
-            keyIndex = StreamingProductIndex.buildIndex(reader);
+            seqReader.seek(startPos);
+            keyIndex = StreamingProductIndex.buildIndex(seqReader);
             streamingProductIndex.writeIndex(keyIndex);
         }
         return product;
@@ -131,7 +142,7 @@ public class StreamingProductReader extends AbstractProductReader {
         TiePointGrid[] tiePointGrids = product.getTiePointGrids();
         for (TiePointGrid tpg : tiePointGrids) {
             String expectedKey = "tiepoint:" + tpg.getName();
-            reader.next(key, value);
+            seqReader.next(key, value);
             if (!key.toString().equals(expectedKey)) {
                 throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));
             }
@@ -165,11 +176,14 @@ public class StreamingProductReader extends AbstractProductReader {
         }
     }
 
-    private final class BandImage extends SingleBandedOpImage {
+    private static final class BandImage extends SingleBandedOpImage {
 
         private final RasterDataNode rasterDataNode;
+        private final SequenceFile.Reader seqReader;
+        private final Map<String, Long> keyIndex;
+        private final Format format;
 
-        protected BandImage(RasterDataNode rasterDataNode, Dimension tileSize) {
+        private BandImage(RasterDataNode rasterDataNode, Dimension tileSize,SequenceFile.Reader seqReader, Map<String, Long> keyIndex, Format format) {
             super(ImageManager.getDataBufferType(rasterDataNode.getDataType()),
                   rasterDataNode.getRasterWidth(),
                   rasterDataNode.getRasterHeight(),
@@ -177,6 +191,9 @@ public class StreamingProductReader extends AbstractProductReader {
                   null,
                   ResolutionLevel.MAXRES);
             this.rasterDataNode = rasterDataNode;
+            this.seqReader = seqReader;
+            this.keyIndex = keyIndex;
+            this.format = format;
         }
 
         @Override
@@ -192,7 +209,7 @@ public class StreamingProductReader extends AbstractProductReader {
             }
 
             try {
-                computeProductData(productData, destRect.y);
+                computeProductData(productData, destRect.x, destRect.y);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -202,18 +219,23 @@ public class StreamingProductReader extends AbstractProductReader {
             }
         }
 
-        private void computeProductData(ProductData productData, int y) throws IOException {
-            int sliceIndex = MathUtils.floorInt(y / sliceHeight);
-            String expectedKey = rasterDataNode.getName() + ":" + sliceIndex;
+        private void computeProductData(ProductData productData, int x, int y) throws IOException {
+            String expectedKey;
+            if (format == Format.V1) {
+                int sliceIndex = MathUtils.floorInt(y / tileHeight);
+                expectedKey = rasterDataNode.getName() + ":" + sliceIndex;
+            } else {
+                expectedKey = rasterDataNode.getName() + ":" + x + ":" + y;
+            }
 
             Text key = new Text();
             ByteArrayWritable value = new ByteArrayWritable();
-            synchronized (reader) {
+            synchronized (seqReader) {
                 Long keyPosition = keyIndex.get(expectedKey);
-                if (keyPosition != reader.getPosition()) {
-                    reader.seek(keyPosition);
+                if (keyPosition != seqReader.getPosition()) {
+                    seqReader.seek(keyPosition);
                 }
-                reader.next(key, value);
+                seqReader.next(key, value);
             }
             if (!key.toString().equals(expectedKey)) {
                 throw new IllegalStateException(String.format("key '%s' expected but got '%s'", expectedKey, key));

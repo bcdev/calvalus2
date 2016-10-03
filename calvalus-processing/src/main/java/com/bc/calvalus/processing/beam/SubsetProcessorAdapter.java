@@ -19,12 +19,15 @@ package com.bc.calvalus.processing.beam;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.utils.ProductTransformation;
 import com.bc.ceres.core.ProgressMonitor;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.util.io.FileUtils;
+import org.esa.snap.core.util.jai.JAIUtils;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -64,8 +67,8 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
             return 0;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
-                subsetProduct.getSceneRasterWidth(),
-                subsetProduct.getSceneRasterHeight()));
+                                       subsetProduct.getSceneRasterWidth(),
+                                       subsetProduct.getSceneRasterHeight()));
         return 1;
     }
 
@@ -99,14 +102,14 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected void saveTargetProduct(Product product, ProgressMonitor pm) throws IOException {
-        int tileHeight = DEFAULT_TILE_HEIGHT;
+        Configuration conf = getConfiguration();
         Dimension preferredTileSize = product.getPreferredTileSize();
-        if (preferredTileSize != null) {
-            tileHeight = preferredTileSize.height;
-        } else {
+        if (preferredTileSize == null) {
+            System.out.println("saveTargetProduct: product has no preferredTileSize -> setting it");
             product.setPreferredTileSize(product.getSceneRasterWidth(), DEFAULT_TILE_HEIGHT);
+            System.out.println("new preferredTileSize = " + product.getPreferredTileSize());
         }
-        StreamingProductWriter.writeProductInSlices(getConfiguration(), pm, product, getWorkOutputProductPath(), tileHeight);
+        StreamingProductWriter.writeProductInTiles(conf, pm, product, getWorkOutputProductPath());
     }
 
     private Path getWorkOutputProductPath() throws IOException {
@@ -143,8 +146,8 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
         op.setCopyMetadata(true);
         Product subsetProduct = op.getTargetProduct();
         getLogger().info(String.format("Created Subset product width = %d height = %d",
-                subsetProduct.getSceneRasterWidth(),
-                subsetProduct.getSceneRasterHeight()));
+                                       subsetProduct.getSceneRasterWidth(),
+                                       subsetProduct.getSceneRasterHeight()));
         return subsetProduct;
     }
 }

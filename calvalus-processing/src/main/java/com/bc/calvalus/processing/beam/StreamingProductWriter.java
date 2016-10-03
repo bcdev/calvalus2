@@ -73,7 +73,6 @@ public class StreamingProductWriter extends AbstractProductWriter {
     private Configuration configuration;
     private final Progressable progressable = null; // TODO no longer needed ??, progress through pm
     private SequenceFile.Writer sequenceFileWriter;
-    private int tileHeight;
     private static boolean tileCacheDebugging;
 
 
@@ -94,7 +93,6 @@ public class StreamingProductWriter extends AbstractProductWriter {
         } else {
             throw new IllegalFileFormatException("input is not of the correct type.");
         }
-        tileHeight = product.getPreferredTileSize().height;
         sequenceFileWriter = writeHeader(product, path);
         writeTiePointData(product, sequenceFileWriter, indexMap);
         LOG.info(" written header");
@@ -102,8 +100,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
     @Override
     public void writeBandRasterData(Band band, int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight, ProductData productData, ProgressMonitor pm) throws IOException {
-        int sliceIndex = sourceOffsetY / tileHeight;
-        String key = band.getName() + ":" + sliceIndex;
+        String key = band.getName() + ":" + sourceOffsetX + ":" + sourceOffsetY;
         updateIndex(indexMap, key, sequenceFileWriter.getLength());
         writeProductData(sequenceFileWriter, key, productData);
     }
@@ -127,28 +124,27 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
     }
 
-    public static void writeProductInSlices(Configuration configuration,
+    public static void writeProductInTiles(Configuration configuration,
                                             ProgressMonitor pm,
                                             Product product,
-                                            Path path,
-                                            int tileHeight) throws IOException {
+                                            Path path) throws IOException {
         PathConfiguration output = new PathConfiguration(path, configuration);
-        writeProductInSlices(product, output, StreamingProductPlugin.FORMAT_NAME, tileHeight, pm);
+        writeProductInTiles(product, output, StreamingProductPlugin.FORMAT_NAME, pm);
     }
 
-    public static void writeProductInSlices(Product product, Object output, String format, int tileHeight, ProgressMonitor pm) throws IOException {
+    public static void writeProductInTiles(Product product, Object output, String format, ProgressMonitor pm) throws IOException {
         ProductWriter productWriter = ProductIO.getProductWriter(format);
         if (productWriter == null) {
             throw new IllegalArgumentException(String.format("No product writer found for format %s.", format));
         }
         product.setProductWriter(productWriter);
         productWriter.writeProductNodes(product, output);
-        writeAllBandsInSlices(product, pm, tileHeight);
+        writeAllBandsInTiles(product, pm);
         product.closeProductWriter();
     }
 
     // TODO move to calvalusProductIO
-    private static void writeAllBandsInSlices(Product product, ProgressMonitor pm, int tileHeight) throws IOException {
+    private static void writeAllBandsInTiles(Product product, ProgressMonitor pm) throws IOException {
         ProductWriter productWriter = product.getProductWriter();
 
         // for correct progress indication we need to collect
@@ -167,7 +163,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
             if (allBandsSameSize(bandsToWrite)) {
                 CalvalusLogger.getLogger().info("Writing bands of the same size");
-                writeSameSizedBands(product, tileHeight, sceneHeight, bandsToWrite, productWriter, pm);
+                writeSameSizedBands(product, bandsToWrite, productWriter, pm);
             } else {
                 CalvalusLogger.getLogger().info("Writing bands of different sizes");
                 writeDifferentSizedBands(product, pm, productWriter, bandsToWrite);
@@ -233,32 +229,40 @@ public class StreamingProductWriter extends AbstractProductWriter {
         }
     }
 
-    private static void writeSameSizedBands(Product product, int tileHeight, int sceneHeight, List<Band> bandsToWrite, ProductWriter productWriter, ProgressMonitor pm) throws IOException {
+    private static void writeSameSizedBands(Product product, List<Band> bandsToWrite, ProductWriter productWriter, ProgressMonitor pm) throws IOException {
+        final int sceneHeight = product.getSceneRasterHeight();
+        final int sceneWidth = product.getSceneRasterWidth();
+        Dimension tileSize = product.getPreferredTileSize();
+        final int tileHeight = tileSize.height;
+        final int tileWidth = tileSize.width;
         try {
-            int x = 0;
-            int w = product.getSceneRasterWidth();
             int h = tileHeight;
-            int sliceIndex = 0;
-
-            for (int y = 0; y < sceneHeight; y += tileHeight, sliceIndex++) {
+            for (int y = 0; y < sceneHeight; y += tileHeight) {
                 if (y + h > sceneHeight) {
                     h = sceneHeight - y;
                 }
-                for (Band band : bandsToWrite) {
-                    Rectangle rectangle = new Rectangle(x, y, w, h);
-                    Raster tile = band.getSourceImage().getData(rectangle);
-                    tileCacheDebugging(band, rectangle);
-                    boolean directMode = tile.getDataBuffer().getSize() == w * h;
-                    ProductData productData;
-                    if (directMode) {
-                        Object primitiveArray = ImageUtils.getPrimitiveArray(tile.getDataBuffer());
-                        productData = ProductData.createInstance(band.getDataType(), primitiveArray);
-                    } else {
-                        productData = ProductData.createInstance(band.getDataType(), w * h);
-                        tile.getDataElements(x, y, w, h, productData.getElems());
+                int w = tileWidth;
+                for (int x = 0; x < sceneWidth; x += tileWidth) {
+                    if (x + w > sceneWidth) {
+                        w = sceneWidth - x;
                     }
-                    productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
-                    pm.worked(h);
+
+                    for (Band band : bandsToWrite) {
+                        Rectangle rectangle = new Rectangle(x, y, w, h);
+                        Raster tile = band.getSourceImage().getData(rectangle);
+                        tileCacheDebugging(band, rectangle);
+                        boolean directMode = tile.getDataBuffer().getSize() == w * h;
+                        ProductData productData;
+                        if (directMode) {
+                            Object primitiveArray = ImageUtils.getPrimitiveArray(tile.getDataBuffer());
+                            productData = ProductData.createInstance(band.getDataType(), primitiveArray);
+                        } else {
+                            productData = ProductData.createInstance(band.getDataType(), w * h);
+                            tile.getDataElements(x, y, w, h, productData.getElems());
+                        }
+                        productWriter.writeBandRasterData(band, x, y, w, h, productData, ProgressMonitor.NULL);
+                        pm.worked(h);
+                    }
                 }
             }
         } finally {
@@ -287,7 +291,7 @@ public class StreamingProductWriter extends AbstractProductWriter {
 
 
     private SequenceFile.Writer writeHeader(Product product, Path outputPath) throws IOException {
-        SequenceFile.Metadata metadata = createMetadata(product, tileHeight);
+        SequenceFile.Metadata metadata = createMetadata(product);
         FileSystem fileSystem = outputPath.getFileSystem(configuration);
         return SequenceFile.createWriter(fileSystem,
                 configuration,
@@ -327,16 +331,19 @@ public class StreamingProductWriter extends AbstractProductWriter {
         indexMap.put(key, position);
     }
 
-    private static SequenceFile.Metadata createMetadata(Product product, int tile_height) {
+    private static SequenceFile.Metadata createMetadata(Product product) {
 
         final StringWriter stringWriter = new StringWriter();
         final DimapHeaderWriter writer = new DimapHeaderWriter(product, stringWriter, "");
         writer.writeHeader();
         writer.close();
 
+        Dimension preferredTileSize = product.getPreferredTileSize();
+
         String[][] metadataKeyValues = new String[][]{
                 {"dim", stringWriter.getBuffer().toString()},
-                {"slice.height", Integer.toString(tile_height)},
+                {"tile.height", Integer.toString(preferredTileSize.height)},
+                {"tile.width", Integer.toString(preferredTileSize.width)},
         };
 
         SequenceFile.Metadata metadata = new SequenceFile.Metadata();

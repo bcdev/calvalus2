@@ -57,7 +57,7 @@ public class StreamingProductWriterTest {
         product.addBand(smallBand);
 
         result = new HashMap<>();
-        StreamingProductWriter.writeProductInSlices(product, new NullWriter(), "NullFormat", PREFERRED_TILE_SIZE, ProgressMonitor.NULL);
+        StreamingProductWriter.writeProductInTiles(product, new NullWriter(), "NullFormat", ProgressMonitor.NULL);
 
         float[] largeBandData1 = new float[10 * PREFERRED_TILE_SIZE];
         float[] largeBandData2 = new float[10 * 2];
@@ -106,7 +106,7 @@ public class StreamingProductWriterTest {
         product.addBand(band2);
 
         result = new HashMap<>();
-        StreamingProductWriter.writeProductInSlices(product, new NullWriter(), "NullFormat", 10, ProgressMonitor.NULL);
+        StreamingProductWriter.writeProductInTiles(product, new NullWriter(), "NullFormat", ProgressMonitor.NULL);
     }
 
 

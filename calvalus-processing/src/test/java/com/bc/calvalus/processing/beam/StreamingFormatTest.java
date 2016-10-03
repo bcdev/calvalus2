@@ -56,7 +56,8 @@ import static org.junit.Assert.assertTrue;
 @RunWith(UnixTestRunner.class)
 public class StreamingFormatTest {
 
-    private static final int TILE_HEIGHT = 64;
+    private static final int TILE_HEIGHT = 256;
+    private static final int TILE_WIDTH = 512;
     private Configuration configuration;
     private FileSystem fileSystem;
 
@@ -71,20 +72,23 @@ public class StreamingFormatTest {
 
         File testProductFile = MerisProductTestRunner.getTestProductFile();
 
-        System.setProperty("snap.dataio.reader.tileHeight", "64");
-        System.setProperty("snap.dataio.reader.tileWidth", "*");
+        System.setProperty("snap.dataio.reader.tileHeight", Integer.toString(TILE_HEIGHT));
+        System.setProperty("snap.dataio.reader.tileWidth", Integer.toString(TILE_WIDTH));
         ProductReader productReader = ProductIO.getProductReader("ENVISAT");
         Product sourceProduct = productReader.readProductNodes(testProductFile, null);
+
+        System.clearProperty("snap.dataio.reader.tileHeight");
+        System.clearProperty("snap.dataio.reader.tileWidth");
 
         Path outputDir = new Path("target/testdata/StreamingProductWriterTest");
         Path productPath = new Path(outputDir, "testWrite.seq");
         try {
             assertFalse(fileSystem.exists(productPath));
             ProgressMonitor pm = ProgressMonitor.NULL;
-            StreamingProductWriter.writeProductInSlices(configuration, pm, sourceProduct, productPath, TILE_HEIGHT);
+            StreamingProductWriter.writeProductInTiles(configuration, pm, sourceProduct, productPath);
             assertTrue(fileSystem.exists(productPath));
 
-            testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct));
+            testThatProductSequenceFileIsCorrect(productPath, getNumKeys(sourceProduct), TILE_HEIGHT, TILE_WIDTH);
 
             testThatProductIsCorrect(sourceProduct, productPath);
 
@@ -152,22 +156,24 @@ public class StreamingFormatTest {
         }
     }
 
-    private void testThatProductSequenceFileIsCorrect(Path productPath, int numKeys) throws IOException {
+    private void testThatProductSequenceFileIsCorrect(Path productPath, int numKeys, int tile_height, int tile_width) throws IOException {
         try (SequenceFile.Reader reader = new SequenceFile.Reader(fileSystem, productPath, configuration)) {
             assertSame(Text.class, reader.getKeyClass());
             assertSame(ByteArrayWritable.class, reader.getValueClass());
 
             SequenceFile.Metadata metadata = reader.getMetadata();
             TreeMap<Text, Text> metadatMap = metadata.getMetadata();
-            assertEquals(2, metadatMap.size());
+            assertEquals(3, metadatMap.size());
 
             assertTrue(metadatMap.containsKey(new Text("dim")));
-            assertTrue(metadatMap.containsKey(new Text("slice.height")));
 
-            Text sliceHeigthText = metadatMap.get(new Text("slice.height"));
-            assertEquals(Integer.toString(TILE_HEIGHT), sliceHeigthText.toString());
+            assertTrue(metadatMap.containsKey(new Text("tile.height")));
+            assertEquals(Integer.toString(tile_height), metadatMap.get(new Text("tile.height")).toString());
 
-            List<String> keyList = new ArrayList<String>();
+            assertTrue(metadatMap.containsKey(new Text("tile.width")));
+            assertEquals(Integer.toString(tile_width), metadatMap.get(new Text("tile.width")).toString());
+
+            List<String> keyList = new ArrayList<>();
             Text key = new Text();
             while (reader.next(key)) {
                 keyList.add(key.toString());
@@ -178,8 +184,9 @@ public class StreamingFormatTest {
     }
 
     private int getNumKeys(Product sourceProduct) {
-        int numSlices = MathUtils.ceilInt(sourceProduct.getSceneRasterHeight() / 64f);
-        int numBandKeys = sourceProduct.getNumBands() * numSlices;
+        int numTilesX = MathUtils.ceilInt(sourceProduct.getSceneRasterWidth() / (float)TILE_WIDTH);
+        int numTilesY = MathUtils.ceilInt(sourceProduct.getSceneRasterHeight() / (float)TILE_HEIGHT);
+        int numBandKeys = sourceProduct.getNumBands() * numTilesX * numTilesY;
         int numTiepointKeys = sourceProduct.getNumTiePointGrids();
         return numBandKeys + numTiepointKeys;
     }
