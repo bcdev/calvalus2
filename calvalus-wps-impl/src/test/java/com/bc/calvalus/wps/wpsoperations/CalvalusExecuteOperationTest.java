@@ -83,7 +83,7 @@ public class CalvalusExecuteOperationTest {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
         when(mockProduction.getId()).thenReturn("process-00");
-        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionAsynchronous(any(Execute.class))).thenReturn("process-00");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
@@ -112,7 +112,7 @@ public class CalvalusExecuteOperationTest {
         WorkflowItem mockWorkflow = mock(WorkflowItem.class);
         when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
         when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
-        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn("process-00");
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
         resultUrlList.add("resultUrl2");
@@ -134,31 +134,19 @@ public class CalvalusExecuteOperationTest {
     @Test
     public void canProcessSync() throws Exception {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
-        WorkflowItem mockWorkflow = mock(WorkflowItem.class);
-        when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
-        Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("job-id");
-        when(mockCalvalusFacade.orderProductionSynchronous(any(ProductionRequest.class))).thenReturn("job-id");
+        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn("job-id");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        ProductionRequest mockProductionRequest = configureProcessingMock();
 
         ArgumentCaptor<Execute> executeRequestCaptor = ArgumentCaptor.forClass(Execute.class);
-        ArgumentCaptor<String> processIdCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<ProductionRequest> productionRequestCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        String jobId = executeOperation.processSync(mockExecuteRequest, "process1");
+        String jobId = executeOperation.processSync(mockExecuteRequest);
 
-        PowerMockito.verifyNew(ExecuteRequestExtractor.class).withArguments(executeRequestCaptor.capture());
-        PowerMockito.verifyNew(ProcessorNameConverter.class).withArguments(processIdCaptor.capture());
-        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameConverter.class));
-        verify(mockCalvalusFacade).orderProductionSynchronous(productionRequestCaptor.capture());
+        verify(mockCalvalusFacade).orderProductionSynchronous(executeRequestCaptor.capture());
         verify(mockCalvalusFacade).stageProduction("job-id");
         verify(mockCalvalusFacade).observeStagingStatus("job-id");
 
         assertThat(executeRequestCaptor.getValue(), equalTo(mockExecuteRequest));
-        assertThat(processIdCaptor.getValue(), equalTo("process1"));
-        assertThat(productionRequestCaptor.getValue(), equalTo(mockProductionRequest));
         assertThat(jobId, equalTo("job-id"));
     }
 
@@ -170,33 +158,23 @@ public class CalvalusExecuteOperationTest {
         thrownException.expectMessage("error");
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.processSync(mockExecuteRequest, "process1");
+        executeOperation.processSync(mockExecuteRequest);
     }
 
     @Test
     public void canProcessAsync() throws Exception {
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
-        Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("process-00");
-        when(mockCalvalusFacade.orderProductionAsynchronous(any(ProductionRequest.class))).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionAsynchronous(any(Execute.class))).thenReturn("process-00");
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        ProductionRequest mockProductionRequest = configureProcessingMock();
 
         ArgumentCaptor<Execute> executeRequestCaptor = ArgumentCaptor.forClass(Execute.class);
-        ArgumentCaptor<String> processIdCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<ProductionRequest> productionRequestCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        String jobId = executeOperation.processAsync(mockExecuteRequest, "process1");
+        String jobId = executeOperation.processAsync(mockExecuteRequest);
 
-        PowerMockito.verifyNew(ExecuteRequestExtractor.class).withArguments(executeRequestCaptor.capture());
-        PowerMockito.verifyNew(ProcessorNameConverter.class).withArguments(processIdCaptor.capture());
-        verify(mockCalvalusFacade).getProcessor(any(ProcessorNameConverter.class));
-        verify(mockCalvalusFacade).orderProductionAsynchronous(productionRequestCaptor.capture());
+        verify(mockCalvalusFacade).orderProductionAsynchronous(executeRequestCaptor.capture());
 
         assertThat(executeRequestCaptor.getValue(), equalTo(mockExecuteRequest));
-        assertThat(processIdCaptor.getValue(), equalTo("process1"));
-        assertThat(productionRequestCaptor.getValue(), equalTo(mockProductionRequest));
         assertThat(jobId, equalTo("process-00"));
     }
 
@@ -208,7 +186,7 @@ public class CalvalusExecuteOperationTest {
         thrownException.expectMessage("error");
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.processAsync(mockExecuteRequest, "process1");
+        executeOperation.processAsync(mockExecuteRequest);
     }
 
     @Test

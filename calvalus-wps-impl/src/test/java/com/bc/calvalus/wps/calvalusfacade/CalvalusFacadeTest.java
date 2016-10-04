@@ -14,9 +14,12 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.cmd.LdapHelper;
+import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.schema.CodeType;
+import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.runner.*;
@@ -26,6 +29,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author hans
@@ -34,11 +39,13 @@ import java.io.IOException;
 @PrepareForTest({
             CalvalusFacade.class, CalvalusProduction.class,
             CalvalusProductionService.class, CalvalusProductionService.class,
-            LdapHelper.class
+            LdapHelper.class, ExecuteRequestExtractor.class, ProcessorNameConverter.class,
+            CalvalusProcessorExtractor.class, CalvalusDataInputs.class, ProductionRequest.class
 })
 public class CalvalusFacadeTest {
 
     private static final String MOCK_USER_NAME = "mockUserName";
+    private static final String MOCK_PROCESS_ID = "process-00";
 
     private WpsRequestContext mockRequestContext;
     private CalvalusProduction mockCalvalusProduction;
@@ -71,13 +78,31 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testOrderProductionAsynchronous() throws Exception {
+        Execute mockExecuteRequest = mock(Execute.class);
+        CalvalusProcessor mockProcessor = mock(CalvalusProcessor.class);
+        CodeType mockIdentifier = new CodeType();
+        mockIdentifier.setValue(MOCK_PROCESS_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockIdentifier);
+        ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
+        ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
+        CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
+        Map<String,String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
+                    .thenReturn(mockProcessor);
+        when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
+        when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
+        whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
+        whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
+        whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
         ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.orderProductionAsynchronous(mockProductionRequest);
+        calvalusFacade.orderProductionAsynchronous(mockExecuteRequest);
 
         verify(mockCalvalusProduction).orderProductionAsynchronous(any(ProductionService.class), requestArgumentCaptor.capture(), userNameCaptor.capture());
 
@@ -87,12 +112,31 @@ public class CalvalusFacadeTest {
 
     @Test
     public void testOrderProductionSynchronous() throws Exception {
+        Execute mockExecuteRequest = mock(Execute.class);
+        CalvalusProcessor mockProcessor = mock(CalvalusProcessor.class);
+        CodeType mockIdentifier = new CodeType();
+        mockIdentifier.setValue(MOCK_PROCESS_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockIdentifier);
+        ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
+        ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
+        CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
+        Map<String,String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
+                    .thenReturn(mockProcessor);
+        when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
+        when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
+        whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
+        whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
+        whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
+        whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
+        whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
+        whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
         ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
-        calvalusFacade.orderProductionSynchronous(mockProductionRequest);
+        calvalusFacade.orderProductionSynchronous(mockExecuteRequest);
 
         verify(mockCalvalusProduction).orderProductionSynchronous(any(ProductionService.class), requestArgumentCaptor.capture());
 
@@ -261,6 +305,7 @@ public class CalvalusFacadeTest {
 
     private void configureProductionServiceMocking() throws IOException, ProductionException {
         mockProductionService = mock(ProductionService.class);
+        when(mockProductionService.getProductSets(anyString(), anyString())).thenReturn(new ProductSet[0]);
         PowerMockito.mockStatic(CalvalusProductionService.class);
         PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
     }

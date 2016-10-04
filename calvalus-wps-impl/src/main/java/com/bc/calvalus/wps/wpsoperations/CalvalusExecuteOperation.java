@@ -3,9 +3,6 @@ package com.bc.calvalus.wps.wpsoperations;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
-import com.bc.calvalus.wps.calvalusfacade.CalvalusProcessor;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
@@ -119,12 +116,12 @@ public class CalvalusExecuteOperation extends WpsOperation {
                 return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
             }
         } else if (isAsynchronous) {
-            String jobId = processAsync(executeRequest, processId);
+            String jobId = processAsync(executeRequest);
             ExecuteResponse asyncExecuteResponse = createAsyncExecuteResponse(executeRequest, isLineage, jobId);
             asyncExecuteResponse.setProcess(processBriefType);
             return asyncExecuteResponse;
         } else {
-            String jobId = processSync(executeRequest, processId);
+            String jobId = processSync(executeRequest);
             ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, jobId);
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
@@ -158,25 +155,23 @@ public class CalvalusExecuteOperation extends WpsOperation {
         return sourceProduct;
     }
 
-    String processSync(Execute executeRequest, String processorId)
+    String processSync(Execute executeRequest)
                 throws InvalidProcessorIdException, InvalidParameterValueException, IOException,
                        JAXBException, ProductionException, MissingParameterValueException,
                        WpsProductionException, WpsStagingException, WpsProcessorNotFoundException {
-        ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
-        String jobid = calvalusFacade.orderProductionSynchronous(request);
+        String jobid = calvalusFacade.orderProductionSynchronous(executeRequest);
         calvalusFacade.stageProduction(jobid);
         calvalusFacade.observeStagingStatus(jobid);
         return jobid;
     }
 
-    String processAsync(Execute executeRequest, String processorId)
+    String processAsync(Execute executeRequest)
                 throws IOException, ProductionException, InvalidProcessorIdException, JAXBException,
                        InvalidParameterValueException, MissingParameterValueException, WpsProductionException,
                        WpsProcessorNotFoundException {
-        ProductionRequest request = createProductionRequest(executeRequest, processorId);
 
-        return calvalusFacade.orderProductionAsynchronous(request);
+        return calvalusFacade.orderProductionAsynchronous(executeRequest);
     }
 
     ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {
@@ -204,21 +199,6 @@ public class CalvalusExecuteOperation extends WpsOperation {
             CalvalusExecuteResponseConverter executeSuccessfulResponse = new CalvalusExecuteResponseConverter();
             return executeSuccessfulResponse.getSuccessfulResponse(productResultUrls, workflowItem.getStopTime());
         }
-    }
-
-    private ProductionRequest createProductionRequest(Execute executeRequest, String processorId)
-                throws JAXBException, IOException, ProductionException, InvalidProcessorIdException,
-                       InvalidParameterValueException, MissingParameterValueException, WpsProcessorNotFoundException {
-        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
-
-        ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-        CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
-        CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
-                                                                       calvalusFacade.getProductSets());
-
-        return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
-                                     calvalusFacade.getUserName(),
-                                     calvalusDataInputs.getInputMapFormatted());
     }
 
     private ProcessBriefType getProcessBriefType(Execute executeRequest) throws InvalidProcessorIdException {
