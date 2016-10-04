@@ -43,7 +43,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     protected final int SDR_AGGREGATED_OFFSET = getCounterNames().length + 1;
     abstract protected String[] getCounterNames();
 
-    private LcL3SensorConfig sensorConfig = null;
+    protected LcL3SensorConfig sensorConfig = null;
+    protected boolean bestPixelAggregation = false;
 
     protected static final int STATUS = 0;
 
@@ -169,7 +170,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     }
                 }
                 // Since we have seen LAND now, accumulate LAND SDRs
-                addSdrs(samples, i);
+                if (! bestPixelAggregation) {
+                    addSdrs(samples, i);
+                } else {
+                    selectSdrs(samples, i, landCount);
+                }
                 // Count LAND
                 aggregatedSamples[STATUS_LAND][i] = landCount + 1;
             } else if (status == STATUS_SNOW) {
@@ -182,7 +187,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     if (waterCount > 0 || shadowCount > 0) {
                         clearSDR(i, sensorConfig.getBandNames().length, 0.0f);
                     }
-                    addSdrs(samples, i);
+                    if (! bestPixelAggregation) {
+                        addSdrs(samples, i);
+                    } else {
+                        selectSdrs(samples, i, (int) aggregatedSamples[STATUS_SNOW][i]);
+                    }
                 }
                 // Count SNOW
                 aggregatedSamples[STATUS_SNOW][i]++;
@@ -201,7 +210,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                         if (shadowCount > 0) {
                             clearSDR(i, sensorConfig.getBandNames().length, 0.0f);
                         }
-                        addSdrs(samples, i);
+                        if (! bestPixelAggregation) {
+                            addSdrs(samples, i);
+                        } else {
+                            selectSdrs(samples, i, (int) aggregatedSamples[STATUS_WATER][i]);
+                        }
                     }
                     aggregatedSamples[STATUS_WATER][i]++;
                 }
@@ -215,7 +228,11 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                 int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
                 if (landCount == 0 && snowCount == 0 && waterCount == 0) {
                     // only aggregate SDR, if no LAND, WATER or SNOW have been aggregated before
-                    addSdrs(samples, i);
+                    if (! bestPixelAggregation) {
+                        addSdrs(samples, i);
+                    } else {
+                        selectSdrs(samples, i, (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+                    }
                 }
                 aggregatedSamples[STATUS_CLOUD_SHADOW][i]++;
             }
@@ -285,6 +302,8 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         this.jobConf = jobConf;
         if (sensorConfig == null) {
             sensorConfig = LcL3SensorConfig.create(jobConf.get("calvalus.lc.resolution"));
+            bestPixelAggregation = jobConf.getBoolean("calvalus.lc.bestpixelaggregation", false);
+            System.out.println("calvalus.lc.bestpixelaggregation=" + bestPixelAggregation);
         }
     }
 
@@ -324,6 +343,23 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             final int sdrJ = j - SDR_AGGREGATED_OFFSET + SDR_L2_OFFSET;
             final float sdrErrorMeasurement = samples[varIndexes[sdrJ]][i];
             aggregatedSamples[j][i] += uncertaintiesAreSquares ? sdrErrorMeasurement : (sdrErrorMeasurement * sdrErrorMeasurement);
+        }
+    }
+
+    protected void selectSdrs(float[][] samples, int i, int count) {
+        if (count < 1) {
+            addSdrs(samples, i);
+        } else if (sensorConfig.isBetterPixel(samples, SDR_L2_OFFSET, aggregatedSamples, SDR_AGGREGATED_OFFSET, count, i)) {
+            clearSDR(i, sensorConfig.getBandNames().length, 0.0f);
+            addSdrs(samples, i);
+            for (int j = SDR_AGGREGATED_OFFSET; j < aggregatedSamples.length; j++) {  // sdr + ndvi + sdr_error
+                aggregatedSamples[j][i] *= count + 1;  // set weight
+            }
+        } else {
+            for (int j = SDR_AGGREGATED_OFFSET; j < aggregatedSamples.length; j++) {  // sdr + ndvi + sdr_error
+                aggregatedSamples[j][i] /= count;
+                aggregatedSamples[j][i] *= count + 1;  // increase weight
+            }
         }
     }
 

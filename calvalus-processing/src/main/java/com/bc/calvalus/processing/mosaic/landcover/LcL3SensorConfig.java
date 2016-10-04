@@ -102,6 +102,10 @@ public abstract class LcL3SensorConfig {
 
     public abstract int getPeriod();
 
+    public boolean isBetterPixel(float[][] samples, int sdr_l2_offset, float[][] aggregatedSamples, int sdr_aggregated_offset, int count, int i) {
+        return false;
+    }
+
 
     public static abstract class LcL3MerisConfig extends LcL3SensorConfig {
 
@@ -864,12 +868,12 @@ public abstract class LcL3SensorConfig {
         }
 
         public String getTemporalCloudBandName() {
-            return "B5_ac";
+            return "B7_ac";
         }
 
         @Override
         public int getTemporalCloudBandIndex() {
-            return 5;
+            return 7;
         }
 
         public float getTemporalCloudFilterThreshold() {
@@ -895,7 +899,7 @@ public abstract class LcL3SensorConfig {
                     "ndvi"
             };
             final String[] virtualVariableExpr = {
-                    "(B11_ac - B4_ac) / (B11_ac + B4_ac)"
+                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)"
             };
             String type = LcSDR8MosaicAlgorithm.class.getName();
             return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);
@@ -917,7 +921,7 @@ public abstract class LcL3SensorConfig {
             //pixel_classif_flags:flag_meanings = "F_INVALID F_CLOUD F_CLOUD_AMBIGUOUS F_CLOUD_SURE F_CLOUD_BUFFER F_CLOUD_SHADOW F_SNOW_ICE F_MIXED_PIXEL F_GLINT_RISK F_COASTLINE F_LAND F_REFL1_ABOVE_THRESH F_REFL2_ABOVE_THRESH F_RATIO_REFL21_ABOVE_THRESH F_RATIO_REFL31_ABOVE_THRESH F_BT4_ABOVE_THRESH F_BT5_ABOVE_THRESH" ;
             //pixel_classif_flags:flag_masks = 1s, 2s, 4s, 8s, 16s, 32s, 64s, 128s, 256s, 512s, 1024s, 2048s, 4096s, 8192s, 16384s, -32768s, 0s ;
             final String[] virtualVariableExpr = {
-                    "(B11_ac - B4_ac) / (B11_ac + B4_ac)"
+                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)"
             };
             String type = "NetCDF4-LC".equals(outputFormat)
                     ? LcL3Nc4MosaicAlgorithm.class.getName()
@@ -984,6 +988,51 @@ public abstract class LcL3SensorConfig {
         @Override
         public int getPeriod() {
             return 10;
+        }
+
+        @Override
+        public boolean isBetterPixel(float[][] samples, int sdr_l2_offset, float[][] aggregatedSamples, int sdr_aggregated_offset, int count, int i) {
+            final float betterB2 =  samples[sdr_l2_offset + 1][i];
+            final float betterB3 =  samples[sdr_l2_offset + 2][i];
+            final float betterB4 =  samples[sdr_l2_offset + 3][i];
+            final float betterB8 =  samples[sdr_l2_offset + 7][i];
+            final float betterB8A = samples[sdr_l2_offset + 8][i];
+            final float formerB2 =  aggregatedSamples[sdr_aggregated_offset + 1][i] / count;
+            final float formerB3 =  aggregatedSamples[sdr_aggregated_offset + 2][i] / count;
+            final float formerB4 =  aggregatedSamples[sdr_aggregated_offset + 3][i] / count;
+            final float formerB8 =  aggregatedSamples[sdr_aggregated_offset + 7][i] / count;
+            final float formerB8A = aggregatedSamples[sdr_aggregated_offset + 8][i] / count;
+
+            final float meanB2  = (formerB2  + betterB2) / 2;
+            final float meanB3  = (formerB3  + betterB3) / 2;
+            final float meanB4  = (formerB4  + betterB4) / 2;
+            final float meanB8  = (formerB8  + betterB8) / 2;
+            final float meanB8A = (formerB8A + betterB8A) / 2;
+
+            final float meanBrightness = (meanB2 + meanB3 + meanB4) / 3;
+            final float meanNDVI = (meanB8A - meanB4) / (meanB8A + meanB4);
+            final float meanNDWI = (meanB3 - meanB8A) / (meanB3 + meanB8A);
+
+            // prefer darker pixel in water
+            if (meanNDWI > 0.02 || (meanBrightness < 0.062 && meanNDVI < 0.3 && meanB8 < 0.07)) {
+                return betterB2 < formerB2;
+            }
+
+//            // prefer brighter pixel in shadow
+//            final float formerBrightness = (formerB2 + formerB3 + formerB4) / 3;
+//            final float betterBrightness = (betterB2 + betterB3 + betterB4) / 3;
+//            if (Math.abs(formerBrightness - betterBrightness) > 0.03
+//                    && (formerBrightness < 0.1 || betterBrightness < 0.1)
+//                    && ((formerBrightness <= 0.11 && betterBrightness <= 0.11)
+//                        || formerBrightness <= 0.06
+//                        || betterBrightness <= 0.06)) {
+//                return betterBrightness > formerBrightness;
+//            }
+
+            // prefer vegetation
+            final float formerNDVI = (formerB8A - formerB4) / (formerB8A + formerB4);
+            final float betterNDVI = (betterB8A - betterB4) / (betterB8A + betterB4);
+            return betterNDVI > formerNDVI;
         }
 
         @Override
