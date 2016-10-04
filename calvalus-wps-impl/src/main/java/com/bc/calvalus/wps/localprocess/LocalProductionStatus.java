@@ -1,5 +1,7 @@
 package com.bc.calvalus.wps.localprocess;
 
+import com.bc.calvalus.commons.ProcessState;
+
 import java.util.Date;
 import java.util.List;
 
@@ -9,13 +11,13 @@ import java.util.List;
 public class LocalProductionStatus implements WpsProcessStatus {
 
     private String jobId;
-    private ProductionState state;
+    private ProcessState state;
     private float progress;
     private String message;
     private List<String> resultUrls;
     private Date stopDate;
 
-    public LocalProductionStatus(String jobId, ProductionState state, float progress, String message, List<String> resultUrls) {
+    public LocalProductionStatus(String jobId, ProcessState state, float progress, String message, List<String> resultUrls) {
         this.jobId = jobId;
         this.state = state;
         this.progress = progress;
@@ -54,14 +56,14 @@ public class LocalProductionStatus implements WpsProcessStatus {
 
     @Override
     public boolean isDone() {
-        return state == ProductionState.FAILED || state == ProductionState.SUCCESSFUL;
+        return state.isDone();
     }
 
     public void setJobId(String jobId) {
         this.jobId = jobId;
     }
 
-    public void setState(ProductionState state) {
+    public void setState(ProcessState state) {
         this.state = state;
     }
 

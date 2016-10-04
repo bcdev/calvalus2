@@ -52,6 +52,8 @@ public class CalvalusProduction {
             }
         }
 
+//        LocalProductionStatus productionStatus = new LocalProductionStatus(production.getId(), production.getProcessingStatus().getState())
+
         return production.getId();
     }
 

@@ -12,7 +12,6 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
-import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -87,9 +86,9 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         processBriefType.setProcessVersion(processorNameConverter.getBundleVersion());
         WpsProcessStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
         if (status != null) {
-            if (ProductionState.SUCCESSFUL.toString().equals(status.getState())) {
+            if (ProcessState.COMPLETED.toString().equals(status.getState())) {
                 executeResponse = getExecuteSuccessfulResponse(status);
-            } else if (ProductionState.FAILED.toString().equals(status.getState())) {
+            } else if (ProcessState.ERROR.toString().equals(status.getState())) {
                 executeResponse = getExecuteFailedResponse(status);
             } else {
                 executeResponse = getExecuteInProgressResponse(status);

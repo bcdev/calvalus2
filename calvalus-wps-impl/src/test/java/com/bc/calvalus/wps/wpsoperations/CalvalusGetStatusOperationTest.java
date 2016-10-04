@@ -19,7 +19,6 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
-import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
@@ -302,14 +301,14 @@ public class CalvalusGetStatusOperationTest {
 
     private LocalProductionStatus getInProgressLocalProcessStatus() {
         LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
-        when(mockStatus.getState()).thenReturn(ProductionState.RUNNING.toString());
+        when(mockStatus.getState()).thenReturn(ProcessState.RUNNING.toString());
         when(mockStatus.getProgress()).thenReturn(40f);
         return mockStatus;
     }
 
     private LocalProductionStatus getFailedLocalProcessStatus() {
         LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
-        when(mockStatus.getState()).thenReturn(ProductionState.FAILED.toString());
+        when(mockStatus.getState()).thenReturn(ProcessState.ERROR.toString());
         when(mockStatus.getMessage()).thenReturn("Error in processing the job");
         when(mockStatus.getStopTime()).thenReturn(new Date(1451606400000L));
         when(mockStatus.isDone()).thenReturn(true);
@@ -318,7 +317,7 @@ public class CalvalusGetStatusOperationTest {
 
     private LocalProductionStatus getDoneAndSuccessfulLocalProcessStatus(List<String> mockResultUrlList) {
         LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
-        when(mockStatus.getState()).thenReturn(ProductionState.SUCCESSFUL.toString());
+        when(mockStatus.getState()).thenReturn(ProcessState.COMPLETED.toString());
         when(mockStatus.getResultUrls()).thenReturn(mockResultUrlList);
         when(mockStatus.getStopTime()).thenReturn(new Date(1451606400000L));
         return mockStatus;

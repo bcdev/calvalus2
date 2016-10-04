@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.localprocess;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
@@ -35,7 +36,7 @@ public class SubsettingProcess implements Process {
     public LocalProductionStatus processAsynchronous(ProcessFacade localFacade, ProcessBuilder processBuilder) {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
         LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
-                                                                 ProductionState.ACCEPTED,
+                                                                 ProcessState.SCHEDULED,
                                                                  0,
                                                                  "The request has been queued.",
                                                                  null);
@@ -69,7 +70,7 @@ public class SubsettingProcess implements Process {
                                             processBuilder.getServerContext().getPort());
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been completed, creating successful response...");
             status = new LocalProductionStatus(processBuilder.getJobId(),
-                                               ProductionState.SUCCESSFUL,
+                                               ProcessState.COMPLETED,
                                                100,
                                                "The request has been processed successfully.",
                                                resultUrls);
@@ -77,7 +78,7 @@ public class SubsettingProcess implements Process {
             return status;
         } catch (WpsResultProductException | OperatorException | ProductionException exception) {
             status = new LocalProductionStatus(processBuilder.getJobId(),
-                                               ProductionState.FAILED,
+                                               ProcessState.ERROR,
                                                0,
                                                "Processing failed : " + exception.getMessage(),
                                                null);
@@ -87,7 +88,7 @@ public class SubsettingProcess implements Process {
                     InvalidProcessorIdException | BindingException exception) {
             String jobId = processBuilder.getJobId();
             status = new LocalProductionStatus(jobId,
-                                               ProductionState.FAILED,
+                                               ProcessState.ERROR,
                                                100,
                                                "Creating product metadata failed : " + exception.getMessage(),
                                                null);

@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.wpsoperations;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -11,7 +12,6 @@ import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.Process;
 import com.bc.calvalus.wps.localprocess.ProcessBuilder;
-import com.bc.calvalus.wps.localprocess.ProductionState;
 import com.bc.calvalus.wps.localprocess.SubsettingProcess;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
@@ -106,7 +106,7 @@ public class CalvalusExecuteOperation extends WpsOperation {
                 return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
             } else {
                 LocalProductionStatus status = utepProcess.processSynchronous(localFacade, processBuilder);
-                if (!ProductionState.SUCCESSFUL.toString().equals(status.getState())) {
+                if (!ProcessState.COMPLETED.toString().equals(status.getState())) {
                     return executeResponse.getFailedResponse(status.getMessage());
                 }
                 if (isLineage) {
