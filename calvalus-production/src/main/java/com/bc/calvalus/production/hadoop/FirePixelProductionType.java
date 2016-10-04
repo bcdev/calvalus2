@@ -58,6 +58,7 @@ public class FirePixelProductionType extends HadoopProductionType {
         String year = productionRequest.getString("calvalus.year");
         String month = productionRequest.getString("calvalus.month");
         String area = productionRequest.getString("calvalus.area");
+        String tile = productionRequest.getString("calvalus.tile");
         String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", year, month);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
@@ -81,6 +82,7 @@ public class FirePixelProductionType extends HadoopProductionType {
         workflowConfig.year = year;
         workflowConfig.month = month;
         workflowConfig.userName = productionRequest.getUserName();
+        workflowConfig.tile = tile;
         Workflow formattingWorkflow = strategy.getWorkflow(workflowConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);

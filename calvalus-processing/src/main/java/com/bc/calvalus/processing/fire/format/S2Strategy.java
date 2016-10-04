@@ -47,6 +47,7 @@ class S2Strategy implements SensorStrategy {
         String outputDir = workflowConfig.outputDir;
         String userName = workflowConfig.userName;
         String productionName = workflowConfig.productionName;
+        String tile = workflowConfig.tile;
         HadoopProcessingService processingService = workflowConfig.processingService;
 
         PixelProductArea pixelProductArea = new S2Strategy().getArea(area);
@@ -62,7 +63,7 @@ class S2Strategy implements SensorStrategy {
                 pixelProductArea.left - 180, pixelProductArea.top - 90
         }, 2), gf), new LinearRing[0], gf);
 
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/BA-T32NPN-%s%s.*.nc", year, month);
+        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/BA-T%s-%s%s.*.nc", tile, year, month);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
