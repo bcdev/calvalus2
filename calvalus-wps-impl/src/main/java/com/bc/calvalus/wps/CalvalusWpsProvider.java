@@ -64,8 +64,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
             CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
             return executeOperation.execute(execute);
         } catch (IOException | WpsStagingException | ProductionException | WpsProductionException |
-                    WpsProcessorNotFoundException | WpsResultProductException | InvalidProcessorIdException |
-                    JAXBException exception) {
+                    WpsResultProductException | InvalidProcessorIdException | JAXBException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }

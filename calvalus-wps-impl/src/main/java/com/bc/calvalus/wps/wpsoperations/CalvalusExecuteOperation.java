@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
-import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
@@ -61,8 +60,8 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
     public ExecuteResponse execute(Execute executeRequest)
                 throws InvalidProcessorIdException, MissingParameterValueException, InvalidParameterValueException,
-                       JAXBException, IOException, ProductionException, WpsProductionException, WpsStagingException,
-                       WpsProcessorNotFoundException, WpsResultProductException {
+                       JAXBException, IOException, WpsProductionException, WpsStagingException, ProductionException,
+                       WpsResultProductException {
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -116,12 +115,12 @@ public class CalvalusExecuteOperation extends WpsOperation {
                 return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
             }
         } else if (isAsynchronous) {
-            String jobId = processAsync(executeRequest);
+            String jobId = calvalusFacade.orderProductionAsynchronous(executeRequest);
             ExecuteResponse asyncExecuteResponse = createAsyncExecuteResponse(executeRequest, isLineage, jobId);
             asyncExecuteResponse.setProcess(processBriefType);
             return asyncExecuteResponse;
         } else {
-            String jobId = processSync(executeRequest);
+            String jobId = calvalusFacade.orderProductionSynchronous(executeRequest);
             ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, jobId);
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
@@ -153,25 +152,6 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
         sourceProduct = ProductIO.readProduct(sourceProductPath);
         return sourceProduct;
-    }
-
-    String processSync(Execute executeRequest)
-                throws InvalidProcessorIdException, InvalidParameterValueException, IOException,
-                       JAXBException, ProductionException, MissingParameterValueException,
-                       WpsProductionException, WpsStagingException, WpsProcessorNotFoundException {
-
-        String jobid = calvalusFacade.orderProductionSynchronous(executeRequest);
-        calvalusFacade.stageProduction(jobid);
-        calvalusFacade.observeStagingStatus(jobid);
-        return jobid;
-    }
-
-    String processAsync(Execute executeRequest)
-                throws IOException, ProductionException, InvalidProcessorIdException, JAXBException,
-                       InvalidParameterValueException, MissingParameterValueException, WpsProductionException,
-                       WpsProcessorNotFoundException {
-
-        return calvalusFacade.orderProductionAsynchronous(executeRequest);
     }
 
     ExecuteResponse createAsyncExecuteResponse(Execute executeRequest, boolean isLineage, String productionId) {

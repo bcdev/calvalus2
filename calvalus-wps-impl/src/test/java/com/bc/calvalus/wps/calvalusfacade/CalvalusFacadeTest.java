@@ -133,6 +133,7 @@ public class CalvalusFacadeTest {
         whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
         whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
+        whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
         ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);

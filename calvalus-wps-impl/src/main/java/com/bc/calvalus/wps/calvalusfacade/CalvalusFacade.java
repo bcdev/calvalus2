@@ -55,9 +55,12 @@ public class CalvalusFacade extends ProcessFacade {
     public String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         try {
             ProductionRequest request = createProductionRequest(executeRequest);
-            return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+            String jobId = calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+            stageProduction(jobId);
+            observeStagingStatus(jobId);
+            return jobId;
         } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
-                    MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
+                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException(exception);
         }
     }
