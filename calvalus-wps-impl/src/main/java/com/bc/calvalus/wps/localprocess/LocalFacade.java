@@ -99,9 +99,10 @@ public class LocalFacade extends ProcessFacade {
             processBuilder = getProcessBuilder(executeRequest);
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting synchronous process...");
             Product subset = GPF.createProduct("Subset", processBuilder.getParameters(), processBuilder.getSourceProduct());
+            String outputFormat = (String) processBuilder.getParameters().get("outputFormat");
             GPF.writeProduct(subset,
                              new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + ".nc"),
-                             "Netcdf-BEAM",
+                             outputFormat,
                              false,
                              ProgressMonitor.NULL);
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] constructing result URLs...");
