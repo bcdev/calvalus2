@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 public enum PixelVariableType {
 

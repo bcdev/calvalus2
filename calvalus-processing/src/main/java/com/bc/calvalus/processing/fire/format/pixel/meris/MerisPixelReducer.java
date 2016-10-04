@@ -1,6 +1,9 @@
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -33,7 +36,7 @@ import java.util.Iterator;
 /**
  * @author thomas
  */
-public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWritable> {
+public class MerisPixelReducer extends Reducer<Text, MerisPixelCell, NullWritable, NullWritable> {
 
     private Product product;
     private PixelProductArea area;
@@ -43,7 +46,8 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
-        area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
+        SensorStrategy strategy = new MerisStrategy();
+        area = strategy.getArea(context.getConfiguration().get("area"));
         variableType = PixelVariableType.valueOf(context.getConfiguration().get("variableType"));
         year = context.getConfiguration().get("calvalus.year");
         month = context.getConfiguration().get("calvalus.month");
@@ -51,9 +55,9 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
     }
 
     @Override
-    protected void reduce(Text key, Iterable<PixelCell> values, Context context) throws IOException, InterruptedException {
-        Iterator<PixelCell> iterator = values.iterator();
-        PixelCell pixelCell = iterator.next();
+    protected void reduce(Text key, Iterable<MerisPixelCell> values, Context context) throws IOException, InterruptedException {
+        Iterator<MerisPixelCell> iterator = values.iterator();
+        MerisPixelCell pixelCell = iterator.next();
 
         int leftTargetXForTile = getLeftTargetXForTile(area, key.toString());
         int topTargetYForTile = getTopTargetYForTile(area, key.toString());
@@ -91,7 +95,7 @@ public class PixelReducer extends Reducer<Text, PixelCell, NullWritable, NullWri
         product.dispose();
         CalvalusLogger.getLogger().info(String.format("...copying product to %s...", zipFilename));
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path path = new Path(outputDir + "/" + year + "/" + month + "/" + "/" + area.name() + "-to-merge/" + zipFilename);
+        Path path = new Path(outputDir + "/" + year + "/" + month + "/" + "/" + area.nicename + "-to-merge/" + zipFilename);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(zipFilename), fs, path, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done.");

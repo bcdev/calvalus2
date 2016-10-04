@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import org.apache.hadoop.io.Writable;
 
@@ -9,9 +9,9 @@ import java.io.IOException;
 /**
  * @author thomas
  */
-public class PixelCell implements Writable {
+public class MerisPixelCell implements Writable {
 
-    private static final int BAND_SIZE = PixelMapper.RASTER_WIDTH * PixelMapper.RASTER_HEIGHT;
+    private static final int BAND_SIZE = MerisPixelMapper.RASTER_WIDTH * MerisPixelMapper.RASTER_HEIGHT;
 
     short[] values;
 

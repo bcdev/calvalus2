@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 
 import java.util.ArrayList;
@@ -8,9 +9,9 @@ import java.util.List;
 public class CommonUtils {
 
 
-    public static String getTile(String baPath) {
-        int startIndex = baPath.indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
-        return baPath.substring(startIndex, startIndex + 6);
+    public static String getMerisTile(String merisBaPath) {
+        int startIndex = merisBaPath.indexOf("BA_PIX_MER_") + "BA_PIX_MER_".length();
+        return merisBaPath.substring(startIndex, startIndex + 6);
     }
 
     public static List<String> getMissingTiles(List<String> usedTiles) {
@@ -59,4 +60,16 @@ public class CommonUtils {
         return filteredPathNames;
     }
 
+    public static SensorStrategy getStrategy(Configuration conf) {
+        String sensor = conf.get("calvalus.sensor");
+        if (sensor == null) {
+            throw new IllegalArgumentException("calvalus.sensor must be set");
+        }
+        if (sensor.equals("MERIS")) {
+            return new MerisStrategy();
+        } else if (sensor.equals("S2")) {
+            return new S2Strategy();
+        }
+        throw new IllegalStateException("Missing configuration item 'calvalus.sensor'");
+    }
 }

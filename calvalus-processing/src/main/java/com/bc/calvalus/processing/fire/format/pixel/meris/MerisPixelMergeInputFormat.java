@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
@@ -23,7 +23,7 @@ import java.util.List;
 /**
  * @author thomas
  */
-public class PixelMergeInputFormat extends InputFormat {
+public class MerisPixelMergeInputFormat extends InputFormat {
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {

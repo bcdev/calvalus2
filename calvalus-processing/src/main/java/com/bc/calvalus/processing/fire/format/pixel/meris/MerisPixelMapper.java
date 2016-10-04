@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
@@ -38,7 +38,7 @@ import java.util.logging.Logger;
  * @author thomas
  * @author marcop
  */
-public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
+public class MerisPixelMapper extends Mapper<Text, FileSplit, Text, MerisPixelCell> {
 
     static final int RASTER_WIDTH = 3600;
     static final int RASTER_HEIGHT = 3600;
@@ -61,7 +61,7 @@ public class PixelMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(lcTile);
 
-        PixelCell pixelCell = new PixelCell();
+        MerisPixelCell pixelCell = new MerisPixelCell();
         pixelCell.values = new short[RASTER_WIDTH * RASTER_HEIGHT];
 
         int[] doy = new int[RASTER_WIDTH * RASTER_HEIGHT];

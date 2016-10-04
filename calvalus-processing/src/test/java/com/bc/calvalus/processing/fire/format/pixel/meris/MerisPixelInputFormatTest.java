@@ -1,9 +1,10 @@
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class PixelInputFormatTest {
+public class MerisPixelInputFormatTest {
 
     @Test
     public void getInputPathPatterns() throws Exception {
@@ -17,7 +18,7 @@ public class PixelInputFormatTest {
                 "v05h15|v05h16|v05h17|v05h18|v05h19|v05h20|v05h21|v05h22|v05h23|" +
                 "v06h15|v06h16|v06h17|v06h18|v06h19|v06h20|v06h21|v06h22|v06h23)" +
                 ".*200206.*tif";
-        Assert.assertEquals(expected, PixelInputFormat.getInputPathPattern("2002", "06", PixelProductArea.EUROPE));
+        Assert.assertEquals(expected, MerisPixelInputFormat.getInputPathPattern("2002", "06", new MerisStrategy().getArea("EUROPE")));
     }
 
     @Test
@@ -31,7 +32,7 @@ public class PixelInputFormatTest {
                 "v05h15|v05h16|v05h17|v05h18|v05h19|v05h20|v05h21|v05h22|v05h23|" +
                 "v06h15|v06h16|v06h17|v06h18|v06h19|v06h20|v06h21|v06h22|v06h23).*nc";
 
-        Assert.assertEquals(expected, PixelInputFormat.getLcInputPathPattern("2002", PixelProductArea.EUROPE));
+        Assert.assertEquals(expected, MerisPixelInputFormat.getLcInputPathPattern("2002", new MerisStrategy().getArea("EUROPE")));
     }
 
 }

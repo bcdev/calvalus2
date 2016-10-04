@@ -14,10 +14,12 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.fire.format.pixel;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -61,7 +63,7 @@ import java.util.logging.Logger;
  * @author thomas
  * @author marcop
  */
-public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
+public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPixelCell> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
 
@@ -76,7 +78,7 @@ public class PixelMergeMapper extends Mapper<Text, FileSplit, Text, PixelCell> {
         String month = context.getConfiguration().get("calvalus.month");
         String version = context.getConfiguration().get("calvalus.baversion", "v04.1");
 
-        PixelProductArea area = PixelProductArea.valueOf(context.getConfiguration().get("area"));
+        PixelProductArea area = new MerisStrategy().getArea(context.getConfiguration().get("area"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
         Path[] paths = inputSplit.getPaths();
