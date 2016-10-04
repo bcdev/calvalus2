@@ -6,6 +6,7 @@ import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.schema.Execute;
@@ -45,9 +46,9 @@ public abstract class ProcessFacade {
         }
     }
 
-    public abstract String orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException;
+    public abstract LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException;
 
-    public abstract String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException;
+    public abstract LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException;
 
     public abstract List<String> getProductResultUrls(String jobId) throws WpsResultProductException;
 

@@ -100,27 +100,36 @@ public class CalvalusExecuteOperation extends WpsOperation {
 
             if (isAsynchronous) {
                 LocalProductionStatus status = utepProcess.processAsynchronous(localFacade, processBuilder);
+                ExecuteResponse asyncExecuteResponse;
                 if (isLineage) {
-                    return utepProcess.createLineageAsyncExecuteResponse(status, processBuilder);
+                    asyncExecuteResponse = utepProcess.createLineageAsyncExecuteResponse(status, processBuilder);
+                } else {
+                    asyncExecuteResponse = executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
                 }
-                return executeResponse.getAcceptedResponse(status.getJobId(), context.getServerContext());
+                asyncExecuteResponse.setProcess(processBriefType);
+                return asyncExecuteResponse;
             } else {
                 LocalProductionStatus status = utepProcess.processSynchronous(localFacade, processBuilder);
+                ExecuteResponse syncExecuteResponse;
                 if (!ProcessState.COMPLETED.toString().equals(status.getState())) {
-                    return executeResponse.getFailedResponse(status.getMessage());
+                    syncExecuteResponse = executeResponse.getFailedResponse(status.getMessage());
+                } else if (isLineage) {
+                    syncExecuteResponse = utepProcess.createLineageSyncExecuteResponse(status, processBuilder);
+                } else {
+                    syncExecuteResponse = executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
                 }
-                if (isLineage) {
-                    return utepProcess.createLineageSyncExecuteResponse(status, processBuilder);
-                }
-                return executeResponse.getSuccessfulResponse(status.getResultUrls(), new Date());
+                syncExecuteResponse.setProcess(processBriefType);
+                return syncExecuteResponse;
             }
         } else if (isAsynchronous) {
-            String jobId = calvalusFacade.orderProductionAsynchronous(executeRequest);
+            LocalProductionStatus status = calvalusFacade.orderProductionAsynchronous(executeRequest);
+            String jobId = status.getJobId();
             ExecuteResponse asyncExecuteResponse = createAsyncExecuteResponse(executeRequest, isLineage, jobId);
             asyncExecuteResponse.setProcess(processBriefType);
             return asyncExecuteResponse;
         } else {
-            String jobId = calvalusFacade.orderProductionSynchronous(executeRequest);
+            LocalProductionStatus status = calvalusFacade.orderProductionSynchronous(executeRequest);
+            String jobId = status.getJobId();
             ExecuteResponse syncExecuteResponse = createSyncExecuteResponse(executeRequest, isLineage, jobId);
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;

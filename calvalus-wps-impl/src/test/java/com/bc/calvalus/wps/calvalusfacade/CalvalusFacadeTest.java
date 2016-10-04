@@ -14,6 +14,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.cmd.LdapHelper;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
@@ -86,7 +87,7 @@ public class CalvalusFacadeTest {
         ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
         ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
         CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
-        Map<String,String> mockParameterMap = new HashMap<>();
+        Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
         when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
                     .thenReturn(mockProcessor);
@@ -114,19 +115,21 @@ public class CalvalusFacadeTest {
     public void testOrderProductionSynchronous() throws Exception {
         Execute mockExecuteRequest = mock(Execute.class);
         CalvalusProcessor mockProcessor = mock(CalvalusProcessor.class);
+        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
         CodeType mockIdentifier = new CodeType();
         mockIdentifier.setValue(MOCK_PROCESS_ID);
         when(mockExecuteRequest.getIdentifier()).thenReturn(mockIdentifier);
         ExecuteRequestExtractor mockRequestExtractor = mock(ExecuteRequestExtractor.class);
         ProcessorNameConverter mockNameConverter = mock(ProcessorNameConverter.class);
         CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
-        Map<String,String> mockParameterMap = new HashMap<>();
+        Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
         when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
                     .thenReturn(mockProcessor);
         when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
         when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
-        whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
+        when(mockStatus.getJobId()).thenReturn(MOCK_PROCESS_ID);
+        when(mockCalvalusProduction.orderProductionSynchronous(mockProductionService, mockProductionRequest)).thenReturn(mockStatus);
         whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
         whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);

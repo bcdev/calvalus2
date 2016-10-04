@@ -9,6 +9,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 
 import java.io.IOException;
 import java.util.Timer;
@@ -26,7 +27,7 @@ public class CalvalusProduction {
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
 
-    protected String orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
+    protected LocalProductionStatus orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
                 throws ProductionException {
         logInfo("Ordering production...");
         logInfo("user : " + userName);
@@ -52,19 +53,30 @@ public class CalvalusProduction {
             }
         }
 
-//        LocalProductionStatus productionStatus = new LocalProductionStatus(production.getId(), production.getProcessingStatus().getState())
+        ProcessStatus status = production.getProcessingStatus();
+        return new LocalProductionStatus(production.getId(),
+                                         status.getState(),
+                                         status.getProgress(),
+                                         status.getMessage(),
+                                         null);
 
-        return production.getId();
+//        return production.getId();
     }
 
-    protected String orderProductionSynchronous(ProductionService productionService, ProductionRequest request)
+    protected LocalProductionStatus orderProductionSynchronous(ProductionService productionService, ProductionRequest request)
                 throws ProductionException, InterruptedException {
         logInfo("Ordering production...");
         ProductionResponse productionResponse = productionService.orderProduction(request);
         Production production = productionResponse.getProduction();
         logInfo("Production successfully ordered. The production ID is: " + production.getId());
         observeProduction(productionService, production);
-        return production.getId();
+        ProcessStatus status = production.getProcessingStatus();
+        return new LocalProductionStatus(production.getId(),
+                                         status.getState(),
+                                         status.getProgress(),
+                                         status.getMessage(),
+                                         null);
+//        return production.getId();
     }
 
     private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {

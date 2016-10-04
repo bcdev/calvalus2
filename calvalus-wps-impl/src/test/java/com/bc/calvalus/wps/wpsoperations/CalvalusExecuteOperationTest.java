@@ -11,6 +11,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -81,8 +82,10 @@ public class CalvalusExecuteOperationTest {
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
+        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
+        when(mockStatus.getJobId()).thenReturn("process-00");
         when(mockProduction.getId()).thenReturn("process-00");
-        when(mockCalvalusFacade.orderProductionAsynchronous(any(Execute.class))).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionAsynchronous(any(Execute.class))).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
@@ -107,11 +110,13 @@ public class CalvalusExecuteOperationTest {
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
+        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
+        when(mockStatus.getJobId()).thenReturn("process-00");
         when(mockProduction.getId()).thenReturn("process-00");
         WorkflowItem mockWorkflow = mock(WorkflowItem.class);
         when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
         when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
-        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn(mockStatus);
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
         resultUrlList.add("resultUrl2");

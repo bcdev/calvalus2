@@ -11,6 +11,7 @@ import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
@@ -42,7 +43,7 @@ public class CalvalusFacade extends ProcessFacade {
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
-    public String orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
+    public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         try {
             ProductionRequest request = createProductionRequest(executeRequest);
             return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
@@ -52,13 +53,14 @@ public class CalvalusFacade extends ProcessFacade {
         }
     }
 
-    public String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
+    public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         try {
             ProductionRequest request = createProductionRequest(executeRequest);
-            String jobId = calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+            LocalProductionStatus status = calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+            String jobId = status.getJobId();
             stageProduction(jobId);
             observeStagingStatus(jobId);
-            return jobId;
+            return status;
         } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException(exception);

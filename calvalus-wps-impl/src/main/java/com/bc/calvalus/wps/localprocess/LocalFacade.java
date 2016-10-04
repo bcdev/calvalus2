@@ -36,12 +36,12 @@ public class LocalFacade extends ProcessFacade {
     }
 
     @Override
-    public String orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
+    public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         return null;
     }
 
     @Override
-    public String orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
+    public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         return null;
     }
 
