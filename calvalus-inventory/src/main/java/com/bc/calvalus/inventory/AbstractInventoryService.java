@@ -104,10 +104,10 @@ public abstract class AbstractInventoryService implements InventoryService {
                             if (fileStatuses.length == 1) {
                                 accu.add(fileStatuses[0].getPath());
                             }
-                        } catch (AccessControlException | FileNotFoundException _) {
+                        } catch (AccessControlException | FileNotFoundException ignore) {
                         }
                     }
-                } catch (AccessControlException | FileNotFoundException _) {
+                } catch (AccessControlException | FileNotFoundException ignore) {
                 }
             }
             paths = accu.toArray(new Path[accu.size()]);
