@@ -124,7 +124,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
         final Configuration conf = context.getConfiguration();
 
         if (! context.nextKey()) {
-            throw new IllegalArgumentException("no tiles found");
+            LOG.info("no tiles found");
+            return;
         }
 
         final int bandNumber = (context.getCurrentKey().get() >>> 22) & 0x1f;
