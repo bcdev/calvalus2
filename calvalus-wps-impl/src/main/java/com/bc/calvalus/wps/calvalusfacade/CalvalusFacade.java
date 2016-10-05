@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -23,6 +24,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -49,7 +51,13 @@ public class CalvalusFacade extends ProcessFacade {
             return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
-            throw new WpsProductionException(exception);
+            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
+                                                                     ProcessState.ERROR,
+                                                                     0.0f,
+                                                                     "Processing failed : " + exception.getMessage(),
+                                                                     null);
+            status.setStopDate(new Date());
+            return status;
         }
     }
 
@@ -60,10 +68,20 @@ public class CalvalusFacade extends ProcessFacade {
             String jobId = status.getJobId();
             stageProduction(jobId);
             observeStagingStatus(jobId);
+            status.setResultUrls(getProductResultUrls(jobId));
+            status.setStopDate(new Date());
+            status.setState(ProcessState.COMPLETED);
             return status;
         } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
-                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
-            throw new WpsProductionException(exception);
+                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException |
+                    WpsResultProductException exception) {
+            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
+                                                                     ProcessState.ERROR,
+                                                                     0.0f,
+                                                                     "Processing failed : " + exception.getMessage(),
+                                                                     null);
+            status.setStopDate(new Date());
+            return status;
         }
     }
 

@@ -70,8 +70,9 @@ public class LocalFacade extends ProcessFacade {
 
     @Override
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
+        ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
-            ProcessBuilder processBuilder = getProcessBuilder(executeRequest);
+            processBuilder = getProcessBuilder(executeRequest);
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
             LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
                                                                      ProcessState.SCHEDULED,
@@ -87,7 +88,13 @@ public class LocalFacade extends ProcessFacade {
             logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
             return status;
         } catch (InvalidParameterValueException | JAXBException | MissingParameterValueException | IOException exception) {
-            throw new WpsProductionException(exception);
+            LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
+                                                                     ProcessState.ERROR,
+                                                                     0.0f,
+                                                                     "Processing failed : " + exception.getMessage(),
+                                                                     null);
+            status.setStopDate(new Date());
+            return status;
         }
     }
 
@@ -124,7 +131,8 @@ public class LocalFacade extends ProcessFacade {
                                                resultUrls);
             status.setStopDate(new Date());
             return status;
-        } catch (WpsResultProductException | OperatorException | ProductionException exception) {
+        } catch (WpsResultProductException | OperatorException | ProductionException | InvalidParameterValueException |
+                    JAXBException | MissingParameterValueException exception) {
             status = new LocalProductionStatus(processBuilder.getJobId(),
                                                ProcessState.ERROR,
                                                0,
@@ -133,8 +141,7 @@ public class LocalFacade extends ProcessFacade {
             status.setStopDate(new Date());
             return status;
         } catch (ProductMetadataException | IOException | URISyntaxException |
-                    InvalidProcessorIdException | BindingException | InvalidParameterValueException |
-                    JAXBException | MissingParameterValueException exception) {
+                    BindingException | InvalidProcessorIdException exception) {
             String jobId = processBuilder.getJobId();
             status = new LocalProductionStatus(jobId,
                                                ProcessState.ERROR,

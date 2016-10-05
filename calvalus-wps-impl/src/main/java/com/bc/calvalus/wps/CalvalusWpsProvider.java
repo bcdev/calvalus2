@@ -6,7 +6,6 @@ import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
-import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.wpsoperations.CalvalusDescribeProcessOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusExecuteOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
@@ -21,7 +20,6 @@ import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ProcessDescriptionType;
 import com.bc.wps.utilities.WpsLogger;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -59,12 +57,13 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
     }
 
     @Override
-    public ExecuteResponse doExecute(WpsRequestContext wpsRequestContext, Execute execute) throws WpsServiceException {
+    public ExecuteResponse doExecute(WpsRequestContext wpsRequestContext, Execute executeRequest) throws WpsServiceException {
         try {
-            CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(wpsRequestContext);
-            return executeOperation.execute(execute);
-        } catch (IOException | WpsStagingException | ProductionException | WpsProductionException |
-                    WpsResultProductException | InvalidProcessorIdException | JAXBException exception) {
+            String processId = executeRequest.getIdentifier().getValue();
+            CalvalusExecuteOperation executeOperation = new CalvalusExecuteOperation(processId, wpsRequestContext);
+            return executeOperation.execute(executeRequest);
+        } catch (IOException | ProductionException | WpsProductionException |
+                    WpsResultProductException | InvalidProcessorIdException exception) {
             logger.log(Level.SEVERE, "Unable to perform Execute operation successfully", exception);
             throw new WpsServiceException(exception);
         }

@@ -6,7 +6,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
@@ -17,8 +17,6 @@ import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
-import com.bc.wps.api.schema.DataInputsType;
-import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ResponseDocumentType;
@@ -28,7 +26,6 @@ import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 import org.junit.rules.*;
 import org.junit.runner.*;
-import org.mockito.ArgumentCaptor;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -48,11 +45,11 @@ import java.util.List;
 })
 public class CalvalusExecuteOperationTest {
 
+    private static final String MOCK_PROCESSOR_ID = "processor-00";
     private CalvalusExecuteOperation executeOperation;
 
     private Execute mockExecuteRequest;
     private WpsRequestContext mockRequestContext;
-    private WpsServerContext mockServerContext;
 
     @Rule
     public ExpectedException thrownException = ExpectedException.none();
@@ -62,7 +59,7 @@ public class CalvalusExecuteOperationTest {
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockExecuteRequest = mock(Execute.class);
         mockRequestContext = mock(WpsRequestContext.class);
-        mockServerContext = mock(WpsServerContext.class);
+        WpsServerContext mockServerContext = mock(WpsServerContext.class);
         when(mockServerContext.getHostAddress()).thenReturn("dummyHostName");
         when(mockServerContext.getRequestUrl()).thenReturn("http://dummyUrl.com/bc-wps/wps/provider1");
         when(mockServerContext.getPort()).thenReturn(8000);
@@ -88,7 +85,7 @@ public class CalvalusExecuteOperationTest {
         when(mockCalvalusFacade.orderProductionAsynchronous(any(Execute.class))).thenReturn(mockStatus);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
+        executeOperation = new CalvalusExecuteOperation(MOCK_PROCESSOR_ID, mockRequestContext);
         ExecuteResponse executeResponse = executeOperation.execute(mockExecuteRequest);
 
         assertThat(executeResponse.getStatus().getProcessAccepted(),
@@ -110,21 +107,20 @@ public class CalvalusExecuteOperationTest {
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
         Production mockProduction = mock(Production.class);
-        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
-        when(mockStatus.getJobId()).thenReturn("process-00");
-        when(mockProduction.getId()).thenReturn("process-00");
-        WorkflowItem mockWorkflow = mock(WorkflowItem.class);
-        when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
-        when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
-        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn(mockStatus);
         List<String> resultUrlList = new ArrayList<>();
         resultUrlList.add("resultUrl1");
         resultUrlList.add("resultUrl2");
-        when(mockCalvalusFacade.getProductResultUrls("process-00")).thenReturn(resultUrlList);
+        LocalProductionStatus mockStatus = mock(LocalProductionStatus.class);
+        when(mockStatus.getJobId()).thenReturn("process-00");
+        when(mockStatus.getState()).thenReturn(ProcessState.COMPLETED.toString());
+        when(mockStatus.getStopTime()).thenReturn(new Date(1451606400000L));
+        when(mockStatus.getResultUrls()).thenReturn(resultUrlList);
+        when(mockProduction.getId()).thenReturn("process-00");
+        when(mockCalvalusFacade.orderProductionSynchronous(any(Execute.class))).thenReturn(mockStatus);
         when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
+        executeOperation = new CalvalusExecuteOperation(MOCK_PROCESSOR_ID, mockRequestContext);
         ExecuteResponse executeResponse = executeOperation.execute(mockExecuteRequest);
 
         assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been processed successfully."));
@@ -133,114 +129,6 @@ public class CalvalusExecuteOperationTest {
         assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(2));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(), equalTo("resultUrl1"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(), equalTo("resultUrl2"));
-    }
-
-    @Test
-    public void canCreateLineageAsyncResponse() throws Exception {
-        CalvalusExecuteResponseConverter mockExecuteAcceptedResponse = mock(CalvalusExecuteResponseConverter.class);
-        PowerMockito.whenNew(CalvalusExecuteResponseConverter.class).withNoArguments().thenReturn(mockExecuteAcceptedResponse);
-        ResponseFormType mockResponseForm = mock(ResponseFormType.class);
-        ResponseDocumentType mockResponseDocument = mock(ResponseDocumentType.class);
-        List<DocumentOutputDefinitionType> mockOutputList = new ArrayList<>();
-        when(mockResponseDocument.getOutput()).thenReturn(mockOutputList);
-        when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
-        when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
-        DataInputsType mockDataInputs = mock(DataInputsType.class);
-        when(mockExecuteRequest.getDataInputs()).thenReturn(mockDataInputs);
-
-        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<DataInputsType> dataInputsCaptor = ArgumentCaptor.forClass(DataInputsType.class);
-        ArgumentCaptor<List> output = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<WpsServerContext> serverContextCaptor = ArgumentCaptor.forClass(WpsServerContext.class);
-
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.createAsyncExecuteResponse(mockExecuteRequest, true, "process1");
-
-        verify(mockExecuteAcceptedResponse).getAcceptedWithLineageResponse(jobIdCaptor.capture(), dataInputsCaptor.capture(),
-                                                                           output.capture(), serverContextCaptor.capture());
-
-        assertThat(jobIdCaptor.getValue(), equalTo("process1"));
-        assertThat(dataInputsCaptor.getValue(), equalTo(mockDataInputs));
-        assertThat(output.getValue(), equalTo(mockOutputList));
-        assertThat(serverContextCaptor.getValue(), equalTo(mockServerContext));
-    }
-
-    @Test
-    public void canCreateNonLineageAsyncResponse() throws Exception {
-        CalvalusExecuteResponseConverter mockExecuteAcceptedResponse = mock(CalvalusExecuteResponseConverter.class);
-        PowerMockito.whenNew(CalvalusExecuteResponseConverter.class).withNoArguments().thenReturn(mockExecuteAcceptedResponse);
-
-        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<WpsServerContext> serverContextCaptor = ArgumentCaptor.forClass(WpsServerContext.class);
-
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.createAsyncExecuteResponse(mockExecuteRequest, false, "process1");
-
-        verify(mockExecuteAcceptedResponse).getAcceptedResponse(jobIdCaptor.capture(), serverContextCaptor.capture());
-
-        assertThat(jobIdCaptor.getValue(), equalTo("process1"));
-        assertThat(serverContextCaptor.getValue(), equalTo(mockServerContext));
-    }
-
-    @Test
-    public void canCreateLineageSyncResponse() throws Exception {
-        CalvalusExecuteResponseConverter mockExecuteAcceptedResponse = mock(CalvalusExecuteResponseConverter.class);
-        PowerMockito.whenNew(CalvalusExecuteResponseConverter.class).withNoArguments().thenReturn(mockExecuteAcceptedResponse);
-        ResponseFormType mockResponseForm = mock(ResponseFormType.class);
-        ResponseDocumentType mockResponseDocument = mock(ResponseDocumentType.class);
-        List<DocumentOutputDefinitionType> mockOutputList = new ArrayList<>();
-        when(mockResponseDocument.getOutput()).thenReturn(mockOutputList);
-        when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
-        when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
-        DataInputsType mockDataInputs = mock(DataInputsType.class);
-        when(mockExecuteRequest.getDataInputs()).thenReturn(mockDataInputs);
-        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
-        Production mockProduction = mock(Production.class);
-        when(mockProduction.getId()).thenReturn("job-id");
-        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-
-        List<String> mockResultUrls = new ArrayList<>();
-
-        ArgumentCaptor<List> resultUrlsCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<DataInputsType> dataInputsCaptor = ArgumentCaptor.forClass(DataInputsType.class);
-        ArgumentCaptor<List> output = ArgumentCaptor.forClass(List.class);
-
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.createSyncExecuteResponse(mockExecuteRequest, true, "job-id");
-
-        verify(mockExecuteAcceptedResponse).getSuccessfulWithLineageResponse(resultUrlsCaptor.capture(), dataInputsCaptor.capture(),
-                                                                             output.capture());
-
-        assertThat(resultUrlsCaptor.getValue(), equalTo(mockResultUrls));
-        assertThat(dataInputsCaptor.getValue(), equalTo(mockDataInputs));
-        assertThat(output.getValue(), equalTo(mockOutputList));
-    }
-
-    @Test
-    public void canCreateNonLineageSyncResponse() throws Exception {
-        CalvalusExecuteResponseConverter mockExecuteAcceptedResponse = mock(CalvalusExecuteResponseConverter.class);
-        PowerMockito.whenNew(CalvalusExecuteResponseConverter.class).withNoArguments().thenReturn(mockExecuteAcceptedResponse);
-        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
-        Production mockProduction = mock(Production.class);
-        WorkflowItem mockWorkflow = mock(WorkflowItem.class);
-        when(mockWorkflow.getStopTime()).thenReturn(new Date(1451606400000L));
-        when(mockProduction.getId()).thenReturn("job-id");
-        when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
-        when(mockCalvalusFacade.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
-        List<String> mockResultUrls = new ArrayList<>();
-
-        ArgumentCaptor<List> resultUrlsCaptor = ArgumentCaptor.forClass(List.class);
-        ArgumentCaptor<Date> finishTimeCaptor = ArgumentCaptor.forClass(Date.class);
-
-        executeOperation = new CalvalusExecuteOperation(mockRequestContext);
-        executeOperation.createSyncExecuteResponse(mockExecuteRequest, false, "job-id");
-
-        verify(mockExecuteAcceptedResponse).getSuccessfulResponse(resultUrlsCaptor.capture(), finishTimeCaptor.capture());
-
-        assertThat(resultUrlsCaptor.getValue(), equalTo(mockResultUrls));
-        assertThat(finishTimeCaptor.getValue().toString(), equalTo("Fri Jan 01 01:00:00 CET 2016"));
     }
 
     private ProductionRequest configureProcessingMock() throws Exception {

@@ -12,6 +12,7 @@ import com.bc.calvalus.wps.wpsoperations.CalvalusGetCapabilitiesOperation;
 import com.bc.calvalus.wps.wpsoperations.CalvalusGetStatusOperation;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.exceptions.WpsServiceException;
+import com.bc.wps.api.schema.CodeType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -36,6 +37,7 @@ import java.util.Timer;
 public class CalvalusWpsProviderTest {
 
     private static final String DUMMY_ID = "dummyId";
+    private static final String MOCK_PROCESSOR_ID = "processor-00";
     private WpsRequestContext mockRequestContext;
 
     private CalvalusWpsProvider calvalusProvider;
@@ -91,7 +93,10 @@ public class CalvalusWpsProviderTest {
     public void canDoExecute() throws Exception {
         CalvalusExecuteOperation mockExecute = mock(CalvalusExecuteOperation.class);
         Execute mockExecuteRequest = mock(Execute.class);
-        PowerMockito.whenNew(CalvalusExecuteOperation.class).withArguments(mockRequestContext).thenReturn(mockExecute);
+        CodeType mockProcessorId = new CodeType();
+        mockProcessorId.setValue(MOCK_PROCESSOR_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockProcessorId);
+        PowerMockito.whenNew(CalvalusExecuteOperation.class).withArguments(MOCK_PROCESSOR_ID, mockRequestContext).thenReturn(mockExecute);
 
         calvalusProvider.doExecute(mockRequestContext, mockExecuteRequest);
 
@@ -101,9 +106,12 @@ public class CalvalusWpsProviderTest {
     @Test(expected = WpsServiceException.class)
     public void canThrowExceptionDoExecute() throws Exception {
         Execute mockExecuteRequest = mock(Execute.class);
+        CodeType mockProcessorId = new CodeType();
+        mockProcessorId.setValue(MOCK_PROCESSOR_ID);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(mockProcessorId);
         CalvalusExecuteOperation mockExecute = mock(CalvalusExecuteOperation.class);
         when(mockExecute.execute(mockExecuteRequest)).thenThrow(new IOException());
-        PowerMockito.whenNew(CalvalusExecuteOperation.class).withArguments(mockRequestContext).thenReturn(mockExecute);
+        PowerMockito.whenNew(CalvalusExecuteOperation.class).withArguments(MOCK_PROCESSOR_ID, mockRequestContext).thenReturn(mockExecute);
 
         calvalusProvider.doExecute(mockRequestContext, mockExecuteRequest);
     }
