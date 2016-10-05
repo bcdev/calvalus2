@@ -14,9 +14,9 @@
         <updated>$jobFinishTime</updated>
         <link href="$collectionUrl" rel="alternate" type="text/html"/>
         #foreach( $product in $productList )
-            <link href="$product.productUrl" rel="enclosure" type="application/netcdf" length=$product.productFileSize/>
+            <link href="$product.productUrl" rel="enclosure" type="application/netcdf" length="$product.productFileSize"/>
         #end
-        <where xmlns="http://www.georss.org/georss/10" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <where xmlns="http://www.georss.org/georss/10">
             <Polygon xmlns="http://www.opengis.net/gml">
                 <exterior>
                     <LinearRing>
@@ -41,11 +41,11 @@
             <nativeProductFormat>$outputFormat</nativeProductFormat>
         </ProcessingInformation>
         <box xmlns="http://www.georss.org/georss">$regionBox</box>
-        <offering xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/html">
+        <offering xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/html">
             <content href="$collectionUrl" type="text/html" />
         </offering>
         #foreach( $product in $productList )
-            <offering xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/nc">
+            <offering xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/nc">
                 <content href="$product.productUrl" type="application/netcdf" />
             </offering>
         #end
