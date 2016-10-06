@@ -65,7 +65,7 @@ public class CalvalusFacade extends ProcessFacade {
 
     @Override
     public void generateProductMetadata(String jobId) throws ProductMetadataException {
-
+        calvalusStaging.generateProductMetadata(jobId, CalvalusProductionService.getDefaultConfig());
     }
 
     @Override

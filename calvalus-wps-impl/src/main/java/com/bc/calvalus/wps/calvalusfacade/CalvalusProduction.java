@@ -11,6 +11,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
@@ -70,10 +71,11 @@ class CalvalusProduction {
             status.setResultUrls(calvalusFacade.getProductResultUrls(jobId));
             status.setStopDate(new Date());
             status.setState(ProcessState.COMPLETED);
+            calvalusFacade.generateProductMetadata(jobId);
             return status;
-        } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
-                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException |
-                    WpsResultProductException exception) {
+        } catch (WpsResultProductException | JAXBException | MissingParameterValueException | InvalidProcessorIdException | WpsStagingException |
+                    ProductMetadataException | InterruptedException | WpsProcessorNotFoundException | ProductionException |
+                    InvalidParameterValueException | IOException exception) {
             LocalProductionStatus status = new LocalProductionStatus("NO_ID",
                                                                      ProcessState.ERROR,
                                                                      0.0f,

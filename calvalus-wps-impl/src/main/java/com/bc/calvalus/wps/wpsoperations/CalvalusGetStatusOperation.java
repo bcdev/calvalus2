@@ -11,6 +11,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.LocalJob;
@@ -64,16 +65,16 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
             processBriefType.setProcessVersion(processorConverter.getBundleVersion());
             processStatus = new CalvalusWpsProcessStatus(production, calvalusFacade.getProductResultUrls(jobId));
-        } catch (ProductionException | IOException | WpsResultProductException exception) {
+            if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
+                calvalusFacade.generateProductMetadata(jobId);
+                executeResponse = getExecuteSuccessfulResponse(processStatus);
+            } else if (processStatus.isDone()) {
+                executeResponse = getExecuteFailedResponse(processStatus);
+            } else {
+                executeResponse = getExecuteInProgressResponse(processStatus);
+            }
+        } catch (ProductionException | IOException | WpsResultProductException | ProductMetadataException exception) {
             throw new JobNotFoundException(exception, "JobId");
-        }
-
-        if (ProcessState.COMPLETED.toString().equals(processStatus.getState())) {
-            executeResponse = getExecuteSuccessfulResponse(processStatus);
-        } else if (processStatus.isDone()) {
-            executeResponse = getExecuteFailedResponse(processStatus);
-        } else {
-            executeResponse = getExecuteInProgressResponse(processStatus);
         }
         executeResponse.setProcess(processBriefType);
         return executeResponse;

@@ -56,7 +56,7 @@ class CalvalusStaging {
         }
     }
 
-    protected List<String> getProductResultUrls(String jobId, Map<String, String> calvalusDefaultConfig) throws WpsResultProductException {
+    List<String> getProductResultUrls(String jobId, Map<String, String> calvalusDefaultConfig) throws WpsResultProductException {
         Production production;
         try {
             ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
@@ -94,8 +94,6 @@ class CalvalusStaging {
                         .path(production.getName() + "-metadata")
                         .build().toString();
             productResultUrls.add(metadataUrl);
-
-            generateProductMetadata(production, stagingDirectory, productResultFiles);
         }
         return productResultUrls;
     }
@@ -127,7 +125,20 @@ class CalvalusStaging {
         }
     }
 
-    private void generateProductMetadata(Production production, File stagingDirectory, File[] productResultFiles) {
+    void generateProductMetadata(String jobId, Map<String, String> calvalusDefaultConfig) throws ProductMetadataException {
+        Production production;
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            production = productionService.getProduction(jobId);
+        } catch (ProductionException | IOException exception) {
+            throw new ProductMetadataException(exception);
+        }
+        String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
+        File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
+        File[] productResultFiles = stagingDirectory.listFiles();
+        if (productResultFiles == null) {
+            throw new ProductMetadataException("No available product result files.");
+        }
         File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
         if (outputMetadata.exists()) {
             return;
