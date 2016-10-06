@@ -3,6 +3,7 @@ package com.bc.calvalus.wps.localprocess;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -24,9 +25,16 @@ import java.util.List;
  */
 public class ProcessorExtractor {
 
-    public List<WpsProcess> getProcessors() throws BindingException, IOException, URISyntaxException {
+    public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
         List<WpsProcess> processors = new ArrayList<>();
-        for (BundleDescriptor bundleDescriptor : getLocalBundleDescriptors()) {
+        List<BundleDescriptor> localBundleDescriptors;
+        try {
+            localBundleDescriptors = getLocalBundleDescriptors();
+        } catch (URISyntaxException | IOException | BindingException exception) {
+            throw new WpsProcessorNotFoundException(exception);
+        }
+
+        for (BundleDescriptor bundleDescriptor : localBundleDescriptors) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;
             }
@@ -38,9 +46,15 @@ public class ProcessorExtractor {
         return processors;
     }
 
-    public WpsProcess getProcessor(ProcessorNameConverter converter)
-                throws BindingException, IOException, URISyntaxException {
-        for (BundleDescriptor bundleDescriptor : getLocalBundleDescriptors()) {
+    public WpsProcess getProcessor(ProcessorNameConverter converter) throws WpsProcessorNotFoundException {
+        List<BundleDescriptor> localBundleDescriptors;
+        try {
+            localBundleDescriptors = getLocalBundleDescriptors();
+        } catch (URISyntaxException | IOException | BindingException exception) {
+            throw new WpsProcessorNotFoundException(exception);
+        }
+
+        for (BundleDescriptor bundleDescriptor : localBundleDescriptors) {
             if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;
             }

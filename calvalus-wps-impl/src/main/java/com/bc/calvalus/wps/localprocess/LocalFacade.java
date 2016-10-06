@@ -21,8 +21,6 @@ import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.gpf.OperatorException;
 
 import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Date;
@@ -117,38 +115,17 @@ public class LocalFacade extends ProcessFacade {
 
     @Override
     public void generateProductMetadata(String jobId) throws ProductMetadataException {
-        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
-        if (job == null) {
-            throw new ProductMetadataException("Unable to create metadata for jobId '" + jobId + "'");
-        }
-        try {
-            String processId = (String) job.getParameters().get("processId");
-            ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
-            WpsProcess processor = getProcessor(processorNameConverter);
-            String targetDirPath = (String) job.getParameters().get("targetDir");
-            File targetDir = new File(targetDirPath);
-            localStaging.generateProductMetadata(targetDir, job.getJobid(), job.getParameters(), processor, hostName, portNumber);
-        } catch (InvalidProcessorIdException | ProductionException | WpsProcessorNotFoundException | FileNotFoundException exception) {
-            throw new ProductMetadataException(exception);
-        }
+        localStaging.generateProductMetadata(jobId, hostName, portNumber);
     }
 
     @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
-        try {
-            return processorExtractor.getProcessors();
-        } catch (BindingException | IOException | URISyntaxException exception) {
-            throw new WpsProcessorNotFoundException(exception);
-        }
+        return processorExtractor.getProcessors();
     }
 
     @Override
     public WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
-        try {
-            return processorExtractor.getProcessor(parser);
-        } catch (BindingException | IOException | URISyntaxException exception) {
-            throw new WpsProcessorNotFoundException(exception);
-        }
+        return processorExtractor.getProcessor(parser);
     }
 
     private void updateProductionStatusMap(LocalProductionStatus status, ProcessBuilder processBuilder) {

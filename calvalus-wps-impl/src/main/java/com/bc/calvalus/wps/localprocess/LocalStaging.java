@@ -2,7 +2,10 @@ package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
+import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.utils.ProductMetadataBuilder;
 import com.bc.calvalus.wps.utils.VelocityWrapper;
@@ -23,11 +26,11 @@ import java.util.Map;
 /**
  * @author hans
  */
-public class LocalStaging {
+class LocalStaging {
 
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
-    protected List<String> getProductUrls(String jobId, String userName, String hostName, int portNumber) {
+    List<String> getProductUrls(String jobId, String userName, String hostName, int portNumber) {
         Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
                                              PropertiesWrapper.get("utep.output.directory"), userName, jobId);
         File targetDir = targetDirectoryPath.toFile();
@@ -63,7 +66,26 @@ public class LocalStaging {
         return resultUrls;
     }
 
-    protected void generateProductMetadata(File targetDir,
+    void generateProductMetadata(String jobId, String hostName, int portNumber)
+                throws ProductMetadataException {
+        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        if (job == null) {
+            throw new ProductMetadataException("Unable to create metadata for jobId '" + jobId + "'");
+        }
+        try {
+            String processId = (String) job.getParameters().get("processId");
+            ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
+            ProcessorExtractor processorExtractor = new ProcessorExtractor();
+            WpsProcess processor = processorExtractor.getProcessor(processorNameConverter);
+            String targetDirPath = (String) job.getParameters().get("targetDir");
+            File targetDir = new File(targetDirPath);
+            doGenerateProductMetadata(targetDir, job.getJobid(), job.getParameters(), processor, hostName, portNumber);
+        } catch (InvalidProcessorIdException | ProductionException | FileNotFoundException | WpsProcessorNotFoundException exception) {
+            throw new ProductMetadataException(exception);
+        }
+    }
+
+    private void doGenerateProductMetadata(File targetDir,
                                            String jobid,
                                            Map<String, Object> processParameters,
                                            WpsProcess processor,
