@@ -10,7 +10,6 @@ import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
-import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
 import com.bc.wps.api.WpsRequestContext;
@@ -18,10 +17,7 @@ import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
-import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.OperatorException;
 
 import javax.xml.bind.JAXBException;
@@ -29,15 +25,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,8 +34,6 @@ import java.util.logging.Logger;
  * @author hans
  */
 public class LocalFacade extends ProcessFacade {
-
-    private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
     private Logger logger = WpsLogger.getLogger();
 
@@ -72,7 +59,7 @@ public class LocalFacade extends ProcessFacade {
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
-            processBuilder = getProcessBuilder(executeRequest);
+            processBuilder = localProduction.getProcessBuilder(executeRequest, userName, wpsRequestContext.getServerContext());
             return localProduction.orderProductionAsynchronous(this, processBuilder);
         } catch (InvalidParameterValueException | JAXBException | MissingParameterValueException | IOException exception) {
             String jobId = processBuilder.getJobId();
@@ -88,7 +75,7 @@ public class LocalFacade extends ProcessFacade {
         LocalProductionStatus status;
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
-            processBuilder = getProcessBuilder(executeRequest);
+            processBuilder = localProduction.getProcessBuilder(executeRequest, userName, wpsRequestContext.getServerContext());
             String jobId = processBuilder.getJobId();
             localProduction.orderProductionSynchronous(processBuilder);
             status = getSuccessfulStatus(processBuilder, getProductResultUrls(jobId));
@@ -164,6 +151,12 @@ public class LocalFacade extends ProcessFacade {
         }
     }
 
+    private void updateProductionStatusMap(LocalProductionStatus status, ProcessBuilder processBuilder) {
+        String jobId = processBuilder.getJobId();
+        LocalJob job = new LocalJob(jobId, processBuilder.getParameters(), status);
+        GpfProductionService.getProductionStatusMap().put(jobId, job);
+    }
+
     private LocalProductionStatus getFailedStatus(String errorMessage, ProcessBuilder processBuilder) {
         LocalProductionStatus status;
         status = new LocalProductionStatus(processBuilder.getJobId(),
@@ -175,12 +168,6 @@ public class LocalFacade extends ProcessFacade {
         return status;
     }
 
-    private void updateProductionStatusMap(LocalProductionStatus status, ProcessBuilder processBuilder) {
-        String jobId = processBuilder.getJobId();
-        LocalJob job = new LocalJob(jobId, processBuilder.getParameters(), status);
-        GpfProductionService.getProductionStatusMap().put(jobId, job);
-    }
-
     private LocalProductionStatus getSuccessfulStatus(ProcessBuilder processBuilder, List<String> resultUrls) {
         LocalProductionStatus status;
         status = new LocalProductionStatus(processBuilder.getJobId(),
@@ -190,59 +177,5 @@ public class LocalFacade extends ProcessFacade {
                                            resultUrls);
         status.setStopDate(new Date());
         return status;
-    }
-
-    private Product getSourceProduct(Map<String, String> inputParameters) throws IOException {
-        final Product sourceProduct;
-        Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
-        List<File> files = new ArrayList<>();
-        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("sourceProduct"));
-        for (Path entry : stream) {
-            files.add(entry.toFile());
-        }
-
-        String sourceProductPath;
-        if (files.size() != 0) {
-            sourceProductPath = files.get(0).getAbsolutePath();
-        } else {
-            throw new FileNotFoundException("The source product '" + inputParameters.get("sourceProduct") + "' cannot be found");
-        }
-
-        sourceProduct = ProductIO.readProduct(sourceProductPath);
-        return sourceProduct;
-    }
-
-    private Path getTargetDirectoryPath(String jobId) throws IOException {
-        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
-                                             PropertiesWrapper.get("utep.output.directory"), getUserName(), jobId);
-        Files.createDirectories(targetDirectoryPath);
-        return targetDirectoryPath;
-    }
-
-    private ProcessBuilder getProcessBuilder(Execute executeRequest)
-                throws JAXBException, MissingParameterValueException, InvalidParameterValueException, IOException {
-        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
-        Map<String, String> inputParameters = requestExtractor.getInputParametersMapRaw();
-        final Product sourceProduct = getSourceProduct(inputParameters);
-        String jobId = GpfProductionService.createJobId(getUserName());
-        String processId = executeRequest.getIdentifier().getValue();
-        Path targetDirPath = getTargetDirectoryPath(jobId);
-        HashMap<String, Object> parameters = new HashMap<>();
-        parameters.put("processId", processId);
-        parameters.put("productionName", inputParameters.get("productionName"));
-        parameters.put("geoRegion", inputParameters.get("regionWKT"));
-        parameters.put("outputFormat", inputParameters.get("outputFormat"));
-        parameters.put("productionType", inputParameters.get("productionType"));
-        parameters.put("sourceProduct", inputParameters.get("sourceProduct"));
-        parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
-        parameters.put("targetDir", targetDirPath.toString());
-        return ProcessBuilder.create()
-                    .withJobId(jobId)
-                    .withProcessId(processId)
-                    .withParameters(parameters)
-                    .withSourceProduct(sourceProduct)
-                    .withTargetDirPath(targetDirPath)
-                    .withServerContext(wpsRequestContext.getServerContext())
-                    .withExecuteRequest(executeRequest);
     }
 }

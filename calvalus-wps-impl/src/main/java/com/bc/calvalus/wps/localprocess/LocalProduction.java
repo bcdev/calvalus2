@@ -4,26 +4,71 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.core.ProgressMonitor;
+import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
+import com.bc.wps.api.schema.Execute;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 
+import javax.xml.bind.JAXBException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author hans
  */
-public class LocalProduction {
+class LocalProduction {
 
+    private static final String CATALINA_BASE = System.getProperty("catalina.base");
     private Logger logger = WpsLogger.getLogger();
 
-    public LocalProductionStatus orderProductionAsynchronous(LocalFacade localFacade, ProcessBuilder processBuilder) {
+    ProcessBuilder getProcessBuilder(Execute executeRequest, String userName, WpsServerContext serverContext)
+                throws JAXBException, MissingParameterValueException, InvalidParameterValueException, IOException {
+        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
+        Map<String, String> inputParameters = requestExtractor.getInputParametersMapRaw();
+        final Product sourceProduct = getSourceProduct(inputParameters);
+        String jobId = GpfProductionService.createJobId(userName);
+        String processId = executeRequest.getIdentifier().getValue();
+        Path targetDirPath = getTargetDirectoryPath(jobId, userName);
+        HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("processId", processId);
+        parameters.put("productionName", inputParameters.get("productionName"));
+        parameters.put("geoRegion", inputParameters.get("regionWKT"));
+        parameters.put("outputFormat", inputParameters.get("outputFormat"));
+        parameters.put("productionType", inputParameters.get("productionType"));
+        parameters.put("sourceProduct", inputParameters.get("sourceProduct"));
+        parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
+        parameters.put("targetDir", targetDirPath.toString());
+        return ProcessBuilder.create()
+                    .withJobId(jobId)
+                    .withProcessId(processId)
+                    .withParameters(parameters)
+                    .withSourceProduct(sourceProduct)
+                    .withTargetDirPath(targetDirPath)
+                    .withServerContext(serverContext)
+                    .withExecuteRequest(executeRequest);
+    }
+
+    LocalProductionStatus orderProductionAsynchronous(LocalFacade localFacade, ProcessBuilder processBuilder) {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
         LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
                                                                  ProcessState.SCHEDULED,
@@ -41,7 +86,7 @@ public class LocalProduction {
         return status;
     }
 
-    public void orderProductionSynchronous(ProcessBuilder processBuilder)
+    void orderProductionSynchronous(ProcessBuilder processBuilder)
                 throws InvalidProcessorIdException, BindingException, IOException,
                        URISyntaxException, ProductionException, ProductMetadataException {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting synchronous process...");
@@ -53,6 +98,33 @@ public class LocalProduction {
                          false,
                          ProgressMonitor.NULL);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] process finished...");
+    }
+
+    private Product getSourceProduct(Map<String, String> inputParameters) throws IOException {
+        final Product sourceProduct;
+        Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
+        List<File> files = new ArrayList<>();
+        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("sourceProduct"));
+        for (Path entry : stream) {
+            files.add(entry.toFile());
+        }
+
+        String sourceProductPath;
+        if (files.size() != 0) {
+            sourceProductPath = files.get(0).getAbsolutePath();
+        } else {
+            throw new FileNotFoundException("The source product '" + inputParameters.get("sourceProduct") + "' cannot be found");
+        }
+
+        sourceProduct = ProductIO.readProduct(sourceProductPath);
+        return sourceProduct;
+    }
+
+    private Path getTargetDirectoryPath(String jobId, String userName) throws IOException {
+        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                             PropertiesWrapper.get("utep.output.directory"), userName, jobId);
+        Files.createDirectories(targetDirectoryPath);
+        return targetDirectoryPath;
     }
 
     private String getFileExtension(String outputFormat) {
