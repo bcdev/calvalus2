@@ -8,6 +8,8 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
+import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ProductMetadata;
 import com.bc.calvalus.wps.utils.ProductMetadataBuilder;
 import com.bc.calvalus.wps.utils.VelocityWrapper;
@@ -32,7 +34,7 @@ import java.util.logging.Logger;
  *
  * @author hans
  */
-public class CalvalusStaging {
+class CalvalusStaging {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String CALWPS_ROOT_PATH = "/webapps/bc-wps/";
@@ -40,16 +42,28 @@ public class CalvalusStaging {
 
     private final WpsServerContext wpsServerContext;
 
-    public CalvalusStaging(WpsServerContext wpsServerContext) {
+    CalvalusStaging(WpsServerContext wpsServerContext) {
         this.wpsServerContext = wpsServerContext;
     }
 
-    protected void stageProduction(ProductionService productionService, String jobid) throws ProductionException, IOException {
+    void stageProduction(String jobid) throws WpsStagingException {
         logInfo("Staging results...");
-        productionService.stageProductions(jobid);
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            productionService.stageProductions(jobid);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsStagingException(exception);
+        }
     }
 
-    protected List<String> getProductResultUrls(Map<String, String> calvalusDefaultConfig, Production production) {
+    protected List<String> getProductResultUrls(String jobId, Map<String, String> calvalusDefaultConfig) throws WpsResultProductException {
+        Production production;
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            production = productionService.getProduction(jobId);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsResultProductException(exception);
+        }
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
         File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
 
@@ -86,17 +100,25 @@ public class CalvalusStaging {
         return productResultUrls;
     }
 
-    protected void observeStagingStatus(ProductionService productionService, Production production)
-                throws InterruptedException {
-        String userName = production.getProductionRequest().getUserName();
-        while (!production.getStagingStatus().isDone()) {
-            Thread.sleep(500);
-            productionService.updateStatuses(userName);
-            ProcessStatus stagingStatus = production.getStagingStatus();
-            logInfo(String.format("Staging status: state=%s, progress=%s, message='%s'",
-                                  stagingStatus.getState(),
-                                  stagingStatus.getProgress(),
-                                  stagingStatus.getMessage()));
+    void observeStagingStatus(String jobId) throws WpsStagingException {
+        ProductionService productionService;
+        Production production;
+        try {
+            productionService = CalvalusProductionService.getProductionServiceSingleton();
+            production = productionService.getProduction(jobId);
+
+            String userName = production.getProductionRequest().getUserName();
+            while (!production.getStagingStatus().isDone()) {
+                Thread.sleep(500);
+                productionService.updateStatuses(userName);
+                ProcessStatus stagingStatus = production.getStagingStatus();
+                logInfo(String.format("Staging status: state=%s, progress=%s, message='%s'",
+                                      stagingStatus.getState(),
+                                      stagingStatus.getProgress(),
+                                      stagingStatus.getMessage()));
+            }
+        } catch (ProductionException | IOException | InterruptedException exception) {
+            throw new WpsStagingException(exception);
         }
         if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
             logInfo("Staging completed.");

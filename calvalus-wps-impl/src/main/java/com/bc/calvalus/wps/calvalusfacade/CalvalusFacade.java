@@ -47,29 +47,15 @@ public class CalvalusFacade extends ProcessFacade {
     }
 
     public List<String> getProductResultUrls(String jobId) throws WpsResultProductException {
-        try {
-            Production production = getProduction(jobId);
-            return calvalusStaging.getProductResultUrls(CalvalusProductionService.getDefaultConfig(), production);
-        } catch (ProductionException | IOException exception) {
-            throw new WpsResultProductException(exception);
-        }
+        return calvalusStaging.getProductResultUrls(jobId, CalvalusProductionService.getDefaultConfig());
     }
 
     public void stageProduction(String jobId) throws WpsStagingException {
-        try {
-            calvalusStaging.stageProduction(getProductionService(), jobId);
-        } catch (ProductionException | IOException exception) {
-            throw new WpsStagingException(exception);
-        }
+        calvalusStaging.stageProduction(jobId);
     }
 
     public void observeStagingStatus(String jobId) throws WpsStagingException {
-        try {
-            Production production = getProduction(jobId);
-            calvalusStaging.observeStagingStatus(getProductionService(), production);
-        } catch (ProductionException | IOException | InterruptedException exception) {
-            throw new WpsStagingException(exception);
-        }
+        calvalusStaging.observeStagingStatus(jobId);
     }
 
     @Override

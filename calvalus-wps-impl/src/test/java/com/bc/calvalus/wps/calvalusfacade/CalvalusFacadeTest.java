@@ -153,14 +153,14 @@ public class CalvalusFacadeTest {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
         when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProductResultUrls("job-00");
 
-        verify(mockCalvalusStaging).getProductResultUrls(anyMapOf(String.class, String.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).getProductResultUrls(jobIdCaptor.capture(), anyMapOf(String.class, String.class));
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
@@ -171,7 +171,7 @@ public class CalvalusFacadeTest {
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.stageProduction("job-00");
 
-        verify(mockCalvalusStaging).stageProduction(any(ProductionService.class), jobidCaptor.capture());
+        verify(mockCalvalusStaging).stageProduction(jobidCaptor.capture());
 
         assertThat(jobidCaptor.getValue(), equalTo("job-00"));
     }
@@ -181,14 +181,14 @@ public class CalvalusFacadeTest {
         Production mockProduction = mock(Production.class);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
         when(mockProductionService.getProduction("job-00")).thenReturn(mockProduction);
-        ArgumentCaptor<Production> productionCaptor = ArgumentCaptor.forClass(Production.class);
+        ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.observeStagingStatus("job-00");
 
-        verify(mockCalvalusStaging).observeStagingStatus(any(ProductionService.class), productionCaptor.capture());
+        verify(mockCalvalusStaging).observeStagingStatus(jobIdCaptor.capture());
 
-        assertThat(productionCaptor.getValue(), equalTo(mockProduction));
+        assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
     }
 
     @Test
