@@ -9,9 +9,12 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
+import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
+import com.bc.calvalus.wps.localprocess.LocalJob;
+import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
@@ -31,7 +34,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         super(context);
     }
 
-    public ExecuteResponse getStatus(String jobId) throws JobNotFoundException {
+    public ExecuteResponse getStatus(String jobId) throws JobNotFoundException, InvalidProcessorIdException {
         // to match urban1-20160919_160202392, hans-20150919_999999999, etc.
         String localJobIdRegex = ".*-((\\d{4}((0[13578]|1[02])(0[1-9]|[12]\\d|3[01])|(0[13456789]|1[012])(0[1-9]|" +
                                  "[12]\\d|30)|02(0[1-9]|1\\d|2[0-8])))|(\\d{2}[02468][048]|\\d{2}[13579][26])0229){0,8}_.*";
@@ -76,27 +79,28 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         return executeResponse;
     }
 
-    private ExecuteResponse getLocalProcessExecuteResponse(String jobId) throws JobNotFoundException {
+    private ExecuteResponse getLocalProcessExecuteResponse(String jobId)
+                throws JobNotFoundException, InvalidProcessorIdException {
         ExecuteResponse executeResponse;
+        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        if (job == null) {
+            throw new JobNotFoundException("JobId");
+        }
+        LocalProductionStatus status = job.getStatus();
+        String processId = (String) job.getParameters().get("processId");
+        ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
         ProcessBriefType processBriefType = new ProcessBriefType();
-        ProcessorNameConverter processorNameConverter = new ProcessorNameConverter("local", "0.0.1", "Subset");
-        String processId = processorNameConverter.getProcessorIdentifier();
         processBriefType.setIdentifier(WpsTypeConverter.str2CodeType(processId));
         processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(processId));
         processBriefType.setProcessVersion(processorNameConverter.getBundleVersion());
-        WpsProcessStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
-        if (status != null) {
-            if (ProcessState.COMPLETED.toString().equals(status.getState())) {
-                executeResponse = getExecuteSuccessfulResponse(status);
-            } else if (ProcessState.ERROR.toString().equals(status.getState())) {
-                executeResponse = getExecuteFailedResponse(status);
-            } else {
-                executeResponse = getExecuteInProgressResponse(status);
-            }
-            executeResponse.setProcess(processBriefType);
+        if (ProcessState.COMPLETED.toString().equals(status.getState())) {
+            executeResponse = getExecuteSuccessfulResponse(status);
+        } else if (ProcessState.ERROR.toString().equals(status.getState())) {
+            executeResponse = getExecuteFailedResponse(status);
         } else {
-            throw new JobNotFoundException("JobId");
+            executeResponse = getExecuteInProgressResponse(status);
         }
+        executeResponse.setProcess(processBriefType);
         return executeResponse;
     }
 

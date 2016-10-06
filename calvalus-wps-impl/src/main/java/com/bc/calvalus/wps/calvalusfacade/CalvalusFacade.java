@@ -8,6 +8,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -109,6 +110,11 @@ public class CalvalusFacade extends ProcessFacade {
         } catch (ProductionException | IOException | InterruptedException exception) {
             throw new WpsStagingException(exception);
         }
+    }
+
+    @Override
+    public void generateProductMetadata(String jobId) throws ProductMetadataException {
+
     }
 
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {

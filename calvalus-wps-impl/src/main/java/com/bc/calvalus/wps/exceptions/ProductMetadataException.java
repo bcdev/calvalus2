@@ -9,6 +9,10 @@ public class ProductMetadataException extends Exception {
         super(message);
     }
 
+    public ProductMetadataException(Throwable cause) {
+        super(cause);
+    }
+
     public ProductMetadataException(String message, Throwable cause) {
         super(message, cause);
     }

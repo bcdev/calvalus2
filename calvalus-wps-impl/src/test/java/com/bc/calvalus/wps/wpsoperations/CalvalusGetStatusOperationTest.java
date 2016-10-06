@@ -18,6 +18,7 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
+import com.bc.calvalus.wps.localprocess.LocalJob;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.wps.api.WpsRequestContext;
@@ -98,8 +99,12 @@ public class CalvalusGetStatusOperationTest {
     public void canGetInProgressStatusLocalProcess() throws Exception {
         LocalProductionStatus mockStatus = getInProgressLocalProcessStatus();
         PowerMockito.mockStatic(GpfProductionService.class);
-        HashMap<String, LocalProductionStatus> statusMap = new HashMap<>();
-        statusMap.put("urban1-20160919_160202392", mockStatus);
+        HashMap<String, LocalJob> statusMap = new HashMap<>();
+        HashMap<String, Object> mockJobParameters = getMockJobParameters();
+        LocalJob mockJob = mock(LocalJob.class);
+        when(mockJob.getStatus()).thenReturn(mockStatus);
+        when(mockJob.getParameters()).thenReturn(mockJobParameters);
+        statusMap.put("urban1-20160919_160202392", mockJob);
         PowerMockito.when(GpfProductionService.getProductionStatusMap()).thenReturn(statusMap);
         Calendar calendar = Calendar.getInstance();
 
@@ -173,8 +178,12 @@ public class CalvalusGetStatusOperationTest {
     public void canGetFailedStatusLocalProcess() throws Exception {
         LocalProductionStatus mockStatus = getFailedLocalProcessStatus();
         PowerMockito.mockStatic(GpfProductionService.class);
-        HashMap<String, LocalProductionStatus> statusMap = new HashMap<>();
-        statusMap.put("urban1-20160919_160202392", mockStatus);
+        HashMap<String, LocalJob> statusMap = new HashMap<>();
+        HashMap<String, Object> mockJobParameters = getMockJobParameters();
+        LocalJob mockJob = mock(LocalJob.class);
+        when(mockJob.getStatus()).thenReturn(mockStatus);
+        when(mockJob.getParameters()).thenReturn(mockJobParameters);
+        statusMap.put("urban1-20160919_160202392", mockJob);
         PowerMockito.when(GpfProductionService.getProductionStatusMap()).thenReturn(statusMap);
         Calendar calendar = Calendar.getInstance();
 
@@ -227,8 +236,12 @@ public class CalvalusGetStatusOperationTest {
         when(mockCalvalusFacade.getProductResultUrls("urban1-20160919_160202392")).thenReturn(dummyList);
         LocalProductionStatus mockStatus = getDoneAndSuccessfulLocalProcessStatus(dummyList);
         PowerMockito.mockStatic(GpfProductionService.class);
-        HashMap<String, LocalProductionStatus> statusMap = new HashMap<>();
-        statusMap.put("urban1-20160919_160202392", mockStatus);
+        HashMap<String, LocalJob> statusMap = new HashMap<>();
+        HashMap<String, Object> mockJobParameters = getMockJobParameters();
+        LocalJob mockJob = mock(LocalJob.class);
+        when(mockJob.getStatus()).thenReturn(mockStatus);
+        when(mockJob.getParameters()).thenReturn(mockJobParameters);
+        statusMap.put("urban1-20160919_160202392", mockJob);
         PowerMockito.when(GpfProductionService.getProductionStatusMap()).thenReturn(statusMap);
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
@@ -248,9 +261,9 @@ public class CalvalusGetStatusOperationTest {
     }
 
     @Test
-    public void canThrowExceptionWhenStatusUnavailableLocalProcess() throws Exception {
+    public void canThrowExceptionWhenJobUnavailableLocalProcess() throws Exception {
         PowerMockito.mockStatic(GpfProductionService.class);
-        HashMap<String, LocalProductionStatus> statusMap = new HashMap<>();
+        HashMap<String, LocalJob> statusMap = new HashMap<>();
         PowerMockito.when(GpfProductionService.getProductionStatusMap()).thenReturn(statusMap);
 
         thrownException.expect(JobNotFoundException.class);
@@ -258,6 +271,12 @@ public class CalvalusGetStatusOperationTest {
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("urban1-20160919_160202392");
+    }
+
+    private HashMap<String, Object> getMockJobParameters() {
+        HashMap<String, Object> jobParameters = new HashMap<>();
+        jobParameters.put("processId", "local~0.0.1~Subset");
+        return jobParameters;
     }
 
     private List<String> getMockResultUrlList() {

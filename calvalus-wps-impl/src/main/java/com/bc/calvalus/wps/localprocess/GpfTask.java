@@ -47,7 +47,8 @@ public class GpfTask implements Callable<Boolean> {
 
     @Override
     public Boolean call() throws Exception {
-        LocalProductionStatus status = GpfProductionService.getProductionStatusMap().get(jobId);
+        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        LocalProductionStatus status = job.getStatus();
         status.setState(ProcessState.RUNNING);
         status.setProgress(10);
         try {
@@ -67,27 +68,31 @@ public class GpfTask implements Callable<Boolean> {
             status.setProgress(100);
             status.setResultUrls(resultUrls);
             status.setStopDate(new Date());
-            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            job.updateStatus(status);
+            GpfProductionService.getProductionStatusMap().put(jobId, job);
             return true;
         } catch (OperatorException exception) {
             status.setState(ProcessState.ERROR);
             status.setMessage("GPF process failed : " + exception.getMessage());
             status.setStopDate(new Date());
-            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            job.updateStatus(status);
+            GpfProductionService.getProductionStatusMap().put(jobId, job);
             logger.log(Level.SEVERE, "[" + jobId + "] GPF process failed...", exception);
             return false;
         } catch (ProductMetadataException exception) {
             status.setState(ProcessState.ERROR);
             status.setMessage("Creating product metadata failed : " + exception.getMessage());
             status.setStopDate(new Date());
-            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            job.updateStatus(status);
+            GpfProductionService.getProductionStatusMap().put(jobId, job);
             logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
             return false;
         } catch (Exception exception) {
             status.setState(ProcessState.ERROR);
             status.setMessage("Processing failed : " + exception.getMessage());
             status.setStopDate(new Date());
-            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            job.updateStatus(status);
+            GpfProductionService.getProductionStatusMap().put(jobId, job);
             logger.log(Level.SEVERE, "[" + jobId + "] Processing failed...", exception);
             return false;
         }

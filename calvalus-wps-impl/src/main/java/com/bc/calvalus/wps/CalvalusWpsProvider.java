@@ -74,7 +74,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         try {
             CalvalusGetStatusOperation getStatusOperation = new CalvalusGetStatusOperation(wpsRequestContext);
             return getStatusOperation.getStatus(jobId);
-        } catch (IOException exception) {
+        } catch (IOException | InvalidProcessorIdException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetStatus operation successfully", exception);
             throw new WpsServiceException(exception);
         }

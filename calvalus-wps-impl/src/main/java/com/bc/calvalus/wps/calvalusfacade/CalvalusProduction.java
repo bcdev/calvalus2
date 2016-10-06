@@ -60,7 +60,6 @@ public class CalvalusProduction {
                                          status.getMessage(),
                                          null);
 
-//        return production.getId();
     }
 
     protected LocalProductionStatus orderProductionSynchronous(ProductionService productionService, ProductionRequest request)
@@ -76,7 +75,6 @@ public class CalvalusProduction {
                                          status.getProgress(),
                                          status.getMessage(),
                                          null);
-//        return production.getId();
     }
 
     private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {

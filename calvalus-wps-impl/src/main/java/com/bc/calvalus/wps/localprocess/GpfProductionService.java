@@ -21,7 +21,7 @@ public class GpfProductionService implements ServletContextListener {
 
     private static ExecutorService worker;
 
-    private static Map<String, LocalProductionStatus> productionStatusMap;
+    private static Map<String, LocalJob> productionStatusMap;
 
     private static Logger logger = WpsLogger.getLogger();
 
@@ -34,7 +34,7 @@ public class GpfProductionService implements ServletContextListener {
         return worker;
     }
 
-    public synchronized static Map<String, LocalProductionStatus> getProductionStatusMap() {
+    public synchronized static Map<String, LocalJob> getProductionStatusMap() {
         if (productionStatusMap == null) {
             productionStatusMap = new HashMap<>();
         }

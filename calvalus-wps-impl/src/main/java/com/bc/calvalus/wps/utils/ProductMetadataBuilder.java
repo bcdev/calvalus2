@@ -220,6 +220,7 @@ public class ProductMetadataBuilder {
             this.processorVersion = processor.getVersion();
             this.productionType = (String) processParameters.get("productionType");
             this.outputFormat = (String) processParameters.get("outputFormat");
+            this.productList = createProductList();
         }
         return new ProductMetadata(this);
     }

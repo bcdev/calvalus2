@@ -13,7 +13,6 @@ import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.ceres.binding.BindingException;
-import com.bc.ceres.core.ProgressMonitor;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
@@ -23,7 +22,6 @@ import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 
 import javax.xml.bind.JAXBException;
@@ -53,6 +51,7 @@ public class LocalFacade extends ProcessFacade {
     private Logger logger = WpsLogger.getLogger();
 
     private final ProcessorExtractor processorExtractor;
+    private final LocalProduction localProduction;
     private final LocalStaging localStaging;
     private final String hostName;
     private final int portNumber;
@@ -65,6 +64,7 @@ public class LocalFacade extends ProcessFacade {
         this.portNumber = serverContext.getPort();
         this.processorExtractor = new ProcessorExtractor();
         this.localStaging = new LocalStaging();
+        this.localProduction = new LocalProduction();
         this.wpsRequestContext = wpsRequestContext;
     }
 
@@ -73,27 +73,12 @@ public class LocalFacade extends ProcessFacade {
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
             processBuilder = getProcessBuilder(executeRequest);
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
-            LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
-                                                                     ProcessState.SCHEDULED,
-                                                                     0,
-                                                                     "The request has been queued.",
-                                                                     null);
-            GpfProductionService.getProductionStatusMap().put(processBuilder.getJobId(), status);
-            GpfTask gpfTask = new GpfTask(this,
-                                          processBuilder.getServerContext().getHostAddress(),
-                                          processBuilder.getServerContext().getPort(),
-                                          processBuilder);
-            GpfProductionService.getWorker().submit(gpfTask);
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
-            return status;
+            return localProduction.orderProductionAsynchronous(this, processBuilder);
         } catch (InvalidParameterValueException | JAXBException | MissingParameterValueException | IOException exception) {
-            LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
-                                                                     ProcessState.ERROR,
-                                                                     0.0f,
-                                                                     "Processing failed : " + exception.getMessage(),
-                                                                     null);
-            status.setStopDate(new Date());
+            String jobId = processBuilder.getJobId();
+            LocalProductionStatus status = getFailedStatus("Processing failed : " + exception.getMessage(), processBuilder);
+            logger.log(Level.SEVERE, "[" + jobId + "] Processing failed : ", exception);
+            updateProductionStatusMap(status, processBuilder);
             return status;
         }
     }
@@ -104,52 +89,25 @@ public class LocalFacade extends ProcessFacade {
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
             processBuilder = getProcessBuilder(executeRequest);
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting synchronous process...");
-            Product subset = GPF.createProduct("Subset", processBuilder.getParameters(), processBuilder.getSourceProduct());
-            String outputFormat = (String) processBuilder.getParameters().get("outputFormat");
-            GPF.writeProduct(subset,
-                             new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + ".nc"),
-                             outputFormat,
-                             false,
-                             ProgressMonitor.NULL);
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] constructing result URLs...");
-            List<String> resultUrls = getProductResultUrls(processBuilder.getJobId());
-            ProcessorNameConverter nameConverter = new ProcessorNameConverter(processBuilder.getProcessId());
-            ProcessorExtractor processorExtractor = new ProcessorExtractor();
-            LocalMetadata localMetadata = new LocalMetadata();
-            localMetadata.generateProductMetadata(processBuilder.getTargetDirPath().toFile(),
-                                                  processBuilder.getJobId(),
-                                                  processBuilder.getParameters(),
-                                                  processorExtractor.getProcessor(nameConverter),
-                                                  processBuilder.getServerContext().getHostAddress(),
-                                                  processBuilder.getServerContext().getPort());
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been completed, creating successful response...");
-            status = new LocalProductionStatus(processBuilder.getJobId(),
-                                               ProcessState.COMPLETED,
-                                               100,
-                                               "The request has been processed successfully.",
-                                               resultUrls);
-            status.setStopDate(new Date());
+            String jobId = processBuilder.getJobId();
+            localProduction.orderProductionSynchronous(processBuilder);
+            status = getSuccessfulStatus(processBuilder, getProductResultUrls(jobId));
+            updateProductionStatusMap(status, processBuilder);
+            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] Generating product metadata...");
+            generateProductMetadata(jobId);
             return status;
         } catch (WpsResultProductException | OperatorException | ProductionException | InvalidParameterValueException |
                     JAXBException | MissingParameterValueException exception) {
-            status = new LocalProductionStatus(processBuilder.getJobId(),
-                                               ProcessState.ERROR,
-                                               0,
-                                               "Processing failed : " + exception.getMessage(),
-                                               null);
-            status.setStopDate(new Date());
+            String jobId = processBuilder.getJobId();
+            status = getFailedStatus("Processing failed : " + exception.getMessage(), processBuilder);
+            updateProductionStatusMap(status, processBuilder);
+            logger.log(Level.SEVERE, "[" + jobId + "] Processing failed : ", exception);
             return status;
         } catch (ProductMetadataException | IOException | URISyntaxException |
                     BindingException | InvalidProcessorIdException exception) {
             String jobId = processBuilder.getJobId();
-            status = new LocalProductionStatus(jobId,
-                                               ProcessState.ERROR,
-                                               100,
-                                               "Creating product metadata failed : " + exception.getMessage(),
-                                               null);
-            status.setStopDate(new Date());
-            GpfProductionService.getProductionStatusMap().put(jobId, status);
+            status = getFailedStatus("Creating product metadata failed : " + exception.getMessage(), processBuilder);
+            updateProductionStatusMap(status, processBuilder);
             logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
             return status;
         }
@@ -171,6 +129,24 @@ public class LocalFacade extends ProcessFacade {
     }
 
     @Override
+    public void generateProductMetadata(String jobId) throws ProductMetadataException {
+        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        if (job == null) {
+            throw new ProductMetadataException("Unable to create metadata for jobId '" + jobId + "'");
+        }
+        try {
+            String processId = (String) job.getParameters().get("processId");
+            ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
+            WpsProcess processor = getProcessor(processorNameConverter);
+            String targetDirPath = (String) job.getParameters().get("targetDir");
+            File targetDir = new File(targetDirPath);
+            localStaging.generateProductMetadata(targetDir, job.getJobid(), job.getParameters(), processor, hostName, portNumber);
+        } catch (InvalidProcessorIdException | ProductionException | WpsProcessorNotFoundException | FileNotFoundException exception) {
+            throw new ProductMetadataException(exception);
+        }
+    }
+
+    @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
         try {
             return processorExtractor.getProcessors();
@@ -186,6 +162,34 @@ public class LocalFacade extends ProcessFacade {
         } catch (BindingException | IOException | URISyntaxException exception) {
             throw new WpsProcessorNotFoundException(exception);
         }
+    }
+
+    private LocalProductionStatus getFailedStatus(String errorMessage, ProcessBuilder processBuilder) {
+        LocalProductionStatus status;
+        status = new LocalProductionStatus(processBuilder.getJobId(),
+                                           ProcessState.ERROR,
+                                           0,
+                                           errorMessage,
+                                           null);
+        status.setStopDate(new Date());
+        return status;
+    }
+
+    private void updateProductionStatusMap(LocalProductionStatus status, ProcessBuilder processBuilder) {
+        String jobId = processBuilder.getJobId();
+        LocalJob job = new LocalJob(jobId, processBuilder.getParameters(), status);
+        GpfProductionService.getProductionStatusMap().put(jobId, job);
+    }
+
+    private LocalProductionStatus getSuccessfulStatus(ProcessBuilder processBuilder, List<String> resultUrls) {
+        LocalProductionStatus status;
+        status = new LocalProductionStatus(processBuilder.getJobId(),
+                                           ProcessState.COMPLETED,
+                                           100,
+                                           "The request has been processed successfully.",
+                                           resultUrls);
+        status.setStopDate(new Date());
+        return status;
     }
 
     private Product getSourceProduct(Map<String, String> inputParameters) throws IOException {
@@ -224,6 +228,7 @@ public class LocalFacade extends ProcessFacade {
         String processId = executeRequest.getIdentifier().getValue();
         Path targetDirPath = getTargetDirectoryPath(jobId);
         HashMap<String, Object> parameters = new HashMap<>();
+        parameters.put("processId", processId);
         parameters.put("productionName", inputParameters.get("productionName"));
         parameters.put("geoRegion", inputParameters.get("regionWKT"));
         parameters.put("outputFormat", inputParameters.get("outputFormat"));
