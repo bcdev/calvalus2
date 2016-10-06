@@ -124,7 +124,7 @@ class LocalProduction {
         Product subset = GPF.createProduct("Subset", processBuilder.getParameters(), processBuilder.getSourceProduct());
         String outputFormat = (String) processBuilder.getParameters().get("outputFormat");
         GPF.writeProduct(subset,
-                         new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + getFileExtension(outputFormat)),
+                         new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName()),
                          outputFormat,
                          false,
                          ProgressMonitor.NULL);
@@ -140,10 +140,7 @@ class LocalProduction {
                                                                  null);
         LocalJob job = new LocalJob(processBuilder.getJobId(), processBuilder.getParameters(), status);
         GpfProductionService.getProductionStatusMap().put(processBuilder.getJobId(), job);
-        GpfTask gpfTask = new GpfTask(localFacade,
-                                      processBuilder.getServerContext().getHostAddress(),
-                                      processBuilder.getServerContext().getPort(),
-                                      processBuilder);
+        GpfTask gpfTask = new GpfTask(localFacade, processBuilder);
         GpfProductionService.getWorker().submit(gpfTask);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
         return status;
@@ -174,16 +171,6 @@ class LocalProduction {
                                              PropertiesWrapper.get("utep.output.directory"), userName, jobId);
         Files.createDirectories(targetDirectoryPath);
         return targetDirectoryPath;
-    }
-
-    private String getFileExtension(String outputFormat) {
-        if ("netcdf-beam".equalsIgnoreCase(outputFormat)) {
-            return ".nc";
-        } else if ("geotiff".equalsIgnoreCase(outputFormat)) {
-            return ".tif";
-        } else {
-            return "";
-        }
     }
 
     private void updateProductionStatusMap(LocalProductionStatus status, ProcessBuilder processBuilder) {
