@@ -5,8 +5,10 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,11 +17,16 @@ import java.util.List;
  *
  * @author hans
  */
-public class CalvalusProcessorExtractor {
+class CalvalusProcessorExtractor {
 
-    protected List<WpsProcess> getProcessors(ProductionService productionService, String userName)
-                throws ProductionException {
-        BundleDescriptor[] bundleDescriptors = getBundleDescriptors(productionService, userName);
+    protected List<WpsProcess> getProcessors(String userName) throws WpsProcessorNotFoundException {
+        BundleDescriptor[] bundleDescriptors;
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            bundleDescriptors = getBundleDescriptors(productionService, userName);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsProcessorNotFoundException(exception);
+        }
 
         List<WpsProcess> processors = new ArrayList<>();
         for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
@@ -35,18 +42,23 @@ public class CalvalusProcessorExtractor {
         return processors;
     }
 
-    protected CalvalusProcessor getProcessor(ProcessorNameConverter parser, ProductionService productionService, String userName)
-                throws ProductionException {
-        BundleDescriptor[] bundleDescriptor = getBundleDescriptors(productionService, userName);
-        for (BundleDescriptor bundle : bundleDescriptor) {
-            if (bundle.getProcessorDescriptors() == null) {
+    protected CalvalusProcessor getProcessor(ProcessorNameConverter parser, String userName) throws WpsProcessorNotFoundException {
+        BundleDescriptor[] bundleDescriptors;
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            bundleDescriptors = getBundleDescriptors(productionService, userName);
+        } catch (ProductionException | IOException exception) {
+            throw new WpsProcessorNotFoundException(exception);
+        }
+        for (BundleDescriptor bundleDescriptor : bundleDescriptors) {
+            if (bundleDescriptor.getProcessorDescriptors() == null) {
                 continue;
             }
-            if (bundle.getBundleName().equals(parser.getBundleName())
-                && bundle.getBundleVersion().equals(parser.getBundleVersion())) {
-                for (ProcessorDescriptor processorDescriptor : bundle.getProcessorDescriptors()) {
+            if (bundleDescriptor.getBundleName().equals(parser.getBundleName())
+                && bundleDescriptor.getBundleVersion().equals(parser.getBundleVersion())) {
+                for (ProcessorDescriptor processorDescriptor : bundleDescriptor.getProcessorDescriptors()) {
                     if (processorDescriptor.getExecutableName().equals(parser.getExecutableName())) {
-                        return new CalvalusProcessor(bundle, processorDescriptor);
+                        return new CalvalusProcessor(bundleDescriptor, processorDescriptor);
                     }
                 }
             }

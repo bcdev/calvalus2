@@ -38,22 +38,27 @@ public class CalvalusFacade extends ProcessFacade {
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
+    @Override
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
         return calvalusProduction.orderProductionAsynchronous(executeRequest, userName, this);
     }
 
+    @Override
     public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
         return calvalusProduction.orderProductionSynchronous(executeRequest, userName, this);
     }
 
+    @Override
     public List<String> getProductResultUrls(String jobId) throws WpsResultProductException {
         return calvalusStaging.getProductResultUrls(jobId, CalvalusProductionService.getDefaultConfig());
     }
 
+    @Override
     public void stageProduction(String jobId) throws WpsStagingException {
         calvalusStaging.stageProduction(jobId);
     }
 
+    @Override
     public void observeStagingStatus(String jobId) throws WpsStagingException {
         calvalusStaging.observeStagingStatus(jobId);
     }
@@ -63,20 +68,14 @@ public class CalvalusFacade extends ProcessFacade {
 
     }
 
+    @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
-        try {
-            return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
-        } catch (ProductionException | IOException exception) {
-            throw new WpsProcessorNotFoundException(exception);
-        }
+        return calvalusProcessorExtractor.getProcessors(userName);
     }
 
+    @Override
     public CalvalusProcessor getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
-        try {
-            return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
-        } catch (ProductionException | IOException exception) {
-            throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "' from Calvalus.", exception);
-        }
+        return calvalusProcessorExtractor.getProcessor(parser, userName);
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {

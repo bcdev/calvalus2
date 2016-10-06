@@ -11,14 +11,22 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
+import org.junit.runner.*;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.List;
 
 /**
  * @author hans
  */
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({CalvalusProcessorExtractor.class, CalvalusProductionService.class})
 public class CalvalusProcessorExtractorTest {
 
     private CalvalusProcessorExtractor processorExtractor;
@@ -27,7 +35,11 @@ public class CalvalusProcessorExtractorTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockProductionService = mock(ProductionService.class);
+
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
     }
 
     @Test
@@ -37,7 +49,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors("mockUserName");
 
         assertThat(processors.size(), equalTo(1));
         assertThat(processors.get(0).getTitle(), equalTo("Urban TEP indices Meris L1b"));
@@ -53,7 +65,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors("mockUserName");
 
         assertThat(processors.size(), equalTo(0));
     }
@@ -64,7 +76,7 @@ public class CalvalusProcessorExtractorTest {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenReturn(mockBundleDescriptors);
 
         processorExtractor = new CalvalusProcessorExtractor();
-        List<WpsProcess> processors = processorExtractor.getProcessors(mockProductionService, "mockUserName");
+        List<WpsProcess> processors = processorExtractor.getProcessors("mockUserName");
 
         assertThat(processors.size(), equalTo(0));
     }
@@ -77,7 +89,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processor = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
+        CalvalusProcessor processor = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processor.getTitle(), equalTo("Urban TEP indices Meris L1b"));
         assertThat(processor.getIdentifier(), equalTo("beam-buildin~1.0~urban-tep-indices-meris-l1b"));
@@ -92,7 +104,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getUnmatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
+        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processors, equalTo(null));
     }
@@ -104,18 +116,18 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
+        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processors, equalTo(null));
     }
 
-    @Test(expected = ProductionException.class)
-    public void canThrowProductionException() throws Exception {
+    @Test(expected = WpsProcessorNotFoundException.class)
+    public void canCatchProductionException() throws Exception {
         when(mockProductionService.getBundles(anyString(), any(BundleFilter.class))).thenThrow(new ProductionException("production exception"));
         ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        processorExtractor.getProcessor(mockParser, mockProductionService, "mockUserName");
+        processorExtractor.getProcessor(mockParser, "mockUserName");
     }
 
     private ProcessorNameConverter getMatchingParser() {

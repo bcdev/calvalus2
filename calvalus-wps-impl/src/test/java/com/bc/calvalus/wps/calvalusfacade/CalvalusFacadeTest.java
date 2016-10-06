@@ -89,7 +89,7 @@ public class CalvalusFacadeTest {
         CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
         Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
-        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), anyString()))
                     .thenReturn(mockProcessor);
         when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
         when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
@@ -124,7 +124,7 @@ public class CalvalusFacadeTest {
         CalvalusDataInputs mockCalvalusDataInput = mock(CalvalusDataInputs.class);
         Map<String, String> mockParameterMap = new HashMap<>();
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
-        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), any(ProductionService.class), anyString()))
+        when(mockCalvalusProcessorExtractor.getProcessor(any(ProcessorNameConverter.class), anyString()))
                     .thenReturn(mockProcessor);
         when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
         when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
@@ -201,9 +201,8 @@ public class CalvalusFacadeTest {
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProcessors();
 
-        verify(mockCalvalusProcessorExtractor).getProcessors(productionServiceCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProcessorExtractor).getProcessors(userNameCaptor.capture());
 
-        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
@@ -212,16 +211,14 @@ public class CalvalusFacadeTest {
         ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
         ArgumentCaptor<ProcessorNameConverter> parserCaptor = ArgumentCaptor.forClass(ProcessorNameConverter.class);
-        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProcessor(mockParser);
 
-        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture(), productionServiceCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProcessorExtractor).getProcessor(parserCaptor.capture(), userNameCaptor.capture());
 
         assertThat(parserCaptor.getValue(), equalTo(mockParser));
-        assertThat(productionServiceCaptor.getValue(), equalTo(mockProductionService));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
