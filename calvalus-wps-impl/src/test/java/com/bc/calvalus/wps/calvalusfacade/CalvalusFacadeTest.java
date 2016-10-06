@@ -99,15 +99,15 @@ public class CalvalusFacadeTest {
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
         whenNew(CalvalusDataInputs.class).withAnyArguments().thenReturn(mockCalvalusDataInput);
         whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
-        ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
+        ArgumentCaptor<Execute> requestArgumentCaptor = ArgumentCaptor.forClass(Execute.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.orderProductionAsynchronous(mockExecuteRequest);
 
-        verify(mockCalvalusProduction).orderProductionAsynchronous(any(ProductionService.class), requestArgumentCaptor.capture(), userNameCaptor.capture());
+        verify(mockCalvalusProduction).orderProductionAsynchronous(requestArgumentCaptor.capture(), userNameCaptor.capture(), any(CalvalusFacade.class));
 
-        assertThat(requestArgumentCaptor.getValue(), equalTo(mockProductionRequest));
+        assertThat(requestArgumentCaptor.getValue(), equalTo(mockExecuteRequest));
         assertThat(userNameCaptor.getValue(), equalTo("mockUserName"));
     }
 
@@ -129,7 +129,7 @@ public class CalvalusFacadeTest {
         when(mockCalvalusDataInput.getValue("productionType")).thenReturn("L2");
         when(mockCalvalusDataInput.getInputMapFormatted()).thenReturn(mockParameterMap);
         when(mockStatus.getJobId()).thenReturn(MOCK_PROCESS_ID);
-        when(mockCalvalusProduction.orderProductionSynchronous(mockProductionService, mockProductionRequest)).thenReturn(mockStatus);
+        when(mockCalvalusProduction.orderProductionSynchronous(any(Execute.class), anyString(), any(CalvalusFacade.class))).thenReturn(mockStatus);
         whenNew(ExecuteRequestExtractor.class).withArguments(Execute.class).thenReturn(mockRequestExtractor);
         whenNew(ProcessorNameConverter.class).withArguments(anyString()).thenReturn(mockNameConverter);
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
@@ -137,14 +137,15 @@ public class CalvalusFacadeTest {
         whenNew(ProductionRequest.class).withAnyArguments().thenReturn(mockProductionRequest);
         whenNew(CalvalusProduction.class).withNoArguments().thenReturn(mockCalvalusProduction);
         whenNew(CalvalusStaging.class).withArguments(any(WpsServerContext.class)).thenReturn(mockCalvalusStaging);
-        ArgumentCaptor<ProductionRequest> requestArgumentCaptor = ArgumentCaptor.forClass(ProductionRequest.class);
+        ArgumentCaptor<Execute> requestArgumentCaptor = ArgumentCaptor.forClass(Execute.class);
+        ArgumentCaptor<String> userNameArgumentCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.orderProductionSynchronous(mockExecuteRequest);
 
-        verify(mockCalvalusProduction).orderProductionSynchronous(any(ProductionService.class), requestArgumentCaptor.capture());
+        verify(mockCalvalusProduction).orderProductionSynchronous(requestArgumentCaptor.capture(), userNameArgumentCaptor.capture(), any(CalvalusFacade.class));
 
-        assertThat(requestArgumentCaptor.getValue(), equalTo(mockProductionRequest));
+        assertThat(requestArgumentCaptor.getValue(), equalTo(mockExecuteRequest));
     }
 
     @Test

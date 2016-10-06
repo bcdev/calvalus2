@@ -1,31 +1,23 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
-import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
-import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
-import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
-import com.bc.wps.api.exceptions.InvalidParameterValueException;
-import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
 
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,43 +39,11 @@ public class CalvalusFacade extends ProcessFacade {
     }
 
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
-        try {
-            ProductionRequest request = createProductionRequest(executeRequest);
-            return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
-        } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
-                    MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
-            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
-                                                                     ProcessState.ERROR,
-                                                                     0.0f,
-                                                                     "Processing failed : " + exception.getMessage(),
-                                                                     null);
-            status.setStopDate(new Date());
-            return status;
-        }
+        return calvalusProduction.orderProductionAsynchronous(executeRequest, userName, this);
     }
 
     public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
-        try {
-            ProductionRequest request = createProductionRequest(executeRequest);
-            LocalProductionStatus status = calvalusProduction.orderProductionSynchronous(getProductionService(), request);
-            String jobId = status.getJobId();
-            stageProduction(jobId);
-            observeStagingStatus(jobId);
-            status.setResultUrls(getProductResultUrls(jobId));
-            status.setStopDate(new Date());
-            status.setState(ProcessState.COMPLETED);
-            return status;
-        } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
-                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException |
-                    WpsResultProductException exception) {
-            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
-                                                                     ProcessState.ERROR,
-                                                                     0.0f,
-                                                                     "Processing failed : " + exception.getMessage(),
-                                                                     null);
-            status.setStopDate(new Date());
-            return status;
-        }
+        return calvalusProduction.orderProductionSynchronous(executeRequest, userName, this);
     }
 
     public List<String> getProductResultUrls(String jobId) throws WpsResultProductException {
@@ -131,19 +91,6 @@ public class CalvalusFacade extends ProcessFacade {
         } catch (ProductionException | IOException exception) {
             throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "' from Calvalus.", exception);
         }
-    }
-
-    private ProductionRequest createProductionRequest(Execute executeRequest)
-                throws MissingParameterValueException, InvalidParameterValueException, JAXBException,
-                       InvalidProcessorIdException, WpsProcessorNotFoundException, IOException, ProductionException {
-        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
-        String processorId = executeRequest.getIdentifier().getValue();
-        ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-        CalvalusProcessor calvalusProcessor = getProcessor(parser);
-        CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor, getProductSets());
-        return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
-                                     getUserName(),
-                                     calvalusDataInputs.getInputMapFormatted());
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {

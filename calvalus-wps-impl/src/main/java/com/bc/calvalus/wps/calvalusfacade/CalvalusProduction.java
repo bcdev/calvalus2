@@ -4,14 +4,29 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
+import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
+import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
+import com.bc.calvalus.wps.utils.ProcessorNameConverter;
+import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.api.exceptions.MissingParameterValueException;
+import com.bc.wps.api.schema.Execute;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -22,12 +37,69 @@ import java.util.logging.Logger;
  *
  * @author hans
  */
-public class CalvalusProduction {
+class CalvalusProduction {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
 
-    protected LocalProductionStatus orderProductionAsynchronous(ProductionService productionService, ProductionRequest request, String userName)
+    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) {
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
+            return doProductionAsynchronous(request, productionService, userName);
+        } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
+                    MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
+            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
+                                                                     ProcessState.ERROR,
+                                                                     0.0f,
+                                                                     "Processing failed : " + exception.getMessage(),
+                                                                     null);
+            status.setStopDate(new Date());
+            return status;
+        }
+    }
+
+    LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) {
+        try {
+            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
+            LocalProductionStatus status = doProductionSynchronous(productionService, request);
+            String jobId = status.getJobId();
+            calvalusFacade.stageProduction(jobId);
+            calvalusFacade.observeStagingStatus(jobId);
+            status.setResultUrls(calvalusFacade.getProductResultUrls(jobId));
+            status.setStopDate(new Date());
+            status.setState(ProcessState.COMPLETED);
+            return status;
+        } catch (ProductionException | IOException | InterruptedException | InvalidParameterValueException | WpsProcessorNotFoundException |
+                    WpsStagingException | MissingParameterValueException | InvalidProcessorIdException | JAXBException |
+                    WpsResultProductException exception) {
+            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
+                                                                     ProcessState.ERROR,
+                                                                     0.0f,
+                                                                     "Processing failed : " + exception.getMessage(),
+                                                                     null);
+            status.setStopDate(new Date());
+            return status;
+        }
+    }
+
+    private LocalProductionStatus doProductionSynchronous(ProductionService productionService, ProductionRequest request)
+                throws ProductionException, InterruptedException {
+        logInfo("Ordering production...");
+        ProductionResponse productionResponse = productionService.orderProduction(request);
+        Production production = productionResponse.getProduction();
+        logInfo("Production successfully ordered. The production ID is: " + production.getId());
+        observeProduction(productionService, production);
+        ProcessStatus status = production.getProcessingStatus();
+        return new LocalProductionStatus(production.getId(),
+                                         status.getState(),
+                                         status.getProgress(),
+                                         status.getMessage(),
+                                         null);
+    }
+
+    private LocalProductionStatus doProductionAsynchronous(ProductionRequest request, ProductionService productionService, String userName)
                 throws ProductionException {
         logInfo("Ordering production...");
         logInfo("user : " + userName);
@@ -62,20 +134,31 @@ public class CalvalusProduction {
 
     }
 
-    protected LocalProductionStatus orderProductionSynchronous(ProductionService productionService, ProductionRequest request)
-                throws ProductionException, InterruptedException {
-        logInfo("Ordering production...");
-        ProductionResponse productionResponse = productionService.orderProduction(request);
-        Production production = productionResponse.getProduction();
-        logInfo("Production successfully ordered. The production ID is: " + production.getId());
-        observeProduction(productionService, production);
-        ProcessStatus status = production.getProcessingStatus();
-        return new LocalProductionStatus(production.getId(),
-                                         status.getState(),
-                                         status.getProgress(),
-                                         status.getMessage(),
-                                         null);
+    private ProductionRequest createProductionRequest(Execute executeRequest, String userName,
+                                                      ProductionService productionService, CalvalusFacade calvalusFacade)
+                throws MissingParameterValueException, InvalidParameterValueException, JAXBException,
+                       InvalidProcessorIdException, WpsProcessorNotFoundException, IOException, ProductionException {
+        ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
+        String processorId = executeRequest.getIdentifier().getValue();
+        ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
+        CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+        CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
+                                                                       getProductSets(userName, productionService));
+        return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
+                                     userName,
+                                     calvalusDataInputs.getInputMapFormatted());
     }
+
+    private ProductSet[] getProductSets(String userName, ProductionService productionService) throws ProductionException, IOException {
+        List<ProductSet> productSets = new ArrayList<>();
+        productSets.addAll(Arrays.asList(productionService.getProductSets(userName, "")));
+        try {
+            productSets.addAll(Arrays.asList(productionService.getProductSets(userName, "user=" + userName)));
+        } catch (ProductionException ignored) {
+        }
+        return productSets.toArray(new ProductSet[productSets.size()]);
+    }
+
 
     private void observeProduction(ProductionService productionService, Production production) throws InterruptedException {
         final Thread shutDownHook = createShutdownHook(production.getWorkflow());
