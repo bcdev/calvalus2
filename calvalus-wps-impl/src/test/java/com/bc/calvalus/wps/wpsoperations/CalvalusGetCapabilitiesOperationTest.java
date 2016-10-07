@@ -136,8 +136,8 @@ public class CalvalusGetCapabilitiesOperationTest {
         assertThat(processOfferings.getProcess().get(1).getAbstract().getValue(), equalTo("Some description"));
 
         assertThat(processOfferings.getProcess().get(2).getIdentifier().getValue(), equalTo("urbantep-local~1.0~Subset"));
-        assertThat(processOfferings.getProcess().get(2).getTitle().getValue(), equalTo("Urban TEP local subsetting"));
-        assertThat(processOfferings.getProcess().get(2).getAbstract().getValue(), equalTo("Urban TEP local subsetting"));
+        assertThat(processOfferings.getProcess().get(2).getTitle().getValue(), equalTo("Urban TEP local subsetting for test"));
+        assertThat(processOfferings.getProcess().get(2).getAbstract().getValue(), equalTo("Urban TEP local subsetting for test"));
 
     }
 

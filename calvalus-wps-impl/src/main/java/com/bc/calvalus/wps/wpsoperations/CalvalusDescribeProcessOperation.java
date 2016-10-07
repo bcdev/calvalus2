@@ -89,7 +89,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         List<WpsProcess> processors = new ArrayList<>();
         for (String singleProcessorId : processorIdArray) {
             ProcessorNameConverter parser = new ProcessorNameConverter(singleProcessorId);
-            CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+            WpsProcess calvalusProcessor = calvalusFacade.getProcessor(parser);
             if (calvalusProcessor == null) {
                 throw new WpsProcessorNotFoundException("Unable to retrieve the selected process(es) " +
                                                         "due to invalid process ID '" + singleProcessorId + "'");

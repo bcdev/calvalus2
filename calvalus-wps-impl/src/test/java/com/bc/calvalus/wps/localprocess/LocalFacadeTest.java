@@ -32,7 +32,7 @@ public class LocalFacadeTest {
     private WpsRequestContext mockRequestContext;
     private LocalProduction mockLocalProduction;
     private LocalStaging mockLocalStaging;
-    private ProcessorExtractor mockProcessorExtractor;
+    private LocalProcessorExtractor mockProcessorExtractor;
 
     private LocalFacade localFacade;
 
@@ -44,7 +44,7 @@ public class LocalFacadeTest {
         WpsServerContext mockServerContext = mock(WpsServerContext.class);
         mockLocalProduction = mock(LocalProduction.class);
         mockLocalStaging = mock(LocalStaging.class);
-        mockProcessorExtractor = mock(ProcessorExtractor.class);
+        mockProcessorExtractor = mock(LocalProcessorExtractor.class);
 
         when(mockServerContext.getHostAddress()).thenReturn(DUMMY_HOST_NAME);
         when(mockServerContext.getPort()).thenReturn(DUMMY_PORT_NUMBER);
@@ -128,6 +128,7 @@ public class LocalFacadeTest {
         PowerMockito.whenNew(LocalStaging.class).withNoArguments().thenReturn(mockLocalStaging);
 
         ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> hostNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Integer> portNumberCaptor = ArgumentCaptor.forClass(Integer.class);
 
@@ -135,36 +136,44 @@ public class LocalFacadeTest {
         localFacade.generateProductMetadata(DUMMY_JOB_ID);
 
         verify(mockLocalStaging).generateProductMetadata(jobIdCaptor.capture(),
+                                                         userNameCaptor.capture(),
                                                          hostNameCaptor.capture(),
                                                          portNumberCaptor.capture());
 
         assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
+        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
         assertThat(hostNameCaptor.getValue(), equalTo("www.dummy-host.de"));
         assertThat(portNumberCaptor.getValue(), equalTo(80));
     }
 
     @Test
     public void canGetProcessor() throws Exception {
-        PowerMockito.whenNew(ProcessorExtractor.class).withNoArguments().thenReturn(mockProcessorExtractor);
+        PowerMockito.whenNew(LocalProcessorExtractor.class).withNoArguments().thenReturn(mockProcessorExtractor);
         ProcessorNameConverter mockConverter = mock(ProcessorNameConverter.class);
 
         ArgumentCaptor<ProcessorNameConverter> converterCaptor = ArgumentCaptor.forClass(ProcessorNameConverter.class);
+        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         localFacade = new LocalFacade(mockRequestContext);
         localFacade.getProcessor(mockConverter);
 
-        verify(mockProcessorExtractor).getProcessor(converterCaptor.capture());
+        verify(mockProcessorExtractor).getProcessor(converterCaptor.capture(), userNameCaptor.capture());
 
         assertThat(converterCaptor.getValue(), equalTo(mockConverter));
+        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
     }
 
     @Test
     public void canGetProcessors() throws Exception {
-        PowerMockito.whenNew(ProcessorExtractor.class).withNoArguments().thenReturn(mockProcessorExtractor);
+        PowerMockito.whenNew(LocalProcessorExtractor.class).withNoArguments().thenReturn(mockProcessorExtractor);
+
+        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         localFacade = new LocalFacade(mockRequestContext);
         localFacade.getProcessors();
 
-        verify(mockProcessorExtractor).getProcessors();
+        verify(mockProcessorExtractor).getProcessors(userNameCaptor.capture());
+
+        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
     }
 }

@@ -66,7 +66,7 @@ class LocalStaging {
         return resultUrls;
     }
 
-    void generateProductMetadata(String jobId, String hostName, int portNumber)
+    void generateProductMetadata(String jobId, String userName, String hostName, int portNumber)
                 throws ProductMetadataException {
         LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
         if (job == null) {
@@ -75,8 +75,8 @@ class LocalStaging {
         try {
             String processId = (String) job.getParameters().get("processId");
             ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
-            ProcessorExtractor processorExtractor = new ProcessorExtractor();
-            WpsProcess processor = processorExtractor.getProcessor(processorNameConverter);
+            LocalProcessorExtractor processorExtractor = new LocalProcessorExtractor();
+            WpsProcess processor = processorExtractor.getProcessor(processorNameConverter, userName);
             String targetDirPath = (String) job.getParameters().get("targetDir");
             File targetDir = new File(targetDirPath);
             doGenerateProductMetadata(targetDir, job.getJobid(), job.getParameters(), processor, hostName, portNumber);

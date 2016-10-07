@@ -89,7 +89,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processor = processorExtractor.getProcessor(mockParser, "mockUserName");
+        WpsProcess processor = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processor.getTitle(), equalTo("Urban TEP indices Meris L1b"));
         assertThat(processor.getIdentifier(), equalTo("beam-buildin~1.0~urban-tep-indices-meris-l1b"));
@@ -104,7 +104,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getUnmatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, "mockUserName");
+        WpsProcess processors = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processors, equalTo(null));
     }
@@ -116,7 +116,7 @@ public class CalvalusProcessorExtractorTest {
         ProcessorNameConverter mockParser = getMatchingParser();
 
         processorExtractor = new CalvalusProcessorExtractor();
-        CalvalusProcessor processors = processorExtractor.getProcessor(mockParser, "mockUserName");
+        WpsProcess processors = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processors, equalTo(null));
     }

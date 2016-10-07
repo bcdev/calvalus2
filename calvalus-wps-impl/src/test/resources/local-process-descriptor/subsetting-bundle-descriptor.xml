@@ -5,7 +5,7 @@
 
     <processorDescriptors>
         <processorDescriptor>
-            <processorName>Urban TEP local subsetting</processorName>
+            <processorName>Urban TEP local subsetting for test</processorName>
             <processorVersion>1.0</processorVersion>
             <executableName>Subset</executableName>
             <outputFormats>NetCDF4,GeoTIFF</outputFormats>

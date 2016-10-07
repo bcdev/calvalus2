@@ -110,7 +110,7 @@ public class CalvalusDescribeProcessOperationTest {
         describeProcessOperation = new CalvalusDescribeProcessOperation(mockRequestContext);
         List<ProcessDescriptionType> processes = describeProcessOperation.getProcesses("all");
 
-        assertThat(processes.size(), equalTo(2));
+        assertThat(processes.size(), equalTo(3));
 
         assertThat(processes.get(0).getIdentifier().getValue(), equalTo("beam-buildin~1.0~BandMaths"));
         assertThat(processes.get(0).getTitle().getValue(), equalTo("beam-buildin~1.0~BandMaths"));
@@ -119,6 +119,10 @@ public class CalvalusDescribeProcessOperationTest {
         assertThat(processes.get(1).getIdentifier().getValue(), equalTo("beam-buildin~1.0~urban-tep-indices"));
         assertThat(processes.get(1).getTitle().getValue(), equalTo("beam-buildin~1.0~urban-tep-indices"));
         assertThat(processes.get(1).getAbstract().getValue(), equalTo("Some description"));
+
+        assertThat(processes.get(2).getIdentifier().getValue(), equalTo("urbantep-local~1.0~Subset"));
+        assertThat(processes.get(2).getTitle().getValue(), equalTo("urbantep-local~1.0~Subset"));
+        assertThat(processes.get(2).getAbstract().getValue(), equalTo(null));
     }
 
     @Test(expected = WpsProcessorNotFoundException.class)

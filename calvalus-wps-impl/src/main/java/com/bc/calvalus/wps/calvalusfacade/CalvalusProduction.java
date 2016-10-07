@@ -143,7 +143,7 @@ class CalvalusProduction {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
         String processorId = executeRequest.getIdentifier().getValue();
         ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-        CalvalusProcessor calvalusProcessor = calvalusFacade.getProcessor(parser);
+        WpsProcess calvalusProcessor = calvalusFacade.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
                                                                        getProductSets(userName, productionService));
         return new ProductionRequest(calvalusDataInputs.getValue("productionType"),

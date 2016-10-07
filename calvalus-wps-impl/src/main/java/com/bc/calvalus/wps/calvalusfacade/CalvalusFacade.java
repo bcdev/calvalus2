@@ -74,7 +74,7 @@ public class CalvalusFacade extends ProcessFacade {
     }
 
     @Override
-    public CalvalusProcessor getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
+    public WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
         return calvalusProcessorExtractor.getProcessor(parser, userName);
     }
 

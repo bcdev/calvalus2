@@ -15,19 +15,15 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
-import com.bc.wps.utilities.WpsLogger;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.esa.snap.core.datamodel.ProductData;
 
 import java.text.DateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class transform the input parameters map into a format recognized by Calvalus Production Request.
@@ -43,16 +39,16 @@ public class CalvalusDataInputs {
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
 
-    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, CalvalusProcessor calvalusProcessor, ProductSet[] productSets) throws InvalidParameterValueException {
+    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, WpsProcess calvalusProcessor, ProductSet[] productSets) throws InvalidParameterValueException {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
         if (calvalusProcessor != null) {
-            extractProductionInfoParameters(calvalusProcessor);
-            extractProcessorInfoParameters(calvalusProcessor);
-            transformProcessorParameters(calvalusProcessor);
+            extractProductionInfoParameters((CalvalusProcessor) calvalusProcessor);
+            extractProcessorInfoParameters((CalvalusProcessor) calvalusProcessor);
+            transformProcessorParameters((CalvalusProcessor) calvalusProcessor);
         }
-        extractProductSetParameters(productSets, calvalusProcessor);
+        extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
     }

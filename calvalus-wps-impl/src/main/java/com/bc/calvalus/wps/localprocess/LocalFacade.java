@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class LocalFacade extends ProcessFacade {
 
-    private final ProcessorExtractor processorExtractor;
+    private final LocalProcessorExtractor processorExtractor;
     private final LocalProduction localProduction;
     private final LocalStaging localStaging;
     private final String hostName;
@@ -32,7 +32,7 @@ public class LocalFacade extends ProcessFacade {
         WpsServerContext serverContext = wpsRequestContext.getServerContext();
         this.hostName = serverContext.getHostAddress();
         this.portNumber = serverContext.getPort();
-        this.processorExtractor = new ProcessorExtractor();
+        this.processorExtractor = new LocalProcessorExtractor();
         this.localStaging = new LocalStaging();
         this.localProduction = new LocalProduction();
         this.wpsRequestContext = wpsRequestContext;
@@ -65,16 +65,16 @@ public class LocalFacade extends ProcessFacade {
 
     @Override
     public void generateProductMetadata(String jobId) throws ProductMetadataException {
-        localStaging.generateProductMetadata(jobId, hostName, portNumber);
+        localStaging.generateProductMetadata(jobId, userName, hostName, portNumber);
     }
 
     @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
-        return processorExtractor.getProcessors();
+        return processorExtractor.getProcessors(userName);
     }
 
     @Override
     public WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
-        return processorExtractor.getProcessor(parser);
+        return processorExtractor.getProcessor(parser, userName);
     }
 }
