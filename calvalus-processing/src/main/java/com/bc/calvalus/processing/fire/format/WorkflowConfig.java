@@ -13,5 +13,4 @@ public class WorkflowConfig {
     public String month;
     public String userName;
     public String outputDir;
-    public String tile;
 }
