@@ -1,15 +1,11 @@
-package com.bc.calvalus.processing.fire.format;
+package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelInputFormat;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMapper;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeInputFormat;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeMapper;
-import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelReducer;
-import com.bc.calvalus.processing.fire.format.pixel.meris.PixelVariableType;
+import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.SensorStrategy;
+import com.bc.calvalus.processing.fire.format.WorkflowConfig;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;

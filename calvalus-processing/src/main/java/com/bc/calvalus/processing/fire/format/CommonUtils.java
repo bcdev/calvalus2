@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format;
 
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisStrategy;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 

@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
-import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import org.junit.Ignore;
 import org.junit.Test;

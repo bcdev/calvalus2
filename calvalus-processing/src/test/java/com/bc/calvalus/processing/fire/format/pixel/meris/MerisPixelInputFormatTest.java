@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
-import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 

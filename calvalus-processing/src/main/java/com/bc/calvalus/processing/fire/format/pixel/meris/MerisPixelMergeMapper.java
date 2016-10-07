@@ -18,7 +18,6 @@ package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
