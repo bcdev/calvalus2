@@ -58,7 +58,6 @@ public class FirePixelProductionType extends HadoopProductionType {
         String year = productionRequest.getString("calvalus.year");
         String month = productionRequest.getString("calvalus.month");
         String area = productionRequest.getString("calvalus.area");
-        String tile = productionRequest.getString("calvalus.tile");
         String defaultProductionName = String.format("Fire Pixel Formatting %s/%s", year, month);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 

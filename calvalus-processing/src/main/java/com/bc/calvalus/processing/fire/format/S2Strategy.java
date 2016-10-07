@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
+import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -38,7 +39,7 @@ class S2Strategy implements SensorStrategy {
 
     @Override
     public Workflow getWorkflow(WorkflowConfig workflowConfig) {
-        Workflow workflow = new Workflow.Parallel();
+        Workflow workflow = new Workflow.Sequential();
         workflow.setSustainable(false);
         Configuration jobConfig = workflowConfig.jobConfig;
         String area = workflowConfig.area;
@@ -62,7 +63,7 @@ class S2Strategy implements SensorStrategy {
                 pixelProductArea.left - 180, pixelProductArea.top - 90
         }, 2), gf), new LinearRing[0], gf);
 
-        String tilesSpec = pixelProductArea.tiles.replace(",", "|").replace(" ", "").trim();
+        String tilesSpec = "(" + pixelProductArea.tiles.replace(",", "|").replace(" ", "").trim() + ")";
 
         String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/BA-T%s-%s%s.*.nc", tilesSpec, year, month);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
@@ -80,17 +81,28 @@ class S2Strategy implements SensorStrategy {
         WorkflowItem item = new L3WorkflowItem(processingService, userName, productionName, jobConfig);
         workflow.add(item);
 
+        jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF-CF");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz");
+
+        WorkflowItem formatItem = new L3FormatWorkflowItem(processingService,
+                userName,
+                productionName + " Format", jobConfig);
+        workflow.add(formatItem);
+
         return workflow;
     }
 
     private static BinningConfig getBinningConfig() {
         BinningConfig binningConfig = new BinningConfig();
-        binningConfig.setCompositingType(CompositingType.MOSAICKING);
+        binningConfig.setCompositingType(CompositingType.BINNING);
         binningConfig.setNumRows(1001878);
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("result == 999");
         VariableConfig variableConfig = new VariableConfig("result_source", "result");
         binningConfig.setVariableConfigs(variableConfig);
+        binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
         AggregatorAverage.Config config = new AggregatorAverage.Config("result_source", "result_mosaicked", 0.0, true, true);
         binningConfig.setAggregatorConfigs(config);
         return binningConfig;
