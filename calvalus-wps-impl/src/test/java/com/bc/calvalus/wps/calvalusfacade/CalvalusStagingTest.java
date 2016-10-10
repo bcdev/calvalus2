@@ -9,10 +9,11 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.production.Production;
+import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.wps.utils.ProductMetadata;
-import com.bc.calvalus.wps.utils.VelocityWrapper;
+import com.bc.calvalus.wps.exceptions.WpsResultProductException;
+import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
@@ -27,23 +28,22 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({
-            CalvalusStaging.class, File.class, Thread.class, CalvalusLogger.class,
-            ProductMetadata.class, VelocityWrapper.class, CalvalusProductionService.class
-})
+@PrepareForTest({CalvalusStaging.class, CalvalusProductionService.class, CalvalusLogger.class, File.class})
 public class CalvalusStagingTest {
+
+    private static final String DUMMY_PATH = "dummyPath";
+    private static final String DUMMY_JOB_ID = "jobId";
+    private static final String DUMMY_USER_NAME = "dummyUser";
 
     private WpsServerContext mockServerContext;
     private Production mockProduction;
     private ProductionService mockProductionService;
-    private Logger mockLogger;
 
     /**
      * Class under test.
@@ -55,22 +55,21 @@ public class CalvalusStagingTest {
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockServerContext = mock(WpsServerContext.class);
         mockProduction = mock(Production.class);
-        mockProductionService = mock(ProductionService.class);
-        mockLogger = mock(Logger.class);
+
 
         when(mockServerContext.getHostAddress()).thenReturn("calvalustomcat-test");
         when(mockServerContext.getPort()).thenReturn(8080);
 
         PowerMockito.mockStatic(Thread.class);
-        PowerMockito.mockStatic(CalvalusLogger.class);
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        PowerMockito.when(CalvalusLogger.getLogger()).thenReturn(mockLogger);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+
     }
 
     @Test
-    public void testStageProduction() throws Exception {
-        when(mockProduction.getId()).thenReturn("productId");
+    public void canStageProduction() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+
         ArgumentCaptor<String> productId = ArgumentCaptor.forClass(String.class);
 
         calvalusStaging = new CalvalusStaging(mockServerContext);
@@ -80,38 +79,73 @@ public class CalvalusStagingTest {
         assertThat(productId.getValue(), equalTo("productId"));
     }
 
-    // TODO include more mocking in the test so that it passes
-    @Ignore
+    @Test(expected = WpsStagingException.class)
+    public void canCatchExceptionWhenStageProduction() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        doThrow(new ProductionException("error when staging")).when(mockProductionService).stageProductions(anyString());
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+
+        ArgumentCaptor<String> productId = ArgumentCaptor.forClass(String.class);
+
+        calvalusStaging = new CalvalusStaging(mockServerContext);
+        calvalusStaging.stageProduction("productId");
+
+        verify(mockProductionService).stageProductions(productId.capture());
+        assertThat(productId.getValue(), equalTo("productId"));
+    }
+
     @Test
     public void canGetProductResultUrls() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
+        when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
-        when(mockProduction.getStagingPath()).thenReturn("20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc");
-        File mockStagingDirectory = mock(File.class);
-        File[] mockProductResultFiles = getProductResultFiles();
-        when(mockStagingDirectory.listFiles()).thenReturn(mockProductResultFiles);
-        PowerMockito.whenNew(File.class).withArguments(anyString()).thenReturn(mockStagingDirectory);
-        ProductMetadata mockProductMetadata = mock(ProductMetadata.class);
-        PowerMockito.whenNew(ProductMetadata.class).withAnyArguments().thenReturn(mockProductMetadata);
-        VelocityWrapper mockWrapper = mock(VelocityWrapper.class);
-        when(mockWrapper.merge(anyMapOf(String.class, Object.class), anyString())).thenReturn("merged string");
-        PowerMockito.whenNew(VelocityWrapper.class).withNoArguments().thenReturn(mockWrapper);
+        File mockFile = mock(File.class);
+        File[] productResultFiles = getProductResultFiles();
+        when(mockFile.listFiles()).thenReturn(productResultFiles);
+        PowerMockito.whenNew(File.class).withArguments(anyString()).thenReturn(mockFile);
 
         calvalusStaging = new CalvalusStaging(mockServerContext);
         List<String> productResultUrls = calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
 
-        assertThat(productResultUrls.size(), equalTo(2));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product1.nc"));
-        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc/product2.nc"));
+        assertThat(productResultUrls.size(), equalTo(3));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/product1.nc"));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/product2.nc"));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/jobId-metadata"));
     }
 
     @Test
-    public void canGetNullProductResultUrls() throws Exception {
+    public void canGetEmptyProductResultUrlsWhenNoProducts() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
+        when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
-        when(mockProduction.getStagingPath()).thenReturn("localhost:9080/staging/calvalustest/20150915103935_L3_173a941e1ceb0/L3_2009-06-01_2009-06-30.nc");
-        when(mockProductionService.getProduction("jobId")).thenReturn(mockProduction);
-        File mockStagingDirectory = mock(File.class);
-        when(mockStagingDirectory.listFiles()).thenReturn(null);
-        PowerMockito.whenNew(File.class).withArguments(anyString()).thenReturn(mockStagingDirectory);
+        File mockFile = mock(File.class);
+        when(mockFile.listFiles()).thenReturn(new File[0]);
+        PowerMockito.whenNew(File.class).withArguments(anyString()).thenReturn(mockFile);
+
+        calvalusStaging = new CalvalusStaging(mockServerContext);
+        List<String> productResultUrls = calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
+
+        assertThat(productResultUrls.size(), equalTo(1));
+        assertThat(productResultUrls, hasItems("http://calvalustomcat-test:8080/bc-wps/staging/dummyPath/jobId-metadata"));
+    }
+
+    @Test
+    public void canGetEmptyProductResultUrlsWhenDirectoryNotExist() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
+        when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
+        File mockFile = mock(File.class);
+        when(mockFile.listFiles()).thenReturn(null);
+        PowerMockito.whenNew(File.class).withArguments(anyString()).thenReturn(mockFile);
 
         calvalusStaging = new CalvalusStaging(mockServerContext);
         List<String> productResultUrls = calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
@@ -119,48 +153,94 @@ public class CalvalusStagingTest {
         assertThat(productResultUrls.size(), equalTo(0));
     }
 
-    @Ignore // redo the test to make it simpler
-    @PrepareForTest({CalvalusStaging.class, Thread.class, CalvalusLogger.class})
-    @Test
-    public void testObserveStagingStatusInitiallyNotDoneAndThenCompleted() throws Exception {
-        ArgumentCaptor<String> logMessage = ArgumentCaptor.forClass(String.class);
-        ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
-        when(mockProductionRequest.getUserName()).thenReturn("dummyUserName");
-        when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        ProcessStatus mockProcessStatus = mock(ProcessStatus.class);
-        when(mockProcessStatus.isDone()).thenReturn(false, false, true);
-        when(mockProcessStatus.getState()).thenReturn(ProcessState.COMPLETED);
-        when(mockProduction.getStagingStatus()).thenReturn(mockProcessStatus);
+    @Test(expected = WpsResultProductException.class)
+    public void canCatchExceptionWhenGetResultUrls() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        when(mockProductionService.getProduction(anyString())).thenThrow(new ProductionException("error in getting production"));
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
 
-        CalvalusStaging calvalusStaging = new CalvalusStaging(mockServerContext);
-        calvalusStaging.observeStagingStatus("jobId");
-
-        verify(mockProductionService, times(2)).updateStatuses(anyString());
-        verify(mockLogger, times(3)).info(logMessage.capture());
-        assertThat(logMessage.getAllValues().get(2), equalTo("Staging completed."));
+        calvalusStaging = new CalvalusStaging(mockServerContext);
+        calvalusStaging.getProductResultUrls("jobId", mockCalvalusDefaultConfig);
     }
 
-    @Ignore // redo the test to make it simpler
-    @PrepareForTest({CalvalusStaging.class, Thread.class, CalvalusLogger.class})
+    @Ignore // TODO : issue with the mocking of Logger. It runs when the test is run individually, but not when all the test cases are run
     @Test
-    public void testObserveStagingStatusInitiallyNotDoneAndThenFailed() throws Exception {
-        ArgumentCaptor<String> logMessage = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Level> errorLevel = ArgumentCaptor.forClass(Level.class);
+    public void canObserveStagingStatusStillRunning() throws Exception {
+        PowerMockito.mockStatic(CalvalusLogger.class);
+        PowerMockito.mockStatic(Thread.class);
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        Logger mockLogger = mock(Logger.class);
+        PowerMockito.when(CalvalusLogger.getLogger()).thenReturn(mockLogger);
+        mockProductionService = mock(ProductionService.class);
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
-        when(mockProductionRequest.getUserName()).thenReturn("dummyUserName");
+        ProcessStatus mockProcessStatus = getProcessStatusStillRunning();
+        when(mockProductionRequest.getUserName()).thenReturn(DUMMY_USER_NAME);
+        when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
+        when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
-        ProcessStatus mockProcessStatus = mock(ProcessStatus.class);
-        when(mockProcessStatus.isDone()).thenReturn(false, false, true);
-        when(mockProcessStatus.getState()).thenReturn(ProcessState.ERROR);
-        when(mockProcessStatus.getMessage()).thenReturn("error message");
         when(mockProduction.getStagingStatus()).thenReturn(mockProcessStatus);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
 
-        CalvalusStaging calvalusStaging = new CalvalusStaging(mockServerContext);
+        ArgumentCaptor<String> userCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> statusCaptor = ArgumentCaptor.forClass(String.class);
+
+        calvalusStaging = new CalvalusStaging(mockServerContext);
         calvalusStaging.observeStagingStatus("jobId");
 
-        verify(mockProductionService, times(2)).updateStatuses(anyString());
-        verify(mockLogger, times(1)).log(errorLevel.capture(), logMessage.capture());
-        assertThat(logMessage.getAllValues().get(0), equalTo("Error: Staging did not complete normally: error message"));
+        verify(mockProductionService, times(2)).updateStatuses(userCaptor.capture());
+        verify(mockLogger, times(3)).info(statusCaptor.capture());
+
+        assertThat(userCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(statusCaptor.getAllValues().get(0), equalTo("Staging status: state=RUNNING, progress=0.8, message='Still running'"));
+        assertThat(statusCaptor.getAllValues().get(1), equalTo("Staging status: state=RUNNING, progress=0.9, message='Still running'"));
+        assertThat(statusCaptor.getAllValues().get(2), equalTo("Staging completed."));
+    }
+
+    @Ignore // TODO : issue with the mocking of Logger. It runs when the test is run individually, but not when all the test cases are run
+    @Test
+    public void canObserveStagingStatusAlreadyDone() throws Exception {
+        mockProductionService = mock(ProductionService.class);
+        ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
+        ProcessStatus mockProcessStatus = getProcessStatusAlreadyDone();
+        when(mockProductionRequest.getUserName()).thenReturn(DUMMY_USER_NAME);
+        when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
+        when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
+        when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
+        when(mockProduction.getStagingStatus()).thenReturn(mockProcessStatus);
+        when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        Logger mockLogger2 = mock(Logger.class);
+        PowerMockito.mockStatic(CalvalusLogger.class);
+        PowerMockito.when(CalvalusLogger.getLogger()).thenReturn(mockLogger2);
+
+        ArgumentCaptor<String> statusCaptor = ArgumentCaptor.forClass(String.class);
+
+        calvalusStaging = new CalvalusStaging(mockServerContext);
+        calvalusStaging.observeStagingStatus("jobId");
+
+        verify(mockLogger2, times(1)).info(statusCaptor.capture());
+
+        assertThat(statusCaptor.getValue(), equalTo("Staging completed."));
+    }
+
+    private ProcessStatus getProcessStatusStillRunning() {
+        ProcessStatus mockProcessStatus = mock(ProcessStatus.class);
+        when(mockProcessStatus.getState()).thenReturn(ProcessState.RUNNING, ProcessState.RUNNING, ProcessState.COMPLETED);
+        when(mockProcessStatus.getProgress()).thenReturn(0.8f, 0.9f, 1f);
+        when(mockProcessStatus.getMessage()).thenReturn("Still running", "Still running", "Finished");
+        when(mockProcessStatus.isDone()).thenReturn(false, false, true);
+        return mockProcessStatus;
+    }
+
+    private ProcessStatus getProcessStatusAlreadyDone() {
+        ProcessStatus mockProcessStatus = mock(ProcessStatus.class);
+        when(mockProcessStatus.getState()).thenReturn(ProcessState.COMPLETED);
+        when(mockProcessStatus.getProgress()).thenReturn(1f);
+        when(mockProcessStatus.getMessage()).thenReturn("Finished");
+        when(mockProcessStatus.isDone()).thenReturn(true);
+        return mockProcessStatus;
     }
 
     private Map<String, String> getMockDefaultConfig() {

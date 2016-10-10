@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +48,7 @@ class CalvalusStaging {
     }
 
     void stageProduction(String jobid) throws WpsStagingException {
-        logInfo("Staging results...");
+        LOG.info("Staging results...");
         try {
             ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
             productionService.stageProductions(jobid);
@@ -67,35 +68,12 @@ class CalvalusStaging {
         String stagingDirectoryPath = calvalusDefaultConfig.get("calvalus.wps.staging.path") + "/" + production.getStagingPath();
         File stagingDirectory = new File((System.getProperty("catalina.base") + CALWPS_ROOT_PATH) + stagingDirectoryPath);
 
-        File[] productResultFiles = stagingDirectory.listFiles();
-        List<String> productResultUrls = new ArrayList<>();
-        if (productResultFiles != null) {
-            for (File productResultFile : productResultFiles) {
-                String productFileName = productResultFile.getName().toLowerCase();
-                if (productFileName.endsWith("-metadata") || productFileName.endsWith(".csv")) {
-                    continue;
-                }
-                UriBuilder builder = new UriBuilderImpl();
-                String productUrl = builder.scheme("http")
-                            .host(wpsServerContext.getHostAddress())
-                            .port(wpsServerContext.getPort())
-                            .path(APP_NAME)
-                            .path(stagingDirectoryPath)
-                            .path(productResultFile.getName())
-                            .build().toString();
-                productResultUrls.add(productUrl);
-            }
-            UriBuilder builder = new UriBuilderImpl();
-            String metadataUrl = builder.scheme("http")
-                        .host(wpsServerContext.getHostAddress())
-                        .port(wpsServerContext.getPort())
-                        .path(APP_NAME)
-                        .path(stagingDirectoryPath)
-                        .path(production.getName() + "-metadata")
-                        .build().toString();
-            productResultUrls.add(metadataUrl);
+        Optional<File[]> productResultFiles = Optional.ofNullable(stagingDirectory.listFiles());
+        if (productResultFiles.isPresent()) {
+            return doGetProductResultUrls(production, stagingDirectoryPath, productResultFiles.get());
+        } else {
+            return new ArrayList<>();
         }
-        return productResultUrls;
     }
 
     void observeStagingStatus(String jobId) throws WpsStagingException {
@@ -110,18 +88,19 @@ class CalvalusStaging {
                 Thread.sleep(500);
                 productionService.updateStatuses(userName);
                 ProcessStatus stagingStatus = production.getStagingStatus();
-                logInfo(String.format("Staging status: state=%s, progress=%s, message='%s'",
-                                      stagingStatus.getState(),
-                                      stagingStatus.getProgress(),
-                                      stagingStatus.getMessage()));
+                LOG.info(String.format("Staging status: state=%s, progress=%s, message='%s'",
+                                       stagingStatus.getState(),
+                                       stagingStatus.getProgress(),
+                                       stagingStatus.getMessage()));
             }
         } catch (ProductionException | IOException | InterruptedException exception) {
             throw new WpsStagingException(exception);
         }
+
         if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
-            logInfo("Staging completed.");
+            LOG.info("Staging completed.");
         } else {
-            logError("Error: Staging did not complete normally: " + production.getStagingStatus().getMessage());
+            LOG.log(Level.SEVERE, "Error: Staging did not complete normally: " + production.getStagingStatus().getMessage());
         }
     }
 
@@ -161,12 +140,32 @@ class CalvalusStaging {
         }
     }
 
-    private void logError(String errorMessage) {
-        LOG.log(Level.SEVERE, errorMessage);
+    private List<String> doGetProductResultUrls(Production production, String stagingDirectoryPath, File[] productResultFiles) {
+        List<String> productResultUrls = new ArrayList<>();
+        for (File productResultFile : productResultFiles) {
+            String productFileName = productResultFile.getName().toLowerCase();
+            if (productFileName.endsWith("-metadata") || productFileName.endsWith(".csv")) {
+                continue;
+            }
+            UriBuilder builder = new UriBuilderImpl();
+            String productUrl = builder.scheme("http")
+                        .host(wpsServerContext.getHostAddress())
+                        .port(wpsServerContext.getPort())
+                        .path(APP_NAME)
+                        .path(stagingDirectoryPath)
+                        .path(productResultFile.getName())
+                        .build().toString();
+            productResultUrls.add(productUrl);
+        }
+        UriBuilder builder = new UriBuilderImpl();
+        String metadataUrl = builder.scheme("http")
+                    .host(wpsServerContext.getHostAddress())
+                    .port(wpsServerContext.getPort())
+                    .path(APP_NAME)
+                    .path(stagingDirectoryPath)
+                    .path(production.getName() + "-metadata")
+                    .build().toString();
+        productResultUrls.add(metadataUrl);
+        return productResultUrls;
     }
-
-    private void logInfo(String message) {
-        LOG.info(message);
-    }
-
 }
