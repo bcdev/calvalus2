@@ -25,10 +25,13 @@ class LocalProcessorExtractor extends ProcessorExtractor {
 
     @Override
     protected BundleDescriptor[] getBundleDescriptors(String userName) throws WpsProcessorNotFoundException {
-        URL descriptorDirUrl = this.getClass().getClassLoader().getResource(PropertiesWrapper.get("utep.descriptor.directory"));
+        URL descriptorDirUrl = this.getClass().getResource(PropertiesWrapper.get("utep.descriptor.directory"));
         List<BundleDescriptor> bundleDescriptors = new ArrayList<>();
         if (descriptorDirUrl == null) {
-            return new BundleDescriptor[0];
+            descriptorDirUrl = this.getClass().getClassLoader().getResource(PropertiesWrapper.get("utep.descriptor.directory"));
+            if (descriptorDirUrl == null) {
+                return new BundleDescriptor[0];
+            }
         }
         try {
             URI descriptorDirUri = descriptorDirUrl.toURI();
