@@ -30,9 +30,15 @@ class LocalStaging {
 
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
 
-    List<String> getProductUrls(String jobId, String userName, String hostName, int portNumber) {
-        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
-                                             PropertiesWrapper.get("utep.output.directory"), userName, jobId);
+    List<String> getProductUrls(String jobId, String systemUserName, String remoteUserName, String hostName, int portNumber) {
+        Path targetDirectoryPath;
+        if (systemUserName.equalsIgnoreCase(remoteUserName)) {
+            targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                            PropertiesWrapper.get("utep.output.directory"), systemUserName, jobId);
+        } else {
+            targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                            PropertiesWrapper.get("utep.output.directory"), systemUserName, remoteUserName, jobId);
+        }
         File targetDir = targetDirectoryPath.toFile();
         List<String> resultUrls = new ArrayList<>();
         File[] resultProductFiles = targetDir.listFiles();
@@ -44,7 +50,8 @@ class LocalStaging {
                             .port(portNumber)
                             .path(PropertiesWrapper.get("wps.application.name"))
                             .path(PropertiesWrapper.get("utep.output.directory"))
-                            .path(targetDir.getParentFile().getName())
+                            .path(systemUserName)
+                            .path(systemUserName.equals(remoteUserName) ? "/" : remoteUserName)
                             .path(targetDir.getName())
                             .path(resultProductFile.getName()).build().toString();
                 resultUrls.add(productUrl);
@@ -56,7 +63,8 @@ class LocalStaging {
                         .port(portNumber)
                         .path(PropertiesWrapper.get("wps.application.name"))
                         .path(PropertiesWrapper.get("utep.output.directory"))
-                        .path(targetDir.getParentFile().getName())
+                        .path(systemUserName)
+                        .path(systemUserName.equals(remoteUserName) ? "/" : remoteUserName)
                         .path(targetDir.getName())
                         .path(jobId + "-metadata")
                         .build().toString();

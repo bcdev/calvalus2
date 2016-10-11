@@ -40,12 +40,12 @@ public class CalvalusFacade extends ProcessFacade {
 
     @Override
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
-        return calvalusProduction.orderProductionAsynchronous(executeRequest, userName, this);
+        return calvalusProduction.orderProductionAsynchronous(executeRequest, remoteUserName, this);
     }
 
     @Override
     public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
-        return calvalusProduction.orderProductionSynchronous(executeRequest, userName, this);
+        return calvalusProduction.orderProductionSynchronous(executeRequest, remoteUserName, this);
     }
 
     @Override
@@ -70,19 +70,19 @@ public class CalvalusFacade extends ProcessFacade {
 
     @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
-        return calvalusProcessorExtractor.getProcessors(userName);
+        return calvalusProcessorExtractor.getProcessors(remoteUserName);
     }
 
     @Override
     public WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
-        return calvalusProcessorExtractor.getProcessor(parser, userName);
+        return calvalusProcessorExtractor.getProcessor(parser, remoteUserName);
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {
         List<ProductSet> productSets = new ArrayList<>();
-        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "")));
+        productSets.addAll(Arrays.asList(getProductionService().getProductSets(remoteUserName, "")));
         try {
-            productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "user=" + userName)));
+            productSets.addAll(Arrays.asList(getProductionService().getProductSets(remoteUserName, "user=" + remoteUserName)));
         } catch (ProductionException ignored) {
         }
         return productSets.toArray(new ProductSet[productSets.size()]);

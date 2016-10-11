@@ -5,6 +5,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
+import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
@@ -21,13 +22,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
  * @author hans
  */
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({LocalFacade.class, LocalStaging.class, LocalProduction.class})
+@PrepareForTest({LocalFacade.class, LocalStaging.class, LocalProduction.class, LdapHelper.class})
 public class LocalFacadeTest {
 
-    private static final String DUMMY_USER = "dummyUser";
+    private static final String DUMMY_SYSTEM_USER = "dummyUser";
     private static final String DUMMY_HOST_NAME = "www.dummy-host.de";
     private static final int DUMMY_PORT_NUMBER = 80;
     private static final String DUMMY_JOB_ID = "job-00";
+    private static final String DUMMY_REMOTE_USER = "dummyRemoteUser";
 
     private WpsRequestContext mockRequestContext;
     private LocalProduction mockLocalProduction;
@@ -48,8 +50,31 @@ public class LocalFacadeTest {
 
         when(mockServerContext.getHostAddress()).thenReturn(DUMMY_HOST_NAME);
         when(mockServerContext.getPort()).thenReturn(DUMMY_PORT_NUMBER);
-        when(mockRequestContext.getUserName()).thenReturn(DUMMY_USER);
+        when(mockRequestContext.getUserName()).thenReturn(DUMMY_SYSTEM_USER);
         when(mockRequestContext.getServerContext()).thenReturn(mockServerContext);
+    }
+
+    @Test
+    public void canGetRemoteUser() throws Exception {
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(DUMMY_REMOTE_USER);
+        LdapHelper mockLdapHelper = mock(LdapHelper.class);
+        when(mockLdapHelper.isRegistered(DUMMY_REMOTE_USER)).thenReturn(true);
+        PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
+
+        localFacade = new LocalFacade(mockRequestContext);
+
+        assertThat(localFacade.getSystemUserName(), equalTo("dummyUser"));
+        assertThat(localFacade.getRemoteUserName(), equalTo("tep_dummyRemoteUser"));
+    }
+
+    @Test
+    public void canResolveRemoteUserWhenNull() throws Exception {
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(null);
+
+        localFacade = new LocalFacade(mockRequestContext);
+
+        assertThat(localFacade.getSystemUserName(), equalTo("dummyUser"));
+        assertThat(localFacade.getRemoteUserName(), equalTo("dummyUser"));
     }
 
     @Test
@@ -58,7 +83,8 @@ public class LocalFacadeTest {
         PowerMockito.whenNew(LocalProduction.class).withNoArguments().thenReturn(mockLocalProduction);
 
         ArgumentCaptor<Execute> executeCaptor = ArgumentCaptor.forClass(Execute.class);
-        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> systemUserNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> remoteUserNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<WpsRequestContext> requestContextCaptor = ArgumentCaptor.forClass(WpsRequestContext.class);
         ArgumentCaptor<LocalFacade> localFacadeCaptor = ArgumentCaptor.forClass(LocalFacade.class);
 
@@ -66,12 +92,14 @@ public class LocalFacadeTest {
         localFacade.orderProductionAsynchronous(mockExecute);
 
         verify(mockLocalProduction).orderProductionAsynchronous(executeCaptor.capture(),
-                                                                userNameCaptor.capture(),
+                                                                systemUserNameCaptor.capture(),
+                                                                remoteUserNameCaptor.capture(),
                                                                 requestContextCaptor.capture(),
                                                                 localFacadeCaptor.capture());
 
         assertThat(executeCaptor.getValue(), equalTo(mockExecute));
-        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(systemUserNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(remoteUserNameCaptor.getValue(), equalTo("dummyUser"));
         assertThat(requestContextCaptor.getValue(), equalTo(mockRequestContext));
         assertThat(localFacadeCaptor.getValue(), equalTo(localFacade));
     }
@@ -82,7 +110,8 @@ public class LocalFacadeTest {
         PowerMockito.whenNew(LocalProduction.class).withNoArguments().thenReturn(mockLocalProduction);
 
         ArgumentCaptor<Execute> executeCaptor = ArgumentCaptor.forClass(Execute.class);
-        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> systemUserNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> remoteUserNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<WpsRequestContext> requestContextCaptor = ArgumentCaptor.forClass(WpsRequestContext.class);
         ArgumentCaptor<LocalFacade> localFacadeCaptor = ArgumentCaptor.forClass(LocalFacade.class);
 
@@ -90,12 +119,14 @@ public class LocalFacadeTest {
         localFacade.orderProductionSynchronous(mockExecute);
 
         verify(mockLocalProduction).orderProductionSynchronous(executeCaptor.capture(),
-                                                               userNameCaptor.capture(),
+                                                               systemUserNameCaptor.capture(),
+                                                               remoteUserNameCaptor.capture(),
                                                                requestContextCaptor.capture(),
                                                                localFacadeCaptor.capture());
 
         assertThat(executeCaptor.getValue(), equalTo(mockExecute));
-        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(systemUserNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(remoteUserNameCaptor.getValue(), equalTo("dummyUser"));
         assertThat(requestContextCaptor.getValue(), equalTo(mockRequestContext));
         assertThat(localFacadeCaptor.getValue(), equalTo(localFacade));
     }
@@ -105,7 +136,8 @@ public class LocalFacadeTest {
         PowerMockito.whenNew(LocalStaging.class).withNoArguments().thenReturn(mockLocalStaging);
 
         ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> systemUserNameCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> remoteUserNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> hostNameCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Integer> portNumberCaptor = ArgumentCaptor.forClass(Integer.class);
 
@@ -113,12 +145,14 @@ public class LocalFacadeTest {
         localFacade.getProductResultUrls(DUMMY_JOB_ID);
 
         verify(mockLocalStaging).getProductUrls(jobIdCaptor.capture(),
-                                                userNameCaptor.capture(),
+                                                systemUserNameCaptor.capture(),
+                                                remoteUserNameCaptor.capture(),
                                                 hostNameCaptor.capture(),
                                                 portNumberCaptor.capture());
 
         assertThat(jobIdCaptor.getValue(), equalTo("job-00"));
-        assertThat(userNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(systemUserNameCaptor.getValue(), equalTo("dummyUser"));
+        assertThat(remoteUserNameCaptor.getValue(), equalTo("dummyUser"));
         assertThat(hostNameCaptor.getValue(), equalTo("www.dummy-host.de"));
         assertThat(portNumberCaptor.getValue(), equalTo(80));
     }

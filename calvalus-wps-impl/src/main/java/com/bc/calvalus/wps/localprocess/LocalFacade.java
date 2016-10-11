@@ -40,17 +40,17 @@ public class LocalFacade extends ProcessFacade {
 
     @Override
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
-        return localProduction.orderProductionAsynchronous(executeRequest, userName, wpsRequestContext, this);
+        return localProduction.orderProductionAsynchronous(executeRequest, systemUserName, remoteUserName, wpsRequestContext, this);
     }
 
     @Override
     public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
-        return localProduction.orderProductionSynchronous(executeRequest, userName, wpsRequestContext, this);
+        return localProduction.orderProductionSynchronous(executeRequest, systemUserName, remoteUserName, wpsRequestContext, this);
     }
 
     @Override
     public List<String> getProductResultUrls(String jobId) throws WpsResultProductException {
-        return localStaging.getProductUrls(jobId, userName, hostName, portNumber);
+        return localStaging.getProductUrls(jobId, systemUserName, remoteUserName, hostName, portNumber);
     }
 
     @Override
@@ -65,16 +65,16 @@ public class LocalFacade extends ProcessFacade {
 
     @Override
     public void generateProductMetadata(String jobId) throws ProductMetadataException {
-        localStaging.generateProductMetadata(jobId, userName, hostName, portNumber);
+        localStaging.generateProductMetadata(jobId, remoteUserName, hostName, portNumber);
     }
 
     @Override
     public List<WpsProcess> getProcessors() throws WpsProcessorNotFoundException {
-        return processorExtractor.getProcessors(userName);
+        return processorExtractor.getProcessors(remoteUserName);
     }
 
     @Override
     public WpsProcess getProcessor(ProcessorNameConverter parser) throws WpsProcessorNotFoundException {
-        return processorExtractor.getProcessor(parser, userName);
+        return processorExtractor.getProcessor(parser, remoteUserName);
     }
 }

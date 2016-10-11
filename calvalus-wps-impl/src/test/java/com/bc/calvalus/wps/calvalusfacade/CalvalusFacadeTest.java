@@ -195,7 +195,6 @@ public class CalvalusFacadeTest {
     public void testGetProcessors() throws Exception {
         whenNew(CalvalusProcessorExtractor.class).withNoArguments().thenReturn(mockCalvalusProcessorExtractor);
 
-        ArgumentCaptor<ProductionService> productionServiceCaptor = ArgumentCaptor.forClass(ProductionService.class);
         ArgumentCaptor<String> userNameCaptor = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
@@ -279,7 +278,7 @@ public class CalvalusFacadeTest {
         verify(mockLdapHelper, times(1)).register(ldapUser.capture());
 
         assertThat(ldapUser.getValue(), equalTo("tep_mockUserName"));
-        assertThat(calvalusFacade.getUserName(), equalTo("tep_mockUserName"));
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
     }
 
     @Test
@@ -291,7 +290,7 @@ public class CalvalusFacadeTest {
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
 
-        assertThat(calvalusFacade.getUserName(), equalTo("tep_mockUserName"));
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
     }
 
     @Test
@@ -301,7 +300,7 @@ public class CalvalusFacadeTest {
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
 
-        assertThat(calvalusFacade.getUserName(), equalTo("mockUserName"));
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("mockUserName"));
 
     }
 

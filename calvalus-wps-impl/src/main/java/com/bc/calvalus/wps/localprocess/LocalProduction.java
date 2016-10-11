@@ -45,11 +45,11 @@ class LocalProduction {
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
     private Logger logger = WpsLogger.getLogger();
 
-    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String userName, WpsRequestContext wpsRequestContext,
+    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String systemUserName, String remoteUserName, WpsRequestContext wpsRequestContext,
                                                       LocalFacade localFacade) {
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
-            processBuilder = getProcessBuilder(executeRequest, userName, wpsRequestContext.getServerContext());
+            processBuilder = getProcessBuilder(executeRequest, systemUserName, remoteUserName, wpsRequestContext.getServerContext());
             return doProductionAsynchronous(localFacade, processBuilder);
         } catch (InvalidParameterValueException | JAXBException | MissingParameterValueException | IOException exception) {
             String jobId = processBuilder.getJobId();
@@ -60,12 +60,12 @@ class LocalProduction {
         }
     }
 
-    LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String userName, WpsRequestContext wpsRequestContext,
+    LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String systemUserName, String remoteUserName, WpsRequestContext wpsRequestContext,
                                                      LocalFacade localFacade) {
         LocalProductionStatus status;
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
-            processBuilder = getProcessBuilder(executeRequest, userName, wpsRequestContext.getServerContext());
+            processBuilder = getProcessBuilder(executeRequest, systemUserName, remoteUserName, wpsRequestContext.getServerContext());
             String jobId = processBuilder.getJobId();
             doProductionSynchronous(processBuilder);
             status = getSuccessfulStatus(processBuilder, localFacade.getProductResultUrls(jobId));
@@ -90,14 +90,14 @@ class LocalProduction {
         }
     }
 
-    private ProcessBuilder getProcessBuilder(Execute executeRequest, String userName, WpsServerContext serverContext)
+    private ProcessBuilder getProcessBuilder(Execute executeRequest, String systemUserName, String remoteUserName, WpsServerContext serverContext)
                 throws JAXBException, MissingParameterValueException, InvalidParameterValueException, IOException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
         Map<String, String> inputParameters = requestExtractor.getInputParametersMapRaw();
         final Product sourceProduct = getSourceProduct(inputParameters);
-        String jobId = GpfProductionService.createJobId(userName);
+        String jobId = GpfProductionService.createJobId(remoteUserName);
         String processId = executeRequest.getIdentifier().getValue();
-        Path targetDirPath = getTargetDirectoryPath(jobId, userName);
+        Path targetDirPath = getTargetDirectoryPath(jobId, systemUserName, remoteUserName);
         HashMap<String, Object> parameters = new HashMap<>();
         parameters.put("processId", processId);
         parameters.put("productionName", inputParameters.get("productionName"));
@@ -166,9 +166,15 @@ class LocalProduction {
         return sourceProduct;
     }
 
-    private Path getTargetDirectoryPath(String jobId, String userName) throws IOException {
-        Path targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
-                                             PropertiesWrapper.get("utep.output.directory"), userName, jobId);
+    private Path getTargetDirectoryPath(String jobId, String systemUserName, String remoteUserName) throws IOException {
+        Path targetDirectoryPath;
+        if (systemUserName.equalsIgnoreCase(remoteUserName)) {
+            targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                            PropertiesWrapper.get("utep.output.directory"), systemUserName, jobId);
+        } else {
+            targetDirectoryPath = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"),
+                                            PropertiesWrapper.get("utep.output.directory"), systemUserName, remoteUserName, jobId);
+        }
         Files.createDirectories(targetDirectoryPath);
         return targetDirectoryPath;
     }

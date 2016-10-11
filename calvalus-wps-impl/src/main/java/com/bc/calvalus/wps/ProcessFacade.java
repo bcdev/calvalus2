@@ -21,16 +21,23 @@ import java.util.List;
  */
 public abstract class ProcessFacade {
 
-    protected final String userName;
+    protected final String remoteUserName;
+    protected final String systemUserName;
+
     private static final String REMOTE_USER_KEY = PropertiesWrapper.get("remote.user.key");
     private static final String REMOTE_USER_PREFIX = PropertiesWrapper.get("remote.user.prefix");
 
     public ProcessFacade(WpsRequestContext wpsRequestContext) throws IOException {
-        this.userName = resolveUserName(wpsRequestContext);
+        this.systemUserName = wpsRequestContext.getUserName();
+        this.remoteUserName = resolveUserName(wpsRequestContext);
     }
 
-    public String getUserName() {
-        return this.userName;
+    public String getRemoteUserName() {
+        return this.remoteUserName;
+    }
+
+    public String getSystemUserName() {
+        return systemUserName;
     }
 
     private String resolveUserName(WpsRequestContext wpsRequestContext) throws IOException {
@@ -43,7 +50,7 @@ public abstract class ProcessFacade {
             }
             return remoteUserName;
         } else {
-            return wpsRequestContext.getUserName();
+            return systemUserName;
         }
     }
 
