@@ -69,9 +69,9 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                 processDescriptionTypeList.addAll(getMultipleProcessType(processors));
             } else {
                 ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
-                WpsProcess processor = calvalusFacade.getProcessor(parser);
+                WpsProcess processor = localFacade.getProcessor(parser);
                 if (processor == null) {
-                    processor = localFacade.getProcessor(parser);
+                    processor = calvalusFacade.getProcessor(parser);
                 }
                 if (processor == null) {
                     throw new WpsProcessorNotFoundException("Unable to retrieve processor '" + parser.getProcessorIdentifier() + "'");
@@ -251,7 +251,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         }
 
         InputDescriptionType inputDataSetName;
-        if (processor.isLocal()) {
+        if ("urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
             List<Object> inputSourceProductList = new ArrayList<>();
             Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
             List<File> files = new ArrayList<>();
@@ -266,8 +266,8 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
             }
             inputDataSetName = InputDescriptionTypeBuilder
                         .create()
-                        .withIdentifier("sourceProduct")
-                        .withTitle("Urban map or conditions product")
+                        .withIdentifier("inputDataSetName")
+                        .withTitle("Urban map product")
                         .withAbstract("The source product to create a regional subset from")
                         .withDataType("string")
                         .withAllowedValues(inputSourceProductList)

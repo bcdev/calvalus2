@@ -104,7 +104,7 @@ class LocalProduction {
         parameters.put("geoRegion", inputParameters.get("regionWKT"));
         parameters.put("outputFormat", inputParameters.get("outputFormat"));
         parameters.put("productionType", inputParameters.get("productionType"));
-        parameters.put("sourceProduct", inputParameters.get("sourceProduct"));
+        parameters.put("sourceProduct", inputParameters.get("inputDataSetName"));
         parameters.put("copyMetadata", inputParameters.get("copyMetadata"));
         parameters.put("targetDir", targetDirPath.toString());
         return ProcessBuilder.create()
@@ -150,7 +150,7 @@ class LocalProduction {
         final Product sourceProduct;
         Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
         List<File> files = new ArrayList<>();
-        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("sourceProduct"));
+        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("inputDataSetName"));
         for (Path entry : stream) {
             files.add(entry.toFile());
         }

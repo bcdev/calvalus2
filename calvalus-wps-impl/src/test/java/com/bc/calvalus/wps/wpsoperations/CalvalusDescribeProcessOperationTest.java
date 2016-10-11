@@ -120,8 +120,8 @@ public class CalvalusDescribeProcessOperationTest {
         assertThat(processes.get(1).getTitle().getValue(), equalTo("beam-buildin~1.0~urban-tep-indices"));
         assertThat(processes.get(1).getAbstract().getValue(), equalTo("Some description"));
 
-        assertThat(processes.get(2).getIdentifier().getValue(), equalTo("urbantep-local~1.0~Subset"));
-        assertThat(processes.get(2).getTitle().getValue(), equalTo("urbantep-local~1.0~Subset"));
+        assertThat(processes.get(2).getIdentifier().getValue(), equalTo("urbantep-local-test~1.0~Subset"));
+        assertThat(processes.get(2).getTitle().getValue(), equalTo("urbantep-local-test~1.0~Subset"));
         assertThat(processes.get(2).getAbstract().getValue(), equalTo(null));
     }
 

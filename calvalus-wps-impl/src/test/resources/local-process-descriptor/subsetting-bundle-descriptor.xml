@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bundleDescriptor>
-    <bundleName>urbantep-local</bundleName>
+    <bundleName>urbantep-local-test</bundleName>
     <bundleVersion>1.0</bundleVersion>
 
     <processorDescriptors>

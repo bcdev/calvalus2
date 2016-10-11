@@ -42,7 +42,7 @@ public class LocalProcessorExtractorTest {
 
         assertThat(processors.size(), equalTo(1));
         assertThat(processors.get(0).getTitle(), equalTo("Urban TEP local subsetting for test"));
-        assertThat(processors.get(0).getIdentifier(), equalTo("urbantep-local~1.0~Subset"));
+        assertThat(processors.get(0).getIdentifier(), equalTo("urbantep-local-test~1.0~Subset"));
         assertThat(processors.get(0).getVersion(), equalTo("1.0"));
     }
 
@@ -54,7 +54,7 @@ public class LocalProcessorExtractorTest {
         WpsProcess processor = processorExtractor.getProcessor(mockParser, "mockUserName");
 
         assertThat(processor.getTitle(), equalTo("Urban TEP local subsetting for test"));
-        assertThat(processor.getIdentifier(), equalTo("urbantep-local~1.0~Subset"));
+        assertThat(processor.getIdentifier(), equalTo("urbantep-local-test~1.0~Subset"));
         assertThat(processor.getVersion(), equalTo("1.0"));
     }
 
@@ -90,7 +90,7 @@ public class LocalProcessorExtractorTest {
 
     private ProcessorNameConverter getMatchingParser() {
         ProcessorNameConverter mockParser = mock(ProcessorNameConverter.class);
-        when(mockParser.getBundleName()).thenReturn("urbantep-local");
+        when(mockParser.getBundleName()).thenReturn("urbantep-local-test");
         when(mockParser.getBundleVersion()).thenReturn("1.0");
         when(mockParser.getExecutableName()).thenReturn("Subset");
         return mockParser;
