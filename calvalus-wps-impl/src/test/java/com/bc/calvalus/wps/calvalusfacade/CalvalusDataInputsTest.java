@@ -22,6 +22,7 @@ import java.util.Map;
  */
 public class CalvalusDataInputsTest {
 
+    private static final String DUMMY_REMOTE_USER = "dummyRemoteUser";
     private ExecuteRequestExtractor mockExecuteRequestExtractor;
     private CalvalusProcessor mockCalvalusProcessor;
     private ProductSet[] productSets;
@@ -47,7 +48,7 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
@@ -65,7 +66,7 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
         ProductSet[] productSetsWithDateRange = getMockProductSetsWithDates();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithDateRange);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithDateRange, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
@@ -83,7 +84,7 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.10-SNAPSHOT");
         ProductSet[] productSetsWithGeoDb = getMockProductSetsWithGeoDb();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.10-SNAPSHOT"));
@@ -101,7 +102,7 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn("snap-3.0.0");
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
         assertThat(calvalusDataInputs.getValue("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
@@ -118,7 +119,7 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getBundleVersion()).thenReturn("2.0.9");
         when(mockCalvalusProcessor.getName()).thenReturn("Idepix.Water");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo("beam-idepix"));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo("2.0.9"));
@@ -130,7 +131,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getMinimalRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorBundleName"), equalTo(null));
         assertThat(calvalusDataInputs.getValue("processorBundleVersion"), equalTo(null));
@@ -142,7 +143,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getProductSetParametersRawMap();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
         assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
@@ -158,7 +159,7 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         ProductSet[] productSetsMultiPattern = getMockProductSetsWithMultiPatterns();
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
                                                                      "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
@@ -178,7 +179,7 @@ public class CalvalusDataInputsTest {
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
@@ -194,7 +195,7 @@ public class CalvalusDataInputsTest {
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
@@ -209,7 +210,7 @@ public class CalvalusDataInputsTest {
         ParameterDescriptor[] mockParameterDescriptors = getMockParameterDescriptorArray();
         when(mockCalvalusProcessor.getParameterDescriptors()).thenReturn(mockParameterDescriptors);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
                                                                                "<doSmileCorrection>false</doSmileCorrection>\n" +
@@ -222,7 +223,7 @@ public class CalvalusDataInputsTest {
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
         when(mockCalvalusProcessor.getDefaultParameters()).thenReturn(getMockDefaultParameters());
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("########################\n" +
                                                                                "# POLYMER COMMAND FILE #\n" +
@@ -257,9 +258,10 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn("calvalus-2.0b411");
         when(mockCalvalusProcessor.getBundleLocation()).thenReturn("hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0");
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.toString(), equalTo("processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
+                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
                                                           "productionType : L3\n" +
                                                           "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
@@ -279,7 +281,7 @@ public class CalvalusDataInputsTest {
         Map<String, String> mockInputMapRaw = getRawMapWithoutInputDataSetName();
         when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
     }
 
     @Test
@@ -289,10 +291,11 @@ public class CalvalusDataInputsTest {
         when(mockCalvalusProcessor.getDefaultCalvalusBundle()).thenReturn(null);
         when(mockCalvalusProcessor.getDefaultSnapBundle()).thenReturn(null);
 
-        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets);
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, DUMMY_REMOTE_USER);
 
         assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "processorBundleLocation : null\n" +
+                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
                                                           "minDateSource : 2016-01-01\n" +
                                                           "autoStaging : true\n" +
                                                           "processorName : null\n" +

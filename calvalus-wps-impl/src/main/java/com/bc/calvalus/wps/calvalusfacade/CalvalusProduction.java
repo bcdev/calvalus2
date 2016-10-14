@@ -145,7 +145,8 @@ class CalvalusProduction {
         ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
         WpsProcess calvalusProcessor = calvalusFacade.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
-                                                                       getProductSets(userName, productionService));
+                                                                       getProductSets(userName, productionService),
+                                                                       calvalusFacade.getRemoteUserName());
         return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
                                      userName,
                                      calvalusDataInputs.getInputMapFormatted());
