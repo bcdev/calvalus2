@@ -8,6 +8,7 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ public class CalvalusDataInputsTest {
 
     @Before
     public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
         mockExecuteRequestExtractor = mock(ExecuteRequestExtractor.class);
         mockCalvalusProcessor = mock(CalvalusProcessor.class);
         when(mockCalvalusProcessor.getInputProductTypes()).thenReturn(new String[]{"MERIS RR  r03 L1b 2002-2012"});
@@ -148,6 +150,25 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getValue("periodLength"), equalTo("30"));
         assertThat(calvalusDataInputs.getValue("regionWKT"), equalTo("polygon((10.00 54.00,  14.27 53.47))"));
         assertThat(calvalusDataInputs.getValue("outputFormat"), equalTo("NetCDF4"));
+    }
+
+    @Test
+    public void canGetMultiPatternProductSetParameters() throws Exception {
+        Map<String, String> mockInputMapRaw = getProductSetParametersRawMap();
+        when(mockExecuteRequestExtractor.getInputParametersMapRaw()).thenReturn(mockInputMapRaw);
+        ProductSet[] productSetsMultiPattern = getMockProductSetsWithMultiPatterns();
+
+        calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern);
+
+        assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                                     "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                                     "/calvalus/eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
+        assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
+        assertThat(calvalusDataInputs.getValue("maxDate"), equalTo("2009-06-30"));
+        assertThat(calvalusDataInputs.getValue("periodLength"), equalTo("30"));
+        assertThat(calvalusDataInputs.getValue("regionWKT"), equalTo("polygon((10.00 54.00,  14.27 53.47))"));
+        assertThat(calvalusDataInputs.getValue("outputFormat"), equalTo("NetCDF4"));
+
     }
 
     @Test
@@ -286,6 +307,16 @@ public class CalvalusDataInputsTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
+        when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
+        return new ProductSet[]{mockProductSet};
+    }
+
+    private ProductSet[] getMockProductSetsWithMultiPatterns() {
+        ProductSet mockProductSet = mock(ProductSet.class);
+        when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
+        when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                  "eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                  "eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
         when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         return new ProductSet[]{mockProductSet};
     }

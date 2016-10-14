@@ -136,7 +136,12 @@ public class CalvalusDataInputs {
         if (StringUtils.isNotBlank(productSet.getGeoInventory())) {
             inputMapFormatted.put(INPUT_DATASET_GEODB.getIdentifier(), productSet.getGeoInventory());
         } else {
-            inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
+            StringBuilder inputPathStringBuilder = new StringBuilder();
+            for (String productSetPath : productSet.getPath().split(",")) {
+                inputPathStringBuilder.append("/calvalus/").append(productSetPath).append(",");
+            }
+            String inputPathString = inputPathStringBuilder.substring(0, inputPathStringBuilder.length() - 1);
+            inputMapFormatted.put("inputPath", inputPathString);
         }
     }
 
