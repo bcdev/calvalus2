@@ -26,13 +26,13 @@ import java.util.Map;
 /**
  * Statistical bootstrapping for data sets
  */
-public class BootstrappingView extends OrderProductionView {
+public class OrderBootstrappingView extends OrderProductionView {
 
 
     private final VerticalPanel widget;
     private final BootstrappingForm bootstrappingForm;
 
-    public BootstrappingView(PortalContext portalContext) {
+    public OrderBootstrappingView(PortalContext portalContext) {
         super(portalContext);
 
         this.bootstrappingForm = new BootstrappingForm(portalContext);

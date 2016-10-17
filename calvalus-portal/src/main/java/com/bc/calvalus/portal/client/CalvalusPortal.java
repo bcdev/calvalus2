@@ -261,7 +261,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             case "freshmonView":
                 return new OrderFreshmonProductionView(this);
             case "bootstrappingView":
-                return new BootstrappingView(this);
+                return new OrderBootstrappingView(this);
             case "vicariousCalibrationView":
                 return new OrderVCProductionView(this);
             case "matchupComparisonView":
