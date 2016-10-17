@@ -105,7 +105,6 @@ class LocalStaging {
             return;
         }
         File[] resultProductFiles = targetDir.listFiles();
-//        String stagingDirectoryName = targetDir.getParentFile().getName() + "/" + targetDir.getName();
         String stagingPaths[] = targetDir.getAbsolutePath().split("[/\\\\]staging[/\\\\]");
 
 

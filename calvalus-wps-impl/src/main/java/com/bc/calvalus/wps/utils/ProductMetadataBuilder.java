@@ -328,12 +328,6 @@ public class ProductMetadataBuilder {
     }
 
     private String getBaseStagingUrl() {
-//        return "http://"
-//               + hostName
-//               + ":" + portNumber
-//               + "/" + PropertiesWrapper.get("wps.application.name")
-//               + "/" + PropertiesWrapper.get("staging.directory");
-
         UriBuilder builder = new UriBuilderImpl();
         return builder.scheme("http")
                     .host(hostName)

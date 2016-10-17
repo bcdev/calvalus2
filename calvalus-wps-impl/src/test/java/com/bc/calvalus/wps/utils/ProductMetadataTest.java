@@ -109,18 +109,6 @@ public class ProductMetadataTest {
         assertThat(product4.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result.xml"));
     }
 
-    @Test
-    public void name() throws Exception {
-        String sample = "/opt/tomcat/webapps/bc-wps/staging/sysUser/remoteUser/stagingDir/file.nc";
-//        String sample = "C:\\opt\\tomcat\\webapps\\bc-wps\\staging\\sysUser\\remoteUser\\stagingDir\\file.nc";
-        String[] samplePaths = sample.split("[/\\\\]staging[/\\\\]");
-
-        for (String singlePath : samplePaths) {
-            System.out.println(singlePath);
-        }
-
-    }
-
     private File getMockFile(String name, long size) {
         File mockFile1 = mock(File.class);
         when(mockFile1.getName()).thenReturn(name);
