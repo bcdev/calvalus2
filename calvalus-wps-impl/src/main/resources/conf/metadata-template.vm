@@ -14,7 +14,7 @@
         <updated>$jobFinishTime</updated>
         <link href="$collectionUrl" rel="alternate" type="text/html"/>
         #foreach( $product in $productList )
-            <link href="$product.productUrl" rel="enclosure" type="$product.productMimeType" length="$product.productFileSize"/>
+            <link href="$product.productUrl" title="$product.productFileName" rel="enclosure" type="$product.productMimeType" length="$product.productFileSize"/>
         #end
         <where xmlns="http://www.georss.org/georss/10">
             <Polygon xmlns="http://www.opengis.net/gml">
