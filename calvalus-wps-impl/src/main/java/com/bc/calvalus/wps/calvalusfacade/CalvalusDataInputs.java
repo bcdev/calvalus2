@@ -17,9 +17,10 @@ import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.esa.snap.core.datamodel.ProductData;
 
-import java.text.DateFormat;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,6 @@ import java.util.Map;
  */
 public class CalvalusDataInputs {
 
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
     public static final long MIN_DATE = 1451606400000L;
     public static final long MAX_DATE = 1483228800000L;
 
@@ -128,10 +128,12 @@ public class CalvalusDataInputs {
     }
 
     private void putDates(ProductSet productSet) {
-        Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
-        Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
-        inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
-        inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
+        ZonedDateTime defaultMinDate = ZonedDateTime.ofInstant(new Date(MIN_DATE).toInstant(), ZoneId.systemDefault());
+        ZonedDateTime defaultMaxDate = ZonedDateTime.ofInstant(new Date(MAX_DATE).toInstant(), ZoneId.systemDefault());
+        ZonedDateTime minDate = productSet.getMinDate() == null ? defaultMinDate : ZonedDateTime.ofInstant(productSet.getMinDate().toInstant(), ZoneId.systemDefault());
+        ZonedDateTime maxDate = productSet.getMaxDate() == null ? defaultMaxDate : ZonedDateTime.ofInstant(productSet.getMaxDate().toInstant(), ZoneId.systemDefault());
+        inputMapFormatted.putIfAbsent("minDateSource", minDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        inputMapFormatted.putIfAbsent("maxDateSource", maxDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
     }
 
     private void putProductPath(ProductSet productSet) {

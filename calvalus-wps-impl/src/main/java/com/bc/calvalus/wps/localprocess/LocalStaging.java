@@ -105,13 +105,15 @@ class LocalStaging {
             return;
         }
         File[] resultProductFiles = targetDir.listFiles();
-        String stagingDirectoryName = targetDir.getParentFile().getName() + "/" + targetDir.getName();
+//        String stagingDirectoryName = targetDir.getParentFile().getName() + "/" + targetDir.getName();
+        String stagingPaths[] = targetDir.getAbsolutePath().split("[/\\\\]staging[/\\\\]");
+
 
         ProductMetadata productMetadata = ProductMetadataBuilder.create()
                     .isLocal()
                     .withProductionResults(resultProductFiles != null ? Arrays.asList(resultProductFiles) : new ArrayList<>())
                     .withProcessParameters(processParameters)
-                    .withProductOutputDir(stagingDirectoryName)
+                    .withProductOutputDir(stagingPaths[stagingPaths.length - 1])
                     .withProcessor(processor)
                     .withHostName(hostName)
                     .withPortNumber(portNumber)

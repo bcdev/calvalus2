@@ -1,6 +1,5 @@
 package com.bc.calvalus.wps.utils;
 
-import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.DATE_FORMAT;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MAX_DATE;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs.MIN_DATE;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
@@ -13,11 +12,16 @@ import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.utilities.PropertiesWrapper;
+import com.sun.jersey.api.uri.UriBuilderImpl;
 
+import javax.ws.rs.core.UriBuilder;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -44,11 +48,12 @@ public class ProductMetadataBuilder {
     private String stopDate;
     private String collectionUrl;
     private String processorVersion;
+    private String processorId;
     private String productionType;
     private String outputFormat;
     private List<Map> productList;
-
     private boolean isLocal;
+
     private Production production;
     private List<File> productionResults;
     private WpsServerContext serverContext;
@@ -57,6 +62,8 @@ public class ProductMetadataBuilder {
     private String hostName;
     private int portNumber;
     private static final Logger LOG = CalvalusLogger.getLogger();
+    private static final ZonedDateTime DEFAULT_MIN_TIME = ZonedDateTime.ofInstant(new Date(MIN_DATE).toInstant(), ZoneId.systemDefault());
+    private static final ZonedDateTime DEFAULT_MAX_TIME = ZonedDateTime.ofInstant(new Date(MAX_DATE).toInstant(), ZoneId.systemDefault());
 
 
     private ProductMetadataBuilder() {
@@ -114,49 +121,8 @@ public class ProductMetadataBuilder {
         return this;
     }
 
-    public String getJobFinishTime() {
-        return jobFinishTime;
-    }
-
-    public String getProductOutputDir() {
-        return productOutputDir;
-    }
-
     public String getProductionName() {
         return productionName;
-    }
-
-    public String getProcessName() {
-        return processName;
-    }
-
-    public String getInputDatasetName() {
-        return inputDatasetName;
-    }
-
-    public String getRegionWkt() {
-        return regionWkt;
-    }
-
-    public String getRegionBox() {
-        return regionBox;
-    }
-
-
-    public String getStartDate() {
-        return startDate;
-    }
-
-    public String getStopDate() {
-        return stopDate;
-    }
-
-    public String getCollectionUrl() {
-        return collectionUrl;
-    }
-
-    public String getProcessorVersion() {
-        return processorVersion;
     }
 
     public String getProductionType() {
@@ -167,16 +133,57 @@ public class ProductMetadataBuilder {
         return outputFormat;
     }
 
-    public List<Map> getProductList() {
+    String getJobFinishTime() {
+        return jobFinishTime;
+    }
+
+    String getProductOutputDir() {
+        return productOutputDir;
+    }
+
+    String getProcessName() {
+        return processName;
+    }
+
+    String getProcessorId() {
+        return processorId;
+    }
+
+    String getInputDatasetName() {
+        return inputDatasetName;
+    }
+
+    String getRegionWkt() {
+        return regionWkt;
+    }
+
+
+    String getRegionBox() {
+        return regionBox;
+    }
+
+    String getStartDate() {
+        return startDate;
+    }
+
+    String getStopDate() {
+        return stopDate;
+    }
+
+    String getCollectionUrl() {
+        return collectionUrl;
+    }
+
+    String getProcessorVersion() {
+        return processorVersion;
+    }
+
+    List<Map> getProductList() {
         return productList;
     }
 
     public Production getProduction() {
         return production;
-    }
-
-    public List<File> getProductionResults() {
-        return productionResults;
     }
 
     public WpsServerContext getServerContext() {
@@ -187,8 +194,7 @@ public class ProductMetadataBuilder {
         if (!isLocal) {
             ProductionRequest productionRequest = this.production.getProductionRequest();
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(this.production.getWorkflow().getStopTime()).toString();
-            String stagingPath = productionRequest.getStagingDirectory(this.production.getId());
-            this.productOutputDir = this.production.getName() + "/" + stagingPath;
+            this.productOutputDir = productionRequest.getStagingDirectory(this.production.getId());
             this.productionName = this.production.getName();
             this.collectionUrl = getBaseStagingUrl() + "/" + this.production.getStagingPath();
             try {
@@ -200,7 +206,8 @@ public class ProductMetadataBuilder {
                 this.startDate = getStartDate(productionRequest);
                 this.stopDate = getStopDate(productionRequest);
                 this.processorVersion = productionRequest.getString("processorBundleVersion");
-                this.productionType = productionRequest.getString("productionType");
+                this.processorId = getProcessorId(productionRequest);
+                this.productionType = parseProductionType(productionRequest.getString("productionType"));
                 this.outputFormat = productionRequest.getString("outputFormat");
             } catch (ProductionException exception) {
                 throw new ProductMetadataException("Unable to create product metadata", exception);
@@ -215,14 +222,36 @@ public class ProductMetadataBuilder {
             String regionWktRaw = (String) processParameters.get("geoRegion");
             this.regionWkt = extractRegionWkt(regionWktRaw);
             this.regionBox = parseRegionBox();
-            this.startDate = DATE_FORMAT.format(MIN_DATE);
-            this.stopDate = DATE_FORMAT.format(MAX_DATE);
+            this.startDate = DEFAULT_MIN_TIME.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            this.stopDate = DEFAULT_MAX_TIME.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             this.processorVersion = processor.getVersion();
-            this.productionType = (String) processParameters.get("productionType");
+            this.processorId = processor.getIdentifier();
+            this.productionType = parseProductionType((String) processParameters.get("productionType"));
             this.outputFormat = (String) processParameters.get("outputFormat");
             this.productList = createProductList();
         }
         return new ProductMetadata(this);
+    }
+
+    private String getProcessorId(ProductionRequest productionRequest) throws ProductionException {
+        String processorBundle = productionRequest.getString("processorBundleName");
+        String processorBundleVersion = productionRequest.getString("processorBundleVersion");
+        String processorName = productionRequest.getString("processorName");
+        return processorBundle + "~" + processorBundleVersion + "~" + processorName;
+    }
+
+    private String parseProductionType(String productionType) {
+        if (productionType.toLowerCase().contains("l1a")) {
+            return "1A";
+        } else if (productionType.toLowerCase().contains("l1b")) {
+            return "1B";
+        } else if (productionType.toLowerCase().contains("l2")) {
+            return "2";
+        } else if (productionType.toLowerCase().contains("l3")) {
+            return "3";
+        } else {
+            return "UNKNOWN";
+        }
     }
 
     private String extractRegionWkt(String regionWkt) {
@@ -264,24 +293,24 @@ public class ProductMetadataBuilder {
 
     private String getStartDate(ProductionRequest productionRequest) throws ProductionException {
         try {
-            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStartDate());
+            return getDateInXmlGregorianCalendarFormat(productionRequest.createFromMinMax().getStartDate()).toString();
         } catch (ProductionException exception) {
             if (productionRequest.getString("minDateSource") != null) {
                 return productionRequest.getString("minDateSource");
             } else {
-                return DATE_FORMAT.format(MIN_DATE);
+                return DEFAULT_MIN_TIME.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             }
         }
     }
 
     private String getStopDate(ProductionRequest productionRequest) throws ProductionException {
         try {
-            return DATE_FORMAT.format(productionRequest.createFromMinMax().getStopDate());
+            return getDateInXmlGregorianCalendarFormat(productionRequest.createFromMinMax().getStopDate()).toString();
         } catch (ProductionException exception) {
             if (productionRequest.getString("maxDateSource") != null) {
                 return productionRequest.getString("maxDateSource");
             } else {
-                return DATE_FORMAT.format(MAX_DATE);
+                return DEFAULT_MAX_TIME.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
             }
         }
     }
@@ -299,20 +328,29 @@ public class ProductMetadataBuilder {
     }
 
     private String getBaseStagingUrl() {
-        return "http://"
-               + hostName
-               + ":" + portNumber
-               + "/" + PropertiesWrapper.get("wps.application.name")
-               + "/" + PropertiesWrapper.get("staging.directory");
+//        return "http://"
+//               + hostName
+//               + ":" + portNumber
+//               + "/" + PropertiesWrapper.get("wps.application.name")
+//               + "/" + PropertiesWrapper.get("staging.directory");
+
+        UriBuilder builder = new UriBuilderImpl();
+        return builder.scheme("http")
+                    .host(hostName)
+                    .port(portNumber)
+                    .path(PropertiesWrapper.get("wps.application.name"))
+                    .path(PropertiesWrapper.get("staging.directory"))
+                    .build().toString();
     }
 
     private List<Map> createProductList() {
         List<Map> productList = new ArrayList<>();
         for (File productionResult : productionResults) {
             Map<String, String> productMap = new HashMap<>();
-            productMap.put("productUrl", getBaseStagingUrl() + "/" + productionResult.getName());
+            productMap.put("productUrl", getBaseStagingUrl() + "/" + productOutputDir + "/" + productionResult.getName());
             productMap.put("productFileName", productionResult.getName());
             productMap.put("productFileFormat", parseFileFormat(productionResult.getName()));
+            productMap.put("productMimeType", parseMimeType(productionResult.getName()));
             productMap.put("productFileSize", Long.toString(productionResult.length()));
             productList.add(productMap);
         }
@@ -328,6 +366,22 @@ public class ProductMetadataBuilder {
             return "metadata";
         } else {
             return outputFormat;
+        }
+    }
+
+    private String parseMimeType(String fileName) {
+        if (fileName.toLowerCase().endsWith(".zip")) {
+            return "application/zip";
+        } else if (fileName.toLowerCase().endsWith(".xml")) {
+            return "application/xml";
+        } else if (fileName.toLowerCase().endsWith("-metadata")) {
+            return "application/xml";
+        } else if (fileName.toLowerCase().endsWith("nc")) {
+            return "application/netcdf";
+        } else if (fileName.toLowerCase().endsWith("tif")) {
+            return "image/tiff";
+        } else {
+            return "application/octet-stream";
         }
     }
 

@@ -54,8 +54,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T01:00:00+01:00"));
     }
 
     @Test
@@ -72,8 +72,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2000-01-01"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2010-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2000-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2010-01-01T01:00:00+01:00"));
     }
 
     @Test
@@ -90,8 +90,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.10-SNAPSHOT"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01"));
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("minDateSource"), equalTo("2016-01-01T01:00:00+01:00"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("maxDateSource"), equalTo("2017-01-01T01:00:00+01:00"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("geoInventory"), equalTo("/calvalus/geoInventory/URBAN_FOOTPRINT_GUF_GLOBAL_75m"));
     }
 
@@ -267,13 +267,13 @@ public class CalvalusDataInputsTest {
                                                           "processorBundleVersion : null\n" +
                                                           "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                                          "minDateSource : 2016-01-01\n" +
+                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
                                                           "autoStaging : true\n" +
                                                           "calvalus.snap.bundle : snap-3.0.0\nprocessorName : null\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
                                                           "productionName : dummyProductionName\n" +
-                                                          "maxDateSource : 2017-01-01\n"));
+                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n"));
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -296,14 +296,14 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.toString(), equalTo("inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "processorBundleLocation : null\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
-                                                          "minDateSource : 2016-01-01\n" +
+                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
                                                           "autoStaging : true\n" +
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
                                                           "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
-                                                          "maxDateSource : 2017-01-01\n"));
+                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n"));
     }
 
     private ProductSet[] getMockProductSets() {

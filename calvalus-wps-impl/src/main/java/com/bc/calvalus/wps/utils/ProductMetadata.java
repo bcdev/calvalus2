@@ -13,6 +13,7 @@ public class ProductMetadata {
     private String productOutputDir;
     private String productionName;
     private String processName;
+    private String processorId;
     private String inputDatasetName;
     private String regionWkt;
     private String regionBox;
@@ -25,7 +26,7 @@ public class ProductMetadata {
     private List<Map> productList;
 
 
-    public ProductMetadata(ProductMetadataBuilder builder) {
+    ProductMetadata(ProductMetadataBuilder builder) {
         createProductMetadata(builder);
     }
 
@@ -36,6 +37,7 @@ public class ProductMetadata {
         contextMap.put("productOutputDir", productOutputDir);
         contextMap.put("productionName", productionName);
         contextMap.put("processName", processName);
+        contextMap.put("processorId", processorId);
         contextMap.put("inputDatasetName", inputDatasetName);
         contextMap.put("regionWkt", regionWkt);
         contextMap.put("regionBox", regionBox);
@@ -55,6 +57,7 @@ public class ProductMetadata {
         productOutputDir = builder.getProductOutputDir();
         productionName = builder.getProductionName();
         processName = builder.getProcessName();
+        processorId = builder.getProcessorId();
         inputDatasetName = builder.getInputDatasetName();
         regionWkt = builder.getRegionWkt();
         regionBox = builder.getRegionBox();
