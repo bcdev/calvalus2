@@ -46,4 +46,6 @@ public interface PortalContext {
     void setProductionListFiltered(boolean filter);
 
     boolean withPortalFeature(String featureName);
+
+    OrderProductionView getView(String productionType);
 }

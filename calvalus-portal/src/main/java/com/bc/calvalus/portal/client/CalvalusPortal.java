@@ -225,6 +225,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
     }
 
+    @Override
+    public OrderProductionView getView(String productionType) {
+        return productionTypeViews.get(productionType);
+    }
+
     private void maybeInitFrontend() {
         if (!initialised && isAllInputDataAvailable()) {
             initialised = true;
