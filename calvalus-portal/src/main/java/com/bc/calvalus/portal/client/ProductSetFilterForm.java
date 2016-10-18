@@ -358,6 +358,10 @@ public class ProductSetFilterForm extends Composite {
         return parameters;
     }
 
+    public void setValues(Map<String, String> parameters) {
+        // TODO mz
+    }
+
     public interface ChangeHandler {
 
         void temporalFilterChanged(Map<String, String> data);

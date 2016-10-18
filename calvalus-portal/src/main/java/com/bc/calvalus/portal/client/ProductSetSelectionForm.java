@@ -243,6 +243,30 @@ public class ProductSetSelectionForm extends Composite {
         return parameters;
     }
 
+    public void setValues(Map<String, String> parameters) {
+        String geoInventory = parameters.get("geoInventory");
+        String inputPath = parameters.get("inputPath");
+        int newSelectionIndex = -2;
+        for (int i = 0; i < currentProductSets.length; i++) {
+            DtoProductSet productSet = currentProductSets[i];
+            if ((geoInventory != null &&
+                    productSet.getGeoInventory() != null &&
+                    geoInventory.equals(productSet.getGeoInventory()))
+                    || (inputPath != null &&
+                    productSet.getPath() != null &&
+                    inputPath.equals(productSet.getPath()))) {
+                newSelectionIndex = i;
+                break;
+            }
+        }
+
+        if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
+        }
+    }
+
+
     private class UpdateProductSetsCallback implements AsyncCallback<DtoProductSet[]> {
 
         @Override

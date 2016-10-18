@@ -50,6 +50,24 @@ public abstract class OrderProductionView extends PortalView {
     protected abstract Map<String, String> getProductionParameters();
 
     /**
+     *
+     * @return true, if the parameters of this view can be restored
+     */
+    public boolean isRestoringRequestPossible() {
+        return false;
+    }
+
+    /**
+     * Sets the view to the given parameters.
+     *
+     * The default implementation does nothing.
+     *
+     * @param parameters A map with the parameters.
+     */
+    public void setProductionParameters(Map<String, String> parameters) {
+    }
+
+    /**
      * Called by {@link #orderProduction}.
      *
      * @return true, if the form is valid.
@@ -64,9 +82,6 @@ public abstract class OrderProductionView extends PortalView {
         getPortal().showView(ManageProductionsView.ID);
     }
 
-    public boolean isSavingRequestPossible() {
-        return false;
-    }
 
     /**
      * Called by {@link #orderProduction}.
@@ -170,9 +185,7 @@ public abstract class OrderProductionView extends PortalView {
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(4);
         buttonPanel.add(checkButton);
-        if (isSavingRequestPossible()) {
-            buttonPanel.add(saveButton);
-        }
+        buttonPanel.add(saveButton);
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -169,7 +170,15 @@ public class OrderL2ProductionView extends OrderProductionView {
     }
 
     @Override
-    public boolean isSavingRequestPossible() {
+    public boolean isRestoringRequestPossible() {
         return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        //l2ConfigForm.setValues(parameters);
+        //outputParametersForm.setValues(parameters);
     }
 }
