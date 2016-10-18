@@ -27,7 +27,7 @@ public abstract class OrderProductionView extends PortalView {
     }
 
     /**
-     * Called by {@link #orderProduction} and {@link #checkRequest()}.
+     * Called by {@link #orderProduction} and {@link #checkRequest()} and {@link #saveRequest()}.
      *
      * @return The production request.
      */
@@ -124,6 +124,23 @@ public abstract class OrderProductionView extends PortalView {
         }
     }
 
+    protected void saveRequest() {
+        DtoProductionRequest request = getProductionRequest();
+        AsyncCallback<Void> callback = new AsyncCallback<Void>() {
+
+            @Override
+            public void onSuccess(Void result) {
+                Dialog.info("Save Request", "Request successfully saved.");
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.info("Save Request", "Failed to safe request:\n" + caught.getMessage());
+            }
+        };
+        getPortal().getBackendService().saveRequest(request, callback);
+    }
+
     protected HorizontalPanel createOrderPanel() {
         Button orderButton = new Button("Order Production");
         orderButton.addClickHandler(new ClickHandler() {
@@ -139,9 +156,17 @@ public abstract class OrderProductionView extends PortalView {
             }
         });
 
+        Button saveButton = new Button("Save Request");
+        saveButton.addClickHandler(new ClickHandler() {
+            public void onClick(ClickEvent event) {
+                saveRequest();
+            }
+        });
+
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(4);
         buttonPanel.add(checkButton);
+        buttonPanel.add(saveButton);
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();
