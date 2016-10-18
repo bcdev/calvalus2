@@ -89,7 +89,7 @@ public class CalvalusProduction {
     }
 
     private void updateProductionStatuses(String userName) throws IOException, ProductionException {
-        final ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+        final ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton().getProductionService();
         if (productionService != null) {
             synchronized (this) {
                 try {

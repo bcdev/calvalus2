@@ -6,6 +6,7 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.TestFileSystemService;
 import com.bc.calvalus.production.TestInventoryService;
 import com.bc.calvalus.production.TestStagingService;
 import com.bc.calvalus.staging.Staging;
@@ -27,7 +28,7 @@ public class HadoopProductionTypeTest {
     public void setUp() throws Exception {
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         productionType = new HadoopProductionType("X",
-                                                  new TestInventoryService(),
+                                                  new TestFileSystemService(),
                                                   new HadoopProcessingService(jobClientsMap),
                                                   new TestStagingService()
         ) {

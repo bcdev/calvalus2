@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -55,15 +55,15 @@ public class L2PlusProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing,
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing,
                                      StagingService staging) {
-            return new L2PlusProductionType(inventory, processing, staging);
+            return new L2PlusProductionType(fileSystemService, processing, staging);
         }
     }
 
-    L2PlusProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    L2PlusProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                          StagingService stagingService) {
-        super("L2Plus", inventoryService, processingService, stagingService);
+        super("L2Plus", fileSystemService, processingService, stagingService);
     }
 
     @Override

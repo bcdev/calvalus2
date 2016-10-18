@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.mosaic.MosaicFormattingWorkflowItem;
@@ -50,16 +50,16 @@ public class LcL3ProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new LcL3ProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new LcL3ProductionType(fileSystemService, processing, staging);
         }
     }
 
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    LcL3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    LcL3ProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                        StagingService stagingService) {
-        super("LCL3", inventoryService, processingService, stagingService);
+        super("LCL3", fileSystemService, processingService, stagingService);
     }
 
     @Override

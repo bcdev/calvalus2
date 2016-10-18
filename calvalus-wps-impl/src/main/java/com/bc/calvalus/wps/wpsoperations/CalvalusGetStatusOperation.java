@@ -87,7 +87,7 @@ public class CalvalusGetStatusOperation {
     private ExecuteResponse getExecuteSuccessfulResponse(String jobId) throws JobNotFoundException {
         try {
             CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-            ProductionService productionService = calvalusFacade.getProductionService();
+            ProductionService productionService = calvalusFacade.getServices().getProductionService();
             Production production = productionService.getProduction(jobId);
             WorkflowItem workflowItem = production.getWorkflow();
             List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
@@ -118,7 +118,7 @@ public class CalvalusGetStatusOperation {
 
     private Production getProduction(String jobId) throws IOException, ProductionException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-        ProductionService productionService = calvalusFacade.getProductionService();
+        ProductionService productionService = calvalusFacade.getServices().getProductionService();
         return productionService.getProduction(jobId);
     }
 }

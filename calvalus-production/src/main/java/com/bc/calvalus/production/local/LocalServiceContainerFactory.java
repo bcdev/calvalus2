@@ -16,14 +16,16 @@
 
 package com.bc.calvalus.production.local;
 
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
@@ -36,14 +38,15 @@ import java.util.Map;
 /**
  * Factory for production service that operates locally.
  */
-public class LocalProductionServiceFactory implements ProductionServiceFactory {
+public class LocalServiceContainerFactory implements ServiceContainerFactory {
 
     @Override
-    public ProductionService create(Map<String, String> serviceConfiguration,
-                                    File localContextDir,
-                                    File localStagingDir) throws ProductionException, IOException {
+    public ServiceContainer create(Map<String, String> serviceConfiguration,
+                                   File localContextDir,
+                                   File localStagingDir) throws ProductionException, IOException {
 
-        InventoryService inventoryService = new LocalInventoryService();
+        AbstractFileSystemService fileSystemService = new LocalFileSystemService();
+        InventoryService inventoryService = new DefaultInventoryService(fileSystemService, "eodata");
 
         ProcessorDescriptor case2r = new ProcessorDescriptor("pc1", "MERIS IOP Case2R", "1.5", "a=2\nb=5",
                                                              new ProcessorDescriptor.Variable("chl_conc", "AVG", "0.5"),
@@ -151,7 +154,7 @@ public class LocalProductionServiceFactory implements ProductionServiceFactory {
                                                                     "autoStaging", "false"));
         }
 
-        return productionService;
+        return new ServiceContainer(productionService, fileSystemService, inventoryService, null);
 
     }
 

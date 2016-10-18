@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
@@ -95,7 +95,7 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
     }
 
     // multi-year variant
-    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    protected FileStatus[] getFileStatuses(HdfsFileSystemService hdfsFileSystemService,
                                            String inputPathPatterns,
                                            Date minDate,
                                            Date maxDate,
@@ -106,6 +106,6 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
         inputPathResolver.setMaxDate(maxDate);
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolveMultiYear(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
+        return hdfsFileSystemService.globFileStatuses(inputPatterns, conf);
     }
 }

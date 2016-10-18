@@ -97,7 +97,7 @@ public class CalvalusExecuteOperation {
     ExecuteResponse createSyncExecuteResponse(Execute executeRequest, boolean isLineage, String jobId)
                 throws IOException, ProductionException {
         CalvalusFacade calvalusFacade = new CalvalusFacade(context);
-        ProductionService productionService = calvalusFacade.getProductionService();
+        ProductionService productionService = calvalusFacade.getServices().getProductionService();
         Production production = productionService.getProduction(jobId);
         List<String> productResultUrls = calvalusFacade.getProductResultUrls(production);
         WorkflowItem workflowItem = production.getWorkflow();

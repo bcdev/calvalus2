@@ -33,27 +33,27 @@ import static org.junit.Assert.*;
  * @author MarcoZ
  * @author Norman
  */
-public class AbstractInventoryServiceTest {
+public class AbstractFileSystemServiceTest {
 
     @Test
     public void testGetCommonPathPrefix() throws Exception {
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Collections.<String>emptyList()));
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("")));
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList(".*")));
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("abc.*")));
-        assertEquals("abc", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("abc")));
-        assertEquals("abc", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("abc/.*")));
-        assertEquals("abc", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("abc/efg.*")));
-        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/MER_.*.N1")));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Collections.<String>emptyList()));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("")));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList(".*")));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("abc.*")));
+        assertEquals("abc", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("abc")));
+        assertEquals("abc", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("abc/.*")));
+        assertEquals("abc", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("abc/efg.*")));
+        assertEquals("ab/cd", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("ab/cd/MER_.*.N1")));
 
-        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/ef", "ab/cd/gh")));
-        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(
+        assertEquals("ab/cd", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("ab/cd/ef", "ab/cd/gh")));
+        assertEquals("ab/cd", AbstractFileSystemService.getCommonPathPrefix(
                 Arrays.asList("ab/cd/gh", "ab/cd/ef", "ab/cd/ef/gh")));
-        assertEquals("ab/cd", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd/.*", "ab/cd/.*")));
+        assertEquals("ab/cd", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("ab/cd/.*", "ab/cd/.*")));
 
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("", "bcd")));
-        assertEquals("", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("a", "")));
-        assertEquals("ab", AbstractInventoryService.getCommonPathPrefix(Arrays.asList("ab/cd", "ab/ce")));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("", "bcd")));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("a", "")));
+        assertEquals("ab", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("ab/cd", "ab/ce")));
 
 
         /* Talk with MarcoZ about the use of these tests:
@@ -78,24 +78,6 @@ public class AbstractInventoryServiceTest {
         assertFalse(new Path("file://a").isAbsolute());
         assertTrue(new Path("hdfs:///a").isAbsolute());
         assertFalse(new Path("hdfs://a").isAbsolute());
-    }
-
-
-    @Test
-    public void testReadProductSetFromCsv() throws Exception {
-        String csv = "MER_RR__1;MERIS RR L1b 2004-2008;eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1;2004-01-01;2008-12-31;null;null\n" +
-                     "MER_RR__1;MERIS RR L1b 2004;eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1;2004-01-01;2004-12-31;null;null\n" +
-                     "MER_RR__1;MERIS RR L1b 2005;eodata/MER_RR__1P/r03/2005/${MM}/${dd}/.*.N1;2005-01-01;2005-12-31;null;null\n";
-        List<ProductSet> productSets = AbstractInventoryService.readProductSetFromCsv(
-                new ByteArrayInputStream(csv.getBytes()));
-        assertNotNull(productSets);
-        assertEquals(3, productSets.size());
-        assertEquals("MERIS RR L1b 2004", productSets.get(1).getName());
-        assertEquals("eodata/MER_RR__1P/r03/2004/${MM}/${dd}/.*.N1", productSets.get(1).getPath());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-01-01"),
-                     productSets.get(1).getMinDate());
-        assertEquals(ProductData.UTC.createDateFormat("yyyy-MM-dd").parse("2004-12-31"),
-                     productSets.get(1).getMaxDate());
     }
 
     @Test
@@ -157,7 +139,7 @@ public class AbstractInventoryServiceTest {
 
     private void testGetRegexpForPathGlob(String testGlob, String expectedRegexp, String testPath,
                                           boolean expectedMatch) {
-        String regex = AbstractInventoryService.getRegexpForPathGlob(testGlob);
+        String regex = DefaultInventoryService.getRegexpForPathGlob(testGlob);
         assertEquals(expectedRegexp, regex);
         assertEquals(expectedMatch, Pattern.matches(regex, testPath));
     }

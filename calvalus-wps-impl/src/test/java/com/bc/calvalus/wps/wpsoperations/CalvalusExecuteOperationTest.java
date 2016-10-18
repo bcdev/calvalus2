@@ -10,6 +10,7 @@ import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusDataInputs;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
@@ -120,7 +121,9 @@ public class CalvalusExecuteOperationTest {
         when(mockCalvalusFacade.getProductResultUrls(any(Production.class))).thenReturn(resultUrlList);
         ProductionService mockProductionService = mock(ProductionService.class);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         executeOperation = new CalvalusExecuteOperation(mockRequestContext);
@@ -278,7 +281,9 @@ public class CalvalusExecuteOperationTest {
         when(mockProduction.getId()).thenReturn("job-id");
         ProductionService mockProductionService = mock(ProductionService.class);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         List<String> mockResultUrls = new ArrayList<>();
@@ -310,7 +315,9 @@ public class CalvalusExecuteOperationTest {
         when(mockProduction.getWorkflow()).thenReturn(mockWorkflow);
         ProductionService mockProductionService = mock(ProductionService.class);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         List<String> mockResultUrls = new ArrayList<>();
 

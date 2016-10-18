@@ -23,9 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -74,15 +72,6 @@ public class ProductionServiceImpl implements ProductionService {
         this.productionActionMap = new HashMap<String, Action>();
         this.productionStagingsMap = new HashMap<String, Staging>();
         this.logger = CalvalusLogger.getLogger();
-    }
-
-    @Override
-    public ProductSet[] getProductSets(String userName, String filter) throws ProductionException {
-        try {
-            return inventoryService.getProductSets(userName, filter);
-        } catch (Exception e) {
-            throw new ProductionException(e);
-        }
     }
 
     @Override
@@ -352,84 +341,6 @@ public class ProductionServiceImpl implements ProductionService {
         } catch (Exception e) {
             throw new ProductionException("Failed to close production service: " + e.getMessage(), e);
         }
-    }
-
-    @Override
-    public String[] listUserFiles(String userName, String dirPath) throws ProductionException {
-        try {
-            String glob = getUserGlob(userName, dirPath);
-            return inventoryService.globPaths(userName, Arrays.asList(glob));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String[] listSystemFiles(String userName, String glob) throws ProductionException {
-        try {
-            return inventoryService.globPaths(userName, Arrays.asList(glob + "/.*"));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public OutputStream addUserFile(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.addFile(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public boolean removeUserFile(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.removeFile(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public boolean removeUserDirectory(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.removeDirectory(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String getQualifiedUserPath(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.getQualifiedPath(userName, getUserPath(userName, path));
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    @Override
-    public String getQualifiedPath(String userName, String path) throws ProductionException {
-        try {
-            return inventoryService.getQualifiedPath(userName, path);
-        } catch (IOException e) {
-            throw new ProductionException(e);
-        }
-    }
-
-    private String getUserGlob(String userName, String dirPath) {
-        return getUserPath(userName, dirPath) + "/.*";
-    }
-
-    private String getUserPath(String userName, String dirPath) {
-        String path;
-        if (dirPath.isEmpty() || "/".equals(dirPath)) {
-            path = String.format("home/%s", userName.toLowerCase());
-        } else {
-            path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
-        }
-        return path;
     }
 
     private ProductionType findProductionType(ProductionRequest productionRequest) throws ProductionException {

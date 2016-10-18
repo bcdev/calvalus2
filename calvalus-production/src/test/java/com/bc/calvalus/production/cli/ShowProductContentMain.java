@@ -18,7 +18,7 @@ package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionServiceConfig;
@@ -55,7 +55,7 @@ public class ShowProductContentMain {
         Configuration conf = new Configuration();
         HadoopProductionType.setJobConfig(config, conf);
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService inventoryService = new HdfsInventoryService(jobClientsMap, archiveRootDir);
+        HdfsFileSystemService fileSystemService = new HdfsFileSystemService(jobClientsMap);
 
         for (String arg : args) {
             System.out.println("====================================================================");
@@ -72,7 +72,7 @@ public class ShowProductContentMain {
             System.out.println("first pattern = " + pattern);
             firstPattern.add(pattern);
             try {
-                FileStatus[] fileStatuses = inventoryService.globFileStatuses(firstPattern, jobClientsMap.getConfiguration());
+                FileStatus[] fileStatuses = fileSystemService.globFileStatuses(firstPattern, jobClientsMap.getConfiguration());
                 System.out.println("fileStatuses.length = " + fileStatuses.length);
                 if (fileStatuses.length > 0) {
                     System.out.println("fileStatuses[0] = " + fileStatuses[0]);

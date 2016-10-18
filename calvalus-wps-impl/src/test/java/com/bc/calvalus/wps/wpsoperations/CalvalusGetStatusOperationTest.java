@@ -16,6 +16,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusFacade;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.wps.api.WpsRequestContext;
@@ -70,7 +71,9 @@ public class CalvalusGetStatusOperationTest {
         ProductionRequest mockProductionRequest = getMockProductionRequest();
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         Calendar calendar = Calendar.getInstance();
 
@@ -94,7 +97,7 @@ public class CalvalusGetStatusOperationTest {
         when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
         when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("IOException error"));
+        when(mockCalvalusFacade.getServices()).thenThrow(new IOException("IOException error"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
@@ -112,7 +115,7 @@ public class CalvalusGetStatusOperationTest {
         when(mockProduction.getProcessingStatus()).thenReturn(mockInProgressStatus);
         when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenThrow(new IOException("Production error"));
+        when(mockCalvalusFacade.getServices()).thenThrow(new IOException("Production error"));
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
@@ -131,7 +134,9 @@ public class CalvalusGetStatusOperationTest {
         when(mockProduction.getProcessingStatus()).thenReturn(mockFailedStatus);
         when(mockProduction.getStagingStatus()).thenReturn(mockIncompleteStagingStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         Calendar calendar = Calendar.getInstance();
 
@@ -165,7 +170,9 @@ public class CalvalusGetStatusOperationTest {
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/xxx.nc");
         mockResultUrlList.add("http://www.dummy.com/wps/staging/user//123546_L3_123456/yyy.zip");
         when(mockCalvalusFacade.getProductResultUrls(any(Production.class))).thenReturn(mockResultUrlList);
-        when(mockCalvalusFacade.getProductionService()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        when(mockCalvalusFacade.getServices()).thenReturn(mockServiceContainer);
+        when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
         Calendar calendar = Calendar.getInstance();
 

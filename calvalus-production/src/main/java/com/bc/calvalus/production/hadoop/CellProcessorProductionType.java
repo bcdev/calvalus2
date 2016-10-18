@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.l3.CellProcessorWorkflowItem;
@@ -42,14 +42,14 @@ public class CellProcessorProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new CellProcessorProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new CellProcessorProductionType(fileSystemService, processing, staging);
         }
     }
 
-    CellProcessorProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    CellProcessorProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                 StagingService stagingService) {
-        super("Cell", inventoryService, processingService, stagingService);
+        super("Cell", fileSystemService, processingService, stagingService);
     }
 
     @Override

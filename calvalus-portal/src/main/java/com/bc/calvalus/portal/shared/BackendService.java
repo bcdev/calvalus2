@@ -121,12 +121,48 @@ public interface BackendService extends RemoteService {
 
     DtoProductionRequest[] listRequests() throws BackendServiceException;
 
+    /**
+     * Lists files within the user's file space in the inventory.
+     *
+     * @param dirPath     A path that may contain globs ("*" or "?")
+     *
+     * @return The list of files.
+     *
+     * @throws BackendServiceException If an error occured.
+     */
     String[] listUserFiles(String dirPath) throws BackendServiceException;
 
+    /**
+     * Lists files in the inventory.
+     *
+     * @param dirPath     A path that may contain globs ("*" or "?")
+     *
+     * @return The list of files.
+     *
+     * @throws BackendServiceException If an error occured.
+     */
     String[] listSystemFiles(String dirPath) throws BackendServiceException;
 
+    /**
+     * Deletes a file from the user's file space in the inventory.
+     *
+     * @param filePath     A relative path into the user's file space.
+     *
+     * @return true, if the file could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (file exists, but can't be removed).
+     */
     boolean removeUserFile(String filePath) throws BackendServiceException;
 
+    /**
+     * Deletes a directory from the user's file space in the inventory.
+     *
+     * @param filePath     A relative path into the user's file space.
+     *
+     * @return true, if the directory could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (directory exists, but can't be removed).
+     */
     boolean removeUserDirectory(String filePath) throws BackendServiceException;
 
     String checkUserRecordSource(String filePath) throws BackendServiceException;

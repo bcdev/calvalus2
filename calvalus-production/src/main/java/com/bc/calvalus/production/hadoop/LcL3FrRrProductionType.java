@@ -19,7 +19,7 @@ package com.bc.calvalus.production.hadoop;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
@@ -55,16 +55,16 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new LcL3FrRrProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new LcL3FrRrProductionType(fileSystemService, processing, staging);
         }
     }
 
     private static final int PERIOD_LENGTH_DEFAULT = 7;
 
-    LcL3FrRrProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    LcL3FrRrProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                   StagingService stagingService) {
-        super("LCL3FRRR", inventoryService, processingService, stagingService);
+        super("LCL3FRRR", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -89,7 +89,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeRR = getDateRangeRR(productionRequest, rrDays);
             if (mainRangeRR != null) {
                 String inputPathRR = productionRequest.getString("inputPathRR");
-                String[] mainInputFilesRR = getInputPaths(getInventoryService(), productionRequest.getUserName(),
+                String[] mainInputFilesRR = getInputPaths(getFileSystemService(), productionRequest.getUserName(),
                                                           inputPathRR,
                                                           mainRangeRR.getStartDate(), mainRangeRR.getStopDate(), null);
                 if (mainInputFilesRR.length == 0) {
@@ -106,7 +106,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             DateRange mainRangeFR = getDateRangeFR(productionRequest, rrDays);
             if (mainRangeFR != null) {
                 String inputPathFR = productionRequest.getString("inputPathFR");
-                String[] mainInputFilesFR = getInputPaths(getInventoryService(), productionRequest.getUserName(),
+                String[] mainInputFilesFR = getInputPaths(getFileSystemService(), productionRequest.getUserName(),
                                                           inputPathFR,
                                                           mainRangeFR.getStartDate(), mainRangeFR.getStopDate(), null);
                 if (mainInputFilesFR.length == 0) {
@@ -222,7 +222,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         return new MosaicConfig(type, maskExpr, varNames);
     }
 
-    static String[] getInputPaths(InventoryService inventoryService, String username, String inputPathPattern, Date minDate,
+    static String[] getInputPaths(FileSystemService fileSystemService, String username, String inputPathPattern, Date minDate,
                                   Date maxDate, String regionName) throws ProductionException {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
@@ -230,7 +230,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         inputPathResolver.setRegionName(regionName);
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         try {
-            return inventoryService.globPaths(username, inputPatterns);
+            return fileSystemService.globPaths(username, inputPatterns);
         } catch (IOException e) {
             throw new ProductionException("Failed to compute input file list.", e);
         }

@@ -39,15 +39,6 @@ public class ProductionServiceImplTest {
     }
 
     @Test
-    public void testGetProductSets() throws ProductionException {
-        ProductSet[] productSets = productionServiceUnderTest.getProductSets("ewa", null);
-        assertNotNull(productSets);
-        assertEquals(2, productSets.length);
-        assertEquals("pp0", productSets[0].getPath());
-        assertEquals("pp1", productSets[1].getPath());
-    }
-
-    @Test
     public void testOrderProduction() throws ProductionException {
 
         ProductionRequest request = new ProductionRequest("test", "ewa");

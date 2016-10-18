@@ -1,6 +1,8 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.FileSystemService;
+import com.bc.calvalus.production.ServiceContainer;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
@@ -150,11 +152,16 @@ public class FileUploadServlet extends HttpServlet {
                 filePath = relPath + "/" + filePath;
             }
 
-            ProductionService productionService = (ProductionService) getServletContext().getAttribute("productionService");
+
+            ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+
             String userName = getUserName(req).toLowerCase();
+            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+
             InputStream in = new BufferedInputStream(item.getInputStream(), 64 * 1024);
             try {
-                OutputStream out = new BufferedOutputStream(productionService.addUserFile(userName, filePath), 64 * 1024);
+                OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, userPath), 64 * 1024);
                 try {
                     copy(in, out);
                 } finally {

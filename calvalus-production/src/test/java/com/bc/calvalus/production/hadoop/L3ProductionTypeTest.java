@@ -10,7 +10,7 @@ import com.bc.calvalus.processing.l3.L3WorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.TestInventoryService;
+import com.bc.calvalus.production.TestFileSystemService;
 import com.bc.calvalus.production.TestStagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.mapred.JobConf;
@@ -23,7 +23,9 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 public class L3ProductionTypeTest {
 
@@ -32,7 +34,7 @@ public class L3ProductionTypeTest {
     @Before
     public void setUp() throws Exception {
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
-        productionType = new L3ProductionType(new TestInventoryService(),
+        productionType = new L3ProductionType(new TestFileSystemService(),
                                               new HadoopProcessingService(jobClientsMap),
                                               new TestStagingService());
     }

@@ -1,10 +1,11 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.wps.api.WpsRequestContext;
 
@@ -33,16 +34,16 @@ public class CalvalusFacade {
         this.calvalusProcessorExtractor = new CalvalusProcessorExtractor();
     }
 
-    public ProductionService getProductionService() throws ProductionException, IOException {
+    public ServiceContainer getServices() throws ProductionException, IOException {
         return CalvalusProductionService.getProductionServiceSingleton();
     }
 
     public Production orderProductionAsynchronous(ProductionRequest request) throws ProductionException, IOException {
-        return calvalusProduction.orderProductionAsynchronous(getProductionService(), request, userName);
+        return calvalusProduction.orderProductionAsynchronous(getServices().getProductionService(), request, userName);
     }
 
     public Production orderProductionSynchronous(ProductionRequest request) throws ProductionException, InterruptedException, IOException {
-        return calvalusProduction.orderProductionSynchronous(getProductionService(), request);
+        return calvalusProduction.orderProductionSynchronous(getServices().getProductionService(), request);
     }
 
     public List<String> getProductResultUrls(Production production) throws ProductionException, UnsupportedEncodingException {
@@ -50,25 +51,26 @@ public class CalvalusFacade {
     }
 
     public void stageProduction(Production production) throws ProductionException, IOException {
-        calvalusStaging.stageProduction(getProductionService(), production);
+        calvalusStaging.stageProduction(getServices().getProductionService(), production);
     }
 
     public void observeStagingStatus(Production production) throws InterruptedException, IOException, ProductionException {
-        calvalusStaging.observeStagingStatus(getProductionService(), production);
+        calvalusStaging.observeStagingStatus(getServices().getProductionService(), production);
     }
 
     public List<IWpsProcess> getProcessors() throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessors(getProductionService(), userName);
+        return calvalusProcessorExtractor.getProcessors(getServices().getProductionService(), userName);
     }
 
     public CalvalusProcessor getProcessor(ProcessorNameParser parser) throws IOException, ProductionException {
-        return calvalusProcessorExtractor.getProcessor(parser, getProductionService(), userName);
+        return calvalusProcessorExtractor.getProcessor(parser, getServices().getProductionService(), userName);
     }
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {
         List<ProductSet> productSets = new ArrayList<>();
-        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "")));
-        productSets.addAll(Arrays.asList(getProductionService().getProductSets(userName, "user=" + userName)));
+        InventoryService inventoryService = getServices().getInventoryService();
+        productSets.addAll(Arrays.asList(inventoryService.getProductSets(userName, "")));
+        productSets.addAll(Arrays.asList(inventoryService.getProductSets(userName, "user=" + userName)));
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 

@@ -144,6 +144,7 @@
                     <compileSourcesArtifacts>
                         <artifact>com.bc.calvalus:calvalus-commons</artifact>
                     </compileSourcesArtifacts>
+                    <!--<methodNameDisplayMode>FULL</methodNameDisplayMode>-->
 
                 </configuration>
             </plugin>

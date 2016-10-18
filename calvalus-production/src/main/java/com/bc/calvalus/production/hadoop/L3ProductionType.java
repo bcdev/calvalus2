@@ -4,7 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.analysis.QLWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -51,16 +51,16 @@ public class L3ProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new L3ProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new L3ProductionType(fileSystemService, processing, staging);
         }
     }
 
     static final long MILLIS_PER_DAY = 24L * 60L * 60L * 1000L;
 
-    L3ProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    L3ProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                      StagingService stagingService) {
-        super("L3", inventoryService, processingService, stagingService);
+        super("L3", fileSystemService, processingService, stagingService);
     }
 
     @Override

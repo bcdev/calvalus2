@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.productinventory.ProductInventoryWorkflowItem;
@@ -43,14 +43,14 @@ public class InventoryProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new InventoryProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new InventoryProductionType(fileSystemService, processing, staging);
         }
     }
 
-    InventoryProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    InventoryProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                    StagingService stagingService) {
-        super("Inventory", inventoryService, processingService, stagingService);
+        super("Inventory", fileSystemService, processingService, stagingService);
     }
 
     @Override

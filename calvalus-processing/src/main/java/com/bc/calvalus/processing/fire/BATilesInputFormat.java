@@ -1,6 +1,6 @@
 package com.bc.calvalus.processing.fire;
 
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
 import com.bc.calvalus.processing.mosaic.MosaicGrid;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -20,14 +20,14 @@ import java.util.Map;
 public class BATilesInputFormat extends FireInputFormat {
 
     @Override
-    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    protected FileStatus[] getFileStatuses(AbstractFileSystemService fileSystemService,
                                            String inputPathPatterns,
                                            Configuration conf) throws IOException {
-        FileStatus[] sameYearStatuses = super.getFileStatuses(inventoryService, inputPathPatterns, conf);
+        FileStatus[] sameYearStatuses = super.getFileStatuses(fileSystemService, inputPathPatterns, conf);
 
         String[] wingsPathPatterns = BATilesInputFormat.createWingsPathPatterns(inputPathPatterns);
-        FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[0], conf) : new FileStatus[0];
-        FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? super.getFileStatuses(inventoryService, wingsPathPatterns[1], conf) : new FileStatus[0];
+        FileStatus[] beforeStatuses = wingsPathPatterns[0].length() > 0 ? super.getFileStatuses(fileSystemService, wingsPathPatterns[0], conf) : new FileStatus[0];
+        FileStatus[] afterStatuses = wingsPathPatterns[1].length() > 0 ? super.getFileStatuses(fileSystemService, wingsPathPatterns[1], conf) : new FileStatus[0];
 
         FileStatus[] fileStatuses = new FileStatus[sameYearStatuses.length + beforeStatuses.length + afterStatuses.length];
         System.arraycopy(sameYearStatuses, 0, fileStatuses, 0, sameYearStatuses.length);

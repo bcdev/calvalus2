@@ -2,7 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -32,14 +32,14 @@ public class MRProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new MRProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new MRProductionType(fileSystemService, processing, staging);
         }
     }
 
-    MRProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    MRProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                      StagingService stagingService) {
-        super("MR", inventoryService, processingService, stagingService);
+        super("MR", fileSystemService, processingService, stagingService);
     }
 
     @Override
@@ -55,8 +55,8 @@ public class MRProductionType extends HadoopProductionType {
         final String maxDateStr = ProductionRequest.getDateFormat().format(maxDate);
         final String outputDir;
         try {
-            outputDir = getInventoryService().getQualifiedPath(productionRequest.getUserName(),
-                                                                            productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
+            outputDir = getFileSystemService().getQualifiedPath(productionRequest.getUserName(),
+                                                                productionRequest.getString("calvalus.output.dir") + File.separator + minDateStr);
         } catch (IOException e) {
             throw new ProductionException(e);
         }
