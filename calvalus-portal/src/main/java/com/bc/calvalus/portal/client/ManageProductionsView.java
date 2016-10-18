@@ -554,7 +554,7 @@ public class ManageProductionsView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Productions";
+        return "Productions";
     }
 
     @Override

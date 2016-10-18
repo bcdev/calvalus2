@@ -84,7 +84,7 @@ public class ManageRegionsView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Regions";
+        return "Regions";
     }
 
     @Override

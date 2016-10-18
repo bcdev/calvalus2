@@ -16,17 +16,13 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.BeforeSelectionEvent;
-import com.google.gwt.event.logical.shared.BeforeSelectionHandler;
-import com.google.gwt.event.logical.shared.SelectionEvent;
-import com.google.gwt.event.logical.shared.SelectionHandler;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.maps.client.LoadApi;
-import com.google.gwt.user.cellview.client.CellTree;
-import com.google.gwt.user.cellview.client.HasKeyboardSelectionPolicy;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.DecoratedTabPanel;
+import com.google.gwt.user.client.ui.DeckLayoutPanel;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.ListDataProvider;
@@ -37,7 +33,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.logging.Logger;
 
 /**
@@ -82,19 +77,14 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoMaskDescriptor[] userMasks;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
-    private PortalView[] views;
-    private Map<String, Integer> viewTabIndices;
-    private DecoratedTabPanel mainPanel;
     // A timer that periodically retrieves production statuses from server
     private Timer productionsUpdateTimer;
     private RegionMapModel regionMapModel;
     private ManageProductionsView manageProductionsView;
     private boolean productionListFiltered;
-//    private Boolean isCalvalusUser = null;
-//    private Boolean isCcUser = null;
-//    private Boolean isCalEsa = null;
-//    private Boolean isCalOpus = null;
     private Map<String, Boolean> calvalusConfig = null;
+    private MainMenu mainMenu;
+    private PortalView currentView = null;
 
     public boolean withPortalFeature(String featureName) {
         Boolean v = calvalusConfig.get(featureName);
@@ -147,10 +137,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
                 GWT.log("checking for user roles asynchronously");
                 backendService.getCalvalusConfig(new CalvalusConfigCallback());
-//                backendService.isUserInRole("eop_file.modify_calopus_b", new UserRolesCallback("eop_file.modify_calopus_b"));
-//                backendService.isUserInRole("calesa", new UserRolesCallback("calesa"));
-//                backendService.isUserInRole("calvalus", new UserRolesCallback("calvalus"));
-//                backendService.isUserInRole("coastcolour", new UserRolesCallback("coastcolour"));
             }
         };
         // load all the libs for use in the maps
@@ -217,8 +203,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     @Override
     public void showView(String id) {
-        Integer newViewIndex = viewTabIndices.get(id);
-        mainPanel.selectTab(newViewIndex);
+        mainMenu.selectView(id);
     }
 
     @Override
@@ -275,7 +260,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             case "masksView":
                 return new ManageMasksView(this);
             case "productionsView":
-                return new ManageProductionsView(this);
+                manageProductionsView = new ManageProductionsView(this);
+                return manageProductionsView;
             case "emptyView":
                 return new FrameView(this, "EmptyView", "Empty", "empty.html");
             default:
@@ -285,101 +271,58 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private void initFrontend() {
         regionMapModel = new RegionMapModelImpl(getRegions());
-        manageProductionsView = new ManageProductionsView(this);
-        List<PortalView> accu = new ArrayList<>();
+        List<PortalView> views = new ArrayList<>();
         for (String viewName : VIEW_NAMES) {
             if (withPortalFeature(viewName)) {
-                accu.add(createViewOf(viewName));
+                views.add(createViewOf(viewName));
             }
         }
-        if (accu.isEmpty()) {
-            accu.add(createViewOf("emptyView"));
+        if (views.isEmpty()) {
+            views.add(createViewOf("emptyView"));
         }
-        views = accu.toArray(new PortalView[accu.size()]);
+        mainMenu = new MainMenu(views);
 
-//        if (withPortalFeature("analysistab")) {
-//            views = new PortalView[]{
-//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-//                    new OrderL2ProductionView(this),
-//                    new OrderMAProductionView(this),
-//                    new OrderL3ProductionView(this),
-//                    new OrderTAProductionView(this),
-//                    new OrderFreshmonProductionView(this),
-//                    new BootstrappingView(this),
-//                    new OrderVCProductionView(this),
-//                    new OrderMACProductionView(this),
-//                    new OrderL2toL3ProductionView(this),
-//                    new ManageRegionsView(this),
-//                    new ManageBundleView(this),
-//                    manageProductionsView,
-//            };
-//        } else if (withPortalFeature("coretab")) {
-//            views = new PortalView[]{
-//                    //new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-//                    new OrderL2ProductionView(this),
-//                    new OrderMAProductionView(this),
-//                    new OrderL3ProductionView(this),
-//                    new OrderTAProductionView(this),
-//                    new ManageRegionsView(this),
-//                    new ManageBundleView(this),
-//                    manageProductionsView,
-//            };
-//        } else {
-//            views = new PortalView[]{
-//                    new FrameView(this, "NewsView", "News", "calvalus-news.html"),
-//                    new OrderL2ProductionView(this),
-//                    new OrderL3ProductionView(this),
-//                    new ManageRegionsView(this),
-//                    manageProductionsView,
-//            };
-//        }
-
-        viewTabIndices = new HashMap<>();
-        for (int i = 0; i < views.length; i++) {
-            viewTabIndices.put(views[i].getViewId(), i);
-        }
-
-        mainPanel = new DecoratedTabPanel();
-        mainPanel.setAnimationEnabled(true);
-        mainPanel.ensureDebugId("mainPanel");
+        DeckLayoutPanel viewPanel = new DeckLayoutPanel();
+        viewPanel.setSize("95em", "150em");
+        viewPanel.setVisible(true);
         for (PortalView view : views) {
-            mainPanel.add(view, view.getTitle());
+            viewPanel.add(view.asWidget());
         }
 
-        mainPanel.addSelectionHandler(new SelectionHandler<Integer>() {
-            @Override
-            public void onSelection(SelectionEvent<Integer> integerSelectionEvent) {
-                Integer tabIndex = integerSelectionEvent.getSelectedItem();
-                if (tabIndex != null && tabIndex >= 0 && tabIndex < views.length) {
-                    PortalView view = views[tabIndex];
-                    GWT.log("Now showing: " + view.getTitle());
-                    view.onShowing();
-                }
-            }
-        });
-        mainPanel.addBeforeSelectionHandler(new BeforeSelectionHandler<Integer>() {
-            @Override
-            public void onBeforeSelection(BeforeSelectionEvent<Integer> integerBeforeSelectionEvent) {
-                int tabIndex = mainPanel.getTabBar().getSelectedTab();
-                if (tabIndex >= 0 && tabIndex < views.length) {
-                    PortalView view = views[tabIndex];
-                    GWT.log("Now hidden: " + view.getTitle());
-                    view.onHidden();
-                }
-            }
-        });
+        HorizontalPanel mainPanel = new HorizontalPanel();
+        mainPanel.add(mainMenu.getWidget());
+        mainPanel.add(viewPanel);
+        mainPanel.ensureDebugId("mainPanel");
+
+        SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
+        selectionModel.addSelectionChangeHandler(
+                new SelectionChangeEvent.Handler() {
+                    public void onSelectionChange(SelectionChangeEvent event) {
+                        final PortalView selected = selectionModel.getSelectedObject();
+                        if (selected != null) {
+                            if (currentView != null) {
+                                GWT.log("Now hiding: " + currentView.getTitle());
+                                currentView.onHidden();
+                            }
+                            currentView = selected;
+                            GWT.log("Now showing: " + selected.getTitle());
+                            viewPanel.showWidget(selected.asWidget());
+
+                            // make sure #onShowing is called after the new view is shown
+                            Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+                                @Override
+                                public void execute() {
+                                    selected.onShowing();
+                                }
+                            });
+                        }
+                    }
+                });
 
         removeSplashScreen();
 
-        if (viewTabIndices.containsKey(OrderL2ProductionView.ID)) {
-            showView(OrderL2ProductionView.ID);
-        } else {
-            Set<String> keySet = viewTabIndices.keySet();
-            if (!keySet.isEmpty()) {
-                String firstViewKey = keySet.toArray(new String[0])[0];
-                showView(firstViewKey);
-            }
-        }
+        mainMenu.showAndSelectFirstView();
+
         showMainPanel(mainPanel);
 
         productionsUpdateTimer = new Timer() {
@@ -396,7 +339,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private void removeSplashScreen() {
-        DOM.removeChild(RootPanel.getBodyElement(), DOM.getElementById("splashScreen"));
+        RootPanel.getBodyElement().removeChild(DOM.getElementById("splashScreen"));
     }
 
     private boolean isAllInputDataAvailable() {
@@ -406,10 +349,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 && systemAggregators != null && userAggregators != null && allUserAggregators != null
                 && userMasks != null
                 && productions != null
-//               && isCcUser != null
-//               && isCalEsa != null
-//               && isCalOpus != null
-//               && isCalvalusUser != null
                 && calvalusConfig != null;
     }
 
@@ -454,30 +393,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         if (propertyChange) {
             productions.refresh();
         }
-    }
-
-    /*
-     * Do not remove code.
-     * Alternative menu component - example taken from GWTShowcase. May be used as a left-menu.
-     */
-    @SuppressWarnings({"UnusedDeclaration"})
-    private CellTree createMainMenu() {
-        final SingleSelectionModel<PortalView> selectionModel = new SingleSelectionModel<PortalView>();
-        final MainMenuModel treeModel = new MainMenuModel(this, views, selectionModel);
-        // Create the cell tree.
-        CellTree mainMenu = new CellTree(treeModel, null);
-        mainMenu.setAnimationEnabled(true);
-        mainMenu.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.DISABLED);
-        selectionModel.addSelectionChangeHandler(
-                new SelectionChangeEvent.Handler() {
-                    public void onSelectionChange(SelectionChangeEvent event) {
-                        PortalView selected = selectionModel.getSelectedObject();
-                        if (selected != null) {
-                            showView(selected.getViewId());
-                        }
-                    }
-                });
-        return mainMenu;
     }
 
     private void updateProductionList() {
@@ -630,39 +545,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             GWT.log("Failed to get productions from server", caught);
         }
     }
-
-//    private class UserRolesCallback implements AsyncCallback<Boolean> {
-//        String role;
-//        public UserRolesCallback(String role) {
-//            this.role = role;
-//        }
-//
-//        @Override
-//        public void onSuccess(Boolean value) {
-//            if ("calvalus".equals(role)) {
-//                isCalvalusUser = value;
-//                GWT.log("User role " + role + " is " + value);
-//            } else if ("coastcolour".equals(role)) {
-//                isCcUser = value;
-//                GWT.log("User role " + role + " is " + value);
-//            } else if ("calesa".equals(role)) {
-//                isCalEsa = value;
-//                GWT.log("User role " + role + " is " + value);
-//            } else if ("eop_file.modify_calopus_b".equals(role)) {
-//                isCalOpus = value;
-//                GWT.log("User role " + role + " is " + value);
-//            } else {
-//                GWT.log("Unknown user role " + role + " is " + value);
-//            }
-//            maybeInitFrontend();
-//        }
-//
-//        @Override
-//        public void onFailure(Throwable caught) {
-//            caught.printStackTrace(System.err);
-//            GWT.log("Failed to check for user role " + role + " at server", caught);
-//        }
-//    }
 
     private class CalvalusConfigCallback implements AsyncCallback<DtoCalvalusConfig> {
         public CalvalusConfigCallback() {

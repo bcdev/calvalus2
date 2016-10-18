@@ -38,7 +38,7 @@ public class ManageBundleView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Bundles";
+        return "Bundles";
     }
 
 }
