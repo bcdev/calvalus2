@@ -356,7 +356,8 @@ public class ParametersEditorGenerator {
                     defaultValues.add(defaultValue);
                 }
             }
-            listBox = new ListBox(multiSelect);
+            listBox = new ListBox();
+            listBox.setMultipleSelect(multiSelect);
             fillListbox(valueSet, defaultValues);
         }
 

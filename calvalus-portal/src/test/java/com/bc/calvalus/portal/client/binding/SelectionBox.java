@@ -25,7 +25,8 @@ public class SelectionBox<T> extends ListBox implements HasValue<T> {
     private T value;
 
     public SelectionBox() {
-        super(false);
+        super();
+        setMultipleSelect(false);
         items = new ArrayList<T>();
         addChangeHandler(new ChangeHandler() {
             @Override

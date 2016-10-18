@@ -160,7 +160,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         for (FileStatus fStat : fileStatuses) {
             String filename = fStat.getPath().getName();
             if (!filename.startsWith("_") && !filename.startsWith(".")) {
-                if (fStat.isDir()) {
+                if (fStat.isDirectory()) {
                     collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
                 } else {
                     String fPath = fStat.getPath().toString();
