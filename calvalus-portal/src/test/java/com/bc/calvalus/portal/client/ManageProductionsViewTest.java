@@ -115,7 +115,7 @@ public class ManageProductionsViewTest extends TestCase {
 
     private DtoProduction createProduction(DtoProcessState productionState, DtoProcessState stagingState,
                                            boolean autoStaging, String[] additionalStagingPaths) {
-        return new DtoProduction("id", "name", "user", "outputPath", "stagingPath", additionalStagingPaths, autoStaging,
+        return new DtoProduction("id", "name", "user", "MA", "outputPath", "stagingPath", additionalStagingPaths, autoStaging,
                                  new DtoProcessStatus(productionState), new DtoProcessStatus(stagingState));
     }
 

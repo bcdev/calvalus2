@@ -167,4 +167,9 @@ public class OrderL2ProductionView extends OrderProductionView {
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
     }
+
+    @Override
+    public boolean isSavingRequestPossible() {
+        return true;
+    }
 }

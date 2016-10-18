@@ -64,6 +64,10 @@ public abstract class OrderProductionView extends PortalView {
         getPortal().showView(ManageProductionsView.ID);
     }
 
+    public boolean isSavingRequestPossible() {
+        return false;
+    }
+
     /**
      * Called by {@link #orderProduction}.
      * Default impl. displays error message.
@@ -166,7 +170,9 @@ public abstract class OrderProductionView extends PortalView {
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(4);
         buttonPanel.add(checkButton);
-        buttonPanel.add(saveButton);
+        if (isSavingRequestPossible()) {
+            buttonPanel.add(saveButton);
+        }
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();

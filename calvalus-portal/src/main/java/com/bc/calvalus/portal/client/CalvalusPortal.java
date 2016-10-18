@@ -85,6 +85,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private Map<String, Boolean> calvalusConfig = null;
     private MainMenu mainMenu;
     private PortalView currentView = null;
+    private Map<String, OrderProductionView> productionTypeViews;
 
     public boolean withPortalFeature(String featureName) {
         Boolean v = calvalusConfig.get(featureName);
@@ -271,10 +272,17 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private void initFrontend() {
         regionMapModel = new RegionMapModelImpl(getRegions());
+        productionTypeViews = new HashMap<>();
         List<PortalView> views = new ArrayList<>();
         for (String viewName : VIEW_NAMES) {
             if (withPortalFeature(viewName)) {
-                views.add(createViewOf(viewName));
+                PortalView portalView = createViewOf(viewName);
+                views.add(portalView);
+                if (portalView instanceof OrderProductionView) {
+                    OrderProductionView orderProductionView = (OrderProductionView) portalView;
+                    String productionType = orderProductionView.getProductionType();
+                    productionTypeViews.put(productionType, orderProductionView);
+                }
             }
         }
         if (views.isEmpty()) {
