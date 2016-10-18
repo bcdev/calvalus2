@@ -645,6 +645,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return new DtoProduction(production.getId(),
                                  production.getName(),
                                  productionRequest.getUserName(),
+                                 productionRequest.getProductionType(),
                                  production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
                                  backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
                                  convert(additionalStagingPaths),
