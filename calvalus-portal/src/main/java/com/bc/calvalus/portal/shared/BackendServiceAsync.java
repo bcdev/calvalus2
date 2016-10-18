@@ -22,6 +22,7 @@ public interface BackendServiceAsync {
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
 
     void getProcessors(String filter, AsyncCallback<DtoProcessorDescriptor[]> callback);
+
     void getAggregators(String filter, AsyncCallback<DtoAggregatorDescriptor[]> callback);
 
     void getProductionRequest(String productionId, AsyncCallback<DtoProductionRequest> callback);
@@ -37,6 +38,12 @@ public interface BackendServiceAsync {
     void stageProductions(String[] productionIds, AsyncCallback<Void> callback);
 
     void scpProduction(String productionId, String remotePath, AsyncCallback<Void> callback);
+
+    void saveRequest(DtoProductionRequest productionRequest, AsyncCallback<Void> callback);
+
+    void deleteRequest(String requestId, AsyncCallback<Void> callback);
+
+    void listRequests(AsyncCallback<DtoProductionRequest[] > callback);
 
     void checkUserRecordSource(String s, AsyncCallback<String> callback);
 

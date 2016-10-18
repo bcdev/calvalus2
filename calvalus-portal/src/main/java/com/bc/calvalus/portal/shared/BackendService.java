@@ -115,6 +115,12 @@ public interface BackendService extends RemoteService {
 
     void scpProduction(String productionId, String remotePath) throws BackendServiceException;
 
+    void saveRequest(DtoProductionRequest productionRequest) throws BackendServiceException;
+
+    void deleteRequest(String requestId) throws BackendServiceException;
+
+    DtoProductionRequest[] listRequests() throws BackendServiceException;
+
     String[] listUserFiles(String dirPath) throws BackendServiceException;
 
     String[] listSystemFiles(String dirPath) throws BackendServiceException;

@@ -359,6 +359,28 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public void saveRequest(DtoProductionRequest productionRequest) throws BackendServiceException {
+        String userName = getUserName();
+//        try {
+//            ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
+//            return convert(productionResponse);
+//        } catch (ProductionException e) {
+//            throw convert(e);
+//        }
+    }
+
+    @Override
+    public void deleteRequest(String requestId) throws BackendServiceException {
+        String userName = getUserName();
+    }
+
+    @Override
+    public DtoProductionRequest[] listRequests() throws BackendServiceException {
+        String userName = getUserName();
+        return new DtoProductionRequest[0];
+    }
+
+    @Override
     public void cancelProductions(String[] productionIds) throws BackendServiceException {
         try {
             productionService.cancelProductions(productionIds);

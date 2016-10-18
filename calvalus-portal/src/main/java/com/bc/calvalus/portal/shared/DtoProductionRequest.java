@@ -13,6 +13,7 @@ import java.util.Map;
  * @author Norman
  */
 public class DtoProductionRequest implements IsSerializable {
+    private String id;
     private String productionType;
     private Map<String, String> productionParameters;
 
