@@ -12,6 +12,7 @@ sudo -u $RUN_AS cp log4j.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp metadata-template.vm $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp -r local-process-descriptor $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS mkdir -p $CATALINA_HOME/webapps/bc-wps/staging
+sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS cp staging/directory-listing.xsl $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS cp staging/directory-listing-readme.txt $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS cp xsd/calwpsL3Parameters-schema.xsd $CATALINA_HOME/webapps/bc-wps
