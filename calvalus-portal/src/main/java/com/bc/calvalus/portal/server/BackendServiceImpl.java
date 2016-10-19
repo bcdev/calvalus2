@@ -52,19 +52,27 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.ServiceContainerFactory;
+import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
+import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.ProductData;
+import org.jdom.JDOMException;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -204,7 +212,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProcessorDescriptor[] getProcessors(String filterString) throws BackendServiceException {
         try {
-            List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<DtoProcessorDescriptor>();
+            List<DtoProcessorDescriptor> dtoProcessorDescriptors = new ArrayList<>();
             final BundleFilter filter = BundleFilter.fromString(filterString);
             String userName = getUserName();
             filter.withTheUser(userName);
@@ -223,7 +231,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoAggregatorDescriptor[] getAggregators(String filterString) throws BackendServiceException {
         try {
-            List<DtoAggregatorDescriptor> dtoAggregatorDescriptors = new ArrayList<DtoAggregatorDescriptor>();
+            List<DtoAggregatorDescriptor> dtoAggregatorDescriptors = new ArrayList<>();
             final BundleFilter filter = BundleFilter.fromString(filterString);
             String userName = getUserName();
             filter.withTheUser(userName);
@@ -276,23 +284,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             return dtoDescriptors;
         } else {
             return new DtoProcessorDescriptor[]{
-                    new DtoProcessorDescriptor(null,
-                                               BundleFilter.DUMMY_PROCESSOR_NAME,
-                                               "",
-                                               "",
-                                               bundleDescriptor.getBundleName(),
-                                               bundleDescriptor.getBundleVersion(),
-                                               bundleDescriptor.getBundleLocation(),
-                                               "",
-                                               null,
-                                               null,
-                                               DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null)
+                        new DtoProcessorDescriptor(null,
+                                                   BundleFilter.DUMMY_PROCESSOR_NAME,
+                                                   "",
+                                                   "",
+                                                   bundleDescriptor.getBundleName(),
+                                                   bundleDescriptor.getBundleVersion(),
+                                                   bundleDescriptor.getBundleLocation(),
+                                                   "",
+                                                   null,
+                                                   null,
+                                                   DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
+                                                   null,
+                                                   null,
+                                                   null,
+                                                   null,
+                                                   null,
+                                                   null)
             };
         }
     }
@@ -319,7 +327,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         boolean currentUserFilter = (PARAM_NAME_CURRENT_USER_ONLY + "=true").equals(filter);
         try {
             Production[] productions = serviceContainer.getProductionService().getProductions(filter);
-            ArrayList<DtoProduction> dtoProductions = new ArrayList<DtoProduction>(productions.length);
+            ArrayList<DtoProduction> dtoProductions = new ArrayList<>(productions.length);
             for (Production production : productions) {
                 if (currentUserFilter) {
                     if (getUserName().equalsIgnoreCase(production.getProductionRequest().getUserName())) {
@@ -351,7 +359,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
-            BackendServiceException {
+                                                                                         BackendServiceException {
         try {
             ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest));
             return convert(productionResponse);
@@ -361,25 +369,50 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public void saveRequest(DtoProductionRequest productionRequest) throws BackendServiceException {
+    public void saveRequest(DtoProductionRequest dtoProductionRequest) throws BackendServiceException {
         String userName = getUserName();
-//        try {
-//            ProductionResponse productionResponse = productionService.orderProduction(convert(productionRequest));
-//            return convert(productionResponse);
-//        } catch (ProductionException e) {
-//            throw convert(e);
-//        }
+        ProductionRequest productionRequest = convert(dtoProductionRequest);
+        WpsXmlRequestConverter xmlRequestConverter = new WpsXmlRequestConverter(productionRequest);
+        try {
+            String fileName = createRequestId(dtoProductionRequest.getProductionType());
+            String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + fileName);
+            try (OutputStream out = new BufferedOutputStream(serviceContainer.getFileSystemService().addFile(userName, userPath), 64 * 1024)) {
+                out.write(xmlRequestConverter.toXml().getBytes());
+            }
+        } catch (IOException e) {
+            throw convert(e);
+        }
     }
 
     @Override
     public void deleteRequest(String requestId) throws BackendServiceException {
         String userName = getUserName();
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + requestId);
+        try {
+            serviceContainer.getFileSystemService().removeFile(userName, userPath);
+        } catch (IOException e) {
+            throw convert(e);
+        }
     }
 
     @Override
     public DtoProductionRequest[] listRequests() throws BackendServiceException {
         String userName = getUserName();
-        return new DtoProductionRequest[0];
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request");
+        String[] requestFilePaths;
+        try {
+            requestFilePaths = serviceContainer.getFileSystemService().globPaths(userName, Collections.singletonList(userPath));
+
+            List<DtoProductionRequest> requests = new ArrayList<>();
+            for (String requestFilePath : requestFilePaths) {
+                FileReader reader = new FileReader(requestFilePath);
+                ProductionRequest productionRequest = new WpsProductionRequestConverter(reader).loadProductionRequest(userName);
+                requests.add(convert(productionRequest));
+            }
+            return requests.toArray(new DtoProductionRequest[requests.size()]);
+        } catch (IOException | JDOMException e) {
+            throw convert(e);
+        }
     }
 
     @Override
@@ -418,24 +451,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
     }
 
-
-
     @Override
     public String[] listUserFiles(String dirPath) throws BackendServiceException {
         try {
             String userName = getUserName();
-            List<String> pathPatterns = Arrays.asList(AbstractFileSystemService.getUserGlob(userName, dirPath));
+            List<String> pathPatterns = Collections.singletonList(AbstractFileSystemService.getUserGlob(userName, dirPath));
             return serviceContainer.getFileSystemService().globPaths(userName, pathPatterns);
         } catch (IOException e) {
             throw convert(e);
         }
     }
 
+
     @Override
     public String[] listSystemFiles(String dirPath) throws BackendServiceException {
         try {
             String userName = getUserName();
-            List<String> pathPatterns = Arrays.asList(dirPath + "/.*");
+            List<String> pathPatterns = Collections.singletonList(dirPath + "/.*");
             return serviceContainer.getFileSystemService().globPaths(userName, pathPatterns);
         } catch (IOException e) {
             throw convert(e);
@@ -446,8 +478,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public boolean removeUserFile(String filePath) throws BackendServiceException {
         try {
             String userName = getUserName();
-            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
-            return serviceContainer.getFileSystemService().removeFile(userName, userPath);
+            return serviceContainer.getFileSystemService().removeFile(userName, filePath);
         } catch (IOException e) {
             throw convert(e);
         }
@@ -531,13 +562,18 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             float[] latLons = new float[geoPoses.size() * 2];
             int i = 0;
             for (GeoPos geoPos : geoPoses) {
-                latLons[i++] = (float)geoPos.lat;
-                latLons[i++] = (float)geoPos.lon;
+                latLons[i++] = (float) geoPos.lat;
+                latLons[i++] = (float) geoPos.lon;
             }
             return latLons;
         } catch (Exception e) {
             throw convert(e);
         }
+    }
+
+    private String createRequestId(String productionType) {
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
+        return simpleDateFormat.format(new Date()) + "_" + productionType;
     }
 
     private String[] convert(String[] strings) {
@@ -725,7 +761,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void initProductionService() throws ServletException {
         try {
             Class<?> productionServiceFactoryClass = Class.forName(
-                    backendConfig.getProductionServiceFactoryClassName());
+                        backendConfig.getProductionServiceFactoryClassName());
             ServiceContainerFactory serviceContainerFactory = (ServiceContainerFactory) productionServiceFactoryClass.newInstance();
             serviceContainer = serviceContainerFactory.create(backendConfig.getConfigMap(),
                                                               backendConfig.getLocalAppDataDir(),
@@ -760,7 +796,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return getUserName(getThreadLocalRequest());
     }
 
-    public static String getUserName(HttpServletRequest request) {
+    static String getUserName(HttpServletRequest request) {
         if (request != null) {
             Principal userPrincipal = request.getUserPrincipal();
             if (userPrincipal != null) {
@@ -790,7 +826,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
             configuredRoles = backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ");
         } else {
-            configuredRoles = new String[] { "calvalus" };
+            configuredRoles = new String[]{"calvalus"};
         }
         List<String> accu = new ArrayList<>();
         for (String role : configuredRoles) {

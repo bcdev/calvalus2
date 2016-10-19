@@ -17,7 +17,7 @@
 package com.bc.calvalus.production;
 
 import com.bc.calvalus.inventory.FileSystemService;
-import org.junit.Ignore;
+import org.junit.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -51,7 +51,7 @@ public class TestFileSystemService implements FileSystemService {
     }
 
     @Override
-    public OutputStream addFile(String username, String userPath) throws IOException {
+    public OutputStream addFile(String username, String path) throws IOException {
         return null;
     }
 

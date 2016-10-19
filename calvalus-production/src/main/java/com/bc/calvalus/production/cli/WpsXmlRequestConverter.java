@@ -9,15 +9,15 @@ import java.util.Map;
  *
  * @author hans
  */
-class WpsXmlRequestConverter {
+public class WpsXmlRequestConverter {
 
     private final ProductionRequest productionRequest;
 
-    WpsXmlRequestConverter(ProductionRequest productionRequest) {
+    public WpsXmlRequestConverter(ProductionRequest productionRequest) {
         this.productionRequest = productionRequest;
     }
 
-    String toXml() {
+    public String toXml() {
         return getXmlHeader() +
                getIdentifier(productionRequest.getProductionType()) +
                getDataInputs(productionRequest.getParameters()) +

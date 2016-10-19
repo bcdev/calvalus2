@@ -38,7 +38,7 @@ import java.util.List;
  * @author MarcoZ
  * @author Norman
  */
-class WpsProductionRequestConverter {
+public class WpsProductionRequestConverter {
     private final Document document;
     private XMLOutputter xmlOutputter;
 
@@ -46,14 +46,14 @@ class WpsProductionRequestConverter {
         this(new StringReader(xml));
     }
 
-    WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
+    public WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
         SAXBuilder saxBuilder = new SAXBuilder();
         document = saxBuilder.build(reader);
         Format format = Format.getRawFormat().setLineSeparator("\n");
         xmlOutputter = new XMLOutputter(format);
     }
 
-    ProductionRequest loadProductionRequest(String userName) throws IOException {
+    public ProductionRequest loadProductionRequest(String userName) throws IOException {
 
         Element executeElement = document.getRootElement();
 
