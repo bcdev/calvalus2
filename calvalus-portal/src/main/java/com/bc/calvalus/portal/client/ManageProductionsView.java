@@ -243,7 +243,7 @@ public class ManageProductionsView extends PortalView {
         Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
             public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
-                String action = getAction(production);
+                String action = getAction(production, isRestorable(production));
                 if (action != null) {
                     super.render(context, production, sb);
                 } else {
@@ -253,7 +253,12 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(DtoProduction production) {
-                return getAction(production);
+                return getAction(production, isRestorable(production));
+            }
+
+            private boolean isRestorable(DtoProduction production) {
+                OrderProductionView view = getPortal().getView(production.getProductionType());
+                return view != null && view.isRestoringRequestPossible();
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -530,13 +535,13 @@ public class ManageProductionsView extends PortalView {
     }
 
 
-    String getAction(DtoProduction production) {
+    static String getAction(DtoProduction production, boolean isRestorable) {
         if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
             return null;
         }
         if (production.getProcessingStatus().isDone()
             && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
-            if (getPortal().getView(production.getProductionType()) != null) {
+            if (isRestorable) {
                 return EDIT;
             } else {
                 return RESTART;

@@ -10,17 +10,23 @@ import static com.bc.calvalus.portal.shared.DtoProcessState.*;
 public class ManageProductionsViewTest extends TestCase {
 
     public void testGetAction() {
-        assertEquals(null, getAction(UNKNOWN, UNKNOWN));
-        assertEquals("Cancel", getAction(SCHEDULED, UNKNOWN));
-        assertEquals("Cancel", getAction(RUNNING, UNKNOWN));
-        assertEquals("Restart", getAction(COMPLETED, UNKNOWN));
-        assertEquals("Restart", getAction(CANCELLED, UNKNOWN));
-        assertEquals("Restart", getAction(ERROR, UNKNOWN));
-        assertEquals("Cancel", getAction(COMPLETED, SCHEDULED));
-        assertEquals("Cancel", getAction(COMPLETED, RUNNING));
-        assertEquals("Restart", getAction(COMPLETED, COMPLETED));
-        assertEquals("Restart", getAction(COMPLETED, CANCELLED));
-        assertEquals("Restart", getAction(COMPLETED, ERROR));
+        assertEquals(null, getAction(UNKNOWN, UNKNOWN, false));
+        assertEquals("Cancel", getAction(SCHEDULED, UNKNOWN, false));
+        assertEquals("Cancel", getAction(RUNNING, UNKNOWN, false));
+        assertEquals("Restart", getAction(COMPLETED, UNKNOWN, false));
+        assertEquals("Restart", getAction(CANCELLED, UNKNOWN, false));
+        assertEquals("Restart", getAction(ERROR, UNKNOWN, false));
+        assertEquals("Edit", getAction(COMPLETED, UNKNOWN, true));
+        assertEquals("Edit", getAction(CANCELLED, UNKNOWN, true));
+        assertEquals("Edit", getAction(ERROR, UNKNOWN, true));
+        assertEquals("Cancel", getAction(COMPLETED, SCHEDULED, false));
+        assertEquals("Cancel", getAction(COMPLETED, RUNNING, false));
+        assertEquals("Restart", getAction(COMPLETED, COMPLETED, false));
+        assertEquals("Restart", getAction(COMPLETED, CANCELLED, false));
+        assertEquals("Restart", getAction(COMPLETED, ERROR, false));
+        assertEquals("Edit", getAction(COMPLETED, COMPLETED, true));
+        assertEquals("Edit", getAction(COMPLETED, CANCELLED, true));
+        assertEquals("Edit", getAction(COMPLETED, ERROR, true));
     }
 
     public void testGetStageType() {
@@ -91,9 +97,9 @@ public class ManageProductionsViewTest extends TestCase {
         assertEquals("100.0%", ManageProductionsView.getProgressText(1F));
     }
 
-    private String getAction(DtoProcessState productionState, DtoProcessState stagingState) {
-        return ManageProductionsView.getAction(createProduction(productionState, stagingState, false,
-                                                                null));
+    private String getAction(DtoProcessState productionState, DtoProcessState stagingState, boolean isRestorable) {
+        DtoProduction production = createProduction(productionState, stagingState, false, null);
+        return ManageProductionsView.getAction(production, isRestorable);
     }
 
     private StageType getStageType(DtoProcessState productionState,
