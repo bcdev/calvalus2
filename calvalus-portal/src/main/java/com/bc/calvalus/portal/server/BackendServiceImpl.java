@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceException;
@@ -63,11 +64,11 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -400,17 +401,19 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProductionRequest[] listRequests() throws BackendServiceException {
         String userName = getUserName();
-        String userPath = AbstractFileSystemService.getUserPath(userName, "request");
-        String[] requestFilePaths;
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/.*"  + REQUEST_FILE_EXTENSION);
         try {
-            requestFilePaths = serviceContainer.getFileSystemService().globPaths(userName, Collections.singletonList(userPath));
+            FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+            String[] requestFilePaths = fileSystemService.globPaths(userName, Collections.singletonList(userPath));
 
             List<DtoProductionRequest> requests = new ArrayList<>();
             for (String requestFilePath : requestFilePaths) {
-                FileReader reader = new FileReader(requestFilePath);
-                ProductionRequest productionRequest = new WpsProductionRequestConverter(reader).loadProductionRequest(userName);
-                String requestId = extractRequestId(requestFilePath);
-                requests.add(convert(requestId, productionRequest));
+                try (InputStream is = fileSystemService.openFile(userName, requestFilePath)) {
+                    Reader reader = new InputStreamReader(is);
+                    ProductionRequest productionRequest = new WpsProductionRequestConverter(reader).loadProductionRequest(userName);
+                    String requestId = extractRequestId(requestFilePath);
+                    requests.add(convert(requestId, productionRequest));
+                }
             }
             return requests.toArray(new DtoProductionRequest[requests.size()]);
         } catch (IOException | JDOMException e) {
@@ -419,7 +422,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private String extractRequestId(String requestFilePath) {
-        String[] paths = requestFilePath.split(File.pathSeparator);
+        String[] paths = requestFilePath.split("/");
         return paths[paths.length - 1].replace(REQUEST_FILE_EXTENSION, "");
     }
 

@@ -23,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,6 +103,13 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         FileSystem fileSystem = p.getFileSystem(conf);
 
         return fileSystem.exists(p);
+    }
+
+    @Override
+    public InputStream openFile(String username, String path) throws IOException {
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        Path qualifiedPath = makeQualified(fileSystem, path);
+        return fileSystem.open(qualifiedPath);
     }
 
     public FileStatus[] globFileStatuses(List<String> pathPatterns, Configuration conf) throws IOException {

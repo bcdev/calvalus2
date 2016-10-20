@@ -20,6 +20,7 @@ import com.bc.calvalus.inventory.FileSystemService;
 import org.junit.*;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 
@@ -68,5 +69,10 @@ public class TestFileSystemService implements FileSystemService {
     @Override
     public boolean pathExists(String path) throws IOException {
         return false;
+    }
+
+    @Override
+    public InputStream openFile(String username, String path) {
+        return null;
     }
 }

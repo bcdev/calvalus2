@@ -57,6 +57,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             "matchupComparisonView",
             "l2ToL3ComparisonView",
             "regionsView",
+            "requestsView",
             "bundlesView",
             "masksView",
             "productionsView"
@@ -263,6 +264,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new ManageRegionsView(this);
             case "bundlesView":
                 return new ManageBundleView(this);
+            case "requestsView":
+                return new ManageRequestView(this);
             case "masksView":
                 return new ManageMasksView(this);
             case "productionsView":
