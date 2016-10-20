@@ -9,7 +9,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
-import org.esa.snap.binning.CompositingType;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
@@ -42,7 +41,6 @@ public class ProductionRequest implements XmlConvertible {
     private String userName;
     @Parameter(domConverter = HashMapDomConverter.class)
     private Map<String, String> productionParameters;
-    private CompositingType compositingType;
 
 
     // for ProductionRequest.fromXml(String)
@@ -487,14 +485,5 @@ public class ProductionRequest implements XmlConvertible {
             throw new ProductionException(
                     "Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
         }
-    }
-
-
-    public CompositingType getCompositingType() {
-        return compositingType;
-    }
-
-    public void setCompositingType(CompositingType compositingType) {
-        this.compositingType = compositingType;
     }
 }
