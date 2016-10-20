@@ -32,7 +32,7 @@ public abstract class OrderProductionView extends PortalView {
      * @return The production request.
      */
     protected DtoProductionRequest getProductionRequest() {
-        return new DtoProductionRequest(getProductionType(), getProductionParameters());
+        return new DtoProductionRequest("", getProductionType(), getProductionParameters());
     }
 
     /**

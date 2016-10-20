@@ -63,6 +63,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedOutputStream;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -95,6 +96,7 @@ import java.util.logging.Logger;
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
     private static final Properties calvalusVersionProperties;
+    private static final String REQUEST_FILE_EXTENSION = ".xml";
 
     static {
         InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
@@ -348,7 +350,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         try {
             Production production = serviceContainer.getProductionService().getProduction(productionId);
             if (production != null) {
-                return convert(production.getProductionRequest());
+                return convert(production.getId(), production.getProductionRequest());
             } else {
                 return null;
             }
@@ -387,7 +389,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public void deleteRequest(String requestId) throws BackendServiceException {
         String userName = getUserName();
-        String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + requestId);
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/" + requestId + REQUEST_FILE_EXTENSION);
         try {
             serviceContainer.getFileSystemService().removeFile(userName, userPath);
         } catch (IOException e) {
@@ -407,12 +409,18 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             for (String requestFilePath : requestFilePaths) {
                 FileReader reader = new FileReader(requestFilePath);
                 ProductionRequest productionRequest = new WpsProductionRequestConverter(reader).loadProductionRequest(userName);
-                requests.add(convert(productionRequest));
+                String requestId = extractRequestId(requestFilePath);
+                requests.add(convert(requestId, productionRequest));
             }
             return requests.toArray(new DtoProductionRequest[requests.size()]);
         } catch (IOException | JDOMException e) {
             throw convert(e);
         }
+    }
+
+    private String extractRequestId(String requestFilePath) {
+        String[] paths = requestFilePath.split(File.pathSeparator);
+        return paths[paths.length - 1].replace(REQUEST_FILE_EXTENSION, "");
     }
 
     @Override
@@ -573,7 +581,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private String createRequestId(String productionType) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
-        return simpleDateFormat.format(new Date()) + "_" + productionType + ".xml";
+        return simpleDateFormat.format(new Date()) + "_" + productionType + REQUEST_FILE_EXTENSION;
     }
 
     private String[] convert(String[] strings) {
@@ -690,8 +698,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  convert(production.getStagingStatus()));
     }
 
-    private DtoProductionRequest convert(ProductionRequest productionRequest) {
-        return new DtoProductionRequest(productionRequest.getProductionType(),
+    private DtoProductionRequest convert(String requestId, ProductionRequest productionRequest) {
+        return new DtoProductionRequest(requestId,
+                                        productionRequest.getProductionType(),
                                         productionRequest.getParameters());
     }
 

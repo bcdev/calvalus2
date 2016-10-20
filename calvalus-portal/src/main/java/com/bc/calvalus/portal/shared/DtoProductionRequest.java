@@ -13,6 +13,7 @@ import java.util.Map;
  * @author Norman
  */
 public class DtoProductionRequest implements IsSerializable {
+
     private String id;
     private String productionType;
     private Map<String, String> productionParameters;
@@ -23,7 +24,7 @@ public class DtoProductionRequest implements IsSerializable {
     public DtoProductionRequest() {
     }
 
-    public DtoProductionRequest(String productionType,
+    public DtoProductionRequest(String id, String productionType,
                                 Map<String, String> productionParameters) {
         if (productionType == null) {
             throw new NullPointerException("productionType");
@@ -31,8 +32,13 @@ public class DtoProductionRequest implements IsSerializable {
         if (productionParameters == null) {
             throw new NullPointerException("productionParameters");
         }
+        this.id = id;
         this.productionType = productionType;
-        this.productionParameters = new HashMap<String, String>(productionParameters);
+        this.productionParameters = new HashMap<>(productionParameters);
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getProductionType() {
