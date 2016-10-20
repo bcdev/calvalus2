@@ -552,7 +552,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url);
             Iterable<Record> records = recordSource.getRecords();
-            List<GeoPos> geoPoses = new ArrayList<GeoPos>();
+            List<GeoPos> geoPoses = new ArrayList<>();
             for (Record record : records) {
                 GeoPos location = record.getLocation();
                 if (location != null && location.isValid()) {
@@ -573,7 +573,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private String createRequestId(String productionType) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
-        return simpleDateFormat.format(new Date()) + "_" + productionType;
+        return simpleDateFormat.format(new Date()) + "_" + productionType + ".xml";
     }
 
     private String[] convert(String[] strings) {
