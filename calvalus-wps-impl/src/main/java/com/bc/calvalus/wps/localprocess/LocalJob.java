@@ -17,7 +17,7 @@ public class LocalJob {
         this.status = status;
     }
 
-    public String getJobid() {
+    public String getId() {
         return jobid;
     }
 

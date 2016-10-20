@@ -1,7 +1,13 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
+import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionResponse;
+import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -34,6 +40,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,10 +51,11 @@ import java.util.logging.Logger;
 class LocalProduction {
 
     private static final String CATALINA_BASE = System.getProperty("catalina.base");
+    private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
     private Logger logger = WpsLogger.getLogger();
 
-    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String systemUserName, String remoteUserName, WpsRequestContext wpsRequestContext,
-                                                      LocalFacade localFacade) {
+    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String systemUserName, String remoteUserName,
+                                                      WpsRequestContext wpsRequestContext, LocalFacade localFacade) {
         ProcessBuilder processBuilder = ProcessBuilder.create();
         try {
             processBuilder = getProcessBuilder(executeRequest, systemUserName, remoteUserName, wpsRequestContext.getServerContext());
@@ -54,7 +63,7 @@ class LocalProduction {
         } catch (InvalidParameterValueException | JAXBException | MissingParameterValueException | IOException exception) {
             String jobId = processBuilder.getJobId();
             LocalProductionStatus status = getFailedStatus("Processing failed : " + exception.getMessage(), processBuilder);
-            logger.log(Level.SEVERE, "[" + jobId + "] Processing failed : ", exception);
+            logError("[" + jobId + "] Processing failed : ", exception);
             updateProductionStatusMap(status, processBuilder);
             return status;
         }
@@ -70,7 +79,7 @@ class LocalProduction {
             doProductionSynchronous(processBuilder);
             status = getSuccessfulStatus(processBuilder, localFacade.getProductResultUrls(jobId));
             updateProductionStatusMap(status, processBuilder);
-            logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] Generating product metadata...");
+            logInfo("[" + processBuilder.getJobId() + "] Generating product metadata...");
             localFacade.generateProductMetadata(jobId);
             return status;
         } catch (WpsResultProductException | OperatorException | ProductionException | InvalidParameterValueException |
@@ -78,16 +87,74 @@ class LocalProduction {
             String jobId = processBuilder.getJobId();
             status = getFailedStatus("Processing failed : " + exception.getMessage(), processBuilder);
             updateProductionStatusMap(status, processBuilder);
-            logger.log(Level.SEVERE, "[" + jobId + "] Processing failed : ", exception);
+            logError("[" + jobId + "] Processing failed : ", exception);
             return status;
         } catch (ProductMetadataException | IOException | URISyntaxException |
                     BindingException | InvalidProcessorIdException exception) {
             String jobId = processBuilder.getJobId();
             status = getFailedStatus("Creating product metadata failed : " + exception.getMessage(), processBuilder);
             updateProductionStatusMap(status, processBuilder);
-            logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
+            logError("[" + jobId + "] Creating product metadata failed...", exception);
             return status;
         }
+    }
+
+    private LocalProductionStatus doProductionAsynchronous(ProductionRequest request, ProductionService productionService, String userName)
+                throws ProductionException {
+        logInfo("Ordering production...");
+        logInfo("user : " + userName);
+        logInfo("request user name : " + request.getUserName());
+        ProductionResponse productionResponse = productionService.orderProduction(request);
+        Production production = productionResponse.getProduction();
+        logInfo("Production successfully ordered. The production ID is: " + production.getId());
+
+        Timer statusObserver = CalvalusProductionService.getStatusObserverSingleton();
+        synchronized (CalvalusProductionService.getUserProductionMap()) {
+            if (!CalvalusProductionService.getUserProductionMap().containsKey(userName)) {
+                CalvalusProductionService.getUserProductionMap().put(userName, 1);
+                statusObserver.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        try {
+                            updateProductionStatuses(userName);
+                        } catch (IOException | ProductionException exception) {
+                            logError("Unable to update production status.", exception);
+                        }
+                    }
+                }, PRODUCTION_STATUS_OBSERVATION_PERIOD, PRODUCTION_STATUS_OBSERVATION_PERIOD);
+            }
+        }
+
+        ProcessStatus status = production.getProcessingStatus();
+        return new LocalProductionStatus(production.getId(),
+                                         status.getState(),
+                                         status.getProgress(),
+                                         status.getMessage(),
+                                         null);
+
+    }
+
+    private LocalProductionStatus doProductionSynchronous(ProductionService productionService, ProductionRequest request)
+                throws ProductionException, InterruptedException {
+        logInfo("Ordering production...");
+        ProductionResponse productionResponse = productionService.orderProduction(request);
+        Production production = productionResponse.getProduction();
+        logInfo("Production successfully ordered. The production ID is: " + production.getId());
+        observeProduction(productionService, production);
+        ProcessStatus status = production.getProcessingStatus();
+        return new LocalProductionStatus(production.getId(),
+                                         status.getState(),
+                                         status.getProgress(),
+                                         status.getMessage(),
+                                         null);
+    }
+
+    private void logError(String msg, Exception exception) {
+        logger.log(Level.SEVERE, msg, exception);
+    }
+
+    private void logInfo(String message) {
+        logger.log(Level.INFO, message);
     }
 
     private ProcessBuilder getProcessBuilder(Execute executeRequest, String systemUserName, String remoteUserName, WpsServerContext serverContext)
@@ -133,6 +200,7 @@ class LocalProduction {
 
     private LocalProductionStatus doProductionAsynchronous(LocalFacade localFacade, ProcessBuilder processBuilder) {
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] starting asynchronous process...");
+
         LocalProductionStatus status = new LocalProductionStatus(processBuilder.getJobId(),
                                                                  ProcessState.SCHEDULED,
                                                                  0,

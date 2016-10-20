@@ -87,7 +87,7 @@ class LocalStaging {
             WpsProcess processor = processorExtractor.getProcessor(processorNameConverter, userName);
             String targetDirPath = (String) job.getParameters().get("targetDir");
             File targetDir = new File(targetDirPath);
-            doGenerateProductMetadata(targetDir, job.getJobid(), job.getParameters(), processor, hostName, portNumber);
+            doGenerateProductMetadata(targetDir, job.getId(), job.getParameters(), processor, hostName, portNumber);
         } catch (InvalidProcessorIdException | ProductionException | FileNotFoundException | WpsProcessorNotFoundException exception) {
             throw new ProductMetadataException(exception);
         }
