@@ -75,6 +75,6 @@ public class GpfProductionService implements ServletContextListener {
 
     private static LocalProductionService createProductionService() throws SqlStoreException {
         LocalWpsProductionServiceFactory productionServiceFactory = new LocalWpsProductionServiceFactory();
-        return productionServiceFactory.create(null, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, STAGING_DIRECTORY));
+        return productionServiceFactory.create(getUserAppDataCalWpsDir());
     }
 }
