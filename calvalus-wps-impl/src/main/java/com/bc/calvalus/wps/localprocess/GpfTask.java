@@ -3,6 +3,7 @@ package com.bc.calvalus.wps.localprocess;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.wps.utilities.WpsLogger;
 import org.esa.snap.core.datamodel.Product;
@@ -40,7 +41,8 @@ class GpfTask implements Callable<Boolean> {
 
     @Override
     public Boolean call() throws Exception {
-        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        LocalProductionService localProductionService = GpfProductionService.getProductionServiceSingleton();
+        LocalJob job = localProductionService.getJob(jobId);
         LocalProductionStatus status = job.getStatus();
         status.setState(ProcessState.RUNNING);
         status.setProgress(10);
@@ -59,14 +61,14 @@ class GpfTask implements Callable<Boolean> {
             status.setResultUrls(resultUrls);
             status.setStopDate(new Date());
             job.updateStatus(status);
-            GpfProductionService.getProductionStatusMap().put(jobId, job);
+            localProductionService.updateJob(job);
             return true;
         } catch (OperatorException exception) {
             status.setState(ProcessState.ERROR);
             status.setMessage("GPF process failed : " + exception.getMessage());
             status.setStopDate(new Date());
             job.updateStatus(status);
-            GpfProductionService.getProductionStatusMap().put(jobId, job);
+            localProductionService.updateJob(job);
             logger.log(Level.SEVERE, "[" + jobId + "] GPF process failed...", exception);
             return false;
         } catch (ProductMetadataException exception) {
@@ -74,7 +76,7 @@ class GpfTask implements Callable<Boolean> {
             status.setMessage("Creating product metadata failed : " + exception.getMessage());
             status.setStopDate(new Date());
             job.updateStatus(status);
-            GpfProductionService.getProductionStatusMap().put(jobId, job);
+            localProductionService.updateJob(job);
             logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
             return false;
         } catch (Exception exception) {
@@ -82,9 +84,15 @@ class GpfTask implements Callable<Boolean> {
             status.setMessage("Processing failed : " + exception.getMessage());
             status.setStopDate(new Date());
             job.updateStatus(status);
-            GpfProductionService.getProductionStatusMap().put(jobId, job);
+            localProductionService.updateJob(job);
             logger.log(Level.SEVERE, "[" + jobId + "] Processing failed...", exception);
             return false;
+        } finally {
+            try {
+                localProductionService.updateStatuses();
+            } catch (SqlStoreException exception) {
+                logger.log(Level.SEVERE, "[" + jobId + "] Unable to persist the job information to DB...", exception);
+            }
         }
     }
 }

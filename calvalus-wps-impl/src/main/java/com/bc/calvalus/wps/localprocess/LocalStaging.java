@@ -4,6 +4,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.calvalus.wps.utils.ProductMetadata;
@@ -76,11 +77,10 @@ class LocalStaging {
 
     void generateProductMetadata(String jobId, String userName, String hostName, int portNumber)
                 throws ProductMetadataException {
-        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
-        if (job == null) {
-            throw new ProductMetadataException("Unable to create metadata for jobId '" + jobId + "'");
-        }
         try {
+            LocalProductionService productionService = GpfProductionService.getProductionServiceSingleton();
+            LocalJob job = productionService.getJob(jobId);
+
             String processId = (String) job.getParameters().get("processId");
             ProcessorNameConverter processorNameConverter = new ProcessorNameConverter(processId);
             LocalProcessorExtractor processorExtractor = new LocalProcessorExtractor();
@@ -88,7 +88,8 @@ class LocalStaging {
             String targetDirPath = (String) job.getParameters().get("targetDir");
             File targetDir = new File(targetDirPath);
             doGenerateProductMetadata(targetDir, job.getId(), job.getParameters(), processor, hostName, portNumber);
-        } catch (InvalidProcessorIdException | ProductionException | FileNotFoundException | WpsProcessorNotFoundException exception) {
+        } catch (InvalidProcessorIdException | ProductionException | WpsProcessorNotFoundException |
+                    SqlStoreException | FileNotFoundException exception) {
             throw new ProductMetadataException(exception);
         }
     }

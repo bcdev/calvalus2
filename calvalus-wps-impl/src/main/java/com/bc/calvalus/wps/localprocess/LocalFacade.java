@@ -1,10 +1,9 @@
 package com.bc.calvalus.wps.localprocess;
 
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -80,7 +79,7 @@ public class LocalFacade extends ProcessFacade {
         return processorExtractor.getProcessor(parser, remoteUserName);
     }
 
-    private ProductionService getProductionService() throws ProductionException, IOException {
+    private LocalProductionService getProductionService() throws SqlStoreException {
         return GpfProductionService.getProductionServiceSingleton();
     }
 }

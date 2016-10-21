@@ -3,6 +3,7 @@ package com.bc.calvalus.wps;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
@@ -74,7 +75,7 @@ public class CalvalusWpsProvider implements WpsServiceInstance {
         try {
             CalvalusGetStatusOperation getStatusOperation = new CalvalusGetStatusOperation(wpsRequestContext);
             return getStatusOperation.getStatus(jobId);
-        } catch (IOException | InvalidProcessorIdException exception) {
+        } catch (IOException | InvalidProcessorIdException | SqlStoreException exception) {
             logger.log(Level.SEVERE, "Unable to perform GetStatus operation successfully", exception);
             throw new WpsServiceException(exception);
         }

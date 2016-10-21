@@ -1,7 +1,6 @@
 package com.bc.calvalus.wps.localprocess;
 
-import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
 import com.bc.wps.utilities.WpsServletContainer;
@@ -9,11 +8,8 @@ import com.bc.wps.utilities.WpsServletContainer;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -29,8 +25,7 @@ public class GpfProductionService implements ServletContextListener {
     private static final String CALWPS_ROOT = CATALINA_BASE + PropertiesWrapper.get("wps.application.path");
 
     private static ExecutorService worker;
-    private static ProductionService productionService;
-    private static Map<String, LocalJob> productionStatusMap;
+    private static LocalProductionService productionService;
     private static Logger logger = WpsLogger.getLogger();
 
     synchronized static ExecutorService getWorker() {
@@ -42,31 +37,14 @@ public class GpfProductionService implements ServletContextListener {
         return worker;
     }
 
-    public synchronized static ProductionService getProductionServiceSingleton() throws IOException, ProductionException {
+    public synchronized static LocalProductionService getProductionServiceSingleton() throws SqlStoreException {
         if (productionService == null) {
             productionService = createProductionService();
         }
         return productionService;
     }
 
-    private static ProductionService createProductionService() throws IOException, ProductionException {
-        LocalWpsProductionServiceFactory productionServiceFactory = new LocalWpsProductionServiceFactory();
-        return productionServiceFactory.create(null, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, STAGING_DIRECTORY));
-    }
-
-    public static File getUserAppDataCalWpsDir() {
-        String userHome = System.getProperty("user.home");
-        return userHome != null ? new File(userHome, ".calwps") : null;
-    }
-
-    public synchronized static Map<String, LocalJob> getProductionStatusMap() {
-        if (productionStatusMap == null) {
-            productionStatusMap = new HashMap<>();
-        }
-        return productionStatusMap;
-    }
-
-    public static String createJobId(String userName) {
+    static String createJobId(String userName) {
         return userName + "-" + new SimpleDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
     }
 
@@ -82,7 +60,21 @@ public class GpfProductionService implements ServletContextListener {
                 worker.shutdown();
             }
             worker = null;
-            productionStatusMap = null;
+            try {
+                productionService.close();
+            } catch (SqlStoreException exception) {
+                logger.log(Level.SEVERE, "Unable to close SQL connection", exception);
+            }
         }
+    }
+
+    private static File getUserAppDataCalWpsDir() {
+        String userHome = System.getProperty("user.home");
+        return userHome != null ? new File(userHome, ".calwps") : null;
+    }
+
+    private static LocalProductionService createProductionService() throws SqlStoreException {
+        LocalWpsProductionServiceFactory productionServiceFactory = new LocalWpsProductionServiceFactory();
+        return productionServiceFactory.create(null, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, STAGING_DIRECTORY));
     }
 }

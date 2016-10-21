@@ -12,9 +12,11 @@ import com.bc.calvalus.wps.calvalusfacade.CalvalusWpsProcessStatus;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.JobNotFoundException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
+import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.localprocess.GpfProductionService;
 import com.bc.calvalus.wps.localprocess.LocalJob;
+import com.bc.calvalus.wps.localprocess.LocalProductionService;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.localprocess.WpsProcessStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
@@ -35,7 +37,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         super(context);
     }
 
-    public ExecuteResponse getStatus(String jobId) throws JobNotFoundException, InvalidProcessorIdException {
+    public ExecuteResponse getStatus(String jobId) throws JobNotFoundException, InvalidProcessorIdException, SqlStoreException {
         // to match urban1-20160919_160202392, hans-20150919_999999999, etc.
         String localJobIdRegex = ".*-((\\d{4}((0[13578]|1[02])(0[1-9]|[12]\\d|3[01])|(0[13456789]|1[012])(0[1-9]|" +
                                  "[12]\\d|30)|02(0[1-9]|1\\d|2[0-8])))|(\\d{2}[02468][048]|\\d{2}[13579][26])0229){0,8}_.*";
@@ -81,9 +83,10 @@ public class CalvalusGetStatusOperation extends WpsOperation {
     }
 
     private ExecuteResponse getLocalProcessExecuteResponse(String jobId)
-                throws JobNotFoundException, InvalidProcessorIdException {
+                throws JobNotFoundException, InvalidProcessorIdException, SqlStoreException {
         ExecuteResponse executeResponse;
-        LocalJob job = GpfProductionService.getProductionStatusMap().get(jobId);
+        LocalProductionService productionService = GpfProductionService.getProductionServiceSingleton();
+        LocalJob job = productionService.getJob(jobId);
         if (job == null) {
             throw new JobNotFoundException("JobId");
         }
