@@ -324,13 +324,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                             GWT.log("Now showing: " + selected.getTitle());
                             viewPanel.showWidget(selected.asWidget());
 
-                            // make sure #onShowing is called after the new view is shown
-                            Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
-                                @Override
-                                public void execute() {
-                                    selected.onShowing();
-                                }
-                            });
+                            selected.onShowing();
                         }
                     }
                 });
