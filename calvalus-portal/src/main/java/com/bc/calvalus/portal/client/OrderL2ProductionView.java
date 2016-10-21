@@ -185,7 +185,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
-        //l2ConfigForm.setValues(parameters);
-        //outputParametersForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

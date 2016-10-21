@@ -359,7 +359,47 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public void setValues(Map<String, String> parameters) {
-        // TODO mz
+        String dateListValue = parameters.get("dateList");
+        if (dateListValue != null) {
+            dateList.setValue(dateListValue);
+            temporalFilterByDateList.setValue(true, true);
+        } else {
+            String minDateValue = parameters.get("minDate");
+            if (minDateValue != null) {
+                minDate.setValue(DATE_FORMAT.parse(minDateValue));
+            }
+            String maxDateValue = parameters.get("maxDate");
+            if (maxDateValue != null) {
+                maxDate.setValue(DATE_FORMAT.parse(maxDateValue));
+            }
+            if (minDateValue != null || maxDateValue != null) {
+                temporalFilterByDateRange.setValue(true, true);
+            } else {
+                temporalFilterOff.setValue(true, true);
+            }
+        }
+        String regionNameValue = parameters.get("regionName");
+        if (regionNameValue != null) {
+            Region region = regionMap.getRegion(regionNameValue);
+            if (region != null) {
+                spatialFilterByRegion.setValue(true, true);
+                regionMap.getRegionMapSelectionModel().setSelected(region, true);
+                return;
+            }
+        }
+        String regionWKTValue = parameters.get("regionWKT");
+        if (regionWKTValue != null) {
+            List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
+            for (Region region : list) {
+                if (region.getGeometryWkt() != null && region.getGeometryWkt().equals(regionWKTValue)) {
+                    spatialFilterByRegion.setValue(true, true);
+                    regionMap.getRegionMapSelectionModel().setSelected(region, true);
+                    return;
+                }
+            }
+        }
+        spatialFilterOff.setValue(true, true);
+        regionMap.getRegionMapSelectionModel().clearSelection();
     }
 
     public interface ChangeHandler {

@@ -346,6 +346,58 @@ public class L2ConfigForm extends Composite {
         return parameters;
     }
 
+    public void setValues(Map<String, String> parameters) {
+        String bundleNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME);
+        String bundleVersionValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION);
+        String bundleLocationValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION);
+        String processorNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_NAME);
+        String processorParameterValue = parameters.get(ProcessorProductionRequest.PROCESSOR_PARAMETERS);
+
+        if (bundleNameValue != null && bundleVersionValue != null && processorNameValue != null) {
+            showMyProcessors.setValue(true);
+            if (showAllUserProcessors.isEnabled()) {
+                showAllUserProcessors.setValue(true);
+            }
+            showSystemProcessors.setValue(true);
+            filterProcessorByProductType.setValue(false);
+            filterProcessorByVersion.setValue(false);
+            updateProcessorList();
+            int selectionIndex = findProcessor(portalContext.getProcessors(BundleFilter.PROVIDER_SYSTEM),
+                                                             bundleNameValue, bundleVersionValue,
+                                                             bundleLocationValue, processorNameValue);
+            if (selectionIndex > -1) {
+                processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
+            } else {
+                processorList.setSelectedIndex(0);
+            }
+            updateProcessorDetails();
+            if (processorParameterValue != null) {
+                processorParametersArea.setValue(processorParameterValue);            }
+
+        } else if (!selectionMandatory) {
+            processorList.setSelectedIndex(0);
+            updateProcessorDetails();
+        }
+
+    }
+
+    private int findProcessor(DtoProcessorDescriptor[] dtoProcessorDescriptor,
+                                                 String bundleNameValue,
+                                                 String bundleVersionValue,
+                                                 String bundleLocationValue,
+                                                 String processorNameValue) {
+        for (int i = 0; i < dtoProcessorDescriptor.length; i++) {
+            DtoProcessorDescriptor processorDescriptor = dtoProcessorDescriptor[i];
+            if (bundleNameValue.equals(processorDescriptor.getBundleName()) &&
+                    bundleVersionValue.equals(processorDescriptor.getBundleVersion()) &&
+                    processorNameValue.equals(processorDescriptor.getExecutableName()) &&
+                    (bundleLocationValue == null || bundleLocationValue.equals(processorDescriptor.getBundleLocation()))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {
 
         @Override
