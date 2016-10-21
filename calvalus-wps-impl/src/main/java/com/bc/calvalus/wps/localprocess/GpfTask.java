@@ -64,28 +64,13 @@ class GpfTask implements Callable<Boolean> {
             localProductionService.updateJob(job);
             return true;
         } catch (OperatorException exception) {
-            status.setState(ProcessState.ERROR);
-            status.setMessage("GPF process failed : " + exception.getMessage());
-            status.setStopDate(new Date());
-            job.updateStatus(status);
-            localProductionService.updateJob(job);
-            logger.log(Level.SEVERE, "[" + jobId + "] GPF process failed...", exception);
+            logAndCreateErrorStatus(localProductionService, job, status, "GPF process failed", exception);
             return false;
         } catch (ProductMetadataException exception) {
-            status.setState(ProcessState.ERROR);
-            status.setMessage("Creating product metadata failed : " + exception.getMessage());
-            status.setStopDate(new Date());
-            job.updateStatus(status);
-            localProductionService.updateJob(job);
-            logger.log(Level.SEVERE, "[" + jobId + "] Creating product metadata failed...", exception);
+            logAndCreateErrorStatus(localProductionService, job, status, "Creating product metadata failed", exception);
             return false;
         } catch (Exception exception) {
-            status.setState(ProcessState.ERROR);
-            status.setMessage("Processing failed : " + exception.getMessage());
-            status.setStopDate(new Date());
-            job.updateStatus(status);
-            localProductionService.updateJob(job);
-            logger.log(Level.SEVERE, "[" + jobId + "] Processing failed...", exception);
+            logAndCreateErrorStatus(localProductionService, job, status, "Processing failed", exception);
             return false;
         } finally {
             try {
@@ -94,5 +79,15 @@ class GpfTask implements Callable<Boolean> {
                 logger.log(Level.SEVERE, "[" + jobId + "] Unable to persist the job information to DB...", exception);
             }
         }
+    }
+
+    private void logAndCreateErrorStatus(LocalProductionService localProductionService, LocalJob job,
+                                         LocalProductionStatus status, String errorMessage, Exception exception) {
+        status.setState(ProcessState.ERROR);
+        status.setMessage(errorMessage + " : " + exception.getMessage());
+        status.setStopDate(new Date());
+        job.updateStatus(status);
+        localProductionService.updateJob(job);
+        logger.log(Level.SEVERE, "[" + jobId + "] " + errorMessage, exception);
     }
 }
