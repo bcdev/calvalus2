@@ -72,7 +72,7 @@
 <table style="width: 99%; border: 0;" align="center">
     <tr>
         <td>
-            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; 2013 Brockmann Consult GmbH
+            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; 2016 Brockmann Consult GmbH
                 &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html"
                                 target="_blank">Impressum</a></p>
         </td>
