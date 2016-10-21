@@ -1,33 +1,38 @@
 package com.bc.calvalus.wps.cmd;
 
+import com.bc.wps.utilities.WpsLogger;
 import org.apache.commons.exec.DefaultExecuteResultHandler;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * @author hans
  */
-public class CommandLineResultHandler extends DefaultExecuteResultHandler {
+class CommandLineResultHandler extends DefaultExecuteResultHandler {
 
+    private Logger logger = WpsLogger.getLogger();
     private ExecuteWatchdog watchdog;
 
-    public CommandLineResultHandler(ExecuteWatchdog watchdog) {
+    CommandLineResultHandler(ExecuteWatchdog watchdog) {
         this.watchdog = watchdog;
     }
 
     @Override
     public void onProcessComplete(int exitValue) {
         super.onProcessComplete(exitValue);
-        System.out.println("[resultHandler] The process has been successfully completed.");
+        logger.info("[resultHandler] The command line has been successfully executed.");
     }
 
     @Override
     public void onProcessFailed(ExecuteException exception) {
         super.onProcessFailed(exception);
         if (watchdog != null && watchdog.killedProcess()) {
-            System.err.println("[resultHandler] The process has timed out");
+            logger.log(Level.SEVERE, "[resultHandler] The process has timed out");
         } else {
-            System.err.println("[resultHandler] The process has failed : " + exception.getMessage());
+            logger.log(Level.SEVERE, "[resultHandler] The process has failed : " + exception.getMessage());
         }
     }
 }
