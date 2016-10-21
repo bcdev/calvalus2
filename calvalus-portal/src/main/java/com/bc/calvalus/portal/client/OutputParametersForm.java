@@ -167,7 +167,10 @@ public class OutputParametersForm extends Composite {
             parameters.put("productionName", prodName);
         }
         if (processingFormatUser.getValue()) {
-            parameters.put("outputFormat", getOutputFormat());
+            String outputFormat = getOutputFormat();
+            if (outputFormat != null) {
+                parameters.put("outputFormat", outputFormat);
+            }
             parameters.put("autoStaging", String.valueOf(autoStaging.getValue()));
         } else {
             parameters.put("outputFormat", "SEQ");
@@ -231,7 +234,11 @@ public class OutputParametersForm extends Composite {
 
     private String getOutputFormat() {
         int index = outputFormat.getSelectedIndex();
-        return outputFormat.getValue(index);
+        if (index > -1) {
+            return outputFormat.getValue(index);
+        } else {
+            return null;
+        }
     }
 
     private String getProductionName() {
