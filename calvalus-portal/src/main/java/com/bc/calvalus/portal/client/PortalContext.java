@@ -47,5 +47,5 @@ public interface PortalContext {
 
     boolean withPortalFeature(String featureName);
 
-    OrderProductionView getView(String productionType);
+    OrderProductionView getViewForRestore(String productionType);
 }

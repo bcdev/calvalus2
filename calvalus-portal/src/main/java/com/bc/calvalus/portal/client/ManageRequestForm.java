@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ChangeEvent;
@@ -29,26 +27,17 @@ import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FlexTable;
-import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Date;
 
 /**
  * Form for handling production requests
  */
 public class ManageRequestForm extends Composite {
-
-    private static final String BUNDLE_DIRECTORY = "software";
 
     private final PortalContext portalContext;
 
@@ -71,7 +60,7 @@ public class ManageRequestForm extends Composite {
 //    Anchor showHelp;
 
     @UiField
-    FlexTable request;
+    FlexTable requestParameterTable;
 
     private DtoProductionRequest[] productionRequests;
 
@@ -79,64 +68,107 @@ public class ManageRequestForm extends Composite {
         this.portalContext = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
 
+        updateRequestList();
         removeButton.addClickHandler(new RequestRemoveHandler());
-//        editButton.addClickHandler(new BundleUploadHandler());
+        editButton.addClickHandler(new RequestEditHandler());
         requestList.addChangeHandler(new RequestListChangeHandler());
 //        HelpSystem.addClickHandler(showHelp, "managingRequest");
     }
 
 
-
     void updateRequestList() {
+        GWT.log("updateRequestList 1 " + new Date());
         portalContext.getBackendService().listRequests(new AsyncCallback<DtoProductionRequest[]>() {
             @Override
-            public void onFailure(Throwable caught) {
-                // TODO
+            public void onSuccess(DtoProductionRequest[] result) {
+                GWT.log("updateRequestList 2 " + new Date());
+                productionRequests = result;
+                fillRequestList();
+                GWT.log("updateRequestList 3 " + new Date());
+                updateRequestDetails();
+                GWT.log("updateRequestList 4 " + new Date());
             }
 
             @Override
-            public void onSuccess(DtoProductionRequest[] result) {
-                productionRequests = result;
+            public void onFailure(Throwable caught) {
+                caught.printStackTrace(System.err);
+                Dialog.error("Server-side Error", caught.getMessage());
+                productionRequests = new DtoProductionRequest[0];
                 fillRequestList();
                 updateRequestDetails();
             }
         });
     }
 
-    private void fillRequestList    () {
+    private void fillRequestList() {
         requestList.clear();
         if (productionRequests.length > 0) {
             for (DtoProductionRequest productionRequest : productionRequests) {
-                requestList.addItem(productionRequest.getId());
+                requestList.addItem(formatListEntry(productionRequest));
             }
             requestList.setSelectedIndex(0);
         }
     }
 
+    private static String formatListEntry(DtoProductionRequest productionRequest) {
+        String id = productionRequest.getId();
+        String entry = "";
+        if (id.contains("_")) {
+            String[] split = id.split("_");
+            if (split.length == 3) {
+                if (split[0].length() == 8) {
+                    String year = split[0].substring(0, 4);
+                    String month = split[0].substring(4, 6);
+                    String day = split[0].substring(6);
+                    entry += day + "." + month + "." + year;
+                } else {
+                    return id;
+                }
+                if (split[1].length() == 9) {
+                    String hour = split[1].substring(0, 2);
+                    String minute = split[1].substring(2, 4);
+                    String sec = split[1].substring(4, 6);
+                    entry += " " + hour + ":" + minute + ":" + sec;
+                } else {
+                    return id;
+                }
+                entry += " " + split[2];
+                String productionName = productionRequest.getProductionParameters().get("productionName");
+                if (productionName != null) {
+                    entry += " " + productionName;
+                }
+                return entry;
+            }
+        }
+        return id;
+    }
+
     private void updateRequestDetails() {
-//        processors.removeAllRows();
-//        final int selectedIndex = requestList.getSelectedIndex();
-//        if (selectedIndex >= 0) {
-//            String bundleName = requestList.getItemText(selectedIndex);
-//            int row = 0;
-//            FlexTable.FlexCellFormatter flexCellFormatter = processors.getFlexCellFormatter();
-//            for (DtoProcessorDescriptor descriptor : processorsDesc) {
-//                String name = descriptor.getBundleName() + "-" + descriptor.getBundleVersion();
-//                if (name.equals(bundleName)) {
-//                    flexCellFormatter.setStyleName(row, 0, style.explanatoryValue());
-//                    processors.setWidget(row, 0, new Label(descriptor.getProcessorName()));
-//                    processors.setWidget(row, 1, new Label(descriptor.getProcessorVersion()));
-//                    flexCellFormatter.setStyleName(row, 1, style.explanatoryValue());
-//                    row++;
-//                    processors.setWidget(row, 0, new HTML(descriptor.getDescriptionHtml()));
-//                    flexCellFormatter.setColSpan(row, 0, 2);
-//                    row++;
-//                    processors.setWidget(row, 0, new HTML("&nbsp;"));
-//                    flexCellFormatter.setColSpan(row, 0, 2);
-//                    row++;
-//                }
-//            }
-//        }
+        requestParameterTable.removeAllRows();
+        final int selectedIndex = requestList.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            ShowProductionRequestAction.fillTable(requestParameterTable, productionRequests[selectedIndex]);
+            removeButton.setEnabled(true);
+            editButton.setEnabled(true);
+        } else {
+            removeButton.setEnabled(false);
+            editButton.setEnabled(false);
+        }
+    }
+
+    private class RequestEditHandler implements ClickHandler {
+
+        @Override
+        public void onClick(ClickEvent event) {
+            final int selectedIndex = requestList.getSelectedIndex();
+            if (selectedIndex >= 0) {
+                DtoProductionRequest request = productionRequests[selectedIndex];
+                String productionType = request.getProductionType();
+                OrderProductionView orderProductionView = portalContext.getViewForRestore(productionType);
+                orderProductionView.setProductionParameters(request.getProductionParameters());
+                portalContext.showView(orderProductionView.getViewId());
+            }
+        }
     }
 
     private class RequestRemoveHandler implements ClickHandler {
@@ -144,42 +176,42 @@ public class ManageRequestForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             final int selectedIndex = requestList.getSelectedIndex();
-            final String bundleName;
+            final String requestName;
             if (selectedIndex >= 0) {
-                bundleName = requestList.getItemText(selectedIndex);
+                requestName = requestList.getItemText(selectedIndex);
             } else {
-                bundleName = null;
+                requestName = null;
             }
-            if (bundleName != null) {
-                Dialog.ask("Remove Bundle",
-                           new HTML("The bundle '" + bundleName + "' will be permanently deleted.<br/>" +
-                                    "Do you really want to continue?"),
+            if (requestName != null) {
+                Dialog.ask("Remove Request",
+                           new HTML("The request '" + requestName + "' will be permanently deleted.<br/>" +
+                                            "Do you really want to continue?"),
                            new Runnable() {
                                @Override
                                public void run() {
-                                   removeBundle(bundleName);
-                                   updateRequestList();
+                                   removeRequest(productionRequests[selectedIndex].getId());
                                }
                            });
             } else {
-                Dialog.error("Remove Bundle",
-                             "No bundle selected.");
+                Dialog.error("Remove Request",
+                             "No request selected.");
             }
 
         }
 
-        private void removeBundle(String bundleName) {
-            portalContext.getBackendService().removeUserDirectory(BUNDLE_DIRECTORY + "/" + bundleName, new AsyncCallback<Boolean>() {
+        private void removeRequest(String requestId) {
+            portalContext.getBackendService().deleteRequest(requestId, new AsyncCallback<Void>() {
                 @Override
                 public void onFailure(Throwable caught) {
-                    Dialog.error("Remove Bundle",
-                                 "No bundle selected.");
+                    Dialog.error("Remove Request",
+                                 "Error while removing request.");
                 }
 
                 @Override
-                public void onSuccess(Boolean result) {
-                    Dialog.info("Remove Bundle",
-                                "Bundle has been successfully removed.");
+                public void onSuccess(Void result) {
+                    Dialog.info("Remove Request",
+                                "Request has been successfully removed.");
+                    updateRequestList();
                 }
             });
         }

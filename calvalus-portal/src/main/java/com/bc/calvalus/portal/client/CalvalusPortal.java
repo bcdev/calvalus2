@@ -16,7 +16,6 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
@@ -227,7 +226,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
-    public OrderProductionView getView(String productionType) {
+    public OrderProductionView getViewForRestore(String productionType) {
         return productionTypeViews.get(productionType);
     }
 
@@ -288,8 +287,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 views.add(portalView);
                 if (portalView instanceof OrderProductionView) {
                     OrderProductionView orderProductionView = (OrderProductionView) portalView;
-                    String productionType = orderProductionView.getProductionType();
-                    productionTypeViews.put(productionType, orderProductionView);
+                    if (orderProductionView.isRestoringRequestPossible()) {
+                        String productionType = orderProductionView.getProductionType();
+                        productionTypeViews.put(productionType, orderProductionView);
+                    }
                 }
             }
         }

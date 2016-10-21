@@ -2,6 +2,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -144,7 +145,6 @@ public abstract class OrderProductionView extends PortalView {
     }
 
     protected void saveRequest() {
-        DtoProductionRequest request = getProductionRequest();
         AsyncCallback<Void> callback = new AsyncCallback<Void>() {
 
             @Override
@@ -157,7 +157,13 @@ public abstract class OrderProductionView extends PortalView {
                 Dialog.info("Save Request", "Failed to safe request:\n" + caught.getMessage());
             }
         };
-        getPortal().getBackendService().saveRequest(request, callback);
+        DtoProductionRequest request;
+        try {
+            request = getProductionRequest();
+            getPortal().getBackendService().saveRequest(request, callback);
+        } catch (Throwable e) {
+            GWT.log("save request:", e);
+        }
     }
 
     protected HorizontalPanel createOrderPanel() {

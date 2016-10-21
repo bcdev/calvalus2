@@ -257,8 +257,7 @@ public class ManageProductionsView extends PortalView {
             }
 
             private boolean isRestorable(DtoProduction production) {
-                OrderProductionView view = getPortal().getView(production.getProductionType());
-                return view != null && view.isRestoringRequestPossible();
+                return getPortal().getViewForRestore(production.getProductionType()) != null;
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -625,7 +624,7 @@ public class ManageProductionsView extends PortalView {
             public void onSuccess(final DtoProductionRequest request) {
                 if (request != null) {
                     String productionType = request.getProductionType();
-                    OrderProductionView orderProductionView = getPortal().getView(productionType);
+                    OrderProductionView orderProductionView = getPortal().getViewForRestore(productionType);
                     orderProductionView.setProductionParameters(request.getProductionParameters());
                     getPortal().showView(orderProductionView.getViewId());
                 } else {

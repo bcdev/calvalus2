@@ -43,7 +43,7 @@
                 <hr/>
             </g:HTMLPanel>
             <g:ScrollPanel>
-                <g:FlexTable ui:field="request" width="50em"/>
+                <g:FlexTable ui:field="requestParameterTable" width="50em"/>
             </g:ScrollPanel>
         </g:VerticalPanel>
 
