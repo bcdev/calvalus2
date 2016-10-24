@@ -77,16 +77,14 @@ public class ManageRequestForm extends Composite {
 
 
     void updateRequestList() {
-        GWT.log("updateRequestList 1 " + new Date());
+        GWT.log("updateRequestList start " + new Date());
         portalContext.getBackendService().listRequests(new AsyncCallback<DtoProductionRequest[]>() {
             @Override
             public void onSuccess(DtoProductionRequest[] result) {
-                GWT.log("updateRequestList 2 " + new Date());
                 productionRequests = result;
                 fillRequestList();
-                GWT.log("updateRequestList 3 " + new Date());
                 updateRequestDetails();
-                GWT.log("updateRequestList 4 " + new Date());
+                GWT.log("updateRequestList end " + new Date());
             }
 
             @Override
