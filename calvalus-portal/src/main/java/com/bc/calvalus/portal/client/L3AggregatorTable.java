@@ -174,6 +174,36 @@ public class L3AggregatorTable {
         }
     }
 
+    public void addRow(String aggregatorName, String[] paramNames, String[] paramValues) {
+        DtoAggregatorDescriptor useAggregatorDescriptor = null;
+        for (DtoAggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
+            if (aggregatorDescriptor.getAggregator().equals(aggregatorName)) {
+                useAggregatorDescriptor = aggregatorDescriptor;
+                break;
+            }
+        }
+        if (useAggregatorDescriptor == null) {
+            // TODO handle failure
+            return;
+        }
+        ConfiguredAggregator aggregator = new ConfiguredAggregator();
+        aggregator.setAggregatorDescriptor(useAggregatorDescriptor);
+        aggregator.editor.setAvailableVariables(availableVariables);
+        aggregator.fillParametersFromEditors();
+        for (int i = 0; i < paramNames.length; i++) {
+            String paramName = paramNames[i];
+            String paramValue = paramValues[i];
+            for (DtoParameterDescriptor parameterDescriptor : useAggregatorDescriptor.getParameterDescriptors()) {
+                if (parameterDescriptor.getName().equals(paramName)) {
+                    aggregator.parameters.put(parameterDescriptor, paramValue);
+                    aggregator.editor.setParameterValue(parameterDescriptor, paramValue);
+                }
+            }
+        }
+        getAggregatorList().add(aggregator);
+        dataProvider.refresh();
+    }
+
     public void removeSelectedRow() {
         ConfiguredAggregator selectedAggregator = selectionModel.getSelectedObject();
         if (selectedAggregator != null) {

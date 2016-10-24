@@ -335,6 +335,7 @@ public class ProductSetFilterForm extends Composite {
         }
 
         if (spatialFilterOff.getValue()) {
+            // TODO mz remove these ??? unused
             parameters.put("regionName", "Globe");
             parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
             parameters.put("minLon", "-180.0");
@@ -348,6 +349,7 @@ public class ProductSetFilterForm extends Composite {
                 LatLngBounds bounds = Region.getBounds(polygon);
                 parameters.put("regionName", region.getName());
                 parameters.put("regionWKT", region.getGeometryWkt());
+                // TODO mz remove these ??? unused
                 parameters.put("minLon", bounds.getSouthWest().getLongitude() + "");
                 parameters.put("minLat", bounds.getSouthWest().getLatitude() + "");
                 parameters.put("maxLon", bounds.getNorthEast().getLongitude() + "");
@@ -386,6 +388,7 @@ public class ProductSetFilterForm extends Composite {
                 regionMap.getRegionMapSelectionModel().setSelected(region, true);
                 return;
             }
+            // TODO handle failure
         }
         String regionWKTValue = parameters.get("regionWKT");
         if (regionWKTValue != null) {
@@ -397,6 +400,7 @@ public class ProductSetFilterForm extends Composite {
                     return;
                 }
             }
+            // TODO handle failure
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();

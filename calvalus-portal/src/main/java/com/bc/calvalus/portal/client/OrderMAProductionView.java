@@ -23,6 +23,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new Match-Up production.
@@ -128,11 +129,25 @@ public class OrderMAProductionView extends OrderProductionView {
     protected HashMap<String, String> getProductionParameters() {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
+        parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
-        parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        maConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

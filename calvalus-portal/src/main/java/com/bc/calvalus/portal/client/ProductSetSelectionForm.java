@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -259,6 +260,7 @@ public class ProductSetSelectionForm extends Composite {
                 break;
             }
         }
+        // TODO handle error
 
         if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
             productSetListBox.setSelectedIndex(newSelectionIndex);

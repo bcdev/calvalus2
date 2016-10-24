@@ -223,10 +223,15 @@ public class OutputParametersForm extends Composite {
             }
         } else {
             outputFormat.setSelectedIndex(0);
+            processingFormatUser.setValue(true, true);
         }
         String autoStagingValue = parameters.get("autoStaging");
         if (autoStagingValue != null) {
             autoStaging.setValue(Boolean.valueOf(autoStagingValue));
+        }
+        String allowedFailureValue = parameters.get("calvalus.hadoop.mapreduce.map.failures.maxpercent");
+        if (allowedFailureValue != null) {
+            allowedFailure.setValue(Integer.valueOf(allowedFailureValue));
         }
     }
 

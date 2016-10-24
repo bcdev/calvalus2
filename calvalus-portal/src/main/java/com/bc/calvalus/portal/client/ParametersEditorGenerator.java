@@ -32,6 +32,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,6 +146,14 @@ public class ParametersEditorGenerator {
         return null;
     }
 
+    public void setParameterValue(DtoParameterDescriptor parameterDescriptor, String value) {
+        ParameterEditor parameterEditor = editorMap.get(parameterDescriptor);
+        if (parameterEditor != null) {
+            parameterEditor.setValue(value);
+        }
+    }
+
+
     public String formatAsXMLFromWidgets() {
         StringBuilder sb = new StringBuilder();
         sb.append("<parameters>\n");
@@ -235,6 +244,8 @@ public class ParametersEditorGenerator {
     interface ParameterEditor {
         String getValue();
 
+        void setValue(String value);
+
         Widget getWidget();
     }
 
@@ -250,6 +261,11 @@ public class ParametersEditorGenerator {
         @Override
         public String getValue() {
             return checkBox.getValue().toString();
+        }
+
+        @Override
+        public void setValue(String value) {
+            checkBox.setValue(Boolean.valueOf(value));
         }
 
         @Override
@@ -275,6 +291,11 @@ public class ParametersEditorGenerator {
         @Override
         public String getValue() {
             return textBox.getValue().trim();
+        }
+
+        @Override
+        public void setValue(String value) {
+            textBox.setValue(value);
         }
 
         @Override
@@ -307,6 +328,11 @@ public class ParametersEditorGenerator {
         }
 
         @Override
+        public void setValue(String value) {
+            doubleBox.setValue(Double.valueOf(value));
+        }
+
+        @Override
         public Widget getWidget() {
             return doubleBox;
         }
@@ -333,6 +359,11 @@ public class ParametersEditorGenerator {
                 return value.toString();
             }
             return null;
+        }
+
+        @Override
+        public void setValue(String value) {
+            longBox.setValue(Long.valueOf(value));
         }
 
         @Override
@@ -375,6 +406,15 @@ public class ParametersEditorGenerator {
                 sb.deleteCharAt(sb.length() - 1);
             }
             return sb.toString();
+        }
+
+        @Override
+        public void setValue(String value) {
+            List valueItems = Arrays.asList(value.split(","));
+            for (int i = 0; i < listBox.getItemCount(); i++) {
+                boolean selected = valueItems.contains(listBox.getValue(i));
+                listBox.setItemSelected(i, selected);
+            }
         }
 
         @Override

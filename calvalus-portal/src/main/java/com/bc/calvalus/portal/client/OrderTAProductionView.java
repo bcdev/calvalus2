@@ -181,4 +181,18 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.put("autoStaging", "true");
         return parameters;
     }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        l3ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
+    }
 }

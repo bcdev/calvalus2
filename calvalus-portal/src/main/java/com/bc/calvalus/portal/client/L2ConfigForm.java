@@ -378,7 +378,7 @@ public class L2ConfigForm extends Composite {
             processorList.setSelectedIndex(0);
             updateProcessorDetails();
         }
-
+        // TODO handle failure
     }
 
     private int findProcessor(DtoProcessorDescriptor[] dtoProcessorDescriptor,

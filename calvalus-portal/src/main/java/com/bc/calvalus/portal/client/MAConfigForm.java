@@ -229,6 +229,21 @@ public class MAConfigForm extends Composite {
         return parameters;
     }
 
+    public void setValues(Map<String, String> parameters) {
+        goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
+        goodRecordExpression.setValue(parameters.getOrDefault("goodRecordExpression", ""));
+        macroPixelSize.setText(parameters.getOrDefault("macroPixelSize", "5"));
+        maxTimeDifference.setText(parameters.getOrDefault("maxTimeDifference", "3.0"));
+        filteredMeanCoeff.setText(parameters.getOrDefault("filteredMeanCoeff", "1.5"));
+        filterOverlapping.setValue(Boolean.valueOf(parameters.getOrDefault("filterOverlapping", "false")));
+        onlyExtractComplete.setValue(Boolean.valueOf(parameters.getOrDefault("onlyExtractComplete", "true")));
+        outputGroupName.setValue(parameters.getOrDefault("outputGroupName", ""));
+        String recordSourceUrl = parameters.get("recordSourceUrl");
+        if (recordSourceUrl != null) {
+            userManagedContent.setSelectedFilePath(recordSourceUrl);
+        }
+    }
+
 
     private class CheckRecordSourceAction implements ClickHandler {
 
