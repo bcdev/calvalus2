@@ -196,11 +196,13 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
         getRegionMapSelectionModel().clearSelection();
     }
 
-    interface CalvalusTreeResource extends CellTree.Resources {
+    interface SpatialFilterTreeResource extends CellTree.Resources {
 
-        @Source("com/bc/calvalus/portal/client/cellTreeStyle.css")
-        CellTree.Style cellTreeStyle();
+        @Source("com/bc/calvalus/portal/client/spatialFilterCellTreeStyle.css")
+        SpatialFilterTreeStyle cellTreeStyle();
     }
+
+    interface SpatialFilterTreeStyle extends CellTree.Style {}
 
     private void initUi() {
         MapOptions mapOptions = MapOptions.newInstance();
@@ -215,11 +217,11 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
         mapWidget = new MapWidget(mapOptions);
         mapWidget.addClickHandler(this);
 
-        CellTree.Resources res = GWT.create(CalvalusTreeResource.class);
+        CellTree.Resources cellTreeRes = GWT.create(SpatialFilterTreeResource.class);
 //        final SelectionModel<Region> regionSelectionModel = new MultiSelectionModel<Region>(Region.KEY_PROVIDER);
         RegionTreeSelectionModel treeNodeSingleSelectionModel = new RegionTreeSelectionModel();
         RegionTreeViewModel treeViewModel = new RegionTreeViewModel(regionMapModel, treeNodeSingleSelectionModel);
-        regionCellTree = new CellTree(treeViewModel, null, res);
+        regionCellTree = new CellTree(treeViewModel, null, cellTreeRes);
         regionCellTree.setAnimationEnabled(true);
         regionCellTree.setDefaultNodeSize(100);
 
