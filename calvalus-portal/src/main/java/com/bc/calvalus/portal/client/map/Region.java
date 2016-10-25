@@ -33,6 +33,7 @@ public class Region {
     private String qualifiedName;
     private String geometryWkt;
     private LatLng[] vertices;
+    private boolean showPolyon = true;
 
     public static Region createUserRegion(LatLng[] polygonVertices) {
         return new Region("region_" + (++counter), new String[]{"user"}, polygonVertices);
@@ -113,6 +114,14 @@ public class Region {
     public void setVertices(LatLng[] vertices) {
         this.vertices = vertices;
         this.geometryWkt = null;
+    }
+
+    public boolean isShowPolyon() {
+        return showPolyon;
+    }
+
+    public void setShowPolyon(boolean showPolyon) {
+        this.showPolyon = showPolyon;
     }
 
     public static String toWkt(LatLng[] vertices) {
