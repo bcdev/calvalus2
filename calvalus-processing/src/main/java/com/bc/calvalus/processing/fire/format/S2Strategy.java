@@ -12,8 +12,9 @@ import com.vividsolutions.jts.geom.LinearRing;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
 import org.apache.hadoop.conf.Configuration;
+import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;
-import org.esa.snap.binning.aggregators.AggregatorAverage;
+import org.esa.snap.binning.aggregators.AggregatorMinMax;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.VariableConfig;
 
@@ -65,7 +66,7 @@ class S2Strategy implements SensorStrategy {
 
         String tilesSpec = "(" + pixelProductArea.tiles.replace(",", "|").replace(" ", "").trim() + ")";
 
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/BA-T%s-%s%s.*.nc", tilesSpec, year, month);
+        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/.*/BA-T%s-%s%s.*.nc", tilesSpec, year, month);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
@@ -81,9 +82,9 @@ class S2Strategy implements SensorStrategy {
         WorkflowItem item = new L3WorkflowItem(processingService, userName, productionName, jobConfig);
         workflow.add(item);
 
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, outputDir);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir + "_format");
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF-CF");
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, outputDir + "_format");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF4-CF");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz");
 
         WorkflowItem formatItem = new L3FormatWorkflowItem(processingService,
@@ -100,12 +101,13 @@ class S2Strategy implements SensorStrategy {
         binningConfig.setNumRows(1001878);
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("true");
-        VariableConfig doyConfig = new VariableConfig("doy", "JD");
-        VariableConfig clConfig = new VariableConfig("cl", "CL");
+        VariableConfig doyConfig = new VariableConfig("day_of_year", "JD");
+        VariableConfig clConfig = new VariableConfig("confidence_level", "CL");
         binningConfig.setVariableConfigs(doyConfig, clConfig);
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
-        AggregatorAverage.Config config = new AggregatorAverage.Config("result_source", "result_mosaicked", 0.0, true, true);
-        binningConfig.setAggregatorConfigs(config);
+        AggregatorConfig doyAggConfig = new AggregatorMinMax.Config("JD", "day_of_year");
+        AggregatorConfig clAggConfig = new AggregatorMinMax.Config("CL", "confidence_level");
+        binningConfig.setAggregatorConfigs(doyAggConfig, clAggConfig);
         return binningConfig;
     }
 
