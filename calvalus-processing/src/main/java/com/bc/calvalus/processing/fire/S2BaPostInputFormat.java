@@ -55,7 +55,7 @@ public class S2BaPostInputFormat extends InputFormat {
             }
             alreadyHandledDates.add(currentPostDateString);
 
-            String currentPathPattern = outputDir + "/intermediate.*" + tile + ".*" + currentPostDateString + ".nc";
+            String currentPathPattern = outputDir + "/" + tile + "/intermediate.*" + tile + ".*" + currentPostDateString + ".nc";
             List<String> currentPattern = inputPathResolver.resolve(currentPathPattern);
             FileStatus[] matchingStatuses = inventoryService.globFileStatuses(currentPattern, conf);
             List<Path> filePaths = new ArrayList<>();
