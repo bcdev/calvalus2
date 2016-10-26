@@ -27,7 +27,8 @@ import java.util.logging.Logger;
 
 public class S2BaInputFormat extends InputFormat {
 
-    private static final int MAX_PRE_IMAGES_COUNT = 4;
+    private static final int MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT = 4;
+    private static final int MAX_PRE_IMAGES_COUNT_MULTI_ORBIT = 8;
 
     public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
         Configuration conf = jobContext.getConfiguration();
@@ -53,7 +54,7 @@ public class S2BaInputFormat extends InputFormat {
                               Set<InputSplit> splits, HdfsInventoryService inventoryService, Configuration conf) throws IOException {
         /*
         for each file status r:
-            take r and (up to) latest 4 matching files d, c, b, a (getPeriodStatuses)
+            take r and (up to) latest 4 or 8 matching files d, c, b, a (getPeriodStatuses)
                 create r, d
                 create r, c
                 create r, b
@@ -95,10 +96,28 @@ public class S2BaInputFormat extends InputFormat {
             }
         }
 
-        int resultCount = Math.min(MAX_PRE_IMAGES_COUNT, filteredList.size());
+        int maxPreImagesCount = getMaxPreImagesCount(filteredList);
+        int resultCount = Math.min(maxPreImagesCount, filteredList.size());
         FileStatus[] result = new FileStatus[resultCount];
         System.arraycopy(filteredList.toArray(new FileStatus[0]), 0, result, 0, resultCount);
         return result;
+    }
+
+    private int getMaxPreImagesCount(List<FileStatus> filteredList) {
+        Logger.getLogger("com.bc.calvalus").info("Computing max pre images count...");
+        String orbit = null;
+        for (FileStatus fileStatus : filteredList) {
+            if (orbit == null) {
+                orbit = fileStatus.getPath().getName().substring(42, 47);
+            } else {
+                if (orbit.equals(fileStatus.getPath().getName().substring(42, 47))) {
+                    Logger.getLogger("com.bc.calvalus").info("...other file found with orbit " + orbit + ": " + fileStatus.getPath().getName() + ", so it is 8.");
+                    return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
+                }
+            }
+        }
+        Logger.getLogger("com.bc.calvalus").info("...no other file found with orbit " + orbit + ", so it is 4.");
+        return MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT;
     }
 
     private static void sort(FileStatus[] periodStatuses) {
