@@ -33,7 +33,7 @@ import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
 /**
- * The production type used for formatting the MERIS BA data to the pixel format.
+ * The production type used for formatting the BA data to the pixel format.
  *
  * @author thomas
  */
@@ -95,6 +95,6 @@ public class FirePixelProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for fire-cci MERIS BA grid formatting.");
+        throw new NotImplementedException("Staging currently not implemented for fire-cci BA pixel formatting.");
     }
 }
