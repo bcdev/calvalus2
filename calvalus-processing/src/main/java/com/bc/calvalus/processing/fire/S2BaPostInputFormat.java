@@ -31,7 +31,7 @@ public class S2BaPostInputFormat extends InputFormat {
         Configuration conf = jobContext.getConfiguration();
         String outputDir = jobContext.getConfiguration().get("calvalus.output.dir");
         String tile = jobContext.getConfiguration().get("calvalus.tile");
-        String inputPathPattern = outputDir + "/intermediate.*" + tile + ".*.nc";
+        String inputPathPattern = outputDir + "/" + tile + "/intermediate.*" + tile + ".*.nc";
 
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
