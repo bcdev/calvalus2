@@ -81,8 +81,8 @@ class S2Strategy implements SensorStrategy {
         WorkflowItem item = new L3WorkflowItem(processingService, userName, productionName, jobConfig);
         workflow.add(item);
 
-        jobConfig.setStrings(JobConfigNames.CALVALUS_INPUT_DIR, outputDir);
-        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DIR, outputDir);
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir + "_format");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_FORMAT, "NetCDF-CF");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, "gz");
 
@@ -99,9 +99,10 @@ class S2Strategy implements SensorStrategy {
         binningConfig.setCompositingType(CompositingType.BINNING);
         binningConfig.setNumRows(1001878);
         binningConfig.setSuperSampling(1);
-        binningConfig.setMaskExpr("result == 999");
-        VariableConfig variableConfig = new VariableConfig("result_source", "result");
-        binningConfig.setVariableConfigs(variableConfig);
+        binningConfig.setMaskExpr("true");
+        VariableConfig doyConfig = new VariableConfig("doy", "JD");
+        VariableConfig clConfig = new VariableConfig("cl", "CL");
+        binningConfig.setVariableConfigs(doyConfig, clConfig);
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
         AggregatorAverage.Config config = new AggregatorAverage.Config("result_source", "result_mosaicked", 0.0, true, true);
         binningConfig.setAggregatorConfigs(config);
