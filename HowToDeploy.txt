@@ -20,7 +20,9 @@ all modules that are required for SNAP.
 * Execute the class org.esa.snap.runtime.BundleCreator in the module
   snap-engine/snap-runtime this ist best done from a checked out version of snap-engine.
   this first parameter is the directory of a SNAP installation the second the name of a zip file
-  for the bundle
+  for the bundle, e.g.
+
+  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/modules/ext/org.esa.snap.snap-engine-utilities/org-esa-snap/snap-runtime.jar org.esa.snap.runtime.BundleCreator /opt/viewer/snap-5.0 ~/tmp/snap-5.0.zip
 
 ===========================================================================
 Software archive
