@@ -81,6 +81,9 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
+        if (inputFormat != null) {
+            LOG.info("Trying to find reader for inputFormat: " + inputFormat);
+        }
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
