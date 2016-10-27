@@ -25,21 +25,24 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import static sun.management.snmp.jvminstr.JvmThreadInstanceEntryImpl.ThreadStateMap.Byte1.other;
-
 /**
  * A {@link org.apache.hadoop.io.Writable} to hold a region analysis extract key.
  *
  * @author MarcoZ
  */
-public class ExtractKey implements WritableComparable<ExtractKey> {
+public class RAKey implements WritableComparable<RAKey> {
 
-    private LongWritable time;
     private IntWritable regionId;
+    private LongWritable time;
 
-    public ExtractKey() {
-        time = new LongWritable();
+    public RAKey() {
         regionId = new IntWritable();
+        time = new LongWritable();
+    }
+
+    public RAKey(int regionId, long time) {
+        this.regionId = new IntWritable(regionId);
+        this.time = new LongWritable(time);
     }
 
     public int getRegionId() {
@@ -71,7 +74,7 @@ public class ExtractKey implements WritableComparable<ExtractKey> {
     }
 
     @Override
-    public int compareTo(ExtractKey that) {
+    public int compareTo(RAKey that) {
         int compare = Integer.compare(getRegionId(), that.getRegionId());
         if (compare == 0) {
             compare = Long.compare(getTime(), that.getTime());
@@ -83,13 +86,13 @@ public class ExtractKey implements WritableComparable<ExtractKey> {
     public static class GroupComparator extends WritableComparator {
 
         protected GroupComparator() {
-            super(ExtractKey.class, true);
+            super(RAKey.class, true);
         }
 
         @Override
         public int compare(WritableComparable key1, WritableComparable key2) {
-            ExtractKey thisKey = (ExtractKey) key1;
-            ExtractKey thatKey = (ExtractKey) key2;
+            RAKey thisKey = (RAKey) key1;
+            RAKey thatKey = (RAKey) key2;
             return Integer.compare(thisKey.getRegionId(), thatKey.getRegionId());
         }
     }

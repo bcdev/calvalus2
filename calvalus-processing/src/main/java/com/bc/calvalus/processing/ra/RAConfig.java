@@ -82,15 +82,15 @@ public class RAConfig implements XmlConvertible {
         return bandNames;
     }
 
-    void setRegions(Region[] regions) {
+    public void setRegions(Region...regions) {
         this.regions = regions;
     }
 
-    void setValidExpressions(String validExpressions) {
+    public void setValidExpressions(String validExpressions) {
         this.validExpressions = validExpressions;
     }
 
-    void setBandNames(String[] bandNames) {
+    public void setBandNames(String...bandNames) {
         this.bandNames = bandNames;
     }
 

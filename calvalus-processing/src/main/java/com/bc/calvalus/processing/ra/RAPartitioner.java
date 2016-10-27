@@ -25,13 +25,13 @@ import org.apache.hadoop.mapreduce.Partitioner;
  *
  * @author MarcoZ
  */
-public class ExtractPartitioner extends Partitioner<ExtractKey, ExtractValue> implements Configurable {
+public class RAPartitioner extends Partitioner<RAKey, RAValue> implements Configurable {
 
     private Configuration conf;
     private int numRegions;
 
     @Override
-    public int getPartition(ExtractKey key, ExtractValue value, int numPartitions) {
+    public int getPartition(RAKey key, RAValue value, int numPartitions) {
         return key.getRegionId() * numPartitions / numRegions;
     }
 

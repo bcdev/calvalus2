@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ra;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
@@ -51,7 +52,7 @@ public class ExtractorTest {
         config.setValidExpressions("LAT > 50");
 
         RAMapper.Extractor extractor = new RAMapper.Extractor(product, config);
-        RAMapper.Extract extract = extractor.performExtraction(config.getRegions()[0]);
+        RAMapper.Extract extract = extractor.performExtraction(config.getRegions()[0], ProgressMonitor.NULL);
         assertNotNull(extract);
         assertEquals(574, extract.numPixel);
         assertEquals(3, extract.samples.length);

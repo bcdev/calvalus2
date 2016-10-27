@@ -26,7 +26,7 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class RAReducer extends Reducer<ExtractKey, ExtractValue, NullWritable, NullWritable> {
+public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritable> {
 
     private RAConfig raConfig;
 
@@ -39,21 +39,25 @@ public class RAReducer extends Reducer<ExtractKey, ExtractValue, NullWritable, N
     // key == region
     // values == ordered by time, extracts
     @Override
-    protected void reduce(ExtractKey key, Iterable<ExtractValue> values, Context context) throws IOException, InterruptedException {
+    protected void reduce(RAKey key, Iterable<RAValue> values, Context context) throws IOException, InterruptedException {
         // write netcdf file
         // compute stats
         // write CSV
-
 
         int regionId = key.getRegionId();
         String regionName = raConfig.getRegions()[regionId].getName();
         System.out.println("regionName = " + regionName);
 
-
         // open netcdf
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
-        for (ExtractValue extract : values) {
+        int counter = 0;
+        for (RAValue extract : values) {
             long time = extract.getTime();
+            int numPixel = extract.getNumPixel();
+            counter = counter + numPixel;
+
+            System.out.println("time = " + time);
+//            System.out.println("numPixel = " + numPixel);
             // if new agg window
             // - close old window
             // - open new widow
@@ -62,6 +66,6 @@ public class RAReducer extends Reducer<ExtractKey, ExtractValue, NullWritable, N
         }
         // close old agg window
         // close netcdf
-
+        System.out.println("counter = " + counter);
     }
 }

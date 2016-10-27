@@ -30,7 +30,6 @@ import com.vividsolutions.jts.geom.prep.PreparedGeometry;
 import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -54,7 +53,7 @@ import java.util.logging.Logger;
  *
  * @author MarcoZ
  */
-public class RAMapper extends Mapper<NullWritable, NullWritable, Text, ExtractValue> {
+public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue> {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
@@ -68,17 +67,20 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, Text, ExtractVa
         final RAConfig raConfig = RAConfig.get(jobConfig);
 
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        pm.beginTask("Region Analysis", 100);
+        int numRegions = raConfig.getRegions().length;
+        pm.beginTask("Region Analysis", numRegions * 2);
         try {
             ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
-            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 50));
+            Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, numRegions));
             if (product != null) {
                 Extractor extractor = new Extractor(product, raConfig);
-                for (RAConfig.Region region : raConfig.getRegions()) {
-                    Extract extract = extractor.performExtraction(region);
+                RAConfig.Region[] regions = raConfig.getRegions();
+                for (int regionId = 0; regionId < regions.length; regionId++) {
+                    RAConfig.Region region = regions[regionId];
+                    Extract extract = extractor.performExtraction(region, SubProgressMonitor.create(pm, 1));
                     if (extract != null) {
-                        Text key = new Text(product.getName()); // TODO
-                        ExtractValue value = new ExtractValue(extract.numPixel, extract.samples, extract.time, product.getName());
+                        RAKey key = new RAKey(regionId, extract.time);
+                        RAValue value = new RAValue(extract.numPixel, extract.samples, extract.time, product.getName());
                         context.write(key, value);
                     }
                 }
@@ -139,21 +141,30 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, Text, ExtractVa
             }
         }
 
-        public Extract performExtraction(RAConfig.Region region) {
+        public Extract performExtraction(RAConfig.Region region, ProgressMonitor pm) {
             final Geometry geometry = GeometryUtils.createGeometry(region.getWkt());
             regionRect = SubsetOp.computePixelRegion(product, geometry, 1);
+            if (regionRect.isEmpty()) {
+                LOG.info("Nothing to extract for region " + region.getName());
+            }
             PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(geometry);
             geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);
 
             int numBands = dataImages.length;
             int numPixelsMax = regionRect.width * regionRect.height;
+            LOG.info("numPixelsMax = " + numPixelsMax);
 
             extractedSamples = 0;
             Extract extract = new Extract(numBands, numPixelsMax);
             Point[] tileIndices = maskImage.getTileIndices(regionRect);
+            LOG.info(String.format("Extracting data from %d tiles", tileIndices.length));
+            pm.beginTask("extraction", tileIndices.length);
             for (Point tileIndex : tileIndices) {
                 handleSingleTile(tileIndex, extract);
+                pm.worked(1);
             }
+            LOG.info(String.format("Extracted %d valid samples", extractedSamples));
+            pm.done();
             if (extractedSamples > 0) {
                 for (int i = 0; i < extract.samples.length; i++) {
                     float[] samples = extract.samples[i];

@@ -29,17 +29,17 @@ import java.io.IOException;
  *
  * @author MarcoZ
  */
-public class ExtractValue extends CompressedWritable {
+public class RAValue extends CompressedWritable {
 
     private int numPixel;
     private float[][] sampleValues;
     private long time;
     private String productName;
 
-    public ExtractValue() {
+    public RAValue() {
     }
 
-    public ExtractValue(int numPixel, float[][] samples, long time, String productName) {
+    public RAValue(int numPixel, float[][] samples, long time, String productName) {
         this.numPixel = numPixel;
         this.sampleValues = samples;
         this.time = time;
