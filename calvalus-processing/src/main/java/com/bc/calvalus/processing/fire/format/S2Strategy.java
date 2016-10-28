@@ -14,7 +14,6 @@ import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;
-import org.esa.snap.binning.aggregators.AggregatorMinMax;
 import org.esa.snap.binning.operator.BinningConfig;
 import org.esa.snap.binning.operator.VariableConfig;
 
@@ -105,9 +104,8 @@ class S2Strategy implements SensorStrategy {
         VariableConfig clConfig = new VariableConfig("confidence_level", "CL");
         binningConfig.setVariableConfigs(doyConfig, clConfig);
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
-        AggregatorConfig doyAggConfig = new AggregatorMinMax.Config("JD", "day_of_year");
-        AggregatorConfig clAggConfig = new AggregatorMinMax.Config("CL", "confidence_level");
-        binningConfig.setAggregatorConfigs(doyAggConfig, clAggConfig);
+        AggregatorConfig aggConfig = new JDAggregator.Config("day_of_year", "confidence_level");
+        binningConfig.setAggregatorConfigs(aggConfig);
         return binningConfig;
     }
 
