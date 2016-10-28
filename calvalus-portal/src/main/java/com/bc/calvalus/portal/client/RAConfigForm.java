@@ -156,7 +156,16 @@ public class RAConfigForm extends Composite {
         if (compositingPeriodLengthValue != null) {
             compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
         }
-        // TODO restore bandlist
+        String bandList = parameters.get("bandList");
+        bandListBox.clear();
+        if (bandList != null) {
+            int index = 0;
+            for (String bandname : bandList.split(",")) {
+                bandListBox.addItem(bandname);
+                bandListBox.setItemSelected(index, true);
+                index++;
+            }
+        }
     }
 
 }
