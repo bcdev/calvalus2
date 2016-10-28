@@ -83,6 +83,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         for (RAValue extract : values) {
             long time = extract.getTime();
+            System.out.println("time = " + time);
+            System.out.println("numSamples = " + extract.getSamples().length);
             int trIndex = findDateRangeIndex(time);
             if (trIndex == -1) {
                 String out_ouf_range_date = dateFormat.format(new Date(time));
@@ -108,9 +110,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
         if (stat != null) {
             if (!headerWritten) {
-                stat.finalize();
                 System.out.println(String.join(",", stat.getHeader()));
             }
+            stat.finalize();
             System.out.println(String.join(",", stat.getStats()));
         }
         // close netcdf
@@ -212,8 +214,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         private double max = -Double.MAX_VALUE;
         private double sum = 0;
         private double sumSQ = 0;
-        private double mean;
-        private double sigma;
+        private double mean = Double.NaN;
+        private double sigma = Double.NaN;
 
         public BandStat(String bandname) {
             this.bandname = bandname;
@@ -236,14 +238,12 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                 mean = sum / numValid;
                 double sigmaSqr = sumSQ / numValid - mean * mean;
                 sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
-            } else {
-                mean = Double.NaN;
-                sigma = Double.NaN;
             }
         }
 
         public List<String> getHeader() {
             List<String> header = new ArrayList<>();
+            header.add(bandname + "_count");
             header.add(bandname + "_min");
             header.add(bandname + "_max");
             header.add(bandname + "_mean");
@@ -253,6 +253,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         public List<String> getStats() {
             List<String> stats = new ArrayList<>();
+            stats.add(Integer.toString(numValid));
             stats.add(Double.toString(min));
             stats.add(Double.toString(max));
             stats.add(Double.toString(mean));
