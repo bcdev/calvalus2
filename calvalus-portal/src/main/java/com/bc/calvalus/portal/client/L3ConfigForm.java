@@ -40,8 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getPeriodCount;
-import static com.bc.calvalus.portal.client.L3ConfigUtils.getTargetSizeEstimation;
 
 /**
  * Demo view that lets users submit a new L3 production.
@@ -240,7 +238,7 @@ public class L3ConfigForm extends Composite {
 
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
-            periodCount.setValue(getPeriodCount(minDate,
+            periodCount.setValue(L3ConfigUtils.getPeriodCount(minDate,
                                                 maxDate,
                                                 steppingPeriodLength.getValue(),
                                                 compositingPeriodLength.getValue()));
@@ -262,7 +260,7 @@ public class L3ConfigForm extends Composite {
     }
 
     private void updateTargetSize() {
-        int[] targetSize = getTargetSizeEstimation(regionBounds, resolution.getValue());
+        int[] targetSize = L3ConfigUtils.getTargetSizeEstimation(regionBounds, resolution.getValue());
         targetWidth.setValue(targetSize[0]);
         targetHeight.setValue(targetSize[1]);
     }

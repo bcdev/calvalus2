@@ -83,8 +83,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         for (RAValue extract : values) {
             long time = extract.getTime();
-            System.out.println("time = " + time);
-            System.out.println("numSamples = " + extract.getSamples().length);
+            System.out.println("time = " + time +"  numSamples = " + extract.getSamples()[0].length);
             int trIndex = findDateRangeIndex(time);
             if (trIndex == -1) {
                 String out_ouf_range_date = dateFormat.format(new Date(time));
@@ -158,7 +157,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             this.dStart = dStart;
             this.dEnd = dEnd;
             for (int i = 0; i < bandNames.length; i++) {
-                this.bandStats[i] = new BandStat(bandNames[i]);
+                this.bandStats[i] = new BandStat(bandNames[i].trim());
             }
             this.numObs = 0;
             this.numPasses = 0;

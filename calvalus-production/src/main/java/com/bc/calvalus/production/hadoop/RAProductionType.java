@@ -144,8 +144,9 @@ public class RAProductionType extends HadoopProductionType {
         String name = productionRequest.getString("regionName", "region");
         raConfig.setRegions(new RAConfig.Region(name, wkt));
 
-        raConfig.setBandNames("radiance_2", "radiance_5");
-//        raConfig.setValidExpressions("true");
+        String bandList = productionRequest.getParameter("bandList", true);
+        raConfig.setBandNames(bandList.split(","));
+        raConfig.setValidExpressions(productionRequest.getString("maskExpr", "true"));
         return raConfig;
     }
 

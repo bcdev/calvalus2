@@ -48,6 +48,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             "newsView",
             "l2View",
             "maView",
+            "raView",
             "l3View",
             "taView",
             "freshmonView",
@@ -245,6 +246,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new OrderL2ProductionView(this);
             case "maView":
                 return new OrderMAProductionView(this);
+            case "raView":
+                return new OrderRAProductionView(this);
             case "l3View":
                 return new OrderL3ProductionView(this);
             case "taView":

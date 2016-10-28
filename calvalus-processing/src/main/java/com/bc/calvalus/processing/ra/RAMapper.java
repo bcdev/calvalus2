@@ -132,7 +132,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             String[] bandNames = raConfig.getBandNames();
             dataImages = new PlanarImage[bandNames.length];
             for (int i = 0; i < bandNames.length; i++) {
-                String bandName = bandNames[i];
+                String bandName = bandNames[i].trim();
                 Band band = product.getBand(bandName);
                 if (band == null) {
                     throw new IllegalArgumentException("Product does not contain band " + bandName);
