@@ -27,8 +27,11 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -46,8 +49,7 @@ public class RAConfigForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    @UiField
-    ListBox bandListBox;
+
     @UiField
     TextBox maskExpr;
     @UiField
@@ -56,6 +58,10 @@ public class RAConfigForm extends Composite {
     IntegerBox compositingPeriodLength;
     @UiField
     IntegerBox periodCount;
+    @UiField
+    ListBox bandListBox;
+    @UiField
+    TextBox bandNames;
 
     private Date minDate;
     private Date maxDate;
@@ -118,8 +124,8 @@ public class RAConfigForm extends Composite {
             throw new ValidationException(compositingPeriodLength,
                                           "Compositing period length must be >= 1");
         }
-        if (bandListBox.getSelectedIndex() == -1) {
-            throw new ValidationException(bandListBox, "One or more bands must be selected.");
+        if (bandListBox.getSelectedIndex() == -1 && bandNames.getText().trim().isEmpty()) {
+            throw new ValidationException(bandListBox, "One or more bands must be selected or entered.");
         }
     }
 
@@ -133,17 +139,21 @@ public class RAConfigForm extends Composite {
     }
 
     private String createBandListString() {
-        StringBuilder sb = new StringBuilder();
-        int itemCount = bandListBox.getItemCount();
-        for (int i = 0; i < itemCount; i++) {
-            if (bandListBox.isItemSelected(i)) {
-                if (sb.length() != 0) {
-                    sb.append(",");
+        if (bandListBox.getSelectedIndex() != -1) {
+            StringBuilder sb = new StringBuilder();
+            int itemCount = bandListBox.getItemCount();
+            for (int i = 0; i < itemCount; i++) {
+                if (bandListBox.isItemSelected(i)) {
+                    if (sb.length() != 0) {
+                        sb.append(",");
+                    }
+                    sb.append(bandListBox.getItemText(i));
                 }
-                sb.append(bandListBox.getItemText(i));
             }
+            return sb.toString();
+        } else {
+            return bandNames.getText().trim();
         }
-        return sb.toString();
     }
 
     public void setValues(Map<String, String> parameters) {
@@ -157,15 +167,28 @@ public class RAConfigForm extends Composite {
             compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
         }
         String bandList = parameters.get("bandList");
-        bandListBox.clear();
         if (bandList != null) {
-            int index = 0;
-            for (String bandname : bandList.split(",")) {
-                bandListBox.addItem(bandname);
-                bandListBox.setItemSelected(index, true);
-                index++;
+            List<String> bandNameList = new ArrayList<>();
+            bandNameList.addAll(Arrays.asList(bandList.split(",")));
+            for (int i = 0; i < bandListBox.getItemCount(); i++) {
+                String bandname = bandListBox.getItemText(i);
+                boolean isSelected = bandNameList.contains(bandname);
+                if (isSelected) {
+                    bandListBox.setItemSelected(i, true);
+                    bandNameList.remove(bandname);
+                } else {
+                    bandListBox.setItemSelected(i, false);
+                }
+            }
+            if (!bandNameList.isEmpty()) {
+                // not all given bandnames are in the listbox
+                for (int i = 0; i < bandListBox.getItemCount(); i++) {
+                    bandListBox.setItemSelected(i, false);
+                }
+                bandNames.setText(bandList);
+            } else {
+                bandNames.setText("");
             }
         }
     }
-
 }

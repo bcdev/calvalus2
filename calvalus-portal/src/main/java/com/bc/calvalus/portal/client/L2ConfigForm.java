@@ -372,12 +372,12 @@ public class L2ConfigForm extends Composite {
             }
             updateProcessorDetails();
             if (processorParameterValue != null) {
-                processorParametersArea.setValue(processorParameterValue);            }
-
+                processorParametersArea.setValue(processorParameterValue);
+            }
         } else if (!selectionMandatory) {
             processorList.setSelectedIndex(0);
-            updateProcessorDetails();
         }
+        DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
         // TODO handle failure
     }
 

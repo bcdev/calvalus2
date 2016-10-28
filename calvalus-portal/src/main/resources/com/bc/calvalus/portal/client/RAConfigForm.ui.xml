@@ -18,7 +18,7 @@
                         <td>
                             <g:Label>Good-pixel expression:</g:Label>
                         </td>
-                        <td colspan="6">
+                        <td colspan="2">
                             <g:TextBox ui:field="maskExpr" width="36em"/>
                         </td>
                     </tr>
@@ -29,10 +29,9 @@
                         <td>
                             <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
                         </td>
-                        <td>
+                        <td align="left">
                             <g:Label>days</g:Label>
                         </td>
-                        <td>&nbsp;&nbsp;</td>
                     </tr>
                     <tr>
                         <td>
@@ -41,30 +40,38 @@
                         <td>
                             <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
                         </td>
-                        <td>
+                        <td align="left">
                             <g:Label>days</g:Label>
                         </td>
-                        <td>&nbsp;&nbsp;</td>
                     </tr>
                     <tr>
                         <td>
                             <g:Label>Number of periods:</g:Label>
                         </td>
-                        <td>
+                        <td colspan="2">
                             <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
                         </td>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>&nbsp;&nbsp;</td>
                     </tr>
                     <tr>
                         <td>
                             <g:Label>Band selection:</g:Label>
                         </td>
-                        <td>
+                        <td colspan="2">
                             <g:ListBox ui:field="bandListBox" multipleSelect="true" visibleItemCount="10"/>
                         </td>
-                        <td>&nbsp;&nbsp;</td>
-                        <td>&nbsp;&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <g:Label>Band names:</g:Label>
+                        </td>
+                        <td colspan="2">
+                            <g:TextBox ui:field="bandNames" width="36em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            <g:Label addStyleNames="{style.explanatoryLabel}">A comma separated list of band names. Alternatively to the listbox.</g:Label>
+                        </td>
                     </tr>
                 </table>
             </g:HTMLPanel>
