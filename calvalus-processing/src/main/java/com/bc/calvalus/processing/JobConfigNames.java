@@ -74,6 +74,7 @@ public interface JobConfigNames {
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
     String CALVALUS_RA_PARAMETERS = "calvalus.ra.parameters";
+    String CALVALUS_RA_DATE_RANGES = "calvalus.ra.dateRanges";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String PROCESSING_HISTORY = "processing_history";
 

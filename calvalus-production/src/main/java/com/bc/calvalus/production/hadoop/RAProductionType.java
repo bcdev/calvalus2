@@ -36,6 +36,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -79,13 +80,24 @@ public class RAProductionType extends HadoopProductionType {
         String outputDir = getOutputPath(productionRequest, productionId, "");
         String maParametersXml = getRAConfigXml(productionRequest);
 
-        List<DateRange> dateRanges = productionRequest.getDateRanges();
+        productionRequest.getInteger("periodLength"); // test, if set
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
+        if (dateRanges.size() == 0) {
+            throw new ProductionException("No time ranges specified.");
+        }
+
+        Date startDate = dateRanges.get(0).getStartDate();
+        Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
+        String inputDateRange = new DateRange(startDate, stopDate).toString();
         setInputLocationParameters(productionRequest, raJobConfig);
         raJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
-        raJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+        raJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, inputDateRange);
 
         raJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         raJobConfig.set(JobConfigNames.CALVALUS_RA_PARAMETERS, maParametersXml);
+
+        raJobConfig.set(JobConfigNames.CALVALUS_RA_DATE_RANGES, StringUtils.join(dateRanges, ","));
+
         raJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                         regionGeometry != null ? regionGeometry.toString() : "");
         WorkflowItem workflowItem = new RAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
