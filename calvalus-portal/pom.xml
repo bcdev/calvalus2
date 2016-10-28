@@ -139,13 +139,13 @@
                     <runTarget>calvalus.jsp</runTarget>
                     <!-- Location of the develop-mode web application structure (gwt:run). -->
                     <hostedWebapp>target/www</hostedWebapp>
-                    <compileReport>true</compileReport>
-                    <style>DETAILED</style>
+                    <!--<compileReport>true</compileReport>-->
+                    <!--<style>DETAILED</style>-->
                     <compileSourcesArtifacts>
                         <artifact>com.bc.calvalus:calvalus-commons</artifact>
                     </compileSourcesArtifacts>
-                    <methodNameDisplayMode>FULL</methodNameDisplayMode>
-
+                    <!--<methodNameDisplayMode>FULL</methodNameDisplayMode>-->
+                    <!--<draftCompile>true</draftCompile>-->
                 </configuration>
             </plugin>
 

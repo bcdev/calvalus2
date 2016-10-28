@@ -19,6 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -48,6 +49,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             "newsView",
             "l2View",
             "maView",
+            "raView",
             "l3View",
             "taView",
             "freshmonView",
@@ -245,6 +247,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new OrderL2ProductionView(this);
             case "maView":
                 return new OrderMAProductionView(this);
+            case "raView":
+                return new OrderRAProductionView(this);
             case "l3View":
                 return new OrderL3ProductionView(this);
             case "taView":
@@ -324,7 +328,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                             currentView = selected;
                             GWT.log("Now showing: " + selected.getTitle());
                             viewPanel.showWidget(selected.asWidget());
-
+                            Window.scrollTo (0 , 0);
                             selected.onShowing();
                         }
                     }

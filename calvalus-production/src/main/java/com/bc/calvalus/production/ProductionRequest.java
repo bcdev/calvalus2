@@ -89,9 +89,9 @@ public class ProductionRequest implements XmlConvertible {
         return Collections.unmodifiableMap(productionParameters);
     }
 
-    public String getParameter(String name, boolean notNull) throws ProductionException {
+    public String getParameter(String name, boolean mandatory) throws ProductionException {
         String value = productionParameters.get(name);
-        if (value == null && notNull) {
+        if (value == null && mandatory) {
             throw new ProductionException("Production parameter '" + name + "' not set.");
         }
         return value;
