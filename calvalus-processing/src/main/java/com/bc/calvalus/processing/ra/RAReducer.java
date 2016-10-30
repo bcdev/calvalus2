@@ -19,22 +19,18 @@ package com.bc.calvalus.processing.ra;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
-
-import static org.hsqldb.HsqlDateTime.e;
+import java.util.*;
 
 /**
  * The reducer for the region analysis workflow
@@ -46,6 +42,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
     private RAConfig raConfig;
     private long[][] dateRanges;
     private DateFormat dateFormat;
+    private Writer writer;
+    private boolean headerWritten = false;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -54,6 +52,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_RA_DATE_RANGES);
         dateRanges = createDateRanges(dateRangesString);
         dateFormat = createDateFormat();
+
+        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), "region-analysis.csv");
+        writer = new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
     }
 
     private static DateFormat createDateFormat() {
@@ -61,6 +62,11 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         dateFormat.setCalendar(calendar);
         return dateFormat;
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        writer.close();
     }
 
     // key == region
@@ -79,11 +85,10 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
         Stat stat = null;
         int currentTimeRangeIndex = -1;
-        boolean headerWritten = false;
 
         for (RAValue extract : values) {
             long time = extract.getTime();
-            System.out.println("time = " + time +"  numSamples = " + extract.getSamples()[0].length);
+            System.out.println("time = " + time + "  numSamples = " + extract.getSamples()[0].length);
             int trIndex = findDateRangeIndex(time);
             if (trIndex == -1) {
                 String out_ouf_range_date = dateFormat.format(new Date(time));
@@ -92,11 +97,11 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                 if (trIndex != currentTimeRangeIndex) {
                     if (stat != null) {
                         if (!headerWritten) {
-                            System.out.println(String.join(",", stat.getHeader()));
+                            write(stat.getHeader());
                             headerWritten = true;
                         }
                         stat.finalize();
-                        System.out.println(String.join(",", stat.getStats()));
+                        write(stat.getStats());
                     }
                     long[] dateRange = dateRanges[trIndex];
                     String dStart = dateFormat.format(new Date(dateRange[0]));
@@ -109,12 +114,18 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
         if (stat != null) {
             if (!headerWritten) {
-                System.out.println(String.join(",", stat.getHeader()));
+                write(stat.getHeader());
             }
             stat.finalize();
-            System.out.println(String.join(",", stat.getStats()));
+            write(stat.getStats());
         }
         // close netcdf
+    }
+
+    private void write(List<String> strings) throws IOException {
+        System.out.println(String.join(",", strings));
+        writer.write(String.join("\t", strings));
+        writer.write("\n");
     }
 
     private int findDateRangeIndex(long time) {
@@ -135,7 +146,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                 String dateRangeString = dateRangesStrings[i];
                 DateRange dateRange = DateRange.parseDateRange(dateRangeString);
                 dateRanges[i][0] = dateRange.getStartDate().getTime();
-                dateRanges[i][1] = dateRange.getStopDate().getTime() + 24 * 60 *60 *1000L;
+                dateRanges[i][1] = dateRange.getStopDate().getTime() + 24 * 60 * 60 * 1000L;
             } catch (ParseException e) {
                 throw new IOException(e);
             }
