@@ -23,6 +23,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -52,6 +53,7 @@ public class ProductMetadataBuilder {
     private String productionType;
     private String outputFormat;
     private List<Map> productList;
+    private List<String> quickLookProductUrlList;
     private boolean isLocal;
 
     private Production production;
@@ -182,6 +184,10 @@ public class ProductMetadataBuilder {
         return productList;
     }
 
+    List<String> getQuickLookProductUrlList() {
+        return quickLookProductUrlList;
+    }
+
     public Production getProduction() {
         return production;
     }
@@ -212,7 +218,6 @@ public class ProductMetadataBuilder {
             } catch (ProductionException exception) {
                 throw new ProductMetadataException("Unable to create product metadata", exception);
             }
-            this.productList = createProductList();
         } else {
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(new Date()).toString();
             this.productionName = (String) processParameters.get("productionName");
@@ -228,8 +233,9 @@ public class ProductMetadataBuilder {
             this.processorId = processor.getIdentifier();
             this.productionType = parseProductionType((String) processParameters.get("productionType"));
             this.outputFormat = (String) processParameters.get("outputFormat");
-            this.productList = createProductList();
         }
+        this.productList = createProductList();
+        this.quickLookProductUrlList = createQuickLookProductUrlList();
         return new ProductMetadata(this);
     }
 
@@ -277,8 +283,8 @@ public class ProductMetadataBuilder {
         List<Double> latitudes = new ArrayList<>();
         try {
             for (int i = 0; i < region.length; i += 2) {
-                longitudes.add(Double.valueOf(region[i]));
-                latitudes.add(Double.valueOf(region[i + 1]));
+                latitudes.add(Double.valueOf(region[i]));
+                longitudes.add(Double.valueOf(region[i + 1]));
             }
         } catch (NumberFormatException exception) {
             LOG.log(Level.WARNING, "Error in parsing the regionBox value.", exception);
@@ -339,7 +345,12 @@ public class ProductMetadataBuilder {
 
     private List<Map> createProductList() {
         List<Map> productList = new ArrayList<>();
+        List<String> nonRelevantFileFormats = Arrays.asList(".zip", ".png");
         for (File productionResult : productionResults) {
+            if (nonRelevantFileFormats.stream()
+                        .anyMatch(nonRelevantFileFormat -> productionResult.getName().toLowerCase().endsWith(nonRelevantFileFormat))) {
+                continue;
+            }
             Map<String, String> productMap = new HashMap<>();
             productMap.put("productUrl", getBaseStagingUrl() + "/" + productOutputDir + "/" + productionResult.getName());
             productMap.put("productFileName", productionResult.getName());
@@ -349,6 +360,14 @@ public class ProductMetadataBuilder {
             productList.add(productMap);
         }
         return productList;
+    }
+
+    private List<String> createQuickLookProductUrlList() {
+        List<String> quickLookProductUrlList = new ArrayList<>();
+        productionResults.stream()
+                    .filter(productionResult -> productionResult.getName().toLowerCase().endsWith(".png"))
+                    .forEach(productionResult -> quickLookProductUrlList.add(getBaseStagingUrl() + "/" + productOutputDir + "/" + productionResult.getName()));
+        return quickLookProductUrlList;
     }
 
     private String parseFileFormat(String fileName) {
@@ -374,6 +393,8 @@ public class ProductMetadataBuilder {
             return "application/netcdf";
         } else if (fileName.toLowerCase().endsWith("tif")) {
             return "image/tiff";
+        } else if (fileName.toLowerCase().endsWith("png")) {
+            return "image/png";
         } else {
             return "application/octet-stream";
         }

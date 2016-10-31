@@ -24,6 +24,7 @@ public class ProductMetadata {
     private String productionType;
     private String outputFormat;
     private List<Map> productList;
+    private List<String> quickLookProductUrlList;
 
 
     ProductMetadata(ProductMetadataBuilder builder) {
@@ -48,6 +49,7 @@ public class ProductMetadata {
         contextMap.put("productionType", productionType);
         contextMap.put("outputFormat", outputFormat);
         contextMap.put("productList", productList);
+        contextMap.put("quickLookProductUrlList", quickLookProductUrlList);
 
         return contextMap;
     }
@@ -68,6 +70,7 @@ public class ProductMetadata {
         productionType = builder.getProductionType();
         outputFormat = builder.getOutputFormat();
         productList = builder.getProductList();
+        quickLookProductUrlList = builder.getQuickLookProductUrlList();
     }
 
 }

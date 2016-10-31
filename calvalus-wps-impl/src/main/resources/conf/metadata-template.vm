@@ -27,6 +27,11 @@
         </where>
         <date xmlns="http://purl.org/dc/elements/1.1/">$startDate/$stopDate</date>
         <box xmlns="http://www.georss.org/georss">$regionBox</box>
+        #foreach( $productUrl in $quickLookProductUrlList )
+            <offering xmlns="http://www.opengis.net/owc/1.0" code="http://www.opengis.net/spec/owc-atom/1.0/req/png">
+                <content href="$productUrl" type="image/png" />
+            </offering>
+        #end
         <opt:EarthObservation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                               xsi:schemaLocation="http://www.opengis.net/opt/2.0 omeo/1.0.0/opt.xsd"
                               xmlns:xlink="http://www.w3.org/1999/xlink"

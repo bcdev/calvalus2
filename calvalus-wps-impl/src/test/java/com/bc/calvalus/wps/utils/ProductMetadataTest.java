@@ -61,6 +61,8 @@ public class ProductMetadataTest {
         mockProductionFileList.add(mockFile3);
         File mockFile4 = getMockFile("result.xml", 1000L);
         mockProductionFileList.add(mockFile4);
+        File mockFile5 = getMockFile("quicklook.png", 2000L);
+        mockProductionFileList.add(mockFile5);
 
         ProductMetadata productMetadata = ProductMetadataBuilder.create()
                     .withProduction(mockProduction)
@@ -83,7 +85,7 @@ public class ProductMetadataTest {
         assertThat(contextMap.get("outputFormat"), equalTo("NetCDF4"));
 
         List productionList = (List) contextMap.get("productList");
-        assertThat(productionList.size(), equalTo(4));
+        assertThat(productionList.size(), equalTo(3));
         Map product1 = (Map) productionList.get(0);
         assertThat(product1.get("productFileName"), equalTo("result1.nc"));
         assertThat(product1.get("productFileFormat"), equalTo("NetCDF4"));
@@ -91,22 +93,20 @@ public class ProductMetadataTest {
         assertThat(product1.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result1.nc"));
 
         Map product2 = (Map) productionList.get(1);
-        assertThat(product2.get("productFileName"), equalTo("result.zip"));
-        assertThat(product2.get("productFileFormat"), equalTo("ZIP"));
-        assertThat(product2.get("productFileSize"), equalTo("1000000"));
-        assertThat(product2.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result.zip"));
+        assertThat(product2.get("productFileName"), equalTo("result-metadata"));
+        assertThat(product2.get("productFileFormat"), equalTo("metadata"));
+        assertThat(product2.get("productFileSize"), equalTo("5000"));
+        assertThat(product2.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result-metadata"));
 
         Map product3 = (Map) productionList.get(2);
-        assertThat(product3.get("productFileName"), equalTo("result-metadata"));
-        assertThat(product3.get("productFileFormat"), equalTo("metadata"));
-        assertThat(product3.get("productFileSize"), equalTo("5000"));
-        assertThat(product3.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result-metadata"));
+        assertThat(product3.get("productFileName"), equalTo("result.xml"));
+        assertThat(product3.get("productFileFormat"), equalTo("XML"));
+        assertThat(product3.get("productFileSize"), equalTo("1000"));
+        assertThat(product3.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result.xml"));
 
-        Map product4 = (Map) productionList.get(3);
-        assertThat(product4.get("productFileName"), equalTo("result.xml"));
-        assertThat(product4.get("productFileFormat"), equalTo("XML"));
-        assertThat(product4.get("productFileSize"), equalTo("1000"));
-        assertThat(product4.get("productUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/result.xml"));
+        List quickLookUrlList = (List) contextMap.get("quickLookProductUrlList");
+        assertThat(quickLookUrlList.size(), equalTo(1));
+        assertThat(quickLookUrlList.get(0), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/quicklook.png"));
     }
 
     private File getMockFile(String name, long size) {

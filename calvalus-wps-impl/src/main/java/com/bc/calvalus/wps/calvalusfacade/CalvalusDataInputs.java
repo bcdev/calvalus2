@@ -53,6 +53,7 @@ public class CalvalusDataInputs {
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
         this.inputMapFormatted.put("calvalus.wps.remote.user", remoteUser);
+        this.inputMapFormatted.put("quicklooks", "true");
     }
 
     /**

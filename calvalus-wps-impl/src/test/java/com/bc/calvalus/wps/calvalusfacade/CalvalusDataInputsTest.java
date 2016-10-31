@@ -268,6 +268,7 @@ public class CalvalusDataInputsTest {
                                                           "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
                                                           "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                                          "quicklooks : true\n" +
                                                           "autoStaging : true\n" +
                                                           "calvalus.snap.bundle : snap-3.0.0\nprocessorName : null\n" +
                                                           "processorBundleName : null\n" +
@@ -297,6 +298,7 @@ public class CalvalusDataInputsTest {
                                                           "processorBundleLocation : null\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
                                                           "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                                          "quicklooks : true\n" +
                                                           "autoStaging : true\n" +
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
