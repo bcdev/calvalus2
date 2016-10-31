@@ -13,6 +13,10 @@ import org.esa.snap.core.gpf.annotations.Parameter;
 
 public class JDAggregator extends AbstractAggregator {
 
+    public static final int WATER = 997;
+    public static final int CLOUD = 998;
+    public static final int NO_DATA = 999;
+
     public JDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames) {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
     }
@@ -28,22 +32,7 @@ public class JDAggregator extends AbstractAggregator {
     public void aggregateSpatial(BinContext ctx, Observation observationVector, WritableVector spatialVector) {
         float jd = observationVector.get(0);
         float cl = observationVector.get(1);
-        Float oldMaxJD = ctx.get("maxJD");
-
-        // take max of JD
-        // overwrite if JD > old maxJD
-        boolean validJD = jd >= 0 && jd < 997;
-        boolean newMax = jd > oldMaxJD;
-        boolean validJdIsSet = oldMaxJD >= 0 && oldMaxJD < 997;
-
-        if (validJD && newMax) {
-            ctx.put("maxJD", jd);
-            spatialVector.set(0, jd);
-            spatialVector.set(1, cl);
-        } else if (!validJdIsSet) {
-            spatialVector.set(0, jd);
-            spatialVector.set(1, cl);
-        }
+        aggregate(jd, cl, ctx, spatialVector);
     }
 
     @Override
@@ -62,21 +51,34 @@ public class JDAggregator extends AbstractAggregator {
     public void aggregateTemporal(BinContext ctx, Vector spatialVector, int numSpatialObs, WritableVector temporalVector) {
         float jd = spatialVector.get(0);
         float cl = spatialVector.get(1);
+        aggregate(jd, cl, ctx, temporalVector);
+    }
+
+    private static void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
         Float oldMaxJD = ctx.get("maxJD");
 
         // take max of JD
         // overwrite if JD > old maxJD
         boolean validJD = jd >= 0 && jd < 997;
-        boolean newMax = jd > oldMaxJD;
+        boolean newValidMax = jd > oldMaxJD;
         boolean validJdIsSet = oldMaxJD >= 0 && oldMaxJD < 997;
 
-        if (validJD && newMax) {
+        if (validJD && newValidMax) {
             ctx.put("maxJD", jd);
-            temporalVector.set(0, jd);
-            temporalVector.set(1, cl);
+            targetVector.set(0, jd);
+            targetVector.set(1, cl);
         } else if (!validJdIsSet) {
-            temporalVector.set(0, jd);
-            temporalVector.set(1, cl);
+            if (oldMaxJD == WATER) {
+                // don't overwrite water: keep the old value
+            } else if (oldMaxJD == CLOUD && jd == WATER) {
+                // overwrite cloud with water
+                targetVector.set(0, jd);
+                targetVector.set(1, cl);
+            } else if (oldMaxJD == NO_DATA && jd != NO_DATA) {
+                // overwrite no data with data
+                targetVector.set(0, jd);
+                targetVector.set(1, cl);
+            }
         }
     }
 
