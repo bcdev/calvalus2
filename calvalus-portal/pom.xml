@@ -236,6 +236,21 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>calbfg-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/calbfg-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-calbfg-patch</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 

@@ -1,0 +1,94 @@
+<html>
+<head>
+    <title>News</title>
+</head>
+
+<body>
+<h4>Overview</h4>
+<font size="2">
+    <ul>
+        <li><b>CoastColour processor version 1.7</b> available for on-demand processing</li>
+        <li><b>MERIS FR L1B v2013</b> available as input</li>
+        <li><b><a href="http://www.coastcolour.org/" target="coastcolour">http://www.coastcolour.org/</a></b> with
+            on-demand processing
+        </li>
+    </ul>
+</font>
+
+<h4>CoastColour processor version 1.7</h4>
+<font size="2">
+    The new CoastColour processor is available in CoastColour's Calvalus system for on-demand processing.
+    It generates CoastColour L1P, L2R and L2W products.
+    For small regions it can also be combined with ICOL for correction of the adjacency effect.
+    The region, time period, and processing parameters can be defined by users.
+    <p/>
+    2014-04-10</font>
+
+<h4>MERIS FR L1B v2013</h4>
+<font size="2">
+    The recently reprocessed dataset of MERIS full resolution (v2013) is available as input for CoastColour processing.
+    The dataset has been geo-corrected with AMORGOS 4.0 and is used as MERIS FSG for CoastColour processing.
+    <p/>
+    A further quality check of this dataset has been requested and is currently performed by ESA and the IDEAS team to
+    blacklist files that have obvious issues.
+    The current v2013 dataset still contains products with issues that had been identified and removed in the previous
+    dataset.
+    <p/>
+    2014-04-10</font>
+
+<h4>CoastColour on-demand processing</h4>
+<font size="2">
+    CoastColour has replaced its online archive of products of predefined regions by a Calvalus on-demand processing
+    system.
+    Users specify time period, region, and processing parameters.
+    The selected data are processed automatically on the Calvalus cluster.
+    The results are made available for download via HTTP or for further processing.
+    <p/>
+    Spatial and temporal selection
+    <ul>
+        <li>The region can be defined by polygon or bounding box, or it can be selected from one of the former 26
+            predefined regions.
+        </li>
+        <li>It is recommended to limit the size of the region to what is required.
+        </li>
+        <li>The time period can be specified by start and end day.
+        </li>
+        <li>It is recommended to split larger periods into several periods, e.g. one per month or at most per year.
+        </li>
+    </ul>
+    Processor selection
+    <ul>
+        <li>The CoastColour L2W processor can start from MERIS L1B products, process with all three processors in a
+            pipeline, and generate L2W in a single processing call.
+            This will succeed for small regions.
+        </li>
+        <li>For larger regions it is necessary to first process L1P, and to use the output to process L2R, and from that
+            to process L2W. Output datasets can be used as inputs for subsequent processing by selecting "Show my
+            outputs" in
+            the L2 processing form. The L2R processor accepts MERIS L1B or CoastColour L1P products. The L2W processor
+            accepts MERIS L1B, CoastColour L1P or L1P products.
+            To do it all in one step will fail for larger regions because of resource consumption.
+        </li>
+        <li>When using ICOL the region to be processed must be small.
+            Else, processing will take very long or will even fail because of resource consumption.
+        </li>
+    </ul>
+    Download and cleanup
+    <ul>
+        <li>You should estimate the download size before submitting a production request.
+            Example: One month of L2W of the Baltic Sea is about 30 GB.
+        </li>
+        <li>Processing time may vary depending on the current load on the Calvalus cluster.
+            If there are no other projects processing at the same time processing one year of data for one CoastColour
+            region may take a few hours.
+            Usually download times will be longer than processing times.
+        </li>
+        <li>After downloading please remove your entry from the production management.
+            This will release the storage of the results and will allow others to process and download as well.
+        </li>
+    </ul>
+    <p/>
+    2014-04-10</font>
+
+</body>
+</html>
