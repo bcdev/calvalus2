@@ -96,7 +96,7 @@ class S2Strategy implements SensorStrategy {
 
     private static BinningConfig getBinningConfig() {
         BinningConfig binningConfig = new BinningConfig();
-        binningConfig.setCompositingType(CompositingType.BINNING);
+        binningConfig.setCompositingType(CompositingType.MOSAICKING);
         binningConfig.setNumRows(1001878);
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("true");

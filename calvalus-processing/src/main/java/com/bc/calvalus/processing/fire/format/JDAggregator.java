@@ -54,31 +54,35 @@ public class JDAggregator extends AbstractAggregator {
         aggregate(jd, cl, ctx, temporalVector);
     }
 
-    private static void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
+    static void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
         Float oldMaxJD = ctx.get("maxJD");
 
         // take max of JD
         // overwrite if JD > old maxJD
         boolean validJD = jd >= 0 && jd < 997;
-        boolean newValidMax = jd > oldMaxJD;
-        boolean validJdIsSet = oldMaxJD >= 0 && oldMaxJD < 997;
+        boolean newValidMax = oldMaxJD >= 997 || jd > oldMaxJD;
+        boolean jdIsSet = oldMaxJD >= 0;
 
         if (validJD && newValidMax) {
             ctx.put("maxJD", jd);
             targetVector.set(0, jd);
             targetVector.set(1, cl);
-        } else if (!validJdIsSet) {
-            if (oldMaxJD == WATER) {
-                // don't overwrite water: keep the old value
-            } else if (oldMaxJD == CLOUD && jd == WATER) {
-                // overwrite cloud with water
-                targetVector.set(0, jd);
-                targetVector.set(1, cl);
-            } else if (oldMaxJD == NO_DATA && jd != NO_DATA) {
-                // overwrite no data with data
-                targetVector.set(0, jd);
-                targetVector.set(1, cl);
-            }
+        } else if (oldMaxJD == WATER) {
+            // don't overwrite water: keep the old value
+        } else if (oldMaxJD == CLOUD && jd == WATER) {
+            // overwrite cloud with water
+            targetVector.set(0, jd);
+            targetVector.set(1, cl);
+            ctx.put("maxJD", jd);
+        } else if (oldMaxJD == NO_DATA && jd != NO_DATA) {
+            // overwrite no data with data
+            targetVector.set(0, jd);
+            targetVector.set(1, cl);
+            ctx.put("maxJD", jd);
+        } else if (!jdIsSet) {
+            targetVector.set(0, jd);
+            targetVector.set(1, cl);
+            ctx.put("maxJD", jd);
         }
     }
 
