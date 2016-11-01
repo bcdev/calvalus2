@@ -67,6 +67,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
                 targetProduct.getSceneRasterHeight() == 0) {
+                getLogger().info("Skip processing");
                 return 0;
             }
             getLogger().info(String.format("Processed product width = %d height = %d",

@@ -48,6 +48,19 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     public SnapGraphAdapter(MapContext mapContext) {
         super(mapContext);
+
+        if (getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY) != null) {
+            if (getConfiguration().get("calvalus.system.snap.dataio.reader.tileHeight") == null) {
+                System.setProperty("snap.dataio.reader.tileHeight", "64");
+                getLogger().info("Setting tileHeight to 64 for graph subsetting");
+            }
+            if ((getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth") == null
+                 || "*".equals(getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth")))
+                && ! getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false)) {
+                System.setProperty("snap.dataio.reader.tileWidth", "64");
+                getLogger().info("Setting tileWidth to 64 for graph subsetting");
+            }
+        }
     }
 
     @Override
@@ -104,7 +117,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 throw new IllegalArgumentException("Specified targetNode '" + target.getNodeId() + "' does not exist in graph.");
             }
             NodeContext targetNodeContext = graphContext.getNodeContext(targetNode);
-            targetProduct = targetNodeContext.getTargetProduct();
+            targetProduct = createSubset(targetNodeContext.getTargetProduct());
         } catch (GraphException e) {
             throw new IOException("Error executing Graph: " + e.getMessage(), e);
         } finally {

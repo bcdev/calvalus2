@@ -124,7 +124,10 @@ public class SubsetProcessorAdapter extends ProcessorAdapter {
     }
 
     protected Product createSubset() throws IOException {
-        Product product = getInputProduct();
+        return createSubset(getInputProduct());
+    }
+
+    protected Product createSubset(Product product) throws IOException {
         // full region
         Rectangle srcProductRect = getInputRectangle();
         if (srcProductRect == null ||
