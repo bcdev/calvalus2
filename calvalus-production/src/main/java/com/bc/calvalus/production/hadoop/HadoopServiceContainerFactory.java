@@ -47,6 +47,9 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         }
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
+        if (serviceConfiguration.containsKey("calvalus.portal.softwareDir")) {
+            jobConf.set("calvalus.portal.softwareDir", serviceConfiguration.get("calvalus.portal.softwareDir"));
+        }
         try {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
             final HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
