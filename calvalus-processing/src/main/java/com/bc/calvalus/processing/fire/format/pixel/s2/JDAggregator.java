@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format;
+package com.bc.calvalus.processing.fire.format.pixel.s2;
 
 import org.esa.snap.binning.AbstractAggregator;
 import org.esa.snap.binning.Aggregator;
@@ -11,14 +11,20 @@ import org.esa.snap.binning.Vector;
 import org.esa.snap.binning.WritableVector;
 import org.esa.snap.core.gpf.annotations.Parameter;
 
+import java.time.Year;
+
 public class JDAggregator extends AbstractAggregator {
 
     public static final int WATER = 997;
     public static final int CLOUD = 998;
     public static final int NO_DATA = 999;
+    private final int minDoy;
+    private final int maxDoy;
 
-    public JDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames) {
+    public JDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames, int[] doyBounds) {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
+        this.minDoy = doyBounds[0];
+        this.maxDoy = doyBounds[1];
     }
 
     @Override
@@ -54,12 +60,12 @@ public class JDAggregator extends AbstractAggregator {
         aggregate(jd, cl, ctx, temporalVector);
     }
 
-    static void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
+    void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
         Float oldMaxJD = ctx.get("maxJD");
 
         // take max of JD
         // overwrite if JD > old maxJD
-        boolean validJD = jd >= 0 && jd < 997;
+        boolean validJD = jd >= 0 && jd < 997 && jd >= minDoy && jd <= maxDoy;
         boolean newValidMax = oldMaxJD >= 997 || jd > oldMaxJD;
         boolean jdIsSet = oldMaxJD >= 0;
 
@@ -103,15 +109,21 @@ public class JDAggregator extends AbstractAggregator {
         String doyName;
         @Parameter(label = "CL band name", notEmpty = true, notNull = true, description = "The CL band used for aggregation.")
         String clName;
+        @Parameter(label = "Year", notEmpty = true, notNull = true, description = "The year in which the aggregation will be done.")
+        public int year;
+        @Parameter(label = "Month", notEmpty = true, notNull = true, description = "The month in which the aggregation will be done.")
+        public int month;
 
         public Config() {
-            this(null, null);
+            this(null, null, -1, -1);
         }
 
-        public Config(String doyName, String clName) {
+        public Config(String doyName, String clName, int year, int month) {
             super(Descriptor.NAME);
             this.doyName = doyName;
             this.clName = clName;
+            this.year = year;
+            this.month = month;
         }
     }
 
@@ -126,7 +138,10 @@ public class JDAggregator extends AbstractAggregator {
 
         @Override
         public Aggregator createAggregator(VariableContext varCtx, AggregatorConfig aggregatorConfig) {
-            return new JDAggregator(NAME, new String[]{"JD", "CL"}, new String[]{"JD", "CL"}, getTargetVarNames(aggregatorConfig));
+            Config config = (Config) aggregatorConfig;
+            int minDoy = Year.of(config.year).atMonth(config.month).atDay(1).getDayOfYear();
+            int maxDoy = Year.of(config.year).atMonth(config.month).atEndOfMonth().getDayOfYear();
+            return new JDAggregator(NAME, new String[]{"JD", "CL"}, new String[]{"JD", "CL"}, getTargetVarNames(aggregatorConfig), new int[]{minDoy, maxDoy});
         }
 
         @Override

@@ -8,7 +8,7 @@ public interface SensorStrategy {
 
     PixelProductArea[] getAllAreas();
 
-    Workflow getWorkflow(WorkflowConfig workflowConfig);
+    Workflow getPixelFormattingWorkflow(WorkflowConfig workflowConfig);
 
     interface PixelProductAreaProvider {
 

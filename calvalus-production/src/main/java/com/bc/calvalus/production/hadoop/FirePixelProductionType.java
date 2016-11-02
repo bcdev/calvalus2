@@ -81,7 +81,7 @@ public class FirePixelProductionType extends HadoopProductionType {
         workflowConfig.year = year;
         workflowConfig.month = month;
         workflowConfig.userName = productionRequest.getUserName();
-        Workflow formattingWorkflow = strategy.getWorkflow(workflowConfig);
+        Workflow formattingWorkflow = strategy.getPixelFormattingWorkflow(workflowConfig);
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         return new Production(productionId,

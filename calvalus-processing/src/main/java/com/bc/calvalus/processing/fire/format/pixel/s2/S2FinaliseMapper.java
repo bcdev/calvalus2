@@ -1,37 +1,27 @@
-/*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 3 of the License, or (at your option)
- * any later version.
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, see http://www.gnu.org/licenses/
- */
-
-package com.bc.calvalus.processing.fire.format.pixel.meris;
+package com.bc.calvalus.processing.fire.format.pixel.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
+import com.bc.calvalus.processing.fire.format.S2Strategy;
+import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.image.ResolutionLevel;
+import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.jdom2.Document;
@@ -39,9 +29,12 @@ import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
-import org.rauschig.jarchivelib.Archiver;
-import org.rauschig.jarchivelib.ArchiverFactory;
 
+import javax.media.jai.PlanarImage;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.image.DataBuffer;
+import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
@@ -52,68 +45,41 @@ import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-/**
- * The fire formatting pixel mapper.
- *
- * @author thomas
- * @author marcop
- */
-public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPixelCell> {
+public class S2FinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
+    static final int TILE_SIZE = 256;
+    public static final String VERSION = "fv4.2";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
-        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "256");
-        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "256");
+        System.getProperties().put("snap.dataio.bigtiff.tiling.width", "" + TILE_SIZE);
+        System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
+
+        ProductSplit inputSplit = (ProductSplit) context.getInputSplit();
+
+        Path inputSplitLocation = inputSplit.getPath();
+        LOG.info("Finalising file '" + inputSplitLocation + "'");
+
+        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
+        File localLC = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2010.nc"), context.getConfiguration());
 
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
-        String version = context.getConfiguration().get("calvalus.baversion", "v04.1");
+        PixelProductArea area = new S2Strategy().getArea(context.getConfiguration().get("calvalus.area"));
 
-        PixelProductArea area = new MerisStrategy().getArea(context.getConfiguration().get("area"));
+        String baseFilename = createBaseFilename(year, month, VERSION, area);
 
-        CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        Path[] paths = inputSplit.getPaths();
-        LOG.info("paths=" + Arrays.toString(paths));
+        Product lcProduct = ProductIO.readProduct(localLC);
+        Product result = remap(localL3, baseFilename, lcProduct);
 
-        File[] variableFiles = new File[3];
-
-        Archiver archiver = ArchiverFactory.createArchiver("tar", "gz");
-        for (int i = 0; i < paths.length; i++) {
-            variableFiles[i] = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            CalvalusLogger.getLogger().info("Extracting...");
-            archiver.extract(variableFiles[i], new File("."));
-            CalvalusLogger.getLogger().info("...done.");
-        }
-
-        CalvalusLogger.getLogger().info("Reading products...");
-        Product inputVar1 = ProductIO.readProduct(variableFiles[0].getName().substring(0, variableFiles[0].getName().indexOf(".")) + ".dim");
-        Product inputVar2 = ProductIO.readProduct(variableFiles[1].getName().substring(0, variableFiles[0].getName().indexOf(".")) + ".dim");
-        Product inputVar3 = ProductIO.readProduct(variableFiles[2].getName().substring(0, variableFiles[0].getName().indexOf(".")) + ".dim");
-        CalvalusLogger.getLogger().info("done.");
-
-        Band JD = findBand(PixelVariableType.DAY_OF_YEAR.bandName, inputVar1, inputVar2, inputVar3);
-        Band CL = findBand(PixelVariableType.CONFIDENCE_LEVEL.bandName, inputVar1, inputVar2, inputVar3);
-        Band LC = findBand(PixelVariableType.LC_CLASS.bandName, inputVar1, inputVar2, inputVar3);
-
-        context.progress();
-
-        String baseFilename = createBaseFilename(year, month, version, area);
-        Product result = new Product(baseFilename, "fire-cci-pixel-product", inputVar1.getSceneRasterWidth(), inputVar1.getSceneRasterHeight());
-        ProductUtils.copyGeoCoding(inputVar1, result);
-        ProductUtils.copyBand(JD.getName(), JD.getProduct(), result, true);
-        ProductUtils.copyBand(CL.getName(), CL.getProduct(), result, true);
-        ProductUtils.copyBand(LC.getName(), LC.getProduct(), result, true);
-
-        CalvalusLogger.getLogger().info("Creating metadata...");
-        String metadata = createMetadata(year, month, version, area);
+        LOG.info("Creating metadata...");
+        String metadata = createMetadata(year, month, VERSION, area);
         try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
             fw.write(metadata);
         }
@@ -122,7 +88,6 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
         final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
-
         result.dispose();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
         Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
@@ -134,14 +99,68 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
         CalvalusLogger.getLogger().info("...done.");
     }
 
-    private Band findBand(String bandName, Product... products) {
-        for (Product product : products) {
-            Band band = product.getBand(bandName);
-            if (band != null) {
-                return band;
+    static Product remap(File localL3, String baseFilename, Product lcProduct) throws IOException {
+        Product source = ProductIO.readProduct(localL3);
+        source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
+        source.addBand("JD_remapped", "(JD < 997) ? JD : (JD == 999) ? -1 : -2", ProductData.TYPE_INT32);
+        source.addBand("CL_remapped", "(JD > 0 and JD < 997) ? (CL * 100) : 0", ProductData.TYPE_INT8);
+
+        Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
+        target.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
+
+        ProductUtils.copyGeoCoding(source, target);
+        ProductUtils.copyBand("JD_remapped", source, "JD", target, true);
+        ProductUtils.copyBand("CL_remapped", source, "CL", target, true);
+        target.addBand("LC", ProductData.TYPE_INT8);
+        target.addBand("sensor", "6", ProductData.TYPE_INT8);
+
+        Band lcBand = target.getBand("LC");
+        Band jdBand = target.getBand("JD");
+        lcBand.setSourceImage(new SingleBandedOpImage(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(TILE_SIZE, TILE_SIZE), null, ResolutionLevel.MAXRES) {
+            @Override
+            protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+                GeoPos geoPos = new GeoPos();
+                GeoCoding resultGeoCoding = target.getSceneGeoCoding();
+                GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
+                PixelPos pixelPos = new PixelPos();
+                int[] jdArray = new int[destRect.width * destRect.height];
+                try {
+                    jdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(jdArray));
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+                int pixelIndex = 0;
+                for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                    for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                        pixelPos.x = x;
+                        pixelPos.y = y;
+                        resultGeoCoding.getGeoPos(pixelPos, geoPos);
+                        lcGeoCoding.getPixelPos(geoPos, pixelPos);
+                        int[] lcData = new int[1];
+                        try {
+                            lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
+                        } catch (IOException e) {
+                            throw new IllegalStateException(e);
+                        }
+                        lcData[0] = LcRemapping.remap(lcData[0]);
+                        if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
+                            lcData[0] = 0;
+                        }
+                        int jdValue = jdArray[pixelIndex++];
+                        if (jdValue <= 0 || jdValue >= 997) {
+                            lcData[0] = 0;
+                        }
+                        dest.setSample(x, y, 0, lcData[0]);
+                    }
+                }
             }
-        }
-        throw new IllegalArgumentException(String.format("Cannot find band %s in any of the given products", bandName));
+        });
+
+        return target;
+    }
+
+    static String createBaseFilename(String year, String month, String version, PixelProductArea area) {
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, area.index, version);
     }
 
     static String createMetadata(String year, String month, String version, PixelProductArea area) throws IOException {
@@ -174,10 +193,6 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
         } catch (JDOMException | NullPointerException e) {
             throw new IOException(e);
         }
-    }
-
-    static String createBaseFilename(String year, String month, String version, PixelProductArea area) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MERIS-AREA_%s-f%s", year, month, area.index, version);
     }
 
     private static final String TEMPLATE = "" +
@@ -279,7 +294,7 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MERIS Burned Area product v4.1 - Zone ${zoneId}: ${zoneName}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product v4.2 - Zone ${zoneId}: ${zoneName}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -314,7 +329,7 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>doi:10.5285/8723B4DD-49A4-4C37-9A3C-BA4392EEE63B</gco:CharacterString>" +
+            "                                <gco:CharacterString>FILL IN</gco:CharacterString>" + // todo - find out DOI
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
@@ -339,20 +354,20 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
             "${Indicative Date} is the identifying date for this data set. Format is YYYY[MM[DD]], where YYYY is the " +
             "four digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to " +
             "31. For monthly products the date will be set to 01. " +
-            "${Indicative sensor} is MERIS. ${Additional Segregator} " +
+            "${Indicative sensor} is MSI. ${Additional Segregator} " +
             "is the AREA_${TILE_NUMBER} being the tile number the subset index described in Extent. fv" +
             "${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional " +
             ". and another 1 or more digits.). An example is: " +
-            "20050301-ESACCI-L3S_FIRE-BA-MERIS-AREA_1-f${REPLACE_WITH_VERSION}.tif.]]#" +
+            "20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_1-f${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3_PUG_v2 available at: www.esa-fire.cci.org/documents" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00277778 deg.; Pixel " +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 10m; Pixel " +
             "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
             "the month or it is not observed; a value of 999 is allocated to pixels that are not taken into account in " +
             "the burned area processing (continuous water, ocean).; Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00277778 deg.; Pixel value = 0 to " +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 10m; Pixel value = 0 to " +
             "100, where the value is the probability in percentage that the pixel is actually burned, as a result " +
             "of both the pre-processing and the actual burned area classification. The higher the value, the " +
             "higher the confidence that the pixel is actually burned. A value of 999 is allocated to pixels that are " +
@@ -381,7 +396,7 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
             "160 = Tree cover, flooded, fresh or brackish water; " +
             "170 = Tree cover, flooded, saline water; " +
             "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
-            "Pixel Spacing = 0.00277778 deg.; Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "Pixel Spacing = 10m; Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
@@ -611,5 +626,4 @@ public class MerisPixelMergeMapper extends Mapper<Text, FileSplit, Text, MerisPi
             "    </gmd:identificationInfo>" +
             "" +
             "</gmi:MI_Metadata>";
-
 }
