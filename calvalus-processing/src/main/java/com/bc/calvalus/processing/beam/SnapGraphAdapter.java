@@ -20,12 +20,31 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorException;
-import org.esa.snap.core.gpf.graph.*;
+import org.esa.snap.core.gpf.graph.Graph;
+import org.esa.snap.core.gpf.graph.GraphContext;
+import org.esa.snap.core.gpf.graph.GraphException;
+import org.esa.snap.core.gpf.graph.GraphIO;
+import org.esa.snap.core.gpf.graph.Header;
+import org.esa.snap.core.gpf.graph.HeaderSource;
+import org.esa.snap.core.gpf.graph.HeaderTarget;
+import org.esa.snap.core.gpf.graph.Node;
+import org.esa.snap.core.gpf.graph.NodeContext;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.List;
+import java.util.Properties;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 /**
@@ -81,6 +100,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             Header header = graph.getHeader();
             List<HeaderSource> sources = header.getSources();
             Path inputPath = getInputPath();
+            Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
             Operator sourceProducts = new SourceProductContainerOperator();
             for (HeaderSource headerSource : sources) {
                 String sourceId = headerSource.getName();
@@ -91,16 +111,27 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 if (headerSource.getDescription() != null && headerSource.getDescription().startsWith("format:")) {
                     inputFormat = headerSource.getDescription().substring("format:".length());
                 }
+                Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
                 Product sourceProduct;
-                if (sourcePath.equals(inputPath) && inputFile != null) {
-                    // if inputFile is set and path is the inputPath us the (local)file instead
-                    System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
-                    sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
-                } else {
-                    Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
-                    Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
-                    if (qualifiedInputPath.equals(qualifiedSourcePath)) {
+                if (qualifiedInputPath.equals(qualifiedSourcePath)) {
+                    // main input
+                    if (sourcePath.equals(inputPath) && inputFile != null) {
+                        // if inputFile is set and path is the inputPath us the (local)file instead
+                        System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
+                        sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
+                    } else {
                         sourceProduct = getInputProduct();
+                    }
+                    if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
+                        getLogger().info("input subsetting of split " + sourcePath);
+                        sourceProduct = createSubset(sourceProduct);
+                    }
+                } else {
+                    // other source product
+                    if (sourcePath.equals(inputPath) && inputFile != null) {
+                        // if inputFile is set and path is the inputPath us the (local)file instead
+                        System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
+                        sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
                     } else {
                         sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
                     }
@@ -117,7 +148,12 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 throw new IllegalArgumentException("Specified targetNode '" + target.getNodeId() + "' does not exist in graph.");
             }
             NodeContext targetNodeContext = graphContext.getNodeContext(targetNode);
-            targetProduct = createSubset(targetNodeContext.getTargetProduct());
+            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
+                getLogger().info("output subsetting of split " + inputPath);
+                targetProduct = createSubset(targetNodeContext.getTargetProduct());
+            } else {
+                targetProduct = targetNodeContext.getTargetProduct();
+            }
         } catch (GraphException e) {
             throw new IOException("Error executing Graph: " + e.getMessage(), e);
         } finally {
@@ -291,6 +327,39 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
         public Date parseDate(String format, String source) throws ParseException {
             return ProductData.UTC.createDateFormat(format).parse(source);
+        }
+
+        public String xmlEncode(String s) {
+            if (s == null) {
+                return null;
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                switch (c) {
+                    case '<':
+                        sb.append("&lt;");
+                        break;
+                    case '>':
+                        sb.append("&gt;");
+                        break;
+                    case '&':
+                        sb.append("&amp;");
+                        break;
+//                    case '\"':
+//                        sb.append("&quot;");
+//                        break;
+//                    case '\'':
+//                        sb.append("&apos;");
+//                        break;
+                    default:
+                        if (c > 0x7e) {
+                            sb.append("&#" + ((int) c) + ";");
+                        } else
+                            sb.append(c);
+                }
+            }
+            return sb.toString();
         }
     }
 

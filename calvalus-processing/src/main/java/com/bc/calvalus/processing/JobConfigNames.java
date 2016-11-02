@@ -104,4 +104,6 @@ public interface JobConfigNames {
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
 
     String CALVALUS_DEBUG_TILECACHE = "calvalus.debug.tileCache";
+    String CALVALUS_INPUT_SUBSETTING = "calvalus.input.subsetting";
+    String CALVALUS_OUTPUT_SUBSETTING = "calvalus.output.subsetting";
 }

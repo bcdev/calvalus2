@@ -42,6 +42,19 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
 
     public SnapOperatorAdapter(MapContext mapContext) {
         super(mapContext);
+
+        if (getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY) != null) {
+            if (getConfiguration().get("calvalus.system.snap.dataio.reader.tileHeight") == null) {
+                System.setProperty("snap.dataio.reader.tileHeight", "128");
+                getLogger().info("Setting tileHeight to 128 for subsetting");
+            }
+            if ((getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth") == null
+                 || "*".equals(getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth")))
+                && ! getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false)) {
+                System.setProperty("snap.dataio.reader.tileWidth", "128");
+                getLogger().info("Setting tileWidth to 128 for subsetting");
+            }
+        }
     }
 
     @Override
@@ -52,6 +65,13 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             String processorName = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR);
             String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS);
 
+            Product sourceProduct;
+            // TODO defaults for subsetting preserve old behaviour
+            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
+                sourceProduct = createSubset();
+            } else {
+                sourceProduct = getInputProduct();
+            }
             Product subsetProduct = createSubset();
             int minWidth = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_WIDTH, 0);
             int minHeight = conf.getInt(JobConfigNames.CALVALUS_INPUT_MIN_HEIGHT, 0);
@@ -63,7 +83,11 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                                                subsetProduct.getSceneRasterHeight()));
                 return 0;
             }
-            targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
+                targetProduct = createSubset(getProcessedProduct(subsetProduct, processorName, processorParameters));
+            } else {
+                targetProduct = getProcessedProduct(subsetProduct, processorName, processorParameters);
+            }
             if (targetProduct == null ||
                 targetProduct.getSceneRasterWidth() == 0 ||
                 targetProduct.getSceneRasterHeight() == 0) {
