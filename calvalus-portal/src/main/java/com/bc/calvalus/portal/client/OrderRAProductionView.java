@@ -102,6 +102,7 @@ public class OrderRAProductionView extends OrderProductionView {
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();

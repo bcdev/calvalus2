@@ -91,11 +91,12 @@ public class OrderTAProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(32);
         l3ConfigForm.compositingPeriodLength.setValue(4);
 
-        updateTemporalParameters(productSetFilterForm.getValueMap());
-
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");

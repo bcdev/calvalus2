@@ -59,16 +59,21 @@ public class OrderMACProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
+                for (int i = 0; i < l2MaForms.length; i++) {
+                    l2MaForms[i].l2ConfigForm.setProductSet(productSet);
+                }
             }
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        DtoProductSet selectedProductSet = productSetSelectionForm.getSelectedProductSet();
+        productSetFilterForm.setProductSet(selectedProductSet);
 
         l2MaForms = new L2MaConfigForm[NUM_PROCESSORS];
         boolean selectionMandatory = false;
         for (int i = 0; i < l2MaForms.length; i++) {
             l2MaForms[i] = new L2MaConfigForm(portalContext, selectionMandatory);
+            l2MaForms[i].l2ConfigForm.setProductSet(selectedProductSet);
             selectionMandatory = true;
             if (i >= 2) {
                 l2MaForms[i].enabledCheckbox.setValue(false, true);

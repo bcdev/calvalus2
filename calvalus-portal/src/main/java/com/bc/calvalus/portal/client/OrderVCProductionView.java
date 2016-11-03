@@ -121,6 +121,8 @@ public class OrderVCProductionView extends OrderProductionView {
         outputParametersForm.setAvailableOutputFormats("Report");
         outputParametersForm.allowedFailure.setValue(5);
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);

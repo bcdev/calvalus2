@@ -93,6 +93,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "NetCDF4", "GeoTIFF", "BigGeoTiff");
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();

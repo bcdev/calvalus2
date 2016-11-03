@@ -95,6 +95,8 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
         l3ConfigForm.compositingPeriodLength.setValue(15);
         l3ConfigForm.compositingType.setEnabled(false);
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         outputParametersForm = new OutputParametersForm();

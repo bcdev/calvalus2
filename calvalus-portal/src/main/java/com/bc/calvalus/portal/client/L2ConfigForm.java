@@ -103,18 +103,13 @@ public class L2ConfigForm extends Composite {
     @UiField
     Anchor showProcessorSelectionHelp;
 
-    private DtoProductSet productSet;
-
-    public void setProductSet(DtoProductSet productSet) {
-        this.productSet = productSet;
-    }
-
     private final boolean selectionMandatory;
     private final PortalContext portalContext;
     private final Filter<DtoProcessorDescriptor> processorFilter;
     private final List<DtoProcessorDescriptor> processorDescriptors;
 
     private HandlerRegistration editParamsHandlerRegistration;
+    private DtoProductSet productSet;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, new L2ProcessorFilter(), selectionMandatory);
@@ -166,12 +161,18 @@ public class L2ConfigForm extends Composite {
         showSystemProcessors.addValueChangeHandler(valueChangeHandler);
         filterProcessorByVersion.addValueChangeHandler(valueChangeHandler);
         filterProcessorByProductType.addValueChangeHandler(valueChangeHandler);
+        filterProcessorByProductType.setEnabled(false);
 
         showAllUserProcessors.setEnabled(portalContext.withPortalFeature("otherSets"));
 
         updateProcessorDetails();
 
         HelpSystem.addClickHandler(showProcessorSelectionHelp, "processorSelection");
+    }
+
+    public void setProductSet(DtoProductSet productSet) {
+        this.productSet = productSet;
+        filterProcessorByProductType.setEnabled(productSet != null);
     }
 
     public void updateProcessorList() {
