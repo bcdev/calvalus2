@@ -89,7 +89,6 @@ public class S2Strategy implements SensorStrategy {
         jobConfig.set(JobConfigNames.CALVALUS_MAX_DATE, maxDate);
 
         if (!exists(jobConfig, outputDir, String.format("L3_%s-%s-01_%s-%s-%02d.nc", year, month, year, month, lastDayOfMonth))) {
-            CalvalusLogger.getLogger().info("Skipping binning and formatting, moving on to finalise");
             WorkflowItem item = new L3WorkflowItem(processingService, userName, productionName, jobConfig);
             workflow.add(item);
 

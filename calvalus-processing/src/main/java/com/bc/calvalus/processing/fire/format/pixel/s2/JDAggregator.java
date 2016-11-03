@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.pixel.s2;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.binning.AbstractAggregator;
 import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.AggregatorConfig;
@@ -25,6 +26,8 @@ public class JDAggregator extends AbstractAggregator {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
         this.minDoy = doyBounds[0];
         this.maxDoy = doyBounds[1];
+        CalvalusLogger.getLogger().info("minDoy=" + minDoy);
+        CalvalusLogger.getLogger().info("maxDoy=" + maxDoy);
     }
 
     @Override

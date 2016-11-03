@@ -13,7 +13,7 @@ public class JDAggregatorTest {
 
     @Before
     public void setUp() throws Exception {
-        // use absurd min/max doy for testing; see tests testAggregate_5 and testAggregate_6 for serious tests of this property
+        // use absurd min/max doy for testing; see tests testAggregate_5 ff for serious tests of this property
         aggregator = new JDAggregator(null, null, null, null, new int[]{-1000, 1000});
     }
 
@@ -125,5 +125,27 @@ public class JDAggregatorTest {
         assertEquals(45F, targetVector.get(0), 1E-7);
         assertEquals(0, targetVector.get(1), 1E-7);
     }
+
+    @Test
+    public void testAggregate_7() throws Exception {
+        SpatialBin ctx = new SpatialBin();
+        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
+
+        targetVector.set(0, 0.0f);
+        targetVector.set(1, 0.0f);
+        ctx.put("maxJD", -1.0f);
+
+        aggregator.aggregate(998F, 0, ctx, targetVector);
+        aggregator.aggregate(33F, 0, ctx, targetVector);
+        aggregator.aggregate(61F, 0, ctx, targetVector);
+        aggregator.aggregate(320F, 0, ctx, targetVector);
+        aggregator.aggregate(997F, 0, ctx, targetVector);
+
+        assertEquals(33F, targetVector.get(0), 1E-7);
+        assertEquals(0, targetVector.get(1), 1E-7);
+    }
+
+
 
 }

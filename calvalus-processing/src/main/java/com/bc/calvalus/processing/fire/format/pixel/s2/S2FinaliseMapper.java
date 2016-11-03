@@ -10,6 +10,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.util.Progressable;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
@@ -76,7 +77,7 @@ public class S2FinaliseMapper extends Mapper {
         String baseFilename = createBaseFilename(year, month, VERSION, area);
 
         Product lcProduct = ProductIO.readProduct(localLC);
-        Product result = remap(localL3, baseFilename, lcProduct);
+        Product result = remap(localL3, baseFilename, lcProduct, context);
 
         LOG.info("Creating metadata...");
         String metadata = createMetadata(year, month, VERSION, area);
@@ -99,7 +100,7 @@ public class S2FinaliseMapper extends Mapper {
         CalvalusLogger.getLogger().info("...done.");
     }
 
-    static Product remap(File localL3, String baseFilename, Product lcProduct) throws IOException {
+    static Product remap(File localL3, String baseFilename, Product lcProduct, Progressable context) throws IOException {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         source.addBand("JD_remapped", "(JD < 997) ? JD : (JD == 999) ? -1 : -2", ProductData.TYPE_INT32);
@@ -116,45 +117,7 @@ public class S2FinaliseMapper extends Mapper {
 
         Band lcBand = target.getBand("LC");
         Band jdBand = target.getBand("JD");
-        lcBand.setSourceImage(new SingleBandedOpImage(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(TILE_SIZE, TILE_SIZE), null, ResolutionLevel.MAXRES) {
-            @Override
-            protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-                GeoPos geoPos = new GeoPos();
-                GeoCoding resultGeoCoding = target.getSceneGeoCoding();
-                GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
-                PixelPos pixelPos = new PixelPos();
-                int[] jdArray = new int[destRect.width * destRect.height];
-                try {
-                    jdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(jdArray));
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-                int pixelIndex = 0;
-                for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                    for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                        pixelPos.x = x;
-                        pixelPos.y = y;
-                        resultGeoCoding.getGeoPos(pixelPos, geoPos);
-                        lcGeoCoding.getPixelPos(geoPos, pixelPos);
-                        int[] lcData = new int[1];
-                        try {
-                            lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
-                        } catch (IOException e) {
-                            throw new IllegalStateException(e);
-                        }
-                        lcData[0] = LcRemapping.remap(lcData[0]);
-                        if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
-                            lcData[0] = 0;
-                        }
-                        int jdValue = jdArray[pixelIndex++];
-                        if (jdValue <= 0 || jdValue >= 997) {
-                            lcData[0] = 0;
-                        }
-                        dest.setSample(x, y, 0, lcData[0]);
-                    }
-                }
-            }
-        });
+        lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
 
         return target;
     }
@@ -192,6 +155,61 @@ public class S2FinaliseMapper extends Mapper {
             return out.toString();
         } catch (JDOMException | NullPointerException e) {
             throw new IOException(e);
+        }
+    }
+
+    private static class LcImage extends SingleBandedOpImage {
+
+        private final Product target;
+        private final Product lcProduct;
+        private final Band jdBand;
+        private final Progressable context;
+
+        private LcImage(Product target, Product lcProduct, Band jdBand, Progressable context) {
+            super(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            this.target = target;
+            this.lcProduct = lcProduct;
+            this.jdBand = jdBand;
+            this.context = context;
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            context.progress();
+            GeoPos geoPos = new GeoPos();
+            GeoCoding resultGeoCoding = target.getSceneGeoCoding();
+            GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
+            PixelPos pixelPos = new PixelPos();
+            int[] jdArray = new int[destRect.width * destRect.height];
+            try {
+                jdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(jdArray));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            int pixelIndex = 0;
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    pixelPos.x = x;
+                    pixelPos.y = y;
+                    resultGeoCoding.getGeoPos(pixelPos, geoPos);
+                    lcGeoCoding.getPixelPos(geoPos, pixelPos);
+                    int[] lcData = new int[1];
+                    try {
+                        lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
+                    } catch (IOException e) {
+                        throw new IllegalStateException(e);
+                    }
+                    lcData[0] = LcRemapping.remap(lcData[0]);
+                    if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
+                        lcData[0] = 0;
+                    }
+                    int jdValue = jdArray[pixelIndex++];
+                    if (jdValue <= 0 || jdValue >= 997) {
+                        lcData[0] = 0;
+                    }
+                    dest.setSample(x, y, 0, lcData[0]);
+                }
+            }
         }
     }
 
