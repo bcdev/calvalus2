@@ -146,6 +146,22 @@ public class JDAggregatorTest {
         assertEquals(0, targetVector.get(1), 1E-7);
     }
 
+    @Test
+    public void testAggregate_8() throws Exception {
+        SpatialBin ctx = new SpatialBin();
+        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
+
+        targetVector.set(0, 0.0f);
+        targetVector.set(1, 0.0f);
+        ctx.put("maxJD", -1.0f);
+
+        aggregator.aggregate(220F, 0, ctx, targetVector);
+
+        assertEquals(0F, targetVector.get(0), 1E-7);
+        assertEquals(0, targetVector.get(1), 1E-7);
+    }
+
 
 
 }

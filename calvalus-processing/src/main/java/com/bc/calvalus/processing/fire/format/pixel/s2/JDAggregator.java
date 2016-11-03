@@ -68,11 +68,12 @@ public class JDAggregator extends AbstractAggregator {
 
         // take max of JD
         // overwrite if JD > old maxJD
-        boolean validJD = jd >= 0 && jd < 997 && jd >= minDoy && jd <= maxDoy;
-        boolean newValidMax = oldMaxJD >= 997 || jd > oldMaxJD;
+        boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
+        boolean validJD = jd >= 0 && jd < 997 && inTimeBounds;
+        boolean maybeNewMax = oldMaxJD >= 997 || jd > oldMaxJD;
         boolean jdIsSet = oldMaxJD >= 0;
 
-        if (validJD && newValidMax) {
+        if (validJD && maybeNewMax) {
             ctx.put("maxJD", jd);
             targetVector.set(0, jd);
             targetVector.set(1, cl);
@@ -88,7 +89,7 @@ public class JDAggregator extends AbstractAggregator {
             targetVector.set(0, jd);
             targetVector.set(1, cl);
             ctx.put("maxJD", jd);
-        } else if (!jdIsSet) {
+        } else if (!jdIsSet && inTimeBounds) {
             targetVector.set(0, jd);
             targetVector.set(1, cl);
             ctx.put("maxJD", jd);
