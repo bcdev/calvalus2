@@ -24,7 +24,7 @@ public class S2FinaliseMapperTest {
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\2010.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         String baseFilename = S2FinaliseMapper.createBaseFilename("2016", "02", "fv4.2", new S2Strategy().getArea("AREA_24"));
-        Product product = S2FinaliseMapper.remap(new File("C:\\ssd\\L3_2016-02-01_2016-02-29.nc"), baseFilename, lcProduct);
+        Product product = S2FinaliseMapper.remap(new File("C:\\ssd\\L3_2016-02-01_2016-02-29.nc"), baseFilename, lcProduct, () -> System.out.println("S2FinaliseMapperTest.progress"));
 
         ProductIO.writeProduct(product, "C:\\ssd\\" + baseFilename + "_test256.tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
     }
