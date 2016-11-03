@@ -30,6 +30,7 @@ import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -473,6 +474,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
 
         private void assign(DtoProcessorDescriptor[] processors) {
+            Arrays.sort(processors, (o1, o2) -> o1.getDisplayText().compareToIgnoreCase(o2.getDisplayText()));
             if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
                 CalvalusPortal.this.systemProcessors = processors;
             } else if (filter.equals(BundleFilter.PROVIDER_USER)) {

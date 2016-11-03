@@ -207,11 +207,7 @@ public class L2ConfigForm extends Composite {
         int newSelectionIndex = 0;
         boolean productSetChanged = true;
         for (DtoProcessorDescriptor processor : processorDescriptors) {
-            String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
-            if (!processor.getOwner().isEmpty()) {
-                label = "(by " + processor.getOwner() +") " + label;
-            }
-            processorList.addItem(label);
+            processorList.addItem(processor.getDisplayText());
             if (oldSelection != null && oldSelection.equals(processor)) {
                 newSelectionIndex = processorList.getItemCount() - 1;
                 productSetChanged = false;
