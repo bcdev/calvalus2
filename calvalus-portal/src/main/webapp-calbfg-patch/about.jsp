@@ -36,7 +36,7 @@
             <h1 class="title">
 <style>
     body {
-    font-family : "Lucida Calligraphy",Calibri,Verdana,Arial,sans-serif;
+    font-family : Lucida Calligraphy,Calibri,Verdana,Arial,sans-serif;
     color : black;
     background-color : white;
     }
@@ -47,7 +47,7 @@
     a {
     color : black;
     }
-</style>WasMon-CT Calvalus</h1>
+</style>WasMon-CT</h1>
 
             <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
         </td>

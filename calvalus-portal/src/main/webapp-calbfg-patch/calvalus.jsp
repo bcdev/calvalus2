@@ -5,7 +5,7 @@
 
 <html>
 <head>
-    <title>WasMon-CT Processing On-Demand</title>
+    <title>WasMon-CT Calvalus</title>
     <link type="text/css" rel="stylesheet" href="calvalus.css">
     <meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <script type="text/javascript" language="javascript" src="calvalus/calvalus.nocache.js"></script>
@@ -33,12 +33,12 @@
             <table style="width: 100%;">
                 <tr>
                     <td>
-                        <a href="http://www.brockmann-consult.de/"><img src="calbfg/images/bfg_logoFL1_A4_rgb.jpg" alt="BfG logo"></a>
+                        <a href="http://www.brockmann-consult.de/"><img src="images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"></a>
                     </td>
                     <td>
-                        <h1 class="title">Calvalus</h1>
+                        <h1 class="title">WasMon-CT</h1>
 
-                        <h2 class="subTitle">Portal for WasMon-CT on-demand processing</h2>
+                        <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
                     </td>
                     <td class="userName">
                         <% final Principal userPrincipal = request.getUserPrincipal(); %>

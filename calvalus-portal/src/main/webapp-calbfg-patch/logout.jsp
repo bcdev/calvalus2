@@ -7,19 +7,19 @@
 </head>
 <body>
 
-<table style="width: 820px; border: 0;" align="center">
+<table style="width: 99%; border: 0;" align="center">
     <tr>
         <td>
             <hr/>
-            <table class="headerPanel">
+            <table style="width: 100%" class="headerPanel">
                 <tr>
                     <td>
-                        <img src="images/bfg_logoFL1_A4_rgb.jpg" alt="BfG logo"/></a>
+                        <a href="http://www.brockmann-consult.de/"><img src="images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"/></a>
                     </td>
                     <td>
-                        <h1 class="title">Calvalus</h1>
+                        <h1 class="title">WasMon-CT</h1>
 
-                        <h2 class="subTitle">Portal for WasMon-CT on-demand processing</h2>
+                        <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
                     </td>
                     <td class="userName">
                         <a href="about.jsp">About</a>

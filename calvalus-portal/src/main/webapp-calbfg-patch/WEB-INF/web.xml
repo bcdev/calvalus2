@@ -6,7 +6,7 @@
 <web-app>
 
     <display-name>BfG WasMon-CT Processing On-Demand</display-name>
-    <description>Calvalus Portal for on-demand processing</description>
+    <description>Calvalus portal for on-demand processing</description>
 
     <!-- Configuration properties for the Calvalus portal -->
 

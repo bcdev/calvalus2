@@ -22,9 +22,9 @@
                         <a href="http://www.brockmann-consult.de/"><img src="/calbfg/images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"/></a>
                     </td>
                     <td>
-                        <h1 class="title">Calvalus</h1>
+                        <h1 class="title">WasMon-CT</h1>
 
-                        <h2 class="subTitle">Portal for WasMoni-CT on-demand processing</h2>
+                        <h2 class="subTitle">Portal for Calvalus on-demand processing</h2>
                     </td>
                     <td class="userName">
                         <a href="about.jsp">About</a>
