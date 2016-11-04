@@ -77,7 +77,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoAggregatorDescriptor[] systemAggregators;
     private DtoAggregatorDescriptor[] userAggregators;
     private DtoAggregatorDescriptor[] allUserAggregators;
-    private DtoMaskDescriptor[] userMasks;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
     // A timer that periodically retrieves production statuses from server
@@ -137,8 +136,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
-                backendService.getMasks(new InitMasksCallback());
-
                 GWT.log("checking for user roles asynchronously");
                 backendService.getCalvalusConfig(new CalvalusConfigCallback());
             }
@@ -188,11 +185,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return allUserAggregators;
         }
         return new DtoAggregatorDescriptor[0];
-    }
-
-    @Override
-    public DtoMaskDescriptor[] getMasks() {
-        return userMasks;
     }
 
     @Override
@@ -363,7 +355,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 && productSets != null
                 && systemProcessors != null && userProcessors != null && allUserProcessors != null
                 && systemAggregators != null && userAggregators != null && allUserAggregators != null
-                && userMasks != null
                 && productions != null
                 && calvalusConfig != null;
     }
@@ -482,22 +473,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
                 CalvalusPortal.this.allUserProcessors = processors;
             }
-        }
-    }
-
-    private class InitMasksCallback implements AsyncCallback<DtoMaskDescriptor[]> {
-
-        @Override
-        public void onSuccess(DtoMaskDescriptor[] maskDescriptors) {
-            CalvalusPortal.this.userMasks = maskDescriptors;
-            maybeInitFrontend();
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            caught.printStackTrace(System.err);
-            Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.userMasks = new DtoMaskDescriptor[0];
         }
     }
 
