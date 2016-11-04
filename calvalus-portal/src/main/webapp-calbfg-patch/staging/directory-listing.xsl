@@ -13,9 +13,18 @@
                 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
                 <style>
                     body {
-                    font-family : "Lucida Calligraphy",Calibri,Verdana,Arial,sans-serif;
+                    font-family : Calibri,Verdana,Arial,sans-serif;
                     color : black;
                     background-color : white;
+                    }
+                    .title {
+                        font-family: Lucida Calligraphy, Calibri, Verdana, Arial, sans-serif;
+                        color: #7b8fae;
+                        font-size: 32pt;
+                        font-weight: bold;
+                        text-shadow: #ddd 3px 3px 1px;
+                        margin: 0;
+                        padding: 0 0 0 4px;
                     }
                     b {
                     color : white;
@@ -33,22 +42,7 @@
                             <a href="http://www.brockmann-consult.de/"><img src="/calbfg/images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"/></a>
                         </td>
                         <td>
-                            <h1 class="title">
-                <style>
-                    body {
-                    font-family : "Lucida Calligraphy",Calibri,Verdana,Arial,sans-serif;
-                    color : black;
-                    background-color : white;
-                    }
-                    b {
-                    color : white;
-                    background-color : #0086b2;
-                    }
-                    a {
-                    color : black;
-                    }
-                </style>WasMon-CT Calvalus</h1>
-
+                            <h1 class="title">WasMon-CT</h1>
                             <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
                         </td>
                     </tr>
