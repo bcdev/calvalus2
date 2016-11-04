@@ -40,12 +40,15 @@ public class MainMenu {
         cellTree = new CellTree(mainMenuModel, null);
         cellTree.setAnimationEnabled(true);
         cellTree.setKeyboardSelectionPolicy(HasKeyboardSelectionPolicy.KeyboardSelectionPolicy.DISABLED);
-        cellTree.setWidth("200px");
+        cellTree.setWidth("180px");
     }
 
     void showAndSelectFirstView() {
         TreeNode root = cellTree.getRootTreeNode();
         TreeNode category = root.setChildOpen(0, true);
+        if (root.getChildCount() > 1) {
+            root.setChildOpen(1, true);
+        }
         PortalView portalView = (PortalView) category.getChildValue(0);
         selectionModel.setSelected(portalView, true);
     }

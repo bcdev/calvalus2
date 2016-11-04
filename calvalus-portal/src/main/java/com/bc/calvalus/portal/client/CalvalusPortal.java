@@ -304,7 +304,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         mainMenu = new MainMenu(views);
 
         DeckLayoutPanel viewPanel = new DeckLayoutPanel();
-        viewPanel.setSize("145em", "500em"); // TODO this is very long, but works
+        viewPanel.setSize("105em", "120em");  // TODO use as minimum, and fill window size if window is larger
         viewPanel.setVisible(true);
         for (PortalView view : views) {
             viewPanel.add(view.asWidget());
