@@ -42,7 +42,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
         String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
-        String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir",
+        String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
