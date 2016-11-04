@@ -220,7 +220,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         velocityContext.put("inputPath", inputPath);
         velocityContext.put("outputPath", getOutputDirectoryPath());
         velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
-        velocityContext.put("GlobalFunctions", new GlobalsFunctions(getLogger()));
+        velocityContext.put("GlobalFunctions", new GlobalFunctions(getLogger()));
 
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         Path graphPath = new Path(graphPathAsString);
@@ -253,11 +253,11 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     // TODO mz/nf 2013-11-13 use some sort of plugin concept to add new functions to the velocity context
-    public static class GlobalsFunctions {
+    public static class GlobalFunctions {
 
         private final Logger logger;
 
-        public GlobalsFunctions(Logger logger) {
+        public GlobalFunctions(Logger logger) {
             this.logger = logger;
         }
 
@@ -380,7 +380,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
         Path inputPath = new Path("hdfs://calvalus/calvalus/eodata/MER_RR__1P/r03/2008/06/01/MER_RR__1PRACR20080601_122734_000026432069_00081_32700_0000.N1");
         velocityContext.put("inputPath", inputPath);
-        velocityContext.put("GlobalFunctions", new GlobalsFunctions(Logger.getLogger("test")));
+        velocityContext.put("GlobalFunctions", new GlobalFunctions(Logger.getLogger("test")));
 
         Reader inputReader = new FileReader(args[0]);
         Resource processedGraph = resourceEngine.processResource(new ReaderResource(args[0], inputReader));
