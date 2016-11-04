@@ -133,7 +133,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 final BundleFilter allUserFilter = new BundleFilter();
                 allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
                 backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
-                backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
+                // aggregators from other users are currently not shown
+                // backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
 
                 GWT.log("checking for user roles asynchronously");
@@ -354,7 +355,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return regions != null
                 && productSets != null
                 && systemProcessors != null && userProcessors != null && allUserProcessors != null
-                && systemAggregators != null && userAggregators != null && allUserAggregators != null
+                && systemAggregators != null && userAggregators != null
                 && productions != null
                 && calvalusConfig != null;
     }
