@@ -108,6 +108,8 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         outputParametersForm.quicklooks.setValue(true);
         outputParametersForm.replaceNans.setValue(true);
         outputParametersForm.replaceNanValue.setValue(0.0);
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged(l2ConfigForm.getSelectedProcessorDescriptor(), bandsToSelect);
 
 
