@@ -97,7 +97,11 @@ public class FireS2BAProductionType extends HadoopProductionType {
         } else {
             CalvalusLogger.getLogger().info("Skipping period workflow.");
         }
-        s2BAWorkflow.add(s2BaPostWorkflowItem);
+        if (!onlyDoPreProcessing(productionRequest)) {
+            s2BAWorkflow.add(s2BaPostWorkflowItem);
+        } else {
+            CalvalusLogger.getLogger().info("Skipping merging workflow.");
+        }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         return new Production(productionId,
@@ -111,6 +115,10 @@ public class FireS2BAProductionType extends HadoopProductionType {
 
     private boolean onlyDoPostProcessing(ProductionRequest productionRequest) throws ProductionException {
         return productionRequest.getBoolean("calvalus.s2ba.onlyPostProcessing", false);
+    }
+
+    private boolean onlyDoPreProcessing(ProductionRequest productionRequest) throws ProductionException {
+        return productionRequest.getBoolean("calvalus.s2ba.onlyPreProcessing", false);
     }
 
     @Override
