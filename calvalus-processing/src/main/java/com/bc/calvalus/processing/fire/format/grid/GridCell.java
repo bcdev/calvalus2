@@ -9,61 +9,65 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLASSES_COUNT;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_HEIGHT;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_WIDTH;
+
 /**
  * @author thomas
  */
 public class GridCell implements Writable {
 
-    private static final int BAND_SIZE = GridMapper.TARGET_RASTER_WIDTH * GridMapper.TARGET_RASTER_HEIGHT;
+    private static final int BAND_SIZE = TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT;
 
-    float[] baFirstHalf;
-    float[] baSecondHalf;
-    float[] patchNumberFirstHalf;
-    float[] patchNumberSecondHalf;
-    float[] errorsFirstHalf;
-    float[] errorsSecondHalf;
-    List<float[]> baInLcFirstHalf;
-    List<float[]> baInLcSecondHalf;
-    float[] coverageFirstHalf;
-    float[] coverageSecondHalf;
+    public float[] baFirstHalf;
+    public float[] baSecondHalf;
+    public float[] patchNumberFirstHalf;
+    public float[] patchNumberSecondHalf;
+    public float[] errorsFirstHalf;
+    public float[] errorsSecondHalf;
+    public List<float[]> baInLcFirstHalf;
+    public List<float[]> baInLcSecondHalf;
+    public float[] coverageFirstHalf;
+    public float[] coverageSecondHalf;
 
-    void setBaFirstHalf(float[] baFirstHalf) {
+    public void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
     }
 
-    void setBaSecondHalf(float[] baSecondHalf) {
+    public void setBaSecondHalf(float[] baSecondHalf) {
         this.baSecondHalf = baSecondHalf;
     }
 
-    void setPatchNumberFirstHalf(float[] patchNumberFirstHalf) {
+    public void setPatchNumberFirstHalf(float[] patchNumberFirstHalf) {
         this.patchNumberFirstHalf = patchNumberFirstHalf;
     }
 
-    void setPatchNumberSecondHalf(float[] patchNumberSecondHalf) {
+    public void setPatchNumberSecondHalf(float[] patchNumberSecondHalf) {
         this.patchNumberSecondHalf = patchNumberSecondHalf;
     }
 
-    void setErrorsFirstHalf(float[] errorsFirstHalf) {
+    public void setErrorsFirstHalf(float[] errorsFirstHalf) {
         this.errorsFirstHalf = errorsFirstHalf;
     }
 
-    void setErrorsSecondHalf(float[] errorsSecondHalf) {
+    public void setErrorsSecondHalf(float[] errorsSecondHalf) {
         this.errorsSecondHalf = errorsSecondHalf;
     }
 
-    void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
+    public void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
         this.baInLcFirstHalf = baInLcFirstHalf;
     }
 
-    void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
+    public void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
         this.baInLcSecondHalf = baInLcSecondHalf;
     }
 
-    void setCoverageFirstHalf(float[] coverageFirstHalf) {
+    public void setCoverageFirstHalf(float[] coverageFirstHalf) {
         this.coverageFirstHalf = coverageFirstHalf;
     }
 
-    void setCoverageSecondHalf(float[] coverageSecondHalf) {
+    public void setCoverageSecondHalf(float[] coverageSecondHalf) {
         this.coverageSecondHalf = coverageSecondHalf;
     }
 
@@ -115,7 +119,7 @@ public class GridCell implements Writable {
         errorsSecondHalf = new float[BAND_SIZE];
         baInLcFirstHalf = new ArrayList<>();
         baInLcSecondHalf = new ArrayList<>();
-        for (int lcClass = 0; lcClass < GridMapper.LC_CLASSES_COUNT; lcClass++) {
+        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
             baInLcFirstHalf.add(new float[BAND_SIZE]);
             baInLcSecondHalf.add(new float[BAND_SIZE]);
         }

@@ -1,17 +1,27 @@
-package com.bc.calvalus.processing.fire.format.pixel.meris;
+package com.bc.calvalus.processing.fire.format;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.format.PixelProductArea;
-import com.bc.calvalus.processing.fire.format.SensorStrategy;
-import com.bc.calvalus.processing.fire.format.WorkflowConfig;
+import com.bc.calvalus.processing.fire.format.grid.GridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridReducer;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelInputFormat;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMapper;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeInputFormat;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMergeMapper;
+import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelReducer;
+import com.bc.calvalus.processing.fire.format.pixel.meris.PixelVariableType;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 import java.io.IOException;
@@ -32,6 +42,21 @@ public class MerisStrategy implements SensorStrategy {
     @Override
     public PixelProductArea[] getAllAreas() {
         return areaProvider.getAllAreas();
+    }
+
+    @Override
+    public Class<? extends InputFormat> getGridInputFormat() {
+        return GridInputFormat.class;
+    }
+
+    @Override
+    public Class<? extends Mapper> getGridMapperClass() {
+        return MerisGridMapper.class;
+    }
+
+    @Override
+    public Class<? extends Reducer> getGridReducerClass() {
+        return MerisGridReducer.class;
     }
 
     @Override

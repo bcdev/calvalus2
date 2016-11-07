@@ -14,12 +14,12 @@ import java.nio.file.Files;
  * @author thomas
  * @author marcop
  */
-class ErrorPredictor {
+public class ErrorPredictor {
 
     private ScriptEngine engine;
     private final File resFile;
 
-    ErrorPredictor() throws IOException {
+    public ErrorPredictor() throws IOException {
         ScriptEngineManager manager = new ScriptEngineManager();
         engine = manager.getEngineByName("Renjin");
         if (engine == null) {
@@ -31,7 +31,7 @@ class ErrorPredictor {
         }
     }
 
-    float[] predictError(float[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) throws ScriptException {
+    public float[] predictError(float[] burnedAreaInSquareMeters, double[] cellSizeInSquareMeters) throws ScriptException {
         if (burnedAreaInSquareMeters.length != cellSizeInSquareMeters.length) {
             throw new IllegalArgumentException("For each burned area pixel there must be exactly one cell size value.");
         }
@@ -54,7 +54,7 @@ class ErrorPredictor {
         return result;
     }
 
-    void dispose() {
+    public void dispose() {
         resFile.delete();
     }
 

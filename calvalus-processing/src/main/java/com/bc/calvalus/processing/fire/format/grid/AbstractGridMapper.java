@@ -1,36 +1,12 @@
-/*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 3 of the License, or (at your option)
- * any later version.
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, see http://www.gnu.org/licenses/
- */
-
 package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.datamodel.Product;
 
 import javax.script.ScriptException;
-import java.awt.Rectangle;
-import java.io.File;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -39,71 +15,24 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
-/**
- * Runs the fire formatting grid mapper.
- *
- * @author thomas
- * @author marcop
- */
-public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_HEIGHT;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_WIDTH;
 
-    static final int TARGET_RASTER_WIDTH = 40;
-    static final int TARGET_RASTER_HEIGHT = 40;
-    static final int LC_CLASSES_COUNT = 18;
-    static final int NO_DATA = -1;
-    static final int NO_AREA = 0;
-    private boolean maskUnmappablePixels;
+public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
-    private static final Logger LOG = CalvalusLogger.getLogger();
+    protected static final Logger LOG = CalvalusLogger.getLogger();
+    private FireGridDataSource dataSource;
 
-    @Override
-    public void run(Context context) throws IOException, InterruptedException {
-
-        int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
-        int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
-
-        CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
-        Path[] paths = inputSplit.getPaths();
-        LOG.info("paths=" + Arrays.toString(paths));
-
-        boolean computeBA = !paths[0].getName().equals("dummy");
-        LOG.info(computeBA ? "Computing BA" : "Only computing coverage");
-        maskUnmappablePixels = paths[0].getName().contains("v4.0.tif");
-        if (maskUnmappablePixels) {
-            LOG.info("v4.0 file; masking pixels which accidentally fall into unmappable LC class");
+    public GridCell computeGridCell(int year, int month, ErrorPredictor errorPredictor) throws IOException {
+        if (dataSource == null) {
+            throw new NullPointerException("dataSource == null");
         }
-
-        Product sourceProduct;
-        Product lcProduct;
-        if (computeBA) {
-            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-            sourceProduct = ProductIO.readProduct(sourceProductFile);
-
-            File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-            lcProduct = ProductIO.readProduct(lcTile);
-        } else {
-            // because coverage is computed in reducer
-            return;
-        }
-        List<File> srProducts = new ArrayList<>();
-
-        ErrorPredictor errorPredictor = new ErrorPredictor();
-        GridCell gridCell = computeGridCell(year, month, sourceProduct, lcProduct, srProducts, errorPredictor);
-
-        context.progress();
-
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[1].toString()))), gridCell); // use LC input for determining tile
-        errorPredictor.dispose();
-    }
-
-    GridCell computeGridCell(int year, int month, Product sourceProduct, Product lcProduct, List<File> srProducts, ErrorPredictor errorPredictor) throws IOException {
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
 
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        FireGridDataSource dataSource = new DataSourceImpl(sourceProduct, lcProduct, srProducts);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -120,7 +49,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
         List<float[]> baInLcFirstHalf = new ArrayList<>();
         List<float[]> baInLcSecondHalf = new ArrayList<>();
-        for (int c = 0; c < LC_CLASSES_COUNT; c++) {
+        for (int c = 0; c < GridFormatUtils.LC_CLASSES_COUNT; c++) {
             float[] firstHalfBaInLcBuffer = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
             float[] secondHalfBaInLcBuffer = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
             Arrays.fill(firstHalfBaInLcBuffer, 0);
@@ -129,15 +58,12 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
             baInLcSecondHalf.add(secondHalfBaInLcBuffer);
         }
 
-        GeoCoding gc = sourceProduct.getSceneGeoCoding();
-
         int targetPixelIndex = 0;
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, TARGET_RASTER_HEIGHT));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
                 data.reset();
-                Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
-                dataSource.readPixels(sourceRect, data, gc, 3600);
+                dataSource.readPixels(data, 3600, x, y);
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
@@ -149,7 +75,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         boolean hasLcClass = false;
-                        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+                        for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
                             boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
                             baInLcFirstHalf.get(lcClass)[targetPixelIndex] += inLcClass ? data.areas[i] : 0.0;
                             if (inLcClass) {
@@ -158,14 +84,14 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         }
                         if (!hasLcClass) {
                             LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
-                            if (maskUnmappablePixels) {
+                            if (maskUnmappablePixels()) {
                                 baValueFirstHalf -= data.areas[i];
                             }
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         boolean hasLcClass = false;
-                        for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
+                        for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
                             boolean inLcClass = LcRemapping.isInLcClass(lcClass + 1, data.lcClasses[i]);
                             baInLcSecondHalf.get(lcClass)[targetPixelIndex] += inLcClass ? data.areas[i] : 0.0;
                             if (inLcClass) {
@@ -174,7 +100,7 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
                         }
                         if (!hasLcClass) {
                             LOG.info("Pixel " + i + " in tile (" + x + "/" + y + ") with LC class " + data.lcClasses[i] + " is not remappable.");
-                            if (maskUnmappablePixels) {
+                            if (maskUnmappablePixels()) {
                                 baValueSecondHalf -= data.areas[i];
                             }
                         }
@@ -220,6 +146,8 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         return gridCell;
     }
 
+    protected abstract boolean maskUnmappablePixels();
+
     private static void validate(float[] ba, List<float[]> baInLc) {
         int baCount = (int) IntStream.range(0, ba.length).mapToDouble(i -> ba[i]).filter(i -> i != 0).count();
         if (baCount < ba.length * 0.05) {
@@ -260,11 +188,15 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
-        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
+        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
     }
 
     static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
-        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != GridFormatUtils.NO_DATA;
+    }
+
+    protected void setDataSource(FireGridDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     private float[] predict(ErrorPredictor errorPredictor, float[] ba, double[] areas) {
@@ -273,25 +205,6 @@ public class GridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
         } catch (ScriptException e) {
             throw new RuntimeException(String.format("Unable to predict error from BA %s, areas %s", Arrays.toString(ba), Arrays.toString(areas)), e);
         }
-    }
-
-    private static String getTile(String path) {
-        // path.toString() = hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v04h07/2008/2008-06-01-fire-nc/CCI-Fire-MERIS-SDR-L3-300m-v1.0-2008-06-01-v04h07.nc
-        int startIndex = path.length() - 9;
-        return path.substring(startIndex, startIndex + 6);
-    }
-
-    interface FireGridDataSource {
-
-        void readPixels(Rectangle sourceRect, SourceData data, GeoCoding geoCoding, int rasterWidth) throws IOException;
-
-        void setDoyFirstOfMonth(int doyFirstOfMonth);
-
-        void setDoyLastOfMonth(int doyLastOfMonth);
-
-        void setDoyFirstHalf(int doyFirstHalf);
-
-        void setDoySecondHalf(int doySecondHalf);
     }
 
 }

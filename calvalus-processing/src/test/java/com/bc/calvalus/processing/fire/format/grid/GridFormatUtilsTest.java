@@ -14,7 +14,7 @@ import java.time.format.DateTimeFormatter;
 
 import static org.junit.Assert.assertEquals;
 
-public class NcUtilsTest {
+public class GridFormatUtilsTest {
 
     @Ignore
     @Test
@@ -22,28 +22,28 @@ public class NcUtilsTest {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
         String timeCoverageStart = dtf.format(LocalDate.of(2008, 6, 1).atTime(0, 0, 0));
         String timeCoverageEnd = dtf.format(LocalDate.of(2008, 6, 15).atTime(23, 59, 59));
-        NetcdfFileWriter ncFile = NcUtils.createNcFile(".\\" + NcUtils.createFilename("2008", "06", "04.1", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
+        NetcdfFileWriter ncFile = GridFormatUtils.createNcFile(".\\" + GridFormatUtils.createFilename("2008", "06", "04.1", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
         ncFile.close();
     }
 
     @Test
     public void testCreateFilename() throws Exception {
-        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "v04.0", true));
-        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", NcUtils.createFilename("2008", "06", "v04.0", false));
+        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createFilename("2008", "06", "v04.0", true));
+        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createFilename("2008", "06", "v04.0", false));
 
-        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "v04.1", true));
-        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", NcUtils.createFilename("2010", "10", "v04.1", false));
+        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createFilename("2010", "10", "v04.1", true));
+        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createFilename("2010", "10", "v04.1", false));
     }
 
     @Test
     public void testCreateTimeString() throws Exception {
-        String localTimeString = NcUtils.createTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
+        String localTimeString = GridFormatUtils.createTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
         assertEquals("20071203T111530Z", localTimeString);
     }
 
     @Test
     public void testCreateNiceTimeString() throws Exception {
-        String localTimeString = NcUtils.createNiceTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
+        String localTimeString = GridFormatUtils.createNiceTimeString(Instant.parse("2007-12-03T10:15:30.00Z"));
         assertEquals("2007-12-03 11:15:30", localTimeString);
     }
 

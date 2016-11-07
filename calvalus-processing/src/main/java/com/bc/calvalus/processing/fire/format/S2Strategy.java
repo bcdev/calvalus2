@@ -4,6 +4,9 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.format.grid.GridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
+import com.bc.calvalus.processing.fire.format.grid.s2.S2GridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
 import com.bc.calvalus.processing.fire.format.pixel.s2.S2FinaliseMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -19,7 +22,10 @@ import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;
@@ -108,6 +114,21 @@ public class S2Strategy implements SensorStrategy {
         finaliseConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, String.format("%s_format/L3_%s-%s.*.nc", outputDir, year, month));
         workflow.add(new FinaliseWorkflowItem(processingService, userName, productionName, finaliseConfig, area));
         return workflow;
+    }
+
+    @Override
+    public Class<? extends InputFormat> getGridInputFormat() {
+        return GridInputFormat.class;
+    }
+
+    @Override
+    public Class<? extends Mapper> getGridMapperClass() {
+        return S2GridMapper.class;
+    }
+
+    @Override
+    public Class<? extends Reducer> getGridReducerClass() {
+        return S2GridReducer.class;
     }
 
     private static boolean exists(Configuration jobConfig, String outputDir, String filename) {

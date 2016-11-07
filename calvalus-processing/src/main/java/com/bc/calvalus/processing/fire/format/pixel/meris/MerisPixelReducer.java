@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.SensorStrategy;
 import com.bc.ceres.core.ProgressMonitor;

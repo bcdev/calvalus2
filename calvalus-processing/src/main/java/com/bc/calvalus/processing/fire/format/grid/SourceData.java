@@ -2,20 +2,23 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import java.util.Arrays;
 
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_AREA;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
+
 /**
  * @author thomas
  */
-class SourceData {
+public class SourceData {
 
-    final int[] pixels;
-    final double[] areas;
-    final int[] lcClasses;
-    int patchCountFirstHalf;
-    int patchCountSecondHalf;
-    int[] statusPixelsFirstHalf;
-    int[] statusPixelsSecondHalf;
+    public final int[] pixels;
+    public final double[] areas;
+    public final int[] lcClasses;
+    public int patchCountFirstHalf;
+    public int patchCountSecondHalf;
+    public int[] statusPixelsFirstHalf;
+    public int[] statusPixelsSecondHalf;
 
-    SourceData() {
+    public SourceData() {
         pixels = new int[90 * 90];
         lcClasses = new int[90 * 90];
         areas = new double[90 * 90];
@@ -23,7 +26,7 @@ class SourceData {
         statusPixelsSecondHalf = new int[90 * 90];
     }
 
-    SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {
+    public SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {
         this.pixels = pixels;
         this.areas = areas;
         this.lcClasses = lcClasses;
@@ -31,10 +34,10 @@ class SourceData {
         this.statusPixelsSecondHalf = statusPixelsSecondHalf;
     }
 
-    void reset() {
-        Arrays.fill(pixels, GridMapper.NO_DATA);
+    public void reset() {
+        Arrays.fill(pixels, NO_DATA);
         Arrays.fill(lcClasses, 0);
-        Arrays.fill(areas, GridMapper.NO_AREA);
+        Arrays.fill(areas, NO_AREA);
         Arrays.fill(statusPixelsFirstHalf, 0);
         Arrays.fill(statusPixelsSecondHalf, 0);
     }

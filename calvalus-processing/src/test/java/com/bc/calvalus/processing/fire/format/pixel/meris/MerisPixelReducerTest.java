@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import org.junit.Test;
 
 import java.awt.Rectangle;

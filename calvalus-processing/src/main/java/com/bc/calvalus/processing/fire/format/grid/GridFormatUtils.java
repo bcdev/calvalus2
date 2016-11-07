@@ -11,7 +11,13 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
-class NcUtils {
+public class GridFormatUtils {
+
+    public static final int TARGET_RASTER_WIDTH = 40;
+    public static final int TARGET_RASTER_HEIGHT = 40;
+    public static final int LC_CLASSES_COUNT = 18;
+    public static final int NO_DATA = -1;
+    static final int NO_AREA = 0;
 
     static NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
@@ -131,5 +137,18 @@ class NcUtils {
 
     static String createNiceTimeString(Instant instant) {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.systemDefault()).format(instant);
+    }
+
+    public static int[][] make2Dims(int[] pixels) {
+        int length = pixels.length;
+        if ((int) (Math.sqrt(length) + 0.5) * (int) (Math.sqrt(length) + 0.5) != length) {
+            throw new IllegalArgumentException();
+        }
+        int size = (int) Math.sqrt(length);
+        int[][] result = new int[size][size];
+        for (int r = 0; r < size; r++) {
+            System.arraycopy(pixels, r * size, result[r], 0, size);
+        }
+        return result;
     }
 }

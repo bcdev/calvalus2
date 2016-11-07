@@ -11,10 +11,12 @@ import org.esa.snap.binning.operator.BinningOp;
 import org.esa.snap.binning.operator.VariableConfig;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class S2StrategyTest {
 
+    @Ignore
     @Test
     public void testAggregation() throws Exception {
         Product product1 = ProductIO.readProduct("C:\\ssd\\BA-T33PTK-20160204T093257.nc");

@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.MerisStrategy;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;

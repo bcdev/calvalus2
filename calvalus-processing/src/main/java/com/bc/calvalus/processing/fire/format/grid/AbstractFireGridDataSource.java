@@ -1,0 +1,82 @@
+package com.bc.calvalus.processing.fire.format.grid;
+
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.util.AreaCalculator;
+
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
+
+public abstract class AbstractFireGridDataSource implements FireGridDataSource {
+
+    private int doyFirstOfMonth = -1;
+    private int doyLastOfMonth = -1;
+    private int doyFirstHalf = -1;
+    private int doySecondHalf = -1;
+
+    @Override
+    public void setDoyFirstOfMonth(int doyFirstOfMonth) {
+        this.doyFirstOfMonth = doyFirstOfMonth;
+    }
+
+    @Override
+    public void setDoyLastOfMonth(int doyLastOfMonth) {
+        this.doyLastOfMonth = doyLastOfMonth;
+    }
+
+    @Override
+    public void setDoyFirstHalf(int doyFirstHalf) {
+        this.doyFirstHalf = doyFirstHalf;
+    }
+
+    @Override
+    public void setDoySecondHalf(int doySecondHalf) {
+        this.doySecondHalf = doySecondHalf;
+    }
+
+    public int getPatchNumbers(int[][] pixels, boolean firstHalf) {
+        int patchCount = 0;
+        for (int i = 0; i < pixels.length; i++) {
+            for (int j = 0; j < pixels[i].length; j++) {
+                if (clearObjects(pixels, i, j, firstHalf)) {
+                    patchCount++;
+                }
+            }
+        }
+        return patchCount;
+    }
+
+    private boolean clearObjects(int[][] array, int x, int y, boolean firstHalf) {
+        if (x < 0 || y < 0 || x >= array.length || y >= array[x].length) {
+            return false;
+        }
+        if (isBurned(array[x][y], firstHalf)) {
+            array[x][y] = 0;
+            clearObjects(array, x - 1, y, firstHalf);
+            clearObjects(array, x + 1, y, firstHalf);
+            clearObjects(array, x, y - 1, firstHalf);
+            clearObjects(array, x, y + 1, firstHalf);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isBurned(int pixel, boolean firstHalf) {
+        if (doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1) {
+            throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
+        }
+        if (firstHalf) {
+            return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
+        }
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
+    }
+
+    protected static double[] getAreas(GeoCoding gc, int rasterWidth, double[] areas) {
+        AreaCalculator areaCalculator = new AreaCalculator(gc);
+        for (int i = 0; i < areas.length; i++) {
+            int sourceBandX = i % rasterWidth;
+            int sourceBandY = i / rasterWidth;
+            areas[i] = areaCalculator.calculatePixelSize(sourceBandX, sourceBandY);
+        }
+        return areas;
+    }
+
+}
