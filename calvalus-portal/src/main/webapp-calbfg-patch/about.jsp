@@ -30,7 +30,7 @@
   <table width="500" class="headerPanel">
     <tr>
       <td width="200">
-          <a href="http://www.brockmann-consult.de/"><img src="/calbfg/images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"/></a>
+          <a href="http://www.bafg.de/DE/Home/homepage_node.html"><img src="/calbfg/images/bfg_logoFL1_A4_rgb.jpg" height="65" alt="BfG logo"/></a>
       </td>
         <td>
             <h1 class="title">
@@ -51,7 +51,10 @@
 
             <h2 class="subTitle">Calvalus portal for on-demand processing</h2>
         </td>
-      <td width="50" class="href"><a href='http://www.brockmann-consult.de/calbfg/products.html'>Back</a></td>
+                    <td>
+                        <a href="http://www.brockmann-consult.de/"><img src="images/BC-Logo_300dpi.png" height="48" alt="BC logo"></a>
+                    </td>
+      <td width="50" class="href"><a href='http://www.brockmann-consult.de/calbfg/calvalus.jsp'>Back</a></td>
     </tr>
   </table>
   <hr>

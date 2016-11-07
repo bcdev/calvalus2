@@ -19,12 +19,15 @@
             <table class="headerPanel">
                 <tr>
                     <td>
-                        <a href="http://www.brockmann-consult.de/"><img src="/calbfg/images/bfg_logoFL1_A4_rgb.jpg" width="200" alt="BfG logo"/></a>
+                        <a href="http://www.bafg.de/DE/Home/homepage_node.html/"><img src="images/bfg_logoFL1_A4_rgb.jpg" height="65" alt="BfG logo"></a>
                     </td>
                     <td>
                         <h1 class="title">WasMon-CT</h1>
 
                         <h2 class="subTitle">Portal for Calvalus on-demand processing</h2>
+                    </td>
+                    <td>
+                        <a href="http://www.brockmann-consult.de/"><img src="images/BC-Logo_300dpi.png" height="48" alt="BC logo"></a>
                     </td>
                     <td class="userName">
                         <a href="about.jsp">About</a>
