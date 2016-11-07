@@ -103,20 +103,20 @@ public class S2BaInputFormat extends InputFormat {
         return result;
     }
 
-    private int getMaxPreImagesCount(List<FileStatus> filteredList) {
+    static int getMaxPreImagesCount(List<FileStatus> filteredList) {
         Logger.getLogger("com.bc.calvalus").info("Computing max pre images count...");
         String orbit = null;
         for (FileStatus fileStatus : filteredList) {
             if (orbit == null) {
                 orbit = fileStatus.getPath().getName().substring(42, 47);
             } else {
-                if (orbit.equals(fileStatus.getPath().getName().substring(42, 47))) {
-                    Logger.getLogger("com.bc.calvalus").info("...other file found with orbit " + orbit + ": " + fileStatus.getPath().getName() + ", so it is 8.");
+                if (!orbit.equals(fileStatus.getPath().getName().substring(42, 47))) {
+                    Logger.getLogger("com.bc.calvalus").info("...other file found with different orbit, so it is 8.");
                     return MAX_PRE_IMAGES_COUNT_MULTI_ORBIT;
                 }
             }
         }
-        Logger.getLogger("com.bc.calvalus").info("...no other file found with orbit " + orbit + ", so it is 4.");
+        Logger.getLogger("com.bc.calvalus").info("...no file found with different orbit, so it is 4.");
         return MAX_PRE_IMAGES_COUNT_SINGLE_ORBIT;
     }
 
