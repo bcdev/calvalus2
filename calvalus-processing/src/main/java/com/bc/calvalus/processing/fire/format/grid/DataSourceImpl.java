@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.AreaCalculator;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
 import ucar.ma2.InvalidRangeException;
