@@ -166,20 +166,23 @@ public class ParametersEditorGenerator {
     }
 
     public void setFromXML(String xml) {
-        // read past <parameters>
-        final int paramStart = xml.indexOf("<parameters>") + "<parameters>".length();
-        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
-            String name = parameterDescriptor.getName();
-            int tagStartIndex = xml.indexOf("<" + name + ">", paramStart);
-            if (tagStartIndex != -1) {
-                int valueStartIndex = tagStartIndex + name.length() + 2;
-                int endIndex = xml.indexOf("</" + name + ">", valueStartIndex);
-                String encodedValue = xml.substring(valueStartIndex, endIndex);
-                String value = decodeXML(encodedValue);
+        int index = xml.indexOf("<parameters>");
+        if (index != -1) {
+            // read past <parameters>
+            final int paramStart = index + "<parameters>".length();
+            for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+                String name = parameterDescriptor.getName();
+                int tagStartIndex = xml.indexOf("<" + name + ">", paramStart);
+                String value = parameterDescriptor.getDefaultValue();
+                if (tagStartIndex != -1) {
+                    int valueStartIndex = tagStartIndex + name.length() + 2;
+                    int endIndex = xml.indexOf("</" + name + ">", valueStartIndex);
+                    if (endIndex != -1) {
+                        String encodedValue = xml.substring(valueStartIndex, endIndex);
+                        value = decodeXML(encodedValue);
+                    }
+                }
                 editorMap.get(parameterDescriptor).setValue(value);
-            } else {
-                String defaultValue = parameterDescriptor.getDefaultValue();
-                editorMap.get(parameterDescriptor).setValue(defaultValue);
             }
         }
     }
