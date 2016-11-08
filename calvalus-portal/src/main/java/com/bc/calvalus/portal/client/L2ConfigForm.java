@@ -271,7 +271,8 @@ public class L2ConfigForm extends Composite {
             String defaultParameter = processor.getDefaultParameter();
             DtoParameterDescriptor[] parameters = processor.getParameterDescriptors();
             boolean hasParameterDescriptors = parameters.length > 0;
-            if (defaultParameter.isEmpty() && hasParameterDescriptors) {
+            if (hasParameterDescriptors) {
+                // ignore processor.getDefaultParameter(), if parameter descriptors are given
                 defaultParameter = ParametersEditorGenerator.formatAsXMLFromDefaults(parameters);
             }
             processorParametersArea.setValue(defaultParameter);
@@ -283,6 +284,10 @@ public class L2ConfigForm extends Composite {
                 editParamsHandlerRegistration = editParametersButton.addClickHandler(new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent event) {
+                        String textboxValue = processorParametersArea.getValue().trim();
+                        if (!textboxValue.isEmpty()) {
+                            parametersEditorGenerator.setFromXML(textboxValue);
+                        }
                         parametersEditorGenerator.showDialog("800px", "640px", new ParametersEditorGenerator.OnOkHandler() {
                             @Override
                             public void onOk() {
@@ -351,14 +356,6 @@ public class L2ConfigForm extends Composite {
         String processorParameterValue = parameters.get(ProcessorProductionRequest.PROCESSOR_PARAMETERS);
 
         if (bundleNameValue != null && bundleVersionValue != null && processorNameValue != null) {
-            showMyProcessors.setValue(true);
-            if (showAllUserProcessors.isEnabled()) {
-                showAllUserProcessors.setValue(true);
-            }
-            showSystemProcessors.setValue(true);
-            filterProcessorByProductType.setValue(false);
-            filterProcessorByVersion.setValue(false);
-            updateProcessorList();
             int selectionIndex = findProcessor(portalContext.getProcessors(BundleFilter.PROVIDER_SYSTEM),
                                                              bundleNameValue, bundleVersionValue,
                                                              bundleLocationValue, processorNameValue);

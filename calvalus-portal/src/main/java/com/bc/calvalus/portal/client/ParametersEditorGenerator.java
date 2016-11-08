@@ -165,6 +165,25 @@ public class ParametersEditorGenerator {
         return sb.toString();
     }
 
+    public void setFromXML(String xml) {
+        // read past <parameters>
+        final int paramStart = xml.indexOf("<parameters>") + "<parameters>".length();
+        for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
+            String name = parameterDescriptor.getName();
+            int tagStartIndex = xml.indexOf("<" + name + ">", paramStart);
+            if (tagStartIndex != -1) {
+                int valueStartIndex = tagStartIndex + name.length() + 2;
+                int endIndex = xml.indexOf("</" + name + ">", valueStartIndex);
+                String encodedValue = xml.substring(valueStartIndex, endIndex);
+                String value = decodeXML(encodedValue);
+                editorMap.get(parameterDescriptor).setValue(value);
+            } else {
+                String defaultValue = parameterDescriptor.getDefaultValue();
+                editorMap.get(parameterDescriptor).setValue(defaultValue);
+            }
+        }
+    }
+
     static String formatAsXMLFromDefaults(DtoParameterDescriptor[] parameterDescriptors) {
         StringBuilder sb = new StringBuilder();
         sb.append("<parameters>\n");

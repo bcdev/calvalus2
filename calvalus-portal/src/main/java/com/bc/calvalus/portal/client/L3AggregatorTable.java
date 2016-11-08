@@ -68,7 +68,7 @@ public class L3AggregatorTable {
             this.editor = new ParametersEditorGenerator(title, aggregatorDescriptor.getParameterDescriptors(), style);
         }
 
-        private String getParametersAsText() {
+        private String getParametersForDisplay() {
             StringBuilder sb = new StringBuilder();
             DtoParameterDescriptor[] parameterDescriptors = aggregatorDescriptor.getParameterDescriptors();
 
@@ -273,7 +273,7 @@ public class L3AggregatorTable {
         return new Column<ConfiguredAggregator, String>(new TextCell()) {
             @Override
             public String getValue(ConfiguredAggregator configuredAggregator) {
-                return configuredAggregator.getParametersAsText();
+                return configuredAggregator.getParametersForDisplay();
             }
         };
     }
