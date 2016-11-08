@@ -8,6 +8,7 @@ import org.junit.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hans
@@ -107,6 +108,15 @@ public class WpsXmlRequestConverterTest {
                                        "    </wps:Input>\n" +
                                        "  </wps:DataInputs>\n" +
                                        "</wps:Execute>"));
+
+        WpsProductionRequestConverter wpsProductionRequestConverter = new WpsProductionRequestConverter(requestXml);
+        ProductionRequest requestRestored = wpsProductionRequestConverter.loadProductionRequest("userName");
+        Set<String> keySet = productionParameters.keySet();
+        for (String key : keySet) {
+            String orig = productionParameters.get(key);
+            String now = requestRestored.getString(key);
+            assertEquals("key="+key, orig, now);
+        }
     }
 
     @Test

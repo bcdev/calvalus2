@@ -355,23 +355,25 @@ public class L2ConfigForm extends Composite {
         String processorNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_NAME);
         String processorParameterValue = parameters.get(ProcessorProductionRequest.PROCESSOR_PARAMETERS);
 
+        boolean processorSelected = false;
         if (bundleNameValue != null && bundleVersionValue != null && processorNameValue != null) {
             int selectionIndex = findProcessor(processorDescriptors,
                                                bundleNameValue, bundleVersionValue,
                                                bundleLocationValue, processorNameValue);
             if (selectionIndex > -1) {
                 processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
-            } else {
-                processorList.setSelectedIndex(0);
+                updateProcessorDetails();
+                if (processorParameterValue != null) {
+                    processorParametersArea.setValue(processorParameterValue);
+                }
+                processorSelected = true;
             }
-            updateProcessorDetails();
-            if (processorParameterValue != null) {
-                processorParametersArea.setValue(processorParameterValue);
-            }
-        } else if (!selectionMandatory) {
-            processorList.setSelectedIndex(0);
         }
-        DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
+        if (!processorSelected) {
+            // no matching processor found, select the first
+            processorList.setSelectedIndex(0);
+            updateProcessorDetails();
+        }
         // TODO handle failure
     }
 
