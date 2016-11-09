@@ -71,7 +71,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                             stagingService,
                                                                             productionStore,
                                                                             productionTypes);
-            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, null);
+            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

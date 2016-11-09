@@ -154,7 +154,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "autoStaging", "false"));
         }
 
-        return new ServiceContainer(productionService, fileSystemService, inventoryService, null);
+        return new ServiceContainer(productionService, fileSystemService, inventoryService);
 
     }
 
