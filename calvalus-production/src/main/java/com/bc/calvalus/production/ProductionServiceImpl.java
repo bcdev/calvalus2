@@ -5,20 +5,15 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowException;
-import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
-import com.bc.calvalus.inventory.InventoryService;
-import com.bc.calvalus.inventory.ProductSet;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
-import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.hadoop.fs.FileSystem;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -48,7 +43,7 @@ public class ProductionServiceImpl implements ProductionService {
         RESTART,// todo - implement restart (nf)
     }
 
-    private final InventoryService inventoryService;
+    private final FileSystemService fileSystemService;
     private final ProcessingService processingService;
     private final StagingService stagingService;
     private final ProductionType[] productionTypes;
@@ -59,12 +54,12 @@ public class ProductionServiceImpl implements ProductionService {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-    public ProductionServiceImpl(InventoryService inventoryService,
+    public ProductionServiceImpl(FileSystemService fileSystemService,
                                  ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
                                  ProductionType... productionTypes) throws ProductionException {
-        this.inventoryService = inventoryService;
+        this.fileSystemService = fileSystemService;
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
@@ -362,7 +357,12 @@ public class ProductionServiceImpl implements ProductionService {
         productionStore.removeProduction(production.getId());
         productionActionMap.remove(production.getId());
         productionStagingsMap.remove(production.getId());
-        deleteWorkflowOutput(production.getWorkflow());
+
+        String userName = production.getProductionRequest().getUserName();
+        deleteOutput(production.getOutputPath(), userName);
+        for (String dir : production.getIntermediateDataPath()) {
+            deleteOutput(dir, userName);
+        }
         try {
             stagingService.deleteTree(production.getStagingPath());
         } catch (IOException e) {
@@ -371,21 +371,19 @@ public class ProductionServiceImpl implements ProductionService {
         }
     }
 
-    private void deleteWorkflowOutput(WorkflowItem workflowItem) {
-        if (workflowItem instanceof HadoopWorkflowItem) {
-            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
-            String outputDir = hadoopWorkflowItem.getOutputDir();
-            try {
-                String userName = hadoopWorkflowItem.getUserName();
-                FileSystem fileSystem = hadoopWorkflowItem.getProcessingService().getFileSystem(userName, outputDir);
-                JobUtils.clearDir(outputDir, fileSystem);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
-            }
-        } else {
-            for (WorkflowItem item : workflowItem.getItems()) {
-                deleteWorkflowOutput(item);
-            }
+    private void deleteOutput(String outputDir, String userName) {
+        if (outputDir == null) {
+            logger.log(Level.WARNING, "output dir is null");
+            return;
+        }
+        if (outputDir.isEmpty()) {
+            logger.log(Level.WARNING, "output dir is empty");
+            return;
+        }
+        try {
+            fileSystemService.removeDirectory(userName, outputDir);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
         }
     }
 }

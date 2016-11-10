@@ -7,7 +7,6 @@ import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
-import com.bc.ceres.binding.BindingException;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -18,6 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -216,6 +216,15 @@ public class SqlProductionStore implements ProductionStore {
         float procProgress = resultSet.getFloat("processing_progress");
         String procMessage = resultSet.getString("processing_message");
         String outputPath = resultSet.getString("output_path");
+        String[] intermediatePathes = new String[0];
+        if (outputPath != null && outputPath.contains(";")) {
+            String[] elems = outputPath.split(";");
+            outputPath = elems[0];
+            intermediatePathes = Arrays.copyOfRange(elems, 1, elems.length);
+        }
+        if ("[[null]]".equals(outputPath)) {
+            outputPath = null;
+        }
         String stagingState = resultSet.getString("staging_state");
         float stagingProgress = resultSet.getFloat("staging_progress");
         String stagingMessage = resultSet.getString("staging_message");
@@ -247,6 +256,7 @@ public class SqlProductionStore implements ProductionStore {
                                                    processStatus);
         Production production = new Production(id, name,
                                                outputPath,
+                                               intermediatePathes,
                                                stagingPath,
                                                autoStaging,
                                                productionRequest,
@@ -299,7 +309,7 @@ public class SqlProductionStore implements ProductionStore {
         insertProductionStmt.setString(9, production.getProcessingStatus().getState().toString());
         insertProductionStmt.setFloat(10, production.getProcessingStatus().getProgress());
         insertProductionStmt.setString(11, production.getProcessingStatus().getMessage());
-        insertProductionStmt.setString(12, production.getOutputPath());
+        insertProductionStmt.setString(12, formatOutputPathes(production.getOutputPath(), production.getIntermediateDataPath()));
         insertProductionStmt.setString(13, production.getStagingStatus().getState().toString());
         insertProductionStmt.setFloat(14, production.getStagingStatus().getProgress());
         insertProductionStmt.setString(15, production.getStagingStatus().getMessage());
@@ -378,5 +388,17 @@ public class SqlProductionStore implements ProductionStore {
 
     private static Timestamp toSqlTimestamp(Date date) {
         return date != null ? new Timestamp(date.getTime()) : null;
+    }
+
+    private static String formatOutputPathes(String outputPath, String[] intermediateDataPath) {
+        StringBuilder sb = new StringBuilder(nullSafe(outputPath));
+        for (String path : intermediateDataPath) {
+            sb.append(";").append(path);
+        }
+        return sb.toString();
+    }
+
+    private static String nullSafe(String s) {
+        return s == null ? "[[null]]" : s;
     }
 }

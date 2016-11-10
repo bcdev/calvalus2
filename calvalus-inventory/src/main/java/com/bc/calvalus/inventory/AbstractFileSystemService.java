@@ -92,7 +92,11 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     public boolean removeDirectory(String username, String path) throws IOException {
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
-        return fileSystem.delete(qualifiedPath, true);
+        if (fileSystem.exists(qualifiedPath)) {
+            return fileSystem.delete(qualifiedPath, true);
+        } else {
+            return false;
+        }
     }
 
     @Override

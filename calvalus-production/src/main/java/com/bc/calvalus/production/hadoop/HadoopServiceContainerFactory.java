@@ -66,7 +66,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
             }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType[] productionTypes = getProductionTypes(hdfsFileSystemService, processingService, stagingService);
-            ProductionService productionService = new ProductionServiceImpl(inventoryService,
+            ProductionService productionService = new ProductionServiceImpl(hdfsFileSystemService,
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,
