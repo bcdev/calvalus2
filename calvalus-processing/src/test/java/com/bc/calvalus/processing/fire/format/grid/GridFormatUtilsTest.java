@@ -1,8 +1,10 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Ignore;
 import org.junit.Test;
 import ucar.nc2.NetcdfFileWriter;
@@ -12,6 +14,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 public class GridFormatUtilsTest {
@@ -47,6 +51,37 @@ public class GridFormatUtilsTest {
         assertEquals("2007-12-03 11:15:30", localTimeString);
     }
 
+    @Test
+    public void testGetTargetDimension() throws Exception {
+        int size = 500;
+        Product a = new Product("a", "t", size, size);
+        a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, size, size, 15, 15, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+        Product b = new Product("b", "t", size, size);
+        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, size, size, 15.02, 15.01, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+
+        a.addBand("a", "1");
+        b.addBand("b", "2");
+
+        GridFormatUtils.ProductSpec ps = GridFormatUtils.getTargetSpec(new Product[]{
+                a, b
+        });
+        assertEquals(610, ps.width);
+        assertEquals(555, ps.height);
+    }
+
+    @Test
+    public void testFilterProducts() throws Exception {
+        Product a = new Product("a", "t", 50, 50);
+        a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10, 10, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+        Product b = new Product("b", "t", 50, 50);
+        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10.05, 10.025, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+        Product c = new Product("c", "t", 50, 50);
+        c.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 16, 15, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+
+        assertArrayEquals(new Product[]{a}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 0, 0));
+        assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 1, 1));
+
+    }
 
     @Ignore
     @Test

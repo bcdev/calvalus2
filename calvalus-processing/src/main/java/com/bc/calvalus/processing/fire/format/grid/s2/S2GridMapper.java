@@ -12,15 +12,23 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
+import org.esa.snap.core.util.ProductUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
-import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.filter;
 
 /**
  * Runs the fire S2 formatting grid mapper.
@@ -40,21 +48,18 @@ public class S2GridMapper extends AbstractGridMapper {
         Path[] paths = inputSplit.getPaths();
         LOG.info("paths=" + Arrays.toString(paths));
 
-        boolean computeBA = !paths[0].getName().equals("dummy");
-        LOG.info(computeBA ? "Computing BA" : "Only computing coverage");
-
-        Product[] sourceProducts = new Product[10]; // todo - continue here
-        Product lcProduct;
-        if (computeBA) {
-            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
-            sourceProducts[0] = ProductIO.readProduct(sourceProductFile);
-
-            File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
-            lcProduct = ProductIO.readProduct(lcTile);
-        } else {
-            // because coverage is computed in reducer
-            return;
+        Product[] sourceProducts = new Product[paths.length - 1];
+        for (int i = 0; i < paths.length - 1; i++) {
+            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            Product currentProduct = ProductIO.readProduct(sourceProductFile);
+            ReprojectionOp reprojectionOp = new ReprojectionOp();
+            reprojectionOp.setParameter("crs", "EPSG:4326");
+            reprojectionOp.setSourceProduct(currentProduct);
+            sourceProducts[i] = reprojectionOp.getTargetProduct();
         }
+
+        File lcTile = CalvalusProductIO.copyFileToLocal(paths[paths.length - 1], context.getConfiguration());
+        Product lcProduct = ProductIO.readProduct(lcTile);
 
         setDataSource(new S2FireGridDataSource(tile, sourceProducts, lcProduct));
         ErrorPredictor errorPredictor = new ErrorPredictor();
@@ -77,61 +82,62 @@ public class S2GridMapper extends AbstractGridMapper {
         private final Product[] sourceProducts;
         private final Product lcProduct;
 
-        public S2FireGridDataSource(String tile, Product sourceProducts[], Product lcProduct) {
+        S2FireGridDataSource(String tile, Product sourceProducts[], Product lcProduct) {
             this.tile = tile;
             this.sourceProducts = sourceProducts;
             this.lcProduct = lcProduct;
         }
 
         @Override
-        public void readPixels(SourceData data, int rasterWidth, int x, int y) throws IOException {
-            for (Product sourceProduct : sourceProducts) {
-                GeoCoding gc = sourceProduct.getSceneGeoCoding();
-                Rectangle sourceRect = getRectangle(gc, x, y);
-                if (sourceRect == null) {
-                    continue;
-                }
-                Band baBand = sourceProduct.getBand("band_1");
-                int[] buffer = new int[data.pixels.length];
-                baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, buffer);
-                double[] areaBuffer = new double[data.areas.length];
-                getAreas(gc, rasterWidth, areaBuffer);
+        public SourceData readPixels(int x, int y) throws IOException {
 
-                merge(buffer, data.pixels);
-                merge(areaBuffer, data.areas);
+            Product[] products = filter(tile, sourceProducts, x, y);
+
+            GridFormatUtils.ProductSpec productSpec = GridFormatUtils.getTargetSpec(products);
+            Product temp = new Product("temp", "temp", productSpec.width, productSpec.height);
+            temp.setSceneGeoCoding(getSceneGeoCoding(productSpec));
+            Band jd = temp.addBand("JD", ProductData.TYPE_INT32);
+            int[] jdBuffer = new int[productSpec.width * productSpec.height];
+            jd.setData(new ProductData.Int(jdBuffer));
+
+            for (Product product : products) {
+                for (int pixelIndex = 0; pixelIndex < jdBuffer.length; pixelIndex++) {
+                    int targetPixelX = pixelIndex % productSpec.width;
+                    int targetPixelY = pixelIndex / productSpec.height;
+                    GeoPos geoPos = temp.getSceneGeoCoding().getGeoPos(new PixelPos(targetPixelX, targetPixelY), null);
+                    PixelPos sourcePixelPos = product.getSceneGeoCoding().getPixelPos(geoPos, null);
+                    long sourceJD = ProductUtils.getGeophysicalSampleAsLong(product.getBand("JD"), (int) sourcePixelPos.x, (int) sourcePixelPos.y, 0);
+                    if (jdBuffer[pixelIndex] == 0) {
+                        jdBuffer[pixelIndex] = (int) sourceJD;
+                    }
+                }
             }
+
+            SourceData data = new SourceData(productSpec.width, productSpec.height);
+            System.arraycopy(jdBuffer, 0, data.pixels, 0, jdBuffer.length);
+            double[] areaBuffer = new double[data.areas.length];
+            getAreas(temp.getSceneGeoCoding(), productSpec.width, productSpec.height, areaBuffer);
+
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(x * 90, y * 90, 90, 90, data.lcClasses);
-            data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels), true);
-            data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels), false);
+
+            data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels, productSpec.width, productSpec.height), true);
+            data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels, productSpec.width, productSpec.height), false);
+
+            return data;
         }
 
-        private void merge(double[] areaBuffer, double[] areas) {
-            // todo - create test and implement; goal: valid pixels shall be preserved
-        }
-
-        private void merge(int[] buffer, int[] pixels) {
-            // todo - create test and implement; goal: valid pixels shall be preserved
-        }
-
-        private Rectangle getRectangle(GeoCoding gc, int x, int y) {
-
-            // todo - use maximum pixel value if necessary
-
-            int tileX = Integer.parseInt(tile.substring(1, 2));
-            int tileY = Integer.parseInt(tile.substring(4, 5));
-            GeoPos UL = new GeoPos(tileX * 10 + x / 40, tileY * 10 - 90 + y / 40);
-            GeoPos LR = new GeoPos(tileX * 10 + (x + 1) / 40, tileY * 10 - 90 + (y + 1) / 40);
-            PixelPos ULpp = gc.getPixelPos(UL, null);
-            PixelPos LRpp = gc.getPixelPos(LR, null);
-            if (!ULpp.isValid() || !LRpp.isValid()) {
-                return null;
+        private static CrsGeoCoding getSceneGeoCoding(GridFormatUtils.ProductSpec productSpec) {
+            try {
+                return new CrsGeoCoding(DefaultGeographicCRS.WGS84,
+                        productSpec.width, productSpec.height,
+                        productSpec.ul.x, productSpec.lr.y,
+                        S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE
+                );
+            } catch (FactoryException | TransformException e) {
+                throw new IllegalStateException("Unable to create temporary geo-coding", e);
             }
-            int rectX = (int) ULpp.x;
-            int rectY = (int) ULpp.y;
-            int rectWidth = (int) (LRpp.x - ULpp.x) - 1;
-            int rectHeight = (int) (LRpp.y - ULpp.y) - 1;
-            return new Rectangle(rectX, rectY, rectWidth, rectHeight);
         }
+
     }
 }

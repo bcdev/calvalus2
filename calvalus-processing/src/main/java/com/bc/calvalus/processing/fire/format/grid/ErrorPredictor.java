@@ -26,7 +26,7 @@ public class ErrorPredictor {
             throw new IllegalStateException("Could not create script engine \"Renjin\"");
         }
         resFile = new File("./codiR_cecr_GridProd_onlyMERIS.RData");
-        try (InputStream resourceAsStream = getClass().getResourceAsStream("codiR_cecr_GridProd_onlyMERIS.RData")) {
+        try (InputStream resourceAsStream = getClass().getResourceAsStream("meris/codiR_cecr_GridProd_onlyMERIS.RData")) {
             Files.copy(resourceAsStream, resFile.getAbsoluteFile().toPath());
         }
     }

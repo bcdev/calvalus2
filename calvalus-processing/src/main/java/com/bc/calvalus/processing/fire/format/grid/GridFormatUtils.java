@@ -1,23 +1,37 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
 import ucar.ma2.DataType;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
+import java.awt.Dimension;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class GridFormatUtils {
 
-    public static final int TARGET_RASTER_WIDTH = 40;
-    public static final int TARGET_RASTER_HEIGHT = 40;
-    public static final int LC_CLASSES_COUNT = 18;
-    public static final int NO_DATA = -1;
+    static final int TARGET_RASTER_WIDTH = 40;
+    static final int TARGET_RASTER_HEIGHT = 40;
+    static final int LC_CLASSES_COUNT = 18;
+    static final int NO_DATA = -1;
     static final int NO_AREA = 0;
+    public static double S2_GRID_PIXELSIZE = 0.0001810432608;
 
     static NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
         NetcdfFileWriter ncFile = NetcdfFileWriter.createNew(NetcdfFileWriter.Version.netcdf3, filename);
@@ -145,10 +159,95 @@ public class GridFormatUtils {
             throw new IllegalArgumentException();
         }
         int size = (int) Math.sqrt(length);
-        int[][] result = new int[size][size];
-        for (int r = 0; r < size; r++) {
-            System.arraycopy(pixels, r * size, result[r], 0, size);
+        return make2Dims(pixels, size, size);
+    }
+
+    public static int[][] make2Dims(int[] pixels, int width, int height) {
+        int[][] result = new int[width][height];
+        for (int r = 0; r < height; r++) {
+            System.arraycopy(pixels, r * width, result[r], 0, width);
         }
         return result;
+    }
+
+    public static Product[] filter(String tile, Product[] sourceProducts, int x, int y) {
+        int tileX = Integer.parseInt(tile.substring(4, 6));
+        int tileY = Integer.parseInt(tile.substring(1, 3));
+        double upperLat = 90 - tileY * 10 - 10 + (y + 1) / 40.0;
+        double leftLon = tileX * 10 - 180 + (x + 1) / 40.0;
+        double lowerLat = 90 - tileY * 10 - 10 + y / 40.0;
+        double rightLon = tileX * 10 - 180 + x / 40.0;
+
+        GeoPos UL = new GeoPos(upperLat, leftLon);
+        GeoPos LL = new GeoPos(lowerLat, leftLon);
+        GeoPos LR = new GeoPos(lowerLat, rightLon);
+        GeoPos UR = new GeoPos(upperLat, rightLon);
+
+        List<Product> filteredProducts = new ArrayList<>();
+        for (Product sourceProduct : sourceProducts) {
+            PixelPos pixelPosUL = sourceProduct.getSceneGeoCoding().getPixelPos(UL, null);
+            PixelPos pixelPosLL = sourceProduct.getSceneGeoCoding().getPixelPos(LL, null);
+            PixelPos pixelPosLR = sourceProduct.getSceneGeoCoding().getPixelPos(LR, null);
+            PixelPos pixelPosUR = sourceProduct.getSceneGeoCoding().getPixelPos(UR, null);
+            if (sourceProduct.containsPixel(pixelPosUL) ||
+                    sourceProduct.containsPixel(pixelPosLL) ||
+                    sourceProduct.containsPixel(pixelPosLR) ||
+                    sourceProduct.containsPixel(pixelPosUR)
+                    ) {
+                filteredProducts.add(sourceProduct);
+            }
+        }
+
+        return filteredProducts.toArray(new Product[0]);
+    }
+
+    public static ProductSpec getTargetSpec(Product[] sourceProducts) {
+        Geometry bb = null;
+        GeometryFactory gf = new GeometryFactory();
+        for (Product sourceProduct : sourceProducts) {
+            GeoCoding gc = sourceProduct.getSceneGeoCoding();
+            PixelPos ul = new PixelPos(0.0, 0.0);
+            PixelPos ur = new PixelPos(sourceProduct.getSceneRasterWidth() - 1, 0.0);
+            PixelPos lr = new PixelPos(sourceProduct.getSceneRasterWidth() - 1, sourceProduct.getSceneRasterHeight() - 1);
+            PixelPos ll = new PixelPos(0.0, sourceProduct.getSceneRasterHeight() - 1);
+            GeoPos ulGp = gc.getGeoPos(ul, null);
+            GeoPos urGp = gc.getGeoPos(ur, null);
+            GeoPos lrGp = gc.getGeoPos(lr, null);
+            GeoPos llGp = gc.getGeoPos(ll, null);
+            Polygon currentBB = new Polygon(new LinearRing(new PackedCoordinateSequence.Double(new Coordinate[]{
+                    new Coordinate(ulGp.getLon(), ulGp.getLat()),
+                    new Coordinate(urGp.getLon(), urGp.getLat()),
+                    new Coordinate(lrGp.getLon(), lrGp.getLat()),
+                    new Coordinate(llGp.getLon(), llGp.getLat()),
+                    new Coordinate(ulGp.getLon(), ulGp.getLat())
+            }, 2), gf), null, gf);
+            if (bb == null) {
+                bb = currentBB;
+            } else {
+                bb = bb.union(currentBB);
+            }
+        }
+        bb = bb.getEnvelope();
+        Coordinate ul = bb.getCoordinates()[0];
+        Coordinate lr = bb.getCoordinates()[2];
+
+        int width = (int) ((lr.x - ul.x) / S2_GRID_PIXELSIZE + 1);
+        int height = (int) ((lr.y - ul.y) / S2_GRID_PIXELSIZE + 1);
+        return new ProductSpec(width, height, ul, lr);
+    }
+
+    public static class ProductSpec extends Dimension {
+
+        public final int width;
+        public final int height;
+        public final Coordinate ul;
+        public final Coordinate lr;
+
+        public ProductSpec(int width, int height, Coordinate ul, Coordinate lr) {
+            this.width = width;
+            this.height = height;
+            this.ul = ul;
+            this.lr = lr;
+        }
     }
 }

@@ -4,7 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.format.grid.GridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.S2GridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
@@ -118,7 +118,7 @@ public class S2Strategy implements SensorStrategy {
 
     @Override
     public Class<? extends InputFormat> getGridInputFormat() {
-        return GridInputFormat.class;
+        return S2GridInputFormat.class;
     }
 
     @Override

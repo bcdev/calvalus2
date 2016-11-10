@@ -69,12 +69,13 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
 
-    protected static double[] getAreas(GeoCoding gc, int rasterWidth, double[] areas) {
+    protected static double[] getAreas(GeoCoding gc, int width, int height, double[] areas) {
         AreaCalculator areaCalculator = new AreaCalculator(gc);
-        for (int i = 0; i < areas.length; i++) {
-            int sourceBandX = i % rasterWidth;
-            int sourceBandY = i / rasterWidth;
-            areas[i] = areaCalculator.calculatePixelSize(sourceBandX, sourceBandY);
+        int pixelIndex = 0;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; y++) {
+                areas[pixelIndex++] = areaCalculator.calculatePixelSize(x, y);
+            }
         }
         return areas;
     }

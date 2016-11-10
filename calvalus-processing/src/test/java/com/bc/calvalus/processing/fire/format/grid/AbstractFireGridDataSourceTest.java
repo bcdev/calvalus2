@@ -16,11 +16,14 @@ public class AbstractFireGridDataSourceTest {
     public void setUp() throws Exception {
         dataSource = new AbstractFireGridDataSource() {
             @Override
-            public void readPixels(SourceData data, int rasterWidth, int x, int y) throws IOException {
-
+            public SourceData readPixels(int x, int y) throws IOException {
+                return null;
             }
         };
-
+        dataSource.setDoyFirstHalf(1);
+        dataSource.setDoyFirstOfMonth(1);
+        dataSource.setDoySecondHalf(22);
+        dataSource.setDoyLastOfMonth(31);
     }
 
     @Test

@@ -38,7 +38,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         dataSource.setDoyFirstHalf(doyFirstHalf);
         dataSource.setDoySecondHalf(doySecondHalf);
 
-        SourceData data = new SourceData();
         double[] areas = new double[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] baFirstHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
         float[] baSecondHalf = new float[TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT];
@@ -62,8 +61,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < TARGET_RASTER_HEIGHT; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, TARGET_RASTER_HEIGHT));
             for (int x = 0; x < TARGET_RASTER_WIDTH; x++) {
-                data.reset();
-                dataSource.readPixels(data, 3600, x, y);
+                SourceData data = dataSource.readPixels(x, y);
 
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;

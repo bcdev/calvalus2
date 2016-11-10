@@ -3,7 +3,7 @@ package com.bc.calvalus.processing.fire.format;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.fire.format.grid.GridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.MerisGridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
@@ -46,7 +46,7 @@ public class MerisStrategy implements SensorStrategy {
 
     @Override
     public Class<? extends InputFormat> getGridInputFormat() {
-        return GridInputFormat.class;
+        return MerisGridInputFormat.class;
     }
 
     @Override

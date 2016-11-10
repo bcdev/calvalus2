@@ -18,12 +18,12 @@ public class SourceData {
     public int[] statusPixelsFirstHalf;
     public int[] statusPixelsSecondHalf;
 
-    public SourceData() {
-        pixels = new int[90 * 90];
+    public SourceData(int width, int height) {
+        pixels = new int[width * height];
+        areas = new double[width * height];
+        statusPixelsFirstHalf = new int[width * height];
+        statusPixelsSecondHalf = new int[width * height];
         lcClasses = new int[90 * 90];
-        areas = new double[90 * 90];
-        statusPixelsFirstHalf = new int[90 * 90];
-        statusPixelsSecondHalf = new int[90 * 90];
     }
 
     public SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {

@@ -22,50 +22,41 @@ import static org.junit.Assert.assertArrayEquals;
  */
 public class MerisDataSourceTest {
 
-    private MerisDataSource dataSource;
     private Product lcProduct;
+    private Product centerProduct;
 
     @Before
     public void setUp() throws Exception {
-        Product centerProduct = createProduct(5);
+        centerProduct = createProduct(5);
         lcProduct = createProduct(10);
-        dataSource = new MerisDataSource(centerProduct, lcProduct, new ArrayList<>());
-        dataSource.setDoyFirstHalf(7);
-        dataSource.setDoySecondHalf(22);
-        dataSource.setDoyFirstOfMonth(1);
-        dataSource.setDoyLastOfMonth(31);
     }
 
     @Test
     public void testReadPixels() throws Exception {
-        int[] pixels = new int[4];
-        int[] lcClasses = new int[4];
-        double[] areas = new double[4];
-        int[] observed1 = new int[4];
-        int[] observed2 = new int[4];
-
-        SourceData data = new SourceData(pixels, areas, lcClasses, observed1, observed2);
+        MerisDataSource dataSource = new MerisDataSource(centerProduct, lcProduct, new ArrayList<>(), 2, 2);
+        dataSource.setDoyFirstHalf(7);
+        dataSource.setDoySecondHalf(22);
+        dataSource.setDoyFirstOfMonth(1);
+        dataSource.setDoyLastOfMonth(31);
 
         // center
-        dataSource.readPixels(data, lcProduct.getSceneRasterWidth(), 0, 0);
+        SourceData data = dataSource.readPixels(0, 0);
         int[] expected = {
                 5000, 5001, 5004, 5005,
         };
-        assertArrayEquals(expected, pixels);
+        assertArrayEquals(expected, data.pixels);
     }
 
     @Test
     public void testReadPixelsLarger() throws Exception {
-        int[] pixels = new int[9];
-        int[] lcClasses = new int[9];
-        double[] areas = new double[9];
-        int[] observed = new int[9];
-        int[] observed2 = new int[9];
-
-        SourceData data = new SourceData(pixels, areas, lcClasses, observed, observed2);
+        MerisDataSource dataSource = new MerisDataSource(centerProduct, lcProduct, new ArrayList<>(), 3, 3);
+        dataSource.setDoyFirstHalf(7);
+        dataSource.setDoySecondHalf(22);
+        dataSource.setDoyFirstOfMonth(1);
+        dataSource.setDoyLastOfMonth(31);
 
         // center larger
-        dataSource.readPixels(data, lcProduct.getSceneRasterWidth(), 0, 0);
+        int[] pixels = dataSource.readPixels(0, 0).pixels;
         int[] expected = new int[]{
                 5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
         };

@@ -26,17 +26,26 @@ public class MerisDataSource extends AbstractFireGridDataSource {
     private final Product lcProduct;
     private final List<File> srProducts;
     private final boolean computeBA;
+    private final int targetWidth;
+    private final int targetHeight;
 
     MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts) {
+        this(sourceProduct, lcProduct, srProducts, 90, 90);
+    }
+
+    MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts, int targetWidth, int targetHeight) {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;
         this.computeBA = sourceProduct != null;
+        this.targetWidth = targetWidth;
+        this.targetHeight = targetHeight;
     }
 
     @Override
-    public void readPixels(SourceData data, int rasterWidth, int x, int y) throws IOException {
-        Rectangle sourceRect = new Rectangle(x * 90, y * 90, 90, 90);
+    public SourceData readPixels(int x, int y) throws IOException {
+        SourceData data = new SourceData(targetWidth, targetHeight);
+        Rectangle sourceRect = new Rectangle(x * targetWidth, y * targetHeight, targetWidth, targetHeight);
         if (computeBA) {
             Band baBand = sourceProduct.getBand("band_1");
             baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
@@ -46,7 +55,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
 
-        getAreas(sourceProduct.getSceneGeoCoding(), rasterWidth, data.areas);
+        getAreas(sourceProduct.getSceneGeoCoding(), 3600, 3600, data.areas);
 
         byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
         byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];
@@ -72,6 +81,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
             collectStatusPixels(statusPixelsFirstHalf, data.statusPixelsFirstHalf);
             collectStatusPixels(statusPixelsSecondHalf, data.statusPixelsSecondHalf);
         }
+        return data;
     }
 
 

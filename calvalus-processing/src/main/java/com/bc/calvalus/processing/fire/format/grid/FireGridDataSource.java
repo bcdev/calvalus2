@@ -4,7 +4,7 @@ import java.io.IOException;
 
 interface FireGridDataSource {
 
-    void readPixels(SourceData data, int rasterWidth, int x, int y) throws IOException;
+    SourceData readPixels(int x, int y) throws IOException;
 
     void setDoyFirstOfMonth(int doyFirstOfMonth);
 

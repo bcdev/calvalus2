@@ -27,7 +27,7 @@ import java.util.List;
  * @author thomas
  * @author marcop
  */
-public class GridInputFormat extends InputFormat {
+public class MerisGridInputFormat extends InputFormat {
 
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException {
