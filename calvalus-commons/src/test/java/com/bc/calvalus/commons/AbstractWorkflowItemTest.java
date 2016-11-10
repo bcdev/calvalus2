@@ -43,11 +43,13 @@ public class AbstractWorkflowItemTest {
 
     @Test
     public void testTimesAreSetOnStateTransition() {
+        assertSame(ProcessState.UNKNOWN, workflow.getStatus().getState());
         assertNull(workflow.getSubmitTime());
         assertNull(workflow.getStartTime());
         assertNull(workflow.getStopTime());
 
         workflow.setStatus(new ProcessStatus(ProcessState.SCHEDULED));
+        assertSame(ProcessState.SCHEDULED, workflow.getStatus().getState());
         assertNotNull(workflow.getSubmitTime());
         assertNull(workflow.getStartTime());
         assertNull(workflow.getStopTime());
@@ -55,6 +57,7 @@ public class AbstractWorkflowItemTest {
         Date submitTime = workflow.getSubmitTime();
 
         workflow.setStatus(new ProcessStatus(ProcessState.RUNNING));
+        assertSame(ProcessState.RUNNING, workflow.getStatus().getState());
         assertNotNull(workflow.getSubmitTime());
         assertNotNull(workflow.getStartTime());
         assertNull(workflow.getStopTime());
@@ -65,10 +68,15 @@ public class AbstractWorkflowItemTest {
         workflow.setStatus(new ProcessStatus(ProcessState.RUNNING));
         workflow.setStatus(new ProcessStatus(ProcessState.RUNNING));
         workflow.setStatus(new ProcessStatus(ProcessState.RUNNING));
+        assertSame(ProcessState.RUNNING, workflow.getStatus().getState());
         assertSame(submitTime, workflow.getSubmitTime());
         assertSame(startTime, workflow.getStartTime());
 
+        workflow.setStatus(new ProcessStatus(ProcessState.UNKNOWN));
+        assertSame(ProcessState.RUNNING, workflow.getStatus().getState());
+
         workflow.setStatus(new ProcessStatus(ProcessState.COMPLETED));
+        assertSame(ProcessState.COMPLETED, workflow.getStatus().getState());
         assertNotNull(workflow.getSubmitTime());
         assertNotNull(workflow.getStartTime());
         assertNotNull(workflow.getStopTime());
@@ -76,6 +84,7 @@ public class AbstractWorkflowItemTest {
         Date stopTime = workflow.getStopTime();
 
         workflow.setStatus(new ProcessStatus(ProcessState.UNKNOWN));
+        assertEquals(ProcessState.COMPLETED, workflow.getStatus().getState());
         assertNotNull(workflow.getSubmitTime());
         assertNotNull(workflow.getStartTime());
         assertNotNull(workflow.getStopTime());
