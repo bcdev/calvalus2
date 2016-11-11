@@ -372,12 +372,7 @@ public class ProductionServiceImpl implements ProductionService {
     }
 
     private void deleteOutput(String outputDir, String userName) {
-        if (outputDir == null) {
-            logger.log(Level.WARNING, "output dir is null");
-            return;
-        }
-        if (outputDir.isEmpty()) {
-            logger.log(Level.WARNING, "output dir is empty");
+        if (outputDir == null  || outputDir.isEmpty()) {
             return;
         }
         try {

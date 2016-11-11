@@ -217,13 +217,17 @@ public class SqlProductionStore implements ProductionStore {
         String procMessage = resultSet.getString("processing_message");
         String outputPath = resultSet.getString("output_path");
         String[] intermediatePathes = new String[0];
-        if (outputPath != null && outputPath.contains(";")) {
-            String[] elems = outputPath.split(";");
-            outputPath = elems[0];
-            intermediatePathes = Arrays.copyOfRange(elems, 1, elems.length);
-        }
-        if ("[[null]]".equals(outputPath)) {
-            outputPath = null;
+        if (outputPath != null) {
+            if (outputPath.contains(";")) {
+                String[] elems = outputPath.split(";");
+                outputPath = decodeNull(elems[0]);
+                intermediatePathes = new String[elems.length - 1];
+                for (int i = 1; i < elems.length; i++) {
+                    intermediatePathes[i - 1] = decodeNull(elems[i]);
+                }
+            } else {
+                outputPath = decodeNull(outputPath);
+            }
         }
         String stagingState = resultSet.getString("staging_state");
         float stagingProgress = resultSet.getFloat("staging_progress");
@@ -391,14 +395,18 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private static String formatOutputPathes(String outputPath, String[] intermediateDataPath) {
-        StringBuilder sb = new StringBuilder(nullSafe(outputPath));
+        StringBuilder sb = new StringBuilder(encodeNull(outputPath));
         for (String path : intermediateDataPath) {
-            sb.append(";").append(path);
+            sb.append(";").append(encodeNull(path));
         }
         return sb.toString();
     }
 
-    private static String nullSafe(String s) {
+    private static String encodeNull(String s) {
         return s == null ? "[[null]]" : s;
+    }
+
+    private static String decodeNull(String s) {
+        return "[[null]]".equals(s) ? null : s;
     }
 }

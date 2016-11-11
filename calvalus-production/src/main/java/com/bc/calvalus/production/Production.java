@@ -146,6 +146,9 @@ public class Production {
     }
 
     static String[] allIntermediatePathes(String outputPath, WorkflowItem workflow) {
+        if (outputPath == null || outputPath.isEmpty()) {
+            return new String[0];
+        }
         Set<String> pathSet = new HashSet<>();
         accumulateOutputPathes(workflow, pathSet);
         pathSet.remove(outputPath);

@@ -79,6 +79,15 @@ public class ProductionTest {
         Arrays.sort(intermediateDataPath);
         assertEquals("dir1", intermediateDataPath[0]);
         assertEquals("dir2", intermediateDataPath[1]);
+
+        production = new Production("9A3F", "Toasting", null, "stagingThere",
+                                    false, new ProductionRequest("test", "ewa"),
+                                    sequential);
+
+        assertEquals(null, production.getOutputPath());
+        intermediateDataPath = production.getIntermediateDataPath();
+        assertNotNull(intermediateDataPath);
+        assertEquals(0, intermediateDataPath.length);
     }
 
     @Test
