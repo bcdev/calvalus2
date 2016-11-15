@@ -290,9 +290,15 @@ public class L2ConfigForm extends Composite {
                         }
                         parametersEditorGenerator.showDialog("800px", "640px", new ParametersEditorGenerator.OnOkHandler() {
                             @Override
-                            public void onOk() {
-                                String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
-                                processorParametersArea.setValue(xml);
+                            public boolean onOk() {
+                                try {
+                                    String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
+                                    processorParametersArea.setValue(xml);
+                                    return true;
+                                } catch (ValidationException e) {
+                                    e.handle();
+                                    return false;
+                                }
                             }
                         });
                     }
