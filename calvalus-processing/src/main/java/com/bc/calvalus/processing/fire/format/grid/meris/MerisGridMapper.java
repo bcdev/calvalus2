@@ -42,6 +42,10 @@ public class MerisGridMapper extends AbstractGridMapper {
 
     private boolean maskUnmappablePixels;
 
+    protected MerisGridMapper(int targetRasterWidth, int targetRasterHeight) {
+        super(40, 40);
+    }
+
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 

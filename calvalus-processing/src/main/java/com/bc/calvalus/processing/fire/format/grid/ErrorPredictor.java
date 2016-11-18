@@ -27,7 +27,9 @@ public class ErrorPredictor {
         }
         resFile = new File("./codiR_cecr_GridProd_onlyMERIS.RData");
         try (InputStream resourceAsStream = getClass().getResourceAsStream("meris/codiR_cecr_GridProd_onlyMERIS.RData")) {
-            Files.copy(resourceAsStream, resFile.getAbsoluteFile().toPath());
+            if (!resFile.exists()) {
+                Files.copy(resourceAsStream, resFile.getAbsoluteFile().toPath());
+            }
         }
     }
 

@@ -70,7 +70,7 @@ public class FireGridProductionType extends HadoopProductionType {
         Configuration jobConfig = createJobConfig(productionRequest);
         String outputPath = getOutputPath(productionRequest, productionId, "Fire-Grid-Formatting");
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+//        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         setRequestParameters(productionRequest, jobConfig);
 
         Workflow.Sequential gridFormattingWorkflow = new Workflow.Sequential();

@@ -64,7 +64,8 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             throw new IllegalStateException("doyFirstHalf == -1 || doySecondHalf == -1 || doyFirstOfMonth == -1 || doyLastOfMonth == -1");
         }
         if (firstHalf) {
-            return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
+            boolean b = pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6 && pixel != 999 && pixel != NO_DATA;
+            return b;
         }
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth && pixel != 999 && pixel != NO_DATA;
     }
@@ -73,7 +74,7 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
         AreaCalculator areaCalculator = new AreaCalculator(gc);
         int pixelIndex = 0;
         for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; y++) {
+            for (int x = 0; x < width; x++) {
                 areas[pixelIndex++] = areaCalculator.calculatePixelSize(x, y);
             }
         }

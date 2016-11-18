@@ -123,7 +123,7 @@ public class S2FinaliseMapper extends Mapper {
     }
 
     static String createBaseFilename(String year, String month, String version, PixelProductArea area) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, area.index, version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, area.nicename, version);
     }
 
     static String createMetadata(String year, String month, String version, PixelProductArea area) throws IOException {
@@ -133,7 +133,7 @@ public class S2FinaliseMapper extends Mapper {
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", area.index);
+        velocityContext.put("zoneId", area.nicename);
         velocityContext.put("zoneName", area.nicename);
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2016).atMonth(6).atDay(29)));
         velocityContext.put("westLon", area.left - 180);

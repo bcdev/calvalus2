@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * @author thomas
  */
-public abstract class GridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
+public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWritable, NullWritable> {
 
     private static final int SCENE_RASTER_WIDTH = 1440;
     private static final int SCENE_RASTER_HEIGHT = 720;
@@ -111,8 +111,8 @@ public abstract class GridReducer extends Reducer<Text, GridCell, NullWritable, 
         String timeCoverageStartSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), 16).atTime(0, 0, 0));
         String timeCoverageEndSecondHalf = dtf.format(LocalDate.of(Integer.parseInt(year), Integer.parseInt(month), lastDayOfMonth).atTime(23, 59, 59));
 
-        firstHalfFile = GridFormatUtils.createFilename(year, month, version, true);
-        secondHalfFile = GridFormatUtils.createFilename(year, month, version, false);
+        firstHalfFile = getFilename(year, month, version, true);
+        secondHalfFile = getFilename(year, month, version, false);
 
         ncFirst = GridFormatUtils.createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
         ncSecond = GridFormatUtils.createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);
@@ -143,6 +143,8 @@ public abstract class GridReducer extends Reducer<Text, GridCell, NullWritable, 
             throw new IOException(e);
         }
     }
+
+    protected abstract String getFilename(String year, String month, String version, boolean firstHalf);
 
     protected static void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 into variable %s", x, y, varName));

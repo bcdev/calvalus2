@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid;
+package com.bc.calvalus.processing.fire.format.grid.meris;
 
 import org.junit.Test;
 

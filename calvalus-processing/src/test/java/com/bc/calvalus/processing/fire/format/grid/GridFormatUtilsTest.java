@@ -26,17 +26,17 @@ public class GridFormatUtilsTest {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyymmdd'T'HHmmss'Z'").withZone(ZoneId.systemDefault());
         String timeCoverageStart = dtf.format(LocalDate.of(2008, 6, 1).atTime(0, 0, 0));
         String timeCoverageEnd = dtf.format(LocalDate.of(2008, 6, 15).atTime(23, 59, 59));
-        NetcdfFileWriter ncFile = GridFormatUtils.createNcFile(".\\" + GridFormatUtils.createFilename("2008", "06", "04.1", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
+        NetcdfFileWriter ncFile = GridFormatUtils.createNcFile(".\\" + GridFormatUtils.createMerisFilename("2008", "06", "04.1", true), "v4.1", timeCoverageStart, timeCoverageEnd, 15);
         ncFile.close();
     }
 
     @Test
     public void testCreateFilename() throws Exception {
-        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createFilename("2008", "06", "v04.0", true));
-        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createFilename("2008", "06", "v04.0", false));
+        assertEquals("20080607-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createMerisFilename("2008", "06", "v04.0", true));
+        assertEquals("20080622-ESACCI-L4_FIRE-BA-MERIS-fv04.0.nc", GridFormatUtils.createMerisFilename("2008", "06", "v04.0", false));
 
-        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createFilename("2010", "10", "v04.1", true));
-        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createFilename("2010", "10", "v04.1", false));
+        assertEquals("20101007-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createMerisFilename("2010", "10", "v04.1", true));
+        assertEquals("20101022-ESACCI-L4_FIRE-BA-MERIS-fv04.1.nc", GridFormatUtils.createMerisFilename("2010", "10", "v04.1", false));
     }
 
     @Test

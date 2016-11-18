@@ -23,7 +23,7 @@ public class SourceData {
         areas = new double[width * height];
         statusPixelsFirstHalf = new int[width * height];
         statusPixelsSecondHalf = new int[width * height];
-        lcClasses = new int[90 * 90];
+        lcClasses = new int[width * height];
     }
 
     public SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {

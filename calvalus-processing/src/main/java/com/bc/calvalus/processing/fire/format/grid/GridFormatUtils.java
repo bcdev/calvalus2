@@ -15,7 +15,6 @@ import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFileWriter;
 import ucar.nc2.Variable;
 
-import java.awt.Dimension;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -24,10 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource.STEP;
+
 public class GridFormatUtils {
 
-    static final int TARGET_RASTER_WIDTH = 40;
-    static final int TARGET_RASTER_HEIGHT = 40;
     static final int LC_CLASSES_COUNT = 18;
     static final int NO_DATA = -1;
     static final int NO_AREA = 0;
@@ -141,8 +140,12 @@ public class GridFormatUtils {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
     }
 
-    static String createFilename(String year, String month, String version, boolean firstHalf) {
+    public static String createMerisFilename(String year, String month, String version, boolean firstHalf) {
         return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MERIS-f%s.nc", year, month, firstHalf ? "07" : "22", version);
+    }
+
+    public static String createS2Filename(String year, String month, String version, boolean firstHalf) {
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, firstHalf ? "07" : "22", version);
     }
 
     static String createTimeString(Instant instant) {
@@ -173,10 +176,10 @@ public class GridFormatUtils {
     public static Product[] filter(String tile, Product[] sourceProducts, int x, int y) {
         int tileX = Integer.parseInt(tile.substring(4, 6));
         int tileY = Integer.parseInt(tile.substring(1, 3));
-        double upperLat = 90 - tileY * 10 - 10 + (y + 1) / 40.0;
-        double leftLon = tileX * 10 - 180 + (x + 1) / 40.0;
-        double lowerLat = 90 - tileY * 10 - 10 + y / 40.0;
-        double rightLon = tileX * 10 - 180 + x / 40.0;
+        double upperLat = 90 - tileY * STEP;
+        double lowerLat = 90 - tileY * STEP - (y + 1) / 4.0;
+        double leftLon = tileX * STEP - 180 + x / 4.0;
+        double rightLon = tileX * STEP - 180 + STEP + x / 4.0;
 
         GeoPos UL = new GeoPos(upperLat, leftLon);
         GeoPos LL = new GeoPos(lowerLat, leftLon);
@@ -236,7 +239,7 @@ public class GridFormatUtils {
         return new ProductSpec(width, height, ul, lr);
     }
 
-    public static class ProductSpec extends Dimension {
+    public static class ProductSpec {
 
         public final int width;
         public final int height;
@@ -248,6 +251,16 @@ public class GridFormatUtils {
             this.height = height;
             this.ul = ul;
             this.lr = lr;
+        }
+
+        @Override
+        public String toString() {
+            return "ProductSpec{" +
+                    "width=" + width +
+                    ", height=" + height +
+                    ", ul=" + ul +
+                    ", lr=" + lr +
+                    '}';
         }
     }
 }

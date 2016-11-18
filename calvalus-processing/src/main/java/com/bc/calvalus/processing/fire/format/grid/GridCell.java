@@ -10,15 +10,18 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLASSES_COUNT;
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_HEIGHT;
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.TARGET_RASTER_WIDTH;
 
 /**
  * @author thomas
  */
 public class GridCell implements Writable {
 
-    private static final int BAND_SIZE = TARGET_RASTER_WIDTH * TARGET_RASTER_HEIGHT;
+    private final int BAND_SIZE;
+
+    public GridCell(int targetRasterWidth, int targetRasterHeight) {
+        BAND_SIZE = targetRasterWidth * targetRasterHeight;
+    }
+
 
     public float[] baFirstHalf;
     public float[] baSecondHalf;

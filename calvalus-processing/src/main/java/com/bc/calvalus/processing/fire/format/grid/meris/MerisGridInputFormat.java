@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid;
+package com.bc.calvalus.processing.fire.format.grid.meris;
 
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;

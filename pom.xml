@@ -263,7 +263,7 @@
             <dependency>
                 <groupId>org.esa.s3tbx</groupId>
                 <artifactId>s3tbx-avhrr-reader</artifactId>
-                <version>${snap.version}</version>
+                <version>${snap.version}-SNAPSHOT</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.snap</groupId>

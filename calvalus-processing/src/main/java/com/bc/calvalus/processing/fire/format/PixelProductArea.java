@@ -8,19 +8,17 @@ public class PixelProductArea {
     public int bottom;
     public String index;
     public String nicename;
-    public String tiles;
 
-    public PixelProductArea(int left, int top, int right, int bottom, String index, String nicename) {
-        this(left, top, right, bottom, index, nicename, null);
+    public PixelProductArea(int left, int top, int right, int bottom, String nicename) {
+        this(left, top, right, bottom, "", nicename);
     }
 
-    public PixelProductArea(int left, int top, int right, int bottom, String index, String nicename, String tiles) {
+    public PixelProductArea(int left, int top, int right, int bottom, String index, String nicename) {
         this.left = left;
         this.top = top;
         this.right = right;
         this.bottom = bottom;
-        this.index = index;
         this.nicename = nicename;
-        this.tiles = tiles;
+        this.index = index;
     }
 }

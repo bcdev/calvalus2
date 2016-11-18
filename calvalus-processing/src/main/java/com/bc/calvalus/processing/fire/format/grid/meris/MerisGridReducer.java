@@ -1,7 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid.meris;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
-import com.bc.calvalus.processing.fire.format.grid.GridReducer;
+import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
+import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.esa.snap.core.dataio.ProductIO;
@@ -11,7 +12,7 @@ import ucar.ma2.InvalidRangeException;
 import java.io.File;
 import java.io.IOException;
 
-public class MerisGridReducer extends GridReducer {
+public class MerisGridReducer extends AbstractGridReducer {
 
     @Override
     protected void setup(Reducer.Context context) throws IOException, InterruptedException {
@@ -44,5 +45,10 @@ public class MerisGridReducer extends GridReducer {
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    protected String getFilename(String year, String month, String version, boolean firstHalf) {
+        return GridFormatUtils.createMerisFilename(year, month, version, firstHalf);
     }
 }
