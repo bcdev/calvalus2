@@ -671,7 +671,7 @@ public abstract class LcL3SensorConfig {
                     sb.append(" or status == ");
                     sb.append(i);
                 }
-                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
+                maskExpr = "(status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
             } else {
                 maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
@@ -890,7 +890,7 @@ public abstract class LcL3SensorConfig {
                     sb.append(" or status == ");
                     sb.append(i);
                 }
-                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
+                maskExpr = "(status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
             } else {
                 maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
