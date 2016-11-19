@@ -290,9 +290,15 @@ public class L2ConfigForm extends Composite {
                         }
                         parametersEditorGenerator.showDialog("800px", "640px", new ParametersEditorGenerator.OnOkHandler() {
                             @Override
-                            public void onOk() {
-                                String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
-                                processorParametersArea.setValue(xml);
+                            public boolean onOk() {
+                                try {
+                                    String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
+                                    processorParametersArea.setValue(xml);
+                                    return true;
+                                } catch (ValidationException e) {
+                                    e.handle();
+                                    return false;
+                                }
                             }
                         });
                     }
@@ -355,37 +361,36 @@ public class L2ConfigForm extends Composite {
         String processorNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_NAME);
         String processorParameterValue = parameters.get(ProcessorProductionRequest.PROCESSOR_PARAMETERS);
 
+        boolean processorSelected = false;
         if (bundleNameValue != null && bundleVersionValue != null && processorNameValue != null) {
-            int selectionIndex = findProcessor(portalContext.getProcessors(BundleFilter.PROVIDER_SYSTEM),
-                                                             bundleNameValue, bundleVersionValue,
-                                                             bundleLocationValue, processorNameValue);
+            int selectionIndex = findProcessor(processorDescriptors,
+                                               bundleNameValue, bundleVersionValue,
+                                               bundleLocationValue, processorNameValue);
             if (selectionIndex > -1) {
                 processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
-            } else {
-                processorList.setSelectedIndex(0);
+                updateProcessorDetails();
+                if (processorParameterValue != null) {
+                    processorParametersArea.setValue(processorParameterValue);
+                }
+                processorSelected = true;
             }
-            updateProcessorDetails();
-            if (processorParameterValue != null) {
-                processorParametersArea.setValue(processorParameterValue);
-            }
-        } else if (!selectionMandatory) {
-            processorList.setSelectedIndex(0);
         }
-        DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
+        if (!processorSelected) {
+            // no matching processor found, select the first
+            processorList.setSelectedIndex(0);
+            updateProcessorDetails();
+        }
         // TODO handle failure
     }
 
-    private int findProcessor(DtoProcessorDescriptor[] dtoProcessorDescriptor,
-                                                 String bundleNameValue,
-                                                 String bundleVersionValue,
-                                                 String bundleLocationValue,
-                                                 String processorNameValue) {
-        for (int i = 0; i < dtoProcessorDescriptor.length; i++) {
-            DtoProcessorDescriptor processorDescriptor = dtoProcessorDescriptor[i];
-            if (bundleNameValue.equals(processorDescriptor.getBundleName()) &&
-                    bundleVersionValue.equals(processorDescriptor.getBundleVersion()) &&
-                    processorNameValue.equals(processorDescriptor.getExecutableName()) &&
-                    (bundleLocationValue == null || bundleLocationValue.equals(processorDescriptor.getBundleLocation()))) {
+    private int findProcessor(List<DtoProcessorDescriptor> descriptorList,
+                              String bundleName, String bundleVersion, String bundleLocation, String processorName) {
+        for (int i = 0; i < descriptorList.size(); i++) {
+            DtoProcessorDescriptor processorDescriptor = descriptorList.get(i);
+            if (bundleName.equals(processorDescriptor.getBundleName()) &&
+                    bundleVersion.equals(processorDescriptor.getBundleVersion()) &&
+                    processorName.equals(processorDescriptor.getExecutableName()) &&
+                    (bundleLocation == null || bundleLocation.equals(processorDescriptor.getBundleLocation()))) {
                 return i;
             }
         }

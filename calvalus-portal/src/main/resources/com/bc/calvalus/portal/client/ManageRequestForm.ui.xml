@@ -11,7 +11,7 @@
                 <h3>User Request on Calvalus</h3>
                 <hr/>
             </g:HTMLPanel>
-            <g:ListBox ui:field="requestList" width="100%" visibleItemCount="25"/>
+            <g:ListBox ui:field="requestList" width="20em"  visibleItemCount="25"/>
             <g:HTMLPanel>
                 <table style="width: 100%;">
                     <tr>

@@ -46,7 +46,7 @@ public class ParametersEditorGenerator {
 
     interface OnOkHandler {
 
-        void onOk();
+        boolean onOk();
     }
 
     private final Map<DtoParameterDescriptor, ParameterEditor> editorMap;
@@ -91,8 +91,9 @@ public class ParametersEditorGenerator {
         final Dialog dialog = new Dialog(title, widget, Dialog.ButtonType.OK, Dialog.ButtonType.CANCEL) {
             @Override
             protected void onOk() {
-                onOkHandler.onOk();
-                hide();
+                if (onOkHandler.onOk()) {
+                    hide();
+                }
             }
         };
         dialog.show();
@@ -138,7 +139,7 @@ public class ParametersEditorGenerator {
         return paramTable;
     }
 
-    public String getParameterValue(DtoParameterDescriptor parameterDescriptor) {
+    public String getParameterValue(DtoParameterDescriptor parameterDescriptor) throws ValidationException {
         ParameterEditor parameterEditor = editorMap.get(parameterDescriptor);
         if (parameterEditor != null) {
             return parameterEditor.getValue();
@@ -154,7 +155,7 @@ public class ParametersEditorGenerator {
     }
 
 
-    public String formatAsXMLFromWidgets() {
+    public String formatAsXMLFromWidgets() throws ValidationException {
         StringBuilder sb = new StringBuilder();
         sb.append("<parameters>\n");
         for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
@@ -227,6 +228,7 @@ public class ParametersEditorGenerator {
     }
 
     private static ParameterEditor createEditor(DtoParameterDescriptor parameterDescriptor) {
+        String paramName = parameterDescriptor.getName();
         String type = parameterDescriptor.getType();
         String defaultValue = parameterDescriptor.getDefaultValue();
 
@@ -248,9 +250,9 @@ public class ParametersEditorGenerator {
             String[] valueSet = parameterDescriptor.getValueSet();
             editor = new SelectParameterEditor(defaultValue, decodeXMLArray(valueSet), true);
         } else if (type.equalsIgnoreCase("float")) {
-            editor = new FloatParameterEditor(defaultValue);
+            editor = new FloatParameterEditor(paramName, defaultValue);
         } else if (type.equalsIgnoreCase("int")) {
-            editor = new IntParameterEditor(defaultValue);
+            editor = new IntParameterEditor(paramName, defaultValue);
         } else if (type.equalsIgnoreCase("variable")) {
             editor = new SelectParameterEditor(defaultValue, new String[0], false);
         } else if (type.equalsIgnoreCase("variableArray")) {
@@ -264,7 +266,7 @@ public class ParametersEditorGenerator {
     }
 
     interface ParameterEditor {
-        String getValue();
+        String getValue() throws ValidationException;
 
         void setValue(String value);
 
@@ -281,7 +283,7 @@ public class ParametersEditorGenerator {
         }
 
         @Override
-        public String getValue() {
+        public String getValue() throws ValidationException {
             return checkBox.getValue().toString();
         }
 
@@ -311,7 +313,7 @@ public class ParametersEditorGenerator {
         }
 
         @Override
-        public String getValue() {
+        public String getValue() throws ValidationException {
             return textBox.getValue().trim();
         }
 
@@ -326,72 +328,47 @@ public class ParametersEditorGenerator {
         }
     }
 
-    private static class FloatParameterEditor implements ParameterEditor {
+    private static class FloatParameterEditor extends TextParameterEditor {
 
-        private final DoubleBox doubleBox;
+        private final String paramName;
 
-        public FloatParameterEditor(String defaultValue) {
-            doubleBox = new DoubleBox();
-            if (defaultValue != null) {
-                doubleBox.setValue(Double.parseDouble(defaultValue));
-                if (doubleBox.getVisibleLength() < defaultValue.length()) {
-                    doubleBox.setVisibleLength(36);
-                }
+        public FloatParameterEditor(String paramName, String defaultValue) {
+            super(defaultValue);
+            this.paramName = paramName;
+        }
+
+        @Override
+        public String getValue() throws ValidationException {
+            String textValue = super.getValue();
+            try {
+                double doubleValue = Double.parseDouble(textValue);
+            } catch (NumberFormatException nfe) {
+                String msg = "The value for '" + paramName + "'is not a floating point value.";
+                throw new ValidationException(getWidget(), msg);
             }
-        }
-
-        @Override
-        public String getValue() {
-            Double value = doubleBox.getValue();
-            if (value != null) {
-                return value.toString();
-            }
-            return null;
-        }
-
-        @Override
-        public void setValue(String value) {
-            doubleBox.setValue(Double.valueOf(value));
-        }
-
-        @Override
-        public Widget getWidget() {
-            return doubleBox;
+            return textValue;
         }
     }
 
-    private static class IntParameterEditor implements ParameterEditor {
+    private static class IntParameterEditor extends TextParameterEditor {
 
-        private final LongBox longBox;
+        private final String paramName;
 
-        public IntParameterEditor(String defaultValue) {
-            longBox = new LongBox();
-            if (defaultValue != null) {
-                longBox.setValue(Long.parseLong(defaultValue));
-                if (longBox.getVisibleLength() < defaultValue.length()) {
-                    longBox.setVisibleLength(36);
-                }
+        public IntParameterEditor(String paramName, String defaultValue) {
+            super(defaultValue);
+            this.paramName = paramName;
+        }
+
+        @Override
+        public String getValue() throws ValidationException {
+            String textValue = super.getValue();
+            try {
+                long longValue = Long.parseLong(textValue);
+            } catch (NumberFormatException nfe) {
+                String msg = "The value for '" + paramName + "'is not an integer value.";
+                throw new ValidationException(getWidget(), msg);
             }
-        }
-
-        @Override
-        public String getValue() {
-            Long value = longBox.getValue();
-            if (value != null) {
-                return value.toString();
-            }
-            return null;
-        }
-
-        @Override
-        public void setValue(String value) {
-            longBox.setValue(Long.valueOf(value));
-        }
-
-        @Override
-        public Widget getWidget() {
-            return longBox;
-        }
+            return textValue;        }
     }
 
     private static class SelectParameterEditor implements ParameterEditor {
@@ -415,7 +392,7 @@ public class ParametersEditorGenerator {
         }
 
         @Override
-        public String getValue() {
+        public String getValue() throws ValidationException {
             StringBuilder sb = new StringBuilder();
             int itemCount = listBox.getItemCount();
             for (int i = 0; i < itemCount; i++) {

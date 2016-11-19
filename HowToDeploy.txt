@@ -159,4 +159,28 @@ cp -r /home/cvop/cc-patch/* webapps/ccprocessing
 rm -rf webapps/ccprocessing/staging/
 mv temp/staging webapps/ccprocessing/
 
+===========================================================================
+BfG Portal Software
+-------------------
+
+(cd calvalus-portal/target; scp -r calvalus-portal.war www/calbfg-patch cvop@bcvm03: )
+
+ssh cvop@bcvm03
+cd /opt/apache-tomcat-7.0.53
+
+# save staging
+mv webapps/calbfg/staging temp/
+
+
+# redeploy
+rm -r webapps/calbfg.war webapps/calbfg
+mv /home/cvop/calvalus-portal.war webapps/calbfg.war
+tail -5f logs/catalina.out
+cp -r /home/cvop/calbfg-patch/* webapps/calbfg
+
+# restore staging
+rm -rf webapps/calbfg/staging/
+mv temp/staging webapps/calbfg/
+
+
 
