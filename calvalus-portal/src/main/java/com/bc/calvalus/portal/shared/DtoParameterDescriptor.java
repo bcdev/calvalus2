@@ -28,7 +28,8 @@ public class DtoParameterDescriptor implements IsSerializable {
     private String description;
     private String type;
     private String defaultValue;
-    private String[] values;
+    private String[] valueSet;
+    private DtoValueRange valueRange;
 
     /**
      * No-arg constructor as required by {@link com.google.gwt.user.client.rpc.IsSerializable}. Don't use directly.
@@ -36,12 +37,19 @@ public class DtoParameterDescriptor implements IsSerializable {
     public DtoParameterDescriptor() {
     }
 
-    public DtoParameterDescriptor(String name, String type, String description, String defaultValue, String[] values) {
+    public DtoParameterDescriptor(
+            String name,
+            String type,
+            String description,
+            String defaultValue,
+            String[] valueSet,
+            DtoValueRange valueRange) {
         this.type = type;
         this.name = name;
         this.description = description;
         this.defaultValue = defaultValue;
-        this.values = values;
+        this.valueSet = valueSet;
+        this.valueRange = valueRange;
     }
 
     public String getName() {
@@ -61,6 +69,10 @@ public class DtoParameterDescriptor implements IsSerializable {
     }
 
     public String[] getValueSet() {
-        return values;
+        return valueSet;
+    }
+
+    public DtoValueRange getValueRange() {
+        return valueRange;
     }
 }

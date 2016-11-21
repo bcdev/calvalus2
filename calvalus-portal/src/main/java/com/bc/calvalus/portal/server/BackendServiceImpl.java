@@ -37,6 +37,7 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
@@ -55,6 +56,7 @@ import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
 import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
+import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.ProductData;
@@ -658,9 +660,24 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                                                     parameterDescriptor.getType(),
                                                                     parameterDescriptor.getDescription(),
                                                                     parameterDescriptor.getDefaultValue(),
-                                                                    convert(parameterDescriptor.getValueSet()));
+                                                                    convert(parameterDescriptor.getValueSet()),
+                                                                    convert(parameterDescriptor.getValueRange()));
         }
         return dtoParameterDescriptors;
+    }
+
+    private DtoValueRange convert(String valueRangeAsText) {
+        if (valueRangeAsText == null || valueRangeAsText.isEmpty()) {
+            return null;
+        } else {
+            try {
+                ValueRange vr = ValueRange.parseValueRange(valueRangeAsText);
+                return new DtoValueRange(vr.getMin(), vr.getMax(), vr.isMinIncluded(), vr.isMaxIncluded());
+            } catch (IllegalArgumentException iae) {
+                log("Error while parsing 'valueRange' expression: " + valueRangeAsText, iae);
+                return null;
+            }
+        }
     }
 
     private DtoProcessorVariable[] convert(ProcessorDescriptor.Variable[] outputVariables) {

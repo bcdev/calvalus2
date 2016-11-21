@@ -17,15 +17,14 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoParameterDescriptor;
+import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.DoubleBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.LongBox;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -73,6 +72,7 @@ public class ParametersEditorGenerator {
         showDialog(onOkHandler, verticalPanel);
 
     }
+
     public void showDialog(String width, String height, final OnOkHandler onOkHandler) {
         ScrollPanel scrollPanel = createParameterPanel(width, height);
         showDialog(onOkHandler, scrollPanel);
@@ -250,9 +250,11 @@ public class ParametersEditorGenerator {
             String[] valueSet = parameterDescriptor.getValueSet();
             editor = new SelectParameterEditor(defaultValue, decodeXMLArray(valueSet), true);
         } else if (type.equalsIgnoreCase("float")) {
-            editor = new FloatParameterEditor(paramName, defaultValue);
+            DtoValueRange valueRange = parameterDescriptor.getValueRange();
+            editor = new FloatParameterEditor(paramName, defaultValue, valueRange);
         } else if (type.equalsIgnoreCase("int")) {
-            editor = new IntParameterEditor(paramName, defaultValue);
+            DtoValueRange valueRange = parameterDescriptor.getValueRange();
+            editor = new IntParameterEditor(paramName, defaultValue, valueRange);
         } else if (type.equalsIgnoreCase("variable")) {
             editor = new SelectParameterEditor(defaultValue, new String[0], false);
         } else if (type.equalsIgnoreCase("variableArray")) {
@@ -331,10 +333,12 @@ public class ParametersEditorGenerator {
     private static class FloatParameterEditor extends TextParameterEditor {
 
         private final String paramName;
+        private final DtoValueRange valueRange;
 
-        public FloatParameterEditor(String paramName, String defaultValue) {
+        public FloatParameterEditor(String paramName, String defaultValue, DtoValueRange valueRange) {
             super(defaultValue);
             this.paramName = paramName;
+            this.valueRange = valueRange;
         }
 
         @Override
@@ -342,6 +346,10 @@ public class ParametersEditorGenerator {
             String textValue = super.getValue();
             try {
                 double doubleValue = Double.parseDouble(textValue);
+                if (valueRange != null && !valueRange.contains(doubleValue)) {
+                    String msg = "Value for '" + paramName + "' is out of range " + valueRange.toString() + ".";
+                    throw new ValidationException(getWidget(), msg);
+                }
             } catch (NumberFormatException nfe) {
                 String msg = "The value for '" + paramName + "'is not a floating point value.";
                 throw new ValidationException(getWidget(), msg);
@@ -353,10 +361,12 @@ public class ParametersEditorGenerator {
     private static class IntParameterEditor extends TextParameterEditor {
 
         private final String paramName;
+        private final DtoValueRange valueRange;
 
-        public IntParameterEditor(String paramName, String defaultValue) {
+        public IntParameterEditor(String paramName, String defaultValue, DtoValueRange valueRange) {
             super(defaultValue);
             this.paramName = paramName;
+            this.valueRange = valueRange;
         }
 
         @Override
@@ -364,11 +374,16 @@ public class ParametersEditorGenerator {
             String textValue = super.getValue();
             try {
                 long longValue = Long.parseLong(textValue);
+                if (valueRange != null && !valueRange.contains(longValue)) {
+                    String msg = "Value for '" + paramName + "' is out of range " + valueRange.toString() + ".";
+                    throw new ValidationException(getWidget(), msg);
+                }
             } catch (NumberFormatException nfe) {
                 String msg = "The value for '" + paramName + "'is not an integer value.";
                 throw new ValidationException(getWidget(), msg);
             }
-            return textValue;        }
+            return textValue;
+        }
     }
 
     private static class SelectParameterEditor implements ParameterEditor {

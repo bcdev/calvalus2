@@ -117,7 +117,7 @@ public class ProcessorDescriptorTest {
 
         ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processorDescriptor.getParameterDescriptors();
         assertNotNull(parameterDescriptors);
-        assertEquals(2, parameterDescriptors.length);
+        assertEquals(3, parameterDescriptors.length);
 
         ProcessorDescriptor.ParameterDescriptor parameterDescriptor = parameterDescriptors[0];
         assertNotNull(parameterDescriptor);
@@ -135,6 +135,13 @@ public class ProcessorDescriptorTest {
         assertEquals("simple", parameterDescriptor.getDefaultValue());
         assertArrayEquals(new String[]{"simple", "complex"}, parameterDescriptor.getValueSet());
 
+        parameterDescriptor = parameterDescriptors[2];
+        assertNotNull(parameterDescriptor);
+        assertEquals("salinity", parameterDescriptor.getName());
+        assertEquals("float", parameterDescriptor.getType());
+        assertEquals(null, parameterDescriptor.getDescription());
+        assertEquals("3.14", parameterDescriptor.getDefaultValue());
+        assertEquals("[2,4.44)", parameterDescriptor.getValueRange());
     }
 
     private String getResourceAsString(String name) throws IOException {
