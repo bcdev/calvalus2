@@ -103,13 +103,14 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
-            float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            //float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            float macroTileSize = "MSI".equals(sensor) ? 1.0f : 5.0f;
             float latMax = 90.0f - macroTileSize * tileY;
             float latMin = latMax - macroTileSize;
             float lonMin = -180.0f + macroTileSize * tileX;
             float lonMax = lonMin + macroTileSize;
 
-            String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
+            String tileName = "MSI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
             String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
             String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();

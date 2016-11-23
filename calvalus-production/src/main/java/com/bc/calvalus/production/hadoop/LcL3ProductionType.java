@@ -101,6 +101,11 @@ public class LcL3ProductionType extends HadoopProductionType {
         if (productionRequest.getBoolean("lcl3.cloud", true) && !successfullyCompleted(meanOutputDir)) {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
+            if (productionRequest.getParameters().containsKey("processorName")) {
+                ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+                setDefaultProcessorParameters(processorProductionRequest, jobConfigCloud);
+                processorProductionRequest.configureProcessor(jobConfigCloud);
+            }
 
             setInputLocationParameters(productionRequest, jobConfigCloud);
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
@@ -115,6 +120,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigCloud.set("calvalus.lc.version", outputVersion);
             jobConfigCloud.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
             jobConfigCloud.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
+            if ("MSI".equals(sensorName)) {
+                jobConfigCloud.setIfUnset("calvalus.mosaic.numTileY", "900");
+            }
             if ("VEGETATION".equals(sensorName)) {
                 jobConfigCloud.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
@@ -126,6 +134,11 @@ public class LcL3ProductionType extends HadoopProductionType {
         if (productionRequest.getBoolean("lcl3.sr", true) && !successfullyCompleted(mainOutputDir)) {
             Configuration jobConfigSr = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigSr);
+            if (productionRequest.getParameters().containsKey("processorName")) {
+                ProcessorProductionRequest processorProductionRequest = new ProcessorProductionRequest(productionRequest);
+                setDefaultProcessorParameters(processorProductionRequest, jobConfigSr);
+                processorProductionRequest.configureProcessor(jobConfigSr);
+            }
 
             setInputLocationParameters(productionRequest, jobConfigSr);
             jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
@@ -141,6 +154,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigSr.set("calvalus.lc.sensor", sensorName);
             jobConfigSr.set("calvalus.lc.version", outputVersion);
             jobConfigSr.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("MSI".equals(sensorName)) {
+                jobConfigSr.setIfUnset("calvalus.mosaic.numTileY", "900");
+            }
             jobConfigSr.setBoolean("calvalus.system.snap.pixelGeoCoding.useTiling", true);
             if ("VEGETATION".equals(sensorName)) {
                 jobConfigSr.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
@@ -168,6 +184,9 @@ public class LcL3ProductionType extends HadoopProductionType {
             jobConfigFormat.set("calvalus.lc.sensor", sensorName);
             jobConfigFormat.set("calvalus.lc.version", outputVersion);
             jobConfigFormat.setIfUnset("calvalus.mosaic.tileSize", Integer.toString(mosaicTileSize));
+            if ("MSI".equals(sensorName)) {
+                jobConfigFormat.setIfUnset("calvalus.mosaic.numTileY", "900");
+            }
             if ("VEGETATION".equals(sensorName)) {
                 jobConfigFormat.setIfUnset("calvalus.mosaic.withIntersectionCheck", "false");
             }
