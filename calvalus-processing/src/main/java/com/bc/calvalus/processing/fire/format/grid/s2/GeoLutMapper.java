@@ -2,11 +2,13 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
+import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
@@ -37,41 +39,20 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         String utmTile = getUtmTile(localFile);
 
         for (String tile : get2DegTiles(utmTile)) {
-            int tileX = Integer.parseInt(tile.substring(4, 6));
-            int tileY = Integer.parseInt(tile.substring(1, 3));
-            CalvalusLogger.getLogger().info(String.format("Running for tile %s and utmTile %s", tile, utmTile));
+            String zipFile = "./" + tile + "-" + utmTile + ".zip";
+            Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geometry-lut/" + zipFile);
 
-            GeoPos geoPos = new GeoPos();
-            PixelPos pixelPos = new PixelPos();
-            Product p = ProductIO.readProduct(localFile);
-            for (int y = 0; y < 8; y++) {
-                double upperLat = 90 - tileY * 2 - y / 4.0;
-                for (int x = 0; x < 8; x++) {
-                    String pathname = "./" + tile + "-" + utmTile + "-" + x + "-" + y + ".dat";
-                    File file = new File(pathname);
-                    try (FileWriter fos = new FileWriter(file)) {
-                        double currentLon = tileX * 2 - 180 + x / 4.0;
-                        for (int x1 = 0; x1 < 1381; x1++) {
-                            geoPos.lon = currentLon;
-                            double currentLat = upperLat;
-                            for (int y1 = 0; y1 < 1381; y1++) {
-                                geoPos.lat = currentLat;
-                                p.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
-                                if (p.containsPixel(pixelPos)) {
-                                    fos.write(x1 + " " + y1 + " " + (int) pixelPos.x + " " + (int) pixelPos.y + "\n");
-                                }
-                                currentLat -= S2_GRID_PIXELSIZE;
-                            }
-                            currentLon += S2_GRID_PIXELSIZE;
-                        }
-                    }
-                    CalvalusLogger.getLogger().info(String.format("Done %02.2f%%.", (float) ((y * 8.0 + (x + 1)) * 100 / 64.0)));
-                    context.progress();
-                }
+            if (FileSystem.get(context.getConfiguration()).exists(targetPath)) {
+                CalvalusLogger.getLogger().info(String.format("LUT for tile %s and utmTile %s already exists.", tile, utmTile));
+                continue;
+            }
+
+            boolean hasFoundPixel = extract(context, localFile, utmTile, tile);
+            if (!hasFoundPixel) {
+                CalvalusLogger.getLogger().warning("No pixels found!");
             }
             CalvalusLogger.getLogger().info("done, zipping results...");
 
-            String zipFile = "./" + tile + "-" + utmTile + ".zip";
             FileOutputStream fout = new FileOutputStream(zipFile);
             try (ZipOutputStream zipOutput = new ZipOutputStream(new BufferedOutputStream(fout));) {
                 File[] datFiles = new File(".").listFiles((dir, name) -> name.endsWith(".dat"));
@@ -88,11 +69,48 @@ public class GeoLutMapper extends Mapper<NullWritable, NullWritable, NullWritabl
                 }
             }
             CalvalusLogger.getLogger().info("...done, copying to final directory and cleaning...");
-            Path targetPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-geometry-lut/" + zipFile);
             FileUtil.copy(new File(zipFile), inputSplit.getPath(0).getFileSystem(context.getConfiguration()), targetPath, false, context.getConfiguration());
             Arrays.stream(new File(".").listFiles((dir, name) -> name.endsWith(".dat"))).forEach(File::delete);
             CalvalusLogger.getLogger().info("...done.");
         }
+    }
+
+    static boolean extract(Progressable context, File localFile, String utmTile, String tile) throws IOException {
+        int tileX = Integer.parseInt(tile.substring(4));
+        int tileY = Integer.parseInt(tile.substring(1, 3));
+        CalvalusLogger.getLogger().info(String.format("Running for tile %s and utmTile %s", tile, utmTile));
+
+        GeoPos geoPos = new GeoPos();
+        PixelPos pixelPos = new PixelPos();
+        Product p = ProductIO.readProduct(localFile);
+        boolean hasFoundPixel = false;
+        for (int y = 0; y < 8; y++) {
+            double upperLat = 90 - tileY * 2 - y / 4.0;
+            for (int x = 0; x < 8; x++) {
+                String pathname = "./" + tile + "-" + utmTile + "-" + x + "-" + y + ".dat";
+                File file = new File(pathname);
+                try (FileWriter fos = new FileWriter(file)) {
+                    double currentLon = tileX * 2 - 180 + x / 4.0;
+                    for (int x1 = 0; x1 < 1381; x1++) {
+                        geoPos.lon = currentLon;
+                        double currentLat = upperLat;
+                        for (int y1 = 0; y1 < 1381; y1++) {
+                            geoPos.lat = currentLat;
+                            p.getSceneGeoCoding().getPixelPos(geoPos, pixelPos);
+                            if (p.containsPixel(pixelPos)) {
+                                hasFoundPixel = true;
+                                fos.write(x1 + " " + y1 + " " + (int) pixelPos.x + " " + (int) pixelPos.y + "\n");
+                            }
+                            currentLat -= S2_GRID_PIXELSIZE;
+                        }
+                        currentLon += S2_GRID_PIXELSIZE;
+                    }
+                }
+                CalvalusLogger.getLogger().info(String.format("%02.2f%%.", (float) ((y * 8.0 + (x + 1)) * 100 / 64.0)));
+                context.progress();
+            }
+        }
+        return hasFoundPixel;
     }
 
     private static String getUtmTile(File localFile) {
