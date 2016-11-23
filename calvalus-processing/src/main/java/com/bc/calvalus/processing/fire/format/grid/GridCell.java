@@ -16,12 +16,9 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLA
  */
 public class GridCell implements Writable {
 
-    private final int BAND_SIZE;
+    GridCell() {
 
-    GridCell(int targetRasterWidth, int targetRasterHeight) {
-        BAND_SIZE = targetRasterWidth * targetRasterHeight;
     }
-
 
     public float[] baFirstHalf;
     public float[] baSecondHalf;
@@ -34,6 +31,7 @@ public class GridCell implements Writable {
     public float[] coverageFirstHalf;
     public float[] coverageSecondHalf;
     public float[] burnableFraction;
+    private int bandSize;
 
     void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
@@ -122,37 +120,37 @@ public class GridCell implements Writable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
-        baFirstHalf = new float[BAND_SIZE];
-        baSecondHalf = new float[BAND_SIZE];
-        patchNumberFirstHalf = new float[BAND_SIZE];
-        patchNumberSecondHalf = new float[BAND_SIZE];
-        errorsFirstHalf = new float[BAND_SIZE];
-        errorsSecondHalf = new float[BAND_SIZE];
+        baFirstHalf = new float[bandSize];
+        baSecondHalf = new float[bandSize];
+        patchNumberFirstHalf = new float[bandSize];
+        patchNumberSecondHalf = new float[bandSize];
+        errorsFirstHalf = new float[bandSize];
+        errorsSecondHalf = new float[bandSize];
         baInLcFirstHalf = new ArrayList<>();
         baInLcSecondHalf = new ArrayList<>();
         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
-            baInLcFirstHalf.add(new float[BAND_SIZE]);
-            baInLcSecondHalf.add(new float[BAND_SIZE]);
+            baInLcFirstHalf.add(new float[bandSize]);
+            baInLcSecondHalf.add(new float[bandSize]);
         }
-        coverageFirstHalf = new float[BAND_SIZE];
-        coverageSecondHalf = new float[BAND_SIZE];
+        coverageFirstHalf = new float[bandSize];
+        coverageSecondHalf = new float[bandSize];
 
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             baFirstHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             baSecondHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             patchNumberFirstHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             patchNumberSecondHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             errorsFirstHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             errorsSecondHalf[i] = in.readFloat();
         }
         for (float[] lcClass : baInLcFirstHalf) {
@@ -165,13 +163,13 @@ public class GridCell implements Writable {
                 lcClass[i] = in.readFloat();
             }
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             coverageFirstHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             coverageSecondHalf[i] = in.readFloat();
         }
-        for (int i = 0; i < BAND_SIZE; i++) {
+        for (int i = 0; i < bandSize; i++) {
             burnableFraction[i] = in.readFloat();
         }
     }
@@ -191,5 +189,9 @@ public class GridCell implements Writable {
                 ", coverageSecondHalf=" + Arrays.toString(coverageSecondHalf) +
                 ", burnable=" + Arrays.toString(burnableFraction) +
                 '}';
+    }
+
+    void setBandSize(int bandSize) {
+        this.bandSize = bandSize;
     }
 }

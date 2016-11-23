@@ -141,7 +141,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         validate(baFirstHalf, baInLcFirstHalf);
         validate(baSecondHalf, baInLcSecondHalf);
 
-        GridCell gridCell = new GridCell(targetRasterWidth, targetRasterHeight);
+        GridCell gridCell = new GridCell();
+        gridCell.setBandSize(targetRasterWidth * targetRasterHeight);
         gridCell.setBaFirstHalf(baFirstHalf);
         gridCell.setBaSecondHalf(baSecondHalf);
         gridCell.setPatchNumberFirstHalf(patchNumberFirstHalf);
