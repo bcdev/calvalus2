@@ -43,8 +43,11 @@ public class S2GridInputFormat extends InputFormat {
             String[] utmTiles = tilePattern.split("\\|");
             List<FileStatus> fileStatuses = new ArrayList<>();
             for (String utmTile : utmTiles) {
-                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/" + utmTile + "/BA-.*" + year + month + ".*nc";
+                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/s2-ba/T" + utmTile + "/BA-.*" + year + month + ".*nc";
                 Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
+            }
+            if (fileStatuses.size() == 0) {
+                continue;
             }
             addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, entry.getKey().toString());
         }
@@ -52,7 +55,7 @@ public class S2GridInputFormat extends InputFormat {
         return splits;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String fiveDegreeTile) throws IOException {
+    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String twoDegreeTile) throws IOException {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
@@ -60,12 +63,13 @@ public class S2GridInputFormat extends InputFormat {
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());
         }
-        String lcTile = String.format("v%02dh%02d", Integer.parseInt(fiveDegreeTile.substring(1, 3)) * 2, Integer.parseInt(fiveDegreeTile.substring(4, 6)) * 2);
+        // lcTiles are in 10deg steps, so divide number of two deg file by five
+        String lcTile = String.format("v%02dh%02d", Integer.parseInt(twoDegreeTile.substring(1, 3)) / 5, Integer.parseInt(twoDegreeTile.substring(4)) / 5);
         String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/lc/" + String.format("lc-%s-%s.nc", "2005", lcTile);
         FileStatus lcPath = FileSystem.get(conf).getFileStatus(new Path(lcInputPath));
         filePaths.add(lcPath.getPath());
         fileLengths.add(lcPath.getLen());
-        filePaths.add(new Path(fiveDegreeTile));
+        filePaths.add(new Path(twoDegreeTile));
         fileLengths.add(0L);
         CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());

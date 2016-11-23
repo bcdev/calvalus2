@@ -13,6 +13,7 @@ public class SourceData {
     public final int[] pixels;
     public final double[] areas;
     public final int[] lcClasses;
+    public final boolean[] burnable;
     public int patchCountFirstHalf;
     public int patchCountSecondHalf;
     public int[] statusPixelsFirstHalf;
@@ -24,14 +25,7 @@ public class SourceData {
         statusPixelsFirstHalf = new int[width * height];
         statusPixelsSecondHalf = new int[width * height];
         lcClasses = new int[width * height];
-    }
-
-    public SourceData(int[] pixels, double[] areas, int[] lcClasses, int[] statusPixelsFirstHalf, int[] statusPixelsSecondHalf) {
-        this.pixels = pixels;
-        this.areas = areas;
-        this.lcClasses = lcClasses;
-        this.statusPixelsFirstHalf = statusPixelsFirstHalf;
-        this.statusPixelsSecondHalf = statusPixelsSecondHalf;
+        burnable = new boolean[width * height];
     }
 
     public void reset() {
@@ -40,6 +34,7 @@ public class SourceData {
         Arrays.fill(areas, NO_AREA);
         Arrays.fill(statusPixelsFirstHalf, 0);
         Arrays.fill(statusPixelsSecondHalf, 0);
+        Arrays.fill(burnable, false);
     }
 
 }

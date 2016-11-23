@@ -1,7 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
 import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.util.AreaCalculator;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
 

@@ -38,23 +38,24 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
 
     private String firstHalfFile;
     private String secondHalfFile;
+    private GridCell currentGridCell;
 
     @Override
     protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
         Iterator<GridCell> iterator = values.iterator();
-        GridCell gridCell = iterator.next();
+        currentGridCell = iterator.next();
 
-        float[] burnedAreaFirstHalf = gridCell.baFirstHalf;
-        float[] burnedAreaSecondHalf = gridCell.baSecondHalf;
+        float[] burnedAreaFirstHalf = currentGridCell.baFirstHalf;
+        float[] burnedAreaSecondHalf = currentGridCell.baSecondHalf;
 
-        float[] patchNumbersFirstHalf = gridCell.patchNumberFirstHalf;
-        float[] patchNumbersSecondHalf = gridCell.patchNumberSecondHalf;
+        float[] patchNumbersFirstHalf = currentGridCell.patchNumberFirstHalf;
+        float[] patchNumbersSecondHalf = currentGridCell.patchNumberSecondHalf;
 
-        float[] errorsFirstHalf = gridCell.errorsFirstHalf;
-        float[] errorsSecondHalf = gridCell.errorsSecondHalf;
+        float[] errorsFirstHalf = currentGridCell.errorsFirstHalf;
+        float[] errorsSecondHalf = currentGridCell.errorsSecondHalf;
 
-        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
-        List<float[]> baInLcSecondHalf = gridCell.baInLcSecondHalf;
+        List<float[]> baInLcFirstHalf = currentGridCell.baInLcFirstHalf;
+        List<float[]> baInLcSecondHalf = currentGridCell.baInLcSecondHalf;
 
 
         try {
@@ -145,6 +146,10 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     }
 
     protected abstract String getFilename(String year, String month, String version, boolean firstHalf);
+
+    protected GridCell getCurrentGridCell() {
+        return currentGridCell;
+    }
 
     protected static void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
         CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 into variable %s", x, y, varName));
@@ -281,12 +286,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         ncFile.write(lon, values);
     }
 
-    private static int getX(String key) {
+    protected static int getX(String key) {
         int x = Integer.parseInt(key.substring(12));
         return x * 40;
     }
 
-    private static int getY(String key) {
+    protected static int getY(String key) {
         int y = Integer.parseInt(key.substring(9, 11));
         return y * 40;
     }

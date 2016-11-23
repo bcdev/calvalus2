@@ -50,6 +50,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         float[] coverageSecondHalf = new float[targetRasterWidth * targetRasterHeight];
         float[] patchNumberFirstHalf = new float[targetRasterWidth * targetRasterHeight];
         float[] patchNumberSecondHalf = new float[targetRasterWidth * targetRasterHeight];
+        float[] burnableFraction = new float[targetRasterWidth * targetRasterHeight];
 
         List<float[]> baInLcFirstHalf = new ArrayList<>();
         List<float[]> baInLcSecondHalf = new ArrayList<>();
@@ -75,6 +76,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 float baValueSecondHalf = 0.0F;
                 float coverageValueFirstHalf = 0.0F;
                 float coverageValueSecondHalf = 0.0F;
+                double burnableFractionValue = 0;
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
@@ -113,8 +115,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
                     coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
+                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
-
                     validate(areas[targetPixelIndex], targetPixelIndex);
                 }
 
@@ -122,8 +124,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 baSecondHalf[targetPixelIndex] = baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
-                coverageFirstHalf[targetPixelIndex] = getCoverage(coverageValueFirstHalf, areas[targetPixelIndex]);
-                coverageSecondHalf[targetPixelIndex] = getCoverage(coverageValueSecondHalf, areas[targetPixelIndex]);
+                coverageFirstHalf[targetPixelIndex] = getFraction(coverageValueFirstHalf, areas[targetPixelIndex]);
+                coverageSecondHalf[targetPixelIndex] = getFraction(coverageValueSecondHalf, areas[targetPixelIndex]);
+                burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }
@@ -149,6 +152,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         gridCell.setBaInLcSecondHalf(baInLcSecondHalf);
         gridCell.setCoverageFirstHalf(coverageFirstHalf);
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
+        gridCell.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
         return gridCell;
     }
@@ -190,8 +194,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    private static float getCoverage(float coverage, double area) {
-        return (float) (coverage / area) >= 1.0F ? 1.0F : (float) (coverage / area);
+    private static float getFraction(double burnableCount, double area) {
+        return (float) (burnableCount / area) >= 1.0F ? 1.0F : (float) (burnableCount / area);
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {

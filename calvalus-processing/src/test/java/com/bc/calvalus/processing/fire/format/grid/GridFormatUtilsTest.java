@@ -52,24 +52,6 @@ public class GridFormatUtilsTest {
     }
 
     @Test
-    public void testGetTargetDimension() throws Exception {
-        int size = 500;
-        Product a = new Product("a", "t", size, size);
-        a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, size, size, 15, 15, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
-        Product b = new Product("b", "t", size, size);
-        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, size, size, 15.02, 15.01, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
-
-        a.addBand("a", "1");
-        b.addBand("b", "2");
-
-        GridFormatUtils.ProductSpec ps = GridFormatUtils.getTargetSpec(new Product[]{
-                a, b
-        });
-        assertEquals(610, ps.width);
-        assertEquals(555, ps.height);
-    }
-
-    @Test
     public void testFilterProducts() throws Exception {
         Product a = new Product("a", "t", 50, 50);
         a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10, 10, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
@@ -80,7 +62,6 @@ public class GridFormatUtilsTest {
 
         assertArrayEquals(new Product[]{a}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 0, 0));
         assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 1, 1));
-
     }
 
     @Ignore

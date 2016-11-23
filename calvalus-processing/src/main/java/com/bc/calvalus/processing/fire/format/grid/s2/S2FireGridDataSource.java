@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
+import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
@@ -8,6 +9,7 @@ import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.FactoryException;
@@ -16,10 +18,8 @@ import org.opengis.referencing.operation.TransformException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -31,16 +31,13 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     private final String tile;
     private final Product[] sourceProducts;
     private final Product lcProduct;
-    private final Logger log;
     public static final int STEP = 2;
     private List<ZipFile> geoLookupTables;
-    private List<String> lcForTile = new ArrayList<>();
 
-    public S2FireGridDataSource(String tile, Product sourceProducts[], Product lcProduct, List<ZipFile> geoLookupTables, Logger log) {
+    public S2FireGridDataSource(String tile, Product sourceProducts[], Product lcProduct, List<ZipFile> geoLookupTables) {
         this.tile = tile;
         this.sourceProducts = sourceProducts;
         this.lcProduct = lcProduct;
-        this.log = log;
         this.geoLookupTables = geoLookupTables;
     }
 
@@ -56,7 +53,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         int width = 1381;
         int height = 1381;
 
-        int tileX = Integer.parseInt(tile.substring(4, 6));
+        int tileX = Integer.parseInt(tile.substring(4));
         int tileY = Integer.parseInt(tile.substring(1, 3));
         double upperLat = 90 - tileY * STEP - STEP + (y + 1) / 4.0;
         double leftLon = tileX * STEP - 180 + x / 4.0;
@@ -71,7 +68,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         CrsGeoCoding gc = getCrsGeoCoding(width, height, upperLat, leftLon);
         for (Product product : products) {
-            product.getBand("JD").readRasterDataFully(ProgressMonitor.NULL);
             ZipFile geoLookupTable = null;
             for (ZipFile lookupTable : geoLookupTables) {
                 if (lookupTable.getName().matches(".*" + product.getName().substring(4, 9) + ".*")) {
@@ -98,28 +94,40 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             }
             BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), "UTF-8"));
 
-            int[] jdData = (int[]) product.getBand("JD").getData().getElems();
             String line;
-
+            ProductData.Int intRasterData = new ProductData.Int(1);
             while ((line = br.readLine()) != null) {
                 String[] splitLine = line.split(" ");
                 int targetX = Integer.parseInt(splitLine[0]);
                 int targetY = Integer.parseInt(splitLine[1]);
                 int sourceX = Integer.parseInt(splitLine[2]);
                 int sourceY = Integer.parseInt(splitLine[3]);
-                int sourceJD = jdData[sourceY * product.getSceneRasterWidth() + sourceX];
-                int oldValue = data.pixels[targetY * width + targetX];
-                if (sourceJD > oldValue) {
-                    data.pixels[targetY * width + targetX] = sourceJD;
+                product.getBand("JD").readRasterData(sourceX, sourceY, 1, 1, intRasterData);
+                int sourceJD = intRasterData.getElemIntAt(0);
+                int pixelIndex = targetY * width + targetX;
+                int oldValue = data.pixels[pixelIndex];
+                if (sourceJD > oldValue && sourceJD < 900) {
+                    data.pixels[pixelIndex] = sourceJD;
                 }
-                if (!hasLcDoneForTile(utmTile)) {
-                    gc.getGeoPos(new PixelPos(targetX, targetY), lcGeoPos);
-                    lcProduct.getSceneGeoCoding().getPixelPos(lcGeoPos, lcPixelPos);
-                    int sourceLC = lcData[(int) (lcPixelPos.y * lcProduct.getSceneRasterWidth() + lcPixelPos.x)];
-                    data.lcClasses[targetY * width + targetX] = sourceLC;
+                if (sourceJD < 999) {
+                    data.statusPixelsFirstHalf[pixelIndex] = 1;
                 }
             }
-            setLcDoneForTile(utmTile);
+        }
+
+        for (int y1 = 0; y1 < height; y1++) {
+            for (int x1 = 0; x1 < width; x1++) {
+                int pixelIndex = y1 * width + x1;
+                gc.getGeoPos(new PixelPos(x1, y1), lcGeoPos);
+                lcProduct.getSceneGeoCoding().getPixelPos(lcGeoPos, lcPixelPos);
+                if (lcProduct.containsPixel(lcPixelPos)) {
+                    int sourceLC = lcData[(int) lcPixelPos.y * lcProduct.getSceneRasterWidth() + (int) lcPixelPos.x];
+                    if (LcRemapping.isInBurnableLcClass(sourceLC)) {
+                        data.burnable[pixelIndex] = true;
+                    }
+                    data.lcClasses[pixelIndex] = sourceLC;
+                }
+            }
         }
 
         getAreas(gc, width, height, data.areas);
@@ -128,14 +136,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
         data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels, width, height), false);
 
         return data;
-    }
-
-    private boolean hasLcDoneForTile(String utmTile) {
-        return lcForTile.contains(utmTile);
-    }
-
-    private boolean setLcDoneForTile(String utmTile) {
-        return lcForTile.add(utmTile);
     }
 
     private static CrsGeoCoding getCrsGeoCoding(int width, int height, double upperLat, double leftLon) {

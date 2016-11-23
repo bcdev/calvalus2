@@ -13,6 +13,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -76,14 +79,16 @@ public class AbstractGridMapperTest {
     public void acceptanceTestS2GridFormat() throws Exception {
         ErrorPredictor errorPredictor = new ErrorPredictor();
         List<Product> products = new ArrayList<>();
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PFU-20160101T113935.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PFU-20160108T113011.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PFU-20160111T113934.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PFU-20160118T113008.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PGA-20160108T113011.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PGA-20160118T113008.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PGU-20160108T113011.nc"));
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\BA-T28PGU-20160118T113008.nc"));
+        Files.list(Paths.get("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting"))
+                .filter(path -> path.getFileName().toString().startsWith("BA-"))
+//                .limit(1)
+                .forEach(path -> {
+                    try {
+                        products.add(ProductIO.readProduct(path.toFile()));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
         AbstractGridMapper mapper = new AbstractGridMapper(8, 8) {
             @Override
@@ -94,15 +99,18 @@ public class AbstractGridMapperTest {
         File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-v07h16.nc");
         Product lcProduct = ProductIO.readProduct(file);
         S2GridMapper.setGcToLcProduct(lcProduct);
-        ZipFile geoLookupTable = new ZipFile("C:\\ssd\\v38h83-28PFU.zip");
-        ZipFile geoLookupTable2 = new ZipFile("C:\\ssd\\v38h83-28PGA.zip");
-        ZipFile geoLookupTable3 = new ZipFile("C:\\ssd\\v38h83-28PGU.zip");
-        List<ZipFile> geoLookupTables = new ArrayList<>();
-        geoLookupTables.add(geoLookupTable);
-        geoLookupTables.add(geoLookupTable2);
-        geoLookupTables.add(geoLookupTable3);
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables, logger);
+        List<ZipFile> geoLookupTables = new ArrayList<>();
+        Files.list(Paths.get("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting"))
+                .filter(path -> path.getFileName().toString().startsWith("v")).forEach(path -> {
+            try {
+                geoLookupTables.add(new ZipFile(path.toFile()));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
+
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables);
         mapper.setDataSource(dataSource);
 
         GridCell gridCell = mapper.computeGridCell(2016, 1, errorPredictor);
@@ -129,6 +137,9 @@ public class AbstractGridMapperTest {
             Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
             lcBand.setData(new ProductData.Float(floats));
         }
+
+        Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
+        buf.setData(new ProductData.Float(gridCell.burnableFraction));
 
         product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 8, 8, -14, 14, 0.25, 0.25, 0.0, 0.0));
 

@@ -50,21 +50,25 @@ public class S2GridMapper extends AbstractGridMapper {
         List<ZipFile> geoLookupTables = new ArrayList<>();
         String fiveDegTile = paths[paths.length - 1].getName();
 
-        Product[] sourceProducts = new Product[paths.length - 1];
+        List<Product> sourceProducts = new ArrayList<>();
         for (int i = 0; i < paths.length - 2; i++) {
             String utmTile = paths[i].getName().substring(4, 9);
-            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/" + fiveDegTile + "-" + utmTile + ".zip");
-            File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
-            geoLookupTables.add(new ZipFile(localGeoLookup));
+            String localGeoLookupFileName = fiveDegTile + "-" + utmTile + ".zip";
+            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/" + localGeoLookupFileName);
+            if (!new File(localGeoLookupFileName).exists()) {
+                File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
+                geoLookupTables.add(new ZipFile(localGeoLookup));
+            }
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            sourceProducts[i] = ProductIO.readProduct(sourceProductFile);
+            sourceProducts.add(ProductIO.readProduct(sourceProductFile));
+            LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 2)));
         }
 
         File file = CalvalusProductIO.copyFileToLocal(paths[paths.length - 2], context.getConfiguration());
         Product lcProduct = ProductIO.readProduct(file);
         setGcToLcProduct(lcProduct);
 
-        setDataSource(new S2FireGridDataSource(fiveDegTile, sourceProducts, lcProduct, geoLookupTables, LOG));
+        setDataSource(new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProduct, geoLookupTables));
         ErrorPredictor errorPredictor = new ErrorPredictor();
         GridCell gridCell = computeGridCell(year, month, errorPredictor);
 

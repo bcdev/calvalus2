@@ -1,10 +1,21 @@
 package com.bc.calvalus.processing.fire.format;
 
+import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
+
 /**
  */
 public class LcRemapping {
 
     public static final int INVALID_LC_CLASS = 0;
+
+    public static boolean isInBurnableLcClass(int sourceLcClass) {
+        for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
+            if (isInLcClass(lcClass + 1, sourceLcClass)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static boolean isInLcClass(int lcClassNumber, int sourceLcClass) {
         switch (lcClassNumber) {

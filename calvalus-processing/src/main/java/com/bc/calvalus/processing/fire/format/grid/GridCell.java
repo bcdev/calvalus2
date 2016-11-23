@@ -18,7 +18,7 @@ public class GridCell implements Writable {
 
     private final int BAND_SIZE;
 
-    public GridCell(int targetRasterWidth, int targetRasterHeight) {
+    GridCell(int targetRasterWidth, int targetRasterHeight) {
         BAND_SIZE = targetRasterWidth * targetRasterHeight;
     }
 
@@ -33,45 +33,50 @@ public class GridCell implements Writable {
     public List<float[]> baInLcSecondHalf;
     public float[] coverageFirstHalf;
     public float[] coverageSecondHalf;
+    public float[] burnableFraction;
 
-    public void setBaFirstHalf(float[] baFirstHalf) {
+    void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
     }
 
-    public void setBaSecondHalf(float[] baSecondHalf) {
+    void setBaSecondHalf(float[] baSecondHalf) {
         this.baSecondHalf = baSecondHalf;
     }
 
-    public void setPatchNumberFirstHalf(float[] patchNumberFirstHalf) {
+    void setPatchNumberFirstHalf(float[] patchNumberFirstHalf) {
         this.patchNumberFirstHalf = patchNumberFirstHalf;
     }
 
-    public void setPatchNumberSecondHalf(float[] patchNumberSecondHalf) {
+    void setPatchNumberSecondHalf(float[] patchNumberSecondHalf) {
         this.patchNumberSecondHalf = patchNumberSecondHalf;
     }
 
-    public void setErrorsFirstHalf(float[] errorsFirstHalf) {
+    void setErrorsFirstHalf(float[] errorsFirstHalf) {
         this.errorsFirstHalf = errorsFirstHalf;
     }
 
-    public void setErrorsSecondHalf(float[] errorsSecondHalf) {
+    void setErrorsSecondHalf(float[] errorsSecondHalf) {
         this.errorsSecondHalf = errorsSecondHalf;
     }
 
-    public void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
+    void setBaInLcFirstHalf(List<float[]> baInLcFirstHalf) {
         this.baInLcFirstHalf = baInLcFirstHalf;
     }
 
-    public void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
+    void setBaInLcSecondHalf(List<float[]> baInLcSecondHalf) {
         this.baInLcSecondHalf = baInLcSecondHalf;
     }
 
-    public void setCoverageFirstHalf(float[] coverageFirstHalf) {
+    void setCoverageFirstHalf(float[] coverageFirstHalf) {
         this.coverageFirstHalf = coverageFirstHalf;
     }
 
-    public void setCoverageSecondHalf(float[] coverageSecondHalf) {
+    void setCoverageSecondHalf(float[] coverageSecondHalf) {
         this.coverageSecondHalf = coverageSecondHalf;
+    }
+
+    void setBurnableFraction(float[] burnableFraction) {
+        this.burnableFraction = burnableFraction;
     }
 
     @Override
@@ -108,6 +113,9 @@ public class GridCell implements Writable {
             out.writeFloat(v);
         }
         for (float v : coverageSecondHalf) {
+            out.writeFloat(v);
+        }
+        for (float v : burnableFraction) {
             out.writeFloat(v);
         }
     }
@@ -163,6 +171,9 @@ public class GridCell implements Writable {
         for (int i = 0; i < BAND_SIZE; i++) {
             coverageSecondHalf[i] = in.readFloat();
         }
+        for (int i = 0; i < BAND_SIZE; i++) {
+            burnableFraction[i] = in.readFloat();
+        }
     }
 
     @Override
@@ -178,6 +189,7 @@ public class GridCell implements Writable {
                 ", baInLcSecondHalf=" + baInLcSecondHalf +
                 ", coverageFirstHalf=" + Arrays.toString(coverageFirstHalf) +
                 ", coverageSecondHalf=" + Arrays.toString(coverageSecondHalf) +
+                ", burnable=" + Arrays.toString(burnableFraction) +
                 '}';
     }
 }
