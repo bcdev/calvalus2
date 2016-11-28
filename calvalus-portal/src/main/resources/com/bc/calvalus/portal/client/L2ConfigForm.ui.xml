@@ -21,8 +21,8 @@
                     </g:VerticalPanel>
                     <g:CheckBox ui:field="showAllUserProcessors" text="Processors of other users" value="false"/>
                     <g:VerticalPanel>
-                        <g:CheckBox ui:field="filterProcessorByVersion" text="Highest version" value="false"/>
-                        <g:CheckBox ui:field="filterProcessorByProductType" text="Matching input type" value="false"/>
+                        <g:CheckBox ui:field="filterProcessorByVersion" text="Highest version" value="true"/>
+                        <g:CheckBox ui:field="filterProcessorByProductType" text="Matching input type" value="true"/>
                     </g:VerticalPanel>
                 </g:HorizontalPanel>
 
