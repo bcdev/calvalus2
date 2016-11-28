@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
@@ -66,8 +67,8 @@ public class SnapOperatorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
         SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
-        assertEquals(1, numProducts);
+        boolean success = snapOperatorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
+        assertTrue(success);
         Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -96,7 +97,7 @@ public class SnapOperatorAdapterTest {
             }
         };
 
-        snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+        snapOperatorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
     }
 
     @Test
@@ -107,8 +108,8 @@ public class SnapOperatorAdapterTest {
         SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle(10, 20));
 
-        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
-        assertEquals(1, numProducts);
+        boolean success = snapOperatorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
+                assertTrue(success);
         Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertNotSame(sourceProduct, targetProduct);
@@ -123,8 +124,8 @@ public class SnapOperatorAdapterTest {
         ProductSplit productSplit = new ProductSplit(null, 42L, new String[0], 0, 0);
         SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct, null);
 
-        int numProducts = snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
-        assertEquals(1, numProducts);
+        boolean success = snapOperatorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
+        assertTrue(success);
         Product targetProduct = snapOperatorAdapter.openProcessedProduct();
 
         assertSame(sourceProduct, targetProduct);
@@ -140,7 +141,7 @@ public class SnapOperatorAdapterTest {
         SnapOperatorAdapter snapOperatorAdapter = createProcessorAdapter(productSplit, sourceProduct,
                                                                            new Rectangle());
         try {
-            snapOperatorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            snapOperatorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
             fail();
         } catch (IllegalStateException e) {
             assertEquals("Can not create an empty subset.", e.getMessage());

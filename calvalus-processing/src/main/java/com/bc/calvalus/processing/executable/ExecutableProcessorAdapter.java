@@ -123,7 +123,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
 
         Path inputPath = getInputPath();
         File inputFile = getInputFile();
@@ -139,7 +139,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
 
         outputFilesNames = processInput(pm, inputRectangle, inputPath, inputFile, productRect, null);
-        return outputFilesNames.length;
+        return outputFilesNames.length > 0;
     }
 
     public File getCurrentWorkingDir() {

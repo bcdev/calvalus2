@@ -106,8 +106,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product is empty").increment(1);
             } else {
                 // process input and write target product
-                int numProducts = processorAdapter.processSourceProduct(SubProgressMonitor.create(pm, progressForProcessing));
-                if (numProducts > 0) {
+                if (processorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, SubProgressMonitor.create(pm, progressForProcessing))) {
                     LOG.info(context.getTaskAttemptID() + " target product created");
                     processorAdapter.saveProcessedProducts(SubProgressMonitor.create(pm, progressForSaving));
                     context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product processed").increment(1);
