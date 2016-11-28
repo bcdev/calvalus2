@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -191,7 +192,8 @@ public class ProductSetFilterForm extends Composite {
                     for (Region region : regionList) {
                         if (region.getName().equalsIgnoreCase(regionName)) {
                             regionMap.getRegionMapSelectionModel().setSelected(region, true);
-                            return;
+                            new LocateRegionsAction().run(regionMap);
+                            break;
                         }
                     }
                 }
