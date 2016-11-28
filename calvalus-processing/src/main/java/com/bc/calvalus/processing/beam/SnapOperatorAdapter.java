@@ -58,7 +58,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("SNAP Level 2");
         try {
             Configuration conf = getConfiguration();
@@ -81,7 +81,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                                     "It will be suppressed from the processing.";
                 getLogger().info(String.format(msgPattern, subsetProduct.getSceneRasterWidth(),
                                                subsetProduct.getSceneRasterHeight()));
-                return 0;
+                return false;
             }
             if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
                 targetProduct = createSubset(getProcessedProduct(subsetProduct, processorName, processorParameters));
@@ -92,7 +92,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
                 targetProduct.getSceneRasterWidth() == 0 ||
                 targetProduct.getSceneRasterHeight() == 0) {
                 getLogger().info("Skip processing");
-                return 0;
+                return false;
             }
             getLogger().info(String.format("Processed product width = %d height = %d",
                                            targetProduct.getSceneRasterWidth(),
@@ -103,7 +103,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         } finally {
             pm.done();
         }
-        return 1;
+        return true;
     }
 
     @Override

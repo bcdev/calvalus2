@@ -4,10 +4,21 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.executable.PropertiesHandler;
+import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.xml.XmlConvertible;
+import com.bc.ceres.binding.BindingException;
+import com.bc.ceres.binding.ConversionException;
+import com.bc.ceres.binding.PropertyContainer;
+import com.bc.ceres.binding.ValidationException;
+import com.bc.ceres.binding.dom.DefaultDomConverter;
+import com.bc.ceres.binding.dom.DomConverter;
+import com.bc.ceres.binding.dom.DomElement;
+import com.bc.ceres.binding.dom.XppDomElement;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.resource.ReaderResource;
 import com.bc.ceres.resource.Resource;
 import com.bc.ceres.resource.ResourceEngine;
+import com.thoughtworks.xstream.io.xml.xppdom.XppDom;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -20,25 +31,33 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorException;
+import org.esa.snap.core.gpf.annotations.Parameter;
+import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
 import org.esa.snap.core.gpf.graph.Graph;
 import org.esa.snap.core.gpf.graph.GraphContext;
 import org.esa.snap.core.gpf.graph.GraphException;
 import org.esa.snap.core.gpf.graph.GraphIO;
+import org.esa.snap.core.gpf.graph.GraphProcessor;
 import org.esa.snap.core.gpf.graph.Header;
 import org.esa.snap.core.gpf.graph.HeaderSource;
 import org.esa.snap.core.gpf.graph.HeaderTarget;
 import org.esa.snap.core.gpf.graph.Node;
-import org.esa.snap.core.gpf.graph.NodeContext;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -46,6 +65,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Logger;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * A processor adapter that uses a SNAP GPF {@code Graph} to process input products.
@@ -74,8 +95,8 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 getLogger().info("Setting tileHeight to 64 for graph subsetting");
             }
             if ((getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth") == null
-                 || "*".equals(getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth")))
-                && ! getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false)) {
+                    || "*".equals(getConfiguration().get("calvalus.system.snap.dataio.reader.tileWidth")))
+                    && !getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false)) {
                 System.setProperty("snap.dataio.reader.tileWidth", "64");
                 getLogger().info("Setting tileWidth to 64 for graph subsetting");
             }
@@ -88,74 +109,117 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     @Override
-    public int processSourceProduct(ProgressMonitor pm) throws IOException {
+    public boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException {
         pm.setSubTaskName("SNAP Level 2");
 
         try {
             Graph graph = createGraph();
             if (graph == null) {
                 getLogger().info("Skip processing");
-                return 0;
+                return false;
             }
             Header header = graph.getHeader();
-            List<HeaderSource> sources = header.getSources();
-            Path inputPath = getInputPath();
-            Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
-            Operator sourceProducts = new SourceProductContainerOperator();
-            for (HeaderSource headerSource : sources) {
-                String sourceId = headerSource.getName();
-                Path sourcePath = new Path(headerSource.getLocation());
-
-                File inputFile = getInputFile();
-                String inputFormat = null;
-                if (headerSource.getDescription() != null && headerSource.getDescription().startsWith("format:")) {
-                    inputFormat = headerSource.getDescription().substring("format:".length());
-                }
-                Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
-                Product sourceProduct;
-                if (qualifiedInputPath.equals(qualifiedSourcePath)) {
-                    // main input
-                    if (inputFile != null) {
-                        // if inputFile is set and path is the inputPath us the (local)file instead
-                        System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
-                        sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
-                    } else {
-                        sourceProduct = getInputProduct();
-                    }
-                    if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
-                        getLogger().info("input subsetting of split " + sourcePath);
-                        sourceProduct = createSubset(sourceProduct);
-                    }
-                } else {
-                    // other source product
-                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
-                }
-                sourceProducts.setSourceProduct(sourceId, sourceProduct);
-            }
-            graphContext = new GraphContext(graph, sourceProducts);
+            graphContext = buildGraphContext(graph, header);
             HeaderTarget target = header.getTarget();
-            if (target == null || target.getNodeId() == null) {
-                throw new IllegalArgumentException("No 'target' specified in graph header.");
-            }
-            Node targetNode = graph.getNode(target.getNodeId());
-            if (targetNode == null) {
-                throw new IllegalArgumentException("Specified targetNode '" + target.getNodeId() + "' does not exist in graph.");
-            }
-            NodeContext targetNodeContext = graphContext.getNodeContext(targetNode);
-            if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
-                getLogger().info("output subsetting of split " + inputPath);
-                targetProduct = createSubset(targetNodeContext.getTargetProduct());
+            XppDom calvalusAppData = graph.getApplicationData("calvalus");
+
+            if (mode == MODE.EXECUTE) {
+                if (calvalusAppData == null) {
+                    throw new IllegalArgumentException("No 'applicationData' given in graph.");
+                }
+                return executeGraphAndCollectOutput(graph, calvalusAppData, pm);
             } else {
-                targetProduct = targetNodeContext.getTargetProduct();
+                if (target == null || target.getNodeId() == null) {
+                    throw new IllegalArgumentException("no 'target' product given in graph.");
+                }
+                targetProduct = getTargetProductFromGraph(graph, target.getNodeId());
+                return postprocessTargetProduct();
             }
-        } catch (GraphException e) {
+        } catch (Exception e) {
             throw new IOException("Error executing Graph: " + e.getMessage(), e);
         } finally {
             pm.done();
         }
+    }
+
+    private boolean executeGraphAndCollectOutput(Graph graph, XppDom calvalusAppData, ProgressMonitor pm) throws Exception {
+        if (calvalusAppData != null) {
+            CalvalusGraphApplicationData appData = CalvalusGraphApplicationData.fromDom(calvalusAppData);
+            // "execute" graph
+            GraphProcessor processor = new GraphProcessor();
+            processor.executeGraph(graphContext, pm);
+
+            // collect results files
+            List<File> outputFileList = new ArrayList<>();
+            if (appData.outputFiles != null) {
+                for (String outputFile : appData.outputFiles) {
+                    File file = new File(outputFile);
+                    if (file.exists()) {
+                        outputFileList.add(file);
+                    } else {
+                        getLogger().warning("outputFile '" + outputFile + "' does not exist.");
+                    }
+                }
+            }
+            if (appData.outputNodes != null) {
+                for (OutputNodeRef ref : appData.outputNodes) {
+                    Node node = graph.getNode(ref.nodeId);
+                    DomElement domElement = node.getConfiguration().getChild(ref.parameter);
+                    if (domElement != null) {
+                        File file = new File(domElement.getValue());
+                        if (file.exists()) {
+                            outputFileList.add(file);
+                        } else {
+                            getLogger().warning("outputNode '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
+                        }
+                    }
+                }
+            }
+            MapContext mapContext = getMapContext();
+            if (appData.archiveFile != null) {
+                // create zip with all files
+                Path workPath = new Path(getWorkOutputDirectoryPath(), appData.archiveFile);
+                OutputStream outputStream = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
+                ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(outputStream));
+                zipOutputStream.setMethod(ZipEntry.DEFLATED);
+                try {
+                    for (File outputFile : outputFileList) {
+                        getLogger().info("adding to zip archive: " + outputFile.getName());
+                        ZipEntry zipEntry = new ZipEntry(outputFile.getName().replace('\\', '/'));
+                        FileInputStream inputStream = new FileInputStream(outputFile);
+                        try {
+                            zipOutputStream.putNextEntry(zipEntry);
+                            ProductFormatter.copy(inputStream, zipOutputStream, mapContext);
+                            zipOutputStream.closeEntry();
+                        } finally {
+                            inputStream.close();
+                        }
+                    }
+                } finally {
+                    zipOutputStream.close();
+                }
+            } else {
+                // archive individual files
+                for (File outputFile : outputFileList) {
+                    getLogger().info("copying to HDFS: " + outputFile.getName());
+                    InputStream is = new BufferedInputStream(new FileInputStream(outputFile));
+                    Path workPath = new Path(getWorkOutputDirectoryPath(), outputFile.getName());
+                    OutputStream os = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
+                    ProductFormatter.copyAndClose(is, os, mapContext);
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean postprocessTargetProduct() throws IOException {
+        if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
+            getLogger().info("output subsetting of split " + getInputPath());
+            targetProduct = createSubset(targetProduct);
+        }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             getLogger().info("Skip processing");
-            return 0;
+            return false;
         }
         getLogger().info(String.format("Processed product width = %d height = %d",
                                        targetProduct.getSceneRasterWidth(),
@@ -163,7 +227,53 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         if (hasInvalidStartAndStopTime(targetProduct)) {
             copySceneRasterStartAndStopTime(getInputProduct(), targetProduct, null);
         }
-        return 1;
+        return true;
+    }
+
+    private Product getTargetProductFromGraph(Graph graph, String targetNodeId) {
+        Node targetNode = graph.getNode(targetNodeId);
+        if (targetNode == null) {
+            throw new IllegalArgumentException("Specified targetNode '" + targetNodeId + "' does not exist in graph.");
+        }
+        return graphContext.getNodeContext(targetNode).getTargetProduct();
+    }
+
+    private GraphContext buildGraphContext(Graph graph, Header header) throws IOException, GraphException {
+        List<HeaderSource> sources = header.getSources();
+        Path inputPath = getInputPath();
+        Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
+        Operator sourceProducts = new SourceProductContainerOperator();
+        for (HeaderSource headerSource : sources) {
+            String sourceId = headerSource.getName();
+            Path sourcePath = new Path(headerSource.getLocation());
+
+            File inputFile = getInputFile();
+            String inputFormat = null;
+            if (headerSource.getDescription() != null && headerSource.getDescription().startsWith("format:")) {
+                inputFormat = headerSource.getDescription().substring("format:".length());
+            }
+            Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
+            Product sourceProduct;
+            if (qualifiedInputPath.equals(qualifiedSourcePath)) {
+                // main input
+                if (inputFile != null) {
+                    // if inputFile is set and path is the inputPath us the (local)file instead
+                    System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
+                    sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
+                } else {
+                    sourceProduct = getInputProduct();
+                }
+                if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
+                    getLogger().info("input subsetting of split " + sourcePath);
+                    sourceProduct = createSubset(sourceProduct);
+                }
+            } else {
+                // other source product
+                sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
+            }
+            sourceProducts.setSourceProduct(sourceId, sourceProduct);
+        }
+        return new GraphContext(graph, sourceProducts);
     }
 
     @Override
@@ -198,8 +308,8 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         ResourceEngine resourceEngine = new ResourceEngine();
         VelocityContext velocityContext = resourceEngine.getVelocityContext();
         final Properties processingParameters = PropertiesHandler.asProperties(processorParameters);
-        for (int i=0; i<getInputParameters().length; i+=2) {
-            if (! "output".equals(getInputParameters()[i])) {
+        for (int i = 0; i < getInputParameters().length; i += 2) {
+            if (!"output".equals(getInputParameters()[i])) {
                 processingParameters.put(getInputParameters()[i], getInputParameters()[i + 1]);
             }
         }
@@ -234,6 +344,85 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             graphReader.close();
         }
     }
+
+    public static class CalvalusGraphApplicationData implements XmlConvertible {
+
+        @Parameter(itemAlias = "outputFile")
+        String[] outputFiles;
+
+        @Parameter(itemAlias = "outputNode", domConverter = OutputNodeDomConverter.class)
+        OutputNodeRef[] outputNodes;
+
+        @Parameter()
+        String archiveFile;
+
+        public static CalvalusGraphApplicationData fromXml(String xml) throws BindingException {
+            return createConverter().convertXmlToObject(xml, new CalvalusGraphApplicationData());
+        }
+
+        public static CalvalusGraphApplicationData fromDom(XppDom calvalusAppDataDom) throws ValidationException, ConversionException {
+            if (calvalusAppDataDom.getName().equals("applicationData")) {
+                calvalusAppDataDom = calvalusAppDataDom.getChild("executeParameters");
+            }
+            ParameterDescriptorFactory parameterDescriptorFactory = new ParameterDescriptorFactory();
+            CalvalusGraphApplicationData appData = new CalvalusGraphApplicationData();
+            PropertyContainer propertySet = PropertyContainer.createObjectBacked(appData, parameterDescriptorFactory);
+            propertySet.setDefaultValues();
+            DefaultDomConverter domConverter = new DefaultDomConverter(appData.getClass(), parameterDescriptorFactory);
+            domConverter.convertDomToValue(new XppDomElement(calvalusAppDataDom), propertySet);
+            return appData;
+        }
+
+        @Override
+        public String toXml() {
+            try {
+                return new ParameterBlockConverter().convertObjectToXml(this);
+            } catch (ConversionException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        private static ParameterBlockConverter createConverter() {
+            return new ParameterBlockConverter(new ParameterDescriptorFactory(), "executeParameters");
+        }
+    }
+
+    public static class OutputNodeRef {
+        public final String nodeId;
+        public final String parameter;
+
+        public OutputNodeRef(String nodeId, String parameter) {
+            this.nodeId = nodeId;
+            this.parameter = parameter;
+        }
+    }
+
+    public static class OutputNodeDomConverter implements DomConverter {
+        @Override
+        public Class<?> getValueType() {
+            return OutputNodeRef[].class;
+        }
+
+        @Override
+        public Object convertDomToValue(DomElement parentElement, Object value) throws ConversionException, ValidationException {
+            DomElement[] outputNodes = parentElement.getChildren("outputNode");
+            List<OutputNodeRef> outputNodeRefList = new ArrayList<>();
+            for (DomElement outputNode : outputNodes) {
+                String id = outputNode.getAttribute("id");
+                String parameter = outputNode.getAttribute("parameter");
+                if (id != null && parameter != null) {
+                    outputNodeRefList.add(new OutputNodeRef(id, parameter));
+                }
+            }
+            return outputNodeRefList.toArray(new OutputNodeRef[0]);
+        }
+
+        @Override
+        public void convertValueToDom(Object value, DomElement parentElement) throws ConversionException {
+            throw new IllegalStateException("Conversion to DOM no implemented");
+        }
+    }
+
 
     /**
      * This operator is only a container for the source product of the graph.

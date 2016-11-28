@@ -252,7 +252,7 @@ public class ProcessorFactory {
                     return;
                 }
             }
-            processorAdapter.processSourceProduct(ProgressMonitor.NULL);
+            processorAdapter.processSourceProduct(ProcessorAdapter.MODE.EXECUTE, ProgressMonitor.NULL);
             processorAdapter.saveProcessedProducts(ProgressMonitor.NULL);
 
             // MA only: use points from reference data set to restrict roi even further

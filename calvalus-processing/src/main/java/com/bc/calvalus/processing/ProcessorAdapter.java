@@ -84,6 +84,8 @@ import java.util.logging.Logger;
  */
 public abstract class ProcessorAdapter {
 
+    public enum MODE {TARGET, EXECUTE}
+
     private static final Logger LOG = CalvalusLogger.getLogger();
     public static final String[] EMPTY_PARAMETERS = new String[0];
 
@@ -159,10 +161,10 @@ public abstract class ProcessorAdapter {
      * <p/>
      *
      * @param pm A progress monitor
-     * @return The number of processed products.
+     * @return False, if the product has not be processed
      * @throws java.io.IOException If an I/O error occurs
      */
-    public abstract int processSourceProduct(ProgressMonitor pm) throws IOException;
+    public abstract boolean processSourceProduct(MODE mode, ProgressMonitor pm) throws IOException;
 
     /**
      * Returns the product resulting from the processing.
@@ -253,8 +255,7 @@ public abstract class ProcessorAdapter {
             Rectangle sourceRectangle = getInputRectangle();
             if (sourceRectangle == null || !sourceRectangle.isEmpty()) {
                 prepareProcessing();
-                int numProducts = processSourceProduct(pm);
-                if (numProducts > 0) {
+                if (processSourceProduct(MODE.TARGET, pm)) {
                     processedProduct = openProcessedProduct();
                 }
             }
