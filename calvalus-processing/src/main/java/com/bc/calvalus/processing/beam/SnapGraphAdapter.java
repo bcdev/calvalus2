@@ -26,7 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
-import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
@@ -43,6 +43,7 @@ import org.esa.snap.core.gpf.graph.Header;
 import org.esa.snap.core.gpf.graph.HeaderSource;
 import org.esa.snap.core.gpf.graph.HeaderTarget;
 import org.esa.snap.core.gpf.graph.Node;
+import org.esa.snap.core.gpf.graph.NodeContext;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -120,6 +121,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             }
             Header header = graph.getHeader();
             graphContext = buildGraphContext(graph, header);
+            logGraphState();
             HeaderTarget target = header.getTarget();
             XppDom calvalusAppData = graph.getApplicationData("calvalus");
 
@@ -139,6 +141,21 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             throw new IOException("Error executing Graph: " + e.getMessage(), e);
         } finally {
             pm.done();
+        }
+    }
+
+    private void logGraphState() {
+        for (NodeContext nodeContext : graphContext.getInitNodeContextDeque()) {
+            Node node = nodeContext.getNode();
+            System.out.println("Node = " + node.getId() + " Operator = " + nodeContext.getOperator().getClass().getSimpleName());
+            Product p = nodeContext.getTargetProduct();
+            System.out.println("Product: " + p.getName());
+            System.out.println("Bands:");
+            Band[] bands = p.getBands();
+            for (Band band : bands) {
+                System.out.println("     " + band.toString());
+            }
+            System.out.println();
         }
     }
 
@@ -258,7 +275,6 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             String sourceId = headerSource.getName();
             Path sourcePath = new Path(headerSource.getLocation());
 
-            File inputFile = getInputFile();
             String inputFormat = null;
             if (headerSource.getDescription() != null && headerSource.getDescription().startsWith("format:")) {
                 inputFormat = headerSource.getDescription().substring("format:".length());
@@ -267,13 +283,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             Product sourceProduct;
             if (qualifiedInputPath.equals(qualifiedSourcePath)) {
                 // main input
-                if (inputFile != null) {
-                    // if inputFile is set and path is the inputPath us the (local)file instead
-                    System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
-                    sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
-                } else {
-                    sourceProduct = getInputProduct();
-                }
+                sourceProduct = getInputProduct();
                 if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
                     getLogger().info("input subsetting of split " + sourcePath);
                     sourceProduct = createSubset(sourceProduct);

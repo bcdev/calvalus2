@@ -361,7 +361,13 @@ public abstract class ProcessorAdapter {
                 return ProductIO.readProduct(inputFile);
             }
         } else {
-            return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+            File fileLocation = product.getFileLocation();
+            System.out.println("fileLocation = " + fileLocation);
+            if (fileLocation != null) {
+                setInputFile(fileLocation);
+            }
+            return product;
         }
     }
 
