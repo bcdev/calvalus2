@@ -164,14 +164,25 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             if (appData.outputNodes != null) {
                 for (OutputNodeRef ref : appData.outputNodes) {
                     Node node = graph.getNode(ref.nodeId);
-                    DomElement domElement = node.getConfiguration().getChild(ref.parameter);
-                    if (domElement != null) {
-                        File file = new File(domElement.getValue());
-                        if (file.exists()) {
-                            outputFileList.add(file);
+                    if (node != null) {
+                        DomElement configuration = node.getConfiguration();
+                        if (configuration != null) {
+                            DomElement domElement = configuration.getChild(ref.parameter);
+                            if (domElement != null) {
+                                File file = new File(domElement.getValue());
+                                if (file.exists()) {
+                                    outputFileList.add(file);
+                                } else {
+                                    getLogger().warning("outputNode referenced file '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
+                                }
+                            } else {
+                                getLogger().warning("outputNode parameter '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
+                            }
                         } else {
-                            getLogger().warning("outputNode '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
+                            getLogger().warning("outputNode '" + ref.nodeId + "' has no configuration.");
                         }
+                    } else {
+                        getLogger().warning("outputNode '" + ref.nodeId + "' does not exist.");
                     }
                 }
             }
