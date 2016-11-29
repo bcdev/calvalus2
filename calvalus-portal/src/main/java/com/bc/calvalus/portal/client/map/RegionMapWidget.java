@@ -45,7 +45,6 @@ import com.google.gwt.user.client.ui.ResizeComposite;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.view.client.ListDataProvider;
-import com.google.gwt.view.client.MultiSelectionModel;
 import com.google.gwt.view.client.ProvidesKey;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SelectionModel;
@@ -55,7 +54,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An implementation of a Google map that has regions.
@@ -589,47 +587,13 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
 
     private class RegionTreeViewModel implements TreeViewModel {
 
-        private final Cell<RegionTreeNode> nameCell;
+        private final Cell<RegionTreeNode> childCell;
         private final Cell<RegionTreeNode> topLevelCell;
-        //        private final Cell<TreeNode> cell;
         private final SelectionModel<RegionTreeNode> treeSelectionModel;
-        private final MultiSelectionModel<RegionTreeNode> topLevelSelectionModel;
         private final RegionGroupNode rootNode = new RegionGroupNode("");
 
         public RegionTreeViewModel(RegionMapModel regionMapModel, RegionTreeSelectionModel regionTreeSelectionModel) {
             this.treeSelectionModel = regionTreeSelectionModel;
-            this.topLevelSelectionModel = new MultiSelectionModel<RegionTreeNode>();
-            this.topLevelSelectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-                @Override
-                public void onSelectionChange(SelectionChangeEvent event) {
-                    Set<RegionTreeNode> selectedSet = topLevelSelectionModel.getSelectedSet();
-                    List<RegionTreeNode> list = rootNode.getChildNodes().getList();
-                    for (int i = 0; i < list.size(); i++) {
-                        RegionTreeNode topLevelNode = list.get(i);
-                        boolean showPolyon = selectedSet.contains(topLevelNode);
-                        setSubtreeShow(topLevelNode, showPolyon);
-                        if (!showPolyon) {
-                            TreeNode rootTreeNode = regionCellTree.getRootTreeNode();
-                            rootTreeNode.setChildOpen(i, false, true);
-                        }
-                    }
-                }
-
-                private void setSubtreeShow(RegionTreeNode regionTreeNode, boolean showPolygon) {
-                    if (regionTreeNode instanceof RegionGroupNode) {
-                        RegionGroupNode groupNode = (RegionGroupNode) regionTreeNode;
-                        for (RegionTreeNode childNode : groupNode.getChildNodes().getList()) {
-                            setSubtreeShow(childNode, showPolygon);
-                        }
-                    } else if (regionTreeNode instanceof RegionLeafNode) {
-                        RegionLeafNode leafNode = (RegionLeafNode) regionTreeNode;
-                        Region region = leafNode.getRegion();
-                        ensurePolygonPresent(region);
-                        region.setShowPolyon(showPolygon);
-                        polygonMap.get(region).setVisible(showPolygon);
-                    }
-                }
-            });
             for (Region region : regionMapModel.getRegionProvider().getList()) {
                 addRegion(rootNode, region);
             }
@@ -670,40 +634,47 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
                     }
                 }
             });
-            nameCell = new AbstractCell<RegionTreeNode>() {
+            childCell = new AbstractCell<RegionTreeNode>() {
                 @Override
                 public void render(Context context, RegionTreeNode value, SafeHtmlBuilder sb) {
                     sb.appendHtmlConstant(value.getName());
                 }
             };
 
-            // Construct a composite cell fthat includes a checkbox.
+            // Construct a composite cell that includes a checkbox.
             List<HasCell<RegionTreeNode, ?>> hasCells = new ArrayList<>();
             hasCells.add(new HasCell<RegionTreeNode, Boolean>() {
 
-                private CheckboxCell cell = new CheckboxCell(true, true);
+                private CheckboxCell checkboxCell = new CheckboxCell(true, true);
+                private boolean showSubtree;
 
                 public Cell<Boolean> getCell() {
-                    return cell;
+                    return checkboxCell;
                 }
 
                 public FieldUpdater<RegionTreeNode, Boolean> getFieldUpdater() {
                     return new FieldUpdater<RegionTreeNode, Boolean>() {
                         @Override
                         public void update(int index, RegionTreeNode regionTreeNode, Boolean value) {
-                            topLevelSelectionModel.setSelected(regionTreeNode, value);
+                            showSubtree = value;
+                            setSubtreeShow(regionTreeNode, showSubtree);
+                            if (!showSubtree) {
+                                // collapse subtree
+                                TreeNode rootTreeNode = regionCellTree.getRootTreeNode();
+                                rootTreeNode.setChildOpen(index, false, true);
+                            }
                         }
                     };
                 }
 
                 public Boolean getValue(RegionTreeNode regionTreeNode) {
-                    return topLevelSelectionModel.isSelected(regionTreeNode);
+                    return showSubtree;
                 }
             });
             hasCells.add(new HasCell<RegionTreeNode, RegionTreeNode>() {
 
                 public Cell<RegionTreeNode> getCell() {
-                    return nameCell;
+                    return childCell;
                 }
 
                 public FieldUpdater<RegionTreeNode, RegionTreeNode> getFieldUpdater() {
@@ -739,6 +710,21 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
             };
         }
 
+        private void setSubtreeShow(RegionTreeNode regionTreeNode, boolean showPolygon) {
+            if (regionTreeNode instanceof RegionGroupNode) {
+                RegionGroupNode groupNode = (RegionGroupNode) regionTreeNode;
+                for (RegionTreeNode childNode : groupNode.getChildNodes().getList()) {
+                    setSubtreeShow(childNode, showPolygon);
+                }
+            } else if (regionTreeNode instanceof RegionLeafNode) {
+                RegionLeafNode leafNode = (RegionLeafNode) regionTreeNode;
+                Region region = leafNode.getRegion();
+                ensurePolygonPresent(region);
+                region.setShowPolyon(showPolygon);
+                polygonMap.get(region).setVisible(showPolygon);
+            }
+        }
+
         public RegionGroupNode getRootNode() {
             return rootNode;
         }
@@ -769,10 +755,10 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
             ListDataProvider<RegionTreeNode> dataProvider = null;
             if (value == null) {
                 dataProvider = rootNode.getChildNodes();
-                return new DefaultNodeInfo<RegionTreeNode>(dataProvider, topLevelCell, topLevelSelectionModel, null);
+                return new DefaultNodeInfo<RegionTreeNode>(dataProvider, topLevelCell, null, null);
             } else if (value instanceof RegionGroupNode) {
                 dataProvider = ((RegionGroupNode) value).getChildNodes();
-                return new DefaultNodeInfo<RegionTreeNode>(dataProvider, nameCell, treeSelectionModel, null);
+                return new DefaultNodeInfo<RegionTreeNode>(dataProvider, childCell, treeSelectionModel, null);
             }
             return null;
         }
