@@ -56,7 +56,6 @@ public class OrderRAProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
                 if (l2ConfigForm.getSelectedProcessorDescriptor() == null) {
                     updateBandList(productSet);
                 }

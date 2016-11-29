@@ -173,6 +173,7 @@ public class L2ConfigForm extends Composite {
     public void setProductSet(DtoProductSet productSet) {
         this.productSet = productSet;
         filterProcessorByProductType.setEnabled(productSet != null);
+        updateProcessorList();
     }
 
     public void updateProcessorList() {
