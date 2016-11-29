@@ -615,17 +615,18 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
                     }
                 }
 
-                private void setSubtreeShow(RegionTreeNode regionTreeNode, boolean showPolyon) {
+                private void setSubtreeShow(RegionTreeNode regionTreeNode, boolean showPolygon) {
                     if (regionTreeNode instanceof RegionGroupNode) {
                         RegionGroupNode groupNode = (RegionGroupNode) regionTreeNode;
                         for (RegionTreeNode childNode : groupNode.getChildNodes().getList()) {
-                            setSubtreeShow(childNode, showPolyon);
+                            setSubtreeShow(childNode, showPolygon);
                         }
                     } else if (regionTreeNode instanceof RegionLeafNode) {
                         RegionLeafNode leafNode = (RegionLeafNode) regionTreeNode;
                         Region region = leafNode.getRegion();
-                        region.setShowPolyon(showPolyon);
-                        polygonMap.get(region).setVisible(showPolyon);
+                        ensurePolygonPresent(region);
+                        region.setShowPolyon(showPolygon);
+                        polygonMap.get(region).setVisible(showPolygon);
                     }
                 }
             });
@@ -736,10 +737,6 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
                     sb.appendHtmlConstant("</td>");
                 }
             };
-
-            for (RegionTreeNode topLevelNode : rootNode.getChildNodes().getList()) {
-                topLevelSelectionModel.setSelected(topLevelNode, true);
-            }
         }
 
         public RegionGroupNode getRootNode() {

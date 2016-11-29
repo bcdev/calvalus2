@@ -40,11 +40,12 @@ public class LocateRegionsAction extends AbstractMapAction {
         Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion != null) {
             Polygon regionPolygon = regionMap.getPolygon(selectedRegion);
-            if (regionPolygon != null) {
-                LatLngBounds bounds = Region.getBounds(regionPolygon);
-                regionMap.getMapWidget().fitBounds(bounds);
-                regionMap.getMapWidget().panTo(bounds.getCenter());
+            if (regionPolygon == null) {
+                regionPolygon = selectedRegion.createPolygon();
             }
+            LatLngBounds bounds = Region.getBounds(regionPolygon);
+            regionMap.getMapWidget().fitBounds(bounds);
+            regionMap.getMapWidget().panTo(bounds.getCenter());
         }
     }
 

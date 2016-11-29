@@ -33,7 +33,7 @@ public class Region {
     private String qualifiedName;
     private String geometryWkt;
     private LatLng[] vertices;
-    private boolean showPolyon = true;
+    private boolean showPolyon;
 
     public static Region createUserRegion(LatLng[] polygonVertices) {
         return new Region("region_" + (++counter), new String[]{"user"}, polygonVertices);
