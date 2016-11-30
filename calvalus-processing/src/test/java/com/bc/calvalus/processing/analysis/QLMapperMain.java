@@ -45,10 +45,17 @@ public class QLMapperMain {
         final Quicklooks.QLConfig qlConfig;
         Configuration configuration;
         if (args.length == 2) {
-            Quicklooks quicklooks = Quicklooks.fromXml(FileUtils.readText(new File(args[0])));
+            File qlParameterFile = new File(args[0]);
+            String productPath = args[1];
+
+            System.out.println("qlParameterFile = " + qlParameterFile);
+            System.out.println("qlParameterFile.exist = " + qlParameterFile.exists());
+            System.out.println("productPath = " + productPath);
+
+            Quicklooks quicklooks = Quicklooks.fromXml(FileUtils.readText(qlParameterFile));
             qlConfig = quicklooks.getConfigs()[0];
             configuration = new Configuration();
-            product = openProduct(args[1], configuration);
+            product = openProduct(productPath, configuration);
             final String[] bandNames = product.getBandNames();
             System.out.println("bandNames = " + Arrays.toString(bandNames));
         } else {
