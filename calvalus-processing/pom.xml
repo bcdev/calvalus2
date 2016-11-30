@@ -71,6 +71,11 @@
             <artifactId>snap-envisat-reader</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.esa.s3tbx</groupId>
+            <artifactId>s3tbx-landsat-reader</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!--
         <dependency>
             <groupId>org.geotools</groupId>
