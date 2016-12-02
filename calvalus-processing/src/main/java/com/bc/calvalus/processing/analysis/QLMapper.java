@@ -17,9 +17,11 @@
 package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -71,10 +73,21 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
-                Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+                final String inputFileName = processorAdapter.getInputPath().getName();
+                final String productName = FileUtils.getFilenameWithoutExtension(inputFileName);
+                final Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
                 for (Quicklooks.QLConfig config : configs) {
-                    String imageFileName = productName + "_" + config.getBandName();
+                    final String imageFileName;
+                    if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+                            && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+                        if (configs.length == 1) {
+                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName);
+                        } else {
+                            imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), inputFileName) + "_" + config.getBandName();
+                        }
+                    } else {
+                        imageFileName = productName + "_" + config.getBandName();
+                    }
                     createQuicklook(product, imageFileName, context, config);
                 }
             }
