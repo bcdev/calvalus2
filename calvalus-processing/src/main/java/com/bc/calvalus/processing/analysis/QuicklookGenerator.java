@@ -32,8 +32,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
 import org.esa.snap.core.datamodel.*;
+import org.esa.snap.core.dataop.barithm.BandArithmetic;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
+import org.esa.snap.core.jexp.ParseException;
 import org.esa.snap.core.layer.MaskLayerType;
 import org.esa.snap.core.layer.NoDataLayerType;
 import org.esa.snap.core.util.DefaultPropertyMap;
@@ -75,23 +77,32 @@ public class QuicklookGenerator {
         ColoredBandImageMultiLevelSource multiLevelSource;
         Band masterBand;
         if (qlConfig.getRGBAExpressions() != null && qlConfig.getRGBAExpressions().length > 0) {
-            String[] rgbaExpressions;
-            if (qlConfig.getRGBAExpressions().length == 4) {
-                rgbaExpressions = qlConfig.getRGBAExpressions();
-            } else if (qlConfig.getRGBAExpressions().length == 3) {
-                rgbaExpressions = new String[4];
-                System.arraycopy(qlConfig.getRGBAExpressions(), 0, rgbaExpressions, 0,
-                                 qlConfig.getRGBAExpressions().length);
-                rgbaExpressions[3] = "";
-            } else {
+            String[] rgbaExpressions = qlConfig.getRGBAExpressions();
+            if (rgbaExpressions.length != 3 && rgbaExpressions.length != 4) {
                 throw new IllegalArgumentException("RGBA expression must contain 3 or 4 band names");
             }
-            RGBImageProfile.storeRgbaExpressions(product, rgbaExpressions);
-            final Band[] rgbBands = {
-                    product.getBand(RGBImageProfile.RED_BAND_NAME),
-                    product.getBand(RGBImageProfile.GREEN_BAND_NAME),
-                    product.getBand(RGBImageProfile.BLUE_BAND_NAME),
-            };
+            try {
+                if (!BandArithmetic.areRastersEqualInSize(product, rgbaExpressions)) {
+                    throw new IllegalArgumentException("Referenced rasters are not of the same size");
+                }
+            } catch (ParseException e) {
+                throw new IllegalArgumentException("Expressions are invalid");
+            }
+            final Band[] rgbBands = new Band[3];
+            for (int i = 0; i < rgbBands.length; i++) {
+                String expression = rgbaExpressions[i];
+                Band rgbBand = product.getBand(expression);
+                if (rgbBand == null) {
+                    rgbBand = new VirtualBand(RGBImageProfile.RGB_BAND_NAMES[i],
+                                              ProductData.TYPE_FLOAT32,
+                                              determineWidth(expression, product),
+                                              determineHeight(expression, product),
+                                              expression);
+                    rgbBand.setOwner(product);
+                    rgbBand.setModified(false);
+                }
+                rgbBands[i] = rgbBand;
+            }
             masterBand = rgbBands[0];
             for (Band band : rgbBands) {
                 band.setNoDataValue(Float.NaN);
@@ -199,6 +210,32 @@ public class QuicklookGenerator {
             }
         });
         return rendering.getImage();
+    }
+
+    private static int determineWidth(String expression, Product product) {
+        int width = product.getSceneRasterWidth();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                width = refRasters[0].getRasterWidth();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return width;
+    }
+
+    private static int determineHeight(String expression, Product product) {
+        int height = product.getSceneRasterHeight();
+        try {
+            final RasterDataNode[] refRasters = BandArithmetic.getRefRasters(expression, product);
+            if (refRasters.length > 0) {
+                height = refRasters[0].getRasterHeight();
+            }
+        } catch (ParseException e) {
+            throw new IllegalArgumentException("Invalid expression: " + expression);
+        }
+        return height;
     }
 
     private static Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {
