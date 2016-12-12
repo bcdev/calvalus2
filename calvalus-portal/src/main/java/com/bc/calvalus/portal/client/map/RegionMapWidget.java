@@ -286,7 +286,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
                         updateRegionSelectionInMap(regionTreeSelectionModel, regionMapSelectionModel);
                         updatePolygonStyles();
                         if (!editable && regionMapSelectionModel.getSelectedRegion() != null) {
-                            new LocateRegionsAction().run(RegionMapWidget.this);
+                            LocateRegionsAction.locateSelectedRegion(RegionMapWidget.this);
                         }
                     } finally {
                         adjustingRegionSelection = false;

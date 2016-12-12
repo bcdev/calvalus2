@@ -191,8 +191,7 @@ public class ProductSetFilterForm extends Composite {
                     List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
                     for (Region region : regionList) {
                         if (region.getName().equalsIgnoreCase(regionName)) {
-                            regionMap.getRegionMapSelectionModel().setSelected(region, true);
-                            new LocateRegionsAction().run(regionMap);
+                            LocateRegionsAction.locateRegion(regionMap, region);
                             break;
                         }
                     }
