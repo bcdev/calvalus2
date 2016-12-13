@@ -14,7 +14,16 @@ import org.esa.snap.core.datamodel.Product;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+
 public class S2StrategyTest {
+
+    @Test
+    public void testGetNextMonth() throws Exception {
+        assertEquals("(201512|201601)", S2Strategy.getInputDateSpec(2015, 12));
+        assertEquals("(201601|201602)", S2Strategy.getInputDateSpec(2016, 1));
+        assertEquals("(201511|201512)", S2Strategy.getInputDateSpec(2015, 11));
+    }
 
     @Ignore
     @Test

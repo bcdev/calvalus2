@@ -26,7 +26,6 @@ public class JDAggregatorTest {
         targetVector.set(1, 0.0f);
         ctx.put("maxJD", -1.0f);
 
-        aggregator.aggregate(997F, 997F, ctx, targetVector);
         aggregator.aggregate(300F, 0.5F, ctx, targetVector);
         aggregator.aggregate(998F, 998F, ctx, targetVector);
 
@@ -48,7 +47,7 @@ public class JDAggregatorTest {
         aggregator.aggregate(997F, 997F, ctx, targetVector);
 
         assertEquals(997F, targetVector.get(0), 1E-7);
-        assertEquals(997F, targetVector.get(1), 1E-7);
+        assertEquals(0F, targetVector.get(1), 1E-7);
     }
 
     @Test
@@ -63,7 +62,6 @@ public class JDAggregatorTest {
         aggregator.aggregate(10F, 0, ctx, targetVector);
         aggregator.aggregate(20F, 0, ctx, targetVector);
         aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
 
         assertEquals(20F, targetVector.get(0), 1E-7);
         assertEquals(0, targetVector.get(1), 1E-7);
@@ -98,7 +96,6 @@ public class JDAggregatorTest {
 
         aggregator.aggregate(5F, 0, ctx, targetVector);
         aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
         aggregator.aggregate(100F, 0, ctx, targetVector);
         aggregator.aggregate(45F, 0, ctx, targetVector);
 
@@ -118,7 +115,6 @@ public class JDAggregatorTest {
 
         aggregator.aggregate(5F, 0, ctx, targetVector);
         aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
         aggregator.aggregate(100F, 0, ctx, targetVector);
         aggregator.aggregate(45F, 0, ctx, targetVector);
 
@@ -140,7 +136,6 @@ public class JDAggregatorTest {
         aggregator.aggregate(33F, 0, ctx, targetVector);
         aggregator.aggregate(61F, 0, ctx, targetVector);
         aggregator.aggregate(320F, 0, ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
 
         assertEquals(33F, targetVector.get(0), 1E-7);
         assertEquals(0, targetVector.get(1), 1E-7);
@@ -160,6 +155,43 @@ public class JDAggregatorTest {
 
         assertEquals(0F, targetVector.get(0), 1E-7);
         assertEquals(0, targetVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_waterIsPreserved() throws Exception {
+        SpatialBin ctx = new SpatialBin();
+        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+
+        targetVector.set(0, 0.0f);
+        targetVector.set(1, 0.0f);
+        ctx.put("maxJD", -1.0f);
+
+        aggregator.aggregate(997F, 0, ctx, targetVector);
+        aggregator.aggregate(998F, 0, ctx, targetVector);
+        aggregator.aggregate(999F, 0, ctx, targetVector);
+        aggregator.aggregate(998F, 0, ctx, targetVector);
+
+        assertEquals(997F, targetVector.get(0), 1E-7);
+        assertEquals(0F, targetVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_noObservationIsMade() throws Exception {
+        SpatialBin ctx = new SpatialBin();
+        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+
+        targetVector.set(0, 0.0f);
+        targetVector.set(1, 0.0f);
+        ctx.put("maxJD", -1.0f);
+
+        aggregator.aggregate(999F, 0, ctx, targetVector);
+        aggregator.aggregate(999F, 0, ctx, targetVector);
+        aggregator.aggregate(999F, 0, ctx, targetVector);
+
+        assertEquals(999F, targetVector.get(0), 1E-7);
+        assertEquals(0F, targetVector.get(1), 1E-7);
     }
 
 

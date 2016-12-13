@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel.s2;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.binning.AbstractAggregator;
 import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.AggregatorConfig;
@@ -26,8 +25,6 @@ public class JDAggregator extends AbstractAggregator {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
         this.minDoy = doyBounds[0];
         this.maxDoy = doyBounds[1];
-        CalvalusLogger.getLogger().info("minDoy=" + minDoy);
-        CalvalusLogger.getLogger().info("maxDoy=" + maxDoy);
     }
 
     @Override
@@ -64,27 +61,26 @@ public class JDAggregator extends AbstractAggregator {
     }
 
     void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
-        Float oldMaxJD = ctx.get("maxJD");
+        Float previousJD = ctx.get("maxJD");
 
         // take max of JD
         // overwrite if JD > old maxJD
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
         boolean validJD = jd >= 0 && jd < 997 && inTimeBounds;
-        boolean maybeNewMax = oldMaxJD >= 997 || jd > oldMaxJD;
-        boolean jdIsSet = oldMaxJD >= 0;
+        boolean laterThanPrevious = previousJD >= 997 || jd > previousJD;
+        boolean jdIsSet = previousJD >= 0;
 
-        if (validJD && maybeNewMax) {
+        if (validJD && laterThanPrevious) {
             ctx.put("maxJD", jd);
             targetVector.set(0, jd);
             targetVector.set(1, cl);
-        } else if (oldMaxJD == WATER) {
+        } else if (jd == WATER) {
+            ctx.put("maxJD", jd);
+            targetVector.set(0, WATER);
+            targetVector.set(1, 0);
+        } else if (previousJD == WATER) {
             // don't overwrite water: keep the old value
-        } else if (oldMaxJD == CLOUD && jd == WATER) {
-            // overwrite cloud with water
-            targetVector.set(0, jd);
-            targetVector.set(1, cl);
-            ctx.put("maxJD", jd);
-        } else if (oldMaxJD == NO_DATA && jd != NO_DATA) {
+        } else if (previousJD == NO_DATA && jd != NO_DATA) {
             // overwrite no data with data
             targetVector.set(0, jd);
             targetVector.set(1, cl);
@@ -93,6 +89,9 @@ public class JDAggregator extends AbstractAggregator {
             targetVector.set(0, jd);
             targetVector.set(1, cl);
             ctx.put("maxJD", jd);
+        } else if (jd == NO_DATA && !jdIsSet) {
+            targetVector.set(0, NO_DATA);
+            targetVector.set(1, 0);
         }
     }
 

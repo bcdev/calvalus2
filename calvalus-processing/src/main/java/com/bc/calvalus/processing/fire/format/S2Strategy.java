@@ -34,6 +34,7 @@ import org.esa.snap.binning.operator.VariableConfig;
 
 import java.io.IOException;
 import java.time.Year;
+import java.time.YearMonth;
 import java.util.Properties;
 
 public class S2Strategy implements SensorStrategy {
@@ -83,7 +84,8 @@ public class S2Strategy implements SensorStrategy {
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
 
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/.*/BA-T%s-%s%s.*.nc", tilesSpec, year, month);
+        String inputDateSpec = getInputDateSpec(Integer.parseInt(year), Integer.parseInt(month));
+        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/.*/BA-T%s-%s.*.nc", tilesSpec, inputDateSpec);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
@@ -116,6 +118,16 @@ public class S2Strategy implements SensorStrategy {
         finaliseConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, String.format("%s_format/L3_%s-%s.*.nc", outputDir, year, month));
         workflow.add(new FinaliseWorkflowItem(processingService, userName, productionName, finaliseConfig, area));
         return workflow;
+    }
+
+    static String getInputDateSpec(int year, int month) {
+        YearMonth nextYearMonth = Year.of(year).atMonth(month).plusMonths(1);
+        int nextYear = nextYearMonth.getYear();
+
+        YearMonth nextNextYearMonth = Year.of(year).atMonth(month).plusMonths(2);
+        int nextNextYear = nextNextYearMonth.getYear();
+
+        return String.format("(%s%02d|%s%02d|%s%02d)", year, month, nextYear, nextYearMonth.getMonthValue(), nextNextYear, nextNextYearMonth.getMonthValue());
     }
 
     private String getTiles(PixelProductArea pixelProductArea) {
