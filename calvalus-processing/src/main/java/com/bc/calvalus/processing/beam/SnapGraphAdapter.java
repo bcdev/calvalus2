@@ -125,10 +125,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             HeaderTarget target = header.getTarget();
             XppDom calvalusAppData = graph.getApplicationData("calvalus");
 
-            if (mode == MODE.EXECUTE) {
-                if (calvalusAppData == null) {
-                    throw new IllegalArgumentException("No 'applicationData' given in graph.");
-                }
+            if (mode == MODE.EXECUTE && calvalusAppData != null) {
                 return executeGraphAndCollectOutput(graph, calvalusAppData, pm);
             } else {
                 if (target == null || target.getNodeId() == null) {
@@ -160,81 +157,79 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     }
 
     private boolean executeGraphAndCollectOutput(Graph graph, XppDom calvalusAppData, ProgressMonitor pm) throws Exception {
-        if (calvalusAppData != null) {
-            CalvalusGraphApplicationData appData = CalvalusGraphApplicationData.fromDom(calvalusAppData);
-            // "execute" graph
-            GraphProcessor processor = new GraphProcessor();
-            processor.executeGraph(graphContext, pm);
+        CalvalusGraphApplicationData appData = CalvalusGraphApplicationData.fromDom(calvalusAppData);
+        getLogger().info("Executing graph");
+        GraphProcessor processor = new GraphProcessor();
+        processor.executeGraph(graphContext, pm);
 
-            // collect results files
-            List<File> outputFileList = new ArrayList<>();
-            if (appData.outputFiles != null) {
-                for (String outputFile : appData.outputFiles) {
-                    File file = new File(outputFile);
-                    if (file.exists()) {
-                        outputFileList.add(file);
-                    } else {
-                        getLogger().warning("outputFile '" + outputFile + "' does not exist.");
-                    }
+        // collect results files
+        List<File> outputFileList = new ArrayList<>();
+        if (appData.outputFiles != null) {
+            for (String outputFile : appData.outputFiles) {
+                File file = new File(outputFile);
+                if (file.exists()) {
+                    outputFileList.add(file);
+                } else {
+                    getLogger().warning("outputFile '" + outputFile + "' does not exist.");
                 }
             }
-            if (appData.outputNodes != null) {
-                for (OutputNodeRef ref : appData.outputNodes) {
-                    Node node = graph.getNode(ref.nodeId);
-                    if (node != null) {
-                        DomElement configuration = node.getConfiguration();
-                        if (configuration != null) {
-                            DomElement domElement = configuration.getChild(ref.parameter);
-                            if (domElement != null) {
-                                File file = new File(domElement.getValue());
-                                if (file.exists()) {
-                                    outputFileList.add(file);
-                                } else {
-                                    getLogger().warning("outputNode referenced file '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
-                                }
+        }
+        if (appData.outputNodes != null) {
+            for (OutputNodeRef ref : appData.outputNodes) {
+                Node node = graph.getNode(ref.nodeId);
+                if (node != null) {
+                    DomElement configuration = node.getConfiguration();
+                    if (configuration != null) {
+                        DomElement domElement = configuration.getChild(ref.parameter);
+                        if (domElement != null) {
+                            File file = new File(domElement.getValue());
+                            if (file.exists()) {
+                                outputFileList.add(file);
                             } else {
-                                getLogger().warning("outputNode parameter '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
+                                getLogger().warning("outputNode referenced file '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
                             }
                         } else {
-                            getLogger().warning("outputNode '" + ref.nodeId + "' has no configuration.");
+                            getLogger().warning("outputNode parameter '" + ref.nodeId + "." + ref.parameter + "' does not exist.");
                         }
                     } else {
-                        getLogger().warning("outputNode '" + ref.nodeId + "' does not exist.");
+                        getLogger().warning("outputNode '" + ref.nodeId + "' has no configuration.");
                     }
+                } else {
+                    getLogger().warning("outputNode '" + ref.nodeId + "' does not exist.");
                 }
             }
-            MapContext mapContext = getMapContext();
-            if (appData.archiveFile != null) {
-                // create zip with all files
-                Path workPath = new Path(getWorkOutputDirectoryPath(), appData.archiveFile);
-                OutputStream outputStream = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
-                ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(outputStream));
-                zipOutputStream.setMethod(ZipEntry.DEFLATED);
-                try {
-                    for (File outputFile : outputFileList) {
-                        getLogger().info("adding to zip archive: " + outputFile.getName());
-                        ZipEntry zipEntry = new ZipEntry(outputFile.getName().replace('\\', '/'));
-                        FileInputStream inputStream = new FileInputStream(outputFile);
-                        try {
-                            zipOutputStream.putNextEntry(zipEntry);
-                            ProductFormatter.copy(inputStream, zipOutputStream, mapContext);
-                            zipOutputStream.closeEntry();
-                        } finally {
-                            inputStream.close();
-                        }
-                    }
-                } finally {
-                    zipOutputStream.close();
-                }
-            } else {
-                // archive individual files
+        }
+        MapContext mapContext = getMapContext();
+        if (appData.archiveFile != null) {
+            // create zip with all files
+            Path workPath = new Path(getWorkOutputDirectoryPath(), appData.archiveFile);
+            OutputStream outputStream = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
+            ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(outputStream));
+            zipOutputStream.setMethod(ZipEntry.DEFLATED);
+            try {
                 for (File outputFile : outputFileList) {
-                    getLogger().info("copying to HDFS: " + outputFile.getName());
-                    InputStream is = new BufferedInputStream(new FileInputStream(outputFile));
-                    Path workPath = new Path(getWorkOutputDirectoryPath(), outputFile.getName());
-                    OutputStream os = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
-                    ProductFormatter.copyAndClose(is, os, mapContext);
+                    getLogger().info("adding to zip archive: " + outputFile.getName());
+                    ZipEntry zipEntry = new ZipEntry(outputFile.getName().replace('\\', '/'));
+                    FileInputStream inputStream = new FileInputStream(outputFile);
+                    try {
+                        zipOutputStream.putNextEntry(zipEntry);
+                        ProductFormatter.copy(inputStream, zipOutputStream, mapContext);
+                        zipOutputStream.closeEntry();
+                    } finally {
+                        inputStream.close();
+                    }
                 }
+            } finally {
+                zipOutputStream.close();
+            }
+        } else {
+            // archive individual files
+            for (File outputFile : outputFileList) {
+                getLogger().info("copying to HDFS: " + outputFile.getName());
+                InputStream is = new BufferedInputStream(new FileInputStream(outputFile));
+                Path workPath = new Path(getWorkOutputDirectoryPath(), outputFile.getName());
+                OutputStream os = workPath.getFileSystem(mapContext.getConfiguration()).create(workPath);
+                ProductFormatter.copyAndClose(is, os, mapContext);
             }
         }
         return true;
