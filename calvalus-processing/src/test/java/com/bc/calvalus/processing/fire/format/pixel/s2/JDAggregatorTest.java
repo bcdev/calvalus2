@@ -2,285 +2,281 @@ package com.bc.calvalus.processing.fire.format.pixel.s2;
 
 import org.esa.snap.binning.SpatialBin;
 import org.esa.snap.binning.TemporalBin;
+import org.esa.snap.binning.support.ObservationImpl;
 import org.esa.snap.binning.support.VectorImpl;
-import org.junit.Before;
 import org.junit.Test;
 
-import static com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator.CURRENT_VALUE;
 import static org.junit.Assert.assertEquals;
 
 public class JDAggregatorTest {
 
     private JDAggregator aggregator;
 
-    @Before
-    public void setUp() throws Exception {
-        // use whole year min/max doy for testing; see tests testAggregate_5 ff for serious tests of this property
-        aggregator = new JDAggregator(null, null, null, null, new int[]{1, 366});
-    }
-
     @Test
     public void testAggregate_1() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(300F, 0.5F, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(998F, 998F, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(300F, targetVector.get(0), 1E-7);
-        assertEquals(0.5F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5F, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_2() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(998F, 998F, ctx, targetVector);
-        aggregator.aggregate(999F, 999F, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(997F, 997F, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(997F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 998F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 997F, 997F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(997F, temporalVector.get(0), 1E-7);
+        assertEquals(0, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_3() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.aggregate(20F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(11F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(20F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.8F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 11F, 0.6F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.8, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_4() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(997F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 5F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.8F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 100F, 0.3F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 998F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 45F, 0.2F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 998F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(10F, temporalVector.get(0), 1E-7);
+        assertEquals(0.8, temporalVector.get(1), 1E-7);
     }
 
     @Test
-    public void testAggregate_5() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 31});
-
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
-
-        aggregator.aggregate(5F, 0, ctx, targetVector);
-        aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.aggregate(100F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(998F, 998F, ctx, targetVector);
-        aggregator.aggregate(45F, 0, ctx, targetVector);
-        aggregator.aggregate(45F, 0, ctx, targetVector);
-
-        assertEquals(10F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
-    }
-
-    @Test
-    public void testAggregate_6() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+    public void testAggregate_NoValidObservations() throws Exception {
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(5F, 0, ctx, targetVector);
-        aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(100F, 0, ctx, targetVector);
-        aggregator.aggregate(45F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(45F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
-    }
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.2F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
 
-    @Test
-    public void testAggregate_7() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
-
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.aggregate(33F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(61F, 0, ctx, targetVector);
-        aggregator.aggregate(320F, 0, ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-
-        assertEquals(33F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
-    }
-
-    @Test
-    public void testAggregate_8() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
-
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
-
-        aggregator.aggregate(220F, 0, ctx, targetVector);
-
-        assertEquals(0F, targetVector.get(0), 1E-7);
-        assertEquals(0, targetVector.get(1), 1E-7);
+        assertEquals(0F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_waterIsPreserved() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.aggregate(997F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(997F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 997, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(997F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 
     @Test
-    public void testAggregate_noObservationIsMade() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
+    public void testAggregate_onlyInvalidObs() throws Exception {
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(999F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(999F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_noObsAreOverwritten() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(0F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(0F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.3F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(10F, temporalVector.get(0), 1E-7);
+        assertEquals(0.3F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_noObsAreOverwrittenWithZero() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0, 0.0F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(0F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_everythingCloudy() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(998F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(998F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 
     @Test
     public void testAggregate_everythingCloudy2() throws Exception {
-        SpatialBin ctx = new SpatialBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
 
-        targetVector.set(0, 0.0f);
-        targetVector.set(1, 0.0f);
-        ctx.put(CURRENT_VALUE, -1.0f);
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
 
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(998F, 0, ctx, targetVector);
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
 
-        assertEquals(998F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
-    }
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 999), spatialVector);
+        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
 
-    @Test
-    public void testAggregate_onlyTemporal() throws Exception {
-        TemporalBin ctx = new TemporalBin();
-        VectorImpl targetVector = new VectorImpl(new float[2]);
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
 
-        aggregator.initTemporal(ctx, targetVector);
-        aggregator.aggregate(999F, 0, ctx, targetVector);
-        aggregator.aggregate(10F, 0, ctx, targetVector);
-        aggregator.aggregate(20F, 0, ctx, targetVector);
-
-        assertEquals(20F, targetVector.get(0), 1E-7);
-        assertEquals(0F, targetVector.get(1), 1E-7);
-
+        assertEquals(998F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 }

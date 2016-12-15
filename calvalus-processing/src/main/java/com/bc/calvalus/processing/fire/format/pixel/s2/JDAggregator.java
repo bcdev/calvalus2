@@ -15,9 +15,9 @@ import java.time.Year;
 
 public class JDAggregator extends AbstractAggregator {
 
-    public static final int WATER = 997;
-    public static final int CLOUD = 998;
-    public static final int NO_DATA = 999;
+    public static final float WATER = 997;
+    public static final float CLOUD = 998;
+    public static final float NO_DATA = 999;
     public static final String CURRENT_VALUE = "currentValue";
     public static final String CURRENT_CL_VALUE = "currentClValue";
     public static final float INITIAL_VALUE = -1.0f;
@@ -51,19 +51,9 @@ public class JDAggregator extends AbstractAggregator {
 
     @Override
     public void initTemporal(BinContext ctx, WritableVector vector) {
-        Number previousValue = ctx.get(CURRENT_VALUE);
-        Number previousClValue = ctx.get(CURRENT_CL_VALUE);
-        boolean isSpatialAggregationDone = previousValue != null && previousValue.floatValue() != INITIAL_VALUE;
-        if (isSpatialAggregationDone) {
-            vector.set(0, previousValue.floatValue());
-            vector.set(1, previousClValue.floatValue());
-            ctx.put(CURRENT_VALUE, previousValue.floatValue());
-            ctx.put(CURRENT_CL_VALUE, previousClValue.floatValue());
-        } else {
-            vector.set(0, 0.0f);
-            vector.set(1, 0.0f);
-            ctx.put(CURRENT_VALUE, INITIAL_VALUE);
-        }
+        vector.set(0, 0.0f);
+        vector.set(1, 0.0f);
+        ctx.put(CURRENT_VALUE, INITIAL_VALUE);
     }
 
     @Override
@@ -73,8 +63,8 @@ public class JDAggregator extends AbstractAggregator {
         aggregate(jd, cl, ctx, temporalVector);
     }
 
-    void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
-        Float previousValue = ctx.get(CURRENT_VALUE);
+    private void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
+        float previousValue = ctx.get(CURRENT_VALUE);
 
         // take max of JD
         // overwrite if JD > old currentValue
