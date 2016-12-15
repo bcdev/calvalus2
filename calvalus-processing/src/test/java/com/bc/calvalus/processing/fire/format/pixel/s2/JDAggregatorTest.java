@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.pixel.s2;
 
 import org.esa.snap.binning.SpatialBin;
+import org.esa.snap.binning.TemporalBin;
 import org.esa.snap.binning.support.VectorImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -265,5 +266,21 @@ public class JDAggregatorTest {
 
         assertEquals(998F, targetVector.get(0), 1E-7);
         assertEquals(0F, targetVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_onlyTemporal() throws Exception {
+        TemporalBin ctx = new TemporalBin();
+        VectorImpl targetVector = new VectorImpl(new float[2]);
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+
+        aggregator.initTemporal(ctx, targetVector);
+        aggregator.aggregate(999F, 0, ctx, targetVector);
+        aggregator.aggregate(10F, 0, ctx, targetVector);
+        aggregator.aggregate(20F, 0, ctx, targetVector);
+
+        assertEquals(20F, targetVector.get(0), 1E-7);
+        assertEquals(0F, targetVector.get(1), 1E-7);
+
     }
 }

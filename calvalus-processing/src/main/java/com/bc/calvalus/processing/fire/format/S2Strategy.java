@@ -83,7 +83,7 @@ public class S2Strategy implements SensorStrategy {
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
 
-        String inputDateSpec = getInputDateSpec(Integer.parseInt(year), Integer.parseInt(month));
+        String inputDateSpec = getInputDatePattern(Integer.parseInt(year), Integer.parseInt(month));
         String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/s2-ba/.*/BA-T%s-%s.*.nc", tilesSpec, inputDateSpec);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
@@ -119,7 +119,7 @@ public class S2Strategy implements SensorStrategy {
         return workflow;
     }
 
-    static String getInputDateSpec(int year, int month) {
+    static String getInputDatePattern(int year, int month) {
         return String.format("%s%02d", year, month);
     }
 

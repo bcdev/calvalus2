@@ -2,6 +2,8 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import org.apache.commons.math3.complex.Complex;
 
+import java.util.Arrays;
+
 class UncertaintyEngine {
 
     public static Complex dft(int r, int n) {
@@ -41,16 +43,17 @@ class UncertaintyEngine {
          */
 
         int n = p.length;
-        Complex[] pdfComplex = new Complex[n];
+        Complex[] pdf = new Complex[n];
+        Arrays.fill(pdf, new Complex(0, 0));
         for (int k = 0; k < n; k++) {
             for (int l = 0; l < n; l++) {
-                pdfComplex[k] = pdfComplex[k].add(dft(-k * l, n)).multiply(product(p, l));
+                pdf[k] = pdf[k].add(dft(-k * l, n).multiply(product(p, l)));
             }
-            pdfComplex[k] = pdfComplex[k].divide(n + 1.0);
+            pdf[k] = pdf[k].divide(n + 1.0);
         }
         double[] result = new double[n];
-        for (int i = 0; i < pdfComplex.length; i++) {
-            Complex complex = pdfComplex[i];
+        for (int i = 0; i < pdf.length; i++) {
+            Complex complex = pdf[i];
             result[i] = complex.getReal();
         }
 

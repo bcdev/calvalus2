@@ -51,14 +51,14 @@ public class JDAggregator extends AbstractAggregator {
 
     @Override
     public void initTemporal(BinContext ctx, WritableVector vector) {
-        Float previousValue = ctx.get(CURRENT_VALUE);
-        Float previousClValue = ctx.get(CURRENT_CL_VALUE);
-        boolean isSpatialAggregationDone = previousValue != null && previousValue != INITIAL_VALUE;
+        Number previousValue = ctx.get(CURRENT_VALUE);
+        Number previousClValue = ctx.get(CURRENT_CL_VALUE);
+        boolean isSpatialAggregationDone = previousValue != null && previousValue.floatValue() != INITIAL_VALUE;
         if (isSpatialAggregationDone) {
-            vector.set(0, previousValue);
-            vector.set(1, previousClValue);
-            ctx.put(CURRENT_VALUE, previousValue);
-            ctx.put(CURRENT_CL_VALUE, previousClValue);
+            vector.set(0, previousValue.floatValue());
+            vector.set(1, previousClValue.floatValue());
+            ctx.put(CURRENT_VALUE, previousValue.floatValue());
+            ctx.put(CURRENT_CL_VALUE, previousClValue.floatValue());
         } else {
             vector.set(0, 0.0f);
             vector.set(1, 0.0f);

@@ -39,7 +39,7 @@ public class GridFormatUtils {
         double upperLat = 90 - tileY * STEP;
         double lowerLat = 90 - tileY * STEP - (y + 1) / 4.0;
         double leftLon = tileX * STEP - 180 + x / 4.0;
-        double rightLon = tileX * STEP - 180 + STEP + x / 4.0;
+        double rightLon = tileX * STEP - 180 + (x + 1) / 4.0;
 
         GeoPos UL = new GeoPos(upperLat, leftLon);
         GeoPos LL = new GeoPos(lowerLat, leftLon);

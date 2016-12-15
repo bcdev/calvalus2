@@ -55,7 +55,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
 
-        getAreas(sourceProduct.getSceneGeoCoding(), 3600, 3600, data.areas);
+        getAreas(sourceProduct.getSceneGeoCoding(), targetWidth, targetHeight, data.areas);
 
         byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
         byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];

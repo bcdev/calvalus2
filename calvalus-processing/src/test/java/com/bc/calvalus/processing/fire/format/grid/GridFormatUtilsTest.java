@@ -33,12 +33,12 @@ public class GridFormatUtilsTest {
         Product a = new Product("a", "t", 50, 50);
         a.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10, 10, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
         Product b = new Product("b", "t", 50, 50);
-        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10.05, 10.025, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
+        b.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 10.25, 9.5, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
         Product c = new Product("c", "t", 50, 50);
         c.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 50, 50, 16, 15, S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE));
 
-        assertArrayEquals(new Product[]{a}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 0, 0));
-        assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("v07h19", new Product[]{a, b, c}, 1, 1));
+        assertArrayEquals(new Product[]{a}, GridFormatUtils.filter("v40h95", new Product[]{a, b, c}, 0, 0));
+        assertArrayEquals(new Product[]{b}, GridFormatUtils.filter("v40h95", new Product[]{a, b, c}, 1, 1));
     }
 
     @Ignore

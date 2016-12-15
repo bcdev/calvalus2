@@ -26,7 +26,7 @@ public class UncertaintyEngineTest {
     @Test
     public void testPoisson() throws Exception {
         double[] result = UncertaintyEngine.poisson_binomial(new double[]{0.8, 0.3, 0.2, 0.9});
-        assertArrayEquals(new double[]{0.12503483, 0.14455178, 0.38402028, 0.2241911}, result, 1E-10);
+        assertArrayEquals(new double[]{0.12503483, 0.14455178, 0.38402028, 0.2241911}, result, 1E-6);
 
     }
 }
