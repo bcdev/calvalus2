@@ -18,7 +18,7 @@ public class MerisGridMapperTest {
     @Ignore
     @Test
     public void acceptanceTestComputeGridCell() throws Exception {
-        MerisGridMapper mapper = new MerisGridMapper(40, 40);
+        MerisGridMapper mapper = new MerisGridMapper();
         Product product = ProductIO.readProduct("D:\\workspace\\fire-cci\\temp\\BA_PIX_MER_v04h24_200806_v4.0.tif");
         Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\temp\\lc-2005-v04h24.nc");
         File[] srFiles = new File("D:\\workspace\\fire-cci\\temp").listFiles(new FilenameFilter() {

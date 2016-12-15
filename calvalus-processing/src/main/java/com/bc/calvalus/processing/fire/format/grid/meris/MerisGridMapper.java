@@ -42,7 +42,7 @@ public class MerisGridMapper extends AbstractGridMapper {
 
     private boolean maskUnmappablePixels;
 
-    protected MerisGridMapper(int targetRasterWidth, int targetRasterHeight) {
+    protected MerisGridMapper() {
         super(40, 40);
     }
 

@@ -6,10 +6,10 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DAT
 
 public abstract class AbstractFireGridDataSource implements FireGridDataSource {
 
-    private int doyFirstOfMonth = -1;
-    private int doyLastOfMonth = -1;
-    private int doyFirstHalf = -1;
-    private int doySecondHalf = -1;
+    protected int doyFirstOfMonth = -1;
+    protected int doyLastOfMonth = -1;
+    protected int doyFirstHalf = -1;
+    protected int doySecondHalf = -1;
 
     @Override
     public void setDoyFirstOfMonth(int doyFirstOfMonth) {

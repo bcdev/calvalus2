@@ -18,6 +18,9 @@ import org.opengis.referencing.operation.TransformException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -110,7 +113,12 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                     data.pixels[pixelIndex] = sourceJD;
                 }
                 if (sourceJD < 999) {
-                    data.statusPixelsFirstHalf[pixelIndex] = 1;
+                    int productJD = getProductJD(product);
+                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
+                        data.statusPixelsFirstHalf[pixelIndex] = 1;
+                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
+                        data.statusPixelsSecondHalf[pixelIndex] = 1;
+                    }
                 }
             }
         }
@@ -122,10 +130,12 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 lcProduct.getSceneGeoCoding().getPixelPos(lcGeoPos, lcPixelPos);
                 if (lcProduct.containsPixel(lcPixelPos)) {
                     int sourceLC = lcData[(int) lcPixelPos.y * lcProduct.getSceneRasterWidth() + (int) lcPixelPos.x];
-                    if (LcRemapping.isInBurnableLcClass(sourceLC)) {
-                        data.burnable[pixelIndex] = true;
+                    data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                    int jdValue = data.pixels[pixelIndex];
+                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, jdValue)
+                            || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, jdValue)) {
+                        data.lcClasses[pixelIndex] = sourceLC;
                     }
-                    data.lcClasses[pixelIndex] = sourceLC;
                 }
             }
         }
@@ -145,4 +155,18 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             throw new IllegalStateException("Unable to create temporary geo-coding", e);
         }
     }
+
+    static int getProductJD(Product product) {
+        String productDate = product.getName().substring(product.getName().lastIndexOf("-") + 1);// BA-T31NBJ-20160219T101925
+        return LocalDate.parse(productDate, DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")).get(ChronoField.DAY_OF_YEAR);
+    }
+
+    static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {
+        return pixel >= doyFirstOfMonth && pixel < doySecondHalf - 6;
+    }
+
+    static boolean isValidSecondHalfPixel(int doyLastOfMonth, int doyFirstHalf, int pixel) {
+        return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth;
+    }
+
 }

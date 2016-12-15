@@ -96,6 +96,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                                 baValueFirstHalf -= data.areas[i];
                             }
                         }
+                        burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         boolean hasLcClass = false;
@@ -112,10 +113,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                                 baValueSecondHalf -= data.areas[i];
                             }
                         }
+                        burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
                     }
                     coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
                     coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
-                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
                     areas[targetPixelIndex] += data.areas[i];
                     validate(areas[targetPixelIndex], targetPixelIndex);
                 }
@@ -127,6 +128,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 coverageFirstHalf[targetPixelIndex] = getFraction(coverageValueFirstHalf, areas[targetPixelIndex]);
                 coverageSecondHalf[targetPixelIndex] = getFraction(coverageValueSecondHalf, areas[targetPixelIndex]);
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
+                validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }
@@ -142,7 +144,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         validate(baSecondHalf, baInLcSecondHalf);
 
         GridCell gridCell = new GridCell();
-        gridCell.setBandSize(targetRasterWidth * targetRasterHeight);
+        gridCell.bandSize = targetRasterWidth * targetRasterHeight;
         gridCell.setBaFirstHalf(baFirstHalf);
         gridCell.setBaSecondHalf(baSecondHalf);
         gridCell.setPatchNumberFirstHalf(patchNumberFirstHalf);
@@ -156,6 +158,20 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         gridCell.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
         return gridCell;
+    }
+
+    private void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+        double lcAreaSum = 0.0F;
+        for (int i = 0; i < baInLcFirst.size(); i++) {
+            float[] firstBaValues = baInLcFirst.get(i);
+            float[] secondBaValues = baInLcSecond.get(i);
+            lcAreaSum += firstBaValues[targetPixelIndex];
+            lcAreaSum += secondBaValues[targetPixelIndex];
+        }
+        float lcAreaSumFraction = getFraction(lcAreaSum, area);
+        if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
+            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+        }
     }
 
     protected abstract boolean maskUnmappablePixels();
@@ -195,8 +211,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    private static float getFraction(double burnableCount, double area) {
-        return (float) (burnableCount / area) >= 1.0F ? 1.0F : (float) (burnableCount / area);
+    private static float getFraction(double value, double area) {
+        return (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {

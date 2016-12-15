@@ -38,7 +38,6 @@ public class S2GridInputFormat extends InputFormat {
         tiles.load(getClass().getResourceAsStream("areas-tiles-2deg.properties"));
         List<InputSplit> splits = new ArrayList<>(1000);
         for (Map.Entry<Object, Object> entry : tiles.entrySet()) {
-            CalvalusLogger.getLogger().info(String.format("Creating split(s) for tile %s...", entry.getKey().toString()));
             String tilePattern = entry.getValue().toString();
             String[] utmTiles = tilePattern.split("\\|");
             List<FileStatus> fileStatuses = new ArrayList<>();

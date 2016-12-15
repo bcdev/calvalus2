@@ -39,6 +39,14 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     private String firstHalfFile;
     private String secondHalfFile;
     private GridCell currentGridCell;
+    private int targetSize;
+
+    @Override
+    protected void setup(Context context) throws IOException, InterruptedException {
+        super.setup(context);
+        prepareTargetProducts(context);
+        this.targetSize = getTargetSize();
+    }
 
     @Override
     protected void reduce(Text key, Iterable<GridCell> values, Context context) throws IOException, InterruptedException {
@@ -67,7 +75,6 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
 
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncFirst, "number_of_patches", patchNumbersFirstHalf);
             writeFloatChunk(getX(key.toString()), getY(key.toString()), ncSecond, "number_of_patches", patchNumbersSecondHalf);
-
 
             for (int i = 0; i < baInLcFirstHalf.size(); i++) {
                 float[] baInClass = baInLcFirstHalf.get(i);
@@ -98,6 +105,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
     }
 
+    protected abstract int getTargetSize();
+
+    protected abstract String getFilename(String year, String month, String version, boolean firstHalf);
+
+    protected abstract NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException;
+
     protected void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
@@ -115,8 +128,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         firstHalfFile = getFilename(year, month, version, true);
         secondHalfFile = getFilename(year, month, version, false);
 
-        ncFirst = GridFormatUtils.createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
-        ncSecond = GridFormatUtils.createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);
+        ncFirst = createNcFile(firstHalfFile, version, timeCoverageStartFirstHalf, timeCoverageEndFirstHalf, 15);
+        ncSecond = createNcFile(secondHalfFile, version, timeCoverageStartSecondHalf, timeCoverageEndSecondHalf, lastDayOfMonth - 16);
 
         try {
             writeLon(ncFirst);
@@ -145,27 +158,25 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         }
     }
 
-    protected abstract String getFilename(String year, String month, String version, boolean firstHalf);
-
     protected GridCell getCurrentGridCell() {
         return currentGridCell;
     }
 
-    protected static void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
-        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, 40*40 into variable %s", x, y, varName));
+    protected void writeFloatChunk(int x, int y, NetcdfFileWriter ncFile, String varName, float[] data) throws IOException, InvalidRangeException {
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d into variable %s", x, y, targetSize, targetSize, varName));
 
         Variable variable = ncFile.findVariable(varName);
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 40, 40}, data);
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, targetSize, targetSize}, data);
         ncFile.write(variable, new int[]{0, y, x}, values);
     }
 
-    private static void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, float[] baInClass) throws IOException, InvalidRangeException {
+    private void writeVegetationChunk(String key, int lcClassIndex, NetcdfFileWriter ncFile, float[] baInClass) throws IOException, InvalidRangeException {
         int x = getX(key);
         int y = getY(key);
-        CalvalusLogger.getLogger().info(String.format("Writing raster data: x=%d, y=%d, 40*40 into lc class %d", x, y, lcClassIndex));
+        CalvalusLogger.getLogger().info(String.format("Writing data: x=%d, y=%d, %d*%d into lc class %d", x, y, targetSize, targetSize, lcClassIndex));
 
         Variable variable = ncFile.findVariable("burned_area_in_vegetation_class");
-        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, 40, 40}, baInClass);
+        Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, targetSize, targetSize}, baInClass);
         ncFile.write(variable, new int[]{0, lcClassIndex, y, x}, values);
     }
 
@@ -286,14 +297,14 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         ncFile.write(lon, values);
     }
 
-    protected static int getX(String key) {
+    protected int getX(String key) {
         int x = Integer.parseInt(key.substring(12));
-        return x * 40;
+        return x * targetSize;
     }
 
-    protected static int getY(String key) {
+    protected int getY(String key) {
         int y = Integer.parseInt(key.substring(9, 11));
-        return y * 40;
+        return y * targetSize;
     }
 
 }

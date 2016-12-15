@@ -18,6 +18,9 @@ public class JDAggregator extends AbstractAggregator {
     public static final int WATER = 997;
     public static final int CLOUD = 998;
     public static final int NO_DATA = 999;
+    public static final String CURRENT_VALUE = "currentValue";
+    public static final String CURRENT_CL_VALUE = "currentClValue";
+    public static final float INITIAL_VALUE = -1.0f;
     private final int minDoy;
     private final int maxDoy;
 
@@ -31,7 +34,7 @@ public class JDAggregator extends AbstractAggregator {
     public void initSpatial(BinContext ctx, WritableVector vector) {
         vector.set(0, 0.0f);
         vector.set(1, 0.0f);
-        ctx.put("maxJD", -1.0f);
+        ctx.put(CURRENT_VALUE, INITIAL_VALUE);
     }
 
     @Override
@@ -48,9 +51,19 @@ public class JDAggregator extends AbstractAggregator {
 
     @Override
     public void initTemporal(BinContext ctx, WritableVector vector) {
-        vector.set(0, 0.0f);
-        vector.set(1, 0.0f);
-        ctx.put("maxJD", -1.0f);
+        Float previousValue = ctx.get(CURRENT_VALUE);
+        Float previousClValue = ctx.get(CURRENT_CL_VALUE);
+        boolean isSpatialAggregationDone = previousValue != null && previousValue != INITIAL_VALUE;
+        if (isSpatialAggregationDone) {
+            vector.set(0, previousValue);
+            vector.set(1, previousClValue);
+            ctx.put(CURRENT_VALUE, previousValue);
+            ctx.put(CURRENT_CL_VALUE, previousClValue);
+        } else {
+            vector.set(0, 0.0f);
+            vector.set(1, 0.0f);
+            ctx.put(CURRENT_VALUE, INITIAL_VALUE);
+        }
     }
 
     @Override
@@ -61,37 +74,40 @@ public class JDAggregator extends AbstractAggregator {
     }
 
     void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
-        Float previousJD = ctx.get("maxJD");
+        Float previousValue = ctx.get(CURRENT_VALUE);
 
         // take max of JD
-        // overwrite if JD > old maxJD
+        // overwrite if JD > old currentValue
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
-        boolean validJD = jd >= 0 && jd < 997 && inTimeBounds;
-        boolean laterThanPrevious = previousJD >= 997 || jd > previousJD;
-        boolean jdIsSet = previousJD >= 0;
+        boolean validJdSet = previousValue >= 0 && previousValue < 997;
+        boolean preferToPreviousValue = (!validJdSet || jd > previousValue) && jd < 997 && inTimeBounds;
 
-        if (validJD && laterThanPrevious) {
-            ctx.put("maxJD", jd);
-            targetVector.set(0, jd);
-            targetVector.set(1, cl);
+        if (previousValue == WATER) {
+            // don't overwrite water: keep the old value
         } else if (jd == WATER) {
-            ctx.put("maxJD", jd);
+            // overwrite everything with water
             targetVector.set(0, WATER);
             targetVector.set(1, 0);
-        } else if (previousJD == WATER) {
-            // don't overwrite water: keep the old value
-        } else if (previousJD == NO_DATA && jd != NO_DATA) {
-            // overwrite no data with data
+            ctx.put(CURRENT_VALUE, WATER);
+            ctx.put(CURRENT_CL_VALUE, 0);
+        } else if (preferToPreviousValue) {
+            // overwrite everything but water with valid JD
             targetVector.set(0, jd);
             targetVector.set(1, cl);
-            ctx.put("maxJD", jd);
-        } else if (!jdIsSet && inTimeBounds) {
-            targetVector.set(0, jd);
-            targetVector.set(1, cl);
-            ctx.put("maxJD", jd);
-        } else if (jd == NO_DATA && !jdIsSet) {
+            ctx.put(CURRENT_VALUE, jd);
+            ctx.put(CURRENT_CL_VALUE, cl);
+        } else if (jd == CLOUD && !validJdSet) {
+            // don't overwrite valid with CLOUD
+            targetVector.set(0, CLOUD);
+            targetVector.set(1, 0);
+            ctx.put(CURRENT_VALUE, jd);
+            ctx.put(CURRENT_CL_VALUE, cl);
+        } else if (jd == NO_DATA && !validJdSet && previousValue != CLOUD) {
+            // don't overwrite valid or cloud with NO_DATA
             targetVector.set(0, NO_DATA);
             targetVector.set(1, 0);
+            ctx.put(CURRENT_VALUE, jd);
+            ctx.put(CURRENT_CL_VALUE, cl);
         }
     }
 

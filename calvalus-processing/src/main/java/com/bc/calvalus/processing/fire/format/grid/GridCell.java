@@ -16,10 +16,6 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLA
  */
 public class GridCell implements Writable {
 
-    GridCell() {
-
-    }
-
     public float[] baFirstHalf;
     public float[] baSecondHalf;
     public float[] patchNumberFirstHalf;
@@ -31,7 +27,7 @@ public class GridCell implements Writable {
     public float[] coverageFirstHalf;
     public float[] coverageSecondHalf;
     public float[] burnableFraction;
-    private int bandSize;
+    public int bandSize;
 
     void setBaFirstHalf(float[] baFirstHalf) {
         this.baFirstHalf = baFirstHalf;
@@ -79,6 +75,7 @@ public class GridCell implements Writable {
 
     @Override
     public void write(DataOutput out) throws IOException {
+        out.writeInt(bandSize);
         for (float v : baFirstHalf) {
             out.writeFloat((int) v);
         }
@@ -120,6 +117,7 @@ public class GridCell implements Writable {
 
     @Override
     public void readFields(DataInput in) throws IOException {
+        int bandSize = in.readInt();
         baFirstHalf = new float[bandSize];
         baSecondHalf = new float[bandSize];
         patchNumberFirstHalf = new float[bandSize];
@@ -128,6 +126,7 @@ public class GridCell implements Writable {
         errorsSecondHalf = new float[bandSize];
         baInLcFirstHalf = new ArrayList<>();
         baInLcSecondHalf = new ArrayList<>();
+        burnableFraction = new float[bandSize];
         for (int lcClass = 0; lcClass < LC_CLASSES_COUNT; lcClass++) {
             baInLcFirstHalf.add(new float[bandSize]);
             baInLcSecondHalf.add(new float[bandSize]);
@@ -189,9 +188,5 @@ public class GridCell implements Writable {
                 ", coverageSecondHalf=" + Arrays.toString(coverageSecondHalf) +
                 ", burnable=" + Arrays.toString(burnableFraction) +
                 '}';
-    }
-
-    void setBandSize(int bandSize) {
-        this.bandSize = bandSize;
     }
 }

@@ -16,6 +16,7 @@ import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -68,11 +69,20 @@ public class S2GridMapper extends AbstractGridMapper {
         Product lcProduct = ProductIO.readProduct(file);
         setGcToLcProduct(lcProduct);
 
-        setDataSource(new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProduct, geoLookupTables));
+        int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
+        int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
+        int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
+        int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
+
+        S2FireGridDataSource dataSource = new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProduct, geoLookupTables);
+        dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
+        dataSource.setDoyLastOfMonth(doyLastOfMonth);
+        dataSource.setDoyFirstHalf(doyFirstHalf);
+        dataSource.setDoySecondHalf(doySecondHalf);
+
+        setDataSource(dataSource);
         ErrorPredictor errorPredictor = new ErrorPredictor();
         GridCell gridCell = computeGridCell(year, month, errorPredictor);
-
-        context.progress();
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, fiveDegTile)), gridCell);
         errorPredictor.dispose();

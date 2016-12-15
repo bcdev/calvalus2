@@ -34,7 +34,6 @@ import org.esa.snap.binning.operator.VariableConfig;
 
 import java.io.IOException;
 import java.time.Year;
-import java.time.YearMonth;
 import java.util.Properties;
 
 public class S2Strategy implements SensorStrategy {
@@ -121,13 +120,7 @@ public class S2Strategy implements SensorStrategy {
     }
 
     static String getInputDateSpec(int year, int month) {
-        YearMonth nextYearMonth = Year.of(year).atMonth(month).plusMonths(1);
-        int nextYear = nextYearMonth.getYear();
-
-        YearMonth nextNextYearMonth = Year.of(year).atMonth(month).plusMonths(2);
-        int nextNextYear = nextNextYearMonth.getYear();
-
-        return String.format("(%s%02d|%s%02d|%s%02d)", year, month, nextYear, nextYearMonth.getMonthValue(), nextNextYear, nextNextYearMonth.getMonthValue());
+        return String.format("%s%02d", year, month);
     }
 
     private String getTiles(PixelProductArea pixelProductArea) {
