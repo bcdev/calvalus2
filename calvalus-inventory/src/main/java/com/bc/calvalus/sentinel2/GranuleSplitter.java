@@ -28,12 +28,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -63,7 +65,9 @@ import java.util.zip.ZipOutputStream;
 public class GranuleSplitter {
 
     private static final boolean ADD_ZIP_SUFFIX = true;
-    private static final boolean COMPACT_FORMAT = false;
+    private static final boolean COMPACT_FORMAT = true;
+
+    static Map<String,ZipEntry> entryMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
@@ -78,6 +82,13 @@ public class GranuleSplitter {
             File inputFile = new File(args[0]);
             if (inputFile.exists()) {
                 if (inputFile.canRead()) {
+                    try (ZipFile zipFile = new ZipFile(inputFile)) {
+                        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                        while (entries.hasMoreElements()) {
+                            ZipEntry entry = entries.nextElement();
+                            entryMap.put(entry.getName(), entry);
+                        }
+                    }
                     inputStream = new FileInputStream(inputFile);
                 } else {
                     throw new IllegalArgumentException("Can not read input file: " + inputFile.getAbsolutePath());
@@ -108,13 +119,18 @@ public class GranuleSplitter {
     private void run() throws IOException {
         Map<String, GranuleWriter> granuleWriters = new HashMap<>();
         String parentProductName = null;
+        byte[] parentProductTxt = new byte[0];
         try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(inputStream))) {
             List<ZipEntryBuffer> zipEntryBuffers = new ArrayList<>();
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 String entryName = entry.getName();
-                if (detectGranule(entryName) == null) {
-                    ZipEntryBuffer zipEntryBuffer = new ZipEntryBuffer(entryName, (int) entry.getSize(), zipIn);
+                long size = entry.getSize() >= 0 ? entry.getSize() : entryMap.containsKey(entry.getName()) ? entryMap.get(entry.getName()).getSize() : -1;
+                if (entryName.endsWith(GranuleMerger.PARENT_PRODUCT_TXT)) {
+                    ZipEntryBuffer buffer = new ZipEntryBuffer(entryName, (int) size, zipIn);
+                    parentProductTxt = buffer.getBuffer();
+                } else if (detectGranule(entryName) == null) {
+                    ZipEntryBuffer zipEntryBuffer = new ZipEntryBuffer(entryName, (int) size, zipIn);
                     zipEntryBuffers.add(zipEntryBuffer);
 
                     for (GranuleWriter granuleWriter : granuleWriters.values()) {
@@ -141,7 +157,7 @@ public class GranuleSplitter {
                             writeBufferToWriter(zipEntryBuffer, granuleWriter);
                         }
                     }
-                    copyToAWriter(entryName, zipIn, granuleWriter);
+                    copyToAWriter(entryName, size, zipIn, granuleWriter);
                 }
             }
         }
@@ -150,7 +166,7 @@ public class GranuleSplitter {
             newProductNames.add(granuleWriter.getOutputFile().getName());
         }
         for (GranuleWriter granuleWriter : granuleWriters.values()) {
-            granuleWriter.writeParentProductInfo(parentProductName, newProductNames);
+            granuleWriter.writeParentProductInfo(parentProductTxt, parentProductName, newProductNames);
             granuleWriter.close();
         }
         writeMarkerFile(parentProductName, newProductNames);
@@ -174,13 +190,13 @@ public class GranuleSplitter {
         return null;
     }
 
-    private static void copyToAWriter(String name, ZipInputStream zipIn, GranuleWriter writer) throws IOException {
-        copyToAllWriters(name, zipIn, Collections.singletonList(writer));
+    private static void copyToAWriter(String name, long size, ZipInputStream zipIn, GranuleWriter writer) throws IOException {
+        copyToAllWriters(name, size, zipIn, Collections.singletonList(writer));
     }
 
-    private static void copyToAllWriters(String name, ZipInputStream zipIn, Collection<GranuleWriter> writers) throws IOException {
+    private static void copyToAllWriters(String name, long size, ZipInputStream zipIn, Collection<GranuleWriter> writers) throws IOException {
         for (GranuleWriter writer : writers) {
-            writer.putNextEntry(name);
+            writer.putNextEntry(name, size);
         }
         if (!name.endsWith("/")) {
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -197,7 +213,7 @@ public class GranuleSplitter {
     }
 
     private static void writeBufferToWriter(ZipEntryBuffer zipEntryBuffer, GranuleWriter writer) throws IOException {
-        writer.putNextEntry(zipEntryBuffer.getName());
+        writer.putNextEntry(zipEntryBuffer.getName(), zipEntryBuffer.getSize());
         if (!zipEntryBuffer.getName().endsWith("/")) {
             byte[] buffer = zipEntryBuffer.getBuffer();
             writer.write(buffer, buffer.length);
@@ -248,17 +264,19 @@ public class GranuleSplitter {
             return outputFile;
         }
 
-        void putNextEntry(String entryName) throws IOException {
-            String[] entyNameParts = entryName.split("/");
-            entyNameParts[0] = granuleSpec.getTopDirName() + ".SAFE";
-            if (entyNameParts.length > 1 && entyNameParts[1].contains("SAFL1C") && entyNameParts[1].endsWith(".xml")) {
-                entyNameParts[1] = granuleSpec.convertXmlName(entyNameParts[1]);
+        void putNextEntry(String entryName, long size) throws IOException {
+            String[] entryNameParts = entryName.split("/");
+            entryNameParts[0] = granuleSpec.getTopDirName() + ".SAFE";
+            if (entryNameParts.length > 1 && entryNameParts[1].contains("SAFL1C") && entryNameParts[1].endsWith(".xml")) {
+                entryNameParts[1] = granuleSpec.convertXmlName(entryNameParts[1]);
             }
-            String newEntryName = String.join("/", entyNameParts);
+            String newEntryName = String.join("/", entryNameParts);
             if (entryName.endsWith("/")) {
                 newEntryName += "/";
             }
-            zipOutputStream.putNextEntry(new ZipEntry(newEntryName));
+            final ZipEntry entry = new ZipEntry(newEntryName);
+            entry.setSize(size);
+            zipOutputStream.putNextEntry(entry);
         }
 
         void write(byte[] buffer, int n) throws IOException {
@@ -269,8 +287,7 @@ public class GranuleSplitter {
             zipOutputStream.closeEntry();
         }
 
-        public void writeParentProductInfo(String productName, List<String> newProductNames) throws IOException {
-            putNextEntry(productName + ".SAFE/" + GranuleMerger.PARENT_PRODUCT_TXT);
+        public void writeParentProductInfo(byte[] oldParentProductTxt, String productName, List<String> newProductNames) throws IOException {
             StringBuilder sb = new StringBuilder();
             sb.append(productName);
             sb.append("\n");
@@ -280,6 +297,8 @@ public class GranuleSplitter {
             }
             byte[] buffer = sb.toString().getBytes(Charset.forName("UTF-8"));
 
+            putNextEntry(productName + ".SAFE/" + GranuleMerger.PARENT_PRODUCT_TXT, oldParentProductTxt.length + buffer.length);
+            write(oldParentProductTxt, oldParentProductTxt.length);
             write(buffer, buffer.length);
         }
 
@@ -294,10 +313,6 @@ public class GranuleSplitter {
         private byte[] buffer;
 
         ZipEntryBuffer(String name, int size, ZipInputStream zipIn) throws IOException {
-            if (size < 0) {
-                System.err.println("no size provided for zip entry " + name);
-                size = 0;
-            }
             this.name = name;
             this.buffer = new byte[size];
             int offset = 0;
@@ -315,6 +330,10 @@ public class GranuleSplitter {
 
         public byte[] getBuffer() {
             return buffer;
+        }
+
+        public long getSize() {
+            return buffer.length;
         }
     }
 
