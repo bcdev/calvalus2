@@ -13,6 +13,7 @@ import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
+import com.bc.calvalus.wps.exceptions.WpsProductionException;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
@@ -43,24 +44,18 @@ class CalvalusProduction {
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 10000;
 
-    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) {
+    LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) throws WpsProductionException {
         try {
             ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
             return doProductionAsynchronous(request, productionService, userName);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
-            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
-                                                                     ProcessState.ERROR,
-                                                                     0.0f,
-                                                                     "Processing failed : " + exception.getMessage(),
-                                                                     null);
-            status.setStopDate(new Date());
-            return status;
+            throw new WpsProductionException("Processing failed : " + exception.getMessage());
         }
     }
 
-    LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) {
+    LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) throws WpsProductionException {
         try {
             ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
             ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
@@ -76,13 +71,7 @@ class CalvalusProduction {
         } catch (WpsResultProductException | JAXBException | MissingParameterValueException | InvalidProcessorIdException | WpsStagingException |
                     ProductMetadataException | InterruptedException | WpsProcessorNotFoundException | ProductionException |
                     InvalidParameterValueException | IOException exception) {
-            LocalProductionStatus status = new LocalProductionStatus("NO_ID",
-                                                                     ProcessState.ERROR,
-                                                                     0.0f,
-                                                                     "Processing failed : " + exception.getMessage(),
-                                                                     null);
-            status.setStopDate(new Date());
-            return status;
+            throw new WpsProductionException("Processing failed : " + exception.getMessage());
         }
     }
 
@@ -202,16 +191,13 @@ class CalvalusProduction {
     }
 
     private Thread createShutdownHook(final WorkflowItem workflow) {
-        return new Thread() {
-            @Override
-            public void run() {
-                try {
-                    workflow.kill();
-                } catch (Exception e) {
-                    logError("Failed to shutdown production: " + e.getMessage());
-                }
+        return new Thread(() -> {
+            try {
+                workflow.kill();
+            } catch (Exception e) {
+                logError("Failed to shutdown production: " + e.getMessage());
             }
-        };
+        });
     }
 
     private void logError(String errorMessage) {
