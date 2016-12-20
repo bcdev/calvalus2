@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps;
 
+import com.bc.calvalus.wps.calvalusfacade.CalvalusProductionService;
 import com.bc.calvalus.wps.calvalusfacade.WpsProcess;
 import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
@@ -15,6 +16,7 @@ import com.bc.wps.utilities.PropertiesWrapper;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author hans
@@ -44,9 +46,13 @@ public abstract class ProcessFacade {
         String remoteUserName = wpsRequestContext.getHeaderField(REMOTE_USER_KEY);
         if (remoteUserName != null) {
             remoteUserName = REMOTE_USER_PREFIX + remoteUserName;
-            LdapHelper ldap = new LdapHelper();
-            if (!ldap.isRegistered(remoteUserName)) {
-                ldap.register(remoteUserName);
+            Set<String> remoteUserSet = CalvalusProductionService.getRemoteUserSet();
+            if (!remoteUserSet.contains(remoteUserName)) {
+                LdapHelper ldap = new LdapHelper();
+                if (!ldap.isRegistered(remoteUserName)) {
+                    ldap.register(remoteUserName);
+                }
+                remoteUserSet.add(remoteUserName);
             }
             return remoteUserName;
         } else {

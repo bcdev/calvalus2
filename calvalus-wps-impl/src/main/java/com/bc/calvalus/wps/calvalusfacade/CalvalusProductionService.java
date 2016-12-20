@@ -16,7 +16,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 
 /**
@@ -30,6 +32,7 @@ public class CalvalusProductionService implements ServletContextListener {
     private static ProductionService productionService = null;
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
+    private static Set<String> remoteUserSet;
 
     private static final String DEFAULT_BEAM_BUNDLE = PropertiesWrapper.get("default.beam.bundle");
     private static final String DEFAULT_SNAP_BUNDLE = PropertiesWrapper.get("default.snap.bundle");
@@ -62,6 +65,13 @@ public class CalvalusProductionService implements ServletContextListener {
             userProductionMap = new HashMap<>();
         }
         return userProductionMap;
+    }
+
+    public synchronized static Set<String> getRemoteUserSet() {
+        if (remoteUserSet == null) {
+            remoteUserSet = new HashSet<>();
+        }
+        return remoteUserSet;
     }
 
     protected static Map<String, String> getDefaultConfig() {

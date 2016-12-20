@@ -31,7 +31,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author hans
@@ -39,9 +41,9 @@ import java.util.Map;
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({
             CalvalusFacade.class, CalvalusProduction.class,
-            CalvalusProductionService.class, CalvalusProductionService.class,
-            LdapHelper.class, ExecuteRequestExtractor.class, ProcessorNameConverter.class,
-            CalvalusProcessorExtractor.class, CalvalusDataInputs.class, ProductionRequest.class
+            CalvalusProductionService.class, LdapHelper.class, ExecuteRequestExtractor.class,
+            ProcessorNameConverter.class, CalvalusProcessorExtractor.class, CalvalusDataInputs.class,
+            ProductionRequest.class
 })
 public class CalvalusFacadeTest {
 
@@ -267,7 +269,28 @@ public class CalvalusFacadeTest {
     }
 
     @Test
+    public void canResolveRemoteUserNameFromCache() throws Exception {
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        Set<String> dummyRemoteUserSet = new HashSet<>();
+        dummyRemoteUserSet.add("tep_mockUserName");
+        dummyRemoteUserSet.add("tep_mockUserName2");
+        PowerMockito.when(CalvalusProductionService.getRemoteUserSet()).thenReturn(dummyRemoteUserSet);
+        when(mockRequestContext.getHeaderField("remote_user")).thenReturn(MOCK_USER_NAME);
+        LdapHelper mockLdapHelper = mock(LdapHelper.class);
+        when(mockLdapHelper.isRegistered(anyString())).thenReturn(false);
+        PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
+
+        calvalusFacade = new CalvalusFacade(mockRequestContext);
+        verify(mockLdapHelper, times(0)).register(anyString());
+
+        assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
+    }
+
+    @Test
     public void canResolveAndRegisterRemoteUserName() throws Exception {
+        PowerMockito.mockStatic(CalvalusProductionService.class);
+        Set<String> dummyRemoteUserSet = new HashSet<>();
+        PowerMockito.when(CalvalusProductionService.getRemoteUserSet()).thenReturn(dummyRemoteUserSet);
         when(mockRequestContext.getHeaderField("remote_user")).thenReturn(MOCK_USER_NAME);
         LdapHelper mockLdapHelper = mock(LdapHelper.class);
         when(mockLdapHelper.isRegistered(anyString())).thenReturn(false);
@@ -279,6 +302,8 @@ public class CalvalusFacadeTest {
 
         assertThat(ldapUser.getValue(), equalTo("tep_mockUserName"));
         assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
+        assertThat(dummyRemoteUserSet.size(), equalTo(1));
+        assertThat(dummyRemoteUserSet.iterator().next(), equalTo("tep_mockUserName"));
     }
 
     @Test
@@ -289,6 +314,7 @@ public class CalvalusFacadeTest {
         PowerMockito.whenNew(LdapHelper.class).withNoArguments().thenReturn(mockLdapHelper);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
+        verify(mockLdapHelper, times(0)).register(anyString());
 
         assertThat(calvalusFacade.getRemoteUserName(), equalTo("tep_mockUserName"));
     }
