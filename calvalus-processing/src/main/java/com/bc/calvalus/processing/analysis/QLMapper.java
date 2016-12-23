@@ -98,8 +98,8 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
     }
 
     public static void createQuicklook(Product product, String imageFileName, Mapper.Context context,
-                                       Quicklooks.QLConfig config) {
-        try {
+                                       Quicklooks.QLConfig config) throws IOException, InterruptedException {
+//        try {
             RenderedImage quicklookImage = QuicklookGenerator.createImage(context, product, config);
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
@@ -110,13 +110,13 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
                     outputStream.close();
                 }
             }
-        } catch (Exception e) {
-            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
-            LOGGER.log(Level.WARNING, msg, e);
-        }
+//        } catch (Exception e) {
+//            String msg = String.format("Could not create quicklook image '%s'.", config.getBandName());
+//            LOGGER.log(Level.WARNING, msg, e);
+//        }
     }
 
-    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws Exception {
+    private static OutputStream createOutputStream(Mapper.Context context, String fileName) throws IOException, InterruptedException {
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
         final FSDataOutputStream fsDataOutputStream = path.getFileSystem(context.getConfiguration()).create(path);
         return new BufferedOutputStream(fsDataOutputStream);

@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -171,7 +172,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
             if (qlConfigList.size() > 1) {
                 imageFileName = imageFileName + "_" + qlConfig.getBandName();
             }
-            QLMapper.createQuicklook(targetProduct, imageFileName, context, qlConfig);
+            try {
+                QLMapper.createQuicklook(targetProduct, imageFileName, context, qlConfig);
+            } catch (Exception e) {
+                String msg = String.format("Could not create quicklook image '%s'.", qlConfig.getBandName());
+                LOG.log(Level.WARNING, msg, e);
+            }
         }
         LOG.info("Finished creating quicklooks.");
     }
