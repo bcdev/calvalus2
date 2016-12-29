@@ -53,7 +53,7 @@ public class UsageStatisticConverterTest {
     }
 
     @Test
-    public void canReturnEmptyUsageStatistic() throws Exception {
+    public void canReturnNullUsageStatistic() throws Exception {
         Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
         CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
         converter = new UsageStatisticConverter(csvReader.readStringRecords());
