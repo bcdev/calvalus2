@@ -8,17 +8,24 @@ import java.util.List;
  */
 public class UsageStatisticConverter {
 
-    private List<UsageStatistic> usageStatistics;
+    private List<String[]> rawRecords;
 
     public UsageStatisticConverter(List<String[]> rawRecords) {
-        this.usageStatistics = extractStatistics(rawRecords);
+        this.rawRecords = rawRecords;
     }
 
-    public List<UsageStatistic> getUsageStatistics() {
-        return usageStatistics;
+    public UsageStatistic extractSingleStatistic(String jobId) {
+        for (int i = 1; i < rawRecords.size(); i++) {
+            String[] singleRecord = rawRecords.get(i);
+            UsageStatistic usageStatistic = parseSingleUsageStatistic(singleRecord);
+            if (jobId.equalsIgnoreCase(usageStatistic.getJobId())) {
+                return usageStatistic;
+            }
+        }
+        return new NullUsageStatistic();
     }
 
-    private List<UsageStatistic> extractStatistics(List<String[]> rawRecords) {
+    public List<UsageStatistic> extractAllStatistics() {
         List<UsageStatistic> usageStatistics = new ArrayList<>();
         for (int i = 1; i < rawRecords.size(); i++) {
             String[] singleRecord = rawRecords.get(i);
