@@ -21,8 +21,8 @@ class ReportGenerator {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage();
         document.addPage(page);
-        List<String> reports = getSingleJobReportContents(usageStatistic);
-        writeToPdfPage(document, page, reports);
+        List<String> reportContents = getSingleJobReportContents(usageStatistic);
+        writeToPdfPage(document, page, reportContents);
         File reportPdf = new File(usageStatistic.getJobId() + ".pdf");
         document.save(reportPdf);
         document.close();
@@ -40,10 +40,16 @@ class ReportGenerator {
 
     String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {
         PDDocument document = new PDDocument();
-        PDPage page = new PDPage();
-        document.addPage(page);
-        List<String> reports = getMultiJobReportContents(usageStatistics);
-        writeToPdfPage(document, page, reports);
+        PDPage summaryPage = new PDPage();
+        document.addPage(summaryPage);
+        List<String> multiJobReportContents = getMultiJobReportContents(usageStatistics);
+        writeToPdfPage(document, summaryPage, multiJobReportContents);
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            PDPage singleJobPage = new PDPage();
+            document.addPage(singleJobPage);
+            List<String> singleJobReportContents = getSingleJobReportContents(usageStatistic);
+            writeToPdfPage(document, singleJobPage, singleJobReportContents);
+        }
         File reportPdf = new File("monthly.pdf");
         document.save(reportPdf);
         document.close();
@@ -60,7 +66,7 @@ class ReportGenerator {
     }
 
     private void writeToPdfPage(PDDocument document, PDPage page, List<String> reports) throws IOException {
-        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, false)) {
             contentStream.beginText();
             contentStream.setFont(PDType1Font.COURIER, 12);
             contentStream.newLineAtOffset(25, 750);
