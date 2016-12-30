@@ -5,7 +5,7 @@ import java.text.DecimalFormat;
 /**
  * @author hans
  */
-public class PriceCalculator {
+class PriceCalculator {
 
     private final static float CPU_PER_THREAD_PER_HOUR_EURO = 0.001322f;
 
@@ -14,19 +14,19 @@ public class PriceCalculator {
     private final static float DISK_PER_GB_PER_YEAR_EURO = 0.0112f;
     private final static float DISK_PER_GB_PER_HOUR_EURO = 0.00000128f;
 
-    protected static double getCpuPrice(long vCoresMillisMaps, long vCoresMillisReduces) {
+    static double getCpuPrice(long vCoresMillisMaps, long vCoresMillisReduces) {
         double totalVCoresUsedSeconds = (vCoresMillisMaps + vCoresMillisReduces) / 1000;
         double totalVCoresUsedHours = totalVCoresUsedSeconds / 3600;
         return monetize(totalVCoresUsedHours * CPU_PER_THREAD_PER_HOUR_EURO);
     }
 
-    protected static double getMemoryPrice(long mbMillisMaps, long mbMillisReduces) {
+    static double getMemoryPrice(long mbMillisMaps, long mbMillisReduces) {
         double totalMemoryUsedGbSeconds = (mbMillisMaps + mbMillisReduces) / (1000 * 1024);
         double totalMemoryUsedGbHours = totalMemoryUsedGbSeconds / 3600;
         return monetize(totalMemoryUsedGbHours * MEMORY_PER_GB_PER_HOUR_EURO);
     }
 
-    protected static double getDiskPrice(long fileBytesRead, long fileBytesWrite, long hdfsBytesRead, long hdfsBytesWrite) {
+    static double getDiskPrice(long fileBytesRead, long fileBytesWrite, long hdfsBytesRead, long hdfsBytesWrite) {
         double totalFileReadGb = (fileBytesRead + hdfsBytesRead) / (1024 * 1024 * 1024);
         double totalFileWriteGb = (fileBytesWrite + hdfsBytesWrite) / (1024 * 1024 * 1024);
         double totalReadWriteGb = totalFileReadGb + totalFileWriteGb;

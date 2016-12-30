@@ -3,7 +3,7 @@ package com.bc.calvalus.reporting;
 /**
  * @author hans
  */
-public class UsageStatistic {
+class UsageStatistic {
 
     private String jobId;
     private String queueName;
@@ -22,7 +22,7 @@ public class UsageStatistic {
     private long vCoresMillisReduces;
     private long cpuMilliseconds;
 
-    public UsageStatistic(String jobId,
+    UsageStatistic(String jobId,
                           String queueName,
                           long startTime,
                           long finishTime,
@@ -53,63 +53,63 @@ public class UsageStatistic {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
-    public String getJobId() {
+    String getJobId() {
         return jobId;
     }
 
-    public String getQueueName() {
+    String getQueueName() {
         return queueName;
     }
 
-    public long getStartTime() {
+    long getStartTime() {
         return startTime;
     }
 
-    public long getFinishTime() {
+    long getFinishTime() {
         return finishTime;
     }
 
-    public long getTotalTime() {
+    long getTotalTime() {
         return totalTime;
     }
 
-    public String getStatus() {
+    String getStatus() {
         return status;
     }
 
-    public long getFileBytesRead() {
+    long getFileBytesRead() {
         return fileBytesRead;
     }
 
-    public long getFileBytesWritten() {
+    long getFileBytesWritten() {
         return fileBytesWritten;
     }
 
-    public long getHdfsBytesRead() {
+    long getHdfsBytesRead() {
         return hdfsBytesRead;
     }
 
-    public long getHdfsBytesWritten() {
+    long getHdfsBytesWritten() {
         return hdfsBytesWritten;
     }
 
-    public long getMbMillisMaps() {
+    long getMbMillisMaps() {
         return mbMillisMaps;
     }
 
-    public long getMbMillisReduces() {
+    long getMbMillisReduces() {
         return mbMillisReduces;
     }
 
-    public long getvCoresMillisMaps() {
+    long getvCoresMillisMaps() {
         return vCoresMillisMaps;
     }
 
-    public long getvCoresMillisReduces() {
+    long getvCoresMillisReduces() {
         return vCoresMillisReduces;
     }
 
-    public long getCpuMilliseconds() {
+    long getCpuMilliseconds() {
         return cpuMilliseconds;
     }
 }

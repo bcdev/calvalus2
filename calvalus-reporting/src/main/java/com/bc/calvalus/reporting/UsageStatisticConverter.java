@@ -6,15 +6,15 @@ import java.util.List;
 /**
  * @author hans
  */
-public class UsageStatisticConverter {
+class UsageStatisticConverter {
 
     private List<String[]> rawRecords;
 
-    public UsageStatisticConverter(List<String[]> rawRecords) {
+    UsageStatisticConverter(List<String[]> rawRecords) {
         this.rawRecords = rawRecords;
     }
 
-    public UsageStatistic extractSingleStatistic(String jobId) {
+    UsageStatistic extractSingleStatistic(String jobId) {
         for (int i = 1; i < rawRecords.size(); i++) {
             String[] singleRecord = rawRecords.get(i);
             UsageStatistic usageStatistic = parseSingleUsageStatistic(singleRecord);
@@ -25,7 +25,7 @@ public class UsageStatisticConverter {
         return new NullUsageStatistic();
     }
 
-    public List<UsageStatistic> extractAllStatistics() {
+    List<UsageStatistic> extractAllStatistics() {
         List<UsageStatistic> usageStatistics = new ArrayList<>();
         for (int i = 1; i < rawRecords.size(); i++) {
             String[] singleRecord = rawRecords.get(i);

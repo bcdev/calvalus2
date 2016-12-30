@@ -3,9 +3,9 @@ package com.bc.calvalus.reporting;
 /**
  * @author hans
  */
-public class NullUsageStatistic extends UsageStatistic {
+class NullUsageStatistic extends UsageStatistic {
 
-    public NullUsageStatistic() {
+    NullUsageStatistic() {
         super("not-found",
               "n/a",
               0,

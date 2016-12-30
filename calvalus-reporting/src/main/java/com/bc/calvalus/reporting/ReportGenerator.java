@@ -15,9 +15,9 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author hans
  */
-public class ReportGenerator {
+class ReportGenerator {
 
-    public String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
+    String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage();
         document.addPage(page);
@@ -29,7 +29,7 @@ public class ReportGenerator {
         return reportPdf.getAbsolutePath();
     }
 
-    public String generateTextSingleJob(UsageStatistic usageStatistic) {
+    String generateTextSingleJob(UsageStatistic usageStatistic) {
         StringBuilder stringBuilder = new StringBuilder();
         List<String> report = getSingleJobReportContents(usageStatistic);
         for (String line : report) {
@@ -38,7 +38,7 @@ public class ReportGenerator {
         return stringBuilder.toString();
     }
 
-    public String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {
+    String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage();
         document.addPage(page);
@@ -50,7 +50,7 @@ public class ReportGenerator {
         return reportPdf.getAbsolutePath();
     }
 
-    public String generateTextMonthly(List<UsageStatistic> usageStatistics) {
+    String generateTextMonthly(List<UsageStatistic> usageStatistics) {
         StringBuilder stringBuilder = new StringBuilder();
         List<String> report = getMultiJobReportContents(usageStatistics);
         for (String line : report) {
