@@ -22,7 +22,7 @@ public class ReportGenerator {
     }
 
     public String generateTextMonthly(List<UsageStatistic> usageStatistics) {
-        return "";
+        return getMultiJobReportContents(usageStatistics);
     }
 
     private String getSingleJobReportContents(UsageStatistic usageStatistic) {
@@ -43,9 +43,33 @@ public class ReportGenerator {
                "Status :  " + usageStatistic.getStatus() + "\n" +
                "Total file writing (MB) : " + totalFileWriting + "\n" +
                "Total file reading (MB) : " + totalFileReading + "\n" +
-               "Total CPU time spent (hours) : " + totalCpuTime + "\n" +
+               "Total CPU time spent : " + totalCpuTime + "\n" +
                "Total Memory used (MB s) :  " + totalMemoryUsed + "\n" +
                "Total vCores used (vCore s) :  " + vCoresUsed + "\n";
+    }
+
+    private String getMultiJobReportContents(List<UsageStatistic> usageStatistics) {
+        long totalFileWriting = 0;
+        long totalFileReading = 0;
+        long totalCpuTime = 0;
+        long totalMemoryUsed = 0;
+        long totalVCoresUsed = 0;
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
+            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
+            totalCpuTime += usageStatistic.getCpuMilliseconds();
+            totalMemoryUsed += (usageStatistic.getMbMillisMaps() + usageStatistic.getMbMillisReduces()) / (1000);
+            totalVCoresUsed += (usageStatistic.getvCoresMillisMaps() + usageStatistic.getvCoresMillisReduces()) / (1000);
+        }
+        int jobNumbers = usageStatistics.size();
+        return "Usage statistic for user $USER in $MONTH $YEAR\n" +
+               "\n" +
+               "Jobs processed : " + jobNumbers + "\n" +
+               "Total file writing (MB) : " + getFormattedNumber(totalFileWriting) + "\n" +
+               "Total file reading (MB) : " + getFormattedNumber(totalFileReading) + "\n" +
+               "Total CPU time spent : " + getElapsedTime(totalCpuTime) + "\n" +
+               "Total Memory used (MB s) :  " + getFormattedNumber(totalMemoryUsed) + "\n" +
+               "Total vCores used (vCore s) :  " + getFormattedNumber(totalVCoresUsed) + "\n";
     }
 
     private String getFormattedNumber(long number) {
