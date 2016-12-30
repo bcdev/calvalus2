@@ -66,7 +66,16 @@ public class ReportGeneratorTest {
                                                                                  "Total file reading (MB) : 1,219,433\n" +
                                                                                  "Total CPU time spent : 27:04:53\n" +
                                                                                  "Total Memory used (MB s) :  599,478,162\n" +
-                                                                                 "Total vCores used (vCore s) :  239,137\n"));
+                                                                                 "Total vCores used (vCore s) :  239,137\n" +
+                                                                                 "\n" +
+                                                                                 "\n" +
+                                                                                 "Price breakdown\n" +
+                                                                                 "\n" +
+                                                                                 "CPU usage price = (Total vCores used) x € 0.0013 = € 0.09\n" +
+                                                                                 "Memory usage price = (Total Memory used) x € 0.00022 = € 0.04\n" +
+                                                                                 "Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € 20.45\n" +
+                                                                                 "\n" +
+                                                                                 "Total = € 20.58\n"));
     }
 
     @Ignore // to avoid creating pdf in every maven install
