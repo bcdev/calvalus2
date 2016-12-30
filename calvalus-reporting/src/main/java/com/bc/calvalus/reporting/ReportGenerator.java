@@ -126,6 +126,21 @@ class ReportGenerator {
         jobReport.add("Total CPU time spent : " + getElapsedTime(totalCpuTime));
         jobReport.add("Total Memory used (MB s) :  " + getFormattedNumber(totalMemoryUsed));
         jobReport.add("Total vCores used (vCore s) :  " + getFormattedNumber(totalVCoresUsed));
+        jobReport.add("");
+        jobReport.add("");
+        jobReport.add("Price breakdown");
+        jobReport.add("");
+        double cpuPrice = PriceCalculator.getCpuPrice(totalVCoresUsed);
+        double memoryPrice = PriceCalculator.getMemoryPrice(totalMemoryUsed);
+        double diskPrice = PriceCalculator.getDiskPrice(totalFileWriting + totalFileReading);
+        jobReport.add("CPU usage price = (Total vCores used) x € 0.0013 = € " +
+                      cpuPrice);
+        jobReport.add("Memory usage price = (Total Memory used) x € 0.00022 = € " +
+                      memoryPrice);
+        jobReport.add("Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € " +
+                      diskPrice);
+        jobReport.add("");
+        jobReport.add("Total = € " + (cpuPrice + memoryPrice + diskPrice));
         return jobReport;
     }
 

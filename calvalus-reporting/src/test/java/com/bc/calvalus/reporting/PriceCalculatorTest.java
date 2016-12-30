@@ -12,17 +12,16 @@ public class PriceCalculatorTest {
 
     @Test
     public void canGetCpuPrice() throws Exception {
-        assertThat(PriceCalculator.getCpuPrice(3503161466L, 0L), equalTo(1.29));
+        assertThat(PriceCalculator.getCpuPrice(3600000L), equalTo(1.32));
     }
 
     @Test
     public void canGetMemoryPrice() throws Exception {
-        assertThat(PriceCalculator.getMemoryPrice(21523424047104L, 0L), equalTo(1.30));
+        assertThat(PriceCalculator.getMemoryPrice(36864000000L), equalTo(2.23));
     }
 
     @Test
     public void canGetDiskPrice() throws Exception {
-        assertThat(PriceCalculator.getDiskPrice(0, 186711804L, 470109601790L, 455803262299L),
-                   equalTo(9.64));
+        assertThat(PriceCalculator.getDiskPrice(1024000L), equalTo(11.2));
     }
 }
