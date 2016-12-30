@@ -44,6 +44,7 @@ public class ReportGeneratorTest {
                                                                                   "Total vCores used (vCore s) :  152,565\n"));
     }
 
+    @Ignore // to avoid creating pdf in every maven install
     @Test
     public void canGeneratePdfSingleJob() throws Exception {
         UsageStatistic usageStatistic = converter.extractSingleStatistic("job_1481485063251_7037");
@@ -68,6 +69,7 @@ public class ReportGeneratorTest {
                                                                                  "Total vCores used (vCore s) :  239,137\n"));
     }
 
+    @Ignore // to avoid creating pdf in every maven install
     @Test
     public void canGeneratePdfMonthly() throws Exception {
         List<UsageStatistic> usageStatistics = converter.extractAllStatistics();

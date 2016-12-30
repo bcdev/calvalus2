@@ -11,6 +11,8 @@
 
     <artifactId>calvalus-reporting</artifactId>
 
+    <packaging>war</packaging>
+
     <name>Calvalus Reporting</name>
     <description>Usage statistic and accounting report.</description>
 
@@ -32,6 +34,22 @@
             <artifactId>pdfbox</artifactId>
             <version>2.0.0</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-server -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-server</artifactId>
+            <version>1.19.3</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-servlet -->
+        <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-servlet</artifactId>
+            <version>1.19.3</version>
+        </dependency>
+
+
 
         <!-- Test Framework -->
         <dependency>
@@ -56,6 +74,43 @@
             <version>${powermockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlet</artifactId>
+            <version>9.2.14.v20151106</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <finalName>calvalus-reporting</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>calvalus-reporting-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-reporting.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-reporting-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

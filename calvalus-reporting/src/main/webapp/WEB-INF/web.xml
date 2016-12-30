@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee
+http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+
+    <display-name>Calvalus Reporting</display-name>
+    <description>Calvalus Reporting Web Service</description>
+
+    <servlet>
+        <servlet-name>Calvalus Reporting</servlet-name>
+        <servlet-class>com.sun.jersey.spi.container.servlet.ServletContainer</servlet-class>
+        <init-param>
+            <param-name>com.sun.jersey.config.property.packages</param-name>
+            <param-value>com.bc.calvalus.reporting</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>Calvalus Reporting</servlet-name>
+        <url-pattern>/reporting/*</url-pattern>
+    </servlet-mapping>
+
+    <security-role>
+        <description>This is the group that consists of internal users with access to Calvalus Portal.</description>
+        <role-name>calvalus</role-name>
+    </security-role>
+
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Calvalus HTTP</web-resource-name>
+            <url-pattern>/reporting/*</url-pattern>
+            <http-method>GET</http-method>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>calvalus</role-name>
+        </auth-constraint>
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>Calvalus Reporting</realm-name>
+    </login-config>
+</web-app>
