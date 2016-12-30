@@ -17,23 +17,18 @@ public class ReportGeneratorTest {
 
     private ReportGenerator reportGenerator;
 
+    private UsageStatisticConverter converter;
+
+    @Before
+    public void setUp() throws Exception {
+        Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
+        CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
+        converter = new UsageStatisticConverter(csvReader.readStringRecords());
+    }
+
     @Test
     public void canGenerateTextSingleJob() throws Exception {
-        UsageStatistic usageStatistic = new UsageStatistic("job_1481485063251_7037",
-                                                           "default",
-                                                           1483007598241L,
-                                                           1483015823051L,
-                                                           "SUCCEEDED",
-                                                           57687118L,
-                                                           533456372L,
-                                                           828041058358L,
-                                                           195727993L,
-                                                           156226661376L,
-                                                           0L,
-                                                           152565099L,
-                                                           0L,
-                                                           72907840L);
-
+        UsageStatistic usageStatistic = converter.extractSingleStatistic("job_1481485063251_7037");
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateTextSingleJob(usageStatistic), equalTo("Usage statistic for job 'job_1481485063251_7037'\n" +
@@ -50,10 +45,16 @@ public class ReportGeneratorTest {
     }
 
     @Test
+    public void canGeneratePdfSingleJob() throws Exception {
+        UsageStatistic usageStatistic = converter.extractSingleStatistic("job_1481485063251_7037");
+        reportGenerator = new ReportGenerator();
+        String pdfPath = reportGenerator.generatePdfSingleJob(usageStatistic);
+
+        assertThat(pdfPath, containsString("job_1481485063251_7037.pdf"));
+    }
+
+    @Test
     public void canGenerateTextMonthly() throws Exception {
-        Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
-        CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
-        UsageStatisticConverter converter = new UsageStatisticConverter(csvReader.readStringRecords());
         List<UsageStatistic> usageStatistics = converter.extractAllStatistics();
 
         reportGenerator = new ReportGenerator();
@@ -65,5 +66,15 @@ public class ReportGeneratorTest {
                                                                                  "Total CPU time spent : 27:04:53\n" +
                                                                                  "Total Memory used (MB s) :  599,478,162\n" +
                                                                                  "Total vCores used (vCore s) :  239,137\n"));
+    }
+
+    @Test
+    public void canGeneratePdfMonthly() throws Exception {
+        List<UsageStatistic> usageStatistics = converter.extractAllStatistics();
+
+        reportGenerator = new ReportGenerator();
+        String pdfPath = reportGenerator.generatePdfMonthly(usageStatistics);
+
+        assertThat(pdfPath, containsString("monthly.pdf"));
     }
 }

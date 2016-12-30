@@ -1,6 +1,14 @@
 package com.bc.calvalus.reporting;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
+import java.io.File;
+import java.io.IOException;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -9,23 +17,63 @@ import java.util.concurrent.TimeUnit;
  */
 public class ReportGenerator {
 
-    public void generatePdfSingleJob(UsageStatistic usageStatistic) {
-        String reports = getSingleJobReportContents(usageStatistic);
+    public String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+        List<String> reports = getSingleJobReportContents(usageStatistic);
+        writeToPdfPage(document, page, reports);
+        File reportPdf = new File(usageStatistic.getJobId() + ".pdf");
+        document.save(reportPdf);
+        document.close();
+        return reportPdf.getAbsolutePath();
     }
 
     public String generateTextSingleJob(UsageStatistic usageStatistic) {
-        return getSingleJobReportContents(usageStatistic);
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> report = getSingleJobReportContents(usageStatistic);
+        for (String line : report) {
+            stringBuilder.append(line).append("\n");
+        }
+        return stringBuilder.toString();
     }
 
-    public void generatePdfMonthly(List<UsageStatistic> usageStatistics) {
-
+    public String generatePdfMonthly(List<UsageStatistic> usageStatistics) throws IOException {
+        PDDocument document = new PDDocument();
+        PDPage page = new PDPage();
+        document.addPage(page);
+        List<String> reports = getMultiJobReportContents(usageStatistics);
+        writeToPdfPage(document, page, reports);
+        File reportPdf = new File("monthly.pdf");
+        document.save(reportPdf);
+        document.close();
+        return reportPdf.getAbsolutePath();
     }
 
     public String generateTextMonthly(List<UsageStatistic> usageStatistics) {
-        return getMultiJobReportContents(usageStatistics);
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> report = getMultiJobReportContents(usageStatistics);
+        for (String line : report) {
+            stringBuilder.append(line).append("\n");
+        }
+        return stringBuilder.toString();
     }
 
-    private String getSingleJobReportContents(UsageStatistic usageStatistic) {
+    private void writeToPdfPage(PDDocument document, PDPage page, List<String> reports) throws IOException {
+        try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
+            contentStream.beginText();
+            contentStream.setFont(PDType1Font.COURIER, 12);
+            contentStream.newLineAtOffset(25, 750);
+            for (String reportLine : reports) {
+                contentStream.showText(reportLine);
+                contentStream.newLineAtOffset(0, -15);
+            }
+            contentStream.endText();
+        }
+    }
+
+    private List<String> getSingleJobReportContents(UsageStatistic usageStatistic) {
+        List<String> jobReport = new ArrayList<>();
         String startTime = getFormattedTime(usageStatistic.getStartTime());
         String finishTime = getFormattedTime(usageStatistic.getFinishTime());
         String totalTime = getElapsedTime(usageStatistic.getTotalTime());
@@ -34,21 +82,23 @@ public class ReportGenerator {
         String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
         String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisMaps() + usageStatistic.getMbMillisReduces()) / (1000));
         String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisMaps() + usageStatistic.getvCoresMillisReduces()) / (1000));
-        return "Usage statistic for job '" + usageStatistic.getJobId() + "'\n" +
-               "\n" +
-               "Project : " + usageStatistic.getQueueName() + "\n" +
-               "Start time : " + startTime + "\n" +
-               "Finish time : " + finishTime + "\n" +
-               "Total time : " + totalTime + "\n" +
-               "Status :  " + usageStatistic.getStatus() + "\n" +
-               "Total file writing (MB) : " + totalFileWriting + "\n" +
-               "Total file reading (MB) : " + totalFileReading + "\n" +
-               "Total CPU time spent : " + totalCpuTime + "\n" +
-               "Total Memory used (MB s) :  " + totalMemoryUsed + "\n" +
-               "Total vCores used (vCore s) :  " + vCoresUsed + "\n";
+        jobReport.add("Usage statistic for job '" + usageStatistic.getJobId() + "'");
+        jobReport.add("");
+        jobReport.add("Project : " + usageStatistic.getQueueName());
+        jobReport.add("Start time : " + startTime);
+        jobReport.add("Finish time : " + finishTime);
+        jobReport.add("Total time : " + totalTime);
+        jobReport.add("Status :  " + usageStatistic.getStatus());
+        jobReport.add("Total file writing (MB) : " + totalFileWriting);
+        jobReport.add("Total file reading (MB) : " + totalFileReading);
+        jobReport.add("Total CPU time spent : " + totalCpuTime);
+        jobReport.add("Total Memory used (MB s) :  " + totalMemoryUsed);
+        jobReport.add("Total vCores used (vCore s) :  " + vCoresUsed);
+        return jobReport;
     }
 
-    private String getMultiJobReportContents(List<UsageStatistic> usageStatistics) {
+    private List<String> getMultiJobReportContents(List<UsageStatistic> usageStatistics) {
+        List<String> jobReport = new ArrayList<>();
         long totalFileWriting = 0;
         long totalFileReading = 0;
         long totalCpuTime = 0;
@@ -62,14 +112,15 @@ public class ReportGenerator {
             totalVCoresUsed += (usageStatistic.getvCoresMillisMaps() + usageStatistic.getvCoresMillisReduces()) / (1000);
         }
         int jobNumbers = usageStatistics.size();
-        return "Usage statistic for user $USER in $MONTH $YEAR\n" +
-               "\n" +
-               "Jobs processed : " + jobNumbers + "\n" +
-               "Total file writing (MB) : " + getFormattedNumber(totalFileWriting) + "\n" +
-               "Total file reading (MB) : " + getFormattedNumber(totalFileReading) + "\n" +
-               "Total CPU time spent : " + getElapsedTime(totalCpuTime) + "\n" +
-               "Total Memory used (MB s) :  " + getFormattedNumber(totalMemoryUsed) + "\n" +
-               "Total vCores used (vCore s) :  " + getFormattedNumber(totalVCoresUsed) + "\n";
+        jobReport.add("Usage statistic for user $USER in $MONTH $YEAR");
+        jobReport.add("");
+        jobReport.add("Jobs processed : " + jobNumbers);
+        jobReport.add("Total file writing (MB) : " + getFormattedNumber(totalFileWriting));
+        jobReport.add("Total file reading (MB) : " + getFormattedNumber(totalFileReading));
+        jobReport.add("Total CPU time spent : " + getElapsedTime(totalCpuTime));
+        jobReport.add("Total Memory used (MB s) :  " + getFormattedNumber(totalMemoryUsed));
+        jobReport.add("Total vCores used (vCore s) :  " + getFormattedNumber(totalVCoresUsed));
+        return jobReport;
     }
 
     private String getFormattedNumber(long number) {
