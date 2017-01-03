@@ -1,4 +1,6 @@
-package com.bc.calvalus.reporting.ws;
+package com.bc.calvalus.reporting.tools;
+
+import com.bc.calvalus.reporting.ws.UsageStatistic;
 
 import java.util.List;
 

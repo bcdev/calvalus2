@@ -3,7 +3,7 @@ package com.bc.calvalus.reporting.ws;
 /**
  * @author hans
  */
-class UsageStatistic {
+public class UsageStatistic {
 
     private String jobId;
     private String queueName;
@@ -22,7 +22,7 @@ class UsageStatistic {
     private long vCoresMillisReduces;
     private long cpuMilliseconds;
 
-    UsageStatistic(String jobId,
+    public UsageStatistic(String jobId,
                    String queueName,
                    long startTime,
                    long finishTime,
@@ -53,7 +53,7 @@ class UsageStatistic {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
-    String getJobId() {
+    public String getJobId() {
         return jobId;
     }
 

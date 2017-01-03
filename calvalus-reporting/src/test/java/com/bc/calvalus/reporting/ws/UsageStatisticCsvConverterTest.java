@@ -3,6 +3,7 @@ package com.bc.calvalus.reporting.ws;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import com.bc.calvalus.reporting.tools.UsageStatisticCsvConverter;
 import org.esa.snap.core.util.io.CsvReader;
 import org.junit.*;
 
