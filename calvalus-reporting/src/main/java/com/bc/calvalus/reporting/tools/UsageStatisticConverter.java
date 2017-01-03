@@ -1,5 +1,6 @@
 package com.bc.calvalus.reporting.tools;
 
+import com.bc.calvalus.reporting.exceptions.ExtractionException;
 import com.bc.calvalus.reporting.ws.UsageStatistic;
 
 import java.util.List;
@@ -14,15 +15,16 @@ public interface UsageStatisticConverter {
      * assumed that jobId is unique.
      *
      * @param jobId The requested job identifier
+     *
      * @return UsageStatistic of the specified job
      */
-    UsageStatistic extractSingleStatistic(String jobId);
+    UsageStatistic extractSingleStatistic(String jobId) throws ExtractionException;
 
     /**
      * This method returns all available {@link UsageStatistic}
      *
      * @return All {@link UsageStatistic}
      */
-    List<UsageStatistic> extractAllStatistics();
+    List<UsageStatistic> extractAllStatistics() throws ExtractionException;
 
 }
