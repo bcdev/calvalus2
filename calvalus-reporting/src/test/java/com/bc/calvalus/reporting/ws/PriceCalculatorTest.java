@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;

@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -13,15 +13,15 @@ import java.util.List;
 /**
  * @author hans
  */
-public class UsageStatisticConverterTest {
+public class UsageStatisticCsvConverterTest {
 
-    private UsageStatisticConverter converter;
+    private UsageStatisticCsvConverter converter;
 
     @Test
     public void canExtractUsageStatistics() throws Exception {
         Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
         CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
-        converter = new UsageStatisticConverter(csvReader.readStringRecords());
+        converter = new UsageStatisticCsvConverter(csvReader.readStringRecords());
         List<UsageStatistic> usageStatistics = converter.extractAllStatistics();
 
         assertThat(usageStatistics.size(), equalTo(3));
@@ -45,7 +45,7 @@ public class UsageStatisticConverterTest {
     public void canExtractSingleUsageStatistic() throws Exception {
         Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
         CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
-        converter = new UsageStatisticConverter(csvReader.readStringRecords());
+        converter = new UsageStatisticCsvConverter(csvReader.readStringRecords());
         UsageStatistic usageStatistic = converter.extractSingleStatistic("job_1481485063251_7024");
 
         assertThat(usageStatistic, not(instanceOf(NullUsageStatistic.class)));
@@ -56,7 +56,7 @@ public class UsageStatisticConverterTest {
     public void canReturnNullUsageStatistic() throws Exception {
         Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
         CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
-        converter = new UsageStatisticConverter(csvReader.readStringRecords());
+        converter = new UsageStatisticCsvConverter(csvReader.readStringRecords());
         UsageStatistic usageStatistic = converter.extractSingleStatistic("job_xxxxx_invalid");
 
         assertThat(usageStatistic, instanceOf(NullUsageStatistic.class));

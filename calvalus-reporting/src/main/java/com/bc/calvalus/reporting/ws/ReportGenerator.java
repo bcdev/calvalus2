@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;

@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,15 +6,15 @@ import java.util.List;
 /**
  * @author hans
  */
-class UsageStatisticConverter {
+class UsageStatisticCsvConverter implements UsageStatisticConverter {
 
     private List<String[]> rawRecords;
 
-    UsageStatisticConverter(List<String[]> rawRecords) {
+    UsageStatisticCsvConverter(List<String[]> rawRecords) {
         this.rawRecords = rawRecords;
     }
 
-    UsageStatistic extractSingleStatistic(String jobId) {
+    public UsageStatistic extractSingleStatistic(String jobId) {
         for (int i = 1; i < rawRecords.size(); i++) {
             String[] singleRecord = rawRecords.get(i);
             UsageStatistic usageStatistic = parseSingleUsageStatistic(singleRecord);
@@ -25,7 +25,7 @@ class UsageStatisticConverter {
         return new NullUsageStatistic();
     }
 
-    List<UsageStatistic> extractAllStatistics() {
+    public List<UsageStatistic> extractAllStatistics() {
         List<UsageStatistic> usageStatistics = new ArrayList<>();
         for (int i = 1; i < rawRecords.size(); i++) {
             String[] singleRecord = rawRecords.get(i);

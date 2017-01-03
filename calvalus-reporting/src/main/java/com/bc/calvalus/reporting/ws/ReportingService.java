@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

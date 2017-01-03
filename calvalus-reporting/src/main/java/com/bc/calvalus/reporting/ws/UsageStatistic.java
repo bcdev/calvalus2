@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 /**
  * @author hans
@@ -23,19 +23,19 @@ class UsageStatistic {
     private long cpuMilliseconds;
 
     UsageStatistic(String jobId,
-                          String queueName,
-                          long startTime,
-                          long finishTime,
-                          String status,
-                          long fileBytesRead,
-                          long fileBytesWritten,
-                          long hdfsBytesRead,
-                          long hdfsBytesWritten,
-                          long mbMillisMaps,
-                          long mbMillisReduces,
-                          long vCoresMillisMaps,
-                          long vCoresMillisReduces,
-                          long cpuMilliseconds) {
+                   String queueName,
+                   long startTime,
+                   long finishTime,
+                   String status,
+                   long fileBytesRead,
+                   long fileBytesWritten,
+                   long hdfsBytesRead,
+                   long hdfsBytesWritten,
+                   long mbMillisMaps,
+                   long mbMillisReduces,
+                   long vCoresMillisMaps,
+                   long vCoresMillisReduces,
+                   long cpuMilliseconds) {
         this.jobId = jobId;
         this.queueName = queueName;
         this.startTime = startTime;

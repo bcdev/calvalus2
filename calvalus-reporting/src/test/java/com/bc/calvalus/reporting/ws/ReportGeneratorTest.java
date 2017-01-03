@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting;
+package com.bc.calvalus.reporting.ws;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -17,13 +17,13 @@ public class ReportGeneratorTest {
 
     private ReportGenerator reportGenerator;
 
-    private UsageStatisticConverter converter;
+    private UsageStatisticCsvConverter converter;
 
     @Before
     public void setUp() throws Exception {
         Reader sampleCsvReader = new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("sampleUsageCsv.csv"));
         CsvReader csvReader = new CsvReader(sampleCsvReader, new char[]{','});
-        converter = new UsageStatisticConverter(csvReader.readStringRecords());
+        converter = new UsageStatisticCsvConverter(csvReader.readStringRecords());
     }
 
     @Test
