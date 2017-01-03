@@ -35,10 +35,8 @@ public class UsageStatisticCsvConverterTest {
         assertThat(usageStatistics.get(0).getFileBytesWritten(), equalTo(66806953L));
         assertThat(usageStatistics.get(0).getHdfsBytesRead(), equalTo(244480290008L));
         assertThat(usageStatistics.get(0).getHdfsBytesWritten(), equalTo(370862346404L));
-        assertThat(usageStatistics.get(0).getMbMillisMaps(), equalTo(248551562240L));
-        assertThat(usageStatistics.get(0).getMbMillisReduces(), equalTo(0L));
-        assertThat(usageStatistics.get(0).getvCoresMillisMaps(), equalTo(48545227L));
-        assertThat(usageStatistics.get(0).getvCoresMillisReduces(), equalTo(0L));
+        assertThat(usageStatistics.get(0).getMbMillisTotal(), equalTo(248551562240L));
+        assertThat(usageStatistics.get(0).getvCoresMillisTotal(), equalTo(48545227L));
         assertThat(usageStatistics.get(0).getCpuMilliseconds(), equalTo(13273330L));
     }
 

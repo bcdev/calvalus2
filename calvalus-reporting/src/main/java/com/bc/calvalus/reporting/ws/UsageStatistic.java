@@ -16,26 +16,22 @@ public class UsageStatistic {
     private long fileBytesWritten;
     private long hdfsBytesRead;
     private long hdfsBytesWritten;
-    private long mbMillisMaps;
-    private long mbMillisReduces;
-    private long vCoresMillisMaps;
-    private long vCoresMillisReduces;
+    private long mbMillisTotal;
+    private long vCoresMillisTotal;
     private long cpuMilliseconds;
 
     public UsageStatistic(String jobId,
-                   String queueName,
-                   long startTime,
-                   long finishTime,
-                   String status,
-                   long fileBytesRead,
-                   long fileBytesWritten,
-                   long hdfsBytesRead,
-                   long hdfsBytesWritten,
-                   long mbMillisMaps,
-                   long mbMillisReduces,
-                   long vCoresMillisMaps,
-                   long vCoresMillisReduces,
-                   long cpuMilliseconds) {
+                          String queueName,
+                          long startTime,
+                          long finishTime,
+                          String status,
+                          long fileBytesRead,
+                          long fileBytesWritten,
+                          long hdfsBytesRead,
+                          long hdfsBytesWritten,
+                          long mbMillisTotal,
+                          long vCoresMillisTotal,
+                          long cpuMilliseconds) {
         this.jobId = jobId;
         this.queueName = queueName;
         this.startTime = startTime;
@@ -46,10 +42,8 @@ public class UsageStatistic {
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
         this.hdfsBytesWritten = hdfsBytesWritten;
-        this.mbMillisMaps = mbMillisMaps;
-        this.mbMillisReduces = mbMillisReduces;
-        this.vCoresMillisMaps = vCoresMillisMaps;
-        this.vCoresMillisReduces = vCoresMillisReduces;
+        this.mbMillisTotal = mbMillisTotal;
+        this.vCoresMillisTotal = vCoresMillisTotal;
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
@@ -93,20 +87,12 @@ public class UsageStatistic {
         return hdfsBytesWritten;
     }
 
-    long getMbMillisMaps() {
-        return mbMillisMaps;
+    long getMbMillisTotal() {
+        return mbMillisTotal;
     }
 
-    long getMbMillisReduces() {
-        return mbMillisReduces;
-    }
-
-    long getvCoresMillisMaps() {
-        return vCoresMillisMaps;
-    }
-
-    long getvCoresMillisReduces() {
-        return vCoresMillisReduces;
+    long getvCoresMillisTotal() {
+        return vCoresMillisTotal;
     }
 
     long getCpuMilliseconds() {

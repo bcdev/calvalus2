@@ -49,9 +49,7 @@ public class UsageStatisticCsvConverter implements UsageStatisticConverter {
                                   Long.parseLong(singleRecord[8]),
                                   Long.parseLong(singleRecord[9]),
                                   Long.parseLong(singleRecord[10]),
-                                  Long.parseLong(singleRecord[11]),
-                                  Long.parseLong(singleRecord[12]),
-                                  Long.parseLong(singleRecord[13])
+                                  Long.parseLong(singleRecord[11])
         );
     }
 }

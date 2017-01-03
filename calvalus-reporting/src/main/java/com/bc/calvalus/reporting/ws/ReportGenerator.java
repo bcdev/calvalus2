@@ -86,8 +86,8 @@ class ReportGenerator {
         String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024));
         String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024));
         String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
-        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisMaps() + usageStatistic.getMbMillisReduces()) / (1000));
-        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisMaps() + usageStatistic.getvCoresMillisReduces()) / (1000));
+        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisTotal()) / (1000));
+        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (1000));
         jobReport.add("Usage statistic for job '" + usageStatistic.getJobId() + "'");
         jobReport.add("");
         jobReport.add("Project : " + usageStatistic.getQueueName());
@@ -114,8 +114,8 @@ class ReportGenerator {
             totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
             totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
-            totalMemoryUsed += (usageStatistic.getMbMillisMaps() + usageStatistic.getMbMillisReduces()) / (1000);
-            totalVCoresUsed += (usageStatistic.getvCoresMillisMaps() + usageStatistic.getvCoresMillisReduces()) / (1000);
+            totalMemoryUsed += (usageStatistic.getMbMillisTotal()) / (1000);
+            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (1000);
         }
         int jobNumbers = usageStatistics.size();
         jobReport.add("Usage statistic for user $USER in $MONTH $YEAR");
