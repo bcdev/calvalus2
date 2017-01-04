@@ -30,7 +30,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.binning.AggregatorConfig;
 import org.esa.snap.binning.CompositingType;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.binning.operator.VariableConfig;
 
 import java.io.IOException;
 import java.time.Year;
@@ -107,7 +106,7 @@ public class S2Strategy implements SensorStrategy {
 
             WorkflowItem formatItem = new L3FormatWorkflowItem(processingService,
                     userName,
-                    productionName + " Format", jobConfig);
+                    productionName + " formatting", jobConfig);
             workflow.add(formatItem);
         } else {
             CalvalusLogger.getLogger().info("Skipping binning and formatting, moving on to finalise");
@@ -162,15 +161,13 @@ public class S2Strategy implements SensorStrategy {
 
     private static BinningConfig getBinningConfig(int year, int month) {
         BinningConfig binningConfig = new BinningConfig();
+//        binningConfig.setCompositingType(CompositingType.BINNING);
         binningConfig.setCompositingType(CompositingType.MOSAICKING);
         binningConfig.setNumRows(1001878);
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("true");
-        VariableConfig doyConfig = new VariableConfig("day_of_year", "JD");
-        VariableConfig clConfig = new VariableConfig("confidence_level", "CL");
-        binningConfig.setVariableConfigs(doyConfig, clConfig);
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
-        AggregatorConfig aggConfig = new JDAggregator.Config("day_of_year", "confidence_level", year, month);
+        AggregatorConfig aggConfig = new JDAggregator.Config("JD", "CL", year, month);
         binningConfig.setAggregatorConfigs(aggConfig);
         return binningConfig;
     }

@@ -103,8 +103,8 @@ public class S2FinaliseMapper extends Mapper {
     static Product remap(File localL3, String baseFilename, Product lcProduct, Progressable context) throws IOException {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        source.addBand("JD_remapped", "(JD < 997) ? JD : (JD == 999) ? -1 : -2", ProductData.TYPE_INT32);
-        source.addBand("CL_remapped", "(JD > 0 and JD < 997) ? (CL * 100) : 0", ProductData.TYPE_INT8);
+        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
+        source.addBand("CL_remapped", "(JD > 0 and JD < 900) ? (CL * 100) : 0", ProductData.TYPE_INT8);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
         target.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
