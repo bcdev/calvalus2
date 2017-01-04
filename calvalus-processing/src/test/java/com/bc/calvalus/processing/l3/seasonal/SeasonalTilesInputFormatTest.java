@@ -26,7 +26,6 @@ public class SeasonalTilesInputFormatTest {
         Mockito.when(fs.getFileBlockLocations((FileStatus) Mockito.any(), Mockito.anyInt(), Mockito.anyInt())).
                 thenReturn(new BlockLocation[]{new BlockLocation(new String[]{"name"}, new String[]{"host"}, 0, 99)});
         SeasonalTilesInputFormat inputFormat = new SeasonalTilesInputFormat() {
-            @Override
             protected FileSystem getFileSystem(FileStatus file, Configuration conf) throws IOException {
                 return fs;
             }
@@ -34,6 +33,7 @@ public class SeasonalTilesInputFormatTest {
         FileStatus[] files = new FileStatus[] {
                 new FileStatus(99, false, 1, 99, 0, new Path("/ab/cd/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090108-v2.0.nc")),
                 new FileStatus(99, false, 1, 99, 0, new Path("/ab/cd/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090115-v2.0.nc")),
+                new FileStatus(99, false, 1, 99, 0, new Path("/ab/cd/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20110115-v2.0.nc")),
                 new FileStatus(99, false, 1, 99, 0, new Path("/ab/cd/ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v09-20090115-v2.0.nc")),
         };
         List<InputSplit> splits = new ArrayList<InputSplit>();

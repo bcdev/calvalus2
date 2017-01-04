@@ -34,6 +34,7 @@ public interface JobConfigNames {
     String CALVALUS_INPUT_FORMAT = "calvalus.input.format";
     String CALVALUS_INPUT_INVENTORY = "calvalus.input.productInventory";
     String CALVALUS_INPUT_TABLE = "calvalus.input.table";
+    String CALVALUS_INPUT_GEO_INVENTORY = "calvalus.input.geoInventory";
 
     String CALVALUS_OUTPUT_DIR = "calvalus.output.dir";
     String CALVALUS_OUTPUT_FORMAT = "calvalus.output.format";
@@ -92,12 +93,6 @@ public interface JobConfigNames {
     String CALVALUS_PRODUCTION_TYPE = "calvalus.productionType";
     String CALVALUS_PROCESS_ALL = "calvalus.processAll";
 
-    /**
-     * @deprecated use following syntax to set (SNAP) system properties: calvalus.system.<system-property-name>
-     */
-    @Deprecated
-    String CALVALUS_SNAP_TILE_CACHE_SIZE = "calvalus.snap.jai.tileCacheSize";
-
     String TA_WITH_TIMESERIES_PLOT = "withTimeseriesPlot";
     String TA_WITH_AGGREGATED_CSV = "withAggregatedCsv";
     String TA_WITH_PIXEL_CSV = "withPixelCsv";
@@ -105,4 +100,6 @@ public interface JobConfigNames {
     String TA_WITH_L3_OUTPUTS = "withL3Outputs";
     String CALVALUS_TA_SKIPL3_FLAG = "skipL3";
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
+
+    String CALVALUS_DEBUG_TILECACHE = "calvalus.debug.tileCache";
 }

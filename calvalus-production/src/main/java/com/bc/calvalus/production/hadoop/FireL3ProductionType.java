@@ -36,7 +36,6 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.datamodel.ProductData;
 
@@ -83,8 +82,8 @@ public class FireL3ProductionType extends HadoopProductionType {
         DateRange cloudRange = getWingsRange(productionRequest, mainRange);
 
         LcL3SensorConfig sensorConfig = LcL3SensorConfig.create(productionRequest.getString("calvalus.lc.resolution"));
-        float temporalCloudFilterThreshold = sensorConfig.getTemporalCloudFilterThreshold();
-        String temporalCloudBandName = sensorConfig.getTemporalCloudBandName();
+        String temporalCloudBandName = productionRequest.getString("calvalus.lc.temporalCloudBandName", sensorConfig.getTemporalCloudBandName());
+        float temporalCloudFilterThreshold = productionRequest.getFloat("calvalus.lc.temporalCloudFilterThreshold", sensorConfig.getTemporalCloudFilterThreshold());
         final int mosaicTileSize = sensorConfig.getMosaicTileSize();
 
         String cloudMosaicConfigXml = getCloudMosaicConfig(temporalCloudBandName).toXml();
@@ -101,13 +100,7 @@ public class FireL3ProductionType extends HadoopProductionType {
             Configuration jobConfigCloud = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfigCloud);
 
-            if (productionRequest.getParameters().containsKey("inputPath")) {
-                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-            } else {
-                throw new ProductionException("missing request parameter inputPath or inputTable");
-            }
+            setInputLocationParameters(productionRequest, jobConfigCloud);
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfigCloud.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, cloudRange.toString());
 
@@ -138,13 +131,7 @@ public class FireL3ProductionType extends HadoopProductionType {
                 Configuration jobConfigSr = createJobConfig(productionRequest);
                 setRequestParameters(productionRequest, jobConfigSr);
 
-                if (productionRequest.getParameters().containsKey("inputPath")) {
-                    jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-                } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                    jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-                } else {
-                    throw new ProductionException("missing request parameter inputPath or inputTable");
-                }
+                setInputLocationParameters(productionRequest, jobConfigSr);
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
                 jobConfigSr.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, singleDayAsRange.toString());
 
@@ -277,7 +264,7 @@ public class FireL3ProductionType extends HadoopProductionType {
     // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for fire-cci Level3.");
+        throw new UnsupportedOperationException("Staging currently not implemented for fire-cci Level3.");
     }
 
 }

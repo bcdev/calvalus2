@@ -68,6 +68,7 @@ public class MRProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, jobConfig);
         processorProductionRequest.configureProcessor(jobConfig);
 
+        setInputLocationParameters(productionRequest, jobConfig);
         if (productionRequest.getParameters().containsKey("inputPath")) {
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
         } else if (productionRequest.getParameters().containsKey("inputTable")) {

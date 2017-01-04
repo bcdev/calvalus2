@@ -128,13 +128,7 @@ public class TAProductionType extends HadoopProductionType {
         setDefaultProcessorParameters(processorProductionRequest, l3JobConfig);
         setRequestParameters(productionRequest, l3JobConfig);
         processorProductionRequest.configureProcessor(l3JobConfig);
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-             l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-         } else if (productionRequest.getParameters().containsKey("inputTable")) {
-             l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-         } else {
-             throw new ProductionException("missing request parameter inputPath or inputTable");
-         }
+        setInputLocationParameters(productionRequest, l3JobConfig);
         l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         l3JobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
         l3JobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, l3OutputDir);

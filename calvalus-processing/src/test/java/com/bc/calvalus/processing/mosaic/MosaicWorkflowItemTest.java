@@ -25,7 +25,7 @@ public class MosaicWorkflowItemTest {
 
     @Test
     public void testComputeNumReducers() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true, 8, 0, null);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
 

@@ -55,6 +55,12 @@
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-netcdf</artifactId>
         </dependency>
+        -->
+        <dependency>
+            <groupId>org.xeustechnologies</groupId>
+            <artifactId>jtar</artifactId>
+            <version>1.0.4</version>
+        </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-binning</artifactId>
@@ -62,6 +68,7 @@
         <dependency>
             <groupId>org.esa.snap</groupId>
             <artifactId>snap-envisat-reader</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.esa.snap</groupId>
@@ -131,6 +138,13 @@
             <version>1.4.8</version>
         </dependency>
 
+        <!--  BC Geo - Inventory -->
+
+        <dependency>
+            <groupId>com.bc</groupId>
+            <artifactId>geo-inventory</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>bc-guava</artifactId>
@@ -147,5 +161,4 @@
         </dependency>
 
     </dependencies>
-
 </project>

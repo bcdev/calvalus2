@@ -25,5 +25,14 @@
             <useTransitiveDependencies>false</useTransitiveDependencies>
             <useProjectArtifact>false</useProjectArtifact>
         </dependencySet>
+        <dependencySet>
+            <includes>
+                <include>com.bc:geo-inventory</include>
+            </includes>
+            <scope>runtime</scope>
+            <useTransitiveDependencies>true</useTransitiveDependencies>
+            <useTransitiveFiltering>true</useTransitiveFiltering>
+            <useProjectArtifact>false</useProjectArtifact>
+        </dependencySet>
     </dependencySets>
 </assembly>

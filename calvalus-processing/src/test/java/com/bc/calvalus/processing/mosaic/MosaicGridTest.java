@@ -29,16 +29,16 @@ public class MosaicGridTest {
         assertNotNull(rectangle);
         assertEquals(0, rectangle.x);
         assertEquals(0, rectangle.y);
-        assertEquals(370 * 10, rectangle.width);
-        assertEquals(370 * 10, rectangle.height);
+        assertEquals(370 * 10 * 36, rectangle.width);
+        assertEquals(370 * 10 + 2, rectangle.height);
 
         geometry = GeometryUtils.createGeometry("polygon((-179.5 89.5, -179.5 80.5, -170.5 80.5, -170.5 89.5, -179.5 89.5))");
         rectangle = mosaicGrid.computeBounds(geometry);
         assertNotNull(rectangle);
-        assertEquals(185, rectangle.x);
-        assertEquals(185, rectangle.y);
-        assertEquals(370 * 9, rectangle.width);
-        assertEquals(370 * 9, rectangle.height);
+        assertEquals(185 - 1, rectangle.x);
+        assertEquals(185 - 1, rectangle.y);
+        assertEquals(370 * 9 + 3, rectangle.width);
+        assertEquals(370 * 9 + 2, rectangle.height);
     }
 
     @Test
@@ -164,7 +164,7 @@ public class MosaicGridTest {
 
     @Test
     public void testGetTileGeometry_5degree() throws Exception {
-        MosaicGrid mosaicGrid = new MosaicGrid(5, 180 / 5, 370 * 5);
+        MosaicGrid mosaicGrid = new MosaicGrid(5, 180 / 5, 370 * 5, true, 8, 0, null);
 
         assertTileGeometry(mosaicGrid, 0, 0, -180.0, -175.0, 85.0, 90.0);
         assertTileGeometry(mosaicGrid, 36, 18, 0.0, 5.0, -5.0, 0.0);
@@ -190,7 +190,7 @@ public class MosaicGridTest {
         assertEquals(72, mosaicGrid.getNumMacroTileX());
         assertEquals(36, mosaicGrid.getNumMacroTileY());
 
-        mosaicGrid = new MosaicGrid(10, 180, 360);
+        mosaicGrid = new MosaicGrid(10, 180, 360, true, 8, 0, null);
         assertEquals(360, mosaicGrid.getNumTileX());
         assertEquals(180, mosaicGrid.getNumTileY());
         assertEquals(36, mosaicGrid.getNumMacroTileX());
@@ -214,12 +214,132 @@ public class MosaicGridTest {
         assertEquals("180", configuration.get("calvalus.mosaic.numTileY"));
         assertEquals("370", configuration.get("calvalus.mosaic.tileSize"));
 
-        mosaicGrid = new MosaicGrid(6, 18, 20);
+        mosaicGrid = new MosaicGrid(6, 18, 20, true, 8, 0, null);
         mosaicGrid.saveToConfiguration(configuration);
 
         assertEquals("6", configuration.get("calvalus.mosaic.macroTileSize"));
         assertEquals("18", configuration.get("calvalus.mosaic.numTileY"));
         assertEquals("20", configuration.get("calvalus.mosaic.tileSize"));
 
+    }
+
+    @Test
+    public void testGetPartitionFull() throws Exception {
+        Configuration configuration = new Configuration();
+        configuration.set("calvalus.mosaic.tileSize", "2700");
+        configuration.set("calvalus.mosaic.numTileY", "360");
+        configuration.set("calvalus.mosaic.macroTileSize", "5");
+        configuration.set("calvalus.mosaic.withIntersectionCheck", "true");
+        configuration.set("calvalus.mosaic.maxReducers", "72");
+        configuration.set("calvalus.mosaic.numXPartitions", "72");
+        configuration.set("calvalus.mosaic.regionGeometry", "POLYGON((1 -19,1 19,9 19,9 -19,1 -19))");
+        final MosaicGrid mosaicGrid = MosaicGrid.create(configuration);
+        assertEquals(2700, mosaicGrid.getTileSize());
+        assertEquals(5, mosaicGrid.getMacroTileSize());
+        assertEquals(360, mosaicGrid.getNumTileY());
+        assertEquals(720, mosaicGrid.getNumTileX());
+        assertEquals(72, mosaicGrid.getNumMacroTileY());
+        assertEquals(144, mosaicGrid.getNumMacroTileX());
+        assertEquals(28, mosaicGrid.macroTileRegion.y);
+        assertEquals(72, mosaicGrid.macroTileRegion.x);
+        assertEquals(16, mosaicGrid.macroTileRegion.height);
+        assertEquals(4, mosaicGrid.macroTileRegion.width);
+        assertEquals(1, mosaicGrid.macroTileStepY);
+        assertEquals(1, mosaicGrid.macroTileStepX);
+        assertEquals(4, mosaicGrid.macroTileCountX);
+        assertEquals(64, mosaicGrid.getNumReducers());
+        assertEquals(32, mosaicGrid.getPartition(72,36));
+        assertEquals(30, mosaicGrid.getPartition(70,36));
+        assertEquals(28, mosaicGrid.getPartition(72,35));
+    }
+
+    @Test
+    public void testGetPartitionPartX() throws Exception {
+        Configuration configuration = new Configuration();
+        configuration.set("calvalus.mosaic.tileSize", "2700");
+        configuration.set("calvalus.mosaic.numTileY", "360");
+        configuration.set("calvalus.mosaic.macroTileSize", "5");
+        configuration.set("calvalus.mosaic.withIntersectionCheck", "true");
+        configuration.set("calvalus.mosaic.maxReducers", "36");
+        configuration.set("calvalus.mosaic.numXPartitions", "36");
+        configuration.set("calvalus.mosaic.regionGeometry", "POLYGON((1 -19,1 19,9 19,9 -19,1 -19))");
+        final MosaicGrid mosaicGrid = MosaicGrid.create(configuration);
+        assertEquals(2700, mosaicGrid.getTileSize());
+        assertEquals(5, mosaicGrid.getMacroTileSize());
+        assertEquals(360, mosaicGrid.getNumTileY());
+        assertEquals(720, mosaicGrid.getNumTileX());
+        assertEquals(72, mosaicGrid.getNumMacroTileY());
+        assertEquals(144, mosaicGrid.getNumMacroTileX());
+        assertEquals(28, mosaicGrid.macroTileRegion.y);
+        assertEquals(72, mosaicGrid.macroTileRegion.x);
+        assertEquals(16, mosaicGrid.macroTileRegion.height);
+        assertEquals(4, mosaicGrid.macroTileRegion.width);
+        assertEquals(1, mosaicGrid.macroTileStepY);
+        assertEquals(2, mosaicGrid.macroTileStepX);
+        assertEquals(2, mosaicGrid.macroTileCountX);
+        assertEquals(32, mosaicGrid.getNumReducers());
+        assertEquals(16, mosaicGrid.getPartition(72,36));
+        assertEquals(15, mosaicGrid.getPartition(70,36));
+        assertEquals(14, mosaicGrid.getPartition(72,35));
+    }
+
+    @Test
+    public void testGetPartitionFullY() throws Exception {
+        Configuration configuration = new Configuration();
+        configuration.set("calvalus.mosaic.tileSize", "2700");
+        configuration.set("calvalus.mosaic.numTileY", "360");
+        configuration.set("calvalus.mosaic.macroTileSize", "5");
+        configuration.set("calvalus.mosaic.withIntersectionCheck", "true");
+        configuration.set("calvalus.mosaic.maxReducers", "18");
+        configuration.set("calvalus.mosaic.numXPartitions", "18");
+        configuration.set("calvalus.mosaic.regionGeometry", "POLYGON((1 -19,1 19,9 19,9 -19,1 -19))");
+        final MosaicGrid mosaicGrid = MosaicGrid.create(configuration);
+        assertEquals(2700, mosaicGrid.getTileSize());
+        assertEquals(5, mosaicGrid.getMacroTileSize());
+        assertEquals(360, mosaicGrid.getNumTileY());
+        assertEquals(720, mosaicGrid.getNumTileX());
+        assertEquals(72, mosaicGrid.getNumMacroTileY());
+        assertEquals(144, mosaicGrid.getNumMacroTileX());
+        assertEquals(28, mosaicGrid.macroTileRegion.y);
+        assertEquals(72, mosaicGrid.macroTileRegion.x);
+        assertEquals(16, mosaicGrid.macroTileRegion.height);
+        assertEquals(4, mosaicGrid.macroTileRegion.width);
+        assertEquals(1, mosaicGrid.macroTileStepY);
+        assertEquals(4, mosaicGrid.macroTileStepX);
+        assertEquals(1, mosaicGrid.macroTileCountX);
+        assertEquals(16, mosaicGrid.getNumReducers());
+        assertEquals(8, mosaicGrid.getPartition(72,36));
+        assertEquals(8, mosaicGrid.getPartition(70,36));
+        assertEquals(7, mosaicGrid.getPartition(72,35));
+    }
+
+    @Test
+    public void testGetPartitionPartY() throws Exception {
+        Configuration configuration = new Configuration();
+        configuration.set("calvalus.mosaic.tileSize", "2700");
+        configuration.set("calvalus.mosaic.numTileY", "360");
+        configuration.set("calvalus.mosaic.macroTileSize", "5");
+        configuration.set("calvalus.mosaic.withIntersectionCheck", "true");
+        configuration.set("calvalus.mosaic.maxReducers", "9");
+        configuration.set("calvalus.mosaic.numXPartitions", "9");
+        configuration.set("calvalus.mosaic.regionGeometry", "POLYGON((1 -19,1 19,9 19,9 -19,1 -19))");
+        final MosaicGrid mosaicGrid = MosaicGrid.create(configuration);
+        assertEquals(2700, mosaicGrid.getTileSize());
+        assertEquals(5, mosaicGrid.getMacroTileSize());
+        assertEquals(360, mosaicGrid.getNumTileY());
+        assertEquals(720, mosaicGrid.getNumTileX());
+        assertEquals(72, mosaicGrid.getNumMacroTileY());
+        assertEquals(144, mosaicGrid.getNumMacroTileX());
+        assertEquals(28, mosaicGrid.macroTileRegion.y);
+        assertEquals(72, mosaicGrid.macroTileRegion.x);
+        assertEquals(16, mosaicGrid.macroTileRegion.height);
+        assertEquals(4, mosaicGrid.macroTileRegion.width);
+        assertEquals(2, mosaicGrid.macroTileStepY);
+        assertEquals(4, mosaicGrid.macroTileStepX);
+        assertEquals(1, mosaicGrid.macroTileCountX);
+        assertEquals(8, mosaicGrid.getNumReducers());
+        assertEquals(4, mosaicGrid.getPartition(72,36));
+        assertEquals(4, mosaicGrid.getPartition(70,36));
+        assertEquals(3, mosaicGrid.getPartition(72,35));
     }
 }

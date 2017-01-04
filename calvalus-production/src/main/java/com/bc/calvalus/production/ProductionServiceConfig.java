@@ -99,8 +99,9 @@ public class ProductionServiceConfig {
         defaultConfig.put("calvalus.hadoop.fs.permissions.umask-mode", "002");
         defaultConfig.put("calvalus.hadoop.yarn.log-aggregation-enable", "true");
 
-        defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.address", "master00:10200");
-        defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.webapp.address", "master00:19888");
+        // let this be determined by the server side default instead, do not overwrite in client [Jira CAVA-111]
+        //defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.address", "master00:10200");
+        //defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.webapp.address", "master00:19888");
 
         defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.command-opts", "-Xmx512M -Djava.awt.headless=true");
         defaultConfig.put("calvalus.hadoop.yarn.app.mapreduce.am.resource.mb", "512");

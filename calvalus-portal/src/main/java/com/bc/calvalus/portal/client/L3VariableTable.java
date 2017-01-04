@@ -42,6 +42,7 @@ import java.util.List;
  */
 public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.ConfiguredVariable> {
 
+    public static final int MAX_NUM_VARIABLES = 100;
     private static int lastId = 0;
 
     class ConfiguredVariable {
@@ -72,7 +73,7 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
                 return item.id;
             }
         };
-        cellTable = new CellTable<ConfiguredVariable>(keyProvider);
+        cellTable = new CellTable<ConfiguredVariable>(MAX_NUM_VARIABLES, keyProvider);
 
         // Add a selection model so we can select cells.
         selectionModel = new SingleSelectionModel<ConfiguredVariable>(keyProvider);

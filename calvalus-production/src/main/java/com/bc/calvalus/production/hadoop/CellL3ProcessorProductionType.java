@@ -14,8 +14,6 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
 import java.util.List;
@@ -106,6 +104,6 @@ public class CellL3ProcessorProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for L3Proc.");
+        throw new UnsupportedOperationException("Staging currently not implemented for L3Proc.");
     }
 }

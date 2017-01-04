@@ -45,6 +45,7 @@ import java.util.Set;
  */
 public class L3AggregatorTable {
 
+    public static final int MAX_NUM_AGGREGATORS = 100;
     private static int lastId = 0;
 
     class ConfiguredAggregator {
@@ -130,7 +131,7 @@ public class L3AggregatorTable {
                 return item.id;
             }
         };
-        cellTable = new CellTable<ConfiguredAggregator>(aggregatorKeyProvider);
+        cellTable = new CellTable<ConfiguredAggregator>(MAX_NUM_AGGREGATORS, aggregatorKeyProvider);
 
         // Add a selection model so we can select cells.
         selectionModel = new SingleSelectionModel<ConfiguredAggregator>(aggregatorKeyProvider);

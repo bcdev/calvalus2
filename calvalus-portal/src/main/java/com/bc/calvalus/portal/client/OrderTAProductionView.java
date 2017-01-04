@@ -52,6 +52,8 @@ public class OrderTAProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
+                l2ConfigForm.setProductSet(productSet);
+                l2ConfigForm.updateProcessorList();
             }
         });
 

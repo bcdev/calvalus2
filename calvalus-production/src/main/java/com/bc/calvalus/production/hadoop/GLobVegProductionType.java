@@ -32,7 +32,6 @@ import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -83,13 +82,7 @@ public class GLobVegProductionType extends HadoopProductionType {
             Configuration jobConfig = createJobConfig(productionRequest);
             setRequestParameters(productionRequest, jobConfig);
 
-            if (productionRequest.getParameters().containsKey("inputPath")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-            } else {
-                throw new ProductionException("missing request parameter inputPath or inputTable");
-            }
+            setInputLocationParameters(productionRequest, jobConfig);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 
@@ -169,7 +162,7 @@ public class GLobVegProductionType extends HadoopProductionType {
     // TODO, at the moment no staging implemented
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for old Level3.");
+        throw new UnsupportedOperationException("Staging currently not implemented for old Level3.");
     }
 
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+
+<salelist testAttr="$test">
+    #foreach( $pet in $petList )
+    <pet>
+        <name>$pet.name</name>
+        <price>$pet.price</price>
+    </pet>
+    #end
+</salelist>

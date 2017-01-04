@@ -522,7 +522,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                                  productSet.getMaxDate(),
                                  productSet.getRegionName(),
                                  productSet.getRegionWKT(),
-                                 productSet.getBandNames());
+                                 productSet.getBandNames(),
+                                 productSet.getGeoInventory());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,

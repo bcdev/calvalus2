@@ -32,6 +32,6 @@ public class CellL3ProcessorMapperTest {
         assertEquals(1936.0, CellL3ProcessorMapper.getMJD("2005-04-20"), 1e-6);
         assertEquals(1937.0, CellL3ProcessorMapper.getMJD("2005-04-21"), 1e-6);
         assertEquals(0.0, CellL3ProcessorMapper.getMJD(null), 1e-6);
-        assertEquals(0.0, CellL3ProcessorMapper.getMJD("foo"), 1e-6);
+        //assertEquals(0.0, CellL3ProcessorMapper.getMJD("foo"), 1e-6);
     }
 }

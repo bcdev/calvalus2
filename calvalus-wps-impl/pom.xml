@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>calvalus</artifactId>
+        <groupId>com.bc.calvalus</groupId>
+        <version>2.10-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>calvalus-wps-impl</artifactId>
+
+    <properties>
+        <bc-wps-api.version>1.0</bc-wps-api.version>
+        <powermockito.version>1.5.6</powermockito.version>
+    </properties>
+
+    <dependencies>
+        <!-- BC WPS dependencies -->
+        <dependency>
+            <groupId>com.bc.wps</groupId>
+            <artifactId>bc-wps-api</artifactId>
+            <scope>provided</scope>
+            <version>${bc-wps-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.wps</groupId>
+            <artifactId>bc-wps-commons</artifactId>
+            <scope>provided</scope>
+            <version>${bc-wps-api.version}</version>
+        </dependency>
+
+        <!-- Calvalus dependencies -->
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-production</artifactId>
+        </dependency>
+
+        <!-- Utilities framework dependencies -->
+        <dependency>
+            <groupId>commons-lang</groupId>
+            <artifactId>commons-lang</artifactId>
+            <version>2.6</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>xerces</groupId>
+            <artifactId>xercesImpl</artifactId>
+            <version>2.11.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.velocity</groupId>
+            <artifactId>velocity</artifactId>
+            <version>1.7</version>
+        </dependency>
+
+
+        <!-- Test Framework -->
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-api-mockito</artifactId>
+            <version>${powermockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.powermock</groupId>
+            <artifactId>powermock-module-junit4</artifactId>
+            <version>${powermockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>calvalus-wps-jar</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-wps-jar.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.bc.calvalus.wps.CalvalusWpsProvider</mainClass>
+                                </manifest>
+                                <!-- required entries in manifest for TA staging -->
+                                <manifestEntries>
+                                    <Specification-Title>Java Advanced Imaging Image I/O Tools</Specification-Title>
+                                    <Specification-Version>1.0-mr</Specification-Version>
+                                    <Specification-Vendor>Sun Microsystems, Inc.</Specification-Vendor>
+                                    <Implementation-Title>com.sun.media.imageio</Implementation-Title>
+                                    <Implementation-Version>1.0_01</Implementation-Version>
+                                    <Implementation-Vendor>Sun Microsystems, Inc.</Implementation-Vendor>
+                                    <Extension-Name>com.sun.media.imageio</Extension-Name>
+                                </manifestEntries>
+                            </archive>
+                            <finalName>calvalus-wps-impl</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>calvalus-wps-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-wps.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-wps-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>calvalus-wps-client-subsetting</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-wps-client-subsetting.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-wps-client-subsetting</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>

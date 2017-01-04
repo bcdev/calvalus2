@@ -55,6 +55,8 @@ public class OrderL3ProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+                l2ConfigForm.setProductSet(productSet);
+                l2ConfigForm.updateProcessorList();
 
             }
         });

@@ -16,13 +16,11 @@
 
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.processing.l3.CellL3ProcessorWorkflowItem;
 import com.bc.calvalus.processing.l3.CellProcessorWorkflowItem;
 import com.bc.calvalus.processing.l3.L3FormatWorkflowItem;
 import com.bc.calvalus.production.Production;
@@ -31,11 +29,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import com.vividsolutions.jts.geom.Geometry;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-
-import java.util.List;
 
 /**
  * A production type used for transforming Level-3 products into a new Level-3 product
@@ -117,6 +111,6 @@ public class CellProcessorProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for L3Proc.");
+        throw new UnsupportedOperationException("Staging currently not implemented for L3Proc.");
     }
 }

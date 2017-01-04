@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.ma;
 
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -30,20 +29,6 @@ public class PlacemarkRecordSourceTest {
         RecordSource recordSource = spi.createRecordSource(url);
         assertNotNull(recordSource);
         assert78(recordSource);
-    }
-
-    @Test
-    public void testThatPlacemarkSpiCanProduce78RecordsFromHDFS() throws Exception {
-        RecordSourceSpi spi = RecordSourceSpi.getForClassName("com.bc.calvalus.processing.ma.PlacemarkRecordSource$Spi");
-        assertNotNull(spi);
-        String url = "hdfs://master01:9000/calvalus/auxiliary/LC_cci/CEOS_AERONET.placemark ";
-        try {
-            RecordSource recordSource = spi.createRecordSource(url);
-            assertNotNull(recordSource);
-            assert78(recordSource);
-        } catch (IOException e) {
-            System.out.println("Warning: test not executed: testThatPlacemarkSpiCanProduce78RecordsFromHDFS: " + e.getMessage());
-        }
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.Date;
  */
 public class DtoProductSet implements IsSerializable {
 
+    private String geoInventory;
     private String productType;
     private String name;
     private String path;
@@ -28,7 +29,7 @@ public class DtoProductSet implements IsSerializable {
     }
 
     public DtoProductSet(String productType, String name, String path, Date minDate, Date maxDate, String regionName,
-                         String regionWKT, String[] bandNames) {
+                         String regionWKT, String[] bandNames, String geoInventory) {
         if (name == null) {
             throw new NullPointerException("name");
         }
@@ -46,6 +47,7 @@ public class DtoProductSet implements IsSerializable {
         this.regionName = regionName;
         this.regionWKT = regionWKT;
         this.bandNames = bandNames;
+        this.geoInventory = geoInventory;
     }
 
     public String getProductType() {
@@ -78,6 +80,10 @@ public class DtoProductSet implements IsSerializable {
 
     public String[] getBandNames() {
         return bandNames;
+    }
+
+    public String getGeoInventory() {
+        return geoInventory;
     }
 
     @Override
@@ -124,6 +130,7 @@ public class DtoProductSet implements IsSerializable {
         result = 31 * result + (minDate != null ? minDate.hashCode() : 0);
         result = 31 * result + (maxDate != null ? maxDate.hashCode() : 0);
         result = 31 * result + (regionName.hashCode());
+        result = 31 * result + (regionWKT != null ? regionWKT.hashCode() : 0);
         result = 31 * result + (regionWKT != null ? regionWKT.hashCode() : 0);
         return result;
     }

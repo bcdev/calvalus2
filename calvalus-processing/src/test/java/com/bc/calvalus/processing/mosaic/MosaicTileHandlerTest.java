@@ -33,7 +33,7 @@ public class MosaicTileHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-        mosaicGrid = new MosaicGrid(3, 9, 2);
+        mosaicGrid = new MosaicGrid(3, 9, 2, true, 8, 0, null);
         tileHandler = new DummyMosaicTileHandler(mosaicGrid);
     }
 
@@ -116,7 +116,7 @@ public class MosaicTileHandlerTest {
 
     @Test
     public void testProductWriting_AllTilesPresent_MacroTile_0_0() throws Exception {
-        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2, true, 8, 0, null));
         assertNull(tileHandler.createProduct);
         assertEquals(0, tileHandler.closeProduct);
         assertEquals(0, tileHandler.nanTiles.size());
@@ -149,7 +149,7 @@ public class MosaicTileHandlerTest {
 
     @Test
     public void testProductWriting_SomeTilesPresent_2_MacroTiles() throws Exception {
-        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2, true, 8, 0, null));
         assertNull(tileHandler.createProduct);
         assertEquals(0, tileHandler.closeProduct);
         assertEquals(0, tileHandler.nanTiles.size());
@@ -186,7 +186,7 @@ public class MosaicTileHandlerTest {
 
     @Test
     public void testProductWriting_NoTilesPresent_MacroTile_0_0() throws Exception {
-        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2, true, 8, 0, null));
         assertNull(tileHandler.createProduct);
         assertEquals(0, tileHandler.closeProduct);
         assertEquals(0, tileHandler.nanTiles.size());
@@ -202,7 +202,7 @@ public class MosaicTileHandlerTest {
 
     @Test
     public void testProductWriting_AllTilesPresent_MacroTile_1_2() throws Exception {
-        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2));
+        tileHandler = new DummyMosaicTileHandler(new MosaicGrid(3, 9, 2, true, 8, 0, null));
         assertNull(tileHandler.createProduct);
         assertEquals(0, tileHandler.closeProduct);
         assertEquals(0, tileHandler.nanTiles.size());

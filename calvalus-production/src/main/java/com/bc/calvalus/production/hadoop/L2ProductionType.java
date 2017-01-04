@@ -64,9 +64,10 @@ public class L2ProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new L2Staging(production,
-                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                             getStagingService().getStagingDir());
+        throw new UnsupportedOperationException("Staging disabled for L2 use L2Plus instead.");
+//        return new L2Staging(production,
+//                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+//                             getStagingService().getStagingDir());
     }
 
     L2WorkflowItem createWorkflowItem(String productionId,
@@ -84,13 +85,7 @@ public class L2ProductionType extends HadoopProductionType {
         processorProductionRequest.configureProcessor(l2JobConfig);
 
         Geometry geometry = productionRequest.getRegionGeometry(null);
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        } else if (productionRequest.getParameters().containsKey("inputTable")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-        } else {
-            throw new ProductionException("missing request parameter inputPath or inputTable");
-        }
+        setInputLocationParameters(productionRequest, l2JobConfig);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
@@ -101,7 +96,7 @@ public class L2ProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String regionWKT = geometry != null ? geometry.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        String pathPattern = outputDir + "/." + getPathPatternForProcessingResult(processorDesc);
+        String pathPattern = outputDir + "/" + getPathPatternForProcessingResult(processorDesc);
         String[] bandNames = getResultingBandNames(processorDesc);
         String resultingProductionType = getResultingProductionType(processorDesc);
         ProductSet productSet = new ProductSet(resultingProductionType,
@@ -138,22 +133,22 @@ public class L2ProductionType extends HadoopProductionType {
     }
 
     static String getPathPatternForProcessingResult(ProcessorDescriptor processorDescriptor) {
-        String DEFAULT = "[^_\\.].*${yyyy}${MM}${dd}.*|[^_\\.].*${yyyy}${DDD}.*";
+        String datePattern = "[^_\\.].*(?:${yyyy}${MM}${dd}|${yyyy}${DDD}).*";
         if (processorDescriptor == null) {
-            return DEFAULT;
+            return datePattern + "\\.seq$";
         }
         ProcessorDescriptor.FormattingType formatting = processorDescriptor.getFormatting();
         if (formatting == ProcessorDescriptor.FormattingType.IMPLICIT) {
             // MEGS, l2gen, polymer, fmask (regex from processor, if given)
             String outputRegex = processorDescriptor.getOutputRegex();
             if (outputRegex.isEmpty()) {
-                return DEFAULT;
+                return datePattern;
             } else {
                 return outputRegex;
             }
         } else {
             // BEAM processor
-            return "[^_\\.].*${yyyy}${MM}${dd}.*\\.seq$|[^_\\.].*${yyyy}${DDD}.*\\.seq$";
+            return datePattern + "\\.seq$";
         }
     }
 

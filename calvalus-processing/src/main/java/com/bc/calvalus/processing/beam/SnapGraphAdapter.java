@@ -74,13 +74,23 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 Path sourcePath = new Path(headerSource.getLocation());
 
                 File inputFile = getInputFile();
+                String inputFormat = null;
+                if (headerSource.getDescription() != null && headerSource.getDescription().startsWith("format:")) {
+                    inputFormat = headerSource.getDescription().substring("format:".length());
+                }
                 Product sourceProduct;
                 if (sourcePath.equals(inputPath) && inputFile != null) {
                     // if inputFile is set and path is the inputPath us the (local)file instead
                     System.out.println("sourcePath equals inputPath, inputFile set, use it=" + inputFile);
-                    sourceProduct = ProductIO.readProduct(inputFile);
+                    sourceProduct = ProductIO.readProduct(inputFile, inputFormat);
                 } else {
-                    sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), null);
+                    Path qualifiedSourcePath = sourcePath.getFileSystem(getConfiguration()).makeQualified(sourcePath);
+                    Path qualifiedInputPath = inputPath.getFileSystem(getConfiguration()).makeQualified(inputPath);
+                    if (qualifiedInputPath.equals(qualifiedSourcePath)) {
+                        sourceProduct = getInputProduct();
+                    } else {
+                        sourceProduct = CalvalusProductIO.readProduct(sourcePath, getConfiguration(), inputFormat);
+                    }
                 }
                 sourceProducts.setSourceProduct(sourceId, sourceProduct);
             }

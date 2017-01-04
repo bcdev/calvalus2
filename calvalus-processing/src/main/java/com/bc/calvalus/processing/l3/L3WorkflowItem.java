@@ -20,14 +20,14 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
-import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
-import com.bc.calvalus.processing.hadoop.TableInputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
+
+import static com.jidesoft.swing.AbstractLayoutPersistence.i;
 
 /**
  * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
@@ -78,14 +78,7 @@ public class L3WorkflowItem extends HadoopWorkflowItem {
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileHeight", "64");
         jobConfig.setIfUnset("calvalus.system.beam.reader.tileWidth", "*");
 
-        if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
-            job.setInputFormatClass(PatternBasedInputFormat.class);
-        } else if (job.getConfiguration().get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
-            job.setInputFormatClass(TableInputFormat.class);
-        } else {
-            throw new IOException("missing job parameter " + JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS +
-                                          " or " + JobConfigNames.CALVALUS_INPUT_TABLE);
-        }
+        job.setInputFormatClass(getInputFormatClass(jobConfig));
         job.setNumReduceTasks(jobConfig.getInt(JobConfigNames.CALVALUS_L3_REDUCERS, 8));
         job.setMapperClass(L3Mapper.class);
         job.setMapOutputKeyClass(LongWritable.class);

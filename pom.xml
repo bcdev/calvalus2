@@ -13,8 +13,8 @@
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.9-SNAPSHOT</calvalus.version>
-        <snap.version>4.0.1</snap.version>
-        <ceres.version>4.0.1</ceres.version>
+        <snap.version>4.0.1-SNAPSHOT</snap.version>
+        <ceres.version>4.0.1-SNAPSHOT</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -28,19 +28,14 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-wps-rest</module>
+        <module>calvalus-wps-impl</module>
     </modules>
 
     <repositories>
         <repository>
-            <id>bedatadriven</id>
-            <name>bedatadriven public repo</name>
-            <url>https://nexus.bedatadriven.com/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>snap-repo-public</id>
-            <name>Public Maven Repository for SNAP</name>
-            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <id>bc-mvn-repo-http</id>
+            <name>Public Maven Repository at Brockmann Consult</name>
+            <url>http://www.brockmann-consult.de/mvn/os</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -54,6 +49,19 @@
             <id>bc-mvn-repo-closed</id>
             <name>Private Maven Repository at Brockmann Consult</name>
             <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
             <releases>
                 <enabled>true</enabled>
                 <checksumPolicy>warn</checksumPolicy>
@@ -263,7 +271,7 @@
             <dependency>
                 <groupId>org.esa.s3tbx</groupId>
                 <artifactId>s3tbx-avhrr-reader</artifactId>
-                <version>${snap.version}-SNAPSHOT</version>
+                <version>${snap.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.esa.snap</groupId>
@@ -441,18 +449,6 @@
                 <version>2.6.0</version>
             </dependency>
 -->
-
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>bc-guava</artifactId>
-                <version>17.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.renjin</groupId>
-                <artifactId>renjin-script-engine</artifactId>
-                <version>0.9.0-BC</version>
-            </dependency>
-
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client</artifactId>
@@ -562,6 +558,14 @@
                 <groupId>jfree</groupId>
                 <artifactId>jcommon</artifactId>
                 <version>1.0.16</version>
+            </dependency>
+
+            <!--  BC Geo - Inventory -->
+
+            <dependency>
+                <groupId>com.bc</groupId>
+                <artifactId>geo-inventory</artifactId>
+                <version>0.1-SNAPSHOT</version>
             </dependency>
 
         </dependencies>

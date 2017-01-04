@@ -73,7 +73,7 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         final String sensor = sensorConfig.getSensorName();
         final String platform = sensorConfig.getPlatformName();
         final String spatialResolution = sensorConfig.getGroundResolution();
-        final String temporalResolution = "P7D";  // TODO
+        final String temporalResolution = String.format("P%dD", sensorConfig.getPeriod());
         final String startTime = COMPACT_DATE_FORMAT.format(minDate);
         final String version = configuration.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final float[] wavelength = sensorConfig.getWavelengths();

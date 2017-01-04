@@ -168,7 +168,11 @@ public class ProductSetFilterForm extends Composite {
         } else if (productSet != null) {
             Date min = productSet.getMinDate();
             Date max = productSet.getMaxDate();
-            numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
+            if (min != null && max != null) {
+                numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
+            } else {
+                numDays.setValue("0");
+            }
         }
     }
 
@@ -191,6 +195,9 @@ public class ProductSetFilterForm extends Composite {
                         }
                     }
                 }
+            }
+            if (productSet.getMinDate() == null || productSet.getMaxDate() == null) {
+                temporalFilterOff.setValue(true, true);
             }
         }
     }
@@ -312,8 +319,14 @@ public class ProductSetFilterForm extends Composite {
         Map<String, String> parameters = new HashMap<String, String>();
 
         if (temporalFilterOff.getValue() && productSet != null) {
-            parameters.put("minDate", DATE_FORMAT.format(productSet.getMinDate()));
-            parameters.put("maxDate", DATE_FORMAT.format(productSet.getMaxDate()));
+            Date minDate = productSet.getMinDate();
+            if (minDate != null) {
+                parameters.put("minDate", DATE_FORMAT.format(minDate));
+            }
+            Date maxDate = productSet.getMaxDate();
+            if (maxDate != null) {
+                parameters.put("maxDate", DATE_FORMAT.format(maxDate));
+            }
         } else if (temporalFilterByDateRange.getValue()) {
             parameters.put("minDate", minDate.getFormat().format(minDate, minDate.getValue()));
             parameters.put("maxDate", maxDate.getFormat().format(maxDate, maxDate.getValue()));

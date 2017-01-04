@@ -1,6 +1,5 @@
 package com.bc.calvalus.production.hadoop;
 
-import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -12,10 +11,7 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.hadoop.conf.Configuration;
-
-import java.util.List;
 
 /**
  * A production type used for formatting Level-3 products for
@@ -82,6 +78,6 @@ public class L3MultiRegionFormatProductionType extends HadoopProductionType {
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new NotImplementedException("Staging currently not implemented for L3MultiRegion.");
+        throw new UnsupportedOperationException("Staging currently not implemented for L3MultiRegion.");
     }
 }

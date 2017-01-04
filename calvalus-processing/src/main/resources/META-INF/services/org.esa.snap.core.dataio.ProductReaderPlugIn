@@ -1,3 +1,6 @@
 com.bc.calvalus.processing.beam.StreamingProductPlugin
 com.bc.calvalus.processing.beam.ModisL1WithGeoReaderPlugin
 com.bc.calvalus.processing.beam.Sentinel2CalvalusReaderPlugin
+com.bc.calvalus.processing.beam.Sentinel3CalvalusReaderPlugin
+com.bc.calvalus.processing.beam.LandsatCalvalusReaderPlugin
+com.bc.calvalus.processing.beam.DimapCalvalusReaderPlugin

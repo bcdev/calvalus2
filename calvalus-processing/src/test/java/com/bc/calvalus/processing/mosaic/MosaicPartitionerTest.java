@@ -26,7 +26,9 @@ public class MosaicPartitionerTest {
     @Test
     public void testOnlyRows() {
         MosaicPartitioner partitioner = new MosaicPartitioner();
-        partitioner.setConf(new Configuration());
+        final Configuration conf = new Configuration();
+        conf.setInt("calvalus.mosaic.maxReducers", 4);
+        partitioner.setConf(conf);
         assertEquals(0, getPartition(partitioner, 0, 0, 4));
         assertEquals(1, getPartition(partitioner, 0, 1, 4));
         assertEquals(2, getPartition(partitioner, 0, 2, 4));
@@ -48,9 +50,10 @@ public class MosaicPartitionerTest {
 
     @Test
     public void testByMacroTile() {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true, 3*6, 6, null);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
+        conf.setInt("calvalus.mosaic.maxReducers", 3 * 6);
         conf.setInt("calvalus.mosaic.numXPartitions", 6);
 
         MosaicPartitioner partitioner = new MosaicPartitioner();
@@ -74,9 +77,10 @@ public class MosaicPartitionerTest {
 
     @Test
     public void testTwoPerRow() {
-        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20);
+        MosaicGrid mosaicGrid = new MosaicGrid(6, 18, 20, true, 8, 0, null);
         Configuration conf = new Configuration();
         mosaicGrid.saveToConfiguration(conf);
+        conf.setInt("calvalus.mosaic.maxReducers", 3*2);
         conf.setInt("calvalus.mosaic.numXPartitions", 2);
 
         MosaicPartitioner partitioner = new MosaicPartitioner();

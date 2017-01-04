@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+
+input_path="$1"
+output_path="$2"
+
+marker_file=_$(basename ${input_path})
+
+marker_path="${output_path}/${marker_file}"
+if hadoop fs -test -f ${marker_path}; then
+    echo "marker exists: ${marker_path}"
+    if hadoop fs -test -z ${marker_path}; then
+        echo "marker is empty: ${marker_path}"
+    else
+        echo "marker is not empty: ${marker_path}"
+        # marker has content
+        marker_content=$(hadoop fs -cat ${marker_path})
+        do_split=""
+        for granule_file in ${marker_content}; do
+            granule_path="${output_path}/${granule_file}"
+            if hadoop fs -test -f ${granule_path}; then
+                echo "granule exists: ${granule_path}"
+                if hadoop fs -test -z ${granule_path}; then
+                    echo "granule is empty: ${granule_path}"
+                    do_split="yes"
+                else
+                    echo "granule is not empty: ${granule_path}"
+                fi
+            else
+                echo "granule missing: ${granule_path}"
+                do_split="yes"
+            fi
+        done
+        if [[ ${do_split} == "yes" ]]; then
+            echo "granule generation needed"
+        else
+            echo CALVALUS_SKIP_PROCESSING yes
+        fi
+    fi
+else
+    echo "marker missing: ${marker_path}"
+fi
+
+
+

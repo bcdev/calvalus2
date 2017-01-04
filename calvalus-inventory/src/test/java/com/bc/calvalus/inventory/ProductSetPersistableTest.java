@@ -58,6 +58,16 @@ public class ProductSetPersistableTest {
         assertEquals("polygon((-7 54, -7 38.5, 5.5 38.5, 5.5 54, -7 54))", productSet.getRegionWKT());
         assertArrayEquals(new String[]{"a", "b", "c"}, productSet.getBandNames());
 
+        productSet = ProductSetPersistable.convertFromCSV("pt;pn;pp;null;null");
+        assertNotNull(productSet);
+        assertEquals("pt", productSet.getProductType());
+        assertEquals("pn", productSet.getName());
+        assertEquals("pp", productSet.getPath());
+        assertNull(productSet.getMinDate());
+        assertNull(productSet.getMaxDate());
+        assertNull(productSet.getRegionName());
+        assertNull(productSet.getRegionWKT());
+        assertArrayEquals(new String[0], productSet.getBandNames());
 
         productSet = ProductSetPersistable.convertFromCSV("pt;pn;pp;null;null;null;null");
         assertNotNull(productSet);
@@ -69,6 +79,9 @@ public class ProductSetPersistableTest {
         assertNull(productSet.getRegionName());
         assertNull(productSet.getRegionWKT());
         assertArrayEquals(new String[0], productSet.getBandNames());
+
+        productSet = ProductSetPersistable.convertFromCSV("pt;pn;pp;null");
+        assertNull(productSet);
     }
 
     @Test
@@ -76,7 +89,7 @@ public class ProductSetPersistableTest {
         ProductSet ps0 = new ProductSet("pType", "pName", "pPath");
         String csv = ProductSetPersistable.convertToCSV(ps0);
         assertNotNull(csv);
-        assertEquals("pType;pName;pPath;null;null;null;null;", csv);
+        assertEquals("pType;pName;pPath;null;null;null;null;;null", csv);
 
         ProductSet ps1 = ProductSetPersistable.convertFromCSV(csv);
         assertNotNull(ps1);

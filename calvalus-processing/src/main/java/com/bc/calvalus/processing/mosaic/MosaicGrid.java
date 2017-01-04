@@ -16,6 +16,8 @@
 
 package com.bc.calvalus.processing.mosaic;
 
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -45,6 +47,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Logger;
 
 /**
  * Defines the Grid on which the mosaic-ing is happening.
@@ -53,40 +56,92 @@ import java.util.Set;
  */
 public class MosaicGrid {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+
     private final int gridWidth;
     private final int gridHeight;
     private final int tileSize;
+    private final boolean withIntersectionCheck;
     private final double pixelSize;
     private final int numTileX;
     private final int macroTileSize;
     private final int numTileY;
     private GeometryFactory geometryFactory;
 
+    Rectangle macroTileRegion;
+    int macroTileStepY;
+    int macroTileStepX;
+    int macroTileCountX;
+
     public static MosaicGrid create(Configuration conf) {
         int macroTileSize = conf.getInt("calvalus.mosaic.macroTileSize", 5);
         int numTileY = conf.getInt("calvalus.mosaic.numTileY", 180);
-        int tileSize = conf.getInt("calvalus.mosaic.tileSize", 370);
-        return new MosaicGrid(macroTileSize, numTileY, tileSize);
+        int tileSize = conf.getInt("calvalus.mosaic.tileSize", 360);  // for a 300m grid
+        boolean withIntersectionCheck = conf.getBoolean("calvalus.mosaic.withIntersectionCheck", true);
+        int maxReducers = conf.getInt("calvalus.mosaic.maxReducers", 16);
+        int maxMacroTileCountX = conf.getInt("calvalus.mosaic.numXPartitions", 0);
+        String regionWkt = conf.get("calvalus.mosaic.regionGeometry");
+        return new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck,maxReducers, maxMacroTileCountX, regionWkt);
     }
 
     MosaicGrid() {
-        this(5, 180, 370);
+        this(5, 180, 370, true, 16, 1, null);
     }
 
-    MosaicGrid(int macroTileSize, int numTileY, int tileSize) {
+    MosaicGrid(int macroTileSize, int numTileY, int tileSize, boolean withIntersectionCheck, int maxReducers, int maxMacroTileCountX, String regionWkt) {
         this.macroTileSize = macroTileSize;
         this.numTileY = numTileY;
         this.numTileX = numTileY * 2;
         this.tileSize = tileSize;
+        this.withIntersectionCheck = withIntersectionCheck;
         this.gridWidth = numTileX * tileSize;
         this.gridHeight = numTileY * tileSize;
         this.pixelSize = 180.0 / gridHeight;
+        if (maxMacroTileCountX == 0) {
+            // old behaviour
+            this.macroTileRegion = new Rectangle(0, 0, numTileX/macroTileSize, numTileY/macroTileSize);
+            this.macroTileStepY = 1;
+            this.macroTileStepX = numTileX;
+            this.macroTileCountX = 1;
+        } else {
+            if (regionWkt != null) {
+                Geometry regionGeometry = GeometryUtils.createGeometry(regionWkt);
+                Rectangle geometryBounds = computeBounds(regionGeometry);
+                this.macroTileRegion = macroTileRectangleOf(geometryBounds);
+            } else {
+                this.macroTileRegion = new Rectangle(0, 0, numTileX / macroTileSize, numTileY / macroTileSize);
+            }
+            int numMacroTilesY = (int) macroTileRegion.getHeight();
+            int numMacroTilesX = (int) macroTileRegion.getWidth();
+            if (numMacroTilesY * numMacroTilesX <= maxReducers && maxMacroTileCountX > 1) {
+                macroTileStepY = 1;
+                macroTileStepX = 1;
+                macroTileCountX = numMacroTilesX;
+                System.out.println("case full, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else if (numMacroTilesY * 2 <= maxReducers && maxMacroTileCountX > 1) {
+                macroTileStepY = 1;
+                macroTileStepX = (numMacroTilesX + (maxReducers / numMacroTilesY) - 1) / (maxReducers / numMacroTilesY);
+                macroTileCountX = (numMacroTilesX + macroTileStepX - 1) / macroTileStepX;
+                System.out.println("case partx, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else if (numMacroTilesY <= maxReducers) {
+                macroTileStepY = 1;
+                macroTileStepX = numMacroTilesX;
+                macroTileCountX = 1;
+                System.out.println("case fully, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else {
+                macroTileStepY = (numMacroTilesY + maxReducers - 1) / maxReducers;
+                macroTileStepX = numMacroTilesX;
+                macroTileCountX = 1;
+                System.out.println("case party, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            }
+        }
     }
 
     public void saveToConfiguration(Configuration conf) {
         conf.setInt("calvalus.mosaic.macroTileSize", macroTileSize);
         conf.setInt("calvalus.mosaic.numTileY", numTileY);
         conf.setInt("calvalus.mosaic.tileSize", tileSize);
+        conf.setBoolean("calvalus.mosaic.withIntersectionCheck", withIntersectionCheck);
     }
 
     private GeometryFactory getGeometryFactory() {
@@ -138,13 +193,32 @@ public class MosaicGrid {
                 gymin = Math.min(gymin, coordinate.y);
                 gymax = Math.max(gymax, coordinate.y);
             }
+            // extend by 1/2 pixelSize in all directions
+            // to circumscribe the complete extend of the source
+            // (sourcePixelSize would be even more accurate)
+            gxmin -= pixelSize / 2;
+            gxmax += pixelSize / 2;
+            gymin -= pixelSize / 2;
+            gymax += pixelSize / 2;
+            if (gxmin < -180.0 || gxmax > 180.0) {
+                gxmin = -180.0;
+                gxmax = 180.0;
+            }
+            if (gymin < -90.0) {
+                gymin = -90.0;
+            }
+            if (gymax > 90.0) {
+                gymax = 90.0;
+            }
+
             final int x = (int) Math.floor((180.0 + gxmin) / pixelSize);
             final int y = (int) Math.floor((90.0 - gymax) / pixelSize);
-            final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize);
-            final int height = (int) Math.ceil((gymax - gymin) / pixelSize);
+            final int width = (int) Math.ceil((gxmax - gxmin) / pixelSize + 1);
+            final int height = (int) Math.ceil((gymax - gymin) / pixelSize + 1);
             final Rectangle unclippedOutputRegion = new Rectangle(x, y, width, height);
             region = unclippedOutputRegion.intersection(region);
         }
+        LOG.info("source product bounds: " + region);
         return region;
     }
 
@@ -291,11 +365,19 @@ public class MosaicGrid {
         final int height = gridRect.height / tileSize;
         List<Point> points = new ArrayList<>(width * height);
 
-        for (int y = yStart; y < yStart + height; y++) {
-            for (int x = xStart; x < xStart + width; x++) {
-                Geometry tileGeometry = getTileGeometry(x, y);
-                Geometry intersection = geometry.intersection(tileGeometry);
-                if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+        if (withIntersectionCheck) {
+            for (int y = yStart; y < yStart + height; y++) {
+                for (int x = xStart; x < xStart + width; x++) {
+                    Geometry tileGeometry = getTileGeometry(x, y);
+                    Geometry intersection = geometry.intersection(tileGeometry);
+                    if (!intersection.isEmpty() && intersection.getDimension() == 2) {
+                        points.add(new Point(x, y));
+                    }
+                }
+            }
+        } else {
+            for (int y = yStart; y < yStart + height; y++) {
+                for (int x = xStart; x < xStart + width; x++) {
                     points.add(new Point(x, y));
                 }
             }
@@ -341,5 +423,22 @@ public class MosaicGrid {
             throw new IllegalStateException(e);
         }
         return geoCoding;
+    }
+
+    private Rectangle macroTileRectangleOf(Rectangle rectangle) {
+        int minX = rectangle.x / tileSize / macroTileSize;
+        int maxX = (rectangle.x + rectangle.width + tileSize * macroTileSize - 1) / tileSize / macroTileSize;
+        int minY = rectangle.y / tileSize / macroTileSize;
+        int maxY = (rectangle.y + rectangle.height + tileSize * macroTileSize - 1) / tileSize / macroTileSize;
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    public int getPartition(int macroTileX, int macroTileY) {
+        return ((macroTileY - macroTileRegion.y) / macroTileStepY) * macroTileCountX + (macroTileX - macroTileRegion.x) / macroTileStepX;
+    }
+
+    public int getNumReducers() {
+        int numMacroTilesY = (int) macroTileRegion.getHeight();
+        return ((numMacroTilesY + macroTileStepY - 1) / macroTileStepY) * macroTileCountX;
     }
 }

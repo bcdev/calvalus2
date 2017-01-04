@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+
+<test testAttr="$test">
+    <contents>
+        <key>$key1</key>
+        <key>$key2</key>
+        <key>$key3</key>
+    </contents>
+</test>

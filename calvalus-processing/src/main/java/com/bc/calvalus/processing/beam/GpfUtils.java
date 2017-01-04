@@ -49,7 +49,6 @@ public class GpfUtils {
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
-        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(configuration.getLong(JobConfigNames.CALVALUS_SNAP_TILE_CACHE_SIZE, DEFAULT_TILE_CACHE_SIZE));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
     }
 

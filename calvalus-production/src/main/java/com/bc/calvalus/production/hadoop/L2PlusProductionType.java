@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.InventoryService;
@@ -39,6 +40,7 @@ import org.esa.snap.core.util.StringUtils;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * A production type used for generating one or more Level-2 products.
@@ -47,6 +49,8 @@ import java.util.List;
  * @author Norman
  */
 public class L2PlusProductionType extends HadoopProductionType {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     public static class Spi extends HadoopProductionType.Spi {
 
@@ -82,7 +86,11 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                                      productionRequest, processorProductionRequest);
             globalOutputDir = processingItem.getOutputDir();
             ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-            formattingInputDir = globalOutputDir + "/." + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
+            formattingInputDir = globalOutputDir + "/" + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
+            LOG.info("choosing pattern " + formattingInputDir + " for processor " + processorProductionRequest.getProcessorName() + " descriptor " + processorDesc);
+            if (processorDesc == null) {
+                LOG.info("looking for bundle " + processorProductionRequest.getProcessorBundle() + " location " + processorProductionRequest.getProcessorBundleLocation());
+            }
             l2WorkflowItem.add(processingItem);
         }
 
@@ -219,13 +227,7 @@ public class L2PlusProductionType extends HadoopProductionType {
         setRequestParameters(productionRequest, l2JobConfig);
         processorProductionRequest.configureProcessor(l2JobConfig);
 
-        if (productionRequest.getParameters().containsKey("inputPath")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        } else if (productionRequest.getParameters().containsKey("inputTable")) {
-            l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-        } else {
-            throw new ProductionException("missing request parameter inputPath or inputTable");
-        }
+        setInputLocationParameters(productionRequest, l2JobConfig);
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
         l2JobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
@@ -237,7 +239,7 @@ public class L2PlusProductionType extends HadoopProductionType {
         Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
         String regionWKT = regionGeom != null ? regionGeom.toString() : null;
         ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
-        String pathPattern = outputDir + "/." + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
+        String pathPattern = outputDir + "/" + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
         ProductSet productSet = new ProductSet(L2ProductionType.getResultingProductionType(processorDesc),
                                                productionName, pathPattern, startDate, stopDate,
                                                productionRequest.getRegionName(), regionWKT,

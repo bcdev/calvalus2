@@ -1,0 +1,95 @@
+#!/bin/bash
+
+# switch on job control
+set -e
+set -m
+
+input_file="${1}"
+output_path="${outputPath}"
+
+marker_file=_$(basename ${input_file})
+
+. /etc/profile
+
+# generate marker file
+jar=calvalus-inventory*jar
+class=com.bc.calvalus.sentinel2.GranuleMarkerFileCreator
+echo java -Xmx265M -cp ${jar} ${class} ${input_file} > ${marker_file}
+java -Xmx265M -cp ${jar} ${class} ${input_file} > ${marker_file}
+
+counter=0
+
+num_granules=$(wc -l ${marker_file})
+echo "num_granules: ${num_granules}"
+
+marker_content=$(cat ${marker_file})
+do_split=""
+for granule_file in ${marker_content}; do
+    granule_path="${output_path}/${granule_file}"
+    if hadoop fs -test -f ${granule_path}; then
+        echo "granule exists: ${granule_path}"
+        if hadoop fs -test -z ${granule_path}; then
+            echo "granule is empty: ${granule_path}"
+            do_split="yes"
+        else
+            echo "granule is not empty: ${granule_path}"
+        fi
+    else
+        echo "granule missing: ${granule_path}"
+        do_split="yes"
+    fi
+done
+if [[ ${do_split} == "yes" ]]; then
+    echo "granule generation needed"
+else
+    echo "granule generation not needed"
+    echo CALVALUS_OUTPUT_PRODUCT ${marker_file}
+    exit 0
+fi
+
+function handle_stdout() {
+  line=$1
+  echo $line
+  if [[ ${line} =~ writing\ to\:\ (.+) ]]; then
+    outputfilename=${BASH_REMATCH[1]}
+    echo CALVALUS_OUTPUT_PRODUCT $(basename ${outputfilename})
+
+    if [[ ${num_granules} != 0 ]]; then
+      counter=$((counter+1))
+      progress=$(echo "scale=3; ${counter} / ${num_granules}" | bc)
+      printf "CALVALUS_PROGRESS %.3f\n" ${progress}
+    fi
+  fi
+}
+
+jar=calvalus-inventory*jar
+class=com.bc.calvalus.sentinel2.GranuleSplitter
+echo java -Xmx265M -cp ${jar} ${class} ${input_file} . | while read x ; do handle_stdout "$x" ; done
+java -Xmx265M -cp ${jar} ${class} ${input_file} . | while read x ; do handle_stdout "$x" ; done
+
+if [[ ${PIPESTATUS[0]} != 0 ]]; then
+  echo "error calling GranuleSplitter"
+  exit ${PIPESTATUS[0]}
+fi
+
+echo CALVALUS_OUTPUT_PRODUCT ${marker_file}
+
+for granule_file in ${marker_content}; do
+    granule_path="${output_path}/${granule_file}"
+    if hadoop fs -test -f ${granule_path}; then
+        echo "granule exists: ${granule_path}"
+        if hadoop fs -test -z ${granule_path}; then
+            echo "granule is empty: ${granule_path}"
+            echo CALVALUS_OUTPUT_PRODUCT ${granule_file}
+        else
+            echo "granule is not empty: ${granule_path}"
+        fi
+    else
+        echo "granule missing: ${granule_path}"
+        echo CALVALUS_OUTPUT_PRODUCT ${granule_file}
+    fi
+done
+
+
+
+

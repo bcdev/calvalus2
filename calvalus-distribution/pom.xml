@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.9-SNAPSHOT</version>
+        <version>2.10-SNAPSHOT</version>
     </parent>
 
     <artifactId>calvalus-distribution</artifactId>
@@ -43,13 +43,14 @@
         <!--  Ceres -->
          <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
          commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->
+        <!--
          <dependency>
              <groupId>org.esa.snap</groupId>
              <artifactId>ceres-metadata</artifactId>
          </dependency>
-
+            -->
          <!--  SNAP -->
-
+        <!--
          <dependency>
              <groupId>org.esa.snap</groupId>
              <artifactId>snap-core</artifactId>
@@ -146,7 +147,7 @@
             <groupId>org.geotools</groupId>
             <artifactId>gt-render</artifactId>
         </dependency>
-
+        -->
 
         <!--  JFreeChart -->
 
@@ -159,6 +160,12 @@
             <artifactId>jcommon</artifactId>
         </dependency>
 
+        <!--  BC Geo - Inventory -->
+
+        <dependency>
+            <groupId>com.bc</groupId>
+            <artifactId>geo-inventory</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
@@ -167,6 +174,7 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.6</version>
                 <executions>
+                    <!--
                     <execution>
                         <id>snap-bundle</id>
                         <configuration>
@@ -182,6 +190,7 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    -->
                     <execution>
                         <id>calvalus-bundle</id>
                         <configuration>

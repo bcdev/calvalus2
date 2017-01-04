@@ -59,7 +59,7 @@ public abstract class HadoopProductionType implements ProductionType {
     }
 
     protected static String createProductionName(String prefix, ProductionRequest productionRequest) throws
-                                                                                                     ProductionException {
+            ProductionException {
         StringBuilder sb = new StringBuilder(prefix);
         String processorName = productionRequest.getString(ProcessorProductionRequest.PROCESSOR_NAME, null);
         if (processorName != null) {
@@ -114,6 +114,19 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
+    protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration conf) throws ProductionException {
+        Map<String, String> productionRequestParameters = productionRequest.getParameters();
+        if (productionRequestParameters.containsKey("inputTable")) {
+            conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
+        } else if (productionRequestParameters.containsKey("geoInventory")) {
+            conf.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
+        } else if (productionRequestParameters.containsKey("inputPath")) {
+            conf.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+        } else {
+            throw new ProductionException("Missing request parameter: neither 'inputPath', 'inputTable' nor 'geoInventory' is given.");
+        }
+    }
+
     protected abstract Staging createUnsubmittedStaging(Production production) throws IOException;
 
     protected final Configuration createJobConfig(ProductionRequest productionRequest) throws ProductionException {
@@ -149,7 +162,6 @@ public abstract class HadoopProductionType implements ProductionType {
      * @param productionRequest request
      * @param productionId      production ID
      * @param dirSuffix         suffix to make multiple outputs unique
-     *
      * @return the fully qualified output path
      */
     protected String getOutputPath(ProductionRequest productionRequest, String productionId, String dirSuffix) throws ProductionException {
@@ -158,7 +170,7 @@ public abstract class HadoopProductionType implements ProductionType {
         String outputPath = productionRequest.getString("outputPath", defaultDir);
         String outputDir = productionRequest.getString(JobConfigNames.CALVALUS_OUTPUT_DIR, outputPath);
         if (outputDir.endsWith("/")) {
-            outputDir = outputDir.substring(0, outputDir.length()-1);
+            outputDir = outputDir.substring(0, outputDir.length() - 1);
         }
         try {
             return getInventoryService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
@@ -172,7 +184,6 @@ public abstract class HadoopProductionType implements ProductionType {
      * after successfully completing a former job attempt.
      *
      * @param outputDir The output directory
-     *
      * @return true, if "_SUCCESS" exists
      */
     protected boolean successfullyCompleted(String outputDir) {

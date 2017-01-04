@@ -102,19 +102,18 @@ public class L3ProductionType extends HadoopProductionType {
             setRequestParameters(productionRequest, jobConfig);
             processorProductionRequest.configureProcessor(jobConfig);
 
-            if (productionRequest.getParameters().containsKey("inputPath")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-            } else if (productionRequest.getParameters().containsKey("inputTable")) {
-                jobConfig.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
-            } else {
-                throw new ProductionException("missing request parameter inputPath or inputTable");
-            }
+            setInputLocationParameters(productionRequest, jobConfig);
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, dateRange.toString());
 
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, singleRangeOutputDir);
 
-            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS, l3ConfigXml);
+            // we have to replace here again since it is the default processor parameters that contains the bundle info
+            jobConfig.set(JobConfigNames.CALVALUS_L3_PARAMETERS,
+                          (jobConfig.get("calvalus.snap.bundle", "").contains("beam"))
+                                  ? l3ConfigXml.replace("<planetaryGrid>org.esa.snap.binning.support.",
+                                                        "<planetaryGrid>org.esa.beam.binning.support.")
+                                  : l3ConfigXml);
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                     regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
@@ -350,8 +349,8 @@ public class L3ProductionType extends HadoopProductionType {
         // todo - detect usable PlanetaryGrid-implementations, and use configured value
         CalvalusLogger.getLogger().info("Validating grid....");
         if (productionRequest.getParameter("processorBundles", false) != null && productionRequest.getString("processorBundles").contains("beam")) {
-            l3ConfigXml = l3ConfigXml.replace("<planetaryGrid>org.esa.snap.binning.support.SEAGrid</planetaryGrid>",
-                    "<planetaryGrid>org.esa.beam.binning.support.SEAGrid</planetaryGrid>");
+            l3ConfigXml = l3ConfigXml.replace("<planetaryGrid>org.esa.snap.binning.support.",
+                                              "<planetaryGrid>org.esa.beam.binning.support.");
             CalvalusLogger.getLogger().warning(String.format("Falling back to '%s'", "org.esa.beam.binning.support.SEAGrid"));
         }
 

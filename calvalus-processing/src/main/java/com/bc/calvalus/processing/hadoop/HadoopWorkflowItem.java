@@ -16,7 +16,11 @@
 
 package com.bc.calvalus.processing.hadoop;
 
-import com.bc.calvalus.commons.*;
+import com.bc.calvalus.commons.AbstractWorkflowItem;
+import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.commons.ProcessStatus;
+import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -25,6 +29,7 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.mapred.TaskCompletionEvent;
+import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
 
@@ -34,7 +39,9 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.*;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
 
 /**
  * A workflow item that corresponds to a single Hadoop job.
@@ -237,10 +244,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         Configuration configuration = job.getConfiguration();
         // Add Calvalus modules to classpath of Hadoop jobs
         final String calvalusBundle = configuration.get(JobConfigNames.CALVALUS_CALVALUS_BUNDLE, DEFAULT_CALVALUS_BUNDLE);
-        addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), userName, configuration);
+        processingService.addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, calvalusBundle), userName, configuration);
         // Add SNAP modules to classpath of Hadoop jobs
         final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
-        addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
+        processingService.addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
@@ -253,5 +260,19 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         JobClient jobClient = processingService.getJobClient(userName);
         RunningJob runningJob = jobClient.submitJob(jobConf);
         return runningJob.getID();
+    }
+
+    protected Class<? extends InputFormat> getInputFormatClass(Configuration conf) throws IOException {
+        if (conf.get(JobConfigNames.CALVALUS_INPUT_TABLE) != null) {
+            return TableInputFormat.class;
+        } else if (conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY) != null || conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS) != null) {
+            return PatternBasedInputFormat.class;
+        } else {
+            throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s nor %s had been set.",
+                                                JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
+                                                JobConfigNames.CALVALUS_INPUT_TABLE,
+                                                JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
+        }
+
     }
 }
