@@ -70,7 +70,7 @@ public class JDAggregator extends AbstractAggregator {
         // overwrite if JD > old currentValue
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
         boolean validJdSet = previousValue >= 0 && previousValue < 997;
-        boolean preferToPreviousValue = (!validJdSet || jd > previousValue) && jd < 997 && inTimeBounds;
+        boolean preferToPreviousValue = (!validJdSet || jd > previousValue) && jd < 997 && (inTimeBounds || jd == 0);
 
         if (previousValue == WATER) {
             // don't overwrite water: keep the old value

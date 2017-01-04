@@ -10,11 +10,9 @@ import static org.junit.Assert.assertEquals;
 
 public class JDAggregatorTest {
 
-    private JDAggregator aggregator;
-
     @Test
     public void testAggregate_1() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -25,6 +23,7 @@ public class JDAggregatorTest {
         aggregator.initSpatial(spatialCtx, spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0F, 0), spatialVector);
         aggregator.completeSpatial(spatialCtx, -1, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
@@ -37,7 +36,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_2() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -61,7 +60,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_3() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -86,7 +85,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_4() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -136,7 +135,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_waterIsPreserved() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -162,7 +161,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_onlyInvalidObs() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -186,7 +185,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_noObsAreOverwritten() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -210,7 +209,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_noObsAreOverwrittenWithZero() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -234,7 +233,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_everythingCloudy() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
@@ -258,7 +257,7 @@ public class JDAggregatorTest {
 
     @Test
     public void testAggregate_everythingCloudy2() throws Exception {
-        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{0, 30});
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
 
         SpatialBin spatialCtx = new SpatialBin();
         TemporalBin temporalCtx = new TemporalBin();
