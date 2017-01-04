@@ -40,16 +40,20 @@ public class UsageStatisticCsvConverter implements UsageStatisticConverter {
     private UsageStatistic parseSingleUsageStatistic(String[] singleRecord) {
         return new UsageStatistic(singleRecord[0],
                                   singleRecord[1],
-                                  Long.parseLong(singleRecord[2]),
+                                  singleRecord[2],
                                   Long.parseLong(singleRecord[3]),
-                                  singleRecord[4],
-                                  Long.parseLong(singleRecord[5]),
-                                  Long.parseLong(singleRecord[6]),
-                                  Long.parseLong(singleRecord[7]),
-                                  Long.parseLong(singleRecord[8]),
+                                  Long.parseLong(singleRecord[4]),
+                                  singleRecord[5],
+                                  singleRecord[6],
+                                  Integer.parseInt(singleRecord[7]),
+                                  Integer.parseInt(singleRecord[8]),
                                   Long.parseLong(singleRecord[9]),
                                   Long.parseLong(singleRecord[10]),
-                                  Long.parseLong(singleRecord[11])
+                                  Long.parseLong(singleRecord[11]),
+                                  Long.parseLong(singleRecord[12]),
+                                  Long.parseLong(singleRecord[13]),
+                                  Long.parseLong(singleRecord[14]),
+                                  Long.parseLong(singleRecord[15])
         );
     }
 }

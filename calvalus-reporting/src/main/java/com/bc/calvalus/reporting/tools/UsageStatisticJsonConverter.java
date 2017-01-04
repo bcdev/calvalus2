@@ -1,7 +1,7 @@
 package com.bc.calvalus.reporting.tools;
 
 import com.bc.calvalus.reporting.exceptions.ExtractionException;
-import com.bc.calvalus.reporting.io.JSONReader;
+import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.calvalus.reporting.ws.UsageStatistic;
 
 import java.io.IOException;
@@ -12,21 +12,21 @@ import java.util.List;
  */
 public class UsageStatisticJsonConverter implements UsageStatisticConverter {
 
-    private final JSONReader jsonReader;
+    private final JSONExtractor jsonExtractor;
 
-    UsageStatisticJsonConverter(JSONReader jsonReader) {
-        this.jsonReader = jsonReader;
+    UsageStatisticJsonConverter(JSONExtractor jsonExtractor) {
+        this.jsonExtractor = jsonExtractor;
     }
 
     @Override
     public UsageStatistic extractSingleStatistic(String jobId) {
-        return jsonReader.getSingleStatistic(jobId);
+        return jsonExtractor.getSingleStatistic(jobId);
     }
 
     @Override
     public List<UsageStatistic> extractAllStatistics() throws ExtractionException {
         try {
-            return jsonReader.getAllStatistics();
+            return jsonExtractor.getAllStatistics();
         } catch (IOException exception) {
             throw new ExtractionException(exception);
         }

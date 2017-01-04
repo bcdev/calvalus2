@@ -6,12 +6,17 @@ package com.bc.calvalus.reporting.ws;
 public class UsageStatistic {
 
     private String jobId;
-    private String queueName;
+    private String user;
+    private String queue;
     private long startTime;
     private long finishTime;
     private long totalTime;
-    private String status;
+    private String state;
 
+    private String inputPath;
+
+    private int mapsCompleted;
+    private int reducesCompleted;
     private long fileBytesRead;
     private long fileBytesWritten;
     private long hdfsBytesRead;
@@ -21,10 +26,14 @@ public class UsageStatistic {
     private long cpuMilliseconds;
 
     public UsageStatistic(String jobId,
-                          String queueName,
+                          String user,
+                          String queue,
                           long startTime,
                           long finishTime,
-                          String status,
+                          String state,
+                          String inputPath,
+                          int mapsCompleted,
+                          int reducesCompleted,
                           long fileBytesRead,
                           long fileBytesWritten,
                           long hdfsBytesRead,
@@ -33,11 +42,15 @@ public class UsageStatistic {
                           long vCoresMillisTotal,
                           long cpuMilliseconds) {
         this.jobId = jobId;
-        this.queueName = queueName;
+        this.user = user;
+        this.queue = queue;
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.totalTime = finishTime - startTime;
-        this.status = status;
+        this.state = state;
+        this.inputPath = inputPath;
+        this.mapsCompleted = mapsCompleted;
+        this.reducesCompleted = reducesCompleted;
         this.fileBytesRead = fileBytesRead;
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
@@ -51,8 +64,12 @@ public class UsageStatistic {
         return jobId;
     }
 
-    String getQueueName() {
-        return queueName;
+    public String getUser() {
+        return user;
+    }
+
+    String getQueue() {
+        return queue;
     }
 
     long getStartTime() {
@@ -67,8 +84,20 @@ public class UsageStatistic {
         return totalTime;
     }
 
-    String getStatus() {
-        return status;
+    String getState() {
+        return state;
+    }
+
+    public String getInputPath() {
+        return inputPath;
+    }
+
+    public int getMapsCompleted() {
+        return mapsCompleted;
+    }
+
+    public int getReducesCompleted() {
+        return reducesCompleted;
     }
 
     long getFileBytesRead() {

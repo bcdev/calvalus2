@@ -90,11 +90,11 @@ class ReportGenerator {
         String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (1000));
         jobReport.add("Usage statistic for job '" + usageStatistic.getJobId() + "'");
         jobReport.add("");
-        jobReport.add("Project : " + usageStatistic.getQueueName());
+        jobReport.add("Project : " + usageStatistic.getQueue());
         jobReport.add("Start time : " + startTime);
         jobReport.add("Finish time : " + finishTime);
         jobReport.add("Total time : " + totalTime);
-        jobReport.add("Status :  " + usageStatistic.getStatus());
+        jobReport.add("Status :  " + usageStatistic.getState());
         jobReport.add("Total file writing (MB) : " + totalFileWriting);
         jobReport.add("Total file reading (MB) : " + totalFileReading);
         jobReport.add("Total CPU time spent : " + totalCpuTime);

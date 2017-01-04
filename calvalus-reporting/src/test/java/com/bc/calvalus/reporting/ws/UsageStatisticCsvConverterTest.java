@@ -27,10 +27,10 @@ public class UsageStatisticCsvConverterTest {
 
         assertThat(usageStatistics.size(), equalTo(3));
         assertThat(usageStatistics.get(0).getJobId(), equalTo("job_1481485063251_7044"));
-        assertThat(usageStatistics.get(0).getQueueName(), equalTo("other"));
+        assertThat(usageStatistics.get(0).getQueue(), equalTo("other"));
         assertThat(usageStatistics.get(0).getStartTime(), equalTo(1483008371365L));
         assertThat(usageStatistics.get(0).getFinishTime(), equalTo(1483016032298L));
-        assertThat(usageStatistics.get(0).getStatus(), equalTo("SUCCEEDED"));
+        assertThat(usageStatistics.get(0).getState(), equalTo("SUCCEEDED"));
         assertThat(usageStatistics.get(0).getFileBytesRead(), equalTo(0L));
         assertThat(usageStatistics.get(0).getFileBytesWritten(), equalTo(66806953L));
         assertThat(usageStatistics.get(0).getHdfsBytesRead(), equalTo(244480290008L));

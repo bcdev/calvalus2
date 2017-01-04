@@ -5,7 +5,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.reporting.exceptions.ExtractionException;
-import com.bc.calvalus.reporting.io.JSONReader;
+import com.bc.calvalus.reporting.io.JSONExtractor;
 import org.junit.*;
 import org.mockito.ArgumentCaptor;
 
@@ -16,37 +16,37 @@ import java.io.IOException;
  */
 public class UsageStatisticJsonConverterTest {
 
-    private JSONReader mockJsonReader;
+    private JSONExtractor mockJsonExtractor;
 
     @Before
     public void setUp() throws Exception {
-        mockJsonReader = mock(JSONReader.class);
+        mockJsonExtractor = mock(JSONExtractor.class);
     }
 
     @Test
     public void canExtractSingleStatistic() throws Exception {
-        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonReader);
+        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonExtractor);
 
         ArgumentCaptor<String> jobIdCaptor = ArgumentCaptor.forClass(String.class);
 
         jsonConverter.extractSingleStatistic("job_xxxxx");
-        verify(mockJsonReader, times(1)).getSingleStatistic(jobIdCaptor.capture());
+        verify(mockJsonExtractor, times(1)).getSingleStatistic(jobIdCaptor.capture());
 
         assertThat(jobIdCaptor.getValue(), equalTo("job_xxxxx"));
     }
 
     @Test
     public void canExtractAllStatistics() throws Exception {
-        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonReader);
+        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonExtractor);
 
         jsonConverter.extractAllStatistics();
-        verify(mockJsonReader, times(1)).getAllStatistics();
+        verify(mockJsonExtractor, times(1)).getAllStatistics();
     }
 
     @Test(expected = ExtractionException.class)
     public void canCatchIOExceptionWhenExtractAll() throws Exception {
-        when(mockJsonReader.getAllStatistics()).thenThrow(new IOException("Unable to extract statistics"));
-        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonReader);
+        when(mockJsonExtractor.getAllStatistics()).thenThrow(new IOException("Unable to extract statistics"));
+        UsageStatisticJsonConverter jsonConverter = new UsageStatisticJsonConverter(mockJsonExtractor);
 
         jsonConverter.extractAllStatistics();
     }
