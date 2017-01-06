@@ -1,10 +1,10 @@
-package com.bc.calvalus.generator.log;
+package com.bc.calvalus.generator.extractor;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.log.counter.CountersType;
-import com.bc.calvalus.generator.log.jobs.JobType;
-import com.bc.calvalus.generator.log.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.counter.CountersType;
+import com.bc.calvalus.generator.extractor.jobs.JobType;
+import com.bc.calvalus.generator.extractor.jobs.JobsType;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
@@ -15,18 +15,18 @@ import java.util.List;
 /**
  * @author muhammad.bc.
  */
-public class CounterLog extends Log {
+public class CounterExtractor extends Extractor {
 
     private static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_COUNTERS = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/counters";
     private static final String COUNTER_XSL = "counter.xsl";
     private String xsltAsString;
 
-    public CounterLog() {
+    public CounterExtractor() {
         super();
         xsltAsString = loadXSLTFile(COUNTER_XSL);
     }
 
-    public CounterLog(String sourceUrl) {
+    public CounterExtractor(String sourceUrl) {
         super(sourceUrl);
         xsltAsString = loadXSLTFile(COUNTER_XSL);
     }

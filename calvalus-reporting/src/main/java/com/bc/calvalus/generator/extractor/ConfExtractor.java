@@ -1,10 +1,10 @@
-package com.bc.calvalus.generator.log;
+package com.bc.calvalus.generator.extractor;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.log.configuration.Conf;
-import com.bc.calvalus.generator.log.jobs.JobType;
-import com.bc.calvalus.generator.log.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.configuration.Conf;
+import com.bc.calvalus.generator.extractor.jobs.JobType;
+import com.bc.calvalus.generator.extractor.jobs.JobsType;
 
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
@@ -15,18 +15,18 @@ import java.util.List;
 /**
  * @author muhammad.bc.
  */
-public class ConfLog extends Log {
+public class ConfExtractor extends Extractor {
 
     public static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_CONF = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/configuration";
     public static final String CONF_XSL = "conf.xsl";
     private String xsltAsString;
 
-    public ConfLog() {
+    public ConfExtractor() {
         super();
         xsltAsString = loadXSLTFile(CONF_XSL);
     }
 
-    public ConfLog(String sourceUrl) {
+    public ConfExtractor(String sourceUrl) {
         super(sourceUrl);
         xsltAsString = loadXSLTFile(CONF_XSL);
     }

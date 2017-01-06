@@ -33,7 +33,7 @@ public class QuicklooksTest {
         sb.append("<config>\n");
         sb.append("<subSamplingX>3</subSamplingX>\n");
         sb.append("<subSamplingY>5</subSamplingY>\n");
-        sb.append("<RGBAExpressions>var2 + log(var3), complicated expression, 1-3 + 5,constant</RGBAExpressions>\n");
+        sb.append("<RGBAExpressions>var2 + extractor(var3), complicated expression, 1-3 + 5,constant</RGBAExpressions>\n");
         sb.append("<RGBAMinSamples>0.45,1.34,5,77</RGBAMinSamples>\n");
         sb.append("<RGBAMaxSamples>23,5.0007,.456</RGBAMaxSamples>\n");
         sb.append("<bandName>chl_conc</bandName>\n");
@@ -51,7 +51,7 @@ public class QuicklooksTest {
         assertEquals(5, qlConfig.getSubSamplingY());
         String[] rgbaExpressions = qlConfig.getRGBAExpressions();
         assertEquals(4, rgbaExpressions.length);
-        assertEquals("var2 + log(var3)", rgbaExpressions[0]);
+        assertEquals("var2 + extractor(var3)", rgbaExpressions[0]);
         assertEquals(" complicated expression", rgbaExpressions[1]);
         assertEquals(" 1-3 + 5", rgbaExpressions[2]);
         assertEquals("constant", rgbaExpressions[3]);

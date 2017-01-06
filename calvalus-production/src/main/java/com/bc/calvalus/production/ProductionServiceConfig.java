@@ -97,7 +97,7 @@ public class ProductionServiceConfig {
 
         defaultConfig.put("calvalus.hadoop.dfs.permissions.superusergroup", "hadoop");
         defaultConfig.put("calvalus.hadoop.fs.permissions.umask-mode", "002");
-        defaultConfig.put("calvalus.hadoop.yarn.log-aggregation-enable", "true");
+        defaultConfig.put("calvalus.hadoop.yarn.extractor-aggregation-enable", "true");
 
         // let this be determined by the server side default instead, do not overwrite in client [Jira CAVA-111]
         //defaultConfig.put("calvalus.hadoop.mapreduce.jobhistory.address", "master00:10200");

@@ -14,7 +14,7 @@ import java.nio.file.Paths;
  * @author muhammad.bc.
  */
 public class FileConnectionCheckIO extends BlockJUnit4ClassRunner {
-    public static final String CALVALUS_LOG_DIR_EXECUTE_TEST = "calvalus.log.dir.connect.execute.test";
+    public static final String CALVALUS_LOG_DIR_EXECUTE_TEST = "calvalus.extractor.dir.connect.execute.test";
     private Class<?> klass;
     private boolean checkConnection;
     private boolean executeDirectory;

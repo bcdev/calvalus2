@@ -128,7 +128,7 @@ public class KeywordHandler extends ProcessObserver.DefaultHandler {
         super.onObservationEnded(process, exitCode, pm);
         pm.done();
         if (exitCode == null || exitCode != 0) {
-            throw new RuntimeException(programName + " failed with exit code " + exitCode + ".\nCheck log for more details.");
+            throw new RuntimeException(programName + " failed with exit code " + exitCode + ".\nCheck extractor for more details.");
         }
     }
 

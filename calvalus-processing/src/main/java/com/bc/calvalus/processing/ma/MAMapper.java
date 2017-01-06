@@ -70,7 +70,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         final MAConfig maConfig = MAConfig.get(jobConfig);
         final Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
-        // write initial log entry for runtime measurements
+        // write initial extractor entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
                                context.getTaskAttemptID(), split, (MiB / 2 + split.getLength()) / MiB));
 
@@ -219,7 +219,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         long productCloseTime = (now() - t0);
         LOG.info(String.format("closed input product, took %s sec", productCloseTime / 1E3));
 
-        // write final log entry for runtime measurements
+        // write final extractor entry for runtime measurements
         long mapperTotalTime = (now() - mapperStartTime);
         LOG.info(String.format("%s stops processing of split %s after %s sec",
                                context.getTaskAttemptID(), split, mapperTotalTime / 1E3));

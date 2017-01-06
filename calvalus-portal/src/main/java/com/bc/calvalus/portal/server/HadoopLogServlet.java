@@ -61,7 +61,7 @@ import java.security.PrivilegedExceptionAction;
 import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
 
 /**
- * Servlet to handle log file viewing for productions
+ * Servlet to handle extractor file viewing for productions
  *
  * @author MarcoZ
  */
@@ -242,9 +242,9 @@ public class HadoopLogServlet extends HttpServlet {
         response.setContentType("text/html");
         PrintWriter writer = new PrintWriter(response.getOutputStream());
         writer.println("<html>");
-        writer.println("<title>Error while showing processing log</title>");
+        writer.println("<title>Error while showing processing extractor</title>");
         writer.println("<body>");
-        writer.println("<h1>Error while showing processing log</h1>");
+        writer.println("<h1>Error while showing processing extractor</h1>");
         writer.println("While retrieving the logfile from the Hadoop Cluster an error occurred.</br>" +
                        "In most cases this is related to the fact, that the logs are automatically removed after roughly 24 hours.</br>" +
                        "Depending on the cluster activity this can happen sooner or later.</br></br></br>");

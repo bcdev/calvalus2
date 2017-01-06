@@ -33,7 +33,7 @@ public abstract class SourceReader implements Closeable {
                 throw new InternalServerErrorException();
             }
         } catch (IllegalArgumentException | InternalServerErrorException | ProcessingException exception) {
-            throw new IllegalArgumentException("Check the url path for extracting the log file.");
+            throw new IllegalArgumentException("Check the url path for extracting the extractor file.");
         }
     }
 

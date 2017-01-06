@@ -6,15 +6,15 @@ package com.bc.calvalus.generator.writer;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.log.ConfLog;
-import com.bc.calvalus.generator.log.CounterLog;
-import com.bc.calvalus.generator.log.JobLog;
-import com.bc.calvalus.generator.log.configuration.Conf;
-import com.bc.calvalus.generator.log.counter.CounterGroupType;
-import com.bc.calvalus.generator.log.counter.CounterType;
-import com.bc.calvalus.generator.log.counter.CountersType;
-import com.bc.calvalus.generator.log.jobs.JobType;
-import com.bc.calvalus.generator.log.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.ConfExtractor;
+import com.bc.calvalus.generator.extractor.CounterExtractor;
+import com.bc.calvalus.generator.extractor.JobExtractor;
+import com.bc.calvalus.generator.extractor.configuration.Conf;
+import com.bc.calvalus.generator.extractor.counter.CounterGroupType;
+import com.bc.calvalus.generator.extractor.counter.CounterType;
+import com.bc.calvalus.generator.extractor.counter.CountersType;
+import com.bc.calvalus.generator.extractor.jobs.JobType;
+import com.bc.calvalus.generator.extractor.jobs.JobsType;
 
 import javax.xml.bind.JAXBException;
 import java.io.*;
@@ -50,11 +50,11 @@ public class WriteJobDetail {
     }
 
     public void writeAll() throws JAXBException {
-        JobLog jobLog = new JobLog();
+        JobExtractor jobLog = new JobExtractor();
         List<JobType> jobTypeList = jobLog.getJobsType().getJob();
 
-        ConfLog confLog = new ConfLog();
-        CounterLog counterLog = new CounterLog();
+        ConfExtractor confLog = new ConfExtractor();
+        CounterExtractor counterLog = new CounterExtractor();
 
         HashMap<String, Conf> confInfo = confLog.extractInfo(confLog.getJobsType());
         HashMap<String, CountersType> counterInfo = counterLog.extractInfo(counterLog.getJobsType());
@@ -71,7 +71,7 @@ public class WriteJobDetail {
 
 
     public void write(String jobId) throws JAXBException {
-        JobLog jobLog = new JobLog();
+        JobExtractor jobLog = new JobExtractor();
         JobsType jobsType = jobLog.getJobsType();
         Optional<JobType> jobTypeOptional = jobsType.getJob().stream().filter(p -> p.getId().equalsIgnoreCase(jobId)).findFirst();
         JobType jobType = null;
@@ -81,10 +81,10 @@ public class WriteJobDetail {
             throw new IllegalArgumentException("The job id does not exist");
         }
 
-        ConfLog confLog = new ConfLog();
+        ConfExtractor confLog = new ConfExtractor();
         Conf conf = confLog.getType(jobId);
 
-        CounterLog counterLog = new CounterLog();
+        CounterExtractor counterLog = new CounterExtractor();
         CountersType countersType = counterLog.getType(jobId);
 
         addJobDetails(conf, countersType, jobType);
@@ -190,12 +190,12 @@ public class WriteJobDetail {
     }
 
     private HashMap<String, CountersType> createCounterLog(int from, int to, JobsType jobsType) throws JAXBException, GenerateLogException {
-        CounterLog counterLog = new CounterLog();
+        CounterExtractor counterLog = new CounterExtractor();
         return counterLog.extractInfo(from, to, jobsType);
     }
 
     private HashMap<String, Conf> createConfLog(int from, int to, JobsType jobsType) throws JAXBException, GenerateLogException {
-        ConfLog confLog = new ConfLog();
+        ConfExtractor confLog = new ConfExtractor();
         return confLog.extractInfo(from, to, jobsType);
     }
 

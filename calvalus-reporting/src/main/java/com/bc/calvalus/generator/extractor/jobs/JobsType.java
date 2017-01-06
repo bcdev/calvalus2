@@ -1,5 +1,5 @@
 
-package com.bc.calvalus.generator.log.jobs;
+package com.bc.calvalus.generator.extractor.jobs;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

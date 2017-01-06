@@ -1,17 +1,14 @@
-package com.bc.calvalus.generator.log;
+package com.bc.calvalus.generator.extractor;
 
 
-import com.bc.calvalus.generator.ConnectTest;
-import com.bc.calvalus.generator.log.configuration.Conf;
+import com.bc.calvalus.generator.extractor.configuration.Conf;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 
 
 import static com.bc.calvalus.generator.Constants.XMLSourceConf;
-import static com.bc.calvalus.generator.log.JobLog.jobHistoryURL;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -25,7 +22,7 @@ public class ConfLogTest {
 
     @Test
     public void testXMLToConf() throws Exception {
-        ConfLog log = new ConfLog();
+        ConfExtractor log = new ConfExtractor();
         String xsltSourceString = log.getXsltAsString();
         StreamSource xsltSource = new StreamSource(new StringReader(xsltSourceString));
         Conf confType = log.extractInfo(XMLSourceConf, xsltSource, Conf.class);
@@ -36,7 +33,7 @@ public class ConfLogTest {
 
     @Test
     public void testXsltFileAsString() throws Exception {
-        ConfLog log = new ConfLog();
+        ConfExtractor log = new ConfExtractor();
         String xsltAsString = log.getXsltAsString();
         assertNotNull(xsltAsString);
         assertEquals(xsltAsString, log.getXsltAsString());

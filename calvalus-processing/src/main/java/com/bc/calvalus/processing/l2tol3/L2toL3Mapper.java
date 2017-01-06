@@ -148,7 +148,7 @@ public class L2toL3Mapper extends Mapper<NullWritable, NullWritable, LongWritabl
                 LOG.log(Level.SEVERE, m, exception);
             }
         }
-        // write final log entry for runtime measurements
+        // write final extractor entry for runtime measurements
         LOG.info(MessageFormat.format(
                 "Finishes processing of {1} after {2} sec ({3} observations seen, {4} bins produced)",
                 context.getTaskAttemptID(), processorAdapter.getInputPath(),

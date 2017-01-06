@@ -1,7 +1,7 @@
-package com.bc.calvalus.generator.log;
+package com.bc.calvalus.generator.extractor;
 
-import com.bc.calvalus.generator.log.counter.CounterGroupType;
-import com.bc.calvalus.generator.log.counter.CountersType;
+import com.bc.calvalus.generator.extractor.counter.CounterGroupType;
+import com.bc.calvalus.generator.extractor.counter.CountersType;
 import org.junit.Test;
 
 import javax.xml.transform.stream.StreamSource;
@@ -16,10 +16,10 @@ import static org.junit.Assert.assertNotNull;
  * Author ubits on 1/3/2017.
  */
 public class CounterLogTest {
-    private final CounterLog log;
+    private final CounterExtractor log;
 
     public CounterLogTest() {
-        log = new CounterLog();
+        log = new CounterExtractor();
     }
 
 

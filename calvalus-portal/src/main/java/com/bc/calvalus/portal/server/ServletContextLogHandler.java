@@ -22,7 +22,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.StreamHandler;
 
 /**
- * A log hanlder that delagets to a servlet context.
+ * A extractor hanlder that delagets to a servlet context.
  */
 public class ServletContextLogHandler extends StreamHandler {
 

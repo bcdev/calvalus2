@@ -1,5 +1,5 @@
 
-package com.bc.calvalus.generator.log.counter;
+package com.bc.calvalus.generator.extractor.counter;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;

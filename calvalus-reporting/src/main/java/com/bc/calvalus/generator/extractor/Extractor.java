@@ -1,8 +1,8 @@
-package com.bc.calvalus.generator.log;
+package com.bc.calvalus.generator.extractor;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.log.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.calvalus.generator.reader.FormatType;
 import com.bc.calvalus.generator.reader.LogReader;
 
@@ -21,15 +21,15 @@ import java.util.Objects;
 /**
  * @author muhammad.bc.
  */
-public abstract class Log {
+public abstract class Extractor {
 
 
     private static JobsType jobsType;
 
-    public Log() {
+    public Extractor() {
     }
 
-    public Log(String sourceUrl) {
+    public Extractor(String sourceUrl) {
         if (Objects.isNull(jobsType)) {
             jobsType = getJobDetail(sourceUrl);
         }

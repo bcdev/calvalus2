@@ -1,9 +1,9 @@
 package com.bc.calvalus.generator;
 
 
-import com.bc.calvalus.generator.log.JobLog;
-import com.bc.calvalus.generator.log.jobs.JobType;
-import com.bc.calvalus.generator.log.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.JobExtractor;
+import com.bc.calvalus.generator.extractor.jobs.JobType;
+import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.calvalus.generator.writer.JobDetailType;
 import com.google.gson.Gson;
 
@@ -24,7 +24,7 @@ public class Main {
 
     public Main(String saveLocation) {
         try {
-            JobLog jobLog = new JobLog();
+            JobExtractor jobLog = new JobExtractor();
             jobsType = jobLog.getJobsType();
             lastJobID = getLastJobId(saveLocation);
         } catch (IOException e) {

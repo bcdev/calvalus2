@@ -91,7 +91,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
-        // write initial log entry for runtime measurements
+        // write initial extractor entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s", context.getTaskAttemptID(), context.getInputSplit()));
 
         RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
