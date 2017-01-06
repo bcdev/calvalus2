@@ -29,6 +29,7 @@ public class HandleOption extends PrintOption {
             printErrorMsg(toString);
         }
     }
+
     public String getOptionValue(String option) {
         return commandLine.getOptionValue(option);
     }
@@ -72,7 +73,6 @@ public class HandleOption extends PrintOption {
     }
 
 
-
     private CommandLine createCLIOptions(String[] args) throws ParseException {
 
         Options options = new Options();
@@ -107,12 +107,6 @@ public class HandleOption extends PrintOption {
             printHelp("help_start.txt");
         } else if ("stop".equalsIgnoreCase(command)) {
             printHelp("help_stop.txt");
-        } else if ("interval".equalsIgnoreCase(command)) {
-            printHelp("help_interval.txt");
-        } else if ("save-location".equalsIgnoreCase(command)) {
-            printHelp("help_location.txt");
-        } else if ("job-url".equalsIgnoreCase(command)) {
-            printHelp("help_job_url.txt");
         } else {
             printHelp("help_info.txt");
         }

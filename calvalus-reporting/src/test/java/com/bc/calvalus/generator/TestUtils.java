@@ -27,14 +27,14 @@ public class TestUtils {
         if (properties == null) {
             createProperties();
         }
-        return properties.getProperty("save-location");
+        return properties.getProperty("save.location");
     }
 
     public static String getJobHistoryURL() {
         if (properties == null) {
             createProperties();
         }
-        return properties.getProperty("calvalus-history-url");
+        return properties.getProperty("calvalus.history.url");
     }
 
     public static boolean checkConnection() {
