@@ -21,12 +21,4 @@ public class LogReader extends SourceReader {
     public String getRawSource() {
         return readSource(formatType);
     }
-
-    public String getSourceUrl() {
-        return sourceUrl;
-    }
-
-    public FormatType getFormatType() {
-        return formatType;
-    }
 }

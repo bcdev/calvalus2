@@ -1,5 +1,7 @@
 package com.bc.calvalus.generator.writer;
-
+/**
+ * @author muhammad.bc.
+ */
 public class JobDetailType {
 
     protected String jobId;

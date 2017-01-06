@@ -110,12 +110,21 @@ public class Constants {
             "    </property>\n" +
             "</conf>";
 
+    public static String HELP_INFO = "calvalus-gen --help\n"+
+            "Usage: calvalus-gen [COMMAND] [OPTION\n"+
+            "       calvalus-gen [ --help | -v | --version ]\n"+
+            "\n"+
+            "Options:\n"+
+            "\n"+
+            "  -h, --help                            Print usage\n"+
+            "  -i, --interval                        Time interval\n"+
+            "  -o, --output-file-path                Location to save the generate report\n"+
+            "  -v, --version                         Print version information and quit\n"+
+            "\n"+
+            "Commands:\n"+
+            "    start            Start generating with the default of 30 minutes\n"+
+            "    Stop             Stop generating\n"+
+            "\n"+
+            "Run 'calvalus-gen COMMAND --help' for more information on a command.\n";
 
-    static String expectXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><jobCounters><id>job_1481485063251_3649</id>" +
-            "<counterGroup><counterGroupName>org.apache.hadoop.mapreduce.FileSystemCounter</counterGroupName><counter>" +
-            "<name>HDFS_BYTES_READ</name><totalCounterValue>449694437376</totalCounterValue>" +
-            "<mapCounterValue>449694437376</mapCounterValue><reduceCounterValue>0</reduceCounterValue></counter>" +
-            "<counter><name>HDFS_BYTES_WRITTEN</name><totalCounterValue>466511729804</totalCounterValue>" +
-            "<mapCounterValue>466511729804</mapCounterValue><reduceCounterValue>0</reduceCounterValue>" +
-            "</counter></counterGroup></jobCounters>";
 }

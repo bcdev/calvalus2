@@ -8,26 +8,10 @@ import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * <p>Java class for jobsType complex type.
- * 
- * <p>The following schema fragment specifies the expected content contained within this class.
- * 
- * <pre>
- * &lt;complexType name="jobsType">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence maxOccurs="unbounded" minOccurs="0">
- *         &lt;element name="job.xml" type="{}jobType"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
- * 
- * 
+ * @author muhammad.bc.
  */
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "jobs")
 @XmlType(name = "jobsType", propOrder = {

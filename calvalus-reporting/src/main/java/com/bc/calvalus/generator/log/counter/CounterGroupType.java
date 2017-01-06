@@ -8,6 +8,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
+/**
+ * @author muhammad.bc.
+ */
 
 @XmlRootElement(name = "counterGroup")
 @XmlAccessorType(XmlAccessType.FIELD)

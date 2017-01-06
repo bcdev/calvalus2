@@ -8,6 +8,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.math.BigInteger;
 
+/**
+ * @author muhammad.bc.
+ */
+
 @XmlRootElement(name = "counter")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "counterType", propOrder = {

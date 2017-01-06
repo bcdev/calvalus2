@@ -1,5 +1,9 @@
 package com.bc.calvalus.generator.writer;
 
+/**
+ * @author muhammad.bc.
+ */
+
 
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.log.ConfLog;

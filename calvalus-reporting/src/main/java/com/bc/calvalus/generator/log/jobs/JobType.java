@@ -8,35 +8,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-
 /**
- * <p>Java class for jobType complex type.
- * <p>
- * <p>The following schema fragment specifies the expected content contained within this class.
- * <p>
- * <pre>
- * &lt;complexType name="jobType">
- *   &lt;complexContent>
- *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType">
- *       &lt;sequence>
- *         &lt;element name="submitTime" type="{http://www.w3.org/2001/XMLSchema}dateTime"/>
- *         &lt;element name="startTime" type="{http://www.w3.org/2001/XMLSchema}dateTime"/>
- *         &lt;element name="finishTime" type="{http://www.w3.org/2001/XMLSchema}dateTime"/>
- *         &lt;element name="id" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="name" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="queue" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="user" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="state" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="mapsTotal" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="mapsCompleted" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="reducesTotal" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *         &lt;element name="reducesCompleted" type="{http://www.w3.org/2001/XMLSchema}string"/>
- *       &lt;/sequence>
- *     &lt;/restriction>
- *   &lt;/complexContent>
- * &lt;/complexType>
- * </pre>
+ * @author muhammad.bc.
  */
+
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "job.xml")
 @XmlType(name = "jobType", propOrder = {
