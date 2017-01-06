@@ -103,7 +103,7 @@
     </welcome-file-list>
 
 
-    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
+    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/configuration/tomcat-users.xml -->
     <security-constraint>
         <display-name>Calvalus Protected</display-name>
         <web-resource-collection>

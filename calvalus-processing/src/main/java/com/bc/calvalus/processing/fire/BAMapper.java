@@ -80,7 +80,7 @@ public class BAMapper extends Mapper<NullWritable, NullWritable, TileIndexWritab
         velocityContext.put("nocomb_base_dir", conf.get("calvalus.nocomb_base_dir"));
         velocityContext.put("tile", tile);
 
-//        velocityContext.put("outputPath", conf.getOgetOutputDirectoryPath());
+//        velocityContext.put("outputPath", configuration.getOgetOutputDirectoryPath());
 //        velocityContext.put("workOutputPath", getWorkOutputDirectoryPath());
 
         scriptGenerator.addScriptResources(conf, "");

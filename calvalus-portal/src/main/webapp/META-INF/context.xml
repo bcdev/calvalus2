@@ -10,7 +10,7 @@
                init-parameters are currently read from web.xml (but that may
                be not ok for the Hadoop parameters) (nf)
         note: since Tomcat 7, context.xml is not automatically copied to
-              <tomcat7>/conf/<engine>/<host>/calvalus.xml   (nf)
+              <tomcat7>/configuration/<engine>/<host>/calvalus.xml   (nf)
     -->
 
     <!--

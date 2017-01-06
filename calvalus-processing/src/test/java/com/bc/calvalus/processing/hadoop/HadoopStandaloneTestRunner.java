@@ -36,7 +36,7 @@ public class HadoopStandaloneTestRunner extends BlockJUnit4ClassRunner {
             // inform about reason for skipping test
             System.err.println("test skipped, local Hadoop not running");
             System.err.println("start Hadoop with:");
-            System.err.println("  export HADOOP_CONF_DIR=/.../calvalus/calvalus-processing/src/test/resources/mini-conf");
+            System.err.println("  export HADOOP_CONF_DIR=/.../calvalus/calvalus-processing/src/test/resources/mini-configuration");
             System.err.println("  /.../hadoop-0.20.2/bin/hadoop namenode -format");
             System.err.println("  /.../hadoop-0.20.2/bin/start-all.sh");
             System.err.println("  sleep 30");
