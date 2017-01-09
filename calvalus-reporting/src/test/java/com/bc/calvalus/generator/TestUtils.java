@@ -1,6 +1,6 @@
 package com.bc.calvalus.generator;
 
-import com.bc.calvalus.generator.reader.LogReader;
+import com.bc.calvalus.generator.extractor.LogReader;
 
 import java.io.IOException;
 import java.io.InputStream;

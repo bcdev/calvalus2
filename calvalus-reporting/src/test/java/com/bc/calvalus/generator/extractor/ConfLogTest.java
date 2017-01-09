@@ -7,17 +7,15 @@ import org.junit.Test;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 
-
 import static com.bc.calvalus.generator.Constants.XMLSourceConf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- *@author muhammad.bc
+ * @author muhammad.bc
  */
 public class ConfLogTest {
     public static final String PATH = "hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2016/12/21/000004/job_1481485063251_4637_conf.xml";
-
 
 
     @Test

@@ -1,13 +1,13 @@
-package com.bc.calvalus.generator.reader;
+package com.bc.calvalus.generator.extractor;
 
-import java.io.Closeable;
-import java.io.IOException;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
+import java.io.Closeable;
+import java.io.IOException;
 
 
 /**

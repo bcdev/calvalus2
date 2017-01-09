@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class ConfExtractor extends Extractor {
 
-    public static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_CONF = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/configuration";
+    public static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_CONF = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/conf";
     public static final String CONF_XSL = "conf.xsl";
     private String xsltAsString;
 

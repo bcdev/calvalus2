@@ -1,4 +1,4 @@
-package com.bc.calvalus.generator.reader;
+package com.bc.calvalus.generator.extractor;
 
 /**
  * @author muhammad.bc.
@@ -17,6 +17,13 @@ public class LogReader extends SourceReader {
         this.formatType = formatType;
     }
 
+    public String getSourceUrl() {
+        return sourceUrl;
+    }
+
+    public FormatType getFormatType() {
+        return formatType;
+    }
 
     public String getRawSource() {
         return readSource(formatType);

@@ -1,4 +1,4 @@
-package com.bc.calvalus.generator.reader;
+package com.bc.calvalus.generator.extractor;
 
 /**
  * @author muhammad.bc.

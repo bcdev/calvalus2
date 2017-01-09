@@ -3,8 +3,6 @@ package com.bc.calvalus.generator.extractor;
 
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
-import com.bc.calvalus.generator.reader.FormatType;
-import com.bc.calvalus.generator.reader.LogReader;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;

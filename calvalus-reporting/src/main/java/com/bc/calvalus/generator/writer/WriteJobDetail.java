@@ -15,9 +15,16 @@ import com.bc.calvalus.generator.extractor.counter.CounterType;
 import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
+import com.google.gson.Gson;
 
 import javax.xml.bind.JAXBException;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -28,30 +35,21 @@ import java.util.Optional;
 public class WriteJobDetail {
 
 
+    private final GetJobInfo getJobInfo;
+    private JobsType jobsTypeList;
     private List<JobDetailType> jobDetailTypeList;
     private File outputFile;
+    private boolean isFinish;
+
 
     public WriteJobDetail(String pathToWrite) {
         jobDetailTypeList = new ArrayList<>();
         outputFile = confirmOutputFile(pathToWrite);
-    }
-
-    private File confirmOutputFile(String pathToWrite) {
-        Path path = Paths.get(pathToWrite);
-        File file = path.toFile();
-        if (!file.exists()) {
-            try {
-                throw new FileNotFoundException("The folder does not exist.");
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
-        return file;
+        getJobInfo = new GetJobInfo(outputFile);
     }
 
     public void writeAll() throws JAXBException {
-        JobExtractor jobLog = new JobExtractor();
-        List<JobType> jobTypeList = jobLog.getJobsType().getJob();
+        List<JobType> jobTypeList = getJobType().getJob();
 
         ConfExtractor confLog = new ConfExtractor();
         CounterExtractor counterLog = new CounterExtractor();
@@ -69,11 +67,8 @@ public class WriteJobDetail {
         flushToFile();
     }
 
-
     public void write(String jobId) throws JAXBException {
-        JobExtractor jobLog = new JobExtractor();
-        JobsType jobsType = jobLog.getJobsType();
-        Optional<JobType> jobTypeOptional = jobsType.getJob().stream().filter(p -> p.getId().equalsIgnoreCase(jobId)).findFirst();
+        Optional<JobType> jobTypeOptional = getJobType().getJob().stream().filter(p -> p.getId().equalsIgnoreCase(jobId)).findFirst();
         JobType jobType = null;
         if (jobTypeOptional.isPresent()) {
             jobType = jobTypeOptional.get();
@@ -91,18 +86,75 @@ public class WriteJobDetail {
         flushToFile();
     }
 
-    public void write(int range, JobsType jobsType) throws JAXBException, GenerateLogException {
-        write(0, range, jobsType);
+    public void write(int range) throws JAXBException, GenerateLogException {
+        write(0, range);
     }
 
-    public void write(int from, int to, JobsType jobsType) throws JAXBException, GenerateLogException {
-        HashMap<String, Conf> confLog = createConfLog(from, to, jobsType);
-        HashMap<String, CountersType> counterLog = createCounterLog(from, to, jobsType);
-        write(confLog, counterLog, jobsType);
+    public void write(int from, int to) throws JAXBException, GenerateLogException {
+        HashMap<String, Conf> confLog = createConfLog(from, to);
+        HashMap<String, CountersType> counterLog = createCounterLog(from, to);
+        write(confLog, counterLog);
     }
 
-    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo, JobsType jobsType) throws GenerateLogException {
-        List<JobType> jobTypeList = jobsType.getJob();
+    public String getLastJobID() {
+        return getJobInfo.getLastJobID();
+    }
+
+    public int getTotalJobs() {
+        int size = getJobType().getJob().size();
+        return size > 0 ? size : 0;
+    }
+
+    public void start() {
+        try {
+
+            String lastJobID = getLastJobID();
+            if (lastJobID == null) {
+                int size = getJobType().getJob().size();
+                write(0, 10);
+            } else {
+                int[] startStopIndex = getStartStopIndex(lastJobID);
+                write(startStopIndex[0], startStopIndex[1]);
+            }
+        } catch (JAXBException | GenerateLogException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public int[] getStartStopIndex(String lastJobID) {
+        List<JobType> listOfJobs = getJobType().getJob();
+        Optional<JobType> jobTypeOptional = listOfJobs.stream().filter(p -> p.getId().equalsIgnoreCase(lastJobID)).findFirst();
+        if (!jobTypeOptional.isPresent()) {
+            return new int[]{0, listOfJobs.size()};
+        } else {
+            int i = listOfJobs.indexOf(jobTypeOptional.get());
+            return new int[]{i + 1, listOfJobs.size()};
+        }
+    }
+
+    private JobsType getJobType() {
+        if (jobsTypeList == null) {
+            JobExtractor jobExtractor = new JobExtractor();
+            jobsTypeList = jobExtractor.getJobsType();
+        }
+        return jobsTypeList;
+    }
+
+    private File confirmOutputFile(String pathToWrite) {
+        Path path = Paths.get(pathToWrite);
+        File file = path.toFile();
+        if (!file.exists()) {
+            try {
+                throw new FileNotFoundException("The folder does not exist.");
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
+        return file;
+    }
+
+    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo) throws GenerateLogException {
+        List<JobType> jobTypeList = getJobType().getJob();
         if (confInfo.size() != counterInfo.size()) {
             throw new GenerateLogException("The size of the configuration is not the same with the counter");
         }
@@ -171,17 +223,13 @@ public class WriteJobDetail {
     }
 
     private void flushToFile() {
-        writeToFile();
-    }
-
-    private void writeToFile() {
         try (
                 FileWriter fileWriter = new FileWriter(outputFile, true);
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
         ) {
-
+            Gson gson = new Gson();
             for (JobDetailType jobDetailType : jobDetailTypeList) {
-                bufferedWriter.append(jobDetailType.toString());
+                bufferedWriter.append(gson.toJson(jobDetailType));
                 bufferedWriter.newLine();
             }
         } catch (IOException e) {
@@ -189,14 +237,54 @@ public class WriteJobDetail {
         }
     }
 
-    private HashMap<String, CountersType> createCounterLog(int from, int to, JobsType jobsType) throws JAXBException, GenerateLogException {
+    private HashMap<String, CountersType> createCounterLog(int from, int to) throws JAXBException, GenerateLogException {
         CounterExtractor counterLog = new CounterExtractor();
+        JobsType jobsType = getJobType();
         return counterLog.extractInfo(from, to, jobsType);
     }
 
-    private HashMap<String, Conf> createConfLog(int from, int to, JobsType jobsType) throws JAXBException, GenerateLogException {
+    private HashMap<String, Conf> createConfLog(int from, int to) throws JAXBException, GenerateLogException {
         ConfExtractor confLog = new ConfExtractor();
+        JobsType jobsType = getJobType();
         return confLog.extractInfo(from, to, jobsType);
+    }
+
+    class GetJobInfo {
+
+        private String lastJobID;
+
+
+        public GetJobInfo(File saveLocation) {
+            try {
+                lastJobID = getLastJobId(saveLocation);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+        public String getLastJobID() {
+            return lastJobID;
+        }
+
+        private String getLastJobId(File saveLocation) throws IOException {
+            String lastLast = null;
+            try (
+                    FileReader fileReader = new FileReader(saveLocation);
+                    BufferedReader bufferedReader = new BufferedReader(fileReader);
+            ) {
+                String readLine = null;
+                while ((readLine = bufferedReader.readLine()) != null) {
+                    lastLast = readLine;
+                }
+            }
+            if (lastLast == null) {
+                return null;
+            }
+
+            JobDetailType jobDetailType = new Gson().fromJson(lastLast, JobDetailType.class);
+            return jobDetailType.getJobId();
+        }
     }
 
 }
