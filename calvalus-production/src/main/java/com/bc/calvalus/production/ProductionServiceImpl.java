@@ -266,7 +266,7 @@ public class ProductionServiceImpl implements ProductionService {
         }
         if (count < productionIds.length) {
             throw new ProductionException(
-                    String.format("Only %d of %d production(s) have been killed. See server extractor for details.",
+                    String.format("Only %d of %d production(s) have been killed. See server log for details.",
                                   count, productionIds.length));
         }
     }

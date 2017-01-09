@@ -124,7 +124,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
      * We then get on Tomcat 7 in the logs
      * <pre>
-     *   16-Sep-2011 10:57:08 org.apache.catalina.core.ApplicationContext extractor
+     *   16-Sep-2011 10:57:08 org.apache.catalina.core.ApplicationContext log
      *   SEVERE: Exception while dispatching incoming RPC call
      *   java.lang.SecurityException: Blocked request without GWT permutation header (XSRF attack?)
      *           at com.google.gwt.user.server.rpc.RemoteServiceServlet.checkPermutationStrongName(RemoteServiceServlet.java:272)

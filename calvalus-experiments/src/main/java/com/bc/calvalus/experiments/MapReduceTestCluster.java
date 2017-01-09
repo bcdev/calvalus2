@@ -78,7 +78,7 @@ public class MapReduceTestCluster {
      */
     public synchronized void startCluster(boolean reformatDFS, Properties props)
             throws Exception {
-        // make sure the extractor folder exists,
+        // make sure the log folder exists,
         // otherwise the test fill fail
         final File testLogs = new File(TEST_LOGS);
         testLogs.mkdirs();

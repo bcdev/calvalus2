@@ -28,7 +28,7 @@ import java.util.List;
  * TODO add API doc
  *
  * program arguments:
- * C:\Users\bettina\temp\calvalus\hadoop-hadoop-jobtracker-master00.extractor.2010-10-20 -start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z -category=host -colour=type
+ * C:\Users\bettina\temp\calvalus\hadoop-hadoop-jobtracker-master00.log.2010-10-20 -start=2010-10-20T19:00:00.000Z -stop=2010-10-20T20:00:00.000Z -category=host -colour=type
  */
 public class RuntimePlotter {
 
@@ -43,7 +43,7 @@ public class RuntimePlotter {
             long start = TimeUtils.parseCcsdsUtcFormat(options.get("start", ""));
             long stop = TimeUtils.parseCcsdsUtcFormat(options.get("stop", ""));
 
-            // scan extractor file
+            // scan log file
             RunTimesScanner scanner = new RunTimesScanner(new BufferedReader(new FileReader(inputLog)));
             final List<Trace> traces = scanner.scan();
             scanner.getValids().add(category, "null");

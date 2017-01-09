@@ -56,7 +56,7 @@ public class PlotterConfigurator {
     }
 
     public void askForNumberOfSeriesToBeShown() {
-        System.out.println("Number of " + colouredDimension + "s found in the extractor file: " + numberOfSeries);
+        System.out.println("Number of " + colouredDimension + "s found in the log file: " + numberOfSeries);
         numberOfSeriesToBeShown = askForANumber("How many " + colouredDimension + "s should be shown? ");
     }
 
@@ -72,14 +72,14 @@ public class PlotterConfigurator {
 
     public void askForLogFile() {
         Scanner in = new Scanner(System.in);
-        System.out.println("Please enter the full name and path of the extractor file you want to plot. " +
+        System.out.println("Please enter the full name and path of the log file you want to plot. " +
                 "There are 2 defaults: type \"default\" or \"errors\".");
         String input = in.next();
         final String userHomeTemp = System.getProperty("user.home") + "/temp/calvalus/";
         if (input.equals("default")) {
-            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.extractor.2010-10-28";
+            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.log.2010-10-28";
         } else if (input.equals("errors")) {
-            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.extractor.2010-10-20";
+            input = userHomeTemp + "hadoop-hadoop-jobtracker-master00.log.2010-10-20";
         }
         inputFile = input;
     }

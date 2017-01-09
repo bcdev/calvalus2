@@ -127,7 +127,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
         // todo - get the database connect info from configuration
         String dbName = "test-productions";
         File databaseFile = new File(localContextDir, dbName);
-        File databaseLogFile = new File(localContextDir, dbName + ".extractor");
+        File databaseLogFile = new File(localContextDir, dbName + ".log");
 
         ProductionStore productionStore = SqlProductionStore.create(processingService,
                                                                     "org.hsqldb.jdbcDriver",

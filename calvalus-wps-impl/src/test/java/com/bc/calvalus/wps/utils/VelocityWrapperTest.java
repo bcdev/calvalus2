@@ -1,14 +1,14 @@
 package com.bc.calvalus.wps.utils;
 
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
-
 import org.apache.velocity.app.VelocityEngine;
-import org.junit.*;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author hans
@@ -44,9 +44,9 @@ public class VelocityWrapperTest {
 //        don't know how to assert Vector object
 //        assertThat(velocityEngine.getProperty("resource.loader"), equalTo("classpath"));
         assertThat(velocityEngine.getProperty("classpath.resource.loader.class"), equalTo("org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader"));
-        assertThat(velocityEngine.getProperty("runtime.log.logsystem.class"), equalTo("org.apache.velocity.runtime.extractor.SimpleLog4JLogSystem"));
-        assertThat(velocityEngine.getProperty("runtime.extractor.logsystem.log4j.category"), equalTo("velocity"));
-        assertThat(velocityEngine.getProperty("runtime.extractor.logsystem.log4j.logger"), equalTo("velocity"));
+        assertThat(velocityEngine.getProperty("runtime.log.logsystem.class"), equalTo("org.apache.velocity.runtime.log.SimpleLog4JLogSystem"));
+        assertThat(velocityEngine.getProperty("runtime.log.logsystem.log4j.category"), equalTo("velocity"));
+        assertThat(velocityEngine.getProperty("runtime.log.logsystem.log4j.logger"), equalTo("velocity"));
     }
 
     @Test

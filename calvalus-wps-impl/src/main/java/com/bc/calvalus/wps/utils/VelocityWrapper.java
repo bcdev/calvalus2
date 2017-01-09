@@ -52,9 +52,9 @@ public class VelocityWrapper {
     private void initDefaultVelocityEngine() {
         velocityEngine.setProperty(RuntimeConstants.RESOURCE_LOADER, "classpath");
         velocityEngine.setProperty("classpath.resource.loader.class", ClasspathResourceLoader.class.getName());
-        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.extractor.SimpleLog4JLogSystem");
-        velocityEngine.setProperty("runtime.extractor.logsystem.log4j.category", "velocity");
-        velocityEngine.setProperty("runtime.extractor.logsystem.log4j.logger", "velocity");
+        velocityEngine.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS, "org.apache.velocity.runtime.log.SimpleLog4JLogSystem");
+        velocityEngine.setProperty("runtime.log.logsystem.log4j.category", "velocity");
+        velocityEngine.setProperty("runtime.log.logsystem.log4j.logger", "velocity");
         velocityEngine.init();
     }
 }

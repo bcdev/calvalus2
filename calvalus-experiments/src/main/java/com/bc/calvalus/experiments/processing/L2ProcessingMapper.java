@@ -55,7 +55,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
         final int tileHeight = context.getConfiguration().getInt(TILE_HEIGHT_OPTION, TILE_HEIGHT_DEFAULT);
         final String outputDir = context.getConfiguration().get("mapred.output.dir");
 
-        // write initial extractor entry for runtime measurements
+        // write initial log entry for runtime measurements
         LOG.info(context.getTaskAttemptID() + " starts processing of split " + split);
         long startTime = System.nanoTime();
 
@@ -141,7 +141,7 @@ public class L2ProcessingMapper extends Mapper<NullWritable, NullWritable, Text 
 //        final Text resultValue = new Text(outputProductPath.toString());
 //        context.write(resultKey, resultValue);
 
-        // write final extractor entry for runtime measurements
+        // write final log entry for runtime measurements
         long stopTime = System.nanoTime();
         LOG.info(context.getTaskAttemptID() + " stops processing of split " + split + " after " + ((stopTime - startTime) / 1E9) + " sec");
     }
