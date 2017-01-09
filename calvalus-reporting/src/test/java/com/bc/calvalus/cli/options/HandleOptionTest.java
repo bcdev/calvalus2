@@ -2,23 +2,25 @@ package com.bc.calvalus.cli.options;
 
 
 import com.bc.calvalus.generator.Constants;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import org.apache.commons.cli.CommandLine;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author muhammad.bc
  */
 public class HandleOptionTest {
 
-    private String outputResult;
     private ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
     @Before
@@ -29,6 +31,13 @@ public class HandleOptionTest {
     @After
     public void tearDown() throws Exception {
         outputStream.close();
+    }
+
+    @Test
+    public void testNonParameter() throws Exception {
+        HandleOption handleOption = new HandleOption(new String[]{});
+        assertThat(outputStream.toString().replaceAll("[\r\n]+", ""),is("Parameter most be specify, for more detail type 'Exec -h'"));
+
     }
 
     @Test

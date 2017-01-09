@@ -1,9 +1,7 @@
 package com.bc.calvalus.cli.options;
 
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Properties;
+import com.bc.calvalus.cli.Launcher;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -11,6 +9,10 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Properties;
 
 
 /**
@@ -21,6 +23,10 @@ public class HandleOption extends PrintOption {
     private CommandLine commandLine;
 
     public HandleOption(String args[]) {
+        if (args.length == 0 || args == null) {
+            printMsg("Parameter most be specify, for more detail type 'Exec -h'");
+            return;
+        }
         String toString = Arrays.toString(args);
         boolean confirmOption = confirmOption(toString);
         if (!confirmOption) {
@@ -54,6 +60,8 @@ public class HandleOption extends PrintOption {
                 startJob(commandLine);
             } else if (commandArg.equalsIgnoreCase("stop")) {
                 stopJob();
+            }else {
+                displayHelp(commandArg);
             }
 
 
@@ -92,6 +100,9 @@ public class HandleOption extends PrintOption {
     }
 
     private void startJob(CommandLine commandLine) {
+        Launcher.builder().setUrlPath(commandLine.getOptionValue("o"))
+                .setTimeIntervalInMinutes(Integer.parseInt(commandLine.getOptionValue("i")))
+                .start();
 
     }
 

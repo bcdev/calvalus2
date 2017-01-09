@@ -1,5 +1,7 @@
 package com.bc.calvalus.cli;
 
+import com.bc.calvalus.generator.writer.WriteJobDetail;
+
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -29,7 +31,10 @@ public class Launcher implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(String.format("Timer all time !!! %d and %s", timeIntervalInMinutes, urlPath));
+//        if (scheduledFuture.isDone()) {
+        WriteJobDetail writeJobDetail = new WriteJobDetail(urlPath);
+        writeJobDetail.start();
+//        }
     }
 
     public void start() {
