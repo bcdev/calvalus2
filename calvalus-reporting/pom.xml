@@ -120,6 +120,13 @@
         </dependency>
     </dependencies>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>onejar-maven-plugin.googlecode.com</id>
+            <url>http://onejar-maven-plugin.googlecode.com/svn/mavenrepo</url>
+        </pluginRepository>
+    </pluginRepositories>
+
     <build>
         <finalName>calvalus-reporting</finalName>
         <resources>
@@ -134,52 +141,6 @@
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.6</version>
             </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.0.2</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.bc.calvalus.generator.GenerateCalvalusReport</mainClass>
-                        </manifest>
-                    </archive>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-a-jar</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <!--<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.6</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.bc.calvalus.generator.GenerateCalvalusReport</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>-->
-
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
@@ -199,7 +160,29 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>calvalus-wps-jar</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-report-jar.xml</descriptor>
+                            </descriptors>
+                            <archive>
+                                <manifest>
+                                    <mainClass>com.bc.calvalus.generator.GenerateCalvalusReport</mainClass>
+                                </manifest>
+                            </archive>
+                            <finalName>generate-calvalus-report</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
                 </executions>
+
+
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
