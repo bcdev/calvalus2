@@ -38,6 +38,13 @@
             <artifactId>jersey-common</artifactId>
             <version>2.25</version>
         </dependency>
+        <!-- required as part of using Servlet 3 spec without any additional configs in web.xml -->
+        <!-- ref: http://stackoverflow.com/a/26721737/2676893 -->
+        <dependency>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>jaxrs-ri</artifactId>
+            <version>2.25</version>
+        </dependency>
 
         <!-- SNAP Dependencies -->
         <dependency>
