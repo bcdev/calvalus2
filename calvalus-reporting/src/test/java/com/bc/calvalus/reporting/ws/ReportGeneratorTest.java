@@ -35,8 +35,8 @@ public class ReportGeneratorTest {
         assertThat(reportGenerator.generateTextSingleJob(usageStatistic), equalTo("Usage statistic for job 'job_1481485063251_7037'\n" +
                                                                                   "\n" +
                                                                                   "Project : default\n" +
-                                                                                  "Start time : 29-Dec-2016 11:33:18\n" +
-                                                                                  "Finish time : 29-Dec-2016 13:50:23\n" +
+                                                                                  "Start time : 29.12.2016 11:33:18\n" +
+                                                                                  "Finish time : 29.12.2016 13:50:23\n" +
                                                                                   "Total time : 02:17:04\nStatus :  SUCCEEDED\n" +
                                                                                   "Total file writing (MB) : 695\n" +
                                                                                   "Total file reading (MB) : 789,736\n" +
