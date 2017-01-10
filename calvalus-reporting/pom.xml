@@ -52,20 +52,6 @@
             <version>2.0.0</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-server -->
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>1.19.3</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.sun.jersey/jersey-servlet -->
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-servlet</artifactId>
-            <version>1.19.3</version>
-        </dependency>
-
         <!-- JSON utility tool -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
@@ -196,7 +182,6 @@
                     </items>
                     <doCheck>false</doCheck>
                     <doUpdate>false</doUpdate>
-                    <revisionOnScmFailure>${nonCanonicalRevision}</revisionOnScmFailure>
                     <providerImplementations>
                         <svn>javasvn</svn>
                     </providerImplementations>
