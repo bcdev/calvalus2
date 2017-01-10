@@ -1,6 +1,0 @@
-Usage:  calvalus-gen stop [OPTIONS] CONTAINER [CONTAINER...]
-
-Stop Interval
-
-Options:
-  -f, --force       force to stop.

@@ -1,19 +1,15 @@
-package com.bc.calvalus.cli;
+package com.bc.calvalus.generator;
 
-import com.bc.calvalus.generator.writer.WriteJobDetail;
+import com.bc.calvalus.generator.writer.JobDetailWriter;
 
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Launcher implements Runnable {
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private final int initialDelay = 0;
     private int timeIntervalInMinutes;
     private String urlPath;
-    private ScheduledFuture<?> scheduledFuture;
 
     public static Launcher builder() {
         return new Launcher();
@@ -31,13 +27,11 @@ public class Launcher implements Runnable {
 
     @Override
     public void run() {
-//        if (scheduledFuture.isDone()) {
-        WriteJobDetail writeJobDetail = new WriteJobDetail(urlPath);
+        JobDetailWriter writeJobDetail = new JobDetailWriter(urlPath);
         writeJobDetail.start();
-//        }
     }
 
     public void start() {
-        scheduledFuture = scheduler.scheduleWithFixedDelay(this, initialDelay, timeIntervalInMinutes, SECONDS);
+        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this, initialDelay, timeIntervalInMinutes, SECONDS);
     }
 }

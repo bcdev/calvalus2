@@ -16,35 +16,14 @@ import java.util.List;
  * @author muhammad.bc.
  */
 public class ConfExtractor extends Extractor {
-
-    public static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_CONF = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/conf";
     public static final String CONF_XSL = "conf.xsl";
+    private final String urlConf;
     private String xsltAsString;
 
     public ConfExtractor() {
         super();
+        urlConf = getProperties().getProperty("calvalus.history.configuration.url");
         xsltAsString = loadXSLTFile(CONF_XSL);
-    }
-
-    public ConfExtractor(String sourceUrl) {
-        super(sourceUrl);
-        xsltAsString = loadXSLTFile(CONF_XSL);
-    }
-
-
-    @Override
-    public <T> HashMap<String, T> extractInfo(JobsType jobsType) {
-        HashMap<String, Conf> confTypesHashMap = new HashMap<>();
-        try {
-            for (JobType jobType : jobsType.getJob()) {
-                String jobTypeId = jobType.getId();
-                Conf confType = getType(jobTypeId);
-                confTypesHashMap.put(jobTypeId, confType);
-            }
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-        return (HashMap<String, T>) confTypesHashMap;
     }
 
     @Override
@@ -73,7 +52,7 @@ public class ConfExtractor extends Extractor {
 
     public Conf getType(String jobId) throws JAXBException {
         StreamSource xsltSource = new StreamSource(new StringReader(xsltAsString));
-        String sourceURL = String.format(HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_CONF, jobId);
+        String sourceURL = String.format(urlConf, jobId);
         return extractInfo(sourceURL, xsltSource, Conf.class);
     }
 

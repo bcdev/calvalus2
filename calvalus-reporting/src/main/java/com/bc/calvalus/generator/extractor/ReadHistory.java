@@ -3,15 +3,15 @@ package com.bc.calvalus.generator.extractor;
 /**
  * @author muhammad.bc.
  */
-public class LogReader extends SourceReader {
+public class ReadHistory extends ReaderHistorySource {
     private String sourceUrl;
     private final FormatType formatType;
 
-    public LogReader(String sourceUrl) {
+    public ReadHistory(String sourceUrl) {
         this(sourceUrl, FormatType.XML);
     }
 
-    public LogReader(String sourceUrl, FormatType formatType) {
+    public ReadHistory(String sourceUrl, FormatType formatType) {
         super(sourceUrl);
         this.sourceUrl = sourceUrl;
         this.formatType = formatType;

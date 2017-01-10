@@ -1,47 +1,39 @@
 package com.bc.calvalus.generator;
 
-import com.bc.calvalus.generator.extractor.LogReader;
+import com.bc.calvalus.generator.extractor.ReadHistory;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
+import static com.bc.calvalus.generator.extractor.Extractor.createProperties;
+
 /**
- * Author ubits on 1/3/2017.
+ * @author muhammad.bc
  */
 public class TestUtils {
 
     private static Properties properties;
-    private static TestUtils instance;
 
-    private static void createProperties() {
-        try (InputStream resourceAsStream = TestUtils.class.getClassLoader().getResourceAsStream("./conf/calvalus-reporting.properties")) {
-            properties = new Properties();
-            properties.load(resourceAsStream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 
     public static String getSaveLocation() {
         if (properties == null) {
-            createProperties();
+            properties = createProperties();
         }
         return properties.getProperty("save.location");
     }
 
     public static String getJobHistoryURL() {
         if (properties == null) {
-            createProperties();
+            properties = createProperties();
         }
-        return properties.getProperty("calvalus.history.url");
+        return properties.getProperty("calvalus.history.jobs.url");
     }
+
 
     public static boolean checkConnection() {
         try {
             String jobHistoryURL = TestUtils.getJobHistoryURL();
-            LogReader logReader = new LogReader(jobHistoryURL);
-            return logReader.isConnect();
+            ReadHistory readHistory = new ReadHistory(jobHistoryURL);
+            return readHistory.isConnect();
         } catch (IllegalArgumentException e) {
 
         }

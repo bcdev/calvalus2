@@ -1,7 +1,7 @@
-package com.bc.calvalus.cli.options;
+package com.bc.calvalus.generator.options;
 
 
-import com.bc.calvalus.cli.Launcher;
+import com.bc.calvalus.generator.Launcher;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;

@@ -12,7 +12,7 @@ import java.io.IOException;
  * @author muhammad.bc
  */
 public class ConnectTest extends BlockJUnit4ClassRunner {
-    public static final String CALVALUS_LOG_EXECUTE_TEST = "calvalus.extractor.execute.test";
+    private static final String CALVALUS_LOG_EXECUTE_TEST = "calvalus.extractor.execute.test";
     private Class<?> klass;
     private boolean executeConnection;
 

@@ -149,25 +149,4 @@ public class JobDetailType {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
-    @Override
-    public String toString() {
-        return "{" +
-                "jobId='" + jobId + '\'' +
-                ", user='" + user + '\'' +
-                ", queue='" + queue + '\'' +
-                ", startTime='" + startTime + '\'' +
-                ", finishTime='" + finishTime + '\'' +
-                ", mapsCompleted='" + mapsCompleted + '\'' +
-                ", reducesCompleted='" + reducesCompleted + '\'' +
-                ", state='" + state + '\'' +
-                ", inputPath='" + inputPath + '\'' +
-                ", fileBytesRead='" + fileBytesRead + '\'' +
-                ", fileBytesWritten='" + fileBytesWritten + '\'' +
-                ", hdfsBytesRead='" + hdfsBytesRead + '\'' +
-                ", hdfsBytesWritten='" + hdfsBytesWritten + '\'' +
-                ", vCoresMillisTotal='" + vCoresMillisTotal + '\'' +
-                ", mbMillisTotal='" + mbMillisTotal + '\'' +
-                ", cpuMilliseconds='" + cpuMilliseconds + '\'' +
-                '}';
-    }
 }

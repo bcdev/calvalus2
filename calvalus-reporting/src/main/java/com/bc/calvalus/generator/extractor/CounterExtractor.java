@@ -17,33 +17,14 @@ import java.util.List;
  */
 public class CounterExtractor extends Extractor {
 
-    private static final String HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_COUNTERS = "http://master00:19888/ws/v1/history/mapreduce/jobs/%s/counters";
+
     private static final String COUNTER_XSL = "counter.xsl";
+    private String countersUrl;
     private String xsltAsString;
 
     public CounterExtractor() {
-        super();
+        countersUrl = getProperties().getProperty("calvalus.history.counters.url");
         xsltAsString = loadXSLTFile(COUNTER_XSL);
-    }
-
-    public CounterExtractor(String sourceUrl) {
-        super(sourceUrl);
-        xsltAsString = loadXSLTFile(COUNTER_XSL);
-    }
-
-
-    public <T> HashMap<String, T> extractInfo(JobsType jobsType) {
-        HashMap<String, CountersType> confTypesHashMap = new HashMap<>();
-        try {
-            for (JobType jobType : jobsType.getJob()) {
-                String jobTypeId = jobType.getId();
-                CountersType confType = getType(jobTypeId);
-                confTypesHashMap.put(jobTypeId, confType);
-            }
-        } catch (JAXBException e) {
-            e.printStackTrace();
-        }
-        return (HashMap<String, T>) confTypesHashMap;
     }
 
     @Override
@@ -73,7 +54,7 @@ public class CounterExtractor extends Extractor {
 
     public CountersType getType(String jobId) throws JAXBException {
         StreamSource xsltSource = new StreamSource(new StringReader(xsltAsString));
-        String sourceURL = String.format(HTTP_MASTER_WS_V1_HISTORY_MAPREDUCE_JOBS_COUNTERS, jobId);
+        String sourceURL = String.format(countersUrl, jobId);
         return extractInfo(sourceURL, xsltSource, CountersType.class);
     }
 

@@ -1,4 +1,4 @@
-package com.bc.calvalus.cli.options;
+package com.bc.calvalus.generator.options;
 
 
 import com.bc.calvalus.generator.Constants;

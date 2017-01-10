@@ -5,6 +5,7 @@ package com.bc.calvalus.generator.writer;
  */
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.ConfExtractor;
 import com.bc.calvalus.generator.extractor.CounterExtractor;
@@ -31,59 +32,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class WriteJobDetail {
+
+public class JobDetailWriter {
 
 
+    public static final int INTERVAL = 10;
     private final GetJobInfo getJobInfo;
     private JobsType jobsTypeList;
     private List<JobDetailType> jobDetailTypeList;
     private File outputFile;
-    private boolean isFinish;
+    private final Logger logger;
 
 
-    public WriteJobDetail(String pathToWrite) {
+    public JobDetailWriter(String pathToWrite) {
+        logger = CalvalusLogger.getLogger();
         jobDetailTypeList = new ArrayList<>();
         outputFile = confirmOutputFile(pathToWrite);
         getJobInfo = new GetJobInfo(outputFile);
-    }
-
-    public void writeAll() throws JAXBException {
-        List<JobType> jobTypeList = getJobType().getJob();
-
-        ConfExtractor confLog = new ConfExtractor();
-        CounterExtractor counterLog = new CounterExtractor();
-
-        HashMap<String, Conf> confInfo = confLog.extractInfo(confLog.getJobsType());
-        HashMap<String, CountersType> counterInfo = counterLog.extractInfo(counterLog.getJobsType());
-
-        for (int i = 0; i < jobTypeList.size(); i++) {
-            JobType jobType = jobTypeList.get(i);
-            String jobId = jobType.getId();
-            Conf conf = confInfo.get(jobId);
-            CountersType countersType = counterInfo.get(jobId);
-            addJobDetails(conf, countersType, jobType);
-        }
-        flushToFile();
-    }
-
-    public void write(String jobId) throws JAXBException {
-        Optional<JobType> jobTypeOptional = getJobType().getJob().stream().filter(p -> p.getId().equalsIgnoreCase(jobId)).findFirst();
-        JobType jobType = null;
-        if (jobTypeOptional.isPresent()) {
-            jobType = jobTypeOptional.get();
-        } else {
-            throw new IllegalArgumentException("The job id does not exist");
-        }
-
-        ConfExtractor confLog = new ConfExtractor();
-        Conf conf = confLog.getType(jobId);
-
-        CounterExtractor counterLog = new CounterExtractor();
-        CountersType countersType = counterLog.getType(jobId);
-
-        addJobDetails(conf, countersType, jobType);
-        flushToFile();
     }
 
     public void write(int range) throws JAXBException, GenerateLogException {
@@ -91,33 +59,34 @@ public class WriteJobDetail {
     }
 
     public void write(int from, int to) throws JAXBException, GenerateLogException {
-        HashMap<String, Conf> confLog = createConfLog(from, to);
-        HashMap<String, CountersType> counterLog = createCounterLog(from, to);
-        write(confLog, counterLog);
+        int last = from;
+        for (int i = from; i < to; i++) {
+            if (i % INTERVAL == 0) {
+                if (last != i) {
+                    write_(last, i);
+                    last = i + 1;
+                }
+            }
+        }
+        write_(last, to);
     }
 
     public String getLastJobID() {
         return getJobInfo.getLastJobID();
     }
 
-    public int getTotalJobs() {
-        int size = getJobType().getJob().size();
-        return size > 0 ? size : 0;
-    }
 
     public void start() {
         try {
-
             String lastJobID = getLastJobID();
             if (lastJobID == null) {
-                int size = getJobType().getJob().size();
-                write(0, 10);
+                write(0, getJobType().getJob().size());
             } else {
                 int[] startStopIndex = getStartStopIndex(lastJobID);
                 write(startStopIndex[0], startStopIndex[1]);
             }
         } catch (JAXBException | GenerateLogException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage());
         }
     }
 
@@ -130,6 +99,12 @@ public class WriteJobDetail {
             int i = listOfJobs.indexOf(jobTypeOptional.get());
             return new int[]{i + 1, listOfJobs.size()};
         }
+    }
+
+    private void write_(int from, int to) throws JAXBException, GenerateLogException {
+        HashMap<String, Conf> confLog = createConfLog(from, to);
+        HashMap<String, CountersType> counterLog = createCounterLog(from, to);
+        write(confLog, counterLog);
     }
 
     private JobsType getJobType() {
@@ -147,7 +122,7 @@ public class WriteJobDetail {
             try {
                 throw new FileNotFoundException("The folder does not exist.");
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage());
             }
         }
         return file;
@@ -160,9 +135,9 @@ public class WriteJobDetail {
         }
         for (JobType jobType : jobTypeList) {
             String jobId = jobType.getId();
+
             Conf conf = confInfo.get(jobId);
             CountersType countersType = counterInfo.get(jobId);
-
             if (conf != null && countersType != null) {
                 addJobDetails(conf, countersType, jobType);
             }
@@ -232,8 +207,9 @@ public class WriteJobDetail {
                 bufferedWriter.append(gson.toJson(jobDetailType));
                 bufferedWriter.newLine();
             }
+            jobDetailTypeList.clear();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage());
         }
     }
 
@@ -250,15 +226,13 @@ public class WriteJobDetail {
     }
 
     class GetJobInfo {
-
         private String lastJobID;
-
 
         public GetJobInfo(File saveLocation) {
             try {
                 lastJobID = getLastJobId(saveLocation);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage());
             }
         }
 
@@ -268,21 +242,20 @@ public class WriteJobDetail {
         }
 
         private String getLastJobId(File saveLocation) throws IOException {
-            String lastLast = null;
+            String lastLine = null;
             try (
                     FileReader fileReader = new FileReader(saveLocation);
                     BufferedReader bufferedReader = new BufferedReader(fileReader);
             ) {
                 String readLine = null;
                 while ((readLine = bufferedReader.readLine()) != null) {
-                    lastLast = readLine;
+                    lastLine = readLine;
                 }
             }
-            if (lastLast == null) {
-                return null;
+            if (lastLine == null) {
+                return lastLine;
             }
-
-            JobDetailType jobDetailType = new Gson().fromJson(lastLast, JobDetailType.class);
+            JobDetailType jobDetailType = new Gson().fromJson(lastLine, JobDetailType.class);
             return jobDetailType.getJobId();
         }
     }

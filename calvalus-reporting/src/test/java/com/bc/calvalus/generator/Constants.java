@@ -4,36 +4,6 @@ package com.bc.calvalus.generator;
  *
  */
 public class Constants {
-
-    public static final String jobHistoryURL = "http://master00:19888/ws/v1/history/mapreduce/jobs";
-
-    public static final String XMLJobInfo =
-            "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
-                    "<jobCounters>\n" +
-                    "    <id>job_1481485063251_3649</id>\n" +
-                    "    <counterGroup>\n" +
-                    "        <counterGroupName>org.apache.hadoop.mapreduce.FileSystemCounter</counterGroupName>\n" +
-                    "        <counter>\n" +
-                    "            <name>HDFS_BYTES_READ</name>\n" +
-                    "            <totalCounterValue>449694437376</totalCounterValue>\n" +
-                    "            <mapCounterValue>449694437376</mapCounterValue>\n" +
-                    "            <reduceCounterValue>0</reduceCounterValue>\n" +
-                    "        </counter>\n" +
-                    "        <counter>\n" +
-                    "            <name>HDFS_BYTES_WRITTEN</name>\n" +
-                    "            <totalCounterValue>466511729804</totalCounterValue>\n" +
-                    "            <mapCounterValue>466511729804</mapCounterValue>\n" +
-                    "            <reduceCounterValue>0</reduceCounterValue>\n" +
-                    "        </counter>\n" +
-                    "        <counter>\n" +
-                    "            <name>What</name>\n" +
-                    "            <totalCounterValue>466511729804</totalCounterValue>\n" +
-                    "            <mapCounterValue>466511729804</mapCounterValue>\n" +
-                    "            <reduceCounterValue>0</reduceCounterValue>\n" +
-                    "        </counter>\n" +
-                    "    </counterGroup>\n" +
-                    "</jobCounters>";
-
     public static final String XMLSourceCounter = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
             "<jobCounters>\n" +
             "    <id>job_1481485063251_3649</id>\n" +
@@ -110,21 +80,21 @@ public class Constants {
             "    </property>\n" +
             "</conf>";
 
-    public static String HELP_INFO = "calvalus-gen --help\n"+
-            "Usage: calvalus-gen [COMMAND] [OPTION\n"+
-            "       calvalus-gen [ --help | -v | --version ]\n"+
-            "\n"+
-            "Options:\n"+
-            "\n"+
-            "  -h, --help                            Print usage\n"+
-            "  -i, --interval                        Time interval\n"+
-            "  -o, --output-file-path                Location to save the generate report\n"+
-            "  -v, --version                         Print version information and quit\n"+
-            "\n"+
-            "Commands:\n"+
-            "    start            Start generating with the default of 30 minutes\n"+
-            "    Stop             Stop generating\n"+
-            "\n"+
+    public static String HELP_INFO = "calvalus-gen --help\n" +
+            "Usage: calvalus-gen [COMMAND] [OPTION\n" +
+            "       calvalus-gen [ --help | -v | --version ]\n" +
+            "\n" +
+            "Options:\n" +
+            "\n" +
+            "  -h, --help                            Print usage\n" +
+            "  -i, --interval                        Time interval\n" +
+            "  -o, --output-file-path                Location to save the generate report\n" +
+            "  -v, --version                         Print version information and quit\n" +
+            "\n" +
+            "Commands:\n" +
+            "    start            Start generating with the default of 30 minutes\n" +
+            "    Stop             Stop generating\n" +
+            "\n" +
             "Run 'calvalus-gen COMMAND --help' for more information on a command.\n";
 
 }

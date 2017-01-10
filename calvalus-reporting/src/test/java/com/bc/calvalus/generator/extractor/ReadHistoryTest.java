@@ -13,20 +13,20 @@ import static org.junit.Assert.assertTrue;
  * @author muhammad
  */
 @RunWith(ConnectTest.class)
-public class LogReaderTest {
+public class ReadHistoryTest {
 
-    private LogReader logReader;
+    private ReadHistory readHistory;
 
 
     @Test(expected = NullPointerException.class)
     public void testLogExtractorURLNull() throws Exception {
-        logReader = new LogReader(null);
+        readHistory = new ReadHistory(null);
     }
 
     @Test
     public void testLogExtractorWrongURL() throws Exception {
         try {
-            logReader = new LogReader("localhost.com");
+            readHistory = new ReadHistory("localhost.com");
         } catch (IllegalArgumentException e) {
 
         }
@@ -35,29 +35,29 @@ public class LogReaderTest {
     @Test
     public void testLogExtractorURLConnection() throws Exception {
         String logURL = TestUtils.getJobHistoryURL();
-        logReader = new LogReader(logURL);
-        boolean connect = logReader.isConnect();
+        readHistory = new ReadHistory(logURL);
+        boolean connect = readHistory.isConnect();
 
         assertTrue(connect);
-        assertEquals(logReader.getSourceUrl(), logURL);
-        assertNotNull(logReader.getRawSource());
-        assertEquals(logReader.getFormatType(), FormatType.XML);
+        assertEquals(readHistory.getSourceUrl(), logURL);
+        assertNotNull(readHistory.getRawSource());
+        assertEquals(readHistory.getFormatType(), FormatType.XML);
 
-        logReader.close();
+        readHistory.close();
     }
 
 
     @Test
     public void testLogExtractorFormatType() throws Exception {
         String logURL = TestUtils.getJobHistoryURL();
-        logReader = new LogReader(logURL, FormatType.JSON);
-        boolean connect = logReader.isConnect();
+        readHistory = new ReadHistory(logURL, FormatType.JSON);
+        boolean connect = readHistory.isConnect();
 
         assertTrue(connect);
-        assertEquals(logReader.getSourceUrl(), logURL);
-        assertNotNull(logReader.getRawSource());
-        assertEquals(logReader.getFormatType(), FormatType.JSON);
-        logReader.close();
+        assertEquals(readHistory.getSourceUrl(), logURL);
+        assertNotNull(readHistory.getRawSource());
+        assertEquals(readHistory.getFormatType(), FormatType.JSON);
+        readHistory.close();
     }
 
 }

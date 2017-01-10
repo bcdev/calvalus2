@@ -1,12 +1,13 @@
-package com.bc.calvalus.cli;
+package com.bc.calvalus.generator;
 
-import com.bc.calvalus.cli.options.HandleOption;
+import com.bc.calvalus.generator.options.HandleOption;
 
 /**
  * @author muhammad.bc.
  */
-public class Calvalus_Gen {
+public class GenerateCalvalusReport {
     public static void main(String[] args) {
         HandleOption handleOption = new HandleOption(args);
+
     }
 }
