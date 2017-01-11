@@ -17,8 +17,6 @@ import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.google.gson.Gson;
-
-import javax.xml.bind.JAXBException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -34,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.bind.JAXBException;
 
 
 public class JobDetailWriter {
@@ -127,7 +126,7 @@ public class JobDetailWriter {
     private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo) throws GenerateLogException {
         List<JobType> jobTypeList = getJobType().getJob();
         if (confInfo.size() != counterInfo.size()) {
-            throw new GenerateLogException("The size of the configuration is not the same with the counter");
+            throw new GenerateLogException("The size of the configuration and counter history have different size");
         }
         for (JobType jobType : jobTypeList) {
             String jobId = jobType.getId();
@@ -201,6 +200,7 @@ public class JobDetailWriter {
             Gson gson = new Gson();
             for (JobDetailType jobDetailType : jobDetailTypeList) {
                 bufferedWriter.append(gson.toJson(jobDetailType));
+                bufferedWriter.write(",");
                 bufferedWriter.newLine();
             }
             jobDetailTypeList.clear();
