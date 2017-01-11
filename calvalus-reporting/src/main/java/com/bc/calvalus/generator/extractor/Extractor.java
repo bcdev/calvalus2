@@ -4,6 +4,7 @@ package com.bc.calvalus.generator.extractor;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -23,6 +24,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -109,12 +112,15 @@ public abstract class Extractor {
     protected String loadXSLTFile(String confXsl) {
         String xsltAsString = null;
         try {
-            File xsltFile = new File(getClass().getResource(confXsl).getFile());
-            if (!xsltFile.exists()) {
+            URL xsltFileUrl = Extractor.class.getClassLoader().getResource(PropertiesWrapper.get("cli.resource.directory") + "/" + confXsl);
+            File xsltFile;
+            if (xsltFileUrl != null) {
+                xsltFile = new File(xsltFileUrl.toURI());
+            } else {
                 throw new FileNotFoundException("XSLT xsltFile does not exit.");
             }
             xsltAsString = getXSLTAsString(xsltFile);
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | URISyntaxException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
         }
 

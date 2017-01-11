@@ -11,6 +11,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.UnrecognizedOptionException;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -70,7 +71,7 @@ public class HandleOption extends PrintOption {
                 String option = ((UnrecognizedOptionException) e).getOption();
                 printErrorMsg(option);
             }
-        } catch (IOException e) {
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
     }
@@ -113,7 +114,7 @@ public class HandleOption extends PrintOption {
         printMsg(format);
     }
 
-    private void displayHelp(String command) throws IOException {
+    private void displayHelp(String command) throws IOException, URISyntaxException {
         if ("start".equalsIgnoreCase(command)) {
             printHelp("help_start.txt");
         } else if ("stop".equalsIgnoreCase(command)) {

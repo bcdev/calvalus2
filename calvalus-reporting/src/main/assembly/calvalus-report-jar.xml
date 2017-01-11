@@ -15,13 +15,9 @@
             <includes>
                 <include>**</include>
             </includes>
-            <outputDirectory>/</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}</directory>
-            <includes>
-                <include>*.txt</include>
-            </includes>
+            <excludes>
+                <exclude>conf/*</exclude>
+            </excludes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
     </fileSets>

@@ -1,21 +1,33 @@
 package com.bc.calvalus.generator.options;
 
+import com.bc.calvalus.generator.extractor.Extractor;
+import com.bc.wps.utilities.PropertiesWrapper;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Objects;
 import java.util.Properties;
 
 
 public abstract class PrintOption {
 
-    public static void printHelp(String help_info) throws IOException {
+    public static void printHelp(String help_info) throws IOException, URISyntaxException {
         try (PrintWriter printWriter = new PrintWriter(System.out)) {
-            File file = new File(PrintOption.class.getResource(help_info).getFile());
+            File file;
+            URL xsltFileUrl = Extractor.class.getClassLoader().getResource(PropertiesWrapper.get("cli.resource.directory") + "/" + help_info);
+            if (xsltFileUrl != null) {
+                file = new File(xsltFileUrl.toURI());
+            } else {
+                throw new FileNotFoundException("'" + help_info + "' not found.");
+            }
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
