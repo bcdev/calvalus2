@@ -1,7 +1,7 @@
 package com.bc.calvalus.generator.extractor;
 
 
-import static com.bc.calvalus.generator.Constants.XMLSourceConf;
+import static com.bc.calvalus.generator.TestConstants.XMLSourceConf;
 import static org.junit.Assert.*;
 
 import com.bc.calvalus.generator.extractor.configuration.Conf;

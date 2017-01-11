@@ -4,7 +4,7 @@ package com.bc.calvalus.generator.options;
 import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
-import com.bc.calvalus.generator.Constants;
+import com.bc.calvalus.generator.TestConstants;
 import org.apache.commons.cli.CommandLine;
 import org.junit.*;
 
@@ -35,12 +35,11 @@ public class HandleOptionTest {
 
     }
 
-    @Ignore // TODO: modify the test the reflect the change regarding file loading.
     @Test
-    public void testStartCommand() throws Exception {
+    public void testHelpCommand() throws Exception {
         PrintOption printOption = new HandleOption(new String[]{"-h"});
         assertNotNull(outputStream.toString());
-        assertEquals(outputStream.toString().replaceAll("[\r\n]+", " "), Constants.HELP_INFO.replaceAll("[\r\n]+", " "));
+        assertEquals(outputStream.toString().replaceAll("[\r\n]+", " "), TestConstants.HELP_INFO.replaceAll("[\r\n]+", " "));
     }
 
     @Test

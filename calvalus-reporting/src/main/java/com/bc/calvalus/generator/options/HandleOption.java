@@ -112,9 +112,9 @@ public class HandleOption extends PrintOption {
 
     private void displayHelp(String command) throws IOException, URISyntaxException {
         if ("start".equalsIgnoreCase(command)) {
-            printHelp("help_start.txt");
+            printHelp(HELP_START);
         } else {
-            printHelp("help_info.txt");
+            printHelp(HELP_INFO);
         }
     }
 

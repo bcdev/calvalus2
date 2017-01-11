@@ -8,7 +8,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import java.io.StringReader;
 
-import static com.bc.calvalus.generator.Constants.XMLSourceCounter;
+import static com.bc.calvalus.generator.TestConstants.XMLSourceCounter;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 

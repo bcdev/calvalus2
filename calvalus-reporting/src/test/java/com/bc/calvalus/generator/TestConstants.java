@@ -3,7 +3,7 @@ package com.bc.calvalus.generator;
 /**
  *
  */
-public class Constants {
+public class TestConstants {
     public static final String XMLSourceCounter = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" +
             "<jobCounters>\n" +
             "    <id>job_1481485063251_3649</id>\n" +
