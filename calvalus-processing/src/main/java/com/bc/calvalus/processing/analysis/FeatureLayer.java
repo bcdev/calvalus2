@@ -78,7 +78,7 @@ public class FeatureLayer extends Layer {
         modelBounds = new Rectangle2D.Double(envelope.getMinX(), envelope.getMinY(),
                                              envelope.getWidth(), envelope.getHeight());
         mapContext = new DefaultMapContext(crs);
-        final Style style = (Style) configuration.getValue(FeatureLayerType.PROPERTY_NAME_SLD_STYLE);
+        final Style style = configuration.getValue(FeatureLayerType.PROPERTY_NAME_SLD_STYLE);
         mapContext.addLayer(fc, style);
         renderer = new StreamingRenderer();
         workaroundLabelCacheBug();

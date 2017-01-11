@@ -20,9 +20,9 @@ import javax.xml.bind.annotation.XmlType;
 public class CountersType {
 
     @XmlElement(required = true)
-    protected String id;
+    private String id;
     @XmlElement(required = true)
-    protected CounterGroupType counterGroup;
+    private CounterGroupType counterGroup;
 
     /**
      * Gets the value of the id property.

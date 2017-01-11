@@ -19,33 +19,11 @@ import java.util.List;
 })
 public class JobsType {
 
-    protected List<JobType> job;
+    private List<JobType> job;
 
-    /**
-     * Gets the value of the job.xml property.
-     * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the job.xml property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getJob().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link JobType }
-     * 
-     * 
-     */
     public List<JobType> getJob() {
         if (job == null) {
-            job = new ArrayList<JobType>();
+            job = new ArrayList<>();
         }
         return this.job;
     }

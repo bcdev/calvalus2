@@ -1,7 +1,0 @@
-Usage:  calvalus-gen start [OPTIONS] CONTAINER [CONTAINER...]
-
-Start Interval
-
-Options:
-  -i, --interval             Interval of time to generate report
-  -o, --output-file-path     Location to save the generate report

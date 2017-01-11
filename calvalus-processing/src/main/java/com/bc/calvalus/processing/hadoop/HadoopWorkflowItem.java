@@ -204,7 +204,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             }
             calvalusConfMap.entrySet().
                     stream().
-                    sorted(Map.Entry.<String, String>comparingByKey()).
+                    sorted(Map.Entry.comparingByKey()).
                     forEach(new Consumer<Map.Entry<String, String>>() {
                         @Override
                         public void accept(Map.Entry<String, String> keyValue) {

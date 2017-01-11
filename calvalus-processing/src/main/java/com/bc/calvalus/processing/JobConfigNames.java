@@ -76,7 +76,7 @@ public interface JobConfigNames {
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String PROCESSING_HISTORY = "processing_history";
 
-    public static final String[] LEVEL3_METADATA_KEYS = {
+    String[] LEVEL3_METADATA_KEYS = {
             JobConfigNames.CALVALUS_MIN_DATE,
             JobConfigNames.CALVALUS_MAX_DATE,
             JobConfigNames.CALVALUS_REGION_GEOMETRY,

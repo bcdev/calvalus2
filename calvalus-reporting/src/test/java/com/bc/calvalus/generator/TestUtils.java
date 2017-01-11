@@ -1,8 +1,9 @@
 package com.bc.calvalus.generator;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.extractor.ReadHistory;
-
 import java.util.Properties;
+import java.util.logging.Level;
 
 import static com.bc.calvalus.generator.extractor.Extractor.createProperties;
 
@@ -18,6 +19,7 @@ public class TestUtils {
         if (properties == null) {
             properties = createProperties();
         }
+        assert properties != null;
         return properties.getProperty("save.location");
     }
 
@@ -25,6 +27,7 @@ public class TestUtils {
         if (properties == null) {
             properties = createProperties();
         }
+        assert properties != null;
         return properties.getProperty("calvalus.history.jobs.url");
     }
 
@@ -35,7 +38,7 @@ public class TestUtils {
             ReadHistory readHistory = new ReadHistory(jobHistoryURL);
             return readHistory.isConnect();
         } catch (IllegalArgumentException e) {
-
+            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
         }
         return false;
     }

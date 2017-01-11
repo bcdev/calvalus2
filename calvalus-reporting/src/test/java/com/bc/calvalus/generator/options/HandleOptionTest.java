@@ -16,7 +16,7 @@ import java.io.PrintStream;
  */
 public class HandleOptionTest {
 
-    private ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
     @Before
     public void setUp() throws Exception {

@@ -453,10 +453,7 @@ public class Example_BoxAndWhiskerXYDataset extends AbstractXYDataset implements
         if (!this.dates.equals(that.dates)) {
             return false;
         }
-        if (!this.items.equals(that.items)) {
-            return false;
-        }
-        return true;
+        return this.items.equals(that.items);
     }
 
     /**

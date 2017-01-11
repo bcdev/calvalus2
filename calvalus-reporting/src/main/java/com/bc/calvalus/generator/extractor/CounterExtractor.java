@@ -5,12 +5,11 @@ import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
-
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.stream.StreamSource;
 
 /**
  * @author muhammad.bc.
@@ -19,8 +18,8 @@ public class CounterExtractor extends Extractor {
 
 
     private static final String COUNTER_XSL = "counter.xsl";
-    private String countersUrl;
-    private String xsltAsString;
+    private final String countersUrl;
+    private final String xsltAsString;
 
     public CounterExtractor() {
         countersUrl = getProperties().getProperty("calvalus.history.counters.url");

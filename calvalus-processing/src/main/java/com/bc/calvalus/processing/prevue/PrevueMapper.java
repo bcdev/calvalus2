@@ -152,8 +152,8 @@ public class PrevueMapper extends Mapper<NullWritable, NullWritable, NullWritabl
         reprojectionOp.setParameter("pixelSizeY", 1.0 / 112.0);
         reprojectionOp.setParameter("width", 49);
         reprojectionOp.setParameter("height", 49);
-        reprojectionOp.setParameter("easting", (double) location.getLon());
-        reprojectionOp.setParameter("northing", (double) location.getLat());
+        reprojectionOp.setParameter("easting", location.getLon());
+        reprojectionOp.setParameter("northing", location.getLat());
         return reprojectionOp;
     }
 

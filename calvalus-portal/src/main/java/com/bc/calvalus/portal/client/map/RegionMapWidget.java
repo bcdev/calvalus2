@@ -685,7 +685,7 @@ public class RegionMapWidget extends ResizeComposite implements RegionMap, Click
         }
     };
 
-    private static interface TreeNode {
+    private interface TreeNode {
         String getName();
     }
 

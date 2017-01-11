@@ -5,15 +5,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.wps.utilities.PropertiesWrapper;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +20,14 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 /**
  * @author muhammad.bc.
@@ -37,14 +36,14 @@ public abstract class Extractor {
 
     private Properties properties;
 
-    public abstract <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException, JAXBException;
+    public abstract <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException;
 
     public abstract <T> T getType(String jobId) throws JAXBException;
 
     public abstract String getXsltAsString();
 
 
-    public Properties getProperties() {
+    Properties getProperties() {
         if (properties == null) {
             properties = createProperties();
         }
@@ -79,7 +78,7 @@ public abstract class Extractor {
         return stringBuilder.toString();
     }
 
-    protected String getFilterXMLWithXSLT(Reader reader, StreamSource xslSource) {
+    private String getFilterXMLWithXSLT(Reader reader, StreamSource xslSource) {
         try (StringWriter stringWriter = new StringWriter()) {
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer = transformerFactory.newTransformer(xslSource);
@@ -91,7 +90,7 @@ public abstract class Extractor {
         return null;
     }
 
-    protected Reader getReadFromSource(String sourceUrl) {
+    Reader getReadFromSource(String sourceUrl) {
         //// todo: 28.12.2017 mba/ for test purpose only
         if (!sourceUrl.contains("master00")) {
             return new StringReader(sourceUrl);
@@ -101,15 +100,16 @@ public abstract class Extractor {
         return new StringReader(rawSource);
     }
 
-    protected <T> T extractInfo(String sourceURL, StreamSource xsltSource, Class<T> typeClass) throws JAXBException {
+    <T> T extractInfo(String sourceURL, StreamSource xsltSource, Class<T> typeClass) throws JAXBException {
         Reader reader = getReadFromSource(sourceURL);
         String filterString = getFilterXMLWithXSLT(reader, xsltSource);
+        assert filterString != null;
         JAXBContext jaxbContext = JAXBContext.newInstance(typeClass);
         Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
         return (T) unmarshaller.unmarshal(new StringReader(filterString));
     }
 
-    protected String loadXSLTFile(String confXsl) {
+    String loadXSLTFile(String confXsl) {
         String xsltAsString = null;
         try {
             URL xsltFileUrl = Extractor.class.getClassLoader().getResource(PropertiesWrapper.get("cli.resource.directory") + "/" + confXsl);

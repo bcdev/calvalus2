@@ -4,8 +4,6 @@ package com.bc.calvalus.generator.options;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.Launcher;
 import com.bc.calvalus.generator.extractor.Extractor;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.Properties;
 import java.util.logging.Level;
 import org.apache.commons.cli.CommandLine;
@@ -24,7 +22,7 @@ public class HandleOption extends PrintOption {
     private CommandLine commandLine;
 
     public HandleOption(String args[]) {
-        if (args.length == 0 || args == null) {
+        if (args.length == 0) {
             printMsg("Please specify a parameter, for more detail type '-h'");
             return;
         }
@@ -58,8 +56,7 @@ public class HandleOption extends PrintOption {
             }
         } catch (ParseException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
-        } catch (IOException | URISyntaxException e) {
-            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
+            printErrorMsg("");
         }
     }
 
@@ -78,7 +75,7 @@ public class HandleOption extends PrintOption {
 
 
     private void startJob(CommandLine commandLine) {
-        String intervalS = null;
+        String intervalS;
         if (commandLine.hasOption("i")) {
             intervalS = commandLine.getOptionValue("i");
         } else {
@@ -99,7 +96,7 @@ public class HandleOption extends PrintOption {
         printMsg(format);
     }
 
-    private void displayHelp(String command) throws IOException, URISyntaxException {
+    private void displayHelp(String command) {
         if ("start".equalsIgnoreCase(command)) {
             printHelp(HELP_START);
         } else {

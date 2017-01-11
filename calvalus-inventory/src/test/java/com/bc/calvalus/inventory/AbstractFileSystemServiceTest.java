@@ -37,7 +37,7 @@ public class AbstractFileSystemServiceTest {
 
     @Test
     public void testGetCommonPathPrefix() throws Exception {
-        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Collections.<String>emptyList()));
+        assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Collections.emptyList()));
         assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("")));
         assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList(".*")));
         assertEquals("", AbstractFileSystemService.getCommonPathPrefix(Arrays.asList("abc.*")));

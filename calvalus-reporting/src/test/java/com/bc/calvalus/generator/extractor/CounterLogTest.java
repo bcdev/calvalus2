@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Author ubits on 1/3/2017.
+ * @author muhammad.bc
  */
 public class CounterLogTest {
     private final CounterExtractor log;

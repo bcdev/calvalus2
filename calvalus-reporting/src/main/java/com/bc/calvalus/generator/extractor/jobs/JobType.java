@@ -31,29 +31,29 @@ import javax.xml.datatype.XMLGregorianCalendar;
 public class JobType {
 
     @XmlElement(required = true)
-    protected String submitTime;
+    private String submitTime;
     @XmlElement(required = true)
-    protected String startTime;
+    private String startTime;
     @XmlElement(required = true)
-    protected String finishTime;
+    private String finishTime;
     @XmlElement(required = true)
-    protected String id;
+    private String id;
     @XmlElement(required = true)
-    protected String name;
+    private String name;
     @XmlElement(required = true)
-    protected String queue;
+    private String queue;
     @XmlElement(required = true)
-    protected String user;
+    private String user;
     @XmlElement(required = true)
-    protected String state;
+    private String state;
     @XmlElement(required = true)
-    protected String mapsTotal;
+    private String mapsTotal;
     @XmlElement(required = true)
-    protected String mapsCompleted;
+    private String mapsCompleted;
     @XmlElement(required = true)
-    protected String reducesTotal;
+    private String reducesTotal;
     @XmlElement(required = true)
-    protected String reducesCompleted;
+    private String reducesCompleted;
 
 
     public String getSubmitTime() {

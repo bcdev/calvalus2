@@ -102,7 +102,7 @@ public class TAKey implements WritableComparable {
 
         @Override
         public int compare(WritableComparable key1, WritableComparable key2) {
-            return ((TAKey) key1).compareTo(key2);
+            return key1.compareTo(key2);
         }
     }
 

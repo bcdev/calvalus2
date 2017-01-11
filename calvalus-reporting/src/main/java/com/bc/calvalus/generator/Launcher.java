@@ -7,7 +7,6 @@ import java.util.concurrent.Executors;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Launcher implements Runnable {
-    private final int initialDelay = 0;
     private int timeIntervalInMinutes;
     private String urlPath;
 
@@ -32,6 +31,7 @@ public class Launcher implements Runnable {
     }
 
     public void start() {
+        int initialDelay = 0;
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this, initialDelay, timeIntervalInMinutes, SECONDS);
     }
 }

@@ -2,24 +2,24 @@ package com.bc.calvalus.generator.writer;
 /**
  * @author muhammad.bc.
  */
-public class JobDetailType {
+class JobDetailType {
 
-    protected String jobId;
-    protected String user;
-    protected String queue;
-    protected String startTime;
-    protected String finishTime;
-    protected String mapsCompleted;
-    protected String reducesCompleted;
-    protected String state;
-    protected String inputPath;
-    protected String fileBytesRead;
-    protected String fileBytesWritten;
-    protected String hdfsBytesRead;
-    protected String hdfsBytesWritten;
-    protected String vCoresMillisTotal;
-    protected String mbMillisTotal;
-    protected String cpuMilliseconds;
+    private String jobId;
+    private String user;
+    private String queue;
+    private String startTime;
+    private String finishTime;
+    private String mapsCompleted;
+    private String reducesCompleted;
+    private String state;
+    private String inputPath;
+    private String fileBytesRead;
+    private String fileBytesWritten;
+    private String hdfsBytesRead;
+    private String hdfsBytesWritten;
+    private String vCoresMillisTotal;
+    private String mbMillisTotal;
+    private String cpuMilliseconds;
 
     public String getJobId() {
         return jobId;

@@ -18,7 +18,7 @@ public interface MapAction {
 
     void run(RegionMap regionMap);
 
-    static class Separator implements MapAction {
+    class Separator implements MapAction {
         @Override
         public Image getImage() {
             return null;

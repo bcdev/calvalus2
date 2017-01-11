@@ -23,13 +23,13 @@ import java.math.BigInteger;
 public class CounterType {
 
     @XmlElement(required = true)
-    protected String name;
+    private String name;
     @XmlElement(required = true)
-    protected BigInteger totalCounterValue;
+    private BigInteger totalCounterValue;
     @XmlElement(required = true)
-    protected BigInteger mapCounterValue;
+    private BigInteger mapCounterValue;
     @XmlElement(required = true)
-    protected String reduceCounterValue;
+    private String reduceCounterValue;
 
     /**
      * Gets the value of the name property.

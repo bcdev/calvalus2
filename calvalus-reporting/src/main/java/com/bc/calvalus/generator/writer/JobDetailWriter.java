@@ -1,9 +1,5 @@
 package com.bc.calvalus.generator.writer;
 
-/**
- * @author muhammad.bc.
- */
-
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
@@ -34,15 +30,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.bind.JAXBException;
 
-
+/**
+ * @author muhammad.bc
+ */
 public class JobDetailWriter {
 
 
-    public static final int INTERVAL = 10;
+    private static final int INTERVAL = 10;
     private final GetJobInfo getJobInfo;
     private JobsType jobsTypeList;
-    private List<JobDetailType> jobDetailTypeList;
-    private File outputFile;
+    private final List<JobDetailType> jobDetailTypeList;
+    private final File outputFile;
     private final Logger logger;
 
 
@@ -53,7 +51,7 @@ public class JobDetailWriter {
         getJobInfo = new GetJobInfo(outputFile);
     }
 
-    public void write(int from, int to) throws JAXBException, GenerateLogException {
+    private void write(int from, int to) throws JAXBException, GenerateLogException {
         int last = from;
         for (int i = from; i < to; i++) {
             if (i % INTERVAL == 0) {
@@ -66,7 +64,7 @@ public class JobDetailWriter {
         write_(last, to);
     }
 
-    public String getLastJobID() {
+    private String getLastJobID() {
         return getJobInfo.getLastJobID();
     }
 
@@ -85,7 +83,7 @@ public class JobDetailWriter {
         }
     }
 
-    public int[] getStartStopIndex(String lastJobID) {
+    private int[] getStartStopIndex(String lastJobID) {
         List<JobType> listOfJobs = getJobType().getJob();
         Optional<JobType> jobTypeOptional = listOfJobs.stream().filter(p -> p.getId().equalsIgnoreCase(lastJobID)).findFirst();
         if (!jobTypeOptional.isPresent()) {
@@ -96,7 +94,7 @@ public class JobDetailWriter {
         }
     }
 
-    private void write_(int from, int to) throws JAXBException, GenerateLogException {
+    private void write_(int from, int to) throws GenerateLogException {
         HashMap<String, Conf> confLog = createConfLog(from, to);
         HashMap<String, CountersType> counterLog = createCounterLog(from, to);
         write(confLog, counterLog);
@@ -195,7 +193,7 @@ public class JobDetailWriter {
     private void flushToFile() {
         try (
                 FileWriter fileWriter = new FileWriter(outputFile, true);
-                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)
         ) {
             Gson gson = new Gson();
             for (JobDetailType jobDetailType : jobDetailTypeList) {
@@ -209,13 +207,13 @@ public class JobDetailWriter {
         }
     }
 
-    private HashMap<String, CountersType> createCounterLog(int from, int to) throws JAXBException, GenerateLogException {
+    private HashMap<String, CountersType> createCounterLog(int from, int to) throws GenerateLogException {
         CounterExtractor counterLog = new CounterExtractor();
         JobsType jobsType = getJobType();
         return counterLog.extractInfo(from, to, jobsType);
     }
 
-    private HashMap<String, Conf> createConfLog(int from, int to) throws JAXBException, GenerateLogException {
+    private HashMap<String, Conf> createConfLog(int from, int to) throws GenerateLogException {
         ConfExtractor confLog = new ConfExtractor();
         JobsType jobsType = getJobType();
         return confLog.extractInfo(from, to, jobsType);
@@ -241,7 +239,7 @@ public class JobDetailWriter {
             String lastLine = null;
             try (
                     FileReader fileReader = new FileReader(saveLocation);
-                    BufferedReader bufferedReader = new BufferedReader(fileReader);
+                    BufferedReader bufferedReader = new BufferedReader(fileReader)
             ) {
                 String readLine;
                 while ((readLine = bufferedReader.readLine()) != null) {
@@ -251,7 +249,7 @@ public class JobDetailWriter {
             if (lastLine == null || lastLine.isEmpty()) {
                 return lastLine;
             }
-            JobDetailType jobDetailType = new Gson().fromJson(lastLine.replace("},","}"), JobDetailType.class);
+            JobDetailType jobDetailType = new Gson().fromJson(lastLine.replace("},", "}"), JobDetailType.class);
             return jobDetailType.getJobId();
         }
     }

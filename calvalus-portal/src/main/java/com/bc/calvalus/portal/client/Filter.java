@@ -23,7 +23,7 @@ package com.bc.calvalus.portal.client;
  */
 interface Filter<T> {
 
-    static final Filter<String> ACCEPTING_ALL = new Filter<String>() {
+    Filter<String> ACCEPTING_ALL = new Filter<String>() {
         @Override
         public boolean accept(String filePath) {
             return true;

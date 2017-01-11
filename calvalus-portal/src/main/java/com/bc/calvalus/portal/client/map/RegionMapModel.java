@@ -19,7 +19,7 @@ public interface RegionMapModel {
 
     void fireRegionChanged(RegionMap regionMap, Region region);
 
-    public static class ChangeEvent {
+    class ChangeEvent {
         private final RegionMap regionMap;
         private final Region region;
 
@@ -37,7 +37,7 @@ public interface RegionMapModel {
         }
     }
 
-    public interface ChangeListener {
+    interface ChangeListener {
         void onRegionAdded(ChangeEvent event);
 
         void onRegionRemoved(ChangeEvent event);

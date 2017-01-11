@@ -58,7 +58,7 @@ public class MergedRecordSourceTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testMergeZero() throws Exception {
-        new MergedRecordSource(insitu, level2, Collections.<NamedRecordSource>emptyList());
+        new MergedRecordSource(insitu, level2, Collections.emptyList());
     }
 
     @Test

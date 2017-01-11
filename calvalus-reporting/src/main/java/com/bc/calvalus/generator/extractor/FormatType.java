@@ -6,7 +6,7 @@ package com.bc.calvalus.generator.extractor;
 public enum FormatType {
     XML("application/xml"), JSON("application/json");
 
-    private String format;
+    private final String format;
 
     FormatType(String format) {
         this.format = format;

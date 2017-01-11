@@ -227,7 +227,7 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    public static interface ChangeHandler {
+    public interface ChangeHandler {
 
         void onProductSetChanged(DtoProductSet productSet);
     }

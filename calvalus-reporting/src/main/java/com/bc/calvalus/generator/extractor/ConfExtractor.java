@@ -16,9 +16,9 @@ import java.util.List;
  * @author muhammad.bc.
  */
 public class ConfExtractor extends Extractor {
-    public static final String CONF_XSL = "conf.xsl";
+    private static final String CONF_XSL = "conf.xsl";
     private final String urlConf;
-    private String xsltAsString;
+    private final String xsltAsString;
 
     public ConfExtractor() {
         super();

@@ -4,7 +4,7 @@ package com.bc.calvalus.generator.extractor;
  * @author muhammad.bc.
  */
 public class ReadHistory extends ReaderHistorySource {
-    private String sourceUrl;
+    private final String sourceUrl;
     private final FormatType formatType;
 
     public ReadHistory(String sourceUrl) {

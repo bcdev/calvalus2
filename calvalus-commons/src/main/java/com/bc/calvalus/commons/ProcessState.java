@@ -33,7 +33,7 @@ public enum ProcessState {
 
     private final boolean done;
 
-    private ProcessState(boolean done) {
+    ProcessState(boolean done) {
         this.done = done;
     }
 

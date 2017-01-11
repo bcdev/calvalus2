@@ -15,7 +15,7 @@ import java.io.StringReader;
  * @author muhammad.bc
  */
 public class ConfLogTest {
-    public static final String PATH = "hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2016/12/21/000004/job_1481485063251_4637_conf.xml";
+    private static final String PATH = "hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2016/12/21/000004/job_1481485063251_4637_conf.xml";
 
     @Before
     public void setUp() throws Exception {

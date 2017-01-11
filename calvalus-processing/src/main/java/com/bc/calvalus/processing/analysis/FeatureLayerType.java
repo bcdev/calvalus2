@@ -80,16 +80,16 @@ public class FeatureLayerType extends LayerType {
         fc = configuration.getValue(FeatureLayerType.PROPERTY_NAME_FEATURE_COLLECTION);
         if (fc == null) {
             try {
-                final URL url = (URL) configuration.getValue(FeatureLayerType.PROPERTY_NAME_FEATURE_COLLECTION_URL);
+                final URL url = configuration.getValue(FeatureLayerType.PROPERTY_NAME_FEATURE_COLLECTION_URL);
                 FeatureSource<SimpleFeatureType, SimpleFeature> featureSource = FeatureUtils.getFeatureSource(url);
                 fc = featureSource.getFeatures();
             } catch (IOException e) {
                 throw new IllegalArgumentException(e);
             }
         }
-        final CoordinateReferenceSystem featureCrs = (CoordinateReferenceSystem) configuration.getValue(
+        final CoordinateReferenceSystem featureCrs = configuration.getValue(
                 FeatureLayerType.PROPERTY_NAME_FEATURE_COLLECTION_CRS);
-        final Geometry clipGeometry = (Geometry) configuration.getValue(
+        final Geometry clipGeometry = configuration.getValue(
                 FeatureLayerType.PROPERTY_NAME_FEATURE_COLLECTION_CLIP_GEOMETRY);
 
         fc = FeatureUtils.clipCollection(fc,

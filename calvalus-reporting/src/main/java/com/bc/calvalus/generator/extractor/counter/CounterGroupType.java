@@ -21,58 +21,21 @@ import java.util.List;
 public class CounterGroupType {
 
     @XmlElement(required = true)
-    protected String counterGroupName;
-    protected List<CounterType> counter;
+    private String counterGroupName;
+    private List<CounterType> counter;
 
-    /**
-     * Gets the value of the counterGroupName property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
+
     public String getCounterGroupName() {
         return counterGroupName;
     }
 
-    /**
-     * Sets the value of the counterGroupName property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
     public void setCounterGroupName(String value) {
         this.counterGroupName = value;
     }
 
-    /**
-     * Gets the value of the counter property.
-     * 
-     * <p>
-     * This accessor method returns a reference to the live list,
-     * not a snapshot. Therefore any modification you make to the
-     * returned list will be present inside the JAXB object.
-     * This is why there is not a <CODE>set</CODE> method for the counter property.
-     * 
-     * <p>
-     * For example, to add a new item, do as follows:
-     * <pre>
-     *    getCounter().add(newItem);
-     * </pre>
-     * 
-     * 
-     * <p>
-     * Objects of the following type(s) are allowed in the list
-     * {@link CounterType }
-     * 
-     * 
-     */
     public List<CounterType> getCounter() {
         if (counter == null) {
-            counter = new ArrayList<CounterType>();
+            counter = new ArrayList<>();
         }
         return this.counter;
     }

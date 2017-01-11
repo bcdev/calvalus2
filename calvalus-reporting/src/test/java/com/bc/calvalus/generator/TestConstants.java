@@ -80,7 +80,7 @@ public class TestConstants {
             "    </property>\n" +
             "</conf>";
 
-    public static String HELP_INFO = "<generate-calvalus-report> --help\n" +
+    public final static String HELP_INFO = "<generate-calvalus-report> --help\n" +
             "Usage: generate-calvalus-report [COMMAND] [OPTION\n" +
             "       generate-calvalus-report [ --help | -v | --version ]\n" +
             "\n" +

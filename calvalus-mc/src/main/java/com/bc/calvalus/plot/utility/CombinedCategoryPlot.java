@@ -246,7 +246,7 @@ public class CombinedCategoryPlot extends CategoryPlot implements PlotChangeList
         int n = this.subplots.size();
         int totalWeight = 0;
         for (int i = 0; i < n; i++) {
-            CategoryPlot sub = (CategoryPlot) this.subplots.get(i);
+            CategoryPlot sub = this.subplots.get(i);
             totalWeight += sub.getWeight();
         }
         this.subplotAreas = new Rectangle2D[n];
@@ -260,7 +260,7 @@ public class CombinedCategoryPlot extends CategoryPlot implements PlotChangeList
         }
 
         for (int i = 0; i < n; i++) {
-            CategoryPlot plot = (CategoryPlot) this.subplots.get(i);
+            CategoryPlot plot = this.subplots.get(i);
 
             // calculate sub-plot area
             if (orientation == PlotOrientation.HORIZONTAL) {
@@ -337,7 +337,7 @@ public class CombinedCategoryPlot extends CategoryPlot implements PlotChangeList
 
         // draw all the subplots
         for (int i = 0; i < this.subplots.size(); i++) {
-            CategoryPlot plot = (CategoryPlot) this.subplots.get(i);
+            CategoryPlot plot = this.subplots.get(i);
             PlotRenderingInfo subplotInfo = null;
             if (info != null) {
                 subplotInfo = new PlotRenderingInfo(info.getOwner());

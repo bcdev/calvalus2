@@ -18,13 +18,13 @@ import javax.ws.rs.core.Response;
 
 public abstract class ReaderHistorySource implements Closeable {
 
-    public static final int MSG_CODE_SUCCESSFUL_START = 200;
-    public static final int MSG_CODE_SUCCESSFUL_END = 300;
+    private static final int MSG_CODE_SUCCESSFUL_START = 200;
+    private static final int MSG_CODE_SUCCESSFUL_END = 300;
     private final Client clientRequest;
     private boolean isConnected;
     private Invocation.Builder builder;
 
-    public ReaderHistorySource(String sourceUrl) {
+    ReaderHistorySource(String sourceUrl) {
         clientRequest = ClientBuilder.newClient();
         try {
             builder = sendRequestBuilder(sourceUrl);
@@ -47,13 +47,12 @@ public abstract class ReaderHistorySource implements Closeable {
         clientRequest.close();
     }
 
-    private final Invocation.Builder sendRequestBuilder(String sourceUrl) {
+    private Invocation.Builder sendRequestBuilder(String sourceUrl) {
         return clientRequest.target(sourceUrl).request();
     }
 
-    protected final String readSource(FormatType formatType) {
+    String readSource(FormatType formatType) {
         Invocation.Builder accept = builder.accept(formatType.getFormat());
-        String result = accept.get(String.class);
-        return result;
+        return accept.get(String.class);
     }
 }

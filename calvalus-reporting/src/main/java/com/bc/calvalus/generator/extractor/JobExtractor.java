@@ -17,7 +17,7 @@ import java.util.logging.Level;
  * @author muhammad.bc.
  */
 public class JobExtractor extends Extractor {
-    private JobsType jobsType;
+    private final JobsType jobsType;
 
     public JobExtractor() {
         super();
@@ -26,7 +26,7 @@ public class JobExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException, JAXBException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException {
         throw new NotImplementedException("Not implemented");
     }
 
