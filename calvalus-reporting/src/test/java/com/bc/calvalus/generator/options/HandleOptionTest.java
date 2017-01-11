@@ -36,7 +36,7 @@ public class HandleOptionTest {
     @Test
     public void testNonParameter() throws Exception {
         HandleOption handleOption = new HandleOption(new String[]{});
-        assertThat(outputStream.toString().replaceAll("[\r\n]+", ""),is("Parameter most be specify, for more detail type 'Exec -h'"));
+        assertThat(outputStream.toString().replaceAll("[\r\n]+", ""), is("Please specify a parameter, for more detail type '-h'"));
 
     }
 
@@ -59,8 +59,8 @@ public class HandleOptionTest {
     public void testOptionParameter() throws Exception {
         HandleOption printOption = new HandleOption(new String[]{"start", "-i", "30", "-o", "c:/test",});
         CommandLine commandLine = printOption.getCommandLine();
-        assertEquals(printOption.getOptionValue("i"), "30");
-        assertEquals(printOption.getOptionValue("o"), "c:/test");
+        assertEquals("30", printOption.getOptionValue("i"));
+        assertEquals("c:/test", printOption.getOptionValue("o"));
     }
 
     @Test

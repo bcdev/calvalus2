@@ -80,9 +80,9 @@ public class Constants {
             "    </property>\n" +
             "</conf>";
 
-    public static String HELP_INFO = "calvalus-gen --help\n" +
-            "Usage: calvalus-gen [COMMAND] [OPTION\n" +
-            "       calvalus-gen [ --help | -v | --version ]\n" +
+    public static String HELP_INFO = "<generate-calvalus-report> --help\n" +
+            "Usage: generate-calvalus-report [COMMAND] [OPTION\n" +
+            "       generate-calvalus-report [ --help | -v | --version ]\n" +
             "\n" +
             "Options:\n" +
             "\n" +
@@ -93,8 +93,6 @@ public class Constants {
             "\n" +
             "Commands:\n" +
             "    start            Start generating with the default of 30 minutes\n" +
-            "    Stop             Stop generating\n" +
-            "\n" +
-            "Run 'calvalus-gen COMMAND --help' for more information on a command.\n";
+            "Run 'generate-calvalus-report COMMAND --help' for more information on a command.\n";
 
 }

@@ -28,7 +28,7 @@ public abstract class PrintOption {
     public static void printErrorMsg(String msg) {
         try (PrintWriter printWriter = new PrintWriter(System.out)) {
             printWriter.println(String.format("Option provided is not define: %s", msg));
-            printWriter.println("See 'calvalus-gen --help'.");
+            printWriter.println("See 'generate-calvalus-report --help'.");
             printWriter.flush();
         }
     }
@@ -41,7 +41,6 @@ public abstract class PrintOption {
 
     public static Properties getBuildProperties() {
         Properties properties = new Properties();
-
         try (InputStream resourceAsStream = PrintOption.class.getResourceAsStream("build-info.properties")) {
             if (Objects.nonNull(resourceAsStream)) {
                 properties.load(resourceAsStream);

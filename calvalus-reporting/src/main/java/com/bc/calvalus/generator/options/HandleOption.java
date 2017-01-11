@@ -8,7 +8,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -24,7 +23,7 @@ public class HandleOption extends PrintOption {
 
     public HandleOption(String args[]) {
         if (args.length == 0 || args == null) {
-            printMsg("Parameter most be specify, for more detail type 'Exec -h'");
+            printMsg("Please specify a parameter, for more detail type '-h'");
             return;
         }
         String toString = Arrays.toString(args);
@@ -56,23 +55,23 @@ public class HandleOption extends PrintOption {
                 return;
             }
 
-            if (commandArg.equalsIgnoreCase("start")) {
+            if (commandArg.equalsIgnoreCase("start") && checkToStart()) {
                 startJob(commandLine);
-            } else if (commandArg.equalsIgnoreCase("stop")) {
-                stopJob();
-            }else {
+            } else {
                 displayHelp(commandArg);
             }
-
-
         } catch (ParseException e) {
-            if (e instanceof UnrecognizedOptionException) {
-                String option = ((UnrecognizedOptionException) e).getOption();
-                printErrorMsg(option);
-            }
+                printErrorMsg(e.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean checkToStart() {
+        if (commandLine.getOptionValue("i") != null && commandLine.getOptionValue("o")!=null) {
+            return true;
+        }
+        return false;
     }
 
     private boolean confirmOption(String toString) {
@@ -84,20 +83,16 @@ public class HandleOption extends PrintOption {
     private CommandLine createCLIOptions(String[] args) throws ParseException {
 
         Options options = new Options();
-        options.addOption(Option.builder("f").longOpt("force").build());
         options.addOption(Option.builder("h").longOpt("help").build());
-        options.addOption(Option.builder("i").longOpt("interval").hasArg(true).build());
-        options.addOption(Option.builder("u").longOpt("job-url").hasArg(true).build());
-        options.addOption(Option.builder("o").longOpt("output-path").hasArg(true).build());
         options.addOption(Option.builder("v").longOpt("version").build());
+        options.addOption(Option.builder("i").longOpt("interval").hasArg(true).build());
+        options.addOption(Option.builder("o").longOpt("output-path").hasArg(true).build());
 
         CommandLineParser commandLineParser = new DefaultParser();
         return commandLineParser.parse(options, args);
     }
 
-    private void stopJob() {
 
-    }
 
     private void startJob(CommandLine commandLine) {
         Launcher.builder().setUrlPath(commandLine.getOptionValue("o"))
@@ -116,8 +111,6 @@ public class HandleOption extends PrintOption {
     private void displayHelp(String command) throws IOException {
         if ("start".equalsIgnoreCase(command)) {
             printHelp("help_start.txt");
-        } else if ("stop".equalsIgnoreCase(command)) {
-            printHelp("help_stop.txt");
         } else {
             printHelp("help_info.txt");
         }

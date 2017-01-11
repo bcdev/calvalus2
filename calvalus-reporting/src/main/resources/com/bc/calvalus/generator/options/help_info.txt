@@ -1,6 +1,6 @@
-calvalus-gen --help
-Usage: calvalus-gen [COMMAND] [OPTION
-       calvalus-gen [ --help | -v | --version ]
+<generate-calvalus-report> --help
+Usage: generate-calvalus-report [COMMAND] [OPTION
+       generate-calvalus-report [ --help | -v | --version ]
 
 Options:
 
@@ -11,6 +11,5 @@ Options:
 
 Commands:
     start            Start generating with the default of 30 minutes
-    Stop             Stop generating
 
-Run 'calvalus-gen COMMAND --help' for more information on a command.
+Run 'generate-calvalus-report COMMAND --help' for more information on a command.

@@ -54,10 +54,6 @@ public class JobDetailWriter {
         getJobInfo = new GetJobInfo(outputFile);
     }
 
-    public void write(int range) throws JAXBException, GenerateLogException {
-        write(0, range);
-    }
-
     public void write(int from, int to) throws JAXBException, GenerateLogException {
         int last = from;
         for (int i = from; i < to; i++) {
@@ -247,12 +243,12 @@ public class JobDetailWriter {
                     FileReader fileReader = new FileReader(saveLocation);
                     BufferedReader bufferedReader = new BufferedReader(fileReader);
             ) {
-                String readLine = null;
+                String readLine;
                 while ((readLine = bufferedReader.readLine()) != null) {
                     lastLine = readLine;
                 }
             }
-            if (lastLine == null) {
+            if (lastLine == null || lastLine.isEmpty()) {
                 return lastLine;
             }
             JobDetailType jobDetailType = new Gson().fromJson(lastLine, JobDetailType.class);
