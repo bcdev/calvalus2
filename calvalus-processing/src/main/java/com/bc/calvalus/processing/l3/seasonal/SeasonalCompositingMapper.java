@@ -48,8 +48,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
     private static final SimpleDateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
     private static final String SR_FILENAME_FORMAT = "ESACCI-LC-L3-SR-%s-P%dD-h%02dv%02d-%s-%s.nc";
+    private static final String SR_FILENAME_FORMAT_MSI = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
     private static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9][0-9])v([0-9][0-9])-........-([^-]*).nc");
+            Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
     public static final int NUM_SRC_BANDS = 1 + 5 + 13 + 1;
 
     @Override
@@ -67,7 +68,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
-        final int numTileRows = mosaicHeight != 972000 ? 36 : 72;
+        final int numTileRows = mosaicHeight != 972000 ? 36 : 180;
         final int numMicroTiles = mosaicHeight != 972000 ? 1 : 5;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72 = 13500
         final int microTileSize = tileSize / numMicroTiles;
@@ -123,7 +124,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar, daysPerWeek)) {
 
             // determine and read input tile for the week
-            final String weekFileName = String.format(SR_FILENAME_FORMAT, sensorAndResolution, daysPerWeek, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
+            final String weekFileName = String.format(mosaicHeight == 972000 ? SR_FILENAME_FORMAT_MSI : SR_FILENAME_FORMAT, sensorAndResolution, daysPerWeek, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
             final Path path = new Path(new Path(mosaicHeight == 972000 ? srRootDir : new Path(srRootDir, YEAR_FORMAT.format(week)), DATE_FORMAT.format(week)), weekFileName);
             if (!fs.exists(path)) {
                 LOG.info("skipping non-existing period " + path);

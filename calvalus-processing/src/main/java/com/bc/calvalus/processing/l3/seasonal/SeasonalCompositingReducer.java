@@ -146,7 +146,7 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
             throw new IllegalArgumentException("no numRows in L3 parameters " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
         final int resolution = mosaicHeight == 972000 ? 20 : mosaicHeight == 64800 ? 300 : mosaicHeight == 16200 ? 1000 : 19440000 / mosaicHeight;
-        final int numTileRows = "MSI".equals(sensor) ? 72*5 : 36;
+        final int numTileRows = "MSI".equals(sensor) ? 180*5 : 36;
         final int numTileColumns = 2 * numTileRows;
         final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72*5 = 2700
 
