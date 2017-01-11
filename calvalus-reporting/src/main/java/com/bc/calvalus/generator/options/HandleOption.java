@@ -1,15 +1,19 @@
 package com.bc.calvalus.generator.options;
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.Launcher;
+import java.util.logging.Level;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.UnrecognizedOptionException;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -61,8 +65,8 @@ public class HandleOption extends PrintOption {
                 displayHelp(commandArg);
             }
         } catch (ParseException e) {
-                printErrorMsg(e.getMessage());
-        } catch (IOException e) {
+            CalvalusLogger.getLogger().log(Level.SEVERE,e.getMessage());
+        } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
     }

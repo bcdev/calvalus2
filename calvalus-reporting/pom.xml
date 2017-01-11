@@ -54,7 +54,6 @@
         <dependency>
             <groupId>com.bc.wps</groupId>
             <artifactId>bc-wps-commons</artifactId>
-            <scope>provided</scope>
             <version>1.0</version>
         </dependency>
 
@@ -149,6 +148,21 @@
                                 </manifest>
                             </archive>
                             <finalName>generate-calvalus-report</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>reporting-cli-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/cli-bundle.xml</descriptor>
+                            </descriptors>
+                            <finalName>reporting-cli</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>

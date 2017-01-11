@@ -1,15 +1,15 @@
 package com.bc.calvalus.generator.extractor;
 
 
+import static com.bc.calvalus.generator.Constants.XMLSourceConf;
+import static org.junit.Assert.*;
+
 import com.bc.calvalus.generator.extractor.configuration.Conf;
-import org.junit.Test;
+import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.*;
 
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
-
-import static com.bc.calvalus.generator.Constants.XMLSourceConf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author muhammad.bc
@@ -17,6 +17,11 @@ import static org.junit.Assert.assertNotNull;
 public class ConfLogTest {
     public static final String PATH = "hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2016/12/21/000004/job_1481485063251_4637_conf.xml";
 
+    @Before
+    public void setUp() throws Exception {
+        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+
+    }
 
     @Test
     public void testXMLToConf() throws Exception {
