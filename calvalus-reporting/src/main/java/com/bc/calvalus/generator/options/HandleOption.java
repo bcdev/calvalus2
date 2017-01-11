@@ -10,7 +10,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.UnrecognizedOptionException;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -65,14 +64,14 @@ public class HandleOption extends PrintOption {
                 displayHelp(commandArg);
             }
         } catch (ParseException e) {
-            CalvalusLogger.getLogger().log(Level.SEVERE,e.getMessage());
+            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
         } catch (IOException | URISyntaxException e) {
             e.printStackTrace();
         }
     }
 
     private boolean checkToStart() {
-        if (commandLine.getOptionValue("i") != null && commandLine.getOptionValue("o")!=null) {
+        if (commandLine.getOptionValue("i") != null && commandLine.getOptionValue("o") != null) {
             return true;
         }
         return false;
@@ -97,7 +96,6 @@ public class HandleOption extends PrintOption {
     }
 
 
-
     private void startJob(CommandLine commandLine) {
         Launcher.builder().setUrlPath(commandLine.getOptionValue("o"))
                 .setTimeIntervalInMinutes(Integer.parseInt(commandLine.getOptionValue("i")))
@@ -112,7 +110,7 @@ public class HandleOption extends PrintOption {
         printMsg(format);
     }
 
-    private void displayHelp(String command) throws IOException {
+    private void displayHelp(String command) throws IOException, URISyntaxException {
         if ("start".equalsIgnoreCase(command)) {
             printHelp("help_start.txt");
         } else {
