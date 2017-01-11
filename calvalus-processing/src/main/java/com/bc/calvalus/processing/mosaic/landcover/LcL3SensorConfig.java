@@ -882,7 +882,9 @@ public abstract class LcL3SensorConfig {
 
         public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
-            if (asLandText != null) {
+            if ("tc4".equals(sdrBandName)) {
+                maskExpr = "status & 3 != 0 and not nan(B2_ac) and not nan(B3_ac) and not nan(B4_ac) and not nan(B8A_ac) and not nan(B11_ac) and not nan(B12_ac)";
+            } else if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
                 int[] statusesToLand = statusRemapper.getStatusesToLand();
                 StringBuilder sb = new StringBuilder();
@@ -896,10 +898,12 @@ public abstract class LcL3SensorConfig {
             }
             String[] varNames = new String[] {"status", sdrBandName};
             final String[] virtualVariableName = {
-                    "ndvi"
+//                    "ndvi",
+                    "tc4"
             };
             final String[] virtualVariableExpr = {
-                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)"
+//                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)",
+                    "(-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac)"
             };
             String type = LcSDR8MosaicAlgorithm.class.getName();
             return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);

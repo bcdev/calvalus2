@@ -198,17 +198,21 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
-            final ArrayByte.D1 valids = new ArrayByte.D1(6);
+            final ArrayByte.D1 valids = new ArrayByte.D1(10);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
             valids.set(2, (byte) 2);
             valids.set(3, (byte) 3);
             valids.set(4, (byte) 4);
             valids.set(5, (byte) 5);
+            valids.set(6, (byte) 11);
+            valids.set(7, (byte) 12);
+            valids.set(8, (byte) 14);
+            valids.set(9, (byte) 15);
             variable.addAttribute("flag_values", valids);
-            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
+            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow haze bright temporal_cloud dark");
             variable.addAttribute("valid_min", 0);
-            variable.addAttribute("valid_max", 5);
+            variable.addAttribute("valid_max", 15);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
 
             StringBuffer ancillaryVariables = new StringBuffer("current_pixel_state");

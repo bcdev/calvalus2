@@ -55,12 +55,16 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     static final int STATUS_CLOUD = 4;
     static final int STATUS_CLOUD_SHADOW = 5;
     static final int STATUS_HAZE = 11;
+    static final int STATUS_BRIGHT = 12;
+    public static final int STATUS_TEMPORAL_CLOUD = 14;
+    static final int STATUS_DARK = 15;
 
 
     public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
     protected int[] varIndexes;
     protected StatusRemapper statusRemapper;
+    protected boolean isTemporalTc4Based;
 
     // output bands * pixels array, output bands = status,5*count,n*sr,ndvi,m*uncertainty
     // MERIS: n=13 and m=13, AVHRR: n=5 and m=2, PROBA: n=4 and m=4
@@ -84,10 +88,12 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         variableCount = featureNames.length;
         tileSize = MosaicGrid.create(jobConf).getTileSize();
         statusRemapper = StatusRemapper.create(jobConf);
+        isTemporalTc4Based = "tc4".equals(jobConf.get("calvalus.lc.temporalCloudBandName"));
     }
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) throws IOException {
+        //System.err.println("initTemporal " + tileIndex + " numElements=" + (tileSize * tileSize));
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[variableCount][numElems];
         deepWaterCounter = new int[numElems];
@@ -136,24 +142,59 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) samples[varIndexes[0]][i];
+            int oldStatus = (int) aggregatedSamples[STATUS][i];
+//            if (i == 406*1080+647) {
+//                System.err.println("status=" + status + " oldStatus=" + oldStatus
+//                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
+//                                           + " #snow=" + aggregatedSamples[STATUS_SNOW][i]
+//                                           + " #water=" + aggregatedSamples[STATUS_WATER][i]
+//                                           + " #cloud=" + aggregatedSamples[STATUS_CLOUD][i]
+//                                           + " #shadow=" + aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+//            }
 
             //check for invalid pixels
             float sdr_1 = samples[varIndexes[SDR_L2_OFFSET]][i];
             if ((status == STATUS_LAND || status == STATUS_SNOW) && Float.isNaN(sdr_1)) {
                 status = STATUS_INVALID;
+//                System.err.println("invalid NaN " + i);
             }
-            status = StatusRemapper.remapStatus(statusRemapper, status);
+
+            // TODO: temporarily removed, as it maps haze to cloud too early
+            // status = StatusRemapper.remapStatus(statusRemapper, status);
 
             if (sdrCloudDataSamples != null) {
                 // temporal test
-                if ((status == STATUS_LAND || status == STATUS_HAZE)) {
+                if (isTemporalTc4Based) {
+                    if (status == STATUS_LAND) {
+                        float tc4CloudThreshold = sdrCloudDataSamples[1][i];
+                        if (!Float.isNaN(tc4CloudThreshold)) {
+                            float B2_ac = samples[varIndexes[SDR_L2_OFFSET+1]][i];
+                            float B3_ac = samples[varIndexes[SDR_L2_OFFSET+2]][i];
+                            float B4_ac = samples[varIndexes[SDR_L2_OFFSET+3]][i];
+                            float B8A_ac = samples[varIndexes[SDR_L2_OFFSET+8]][i];
+                            float B11_ac = samples[varIndexes[SDR_L2_OFFSET+9]][i];
+                            float B12_ac = samples[varIndexes[SDR_L2_OFFSET+10]][i];
+                            float tc4 = (float) (-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac);
+                            if (tc4 < tc4CloudThreshold) {
+                                status = STATUS_TEMPORAL_CLOUD;
+                            }
+                        }
+                    }
+
+                } else if ((status == STATUS_LAND /* || status == STATUS_HAZE || status == STATUS_BRIGHT */)) {
                     float sdr8 = samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i];
                     float sdr8CloudThreshold = sdrCloudDataSamples[0][i];
                     status = temporalCloudCheck(sdr8, sdr8CloudThreshold);
+//                    if (i == 406*1080+647) {
+//                        System.err.println("temporal cloud check status=" + status);
+//                    }
                 } else if (status == STATUS_CLOUD_SHADOW) {
                     float sdr8 = samples[varIndexes[sensorConfig.getTemporalCloudBandIndex()]][i];
                     float sdr8CloudShadowThreshold = sdrCloudDataSamples[1][i];
                     status = temporalCloudShadowCheck(sdr8, sdr8CloudShadowThreshold);
+//                    if (i == 406*1080+647) {
+//                        System.err.println("temporal shadow check status=" + status);
+//                    }
                 }
             }
 
@@ -168,6 +209,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     if (snowCount > 0 || waterCount > 0 || shadowCount > 0) {
                         clearSDR(i, sensorConfig.getBandNames().length,0.0f);
                     }
+                    aggregatedSamples[STATUS][i] = STATUS_LAND;
                 }
                 // Since we have seen LAND now, accumulate LAND SDRs
                 if (! bestPixelAggregation) {
@@ -192,13 +234,15 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                     } else {
                         selectSdrs(samples, i, (int) aggregatedSamples[STATUS_SNOW][i]);
                     }
+                    aggregatedSamples[STATUS][i] = STATUS_SNOW;
                 }
                 // Count SNOW
                 aggregatedSamples[STATUS_SNOW][i]++;
-            } else if (status == STATUS_WATER ) {
+            } else if (status == STATUS_WATER) {
                 if (Float.isNaN(sdr_1)) {
                     // deep water
                     deepWaterCounter[i]++;
+                    aggregatedSamples[STATUS][i] = STATUS_WATER;
                 } else {
                     // shallow water
                     // only aggregate if, no LAND or SNOW before
@@ -215,12 +259,10 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                         } else {
                             selectSdrs(samples, i, (int) aggregatedSamples[STATUS_WATER][i]);
                         }
+                        aggregatedSamples[STATUS][i] = STATUS_WATER;
                     }
                     aggregatedSamples[STATUS_WATER][i]++;
                 }
-            } else if (status == STATUS_CLOUD || status == STATUS_HAZE) {
-                // Count CLOUD
-                aggregatedSamples[STATUS_CLOUD][i]++;
             } else if (status == STATUS_CLOUD_SHADOW) {
                 // Count CLOUD_SHADOW
                 int landCount = (int) aggregatedSamples[STATUS_LAND][i];
@@ -228,14 +270,76 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                 int waterCount = (int) aggregatedSamples[STATUS_WATER][i];
                 if (landCount == 0 && snowCount == 0 && waterCount == 0) {
                     // only aggregate SDR, if no LAND, WATER or SNOW have been aggregated before
+                    if (status != oldStatus) {
+                        clearSDR(i, sensorConfig.getBandNames().length, 0.0f);
+                        aggregatedSamples[STATUS_CLOUD_SHADOW][i] = 0;
+                    }
                     if (! bestPixelAggregation) {
                         addSdrs(samples, i);
                     } else {
                         selectSdrs(samples, i, (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
                     }
+                    aggregatedSamples[STATUS][i] = STATUS_CLOUD_SHADOW;
                 }
                 aggregatedSamples[STATUS_CLOUD_SHADOW][i]++;
+            } else if (status == STATUS_CLOUD) {
+                // Count CLOUD
+                aggregatedSamples[STATUS_CLOUD][i]++;
+                if (oldStatus != STATUS_LAND &&
+                        oldStatus != STATUS_SNOW &&
+                        oldStatus != STATUS_WATER &&
+                        oldStatus != STATUS_CLOUD_SHADOW &&
+                        oldStatus != STATUS_BRIGHT &&
+                        oldStatus != STATUS_DARK &&
+                        oldStatus != STATUS_HAZE &&
+                        oldStatus != STATUS_TEMPORAL_CLOUD) {
+                    aggregatedSamples[STATUS][i] = STATUS_CLOUD;
+                }
+            } else if (status == STATUS_TEMPORAL_CLOUD) {
+                // Count CLOUD
+                aggregatedSamples[STATUS_CLOUD][i]++;
+                if (oldStatus != STATUS_LAND &&
+                        oldStatus != STATUS_SNOW &&
+                        oldStatus != STATUS_WATER &&
+                        oldStatus != STATUS_CLOUD_SHADOW &&
+                        oldStatus != STATUS_BRIGHT &&
+                        oldStatus != STATUS_DARK &&
+                        oldStatus != STATUS_HAZE) {
+                    aggregatedSamples[STATUS][i] = STATUS_TEMPORAL_CLOUD;
+                }
+            } else if (status == STATUS_BRIGHT || status == STATUS_DARK || status == STATUS_HAZE) {
+                if (oldStatus != STATUS_LAND &&
+                        oldStatus != STATUS_SNOW &&
+                        oldStatus != STATUS_WATER &&
+                        oldStatus != STATUS_CLOUD_SHADOW &&
+                        (status == STATUS_BRIGHT ||
+                                (status == STATUS_DARK && oldStatus != STATUS_BRIGHT) ||
+                                (status == STATUS_HAZE && oldStatus != STATUS_BRIGHT && oldStatus != STATUS_DARK))) {
+                    if (status != oldStatus) {
+                        clearSDR(i, sensorConfig.getBandNames().length, 0.0f);
+                        aggregatedSamples[STATUS_CLOUD_SHADOW][i] = 0;
+                        aggregatedSamples[STATUS][i] = status;
+                    }
+                    if (!bestPixelAggregation) {
+                        addSdrs(samples, i);
+                    } else {
+                        selectSdrs(samples, i, (int) aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+                    }
+                    aggregatedSamples[STATUS_CLOUD_SHADOW][i]++;  // TODO: cloud shadow count abused for bright, dark, or haze
+                }
+//            } else {
+//                if (i == 406*1080+647) {
+//                    System.err.println("catch all status=" + status);
+//                }
             }
+//            if (i == 406*1080+647) {
+//                System.err.println("aggregated status=" + aggregatedSamples[STATUS][i] + " status=" + status
+//                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
+//                                           + " #snow=" + aggregatedSamples[STATUS_SNOW][i]
+//                                           + " #water=" + aggregatedSamples[STATUS_WATER][i]
+//                                           + " #cloud=" + aggregatedSamples[STATUS_CLOUD][i]
+//                                           + " #shadow=" + aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+//            }
         }
     }
 
@@ -243,7 +347,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         // if "ndvi" instead of sdr_B3 (spot only)
         if (!Float.isNaN(sdr8CloudThreshold) && sdr8 > sdr8CloudThreshold) {
             // treat this as cloud
-            return STATUS_CLOUD;
+            return STATUS_TEMPORAL_CLOUD;
         } else {
             return STATUS_LAND;
         }
@@ -263,17 +367,22 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     public float[][] getTemporalResult() {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            int status = calculateStatus(aggregatedSamples[STATUS_LAND][i],
-                                         aggregatedSamples[STATUS_WATER][i],
-                                         aggregatedSamples[STATUS_SNOW][i],
-                                         aggregatedSamples[STATUS_CLOUD][i],
-                                         aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
-
-            aggregatedSamples[STATUS][i] = status;
+//            int status = calculateStatus(aggregatedSamples[STATUS_LAND][i],
+//                                         aggregatedSamples[STATUS_WATER][i],
+//                                         aggregatedSamples[STATUS_SNOW][i],
+//                                         aggregatedSamples[STATUS_CLOUD][i],
+//                                         aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+            int status = (int) aggregatedSamples[STATUS][i];
+            //aggregatedSamples[STATUS][i] = status;
             float wSum = 0f;
             if ((status == STATUS_LAND || status == STATUS_SNOW || status == STATUS_WATER || status == STATUS_CLOUD_SHADOW) && deepWaterCounter[i] == 0) {
                 wSum = aggregatedSamples[status][i];
+            } else if (status == STATUS_BRIGHT || status == STATUS_DARK || status == STATUS_HAZE) {
+                wSum = aggregatedSamples[STATUS_CLOUD_SHADOW][i];
             }
+//            if (i == 406*1080+647) {
+//                System.err.println("getTemporalResult status=" + status + " wSum=" + wSum);
+//            }
             if (wSum != 0f) {
                 for (int j = SDR_AGGREGATED_OFFSET; j < SDR_AGGREGATED_OFFSET + sensorConfig.getBandNames().length + 1; j++) {  // sdr + ndvi
                     aggregatedSamples[j][i] /= wSum;

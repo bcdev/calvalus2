@@ -38,14 +38,14 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int SAMPLE_INDEX_STATUS = 0;
     private static final int SAMPLE_INDEX_SDR8 = 1;
-    private static final int SAMPLE_INDEX_NDVI = 2;
+//    private static final int SAMPLE_INDEX_NDVI = 2;
     private static final int NUM_SAMPLE_BANDS = 3;
 
     private static final int AGG_INDEX_COUNT = 0;
     private static final int AGG_INDEX_SDR_SUM = 1;
     private static final int AGG_INDEX_SDR_SQSUM = 2;
-    private static final int AGG_INDEX_MAXNDVI = 3;
-    private static final int AGG_INDEX_SDR4MAXNDVI = 4;
+//    private static final int AGG_INDEX_MAXNDVI = 3;
+//    private static final int AGG_INDEX_SDR4MAXNDVI = 4;
     private static final int NUM_AGGREGATION_BANDS = 5;
 
     private int[] varIndexes;
@@ -75,20 +75,20 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             if (status == STATUS_LAND) {
                 // Since we have seen LAND now, accumulate LAND SDRs
                 float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
-                float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
+//                float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
                 if (!Float.isNaN(sdr)) {
                     aggregatedSamples[AGG_INDEX_COUNT][i]++;
                     aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
                     aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
 
-                    if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
-                        // first pixel
-                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
-                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
-                    } else if (ndvi > aggregatedSamples[AGG_INDEX_MAXNDVI][i]) {
-                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
-                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
-                    }
+//                    if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
+//                        // first pixel
+//                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+//                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+//                    } else if (ndvi > aggregatedSamples[AGG_INDEX_MAXNDVI][i]) {
+//                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+//                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+//                    }
                 }
             }
         }
@@ -114,11 +114,12 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 if (tau1 > applyFilterThresh) {
                     double tau2 = sdrMean + sdrSigma;
                     double tau3 = sdrMean * 1.35;
-                    double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
-                    double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
+//                    double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
+//                    double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
                     double tau5 = sdrMean - sdrSigma;
                     double tau6 = sdrMean * 0.65;
-                    double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
+                    //double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
+                    double sdrCloudDetector = Math.min(tau3, tau2);
                     double sdrCloudShadowDetector = Math.min(tau5, tau6);
                     result[0][i] = (float) sdrCloudDetector;
                     result[1][i] = (float) sdrCloudShadowDetector;
@@ -177,7 +178,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         int[] varIndexes = new int[NUM_SAMPLE_BANDS];
         varIndexes[SAMPLE_INDEX_STATUS] = getVariableIndex(varCtx, "status");
         varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, temporalCloudBandName);
-        varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
+//        varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         return varIndexes;
     }
 
