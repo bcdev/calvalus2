@@ -1,16 +1,15 @@
 package com.bc.calvalus.generator.extractor;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.logging.Level;
 import javax.ws.rs.InternalServerErrorException;
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.Response;
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.logging.Level;
 
 
 /**
@@ -36,7 +35,7 @@ public abstract class ReaderHistorySource implements Closeable {
                 throw new InternalServerErrorException();
             }
         } catch (IllegalArgumentException | InternalServerErrorException | ProcessingException exception) {
-            CalvalusLogger.getLogger().log(Level.SEVERE, "Check the url path for extracting the extractor file.");
+            CalvalusLogger.getLogger().log(Level.SEVERE, "Url is not correct or their is no connection");
         }
     }
 
