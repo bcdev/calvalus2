@@ -59,6 +59,7 @@ public class GranuleLister {
             } catch (IOException e) {
                 System.out.println("productFile = " + productFile);
                 e.printStackTrace();
+                System.exit(1);
             }
         }
     }
