@@ -60,7 +60,7 @@ public class HandleOptionTest {
 
     @Test
     public void testOptionWrongParameter() throws Exception {
-        HandleOption printOption = new HandleOption(new String[]{"start", "-i", "30", "-o", "c:/test", "stop", "-f"});
+        HandleOption printOption = new HandleOption(new String[]{"start", "-z", "30", "-o", "c:/test"});
         CommandLine commandLine = printOption.getCommandLine();
         assertNull(commandLine);
     }

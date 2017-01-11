@@ -3,6 +3,10 @@ package com.bc.calvalus.generator.options;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.Launcher;
+import com.bc.calvalus.generator.extractor.Extractor;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Properties;
 import java.util.logging.Level;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,11 +14,6 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Properties;
 
 
 /**
@@ -29,13 +28,7 @@ public class HandleOption extends PrintOption {
             printMsg("Please specify a parameter, for more detail type '-h'");
             return;
         }
-        String toString = Arrays.toString(args);
-        boolean confirmOption = confirmOption(toString);
-        if (!confirmOption) {
-            initOption(args);
-        } else {
-            printErrorMsg(toString);
-        }
+        initOption(args);
     }
 
     public String getOptionValue(String option) {
@@ -58,7 +51,7 @@ public class HandleOption extends PrintOption {
                 return;
             }
 
-            if (commandArg.equalsIgnoreCase("start") && checkToStart()) {
+            if (commandArg.equalsIgnoreCase("start")) {
                 startJob(commandLine);
             } else {
                 displayHelp(commandArg);
@@ -66,20 +59,8 @@ public class HandleOption extends PrintOption {
         } catch (ParseException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
         } catch (IOException | URISyntaxException e) {
-            e.printStackTrace();
+            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
         }
-    }
-
-    private boolean checkToStart() {
-        if (commandLine.getOptionValue("i") != null && commandLine.getOptionValue("o") != null) {
-            return true;
-        }
-        return false;
-    }
-
-    private boolean confirmOption(String toString) {
-        boolean confirm = (toString.contains("start") && toString.contains("stop"));
-        return confirm;
     }
 
 
@@ -89,7 +70,7 @@ public class HandleOption extends PrintOption {
         options.addOption(Option.builder("h").longOpt("help").build());
         options.addOption(Option.builder("v").longOpt("version").build());
         options.addOption(Option.builder("i").longOpt("interval").hasArg(true).build());
-        options.addOption(Option.builder("o").longOpt("output-path").hasArg(true).build());
+        options.addOption(Option.builder("o").longOpt("output-file-path").hasArg(true).build());
 
         CommandLineParser commandLineParser = new DefaultParser();
         return commandLineParser.parse(options, args);
@@ -97,8 +78,16 @@ public class HandleOption extends PrintOption {
 
 
     private void startJob(CommandLine commandLine) {
-        Launcher.builder().setUrlPath(commandLine.getOptionValue("o"))
-                .setTimeIntervalInMinutes(Integer.parseInt(commandLine.getOptionValue("i")))
+        String intervalS = null;
+        if (commandLine.hasOption("i")) {
+            intervalS = commandLine.getOptionValue("i");
+        } else {
+            intervalS = Extractor.createProperties().getProperty("calvalus.history.generate.time.interval");
+        }
+        int intervalInMinutes = Integer.parseInt(intervalS);
+        String urlPath = commandLine.getOptionValue("o");
+        Launcher.builder().setUrlPath(urlPath)
+                .setTimeIntervalInMinutes(intervalInMinutes)
                 .start();
 
     }
