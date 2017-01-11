@@ -65,7 +65,7 @@ import java.util.zip.ZipOutputStream;
 public class GranuleSplitter {
 
     private static final boolean ADD_ZIP_SUFFIX = true;
-    private static final boolean COMPACT_FORMAT = true;
+    private static final boolean COMPACT_FORMAT = false;
 
     static Map<String,ZipEntry> entryMap = new HashMap<>();
 
