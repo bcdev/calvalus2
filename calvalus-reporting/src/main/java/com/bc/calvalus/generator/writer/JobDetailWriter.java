@@ -251,7 +251,7 @@ public class JobDetailWriter {
             if (lastLine == null || lastLine.isEmpty()) {
                 return lastLine;
             }
-            JobDetailType jobDetailType = new Gson().fromJson(lastLine, JobDetailType.class);
+            JobDetailType jobDetailType = new Gson().fromJson(lastLine.replace("},","}"), JobDetailType.class);
             return jobDetailType.getJobId();
         }
     }
