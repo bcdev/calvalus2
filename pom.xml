@@ -13,8 +13,8 @@
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.9-SNAPSHOT</calvalus.version>
-        <snap.version>4.0.1-SNAPSHOT</snap.version>
-        <ceres.version>4.0.1-SNAPSHOT</ceres.version>
+        <snap.version>4.0.1</snap.version>
+        <ceres.version>4.0.1</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -28,7 +28,6 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-wps-impl</module>
     </modules>
 
     <repositories>
@@ -101,7 +100,8 @@
                          -->
                         <property>
                             <name>calvalus.testrunner.hadoopAvailable</name>
-                            <value>${calvalus.testrunner.hadoopAvailable}</value>
+                            <value>false</value>
+                            <!--<value>${calvalus.testrunner.hadoopAvailable}</value>-->
                         </property>
                     </systemProperties>
                 </configuration>

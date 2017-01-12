@@ -103,20 +103,23 @@ public class S2FinaliseMapper extends Mapper {
     static Product remap(File localL3, String baseFilename, Product lcProduct, Progressable context) throws IOException {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
+//        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
         source.addBand("CL_remapped", "(JD > 0 and JD < 900) ? (CL * 100) : 0", ProductData.TYPE_INT8);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
         target.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         ProductUtils.copyGeoCoding(source, target);
-        ProductUtils.copyBand("JD_remapped", source, "JD", target, true);
+
+        Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
+        jdBand.setSourceImage(new JdImage(source.getBand("JD")));
+
+//        ProductUtils.copyBand("JD_remapped", source, "JD", target, true);
         ProductUtils.copyBand("CL_remapped", source, "CL", target, true);
         target.addBand("LC", ProductData.TYPE_INT8);
         target.addBand("sensor", "6", ProductData.TYPE_INT8);
 
         Band lcBand = target.getBand("LC");
-        Band jdBand = target.getBand("JD");
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
 
         return target;
@@ -211,6 +214,52 @@ public class S2FinaliseMapper extends Mapper {
                 }
             }
         }
+    }
+
+    private static class JdImage extends SingleBandedOpImage {
+
+        private final Band sourceJdBand;
+
+        private JdImage(Band sourceJdBand) {
+            super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            this.sourceJdBand = sourceJdBand;
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            PixelPos pixelPos = new PixelPos();
+
+            float[] sourceJdArray = new float[destRect.width * destRect.height];
+            try {
+                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            int pixelIndex = 0;
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    pixelPos.x = x;
+                    pixelPos.y = y;
+                    float sourceJd = sourceJdArray[pixelIndex];
+                    if (Float.isNaN(sourceJd)) {
+                        sourceJd = findNeighbourValue(sourceJdArray, pixelIndex, destRect.width);
+                    }
+
+                    int targetJd;
+                    if (sourceJd < 900) {
+                        targetJd = (int) sourceJd;
+                    } else if (Math.abs(sourceJd - 999) < 0.01 || Math.abs(sourceJd - 998) < 0.01) {
+                        targetJd = -1;
+                    } else {
+                        targetJd = -2;
+                    }
+
+                    dest.setSample(x, y, 0, targetJd);
+                    pixelIndex++;
+                }
+            }
+        }
+
     }
 
     private static final String TEMPLATE = "" +
@@ -644,4 +693,31 @@ public class S2FinaliseMapper extends Mapper {
             "    </gmd:identificationInfo>" +
             "" +
             "</gmi:MI_Metadata>";
+
+    static float findNeighbourValue(float[] sourceJdArray, int pixelIndex, int width) {
+        int[] xDirections = new int[]{-1, 0, 1};
+        int[] yDirections = new int[]{-1, 0, 1};
+
+        float currentValue = sourceJdArray[pixelIndex];
+        if (!Float.isNaN(currentValue)) {
+            return currentValue;
+        }
+
+        for (int yDirection : yDirections) {
+            for (int xDirection : xDirections) {
+                int newPixelIndex = pixelIndex + yDirection * width + xDirection;
+                if (newPixelIndex < sourceJdArray.length) {
+                    if (newPixelIndex < 0 || newPixelIndex >= sourceJdArray.length) {
+                        continue;
+                    }
+                    float neighbourValue = sourceJdArray[newPixelIndex];
+                    if (!Float.isNaN(neighbourValue)) {
+                        return neighbourValue;
+                    }
+                }
+            }
+        }
+        return Float.NaN;
+    }
+
 }

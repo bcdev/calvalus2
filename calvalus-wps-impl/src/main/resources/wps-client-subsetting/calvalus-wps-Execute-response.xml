@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<wps:ExecuteResponse statusLocation="http://bc-wps:9080/bc-wps/wps/calvalus?Service=WPS&amp;Request=GetStatus&amp;JobId=20160316093228_L2Plus_364bc0f352df" service="WPS" version="1.0.0" xml:lang="en" xmlns:wps="http://www.opengis.net/wps/1.0.0">
-    <wps:Status creationTime="2016-03-16T09:32:31.084+01:00">
-        <wps:ProcessAccepted>The request has been accepted. The status of the process can be found in the URL.</wps:ProcessAccepted>
-    </wps:Status>
-</wps:ExecuteResponse>

@@ -20,11 +20,13 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     protected static final Logger LOG = CalvalusLogger.getLogger();
     private final int targetRasterWidth;
     private final int targetRasterHeight;
+    private final List<Integer> alreadyConsideredDoys;
     private FireGridDataSource dataSource;
 
     protected AbstractGridMapper(int targetRasterWidth, int targetRasterHeight) {
         this.targetRasterWidth = targetRasterWidth;
         this.targetRasterHeight = targetRasterHeight;
+        alreadyConsideredDoys = new ArrayList<>();
     }
 
     public GridCell computeGridCell(int year, int month, ErrorPredictor errorPredictor) throws IOException {
@@ -67,6 +69,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, targetRasterHeight));
             for (int x = 0; x < targetRasterWidth; x++) {
+                alreadyConsideredDoys.clear();
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     continue;
@@ -80,6 +83,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
+                    if (alreadyConsideredDoys.contains(doy)) {
+                        continue;
+                    }
+                    alreadyConsideredDoys.add(doy);
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         boolean hasLcClass = false;
@@ -158,6 +165,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         gridCell.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
         return gridCell;
+    }
+
+    private boolean doyAlreadyConsidered(int doy) {
+        return alreadyConsideredDoys.contains(doy);
     }
 
     private void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
