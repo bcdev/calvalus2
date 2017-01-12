@@ -92,7 +92,7 @@ public class TestConstants {
             "  -v, --version                         Print version information and quit\n" +
             "\n" +
             "Commands:\n" +
-            "    start            Start generating with the default of 30 minutes\n" +
+            "    start            Start generating with the default of 30 seconds\n" +
             "Run 'generate-calvalus-report COMMAND --help' for more information on a command.\n";
 
 }
