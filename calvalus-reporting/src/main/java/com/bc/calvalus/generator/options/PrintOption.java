@@ -1,11 +1,6 @@
 package com.bc.calvalus.generator.options;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.net.URISyntaxException;
-import java.util.Objects;
-import java.util.Properties;
 
 
 abstract class PrintOption {
@@ -31,18 +26,6 @@ abstract class PrintOption {
         }
     }
 
-    static Properties getBuildProperties() {
-        Properties properties = new Properties();
-        try (InputStream resourceAsStream = PrintOption.class.getResourceAsStream("build-info.properties")) {
-            if (Objects.nonNull(resourceAsStream)) {
-                properties.load(resourceAsStream);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return properties;
-    }
-
     final static String HELP_INFO = "<generate-calvalus-report> --help\n" +
             "Usage: generate-calvalus-report [COMMAND] [OPTION\n" +
             "       generate-calvalus-report [ --help | -v | --version ]\n" +
@@ -50,12 +33,12 @@ abstract class PrintOption {
             "Options:\n" +
             "\n" +
             "  -h, --help                            Print usage\n" +
-            "  -i, --interval                        Time interval\n" +
+            "  -i, --interval                        Time interval or set the default in configuration file\n" +
             "  -o, --output-file-path                Location to save the generate report\n" +
             "  -v, --version                         Print version information and quit\n" +
             "\n" +
             "Commands:\n" +
-            "    start            Start generating with the default of 30 minutes\n" +
+            "    start            Start generating with the default of 30 seconds\n" +
             "\n" +
             "Run 'generate-calvalus-report COMMAND --help' for more information on a command.";
 

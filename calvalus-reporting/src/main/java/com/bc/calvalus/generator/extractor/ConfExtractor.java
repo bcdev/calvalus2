@@ -5,7 +5,7 @@ import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.configuration.Conf;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
-
+import com.bc.wps.utilities.PropertiesWrapper;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
@@ -22,7 +22,7 @@ public class ConfExtractor extends Extractor {
 
     public ConfExtractor() {
         super();
-        urlConf = getProperties().getProperty("calvalus.history.configuration.url");
+        urlConf = PropertiesWrapper.get("calvalus.history.configuration.url");
         xsltAsString = loadXSLTFile(CONF_XSL);
     }
 

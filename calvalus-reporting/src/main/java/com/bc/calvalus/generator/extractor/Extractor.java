@@ -5,12 +5,19 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.wps.utilities.PropertiesWrapper;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
@@ -20,14 +27,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Properties;
 import java.util.logging.Level;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
 
 /**
  * @author muhammad.bc.
@@ -41,25 +40,6 @@ public abstract class Extractor {
     public abstract <T> T getType(String jobId) throws JAXBException;
 
     public abstract String getXsltAsString();
-
-
-    Properties getProperties() {
-        if (properties == null) {
-            properties = createProperties();
-        }
-        return properties;
-    }
-
-    public static Properties createProperties() {
-        try (InputStream resourceAsStream = Extractor.class.getClassLoader().getResourceAsStream("./conf/calvalus-reporting.properties")) {
-            Properties properties = new Properties();
-            properties.load(resourceAsStream);
-            return properties;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     private String getXSLTAsString(File file) throws FileNotFoundException {
         if (!file.exists()) {

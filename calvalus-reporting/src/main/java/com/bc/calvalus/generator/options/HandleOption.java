@@ -3,8 +3,7 @@ package com.bc.calvalus.generator.options;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.Launcher;
-import com.bc.calvalus.generator.extractor.Extractor;
-import java.util.Properties;
+import com.bc.wps.utilities.PropertiesWrapper;
 import java.util.logging.Level;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -79,7 +78,7 @@ public class HandleOption extends PrintOption {
         if (commandLine.hasOption("i")) {
             intervalS = commandLine.getOptionValue("i");
         } else {
-            intervalS = Extractor.createProperties().getProperty("calvalus.history.generate.time.interval");
+            intervalS = PropertiesWrapper.get("calvalus.history.generate.time.interval.default");
         }
         int intervalInMinutes = Integer.parseInt(intervalS);
         String urlPath = commandLine.getOptionValue("o");
@@ -90,8 +89,8 @@ public class HandleOption extends PrintOption {
     }
 
     private void displayVersion() {
-        Properties buildProperties = getBuildProperties();
-        String version = (String) buildProperties.get("version");
+
+        String version = PropertiesWrapper.get("version");
         String format = String.format("Calvalus Generator version %s.", version);
         printMsg(format);
     }

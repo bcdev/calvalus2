@@ -1,15 +1,18 @@
 package com.bc.calvalus.generator.options;
 
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
 import com.bc.calvalus.generator.TestConstants;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.cli.CommandLine;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 /**
  * @author muhammad.bc
@@ -45,7 +48,7 @@ public class HandleOptionTest {
     @Test
     public void testOptionVersion() throws Exception {
         HandleOption printOption = new HandleOption(new String[]{"-v"});
-        String version = PrintOption.getBuildProperties().getProperty("version");
+        String version = PropertiesWrapper.get("version");
         String actual = String.format("Calvalus Generator version %s.", version);
         assertEquals(outputStream.toString().replaceAll("[\r\n]+", ""), actual);
     }

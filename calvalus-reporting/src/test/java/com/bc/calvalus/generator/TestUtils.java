@@ -2,10 +2,11 @@ package com.bc.calvalus.generator;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.extractor.ReadHistory;
+import com.bc.wps.utilities.PropertiesWrapper;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.logging.Level;
 
-import static com.bc.calvalus.generator.extractor.Extractor.createProperties;
 
 /**
  * @author muhammad.bc
@@ -14,21 +15,16 @@ public class TestUtils {
 
     private static Properties properties;
 
-
-    public static String getSaveLocation() {
-        if (properties == null) {
-            properties = createProperties();
-        }
-        assert properties != null;
-        return properties.getProperty("save.location");
-    }
-
     public static String getJobHistoryURL() {
+
         if (properties == null) {
-            properties = createProperties();
+            try {
+                PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        assert properties != null;
-        return properties.getProperty("calvalus.history.jobs.url");
+        return PropertiesWrapper.get("calvalus.history.jobs.url");
     }
 
 

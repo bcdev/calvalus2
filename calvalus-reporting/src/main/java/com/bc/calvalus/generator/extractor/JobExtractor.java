@@ -4,8 +4,8 @@ package com.bc.calvalus.generator.extractor;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
+import com.bc.wps.utilities.PropertiesWrapper;
 import org.apache.commons.lang.NotImplementedException;
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -21,7 +21,7 @@ public class JobExtractor extends Extractor {
 
     public JobExtractor() {
         super();
-        String urlJobs = getProperties().getProperty("calvalus.history.jobs.url");
+        String urlJobs = PropertiesWrapper.get("calvalus.history.jobs.url");
         jobsType = getJobDetail(urlJobs);
     }
 
