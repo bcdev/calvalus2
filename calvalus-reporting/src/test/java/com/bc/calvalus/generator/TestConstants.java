@@ -87,7 +87,7 @@ public class TestConstants {
             "Options:\n" +
             "\n" +
             "  -h, --help                            Print usage\n" +
-            "  -i, --interval                        Time interval\n" +
+            "  -i, --interval                        Time interval or set the default in configuration file\n" +
             "  -o, --output-file-path                Location to save the generate report\n" +
             "  -v, --version                         Print version information and quit\n" +
             "\n" +
