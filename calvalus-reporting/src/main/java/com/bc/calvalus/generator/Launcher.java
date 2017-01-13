@@ -1,14 +1,16 @@
 package com.bc.calvalus.generator;
 
 import com.bc.calvalus.generator.writer.JobDetailWriter;
-
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class Launcher implements Runnable {
     private int timeIntervalInMinutes;
     private String urlPath;
+    public static transient boolean terminate = false;
+    private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
 
     public static Launcher builder() {
         return new Launcher();
@@ -27,11 +29,19 @@ public class Launcher implements Runnable {
     @Override
     public void run() {
         JobDetailWriter writeJobDetail = new JobDetailWriter(urlPath);
-        writeJobDetail.start();
+        if (!terminate) {
+            writeJobDetail.start();
+        } else {
+            stop();
+        }
+    }
+
+    private void stop() {
+        scheduledExecutorService.shutdownNow();
     }
 
     public void start() {
         int initialDelay = 0;
-        Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(this, initialDelay, timeIntervalInMinutes, SECONDS);
+        scheduledExecutorService.scheduleWithFixedDelay(this, initialDelay, timeIntervalInMinutes, SECONDS);
     }
 }

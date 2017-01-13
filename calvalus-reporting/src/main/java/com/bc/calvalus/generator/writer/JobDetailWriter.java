@@ -3,6 +3,7 @@ package com.bc.calvalus.generator.writer;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.Launcher;
 import com.bc.calvalus.generator.extractor.ConfExtractor;
 import com.bc.calvalus.generator.extractor.CounterExtractor;
 import com.bc.calvalus.generator.extractor.JobExtractor;
@@ -13,6 +14,7 @@ import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -80,6 +82,14 @@ public class JobDetailWriter {
             }
         } catch (JAXBException | GenerateLogException e) {
             logger.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    private void stop() {
+        Thread thread = Thread.currentThread();
+        if (thread != null) {
+            Launcher.terminate = true;
+            thread.interrupt();
         }
     }
 
@@ -219,14 +229,21 @@ public class JobDetailWriter {
         return confLog.extractInfo(from, to, jobsType);
     }
 
-    class GetJobInfo {
+    private class GetJobInfo {
         private String lastJobID;
 
         public GetJobInfo(File saveLocation) {
             try {
                 lastJobID = getLastJobId(saveLocation);
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, e.getMessage());
+            } catch (IOException | JsonSyntaxException e) {
+
+                if (e instanceof JsonSyntaxException) {
+                    String msg = String.format("The last line JSON is not well formatted in :%s\n%s", saveLocation.toPath(), e.getMessage());
+                    logger.log(Level.SEVERE, msg);
+                    stop();
+                } else {
+                    logger.log(Level.SEVERE, e.getMessage());
+                }
             }
         }
 
@@ -235,8 +252,9 @@ public class JobDetailWriter {
             return lastJobID;
         }
 
-        private String getLastJobId(File saveLocation) throws IOException {
+        private String getLastJobId(File saveLocation) throws IOException, JsonSyntaxException {
             String lastLine = null;
+            JobDetailType jobDetailType = null;
             try (
                     FileReader fileReader = new FileReader(saveLocation);
                     BufferedReader bufferedReader = new BufferedReader(fileReader)
@@ -245,13 +263,15 @@ public class JobDetailWriter {
                 while ((readLine = bufferedReader.readLine()) != null) {
                     lastLine = readLine;
                 }
+
+                if (lastLine == null || lastLine.isEmpty()) {
+                    return lastLine;
+                }
+                jobDetailType = new Gson().fromJson(lastLine.replace("},", "}"), JobDetailType.class);
             }
-            if (lastLine == null || lastLine.isEmpty()) {
-                return lastLine;
-            }
-            JobDetailType jobDetailType = new Gson().fromJson(lastLine.replace("},", "}"), JobDetailType.class);
             return jobDetailType.getJobId();
         }
     }
+
 
 }
