@@ -18,11 +18,9 @@ import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -39,22 +37,27 @@ public class JobDetailWriter {
 
 
     private static final int INTERVAL = 10;
-    private final GetJobInfo getJobInfo;
+    private GetJobInfo getJobInfo;
     private JobsType jobsTypeList;
-    private final List<JobDetailType> jobDetailTypeList;
-    private final File outputFile;
-    private final Logger logger;
+    private File outputFile;
+    private List<JobDetailType> jobDetailTypeList;
+    private Logger logger;
 
 
     public JobDetailWriter(String pathToWrite) {
-        logger = CalvalusLogger.getLogger();
-        jobDetailTypeList = new ArrayList<>();
-        outputFile = confirmOutputFile(pathToWrite);
-        getJobInfo = new GetJobInfo(outputFile);
+        try {
+            logger = CalvalusLogger.getLogger();
+            jobDetailTypeList = new ArrayList<>();
+            outputFile = confirmOutputFile(pathToWrite);
+            getJobInfo = new GetJobInfo(outputFile);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+        }
     }
 
     private void write(int from, int to) throws JAXBException, GenerateLogException {
         int last = from;
+        //Todo mba*** use atomicity
         for (int i = from; i < to; i++) {
             if (i % INTERVAL == 0) {
                 if (last != i) {
@@ -118,15 +121,10 @@ public class JobDetailWriter {
         return jobsTypeList;
     }
 
-    private File confirmOutputFile(String pathToWrite) {
-        Path path = Paths.get(pathToWrite);
-        File file = path.toFile();
+    private File confirmOutputFile(String pathToWrite) throws IOException {
+        File file = Paths.get(pathToWrite).toFile();
         if (!file.exists()) {
-            try {
-                throw new FileNotFoundException("The folder does not exist.");
-            } catch (FileNotFoundException e) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
+            file.createNewFile();
         }
         return file;
     }
