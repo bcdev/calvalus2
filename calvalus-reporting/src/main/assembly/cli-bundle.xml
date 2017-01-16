@@ -9,7 +9,7 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources/conf</directory>
+            <directory>${project.basedir}/target/classes/conf</directory>
             <outputDirectory>/conf</outputDirectory>
         </fileSet>
         <fileSet>
