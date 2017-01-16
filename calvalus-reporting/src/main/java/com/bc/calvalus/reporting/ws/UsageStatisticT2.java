@@ -1,8 +1,10 @@
 package com.bc.calvalus.reporting.ws;
 
-import java.util.HashMap;
+import java.text.DateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 /**
  * @author hans
@@ -15,39 +17,43 @@ public class UsageStatisticT2 {
     private String accountPlatform;
     private String accountUserName;
     private String accountRef;
-    private String compountId;
+    private String compoundId;
     private String compoundName;
     private String compoundType;
-    private Map<String, Long> quantity;
+    private List<Quantity> quantity;
     private String hostName;
     private String timeStamp;
     private String status;
-    private List<Double> coordinates;
 
     public UsageStatisticT2(UsageStatistic usageStatistic) {
         this.id = BC_PROCESSING_CENTER_JOB_PREFIX + usageStatistic.getJobId();
         this.accountPlatform = "Brockmann Consult Processing Center";
         this.accountUserName = usageStatistic.getUser(); // may need to be changed to use remote user instead
         this.accountRef = "DUMMY-xx-20170101"; // TODO(hans-permana, 20170116): get the information from the header of incoming WPS request REMOTE_REF, to be stored as a config
-        this.compountId = compountId;
-        this.compoundName = compoundName;
-        this.compoundType = compoundType;
+        this.compoundId = "DUMMY-20170116_11212222"; //TODO(hans-permana, 20170116): get the compound ID info from the WPS job ID
+        this.compoundName = "Subsetting of Urban Mask"; //TODO(hans-permana, 20170116): get this from the job name in WPS request
+        this.compoundType = "Subset"; //TODO(hans-permana, 20170116): get this from processor or bundle name
         this.quantity = parseQuantity(usageStatistic);
-        this.hostName = hostName;
-        this.timeStamp = timeStamp;
-        this.status = status;
-        this.coordinates = coordinates;
+        this.hostName = "www.brockmann-consult.de/bc-wps/wps/calvalus";
+        this.timeStamp = getFormattedTime(new Date());
+        this.status = usageStatistic.getState();
     }
 
-    private Map<String, Long> parseQuantity(UsageStatistic usageStatistic) {
-        Map<String, Long> quantity = new HashMap<>();
-        quantity.put("CPU_MILLISECONDS", usageStatistic.getCpuMilliseconds());
-        quantity.put("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisTotal()); //check with TD if the unit is MB or Bs
-        quantity.put("BYTE_READ", usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead());
-        quantity.put("BYTE_WRITTEN", usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten());
-        quantity.put("PROC_INSTANCE", usageStatistic.getvCoresMillisTotal()); //check with TD if the unit is only the number of instances or for each second (or ms)
-        quantity.put("NUM_REQ", 1L);
-        return quantity;
+    private String getFormattedTime(Date date) {
+        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, new Locale("de", "DE"));
+        long startTime = date.getTime();
+        return df.format(startTime);
+    }
+
+    private List<Quantity> parseQuantity(UsageStatistic usageStatistic) {
+        List<Quantity> quantityList = new ArrayList<>();
+        quantityList.add(new Quantity("CPU_MILLISECONDS", usageStatistic.getCpuMilliseconds()));
+        quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisTotal())); //check with TD if the unit is MB or Bs
+        quantityList.add(new Quantity("BYTE_READ", usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()));
+        quantityList.add(new Quantity("BYTE_WRITTEN", usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()));
+        quantityList.add(new Quantity("PROC_INSTANCE", usageStatistic.getvCoresMillisTotal())); //check with TD if the unit is only the number of instances or for each second (or ms)
+        quantityList.add(new Quantity("NUM_REQ", 1L));
+        return quantityList;
     }
 
     public String getId() {
@@ -66,8 +72,8 @@ public class UsageStatisticT2 {
         return accountRef;
     }
 
-    public String getCompountId() {
-        return compountId;
+    public String getCompoundId() {
+        return compoundId;
     }
 
     public String getCompoundName() {
@@ -78,7 +84,7 @@ public class UsageStatisticT2 {
         return compoundType;
     }
 
-    public Map<String, Long> getQuantity() {
+    public List<Quantity> getQuantity() {
         return quantity;
     }
 
@@ -92,9 +98,5 @@ public class UsageStatisticT2 {
 
     public String getStatus() {
         return status;
-    }
-
-    public List<Double> getCoordinates() {
-        return coordinates;
     }
 }
