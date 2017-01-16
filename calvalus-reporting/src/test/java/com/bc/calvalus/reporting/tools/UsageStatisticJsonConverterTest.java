@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.reporting.exceptions.ExtractionException;
 import com.bc.calvalus.reporting.io.JSONExtractor;
+import com.bc.calvalus.reporting.ws.NullUsageStatistic;
 import org.junit.*;
 import org.mockito.ArgumentCaptor;
 
@@ -21,6 +22,7 @@ public class UsageStatisticJsonConverterTest {
     @Before
     public void setUp() throws Exception {
         mockJsonExtractor = mock(JSONExtractor.class);
+        when(mockJsonExtractor.getSingleStatistic(anyString())).thenReturn(new NullUsageStatistic());
     }
 
     @Test
