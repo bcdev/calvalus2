@@ -10,7 +10,6 @@ public class UsageStatistic {
     private String queue;
     private long startTime;
     private long finishTime;
-    private long totalTime;
     private String state;
 
     private String inputPath;
@@ -46,7 +45,6 @@ public class UsageStatistic {
         this.queue = queue;
         this.startTime = startTime;
         this.finishTime = finishTime;
-        this.totalTime = finishTime - startTime;
         this.state = state;
         this.inputPath = inputPath;
         this.mapsCompleted = mapsCompleted;
@@ -81,7 +79,7 @@ public class UsageStatistic {
     }
 
     long getTotalTime() {
-        return totalTime;
+        return finishTime - startTime;
     }
 
     public String getState() {

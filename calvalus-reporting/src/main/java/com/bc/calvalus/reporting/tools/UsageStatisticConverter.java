@@ -2,6 +2,7 @@ package com.bc.calvalus.reporting.tools;
 
 import com.bc.calvalus.reporting.exceptions.ExtractionException;
 import com.bc.calvalus.reporting.ws.UsageStatistic;
+import com.bc.calvalus.reporting.ws.UsageStatisticT2;
 
 import java.util.List;
 
@@ -18,13 +19,13 @@ public interface UsageStatisticConverter {
      *
      * @return UsageStatistic of the specified job
      */
-    UsageStatistic extractSingleStatistic(String jobId) throws ExtractionException;
+    UsageStatisticT2 extractSingleStatistic(String jobId) throws ExtractionException;
 
     /**
      * This method returns all available {@link UsageStatistic}
      *
      * @return All {@link UsageStatistic}
      */
-    List<UsageStatistic> extractAllStatistics() throws ExtractionException;
+    List<UsageStatisticT2> extractAllStatistics() throws ExtractionException;
 
 }

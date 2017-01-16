@@ -119,7 +119,7 @@ class ReportGenerator {
             totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (1000);
         }
         int jobNumbers = usageStatistics.size();
-        jobReport.add("Usage statistic for user $USER in $MONTH $YEAR");
+        jobReport.add("Usage statistic for user $USER in $MONTH $YEAR"); // TODO(hans-permana, 20170116): should generate the report per user
         jobReport.add("");
         jobReport.add("Jobs processed : " + jobNumbers);
         jobReport.add("Total file writing (MB) : " + getFormattedNumber(totalFileWriting));
