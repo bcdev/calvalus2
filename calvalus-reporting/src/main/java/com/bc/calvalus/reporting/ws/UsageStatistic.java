@@ -68,15 +68,15 @@ public class UsageStatistic {
         return user;
     }
 
-    String getQueue() {
+    public String getQueue() {
         return queue;
     }
 
-    long getStartTime() {
+    public long getStartTime() {
         return startTime;
     }
 
-    long getFinishTime() {
+    public long getFinishTime() {
         return finishTime;
     }
 
@@ -84,7 +84,7 @@ public class UsageStatistic {
         return totalTime;
     }
 
-    String getState() {
+    public String getState() {
         return state;
     }
 
@@ -100,31 +100,31 @@ public class UsageStatistic {
         return reducesCompleted;
     }
 
-    long getFileBytesRead() {
+    public long getFileBytesRead() {
         return fileBytesRead;
     }
 
-    long getFileBytesWritten() {
+    public long getFileBytesWritten() {
         return fileBytesWritten;
     }
 
-    long getHdfsBytesRead() {
+    public long getHdfsBytesRead() {
         return hdfsBytesRead;
     }
 
-    long getHdfsBytesWritten() {
+    public long getHdfsBytesWritten() {
         return hdfsBytesWritten;
     }
 
-    long getMbMillisTotal() {
+    public long getMbMillisTotal() {
         return mbMillisTotal;
     }
 
-    long getvCoresMillisTotal() {
+    public long getvCoresMillisTotal() {
         return vCoresMillisTotal;
     }
 
-    long getCpuMilliseconds() {
+    public long getCpuMilliseconds() {
         return cpuMilliseconds;
     }
 }

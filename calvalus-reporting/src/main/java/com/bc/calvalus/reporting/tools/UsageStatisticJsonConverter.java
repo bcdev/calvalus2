@@ -19,8 +19,12 @@ public class UsageStatisticJsonConverter implements UsageStatisticConverter {
     }
 
     @Override
-    public UsageStatistic extractSingleStatistic(String jobId) {
-        return jsonExtractor.getSingleStatistic(jobId);
+    public UsageStatistic extractSingleStatistic(String jobId) throws ExtractionException {
+        try {
+            return jsonExtractor.getSingleStatistic(jobId);
+        } catch (IOException exception) {
+            throw new ExtractionException(exception);
+        }
     }
 
     @Override
