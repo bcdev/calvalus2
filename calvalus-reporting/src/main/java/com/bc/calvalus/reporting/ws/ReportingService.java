@@ -37,7 +37,7 @@ public class ReportingService {
     public String getSingleJobReportTxt(@PathParam("jobId") String jobId) {
         try {
             UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId);
-            return reportGenerator.generateTextSingleJob(singleStatistic);
+            return reportGenerator.generateJsonSingleJob(singleStatistic);
         } catch (IOException exception) {
             return exception.getLocalizedMessage();
         }

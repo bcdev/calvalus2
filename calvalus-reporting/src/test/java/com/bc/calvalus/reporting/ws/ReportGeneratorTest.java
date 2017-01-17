@@ -42,6 +42,26 @@ public class ReportGeneratorTest {
                                                                                   "Total vCores used (vCore s) :  1,762\n"));
     }
 
+    @Test
+    public void canGenerateJsonSingleJob() throws Exception {
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052");
+        reportGenerator = new ReportGenerator();
+
+        assertThat(reportGenerator.generateJsonSingleJob(usageStatistic), equalTo("{\n" +
+                                                                                  "  \"jobId\": \"job_1481485063251_20052\",\n" +
+                                                                                  "  \"finishTime\": \"12.01.2017 17:33:06\",\n" +
+                                                                                  "  \"totalFileReadingMb\": \"262\",\n" +
+                                                                                  "  \"totalCpuTime\": \"00:29:58\",\n" +
+                                                                                  "  \"totalTime\": \"00:29:26\",\n" +
+                                                                                  "  \"totalFileWritingMb\": \"89\",\n" +
+                                                                                  "  \"totalMemoryUsedMbs\": \"7,500,170\",\n" +
+                                                                                  "  \"project\": \"fire\",\n" +
+                                                                                  "  \"startTime\": \"12.01.2017 17:03:40\",\n" +
+                                                                                  "  \"totalVcoresUsed\": \"1,762\",\n" +
+                                                                                  "  \"status\": \"SUCCEEDED\"\n" +
+                                                                                  "}"));
+    }
+
     @Ignore // to avoid creating pdf in every maven install
     @Test
     public void canGeneratePdfSingleJob() throws Exception {

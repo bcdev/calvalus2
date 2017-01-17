@@ -43,6 +43,12 @@ class ReportGenerator {
         return stringBuilder.toString();
     }
 
+    String generateJsonSingleJob(UsageStatistic usageStatistic) {
+        Map<String, String> report = getSingleJobJsonContents(usageStatistic);
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(report);
+    }
+
     String generateJsonUserSingleJob(List<UsageStatistic> usageStatistics) {
         Map<String, String> report = getMultiJobJsonContents(usageStatistics);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
@@ -87,6 +93,30 @@ class ReportGenerator {
             }
             contentStream.endText();
         }
+    }
+
+    private Map<String, String> getSingleJobJsonContents(UsageStatistic usageStatistic) {
+        Map<String, String> jobReportJson = new HashMap<>();
+        String startTime = getFormattedTime(usageStatistic.getStartTime());
+        String finishTime = getFormattedTime(usageStatistic.getFinishTime());
+        String totalTime = getElapsedTime(usageStatistic.getTotalTime());
+        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024));
+        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024));
+        String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
+        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisTotal()) / (1000));
+        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (1000));
+        jobReportJson.put("jobId", usageStatistic.getJobId());
+        jobReportJson.put("project", usageStatistic.getQueue());
+        jobReportJson.put("startTime", startTime);
+        jobReportJson.put("finishTime", finishTime);
+        jobReportJson.put("totalTime", totalTime);
+        jobReportJson.put("status", usageStatistic.getState());
+        jobReportJson.put("totalFileWritingMb", totalFileWriting);
+        jobReportJson.put("totalFileReadingMb", totalFileReading);
+        jobReportJson.put("totalCpuTime", totalCpuTime);
+        jobReportJson.put("totalMemoryUsedMbs", totalMemoryUsed);
+        jobReportJson.put("totalVcoresUsed", vCoresUsed);
+        return jobReportJson;
     }
 
     private List<String> getSingleJobReportContents(UsageStatistic usageStatistic) {
