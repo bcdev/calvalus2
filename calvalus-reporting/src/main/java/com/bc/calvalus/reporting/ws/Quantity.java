@@ -8,8 +8,16 @@ public class Quantity {
     private String id;
     private long value;
 
-    public Quantity(String id, long value) {
+    Quantity(String id, long value) {
         this.id = id;
         this.value = value;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public long getValue() {
+        return value;
     }
 }
