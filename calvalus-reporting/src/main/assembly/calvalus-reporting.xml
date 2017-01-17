@@ -22,8 +22,16 @@
             <directory>${project.basedir}/target</directory>
             <includes>
                 <include>calvalus-reporting.war</include>
+                <include>reporting-cli</include>
             </includes>
             <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/target/reporting-cli</directory>
+            <includes>
+                <include>**</include>
+            </includes>
+            <outputDirectory>/reporting-cli</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
