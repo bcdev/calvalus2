@@ -1,10 +1,14 @@
 package com.bc.calvalus.reporting.ws;
 
+import com.bc.calvalus.reporting.io.JSONExtractor;
+import com.bc.wps.utilities.PropertiesWrapper;
+
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 
 /**
  * @author hans
@@ -12,11 +16,26 @@ import javax.ws.rs.core.MediaType;
 @Path("/")
 public class ReportingService {
 
+    private ReportGenerator reportGenerator;
+    private JSONExtractor jsonExtractor;
+
+    public ReportingService() throws IOException {
+        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        jsonExtractor = new JSONExtractor();
+        reportGenerator = new ReportGenerator();
+    }
+
     @GET
     @Path("job/{jobId}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getSingleJobReportTxt(@PathParam("jobId") String jobId) {
-        return "Calvalus usage for job ID '" + jobId + "'";
+        UsageStatistic singleStatistic = null;
+        try {
+            singleStatistic = jsonExtractor.getSingleStatistic(jobId);
+            return reportGenerator.generateTextSingleJob(singleStatistic);
+        } catch (IOException exception) {
+            return exception.getLocalizedMessage();
+        }
     }
 
     @GET

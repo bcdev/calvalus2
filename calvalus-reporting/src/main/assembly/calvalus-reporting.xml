@@ -9,6 +9,16 @@
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
+            <directory>${project.basedir}/src/main/resources/conf</directory>
+            <includes>
+                <include>calvalus-reporting.properties</include>
+            </includes>
+            <excludes>
+                <exclude>readme.txt</exclude>
+            </excludes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/src/main/resources/deployment</directory>
             <includes>
                 <include>**</include>
