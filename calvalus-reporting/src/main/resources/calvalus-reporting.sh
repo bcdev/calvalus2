@@ -1,2 +1,6 @@
 #!/bin/bash
-java -cp lib/generate-calvalus-report.jar:etc com.bc.calvalus.generator.GenerateCalvalusReport start -o calvalus-processing.report
+
+pwd=`pwd`
+output=$1
+
+java -cp "$pwd/generate-calvalus-report.jar:." com.bc.calvalus.generator.GenerateCalvalusReport start -o $output

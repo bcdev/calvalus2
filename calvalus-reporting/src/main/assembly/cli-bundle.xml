@@ -13,6 +13,13 @@
             <outputDirectory>/conf</outputDirectory>
         </fileSet>
         <fileSet>
+            <directory>${project.basedir}/target/classes</directory>
+            <includes>
+                <include>calvalus-reporting.sh</include>
+            </includes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
             <directory>${project.basedir}/target</directory>
             <includes>
                 <include>generate-calvalus-report.jar</include>
