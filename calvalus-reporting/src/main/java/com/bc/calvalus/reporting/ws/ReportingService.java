@@ -33,13 +33,13 @@ public class ReportingService {
 
     @GET
     @Path("job/{jobId}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String getSingleJobReportTxt(@PathParam("jobId") String jobId) {
         try {
             UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId);
             return reportGenerator.generateJsonSingleJob(singleStatistic);
         } catch (IOException exception) {
-            return exception.getLocalizedMessage();
+            return getErrorResponse(exception);
         }
     }
 
@@ -54,11 +54,7 @@ public class ReportingService {
             }
             return reportGenerator.generateJsonUserSingleJob(singleUserStatistics);
         } catch (IOException | JobNotFoundException exception) {
-            Map<String, String> responseMap = new HashMap<>();
-            responseMap.put("Status", "Failed");
-            responseMap.put("Message", exception.getMessage());
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            return gson.toJson(responseMap);
+            return getErrorResponse(exception);
         }
     }
 
@@ -84,6 +80,14 @@ public class ReportingService {
     @Produces(MediaType.TEXT_PLAIN)
     public String getTimeSpecificJobReportTxt(@PathParam("user") String user) {
         return "Calvalus usage for user " + user + " in period $DATE_START to $DATE_END";
+    }
+
+    private String getErrorResponse(Exception exception) {
+        Map<String, String> responseMap = new HashMap<>();
+        responseMap.put("Status", "Failed");
+        responseMap.put("Message", exception.getMessage());
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(responseMap);
     }
 
 }
