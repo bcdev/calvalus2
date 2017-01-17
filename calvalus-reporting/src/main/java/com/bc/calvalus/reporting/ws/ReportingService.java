@@ -1,7 +1,10 @@
 package com.bc.calvalus.reporting.ws;
 
+import com.bc.calvalus.reporting.exceptions.JobNotFoundException;
 import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -9,6 +12,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author hans
@@ -29,9 +35,8 @@ public class ReportingService {
     @Path("job/{jobId}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getSingleJobReportTxt(@PathParam("jobId") String jobId) {
-        UsageStatistic singleStatistic = null;
         try {
-            singleStatistic = jsonExtractor.getSingleStatistic(jobId);
+            UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId);
             return reportGenerator.generateTextSingleJob(singleStatistic);
         } catch (IOException exception) {
             return exception.getLocalizedMessage();
@@ -40,9 +45,21 @@ public class ReportingService {
 
     @GET
     @Path("{user}")
-    @Produces(MediaType.TEXT_PLAIN)
+    @Produces(MediaType.APPLICATION_JSON)
     public String getAllJobReportTxt(@PathParam("user") String user) {
-        return "Calvalus usage for user " + user;
+        try {
+            List<UsageStatistic> singleUserStatistics = jsonExtractor.getSingleUserStatistic(user);
+            if (singleUserStatistics.size() < 1) {
+                throw new JobNotFoundException("Jobs not found for user '" + user + "'");
+            }
+            return reportGenerator.generateJsonUserSingleJob(singleUserStatistics);
+        } catch (IOException | JobNotFoundException exception) {
+            Map<String, String> responseMap = new HashMap<>();
+            responseMap.put("Status", "Failed");
+            responseMap.put("Message", exception.getMessage());
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            return gson.toJson(responseMap);
+        }
     }
 
     @GET

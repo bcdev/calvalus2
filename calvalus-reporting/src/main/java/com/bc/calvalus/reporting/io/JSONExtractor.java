@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,6 +27,17 @@ public class JSONExtractor {
             }
         }
         return new NullUsageStatistic();
+    }
+
+    public List<UsageStatistic> getSingleUserStatistic(String userName) throws IOException {
+        List<UsageStatistic> usageStatistics = getAllStatistics();
+        List<UsageStatistic> singleUserStatistics = new ArrayList<>();
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            if (userName.equalsIgnoreCase(usageStatistic.getUser())) {
+                singleUserStatistics.add(usageStatistic);
+            }
+        }
+        return singleUserStatistics;
     }
 
     public List<UsageStatistic> getAllStatistics() throws IOException {
