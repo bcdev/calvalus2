@@ -198,4 +198,19 @@ public class S2FinaliseMapperTest {
         }
 
     }
+
+    @Test
+    public void name2() throws Exception {
+        int firstNumber = (int) (Math.random() * 100);
+        int secondNumber = (int) (Math.random() * 100);
+        double operatorRandom = Math.random();
+        if (operatorRandom <= 0.25) {
+            System.out.println(firstNumber + secondNumber);
+        } else if (operatorRandom <= 0.5) {
+            System.out.println(firstNumber + secondNumber);
+        } else if (operatorRandom <= 0.5) {
+            System.out.println(firstNumber - secondNumber);
+        }
+
+    }
 }

@@ -205,7 +205,7 @@ public class S2Strategy implements SensorStrategy {
     private static class S2PixelProductAreaProvider implements PixelProductAreaProvider {
 
         private enum S2PixelProductArea {
-            h30v18(150, 90, 160, 95),
+            h30v18(150, 90, 155, 95),
             h31v18(155, 90, 160, 95),
             h32v18(160, 90, 165, 95),
             h33v18(165, 90, 170, 95),

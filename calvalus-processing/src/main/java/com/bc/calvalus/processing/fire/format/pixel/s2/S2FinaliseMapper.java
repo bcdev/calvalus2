@@ -21,10 +21,12 @@ import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ResolutionLevel;
 import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
+import org.esa.snap.watermask.operator.WatermaskOp;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -46,6 +48,7 @@ import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -104,22 +107,23 @@ public class S2FinaliseMapper extends Mapper {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 //        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
-        source.addBand("CL_remapped", "(JD > 0 and JD < 900) ? (CL * 100) : 0", ProductData.TYPE_INT8);
+//        source.addBand("CL_remapped", "(JD > 0 and JD < 900) ? (CL * 100) : 0", ProductData.TYPE_INT8);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
         target.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         ProductUtils.copyGeoCoding(source, target);
 
-        Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
-        jdBand.setSourceImage(new JdImage(source.getBand("JD")));
+        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new WatermaskOp.Spi());
+        Band landWaterMask = GPF.createProduct("LandWaterMask", new HashMap<>(), source).getBandAt(0);
 
-//        ProductUtils.copyBand("JD_remapped", source, "JD", target, true);
-        ProductUtils.copyBand("CL_remapped", source, "CL", target, true);
-        target.addBand("LC", ProductData.TYPE_INT8);
+        Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
+        Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
+        Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
         target.addBand("sensor", "6", ProductData.TYPE_INT8);
 
-        Band lcBand = target.getBand("LC");
+        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask));
+        clBand.setSourceImage(new ClImage(source.getBand("CL"), landWaterMask));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
 
         return target;
@@ -219,27 +223,35 @@ public class S2FinaliseMapper extends Mapper {
     private static class JdImage extends SingleBandedOpImage {
 
         private final Band sourceJdBand;
+        private final Band watermask;
 
-        private JdImage(Band sourceJdBand) {
+        private JdImage(Band sourceJdBand, Band watermask) {
             super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceJdBand = sourceJdBand;
+            this.watermask = watermask;
         }
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            PixelPos pixelPos = new PixelPos();
-
             float[] sourceJdArray = new float[destRect.width * destRect.height];
+            byte[] watermaskArray = new byte[destRect.width * destRect.height];
             try {
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
+                watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
             int pixelIndex = 0;
             for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
                 for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    pixelPos.x = x;
-                    pixelPos.y = y;
+                    byte watermask = watermaskArray[pixelIndex];
+
+                    if (watermask > 0) {
+                        dest.setSample(x, y, 0, -2);
+                        pixelIndex++;
+                        continue;
+                    }
+
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (Float.isNaN(sourceJd)) {
                         sourceJd = findNeighbourValue(sourceJdArray, pixelIndex, destRect.width);
@@ -248,13 +260,59 @@ public class S2FinaliseMapper extends Mapper {
                     int targetJd;
                     if (sourceJd < 900) {
                         targetJd = (int) sourceJd;
-                    } else if (Math.abs(sourceJd - 999) < 0.01 || Math.abs(sourceJd - 998) < 0.01) {
-                        targetJd = -1;
                     } else {
-                        targetJd = -2;
+                        targetJd = -1;
                     }
 
                     dest.setSample(x, y, 0, targetJd);
+                    pixelIndex++;
+                }
+            }
+        }
+
+    }
+
+    private static class ClImage extends SingleBandedOpImage {
+
+        private final Band sourceClBand;
+        private final Band watermask;
+
+        private ClImage(Band sourceClBand, Band watermask) {
+            super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            this.sourceClBand = sourceClBand;
+            this.watermask = watermask;
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            float[] sourceClArray = new float[destRect.width * destRect.height];
+            byte[] watermaskArray = new byte[destRect.width * destRect.height];
+            try {
+                sourceClBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceClArray));
+                watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            int pixelIndex = 0;
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    byte watermask = watermaskArray[pixelIndex];
+
+                    if (watermask > 0) {
+                        dest.setSample(x, y, 0, 0);
+                        pixelIndex++;
+                        continue;
+                    }
+
+                    int targetCl;
+                    float sourceCl = sourceClArray[pixelIndex];
+                    if (Float.isNaN(sourceCl)) {
+                        targetCl = (int) findNeighbourValue(sourceClArray, pixelIndex, destRect.width);
+                    } else {
+                        targetCl = (int) sourceCl;
+                    }
+
+                    dest.setSample(x, y, 0, targetCl);
                     pixelIndex++;
                 }
             }
@@ -694,11 +752,11 @@ public class S2FinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    static float findNeighbourValue(float[] sourceJdArray, int pixelIndex, int width) {
+    static float findNeighbourValue(float[] sourceData, int pixelIndex, int width) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
 
-        float currentValue = sourceJdArray[pixelIndex];
+        float currentValue = sourceData[pixelIndex];
         if (!Float.isNaN(currentValue)) {
             return currentValue;
         }
@@ -706,11 +764,11 @@ public class S2FinaliseMapper extends Mapper {
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
                 int newPixelIndex = pixelIndex + yDirection * width + xDirection;
-                if (newPixelIndex < sourceJdArray.length) {
-                    if (newPixelIndex < 0 || newPixelIndex >= sourceJdArray.length) {
+                if (newPixelIndex < sourceData.length) {
+                    if (newPixelIndex < 0 || newPixelIndex >= sourceData.length) {
                         continue;
                     }
-                    float neighbourValue = sourceJdArray[newPixelIndex];
+                    float neighbourValue = sourceData[newPixelIndex];
                     if (!Float.isNaN(neighbourValue)) {
                         return neighbourValue;
                     }
