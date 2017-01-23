@@ -21,6 +21,8 @@ public class JDAggregator extends AbstractAggregator {
     public static final String CURRENT_VALUE = "currentValue";
     public static final String CURRENT_CL_VALUE = "currentClValue";
     public static final float INITIAL_VALUE = -1.0f;
+    public static final int PRE_CLOUD = -100;
+    public static final int PRE_EMPTY = -101;
     private final int minDoy;
     private final int maxDoy;
 
@@ -66,10 +68,30 @@ public class JDAggregator extends AbstractAggregator {
     private void aggregate(float jd, float cl, BinContext ctx, WritableVector targetVector) {
         float previousValue = ctx.get(CURRENT_VALUE);
 
+        boolean validJdSet = previousValue >= 0 && previousValue < 997;
+        if (!validJdSet) {
+            // use pre-processing data, but only if not valid JD
+            // relevant for spatial binning only
+            if (jd == PRE_CLOUD) {
+                targetVector.set(0, CLOUD);
+                targetVector.set(1, 0);
+                ctx.put(CURRENT_VALUE, CLOUD);
+                ctx.put(CURRENT_CL_VALUE, 0F);
+                return;
+            } else if (jd == PRE_EMPTY) {
+                if (previousValue == INITIAL_VALUE) {
+                    targetVector.set(0, 0);
+                    targetVector.set(1, 0);
+                    ctx.put(CURRENT_VALUE, 0F);
+                    ctx.put(CURRENT_CL_VALUE, 0F);
+                }
+                return;
+            }
+        }
+
         // take max of JD
         // overwrite if JD > old currentValue
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
-        boolean validJdSet = previousValue >= 0 && previousValue < 997;
         boolean preferToPreviousValue = (!validJdSet || jd > previousValue) && jd < 997 && (inTimeBounds || jd == 0);
 
         if (previousValue == WATER) {

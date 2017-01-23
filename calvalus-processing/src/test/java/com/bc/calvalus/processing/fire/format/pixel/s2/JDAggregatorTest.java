@@ -10,6 +10,8 @@ import static org.junit.Assert.assertEquals;
 
 public class JDAggregatorTest {
 
+    public static final int NUM_OBS = -1;
+
     @Test
     public void testAggregate_1() throws Exception {
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
@@ -24,7 +26,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0F, 0), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -48,7 +50,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 998F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 997F, 997F), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -73,7 +75,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.8F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 11F, 0.6F), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -101,7 +103,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999F, 999F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 45F, 0.2F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 998F), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -123,7 +125,7 @@ public class JDAggregatorTest {
 
         aggregator.initSpatial(spatialCtx, spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.2F), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -149,7 +151,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 997, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 0), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -173,7 +175,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -197,7 +199,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 10F, 0.3F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -221,7 +223,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0, 0.0F), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 0), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -245,7 +247,7 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
@@ -269,13 +271,127 @@ public class JDAggregatorTest {
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998, 998), spatialVector);
         aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 999, 999), spatialVector);
-        aggregator.completeSpatial(spatialCtx, -1, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
 
         aggregator.initTemporal(temporalCtx, temporalVector);
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
         aggregator.completeTemporal(temporalCtx, 0, temporalVector);
 
         assertEquals(998F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_supplementData1() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -100F, 0F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_supplementData2() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -100F, 0F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(998F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_supplementData3() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -100F, 0F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -101F, 0F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(998F, temporalVector.get(0), 1E-7);
+        assertEquals(0F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_supplementData4() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -100F, 0F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5F, temporalVector.get(1), 1E-7);
+    }
+
+
+    @Test
+    public void testAggregate_supplementData5() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, -101F, 0F), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(0F, temporalVector.get(0), 1E-7);
         assertEquals(0F, temporalVector.get(1), 1E-7);
     }
 }
