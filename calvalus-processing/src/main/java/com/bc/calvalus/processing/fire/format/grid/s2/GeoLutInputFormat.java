@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
@@ -8,7 +7,6 @@ import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -69,8 +67,7 @@ public class GeoLutInputFormat extends InputFormat {
     private FileStatus[] getFileStatuses(String inputPathPatterns,
                                          Configuration conf) throws IOException {
 
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
         return hdfsInventoryService.globFileStatuses(inputPatterns, conf);

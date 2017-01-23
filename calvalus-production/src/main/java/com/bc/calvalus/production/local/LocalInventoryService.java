@@ -1,9 +1,6 @@
 package com.bc.calvalus.production.local;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.AbstractInventoryService;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.mapred.JobConf;
 
 import java.io.File;
@@ -21,7 +18,7 @@ public class LocalInventoryService extends AbstractInventoryService {
     public static final File EODATA_DIR = new File(CONTEXT_DIR, EODATA);
 
     public LocalInventoryService() throws IOException {
-        super(new JobClientsMap(new JobConf()), EODATA);
+        super(new JobConf(), EODATA);
         CONTEXT_DIR.mkdirs();
         EODATA_DIR.mkdir();
     }

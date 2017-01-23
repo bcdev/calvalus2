@@ -1,12 +1,10 @@
 package com.bc.calvalus.processing.fire;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -36,8 +34,7 @@ public class S2BaPostInputFormat extends InputFormat {
         List<CombineFileSplit> intermediateResultSplits = new ArrayList<>(1000);
         List<InputSplit> splits = new ArrayList<>(1000);
 
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService inventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        HdfsInventoryService inventoryService = new HdfsInventoryService(conf, "eodata");
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPattern);
         FileStatus[] fileStatuses = inventoryService.globFileStatuses(inputPatterns, conf);

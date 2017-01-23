@@ -1,9 +1,9 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceFactory;
@@ -46,7 +46,7 @@ public class HadoopProductionServiceFactory implements ProductionServiceFactory 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
-            final InventoryService inventoryService = new HdfsInventoryService(jobClientsMap, archiveRootDir);
+            final InventoryService inventoryService = new HdfsInventoryService(jobConf, archiveRootDir);
             final HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap);
             final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {

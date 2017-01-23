@@ -72,9 +72,7 @@ public class PatternBasedInputFormat extends InputFormat {
             LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
             return splits;
         } else if (geoInventory == null && inputPathPatterns != null) {
-
-            JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
 
             ProductInventory productInventory = ProductInventory.createInventory(conf);
             List<InputSplit> splits = new ArrayList<>(1000);
@@ -107,7 +105,7 @@ public class PatternBasedInputFormat extends InputFormat {
             Set<Path> qualifiedPath = makeQualified(pathStringInDB, conf);
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+            HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
 
             ProductInventory productInventory = ProductInventory.createInventory(conf);
             List<InputSplit> splits = new ArrayList<>(1000);

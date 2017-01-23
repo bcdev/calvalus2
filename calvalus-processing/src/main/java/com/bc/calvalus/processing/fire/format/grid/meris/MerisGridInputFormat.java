@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.meris;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
@@ -11,7 +10,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -34,8 +32,7 @@ public class MerisGridInputFormat extends InputFormat {
         Configuration conf = context.getConfiguration();
         String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
 
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
 
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);

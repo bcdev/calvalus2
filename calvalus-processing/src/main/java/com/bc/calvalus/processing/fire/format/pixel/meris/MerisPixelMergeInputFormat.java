@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel.meris;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
@@ -8,7 +7,6 @@ import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.JobContext;
@@ -31,8 +29,7 @@ public class MerisPixelMergeInputFormat extends InputFormat {
         String inputBaseDir = context.getConfiguration().get("inputBaseDir"); // hdfs://calvalus/calvalus/projects/fire/meris-PSD/pixel/2008/06/EUROPE
         CalvalusLogger.getLogger().info("Input base dir = " + inputBaseDir);
 
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(conf, "eodata");
 
         String inputPathPattern = inputBaseDir + ".*tar.gz";
 

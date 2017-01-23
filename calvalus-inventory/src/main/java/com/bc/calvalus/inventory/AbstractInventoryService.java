@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.inventory;
 
-import com.bc.calvalus.JobClientsMap;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -24,7 +23,13 @@ import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -40,17 +45,17 @@ import java.util.regex.Pattern;
 public abstract class AbstractInventoryService implements InventoryService {
 
     private static final String USER_FILTER = "user=";
-    private final JobClientsMap jobClientsMap;
+    private final Configuration conf;
     private String archiveRootDir = "eodata";
 
-    public AbstractInventoryService(JobClientsMap jobClientsMap, String archiveRootDir) {
-        this.jobClientsMap = jobClientsMap;
+    public AbstractInventoryService(Configuration conf, String archiveRootDir) {
+        this.conf = conf;
         this.archiveRootDir = archiveRootDir;
     }
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws Exception {
-        FileSystem fileSystem = jobClientsMap.getJobClient(username).getFs();
+        FileSystem fileSystem = FileSystem.get(conf);
 
         if (filter != null && filter.startsWith(USER_FILTER)) {
             String filterUserName = filter.substring(USER_FILTER.length());
@@ -71,7 +76,7 @@ public abstract class AbstractInventoryService implements InventoryService {
         }
         if (fileSystem.exists(databasePath)) {
             final ProductSet[] productSets = readProductSets(fileSystem, new Path[]{databasePath});
-            if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+            if (conf.getBoolean("calvalus.acl", true)) {
                 List<ProductSet> accu = new ArrayList<>();
                 for (ProductSet productSet : productSets) {
                     try {
@@ -90,7 +95,7 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     private ProductSet[] loadProcessed(FileSystem fileSystem, String filterUserName) throws IOException {
         final Path[] paths;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+        if (conf.getBoolean("calvalus.acl", true)) {
             final List<Path> accu = new ArrayList<>();
             final String userDirsPattern = String.format("home/%s", filterUserName);
             final Path userDirsPath = makeQualified(fileSystem, userDirsPattern);
@@ -166,11 +171,10 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public String[] globPaths(String username, List<String> pathPatterns) throws IOException {
-        Configuration conf = jobClientsMap.getConfiguration();
-
+        Configuration conf = this.conf;
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username, commonPathPrefix);
+        FileSystem fileSystem = getFileSystem(username, commonPathPrefix);
         Path qualifiedPath = makeQualified(fileSystem, commonPathPrefix);
         List<FileStatus> fileStatuses = new ArrayList<>(1000);
         collectFileStatuses(fileSystem, qualifiedPath, pattern, fileStatuses);
@@ -183,35 +187,46 @@ public abstract class AbstractInventoryService implements InventoryService {
 
     @Override
     public String getQualifiedPath(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        FileSystem fileSystem = getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
         return qualifiedPath.toString();
     }
 
     @Override
     public OutputStream addFile(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        FileSystem fileSystem = getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
         return fileSystem.create(qualifiedPath);
     }
 
     @Override
     public boolean removeFile(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        FileSystem fileSystem = getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
         return fileSystem.delete(qualifiedPath, false);
     }
 
     @Override
     public boolean removeDirectory(String username, String path) throws IOException {
-        FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
+        FileSystem fileSystem = getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
         return fileSystem.delete(qualifiedPath, true);
     }
 
+    private FileSystem getFileSystem(String username, String commonPathPrefix) throws IOException {
+        URI uri = new Path(commonPathPrefix).toUri();
+        FileSystem fileSystem;
+        try {
+            fileSystem = FileSystem.get(uri, conf, username);
+        } catch (InterruptedException e) {
+            throw new IOException(e);
+        }
+        return fileSystem;
+    }
+
     @Override
     public boolean pathExists(String path) throws IOException {
-        Configuration conf = jobClientsMap.getConfiguration();
+        Configuration conf = this.conf;
 
         Path p = new Path(path);
         FileSystem fileSystem = p.getFileSystem(conf);

@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.production.cli;
 
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
@@ -26,7 +25,6 @@ import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
 import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
@@ -54,8 +52,7 @@ public class ShowProductContentMain {
         }
         Configuration conf = new Configuration();
         HadoopProductionType.setJobConfig(config, conf);
-        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService inventoryService = new HdfsInventoryService(jobClientsMap, archiveRootDir);
+        HdfsInventoryService inventoryService = new HdfsInventoryService(conf, archiveRootDir);
 
         for (String arg : args) {
             System.out.println("====================================================================");
@@ -72,7 +69,7 @@ public class ShowProductContentMain {
             System.out.println("first pattern = " + pattern);
             firstPattern.add(pattern);
             try {
-                FileStatus[] fileStatuses = inventoryService.globFileStatuses(firstPattern, jobClientsMap.getConfiguration());
+                FileStatus[] fileStatuses = inventoryService.globFileStatuses(firstPattern, conf);
                 System.out.println("fileStatuses.length = " + fileStatuses.length);
                 if (fileStatuses.length > 0) {
                     System.out.println("fileStatuses[0] = " + fileStatuses[0]);
