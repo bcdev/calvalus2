@@ -137,12 +137,29 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
         return mosaicPartitioner.getPartition(tileIndex, null, numPartitions);
     }
 
+    public static boolean maybeIsPixelPos(int x, int y, int i, int tileSize) {
+        int ix = x % tileSize;
+        int iy = y % tileSize;
+        return i == iy * tileSize + ix;
+    }
+
     @Override
     public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) samples[varIndexes[0]][i];
             int oldStatus = (int) aggregatedSamples[STATUS][i];
+//            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
+//                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
+//                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
+//                System.err.println("ix=" + (i%tileSize) + " iy=" + (i/tileSize) + " status=" + status + " oldStatus=" + oldStatus
+//                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
+//                                           + " #snow=" + aggregatedSamples[STATUS_SNOW][i]
+//                                           + " #water=" + aggregatedSamples[STATUS_WATER][i]
+//                                           + " #cloud=" + aggregatedSamples[STATUS_CLOUD][i]
+//                                           + " #shadow=" + aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+//            }
+
 //            if (i == 406*1080+647) {
 //                System.err.println("status=" + status + " oldStatus=" + oldStatus
 //                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
@@ -165,7 +182,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
             if (sdrCloudDataSamples != null) {
                 // temporal test
                 if (isTemporalTc4Based) {
-                    if (status == STATUS_LAND) {
+                    if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE) {
                         float tc4CloudThreshold = sdrCloudDataSamples[1][i];
                         if (!Float.isNaN(tc4CloudThreshold)) {
                             float B2_ac = samples[varIndexes[SDR_L2_OFFSET+1]][i];
@@ -178,6 +195,17 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                             if (tc4 < tc4CloudThreshold) {
                                 status = STATUS_TEMPORAL_CLOUD;
                             }
+//                            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
+//                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
+//                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
+//                                System.err.println("ix=" + (i%tileSize) + " iy=" + (i/tileSize) + " tc4=" + tc4 + " tc4CloudThreshold=" + tc4CloudThreshold + " status=" + status);
+//                            }
+//                        } else {
+//                            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
+//                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
+//                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
+//                                System.err.println("ix=" + (i%tileSize) + " iy=" + (i/tileSize) + " tc4CloudThreshold=" + tc4CloudThreshold + " status=" + status);
+//                            }
                         }
                     }
 
@@ -332,6 +360,16 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
 //                    System.err.println("catch all status=" + status);
 //                }
             }
+//            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
+//                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
+//                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
+//                System.err.println("ix=" + (i%tileSize) + " iy=" + (i/tileSize) + " aggregated status=" + aggregatedSamples[STATUS][i] + " status=" + status
+//                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
+//                                           + " #snow=" + aggregatedSamples[STATUS_SNOW][i]
+//                                           + " #water=" + aggregatedSamples[STATUS_WATER][i]
+//                                           + " #cloud=" + aggregatedSamples[STATUS_CLOUD][i]
+//                                           + " #shadow=" + aggregatedSamples[STATUS_CLOUD_SHADOW][i]);
+//            }
 //            if (i == 406*1080+647) {
 //                System.err.println("aggregated status=" + aggregatedSamples[STATUS][i] + " status=" + status
 //                                           + " #land=" + aggregatedSamples[STATUS_LAND][i]
