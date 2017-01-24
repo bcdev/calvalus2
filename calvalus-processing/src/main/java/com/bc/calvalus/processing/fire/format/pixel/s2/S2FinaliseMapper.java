@@ -103,7 +103,7 @@ public class S2FinaliseMapper extends Mapper {
         CalvalusLogger.getLogger().info("...done.");
     }
 
-    private static Product remap(File localL3, String baseFilename, Product lcProduct, Context context) throws IOException {
+    static Product remap(File localL3, String baseFilename, Product lcProduct, Progressable context) throws IOException {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 //        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
@@ -122,7 +122,7 @@ public class S2FinaliseMapper extends Mapper {
         Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
         target.addBand("sensor", "6", ProductData.TYPE_INT8);
 
-        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, target.getSceneGeoCoding(), context.getConfiguration()));
+        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask));
         clBand.setSourceImage(new ClImage(source.getBand("CL"), jdBand));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
 
@@ -164,6 +164,62 @@ public class S2FinaliseMapper extends Mapper {
             throw new IOException(e);
         }
     }
+
+    private static class JdImage extends SingleBandedOpImage {
+
+        private final Band sourceJdBand;
+        private final Band watermask;
+
+        JdImage(Band sourceJdBand, Band watermask) {
+            super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            this.sourceJdBand = sourceJdBand;
+            this.watermask = watermask;
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            float[] sourceJdArray = new float[destRect.width * destRect.height];
+            byte[] watermaskArray = new byte[destRect.width * destRect.height];
+            try {
+                sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
+                watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            int pixelIndex = 0;
+            PixelPos pixelPos = new PixelPos();
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    pixelPos.x = x;
+                    pixelPos.y = y;
+                    byte watermask = watermaskArray[pixelIndex];
+
+                    if (watermask > 0) {
+                        dest.setSample(x, y, 0, -2);
+                        pixelIndex++;
+                        continue;
+                    }
+
+                    float sourceJd = sourceJdArray[pixelIndex];
+                    if (Float.isNaN(sourceJd)) {
+                        sourceJd = S2FinaliseMapper.findNeighbourValue(sourceJdArray, pixelIndex, destRect.width).neighbourValue;
+                    }
+
+                    int targetJd;
+                    if (sourceJd < 900) {
+                        targetJd = (int) sourceJd;
+                    } else {
+                        targetJd = -1;
+                    }
+
+                    dest.setSample(x, y, 0, targetJd);
+
+                    pixelIndex++;
+                }
+            }
+        }
+    }
+
 
     private static class ClImage extends SingleBandedOpImage {
 
