@@ -194,6 +194,9 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
                             float tc4 = (float) (-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac);
                             if (tc4 < tc4CloudThreshold) {
                                 status = STATUS_TEMPORAL_CLOUD;
+                            } else if (status == STATUS_BRIGHT || status == STATUS_HAZE) {
+                                // we observe that the feature is stable over time, we assume it is clear
+                                status = STATUS_LAND;
                             }
 //                            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
 //                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
@@ -206,6 +209,34 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
 //                                                || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
 //                                System.err.println("ix=" + (i%tileSize) + " iy=" + (i/tileSize) + " tc4CloudThreshold=" + tc4CloudThreshold + " status=" + status);
 //                            }
+                        } else if (status == STATUS_BRIGHT || status == STATUS_HAZE) {
+                            // we do not have temporal information, we are restrictive
+                            // TODO status = STATUS_CLOUD;
+                        }
+                    }
+
+                    //TC1 = 0.3029*B2_ac + 0.2786*B3_ac + 0.4733*B4_ac + 0.5599*B8A_ac + 0.508*B11_ac + 0.1872*B12_ac
+                    //TC1_tresh = 0.9*(TC1_mean - TC1_stddev)
+                    //Shadow: TC1 < TC1_tresh
+                    else if (status == STATUS_DARK) {
+                        float tc1CloudThreshold = sdrCloudDataSamples[0][i];
+                        if (!Float.isNaN(tc1CloudThreshold)) {
+                            float B2_ac = samples[varIndexes[SDR_L2_OFFSET + 1]][i];
+                            float B3_ac = samples[varIndexes[SDR_L2_OFFSET + 2]][i];
+                            float B4_ac = samples[varIndexes[SDR_L2_OFFSET + 3]][i];
+                            float B8A_ac = samples[varIndexes[SDR_L2_OFFSET + 8]][i];
+                            float B11_ac = samples[varIndexes[SDR_L2_OFFSET + 9]][i];
+                            float B12_ac = samples[varIndexes[SDR_L2_OFFSET + 10]][i];
+                            float tc1 = (float) (0.3029 * B2_ac + 0.2786 * B3_ac + 0.4733 * B4_ac + 0.5599 * B8A_ac + 0.508 * B11_ac + 0.1872 * B12_ac);
+                            if (tc1 < tc1CloudThreshold) {
+                                status = STATUS_CLOUD_SHADOW;
+                            } else {
+                                // we observe that the feature is stable over time, we assume it is clear
+                                //status = STATUS_LAND;
+                            }
+                        } else {
+                            // we do not have temporal information, we are lost
+                            // TODO status = STATUS_LAND
                         }
                     }
 

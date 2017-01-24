@@ -35,18 +35,28 @@ import java.util.Arrays;
 public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int STATUS_LAND = 1;
+    static final int STATUS_WATER = 2;
+    static final int STATUS_HAZE = 11;
+    static final int STATUS_BRIGHT = 12;
+    static final int STATUS_DARK = 15;
 
     private static final int SAMPLE_INDEX_STATUS = 0;
     private static final int SAMPLE_INDEX_SDR8 = 1;
 //    private static final int SAMPLE_INDEX_NDVI = 2;
+    private static final int SAMPLE_INDEX_TC1 = 2;
     private static final int NUM_SAMPLE_BANDS = 3;
 
     private static final int AGG_INDEX_COUNT = 0;
     private static final int AGG_INDEX_SDR_SUM = 1;
     private static final int AGG_INDEX_SDR_SQSUM = 2;
-//    private static final int AGG_INDEX_MAXNDVI = 3;
+    private static final int AGG_INDEX_STATUS = 3;
+    private static final int AGG_INDEX_TC1_COUNT = 4;
+    private static final int AGG_INDEX_TC1_SUM = 5;
+    private static final int AGG_INDEX_TC1_SQSUM = 6;
+    private static final int AGG_INDEX_TC1_STATUS = 7;
+    //private static final int AGG_INDEX_MAXNDVI = 3;
 //    private static final int AGG_INDEX_SDR4MAXNDVI = 4;
-    private static final int NUM_AGGREGATION_BANDS = 5;
+    private static final int NUM_AGGREGATION_BANDS = 8;
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
@@ -56,6 +66,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private Configuration jobConf;
     private float applyFilterThresh;
     private String temporalCloudBandName;
+    private boolean withTc4 = false;
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) {
@@ -67,19 +78,37 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         }
     }
 
+    /**
+     * Ignore observations that are not LAND or BRIGHT or HAZE.
+     * If there are some land observations, count their contributions.
+     * Else, if there are some bright observations count their contributions.
+     * Else, if there are some haze observations count their contributions.
+     * Use AGG_INDEX_MAXNDVI for the status memo.
+     * @param samples
+     */
     @Override
     public void processTemporal(float[][] samples) {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
-            int status1 = (int) samples[varIndexes[SAMPLE_INDEX_STATUS]][i];
-            int status = StatusRemapper.remapStatus(statusRemapper, status1);
+            int status = (int) samples[varIndexes[SAMPLE_INDEX_STATUS]][i];
+            //int status = StatusRemapper.remapStatus(statusRemapper, status1);
 //            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
 //                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2824, 4982, i, tileSize)
 //                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(2866, 4970, i, tileSize)) {
 //                System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " status1=" + status1 + " status=" + status + " tc4=" + samples[varIndexes[SAMPLE_INDEX_SDR8]][i]);
 //            }
-            if (status == STATUS_LAND) {
-                // Since we have seen LAND now, accumulate LAND SDRs
+            if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE) {
+                int oldStatus = (int) aggregatedSamples[AGG_INDEX_STATUS][i];
+                if (oldStatus == 0.0f ||
+                    (oldStatus == STATUS_BRIGHT && status == STATUS_LAND) ||
+                    (oldStatus == STATUS_HAZE && status == STATUS_LAND) ||
+                    (oldStatus == STATUS_HAZE && status == STATUS_BRIGHT)) {
+                    aggregatedSamples[AGG_INDEX_COUNT][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_SDR_SUM][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_STATUS][i] = status;
+                }
+                // Since we have seen LAND etc. now, accumulate LAND SDRs
                 float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
 //                float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
                 if (!Float.isNaN(sdr)) {
@@ -95,6 +124,25 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 //                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
 //                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
 //                    }
+                }
+            }
+            if (withTc4 && (status == STATUS_LAND || status == STATUS_DARK || status == STATUS_WATER)) {
+
+                int oldStatus = (int) aggregatedSamples[AGG_INDEX_TC1_STATUS][i];
+                if (oldStatus == 0.0f ||
+                    (oldStatus == STATUS_DARK && status == STATUS_LAND) ||
+                    (oldStatus == STATUS_DARK && status == STATUS_WATER)) {
+                    aggregatedSamples[AGG_INDEX_TC1_COUNT][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_TC1_SUM][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] = 0.0f;
+                    aggregatedSamples[AGG_INDEX_TC1_STATUS][i] = status;
+                }
+                // Since we have seen LAND etc. now, accumulate LAND SDRs
+                float sdr = samples[varIndexes[SAMPLE_INDEX_TC1]][i];
+                if (!Float.isNaN(sdr)) {
+                    aggregatedSamples[AGG_INDEX_TC1_COUNT][i]++;
+                    aggregatedSamples[AGG_INDEX_TC1_SUM][i] += sdr;
+                    aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] += sdr * sdr;
                 }
             }
         }
@@ -128,7 +176,9 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 //                    double sdrCloudShadowDetector = Math.min(tau5, tau6);
                     double sdrCloudDetector = sdrMean + sdrSigma * 1.35;
                     double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
-                    result[0][i] = (float) sdrCloudDetector;
+                    if (! withTc4) {
+                        result[0][i] = (float) sdrCloudDetector;
+                    }
                     result[1][i] = (float) sdrCloudShadowDetector;
 //                }
 //                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1564, 5086, i, tileSize)
@@ -148,6 +198,15 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 //                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " count=" + count);
 //                }
             }
+            count = aggregatedSamples[AGG_INDEX_TC1_COUNT][i];
+            if (withTc4 && count >= 2) {
+                double sdrSum = aggregatedSamples[AGG_INDEX_TC1_SUM][i];
+                double sdrSqrSum = aggregatedSamples[AGG_INDEX_TC1_SQSUM][i];
+                double sdrMean = sdrSum / count;
+                double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
+                double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
+                result[0][i] = (float) sdrCloudShadowDetector;
+            }
         }
         return result;
     }
@@ -157,6 +216,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         this.jobConf = jobConf;
         temporalCloudBandName = jobConf.get("calvalus.lc.temporalCloudBandName"); // "sdr_8", "sdr_B3", ...
         applyFilterThresh = Float.parseFloat(jobConf.get("calvalus.lc.temporalCloudFilterThreshold")); // 0.075f
+        withTc4 = "tc4".equals(temporalCloudBandName);
     }
 
     @Override
@@ -196,6 +256,9 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         int[] varIndexes = new int[NUM_SAMPLE_BANDS];
         varIndexes[SAMPLE_INDEX_STATUS] = getVariableIndex(varCtx, "status");
         varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, temporalCloudBandName);
+        if (withTc4) {
+            varIndexes[SAMPLE_INDEX_TC1] = getVariableIndex(varCtx, "tc1");
+        }
 //        varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         return varIndexes;
     }
