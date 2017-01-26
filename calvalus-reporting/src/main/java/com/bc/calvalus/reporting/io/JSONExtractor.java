@@ -56,13 +56,13 @@ public class JSONExtractor {
         ConcurrentHashMap<String, List<UsageStatistic>> concurrentHashMap = new ConcurrentHashMap<>();
         allStatistics.stream().forEach(p -> {
             String user = p.getUser();
-            concurrentHashMap.computeIfAbsent(user, s -> {
+            concurrentHashMap.computeIfAbsent(user, userName -> {
                 try {
-                    return getSingleUserStatistic(s);
+                    return getSingleUserStatistic(userName);
                 } catch (IOException e) {
-
+                    e.printStackTrace();
                 }
-                return null;
+                throw new NullPointerException("The user %userName have no statistic information.");
             });
         });
         return concurrentHashMap;
