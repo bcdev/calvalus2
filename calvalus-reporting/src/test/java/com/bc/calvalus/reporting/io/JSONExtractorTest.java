@@ -1,14 +1,18 @@
 package com.bc.calvalus.reporting.io;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-
 import com.bc.calvalus.reporting.ws.NullUsageStatistic;
 import com.bc.calvalus.reporting.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.junit.*;
-
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.junit.Before;
+import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author hans
@@ -70,5 +74,13 @@ public class JSONExtractorTest {
 
         assertThat(allStatistics.get(3).getJobId(), equalTo("job_1481485063251_16801"));
         assertThat(allStatistics.get(3).getUser(), equalTo("martin"));
+    }
+
+    @Test
+    public void testSummaryOfAllUsers() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserStatistic();
+        Set<String> keySet = allUserStatistic.keySet();
+        assertEquals(keySet.size(), 10);
     }
 }

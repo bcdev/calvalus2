@@ -5,6 +5,8 @@ import com.bc.calvalus.reporting.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -47,6 +49,23 @@ public class JSONExtractor {
         return gson.fromJson(reportingJsonString,
                              new TypeToken<List<UsageStatistic>>() {
                              }.getType());
+    }
+
+    public Map<String, List<UsageStatistic>> getAllUserStatistic() throws IOException {
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        ConcurrentHashMap<String, List<UsageStatistic>> concurrentHashMap = new ConcurrentHashMap<>();
+        allStatistics.stream().forEach(p -> {
+            String user = p.getUser();
+            concurrentHashMap.computeIfAbsent(user, s -> {
+                try {
+                    return getSingleUserStatistic(s);
+                } catch (IOException e) {
+
+                }
+                return null;
+            });
+        });
+        return concurrentHashMap;
     }
 
     @NotNull

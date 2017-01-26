@@ -59,6 +59,21 @@ public class ReportingService {
     }
 
     @GET
+    @Path("/alluser")
+    @Produces(MediaType.APPLICATION_JSON)
+    public String getAllUserSummary() {
+        try {
+            Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserStatistic();
+            if (allUserStatistics.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonAllUserJobSummary(allUserStatistics);
+        } catch (IOException | JobNotFoundException exception) {
+            return getErrorResponse(exception);
+        }
+    }
+
+    @GET
     @Path("{user}/time/{year}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getYearlyJobReportTxt(@PathParam("user") String user,

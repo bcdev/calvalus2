@@ -43,7 +43,7 @@ public abstract class Extractor {
 
     private String getXSLTAsString(File file) throws FileNotFoundException {
         if (!file.exists()) {
-            throw new FileNotFoundException("The file doest exist !!!");
+            throw new FileNotFoundException("The file does not exist !!!");
         }
         StringBuilder stringBuilder = new StringBuilder();
         try (FileInputStream inputStream = new FileInputStream(file)) {

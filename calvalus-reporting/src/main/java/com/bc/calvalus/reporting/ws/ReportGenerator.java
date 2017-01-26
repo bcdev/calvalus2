@@ -2,11 +2,6 @@ package com.bc.calvalus.reporting.ws;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -16,11 +11,25 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 /**
  * @author hans
  */
 class ReportGenerator {
+
+    public String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatistics) {
+        Map<String, String> allUsersJobSummary = new HashMap<>();
+        allUserStatistics.forEach((key, usageStatistics) -> {
+            String stringListBiConsumer = generateJsonUserSingleJob(usageStatistics);
+            allUsersJobSummary.put(key, stringListBiConsumer);
+        });
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        return gson.toJson(allUsersJobSummary);
+    }
 
     String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
         PDDocument document = new PDDocument();
@@ -207,11 +216,11 @@ class ReportGenerator {
         double memoryPrice = PriceCalculator.getMemoryPrice(totalMemoryUsed);
         double diskPrice = PriceCalculator.getDiskPrice(totalFileWriting + totalFileReading);
         jobReport.add("CPU usage price = (Total vCores used) x € 0.0013 = € " +
-                      cpuPrice);
+                              cpuPrice);
         jobReport.add("Memory usage price = (Total Memory used) x € 0.00022 = € " +
-                      memoryPrice);
+                              memoryPrice);
         jobReport.add("Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € " +
-                      diskPrice);
+                              diskPrice);
         jobReport.add("");
         jobReport.add("Total = € " + (cpuPrice + memoryPrice + diskPrice));
         return jobReport;
