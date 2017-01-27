@@ -175,7 +175,8 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 //                    double sdrCloudDetector = Math.min(tau3, tau2);
 //                    double sdrCloudShadowDetector = Math.min(tau5, tau6);
                     double sdrCloudDetector = sdrMean + sdrSigma * 1.35;
-                    double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
+                    //double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
+                    double sdrCloudShadowDetector = Math.min(sdrMean - sdrSigma * 1.4, sdrMean * 1.4);
                     if (! withTc4) {
                         result[0][i] = (float) sdrCloudDetector;
                     }
@@ -204,7 +205,8 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
                 double sdrSqrSum = aggregatedSamples[AGG_INDEX_TC1_SQSUM][i];
                 double sdrMean = sdrSum / count;
                 double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
-                double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
+                //double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
+                double sdrCloudShadowDetector = (sdrMean - sdrSigma) * 0.9;
                 result[0][i] = (float) sdrCloudShadowDetector;
             }
         }
