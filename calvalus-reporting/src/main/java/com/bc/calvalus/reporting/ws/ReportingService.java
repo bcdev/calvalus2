@@ -59,7 +59,7 @@ public class ReportingService {
     }
 
     @GET
-    @Path("/alluser")
+    @Path("/all/users")
     @Produces(MediaType.APPLICATION_JSON)
     public String getAllUserSummary() {
         try {
