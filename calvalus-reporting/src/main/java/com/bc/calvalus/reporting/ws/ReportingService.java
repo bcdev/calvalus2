@@ -78,7 +78,15 @@ public class ReportingService {
     @Produces(MediaType.TEXT_PLAIN)
     public String getYearlyJobReportTxt(@PathParam("user") String user,
                                         @PathParam("year") String year) {
-        return "Calvalus usage for user " + user + " in year " + year;
+        try {
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearStatistic(user, year);
+            if (usageStatisticList.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
     }
 
     @GET
@@ -87,14 +95,51 @@ public class ReportingService {
     public String getMonthlyJobReportTxt(@PathParam("user") String user,
                                          @PathParam("year") String year,
                                          @PathParam("month") String month) {
-        return "Calvalus usage for user " + user + " in month " + month + " year " + year;
+        try {
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthStatistic(user, year, month);
+            if (usageStatisticList.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
+    }
+
+
+    @GET
+    @Path("{user}/time/{year}/{month}/{day}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getMonthlyJobReportTxt(@PathParam("user") String user,
+                                         @PathParam("year") String year,
+                                         @PathParam("month") String month,
+                                         @PathParam("day") String day) {
+        try {
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthDayStatistic(user, year, month, day);
+            if (usageStatisticList.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
     }
 
     @GET
-    @Path("{user}/range")
+    @Path("{user}/range/{date_start}/{date_end}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getTimeSpecificJobReportTxt(@PathParam("user") String user) {
-        return "Calvalus usage for user " + user + " in period $DATE_START to $DATE_END";
+    public String getTimeSpecificJobReportTxt(@PathParam("user") String user,
+                                              @PathParam("date_start") String start,
+                                              @PathParam("date_end") String end) {
+        try {
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserStartEndDateStatistic(user, start, end);
+            if (usageStatisticList.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonUserSingleJob(usageStatisticList);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
     }
 
     private String getErrorResponse(Exception exception) {

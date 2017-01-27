@@ -142,4 +142,26 @@ public class ReportGeneratorTest {
                                                                                                "}"));
 
     }
+
+    @Test
+    public void canGenerateSingleUserYearJson() throws Exception {
+        List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserYearStatistic("cvop", "2017");
+
+        reportGenerator = new ReportGenerator();
+
+        assertThat(reportGenerator.generateJsonUserSingleJob(usageStatistics), equalTo("{\n" +
+                                                                                               "  \"memoryUsagePrice\": \"1.78\",\n" +
+                                                                                               "  \"totalFileReadingMb\": \"37,826,596\",\n" +
+                                                                                               "  \"cpuUsagePrice\": \"10.33\",\n" +
+                                                                                               "  \"diskUsageprice\": \"415.15\",\n" +
+                                                                                               "  \"totalPrice\": \"427.26\",\n" +
+                                                                                               "  \"totalFileWritingMb\": \"130,388\",\n" +
+                                                                                               "  \"totalMemoryUsedMbs\": \"29,343,671,531\",\n" +
+                                                                                               "  \"totalCpuTimeSpent\": \"6426:17:03\",\n" +
+                                                                                               "  \"jobsProcessed\": \"1381\",\n" +
+                                                                                               "  \"user\": \"cvop\",\n" +
+                                                                                               "  \"totalVcoresUsed\": \"28,138,453\"\n" +
+                                                                                               "}"));
+
+    }
 }

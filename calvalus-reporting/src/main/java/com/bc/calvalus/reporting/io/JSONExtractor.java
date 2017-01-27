@@ -5,21 +5,27 @@ import com.bc.calvalus.reporting.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author hans
  */
 public class JSONExtractor {
+
+    public static final String FIRST_DAY = "01";
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
         List<UsageStatistic> usageStatistics = getAllStatistics();
@@ -53,10 +59,10 @@ public class JSONExtractor {
 
     public Map<String, List<UsageStatistic>> getAllUserStatistic() throws IOException {
         List<UsageStatistic> allStatistics = getAllStatistics();
-        ConcurrentHashMap<String, List<UsageStatistic>> concurrentHashMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
         allStatistics.stream().forEach(p -> {
             String user = p.getUser();
-            concurrentHashMap.computeIfAbsent(user, userName -> {
+            groupUserUsageStatistic.computeIfAbsent(user, userName -> {
                 try {
                     return getSingleUserStatistic(userName);
                 } catch (IOException e) {
@@ -65,8 +71,78 @@ public class JSONExtractor {
                 throw new NullPointerException("The user %userName have no statistic information.");
             });
         });
-        return concurrentHashMap;
+        return groupUserUsageStatistic;
     }
+
+    public List<UsageStatistic> getSingleUserStartEndDateStatistic(String user, String startDate, String endDate) throws IOException {
+        Predicate<Long> rangePredicate = new Predicate<Long>() {
+            @Override
+            public boolean test(Long aLong) {
+                Instant start = LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                Instant end = LocalDate.parse(endDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                Instant instant = new Date(aLong).toInstant();
+                if (instant.isAfter(start) && instant.isBefore(end)) {
+                    return true;
+                }
+                return false;
+            }
+        };
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user);
+        return singleUserYearStatistic;
+    }
+
+
+    public List<UsageStatistic> getSingleUserYearStatistic(String user, String year) throws IOException {
+        Predicate<FilterUserTimeInterval> yearPredicate = p -> p.filterYear();
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearPredicate, user, year, FIRST_DAY, FIRST_DAY);
+        return singleUserYearStatistic;
+    }
+
+    public List<UsageStatistic> getSingleUserYearMonthStatistic(String user, String year, String month) throws IOException {
+        Predicate<FilterUserTimeInterval> yearMonthPredicate = p -> p.filterMonth();
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearMonthPredicate, user, year, month, FIRST_DAY);
+        return singleUserYearStatistic;
+    }
+
+    public List<UsageStatistic> getSingleUserYearMonthDayStatistic(String user, String year, String month, String day) throws IOException {
+        Predicate<FilterUserTimeInterval> ymdPredicate = p -> p.filterDay();
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(ymdPredicate, user, year, month, day);
+        return singleUserYearStatistic;
+    }
+
+    private List<UsageStatistic> getSingleUserDateStatistic(Predicate<FilterUserTimeInterval> intervalPredicate, String user, String year, String month, String day) throws IOException {
+        ConcurrentHashMap<String, List<UsageStatistic>> extractUserDate = new ConcurrentHashMap<>();
+        final List<UsageStatistic> userStatisticInYear = new ArrayList<>();
+        extractUserDate.put(user, userStatisticInYear);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        allStatistics.forEach(usageStatistic ->
+                                      extractUserDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
+                                          FilterUserTimeInterval filterUserTimeInterval = new FilterUserTimeInterval(usageStatistic.getFinishTime(), year, month, day);
+                                          if (intervalPredicate.test(filterUserTimeInterval)) {
+                                              userStatisticInYear.add(usageStatistic);
+                                          }
+                                          return userStatisticInYear;
+                                      })
+        );
+        return userStatisticInYear;
+    }
+
+    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> intervalPredicate, String user) throws IOException {
+        ConcurrentHashMap<String, List<UsageStatistic>> extractUserDate = new ConcurrentHashMap<>();
+        final List<UsageStatistic> userStatisticInYear = new ArrayList<>();
+        extractUserDate.put(user, userStatisticInYear);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        allStatistics.forEach(usageStatistic ->
+                                      extractUserDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
+                                          if (intervalPredicate.test(usageStatistic.getFinishTime())) {
+                                              userStatisticInYear.add(usageStatistic);
+                                          }
+                                          return userStatisticInYear;
+                                      })
+        );
+        return userStatisticInYear;
+    }
+
 
     @NotNull
     private String extractJsonString(InputStream inputStream) throws IOException {
@@ -75,4 +151,54 @@ public class JSONExtractor {
         reportingJsonString = "[" + reportingJsonString + "]";
         return reportingJsonString;
     }
+
+    static class FilterUserTimeInterval {
+
+        private Long finishTime;
+        private final String year;
+        private final String month;
+        private final String day;
+
+        public FilterUserTimeInterval(Long finishTime, String year, String month, String day) {
+            this.finishTime = finishTime;
+            this.year = year;
+            this.month = month;
+            this.day = day;
+        }
+
+
+        public boolean filterMonth() {
+            Instant start = Instant.parse(String.format("%s-%s-01T00:00:00.00Z", year, month));
+            Instant end = Instant.parse(String.format("%s-0%s-01T00:00:00.00Z", year, Long.parseLong(month) + 1));
+            Instant instant = new Date(finishTime).toInstant();
+            if (instant.isAfter(start) && instant.isBefore(end)) {
+                return true;
+            }
+            return false;
+
+        }
+
+        public boolean filterDay() {
+            Instant start = Instant.parse(String.format("%s-%s-%sT00:00:00.00Z", year, month, day));
+            Instant end = Instant.parse(String.format("%s-%s-%sT23:59:00.00Z", year, month, day));
+            Instant instant = new Date(finishTime).toInstant();
+            if (instant.isAfter(start) && instant.isBefore(end)) {
+                return true;
+            }
+            return false;
+        }
+
+        boolean filterYear() {
+            Instant start = Instant.parse(String.format("%s-01-01T00:00:00.00Z", year));
+            Instant end = Instant.parse(String.format("%d-01-01T00:00:00.00Z", Long.parseLong(year) + 1));
+            Instant instant = new Date(finishTime).toInstant();
+            if (instant.isAfter(start) && instant.isBefore(end)) {
+                return true;
+            }
+            return false;
+        }
+
+
+    }
+
 }

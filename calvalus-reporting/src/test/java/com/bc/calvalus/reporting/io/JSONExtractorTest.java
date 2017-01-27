@@ -13,6 +13,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author hans
@@ -82,5 +83,95 @@ public class JSONExtractorTest {
         Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserStatistic();
         Set<String> keySet = allUserStatistic.keySet();
         assertEquals(keySet.size(), 10);
+    }
+
+    @Test
+    public void testTimeInterval() throws Exception {
+        JSONExtractor.FilterUserTimeInterval timeInterval = new JSONExtractor.FilterUserTimeInterval(1483933291070L, "2017", "01", "01");
+        boolean isWithIn = timeInterval.filterYear();
+        assertTrue(isWithIn);
+    }
+
+    @Test
+    public void testUSerStatisticInYear() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearStatistic("jessica", "2017");
+        assertEquals(usageStatisticList.size(), 2);
+        UsageStatistic usageStatistic = usageStatisticList.get(0);
+
+        assertThat(usageStatistic.getJobId(), equalTo("job_1481485063251_20533"));
+        assertThat(usageStatistic.getUser(), equalTo("jessica"));
+        assertThat(usageStatistic.getQueue(), equalTo("default"));
+        assertThat(usageStatistic.getStartTime(), equalTo(1484301451312L));
+        assertThat(usageStatistic.getFinishTime(), equalTo(1484303865778L));
+        assertThat(usageStatistic.getMapsCompleted(), equalTo(7));
+        assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
+        assertThat(usageStatistic.getState(), equalTo("SUCCEEDED"));
+        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/13/000020/job_1481485063251_20533_conf.xml"));
+        assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
+        assertThat(usageStatistic.getFileBytesWritten(), equalTo(2100959L));
+        assertThat(usageStatistic.getHdfsBytesRead(), equalTo(6972918194L));
+        assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(1776409134L));
+        assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(3255256L));
+        assertThat(usageStatistic.getMbMillisTotal(), equalTo(8333455360L));
+        assertThat(usageStatistic.getCpuMilliseconds(), equalTo(357650L));
+    }
+
+    @Test
+    public void testUSerStatisticInYearMonth() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthStatistic("thomas", "2017", "01");
+        assertEquals(usageStatisticList.size(), 626);
+        UsageStatistic usageStatistic = usageStatisticList.get(0);
+
+        assertThat(usageStatistic.getJobId(), equalTo("job_1481485063251_18142"));
+        assertThat(usageStatistic.getUser(), equalTo("thomas"));
+        assertThat(usageStatistic.getQueue(), equalTo("high"));
+        assertThat(usageStatistic.getStartTime(), equalTo(1484141759185L));
+        assertThat(usageStatistic.getFinishTime(), equalTo(1484142199965L));
+        assertThat(usageStatistic.getMapsCompleted(), equalTo(113));
+        assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
+        assertThat(usageStatistic.getState(), equalTo("FAILED"));
+        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/11/000018/job_1481485063251_18142_conf.xml"));
+        assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
+        assertThat(usageStatistic.getFileBytesWritten(), equalTo(37940789L));
+        assertThat(usageStatistic.getHdfsBytesRead(), equalTo(37483768696L));
+        assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(0L));
+        assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(0L));
+        assertThat(usageStatistic.getMbMillisTotal(), equalTo(0L));
+        assertThat(usageStatistic.getCpuMilliseconds(), equalTo(6757140L));
+    }
+
+    @Test
+    public void testUSerStatisticInYearMonthDay() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthDayStatistic("martin", "2017", "01", "09");
+        assertEquals(usageStatisticList.size(), 5);
+        UsageStatistic usageStatistic = usageStatisticList.get(0);
+
+        assertThat(usageStatistic.getJobId(), equalTo("job_1481485063251_15808"));
+        assertThat(usageStatistic.getUser(), equalTo("martin"));
+        assertThat(usageStatistic.getQueue(), equalTo("lc"));
+        assertThat(usageStatistic.getStartTime(), equalTo(1483794176512L));
+        assertThat(usageStatistic.getFinishTime(), equalTo(1483942744578L));
+        assertThat(usageStatistic.getMapsCompleted(), equalTo(694));
+        assertThat(usageStatistic.getReducesCompleted(), equalTo(0));
+        assertThat(usageStatistic.getState(), equalTo("SUCCEEDED"));
+        assertThat(usageStatistic.getInputPath(), equalTo("hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/01/09/000015/job_1481485063251_15808_conf.xml"));
+        assertThat(usageStatistic.getFileBytesRead(), equalTo(0L));
+        assertThat(usageStatistic.getFileBytesWritten(), equalTo(186692272L));
+        assertThat(usageStatistic.getHdfsBytesRead(), equalTo(732875870L));
+        assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(1148345579L));
+        assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(148076365L));
+        assertThat(usageStatistic.getMbMillisTotal(), equalTo(909781186560L));
+        assertThat(usageStatistic.getCpuMilliseconds(), equalTo(29974960L));
+    }
+
+    @Test
+    public void testUSerStatisticRange() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserStartEndDateStatistic("martin", "2017-01-09", "2017-01-15");
+        assertEquals(usageStatisticList.size(), 1484);
+
     }
 }
