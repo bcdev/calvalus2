@@ -22,13 +22,13 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 class ReportGenerator {
 
     public String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatistics) {
-        Map<String, String> usersJobSummary = new HashMap<>();
+        List<String> stringList = new ArrayList<>();
         allUserStatistics.forEach((key, usageStatistics) -> {
             String stringListBiConsumer = generateJsonUserSingleJob(usageStatistics);
-            usersJobSummary.put(key, stringListBiConsumer);
+            stringList.add(stringListBiConsumer);
         });
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(usersJobSummary);
+        Gson gson = new Gson();
+        return gson.toJson(stringList);
     }
 
     String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
