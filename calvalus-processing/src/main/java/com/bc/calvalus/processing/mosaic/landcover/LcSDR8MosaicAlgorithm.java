@@ -39,6 +39,10 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     static final int STATUS_HAZE = 11;
     static final int STATUS_BRIGHT = 12;
     static final int STATUS_DARK = 15;
+    static final int[] RANK = new int[] { 0,
+                                15, 14, 13, 5, 4,
+                                -1, -1, -1, -1, -1,
+                                8, 9, -1, 6, 7};
 
     private static final int SAMPLE_INDEX_STATUS = 0;
     private static final int SAMPLE_INDEX_SDR8 = 1;
@@ -100,22 +104,20 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             }
             if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE) {
                 int oldStatus = (int) aggregatedSamples[AGG_INDEX_STATUS][i];
-                if (oldStatus == 0.0f ||
-                    (oldStatus == STATUS_BRIGHT && status == STATUS_LAND) ||
-                    (oldStatus == STATUS_HAZE && status == STATUS_LAND) ||
-                    (oldStatus == STATUS_HAZE && status == STATUS_BRIGHT)) {
+                if (RANK[status] > RANK[oldStatus]) {
                     aggregatedSamples[AGG_INDEX_COUNT][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_SDR_SUM][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_STATUS][i] = status;
                 }
-                // Since we have seen LAND etc. now, accumulate LAND SDRs
-                float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
-//                float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
-                if (!Float.isNaN(sdr)) {
-                    aggregatedSamples[AGG_INDEX_COUNT][i]++;
-                    aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
-                    aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
+                if (RANK[status] >= RANK[oldStatus]) {
+                    // Since we have seen LAND etc. now, accumulate LAND SDRs
+                    float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
+//                    float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
+                    if (!Float.isNaN(sdr)) {
+                        aggregatedSamples[AGG_INDEX_COUNT][i]++;
+                        aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
+                        aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
 
 //                    if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
 //                        // first pixel
@@ -125,25 +127,25 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 //                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
 //                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
 //                    }
+                    }
                 }
             }
             if (withTc4 && (status == STATUS_LAND || status == STATUS_DARK || status == STATUS_WATER)) {
-
                 int oldStatus = (int) aggregatedSamples[AGG_INDEX_TC1_STATUS][i];
-                if (oldStatus == 0.0f ||
-                    (oldStatus == STATUS_DARK && status == STATUS_LAND) ||
-                    (oldStatus == STATUS_DARK && status == STATUS_WATER)) {
+                if (RANK[status] > RANK[oldStatus]) {
                     aggregatedSamples[AGG_INDEX_TC1_COUNT][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_TC1_SUM][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] = 0.0f;
                     aggregatedSamples[AGG_INDEX_TC1_STATUS][i] = status;
                 }
-                // Since we have seen LAND etc. now, accumulate LAND SDRs
-                float sdr = samples[varIndexes[SAMPLE_INDEX_TC1]][i];
-                if (!Float.isNaN(sdr)) {
-                    aggregatedSamples[AGG_INDEX_TC1_COUNT][i]++;
-                    aggregatedSamples[AGG_INDEX_TC1_SUM][i] += sdr;
-                    aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] += sdr * sdr;
+                if (RANK[status] >= RANK[oldStatus]) {
+                    // Since we have seen LAND etc. now, accumulate LAND SDRs
+                    float sdr = samples[varIndexes[SAMPLE_INDEX_TC1]][i];
+                    if (!Float.isNaN(sdr)) {
+                        aggregatedSamples[AGG_INDEX_TC1_COUNT][i]++;
+                        aggregatedSamples[AGG_INDEX_TC1_SUM][i] += sdr;
+                        aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] += sdr * sdr;
+                    }
                 }
             }
         }
