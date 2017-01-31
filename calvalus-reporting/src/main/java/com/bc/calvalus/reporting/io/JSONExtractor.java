@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class JSONExtractor {
 
-    public static final String FIRST_DAY = "01";
+    private static final String FIRST_DAY = "01";
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
         List<UsageStatistic> usageStatistics = getAllStatistics();
@@ -74,23 +75,19 @@ public class JSONExtractor {
         return groupUserUsageStatistic;
     }
 
+
     public List<UsageStatistic> getSingleUserStartEndDateStatistic(String user, String startDate, String endDate) throws IOException {
-        Predicate<Long> rangePredicate = new Predicate<Long>() {
-            @Override
-            public boolean test(Long aLong) {
-                Instant start = LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
-                Instant end = LocalDate.parse(endDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
-                Instant instant = new Date(aLong).toInstant();
-                if (instant.isAfter(start) && instant.isBefore(end)) {
-                    return true;
-                }
-                return false;
-            }
-        };
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user);
+        Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
         return singleUserYearStatistic;
     }
 
+    public Map<String, List<UsageStatistic>> getAllUsersStartEndDateStatistic(String start, String end) throws IOException {
+        Predicate<Long> predicate = filterDateIntervals(start, end);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        return getUsageStatisticsIfUserNull(predicate, allStatistics);
+    }
 
     public List<UsageStatistic> getSingleUserYearStatistic(String user, String year) throws IOException {
         Predicate<FilterUserTimeInterval> yearPredicate = p -> p.filterYear();
@@ -110,16 +107,23 @@ public class JSONExtractor {
         return singleUserYearStatistic;
     }
 
-    private List<UsageStatistic> getSingleUserDateStatistic(Predicate<FilterUserTimeInterval> intervalPredicate, String user, String year, String month, String day) throws IOException {
+
+    private List<UsageStatistic> getSingleUserDateStatistic(Predicate<FilterUserTimeInterval> intervalPredicate,
+                                                            String user,
+                                                            String yr,
+                                                            String mnth,
+                                                            String dy) throws IOException {
+
         ConcurrentHashMap<String, List<UsageStatistic>> extractUserDate = new ConcurrentHashMap<>();
         final List<UsageStatistic> userStatisticInYear = new ArrayList<>();
         extractUserDate.put(user, userStatisticInYear);
         List<UsageStatistic> allStatistics = getAllStatistics();
-        allStatistics.forEach(usageStatistic ->
-                                      extractUserDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
-                                          FilterUserTimeInterval filterUserTimeInterval = new FilterUserTimeInterval(usageStatistic.getFinishTime(), year, month, day);
+        allStatistics.forEach(usage ->
+                                      extractUserDate.computeIfPresent(usage.getUser(), (s, usageStatistics) -> {
+                                          FilterUserTimeInterval filterUserTimeInterval =
+                                                  new FilterUserTimeInterval(usage.getFinishTime(), yr, mnth, dy);
                                           if (intervalPredicate.test(filterUserTimeInterval)) {
-                                              userStatisticInYear.add(usageStatistic);
+                                              userStatisticInYear.add(usage);
                                           }
                                           return userStatisticInYear;
                                       })
@@ -127,22 +131,57 @@ public class JSONExtractor {
         return userStatisticInYear;
     }
 
-    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> intervalPredicate, String user) throws IOException {
-        ConcurrentHashMap<String, List<UsageStatistic>> extractUserDate = new ConcurrentHashMap<>();
-        final List<UsageStatistic> userStatisticInYear = new ArrayList<>();
-        extractUserDate.put(user, userStatisticInYear);
-        List<UsageStatistic> allStatistics = getAllStatistics();
-        allStatistics.forEach(usageStatistic ->
-                                      extractUserDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
-                                          if (intervalPredicate.test(usageStatistic.getFinishTime())) {
-                                              userStatisticInYear.add(usageStatistic);
-                                          }
-                                          return userStatisticInYear;
-                                      })
-        );
+
+    @NotNull
+    private Predicate<Long> filterDateIntervals(final String startDate, final String endDate) {
+        return new Predicate<Long>() {
+            @Override
+            public boolean test(Long aLong) {
+                Instant start = LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                Instant end = LocalDate.parse(endDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                Instant instant = new Date(aLong).toInstant();
+                if (instant.isAfter(start) && instant.isBefore(end)) {
+                    return true;
+                }
+                return false;
+            }
+        };
+    }
+
+
+    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> predTime, String user, List<UsageStatistic> allStatistics) {
+        List<UsageStatistic> userStatisticInYear = new ArrayList<>();
+        ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate = new ConcurrentHashMap<>();
+        filterUserWithDate.put(user, userStatisticInYear);
+        allStatistics.forEach(usageStatistic -> getUsageStatisticsIfUserNotNull(predTime, filterUserWithDate, userStatisticInYear, usageStatistic));
+
         return userStatisticInYear;
     }
 
+
+    private List<UsageStatistic> getUsageStatisticsIfUserNotNull(Predicate<Long> intervalPredicate,
+                                                                 ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate,
+                                                                 List<UsageStatistic> userStatisticInYear,
+                                                                 UsageStatistic usageStatistic) {
+        return filterUserWithDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
+            if (intervalPredicate.test(usageStatistic.getFinishTime())) {
+                userStatisticInYear.add(usageStatistic);
+            }
+            return userStatisticInYear;
+        });
+    }
+
+    private Map<String, List<UsageStatistic>> getUsageStatisticsIfUserNull(Predicate<Long> intervalPredicate, List<UsageStatistic> allStatistics) {
+        ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> intervalPredicate.test(p.getFinishTime())).collect(Collectors.toList());
+
+        usageStatisticList.forEach(p -> {
+            groupUserUsageStatistic.computeIfAbsent(p.getUser(), s -> {
+                return getSingleUserRangeStatistic(intervalPredicate, s, usageStatisticList);
+            });
+        });
+        return groupUserUsageStatistic;
+    }
 
     @NotNull
     private String extractJsonString(InputStream inputStream) throws IOException {
@@ -197,8 +236,6 @@ public class JSONExtractor {
             }
             return false;
         }
-
-
     }
 
 }

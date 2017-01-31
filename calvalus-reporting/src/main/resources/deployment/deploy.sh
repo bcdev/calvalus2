@@ -1,5 +1,4 @@
 #!/bin/bash
-
 CATALINA_HOME=/opt/tomcat
 SERVICE_NAME=bc-tomcat
 RUN_AS=tomcat

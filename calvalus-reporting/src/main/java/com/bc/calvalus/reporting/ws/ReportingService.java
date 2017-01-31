@@ -73,6 +73,24 @@ public class ReportingService {
         }
     }
 
+
+    @GET
+    @Path("/range/{date_start}/{date_end}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getTimeRangeSpecificJobReportTxt(
+            @PathParam("date_start") String start,
+            @PathParam("date_end") String end) {
+        try {
+            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsersStartEndDateStatistic(start, end);
+            if (allUsersStartEndDateStatistic.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonAllUserJobSummary(allUsersStartEndDateStatistic);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
+    }
+
     @GET
     @Path("{user}/time/{year}")
     @Produces(MediaType.TEXT_PLAIN)
@@ -141,6 +159,7 @@ public class ReportingService {
             return getErrorResponse(excep);
         }
     }
+
 
     private String getErrorResponse(Exception exception) {
         Map<String, String> responseMap = new HashMap<>();

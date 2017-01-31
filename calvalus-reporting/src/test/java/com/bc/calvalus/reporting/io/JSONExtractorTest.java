@@ -168,10 +168,16 @@ public class JSONExtractorTest {
     }
 
     @Test
-    public void testUSerStatisticRange() throws Exception {
+    public void testUserStatisticRange() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
         List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserStartEndDateStatistic("martin", "2017-01-09", "2017-01-15");
         assertEquals(usageStatisticList.size(), 1484);
+    }
 
+    @Test
+    public void testAllUserStatisticRange() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsersStartEndDateStatistic("2017-01-09", "2017-01-15");
+        assertEquals(allUsersStartEndDateStatistic.size(), 8);
     }
 }
