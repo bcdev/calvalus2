@@ -76,17 +76,17 @@ public class JSONExtractor {
     }
 
 
+    public Map<String, List<UsageStatistic>> getAllUsersStartEndDateStatistic(String start, String end) throws IOException {
+        Predicate<Long> predicate = filterDateIntervals(start, end);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        return getUsageStatisticsIfUserNull(predicate, allStatistics);
+    }
+
     public List<UsageStatistic> getSingleUserStartEndDateStatistic(String user, String startDate, String endDate) throws IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = getAllStatistics();
         List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
         return singleUserYearStatistic;
-    }
-
-    public Map<String, List<UsageStatistic>> getAllUsersStartEndDateStatistic(String start, String end) throws IOException {
-        Predicate<Long> predicate = filterDateIntervals(start, end);
-        List<UsageStatistic> allStatistics = getAllStatistics();
-        return getUsageStatisticsIfUserNull(predicate, allStatistics);
     }
 
     public List<UsageStatistic> getSingleUserYearStatistic(String user, String year) throws IOException {
