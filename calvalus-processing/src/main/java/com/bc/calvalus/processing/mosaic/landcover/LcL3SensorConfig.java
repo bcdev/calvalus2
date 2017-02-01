@@ -900,12 +900,14 @@ public abstract class LcL3SensorConfig {
             final String[] virtualVariableName = {
 //                    "ndvi",
                     "tc1",
-                    "tc4"
+                    "tc4",
+                    "mjd"
             };
             final String[] virtualVariableExpr = {
 //                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)",
                     "(0.3029*B2_ac + 0.2786*B3_ac + 0.4733*B4_ac + 0.5599*B8A_ac + 0.508*B11_ac + 0.1872*B12_ac)",
-                    "(-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac)"
+                    "(-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac)",
+                    "MJD"
             };
             String type = LcSDR8MosaicAlgorithm.class.getName();
             return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);

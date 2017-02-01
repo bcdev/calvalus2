@@ -46,9 +46,10 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     private static final int SAMPLE_INDEX_STATUS = 0;
     private static final int SAMPLE_INDEX_SDR8 = 1;
-//    private static final int SAMPLE_INDEX_NDVI = 2;
+    private static final int SAMPLE_INDEX_NDVI = 2;
     private static final int SAMPLE_INDEX_TC1 = 2;
-    private static final int NUM_SAMPLE_BANDS = 3;
+    private static final int SAMPLE_INDEX_MJD = 3;
+    private static final int NUM_SAMPLE_BANDS = 4;
 
     private static final int AGG_INDEX_COUNT = 0;
     private static final int AGG_INDEX_SDR_SUM = 1;
@@ -58,9 +59,11 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
     private static final int AGG_INDEX_TC1_SUM = 5;
     private static final int AGG_INDEX_TC1_SQSUM = 6;
     private static final int AGG_INDEX_TC1_STATUS = 7;
-    //private static final int AGG_INDEX_MAXNDVI = 3;
-//    private static final int AGG_INDEX_SDR4MAXNDVI = 4;
-    private static final int NUM_AGGREGATION_BANDS = 8;
+    private static final int AGG_INDEX_MJD = 8;
+    private static final int AGG_INDEX_TC1_MJD = 9;
+    private static final int AGG_INDEX_MAXNDVI = 4;
+    private static final int AGG_INDEX_SDR4MAXNDVI = 5;
+    private static final int NUM_AGGREGATION_BANDS = 10;
 
     private int[] varIndexes;
     private float[][] aggregatedSamples = null;
@@ -74,7 +77,7 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
 
     @Override
     public void initTemporal(TileIndexWritable tileIndex) {
-        System.err.println("initTemporal " + tileIndex + " numElements=" + (tileSize * tileSize));
+        //System.err.println("initTemporal " + tileIndex + " numElements=" + (tileSize * tileSize));
         int numElems = tileSize * tileSize;
         aggregatedSamples = new float[NUM_AGGREGATION_BANDS][numElems];
         for (int band = 0; band < NUM_AGGREGATION_BANDS; band++) {
@@ -95,60 +98,73 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         int numElems = tileSize * tileSize;
         for (int i = 0; i < numElems; i++) {
             int status = (int) samples[varIndexes[SAMPLE_INDEX_STATUS]][i];
+            float mjd = samples[varIndexes[SAMPLE_INDEX_MJD]][i];
             //int status = StatusRemapper.remapStatus(statusRemapper, status1);
-            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1081, 3212, i, tileSize)
-                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1079, 3212, i, tileSize)
-                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3241, i, tileSize)
-                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3239, i, tileSize)) {
-                System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " status=" + status + " status=" + status + " tc4=" + samples[varIndexes[SAMPLE_INDEX_SDR8]][i] + " tc1=" + samples[varIndexes[SAMPLE_INDEX_TC1]][i]);
-            }
-            if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE) {
+//            if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+//                System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " status=" + status + " status=" + status + " tc4=" + samples[varIndexes[SAMPLE_INDEX_SDR8]][i] + " tc1=" + samples[varIndexes[SAMPLE_INDEX_TC1]][i]);
+//            }
+//            if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE) {
+            if (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE || status == STATUS_DARK || status == STATUS_WATER) {
                 int oldStatus = (int) aggregatedSamples[AGG_INDEX_STATUS][i];
-                if (RANK[status] > RANK[oldStatus]) {
-                    aggregatedSamples[AGG_INDEX_COUNT][i] = 0.0f;
-                    aggregatedSamples[AGG_INDEX_SDR_SUM][i] = 0.0f;
-                    aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] = 0.0f;
+                if (oldStatus == 0.0f) {
                     aggregatedSamples[AGG_INDEX_STATUS][i] = status;
+                    aggregatedSamples[AGG_INDEX_MJD][i] = mjd;
                 }
-                if (RANK[status] >= RANK[oldStatus]) {
-                    // Since we have seen LAND etc. now, accumulate LAND SDRs
-                    float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
-//                    float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
-                    if (!Float.isNaN(sdr)) {
-                        aggregatedSamples[AGG_INDEX_COUNT][i]++;
-                        aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
-                        aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
-
-//                    if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
-//                        // first pixel
-//                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
-//                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
-//                    } else if (ndvi > aggregatedSamples[AGG_INDEX_MAXNDVI][i]) {
-//                        aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
-//                        aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
-//                    }
+                // accumulate LAND SDRs
+                float sdr = samples[varIndexes[SAMPLE_INDEX_SDR8]][i];
+                if (!Float.isNaN(sdr)) {
+                    aggregatedSamples[AGG_INDEX_COUNT][i]++;
+                    aggregatedSamples[AGG_INDEX_SDR_SUM][i] += sdr;
+                    aggregatedSamples[AGG_INDEX_SDR_SQSUM][i] += sdr * sdr;
+                    if (aggregatedSamples[AGG_INDEX_COUNT][i] > 1 && isNotSameOrbit(mjd, aggregatedSamples[AGG_INDEX_MJD][i])) {
+                        aggregatedSamples[AGG_INDEX_MJD][i] = Float.NaN;
+                    }
+                    if (! withTc4) {
+                        float ndvi = samples[varIndexes[SAMPLE_INDEX_NDVI]][i];
+                        if (aggregatedSamples[AGG_INDEX_COUNT][i] == 1) {
+                            // first pixel
+                            aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+                            aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+                        } else if (ndvi > aggregatedSamples[AGG_INDEX_MAXNDVI][i]) {
+                            aggregatedSamples[AGG_INDEX_MAXNDVI][i] = ndvi;
+                            aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i] = sdr;
+                        }
                     }
                 }
             }
-            if (withTc4 && (status == STATUS_LAND || status == STATUS_DARK || status == STATUS_WATER)) {
+
+//            if (withTc4 && (status == STATUS_LAND || status == STATUS_DARK || status == STATUS_WATER)) {
+            if (withTc4 && (status == STATUS_LAND || status == STATUS_BRIGHT || status == STATUS_HAZE || status == STATUS_DARK || status == STATUS_WATER)) {
                 int oldStatus = (int) aggregatedSamples[AGG_INDEX_TC1_STATUS][i];
-                if (RANK[status] > RANK[oldStatus]) {
-                    aggregatedSamples[AGG_INDEX_TC1_COUNT][i] = 0.0f;
-                    aggregatedSamples[AGG_INDEX_TC1_SUM][i] = 0.0f;
-                    aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] = 0.0f;
+                if (oldStatus == 0.0f) {
                     aggregatedSamples[AGG_INDEX_TC1_STATUS][i] = status;
+                    aggregatedSamples[AGG_INDEX_TC1_MJD][i] = mjd;
                 }
-                if (RANK[status] >= RANK[oldStatus]) {
-                    // Since we have seen LAND etc. now, accumulate LAND SDRs
-                    float sdr = samples[varIndexes[SAMPLE_INDEX_TC1]][i];
-                    if (!Float.isNaN(sdr)) {
-                        aggregatedSamples[AGG_INDEX_TC1_COUNT][i]++;
-                        aggregatedSamples[AGG_INDEX_TC1_SUM][i] += sdr;
-                        aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] += sdr * sdr;
+                // accumulate LAND SDRs
+                float sdr = samples[varIndexes[SAMPLE_INDEX_TC1]][i];
+                if (!Float.isNaN(sdr)) {
+                    aggregatedSamples[AGG_INDEX_TC1_COUNT][i]++;
+                    aggregatedSamples[AGG_INDEX_TC1_SUM][i] += sdr;
+                    aggregatedSamples[AGG_INDEX_TC1_SQSUM][i] += sdr * sdr;
+                    if (aggregatedSamples[AGG_INDEX_TC1_COUNT][i] > 1 && isNotSameOrbit(mjd, aggregatedSamples[AGG_INDEX_TC1_MJD][i])) {
+                        aggregatedSamples[AGG_INDEX_TC1_MJD][i] = Float.NaN;
                     }
+//                    if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+//                        System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " adding tc1=" + sdr + " mjd=" + mjd + " aggMjd=" + aggregatedSamples[AGG_INDEX_TC1_MJD][i]);
+//                    }
                 }
             }
         }
+    }
+
+    /**
+     * Compares two dates
+     * @param mjd1
+     * @param mjd2
+     * @return whether delta is less than 1 day or one of them is NaN
+     */
+    private boolean isNotSameOrbit(float mjd1, float mjd2) {
+        return ! (Math.abs(mjd1-mjd2) < 1.0f);
     }
 
     @Override
@@ -159,65 +175,55 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
             result[0][i] = Float.NaN;
             result[1][i] = Float.NaN;
             float count = aggregatedSamples[AGG_INDEX_COUNT][i];
-            if (count >= 2) {
+            if (count >= 2 && Float.isNaN(aggregatedSamples[AGG_INDEX_MJD][i])) {
                 double sdrSum = aggregatedSamples[AGG_INDEX_SDR_SUM][i];
                 double sdrSqrSum = aggregatedSamples[AGG_INDEX_SDR_SQSUM][i];
 
                 double sdrMean = sdrSum / count;
                 double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
-//                double tau1 = sdrSigma / sdrMean;
-//
-////                if (tau1 > applyFilterThresh) {
-//                    double tau2 = sdrMean + sdrSigma;
-//                    double tau3 = sdrMean * 1.35;
-////                    double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
-////                    double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
-//                    double tau5 = sdrMean - sdrSigma;
-//                    double tau6 = sdrMean * 0.65;
-//                    //double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
-//                    double sdrCloudDetector = Math.min(tau3, tau2);
-//                    double sdrCloudShadowDetector = Math.min(tau5, tau6);
-                    double sdrCloudDetector = sdrMean + sdrSigma * 1.35;
-                    //double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
-                    double sdrCloudShadowDetector = Math.min(sdrMean - sdrSigma * 1.4, sdrMean * 1.4);
-                    if (! withTc4) {
+                if (! withTc4) {
+                    double tau1 = sdrSigma / sdrMean;
+                    if (tau1 > applyFilterThresh) {
+                        double tau2 = sdrMean + sdrSigma;
+                        double tau3 = sdrMean * 1.35;
+                        double sdr4MaxNdvi = aggregatedSamples[AGG_INDEX_SDR4MAXNDVI][i];
+                        double tau4 = sdr4MaxNdvi + 2 * sdrSigma;
+                        double tau5 = sdrMean - sdrSigma;
+                        double tau6 = sdrMean * 0.65;
+                        double sdrCloudDetector = Math.min(Math.min(tau3, tau2), tau4);
+                        double sdrCloudShadowDetector = Math.min(tau5, tau6);
                         result[0][i] = (float) sdrCloudDetector;
+                        result[1][i] = (float) sdrCloudShadowDetector;
                     }
-                    result[1][i] = (float) sdrCloudShadowDetector;
-//                }
-                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1081, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1079, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3241, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3239, i, tileSize)) {
-                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " sdrMean=" + sdrMean + " sdrSigma=" + sdrSigma + " sdrCloud=" + result[0][i] + " sdrShadow=" + result[1][i]);
+                } else {
+                    double sdrCloudDetector = Math.min(sdrMean - sdrSigma * 1.4, sdrMean * 1.4);
+                    result[0][i] = (float) sdrCloudDetector;
                 }
+//                }
+//                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+//                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " sdrMean=" + sdrMean + " sdrSigma=" + sdrSigma + " sdrCloud=" + result[0][i] + " sdrShadow=" + result[1][i]);
+//                }
                 // if "ndvi" instead of sdr_B3 (spot only)
                 //if (cloudValue2 > applyFilterThresh) {
                 //    float sdrCloudDetector = Math.max(sdrMean * 0.85f, sdrMean - sdrSigma);
                 //    result[0][i] = sdrCloudDetector;
                 //}
-            } else {
-                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1081, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1079, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3241, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3239, i, tileSize)) {
-                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " count=" + count);
-                }
+//            } else {
+//                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+//                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " count=" + count);
+//                }
             }
             count = aggregatedSamples[AGG_INDEX_TC1_COUNT][i];
-            if (withTc4 && count >= 2) {
+            if (withTc4 && count >= 2 && Float.isNaN(aggregatedSamples[AGG_INDEX_TC1_MJD][i])) {
                 double sdrSum = aggregatedSamples[AGG_INDEX_TC1_SUM][i];
                 double sdrSqrSum = aggregatedSamples[AGG_INDEX_TC1_SQSUM][i];
                 double sdrMean = sdrSum / count;
                 double sdrSigma = Math.sqrt(sdrSqrSum / count - sdrMean * sdrMean);
                 //double sdrCloudShadowDetector = sdrMean - sdrSigma * 1.35;
                 double sdrCloudShadowDetector = (sdrMean - sdrSigma) * 0.9;
-                result[0][i] = (float) sdrCloudShadowDetector;
-                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(1081, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1079, 3212, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3241, i, tileSize)
-                                    || AbstractLcMosaicAlgorithm.maybeIsPixelPos(1919, 3239, i, tileSize)) {
-                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " tc1Mean=" + sdrMean + " tc1Sigma=" + sdrSigma + " tc1Cloud=" + result[0][i]);
+                result[1][i] = (float) sdrCloudShadowDetector;
+                if (AbstractLcMosaicAlgorithm.maybeIsPixelPos(2078, 2856, i, tileSize)) {
+                    System.err.println("ix=" + (i % tileSize) + " iy=" + (i / tileSize) + " tc1Mean=" + sdrMean + " tc1Sigma=" + sdrSigma + " tc1CloudShadow=" + result[1][i]);
                 }
             }
         }
@@ -271,8 +277,10 @@ public class LcSDR8MosaicAlgorithm implements MosaicAlgorithm, Configurable {
         varIndexes[SAMPLE_INDEX_SDR8] = getVariableIndex(varCtx, temporalCloudBandName);
         if (withTc4) {
             varIndexes[SAMPLE_INDEX_TC1] = getVariableIndex(varCtx, "tc1");
+            varIndexes[SAMPLE_INDEX_MJD] = getVariableIndex(varCtx, "mjd");
+        } else {
+            varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         }
-//        varIndexes[SAMPLE_INDEX_NDVI] = getVariableIndex(varCtx, "ndvi");
         return varIndexes;
     }
 
