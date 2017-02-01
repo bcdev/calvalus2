@@ -7,25 +7,4 @@
 
     <display-name>Calvalus Reporting</display-name>
     <description>Calvalus Reporting Web Service</description>
-
-    <security-role>
-        <description>This is the group that consists of internal users with access to Calvalus Portal.</description>
-        <role-name>calvalus</role-name>
-    </security-role>
-
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Calvalus HTTP</web-resource-name>
-            <url-pattern>/reporting/*</url-pattern>
-            <http-method>GET</http-method>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>calvalus</role-name>
-        </auth-constraint>
-    </security-constraint>
-
-    <login-config>
-        <auth-method>BASIC</auth-method>
-        <realm-name>Calvalus Reporting</realm-name>
-    </login-config>
 </web-app>
