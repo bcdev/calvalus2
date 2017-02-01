@@ -50,7 +50,7 @@ abstract public class AbstractLcMosaicAlgorithm implements MosaicAlgorithm, Conf
     static final int STATUS_TEMPORAL_CLOUD = 14;
     static final int STATUS_DARK = 15;
 
-    static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
+    public static final String CALVALUS_LC_SDR8_MEAN = "calvalus.lc.sdr8mean";
 
     protected final int STATUS_BAND_INDEX = 0;
     protected final int SDR_L2_OFFSET = 1;
