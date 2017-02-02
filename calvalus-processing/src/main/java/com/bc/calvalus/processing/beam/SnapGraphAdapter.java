@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
@@ -44,6 +45,9 @@ import org.esa.snap.core.gpf.graph.HeaderSource;
 import org.esa.snap.core.gpf.graph.HeaderTarget;
 import org.esa.snap.core.gpf.graph.Node;
 import org.esa.snap.core.gpf.graph.NodeContext;
+import org.jdom2.Element;
+import org.jdom2.output.Format;
+import org.jdom2.output.XMLOutputter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -559,6 +563,35 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 }
             }
             return sb.toString();
+        }
+
+        public String convertProcessingGraphToXML(Product product) {
+            final MetadataElement metadataRoot = product.getMetadataRoot();
+            if (metadataRoot != null) {
+                final MetadataElement processingGraph = metadataRoot.getElement("Processing_Graph");
+                if (processingGraph != null) {
+                    return convertMetadataToXML(processingGraph);
+                }
+            }
+            return "";
+        }
+
+        public String convertMetadataToXML(MetadataElement metadataElement) {
+            Element domElement = convertMetadataToDOM(metadataElement);
+            final XMLOutputter outputter = new XMLOutputter(Format.getPrettyFormat());
+            return outputter.outputString(domElement);
+        }
+
+        public Element convertMetadataToDOM(MetadataElement metadataElement) {
+            final Element domElement = new Element(metadataElement.getName());
+            for (String attributeName : metadataElement.getAttributeNames()) {
+                String attributeString = metadataElement.getAttributeString(attributeName);
+                domElement.addContent(new Element(attributeName).setText(attributeString));
+            }
+            for (MetadataElement element : metadataElement.getElements()) {
+                domElement.addContent(convertMetadataToDOM(element));
+            }
+            return domElement;
         }
     }
 
