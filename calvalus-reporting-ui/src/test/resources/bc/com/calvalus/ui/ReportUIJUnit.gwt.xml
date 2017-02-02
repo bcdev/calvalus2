@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module rename-to="ReportUI">
+  <!-- Inherit our applications main module.                      -->
+  <inherits name='bc.com.calvalus.ui.ReportUI' />
+
+  <!-- Specify the path to any remote services.                   -->
+  <servlet path="/test/greet" class="bc.com.calvalus.ui.server.GreetingServiceImpl" />
+
+</module>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE web-app
+        PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd">
+
+<web-app>
+    <servlet>
+        <servlet-name>bc.com.calvalus.ui.ReportUI JobResourcesService</servlet-name>
+        <servlet-class>bc.com.calvalus.ui.server.JobResourceServiceImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>bc.com.calvalus.ui.ReportUI JobResourcesService</servlet-name>
+        <url-pattern>/ReportUI/JobResourcesService</url-pattern>
+    </servlet-mapping>
+    <!-- Default page to serve -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
+
+</web-app>
