@@ -1,7 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
@@ -46,26 +45,12 @@ public class CalvalusProductionService implements ServletContextListener {
     private CalvalusProductionService() {
     }
 
-    public synchronized static ServiceContainer getProductionServiceSingleton() throws IOException, ProductionException {
-        if (serviceContainer == null) {
-            serviceContainer = createServices();
-        }
-        return serviceContainer;
-    }
-
     public synchronized static Timer getStatusObserverSingleton() {
         if (statusObserver == null) {
             WpsServletContainer.addServletContextListener(new CalvalusProductionService());
             statusObserver = new Timer("StatusObserver" + new Date().toString(), true);
         }
         return statusObserver;
-    }
-
-    public synchronized static Map<String, Integer> getUserProductionMap() {
-        if (userProductionMap == null) {
-            userProductionMap = new HashMap<>();
-        }
-        return userProductionMap;
     }
 
     public synchronized static Set<String> getRemoteUserSet() {
@@ -75,7 +60,41 @@ public class CalvalusProductionService implements ServletContextListener {
         return remoteUserSet;
     }
 
-    protected static Map<String, String> getDefaultConfig() {
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Starting Calvalus WPS *********");
+        System.out.println("*****************************************");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Stopping Calvalus WPS *********");
+        System.out.println("*****************************************");
+        System.out.println("Shutting down statusObserver...");
+        synchronized (CalvalusProductionService.class) {
+            if (statusObserver != null) {
+                statusObserver.cancel();
+            }
+        }
+    }
+
+    synchronized static ServiceContainer getServiceContainerSingleton() throws IOException, ProductionException {
+        if (serviceContainer == null) {
+            serviceContainer = createServices();
+        }
+        return serviceContainer;
+    }
+
+    synchronized static Map<String, Integer> getUserProductionMap() {
+        if (userProductionMap == null) {
+            userProductionMap = new HashMap<>();
+        }
+        return userProductionMap;
+    }
+
+    static Map<String, String> getDefaultConfig() {
         Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         defaultConfig.put("calvalus.calvalus.bundle", DEFAULT_CALVALUS_BUNDLE);
         defaultConfig.put("calvalus.beam.bundle", DEFAULT_BEAM_BUNDLE);
@@ -109,28 +128,8 @@ public class CalvalusProductionService implements ServletContextListener {
         return configFile;
     }
 
-    public static File getUserAppDataCalWpsDir() {
+    private static File getUserAppDataCalWpsDir() {
         String userHome = System.getProperty("user.home");
         return userHome != null ? new File(userHome, ".calwps") : null;
-    }
-
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-        System.out.println("*****************************************");
-        System.out.println("********* Starting Calvalus WPS *********");
-        System.out.println("*****************************************");
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        System.out.println("*****************************************");
-        System.out.println("********* Stopping Calvalus WPS *********");
-        System.out.println("*****************************************");
-        System.out.println("Shutting down statusObserver...");
-        synchronized (CalvalusProductionService.class) {
-            if (statusObserver != null) {
-                statusObserver.cancel();
-            }
-        }
     }
 }

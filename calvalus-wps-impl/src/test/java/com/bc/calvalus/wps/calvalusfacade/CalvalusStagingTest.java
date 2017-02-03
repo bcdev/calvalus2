@@ -12,6 +12,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.exceptions.WpsResultProductException;
 import com.bc.calvalus.wps.exceptions.WpsStagingException;
 import com.bc.wps.api.WpsServerContext;
@@ -68,7 +69,9 @@ public class CalvalusStagingTest {
     @Test
     public void canStageProduction() throws Exception {
         mockProductionService = mock(ProductionService.class);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
 
         ArgumentCaptor<String> productId = ArgumentCaptor.forClass(String.class);
 
@@ -83,7 +86,9 @@ public class CalvalusStagingTest {
     public void canCatchExceptionWhenStageProduction() throws Exception {
         mockProductionService = mock(ProductionService.class);
         doThrow(new ProductionException("error when staging")).when(mockProductionService).stageProductions(anyString());
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
 
         ArgumentCaptor<String> productId = ArgumentCaptor.forClass(String.class);
 
@@ -100,7 +105,9 @@ public class CalvalusStagingTest {
         when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
         when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
         File mockFile = mock(File.class);
         File[] productResultFiles = getProductResultFiles();
@@ -122,7 +129,9 @@ public class CalvalusStagingTest {
         when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
         when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
         File mockFile = mock(File.class);
         when(mockFile.listFiles()).thenReturn(new File[0]);
@@ -141,7 +150,9 @@ public class CalvalusStagingTest {
         when(mockProduction.getName()).thenReturn(DUMMY_JOB_ID);
         when(mockProduction.getStagingPath()).thenReturn(DUMMY_PATH);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
         File mockFile = mock(File.class);
         when(mockFile.listFiles()).thenReturn(null);
@@ -157,7 +168,9 @@ public class CalvalusStagingTest {
     public void canCatchExceptionWhenGetResultUrls() throws Exception {
         mockProductionService = mock(ProductionService.class);
         when(mockProductionService.getProduction(anyString())).thenThrow(new ProductionException("error in getting production"));
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
         Map<String, String> mockCalvalusDefaultConfig = getMockDefaultConfig();
 
         calvalusStaging = new CalvalusStaging(mockServerContext);
@@ -181,7 +194,9 @@ public class CalvalusStagingTest {
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProduction.getStagingStatus()).thenReturn(mockProcessStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
 
         ArgumentCaptor<String> userCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> statusCaptor = ArgumentCaptor.forClass(String.class);
@@ -210,7 +225,9 @@ public class CalvalusStagingTest {
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
         when(mockProduction.getStagingStatus()).thenReturn(mockProcessStatus);
         when(mockProductionService.getProduction(anyString())).thenReturn(mockProduction);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
         Logger mockLogger2 = mock(Logger.class);
         PowerMockito.mockStatic(CalvalusLogger.class);
         PowerMockito.when(CalvalusLogger.getLogger()).thenReturn(mockLogger2);

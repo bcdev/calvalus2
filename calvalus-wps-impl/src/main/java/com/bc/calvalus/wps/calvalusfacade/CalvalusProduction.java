@@ -10,6 +10,7 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
@@ -46,9 +47,9 @@ class CalvalusProduction {
 
     LocalProductionStatus orderProductionAsynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) throws WpsProductionException {
         try {
-            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
-            ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
-            return doProductionAsynchronous(request, productionService, userName);
+            ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
+            ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
+            return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
             throw new WpsProductionException("Processing failed : " + exception.getMessage());
@@ -57,9 +58,9 @@ class CalvalusProduction {
 
     LocalProductionStatus orderProductionSynchronous(Execute executeRequest, String userName, CalvalusFacade calvalusFacade) throws WpsProductionException {
         try {
-            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
-            ProductionRequest request = createProductionRequest(executeRequest, userName, productionService, calvalusFacade);
-            LocalProductionStatus status = doProductionSynchronous(productionService, request);
+            ServiceContainer serviceContainer = CalvalusProductionService.getServiceContainerSingleton();
+            ProductionRequest request = createProductionRequest(executeRequest, userName, serviceContainer, calvalusFacade);
+            LocalProductionStatus status = doProductionSynchronous(serviceContainer.getProductionService(), request);
             String jobId = status.getJobId();
             calvalusFacade.stageProduction(jobId);
             calvalusFacade.observeStagingStatus(jobId);
@@ -126,7 +127,7 @@ class CalvalusProduction {
     }
 
     private ProductionRequest createProductionRequest(Execute executeRequest, String userName,
-                                                      ProductionService productionService, CalvalusFacade calvalusFacade)
+                                                      ServiceContainer serviceContainer, CalvalusFacade calvalusFacade)
                 throws MissingParameterValueException, InvalidParameterValueException, JAXBException,
                        InvalidProcessorIdException, WpsProcessorNotFoundException, IOException, ProductionException {
         ExecuteRequestExtractor requestExtractor = new ExecuteRequestExtractor(executeRequest);
@@ -134,20 +135,17 @@ class CalvalusProduction {
         ProcessorNameConverter parser = new ProcessorNameConverter(processorId);
         WpsProcess calvalusProcessor = calvalusFacade.getProcessor(parser);
         CalvalusDataInputs calvalusDataInputs = new CalvalusDataInputs(requestExtractor, calvalusProcessor,
-                                                                       getProductSets(userName, productionService),
+                                                                       getProductSets(userName, serviceContainer),
                                                                        calvalusFacade.getRemoteUserName());
         return new ProductionRequest(calvalusDataInputs.getValue("productionType"),
                                      userName,
                                      calvalusDataInputs.getInputMapFormatted());
     }
 
-    private ProductSet[] getProductSets(String userName, ProductionService productionService) throws ProductionException, IOException {
+    private ProductSet[] getProductSets(String userName, ServiceContainer serviceContainer) throws ProductionException, IOException {
         List<ProductSet> productSets = new ArrayList<>();
-        productSets.addAll(Arrays.asList(productionService.getProductSets(userName, "")));
-        try {
-            productSets.addAll(Arrays.asList(productionService.getProductSets(userName, "user=" + userName)));
-        } catch (ProductionException ignored) {
-        }
+        productSets.addAll(Arrays.asList(serviceContainer.getInventoryService().getProductSets(userName, "")));
+        productSets.addAll(Arrays.asList(serviceContainer.getInventoryService().getProductSets(userName, "user=" + userName)));
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
@@ -176,7 +174,7 @@ class CalvalusProduction {
     }
 
     private void updateProductionStatuses(String userName) throws IOException, ProductionException {
-        final ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton().getProductionService();
+        final ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
         if (productionService != null) {
             synchronized (this) {
                 try {

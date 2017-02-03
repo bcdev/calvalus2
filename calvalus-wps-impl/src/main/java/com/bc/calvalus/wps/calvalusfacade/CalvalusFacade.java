@@ -1,9 +1,10 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.ProcessFacade;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
@@ -80,19 +81,17 @@ public class CalvalusFacade extends ProcessFacade {
 
     public ProductSet[] getProductSets() throws ProductionException, IOException {
         List<ProductSet> productSets = new ArrayList<>();
-        productSets.addAll(Arrays.asList(getProductionService().getProductSets(remoteUserName, "")));
-        try {
-            productSets.addAll(Arrays.asList(getProductionService().getProductSets(remoteUserName, "user=" + remoteUserName)));
-        } catch (ProductionException ignored) {
-        }
+        InventoryService inventoryService = getServices().getInventoryService();
+        productSets.addAll(Arrays.asList(inventoryService.getProductSets(remoteUserName, "")));
+        productSets.addAll(Arrays.asList(inventoryService.getProductSets(remoteUserName, "user=" + remoteUserName)));
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 
     public Production getProduction(String jobId) throws IOException, ProductionException {
-        return getProductionService().getProduction(jobId);
+        return getServices().getProductionService().getProduction(jobId);
     }
 
-    private ProductionService getProductionService() throws ProductionException, IOException {
-        return CalvalusProductionService.getProductionServiceSingleton();
+    private ServiceContainer getServices() throws ProductionException, IOException {
+        return CalvalusProductionService.getServiceContainerSingleton();
     }
 }

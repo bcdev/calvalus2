@@ -50,7 +50,7 @@ class CalvalusStaging {
     void stageProduction(String jobid) throws WpsStagingException {
         LOG.info("Staging results...");
         try {
-            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
             productionService.stageProductions(jobid);
         } catch (ProductionException | IOException exception) {
             throw new WpsStagingException(exception);
@@ -60,7 +60,7 @@ class CalvalusStaging {
     List<String> getProductResultUrls(String jobId, Map<String, String> calvalusDefaultConfig) throws WpsResultProductException {
         Production production;
         try {
-            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
             production = productionService.getProduction(jobId);
         } catch (ProductionException | IOException exception) {
             throw new WpsResultProductException(exception);
@@ -80,7 +80,7 @@ class CalvalusStaging {
         ProductionService productionService;
         Production production;
         try {
-            productionService = CalvalusProductionService.getProductionServiceSingleton();
+            productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
             production = productionService.getProduction(jobId);
 
             String userName = production.getProductionRequest().getUserName();
@@ -107,7 +107,7 @@ class CalvalusStaging {
     void generateProductMetadata(String jobId, Map<String, String> calvalusDefaultConfig) throws ProductMetadataException {
         Production production;
         try {
-            ProductionService productionService = CalvalusProductionService.getProductionServiceSingleton();
+            ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
             production = productionService.getProduction(jobId);
         } catch (ProductionException | IOException exception) {
             throw new ProductMetadataException(exception);

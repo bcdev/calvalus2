@@ -11,6 +11,7 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -39,7 +40,9 @@ public class CalvalusProcessorExtractorTest {
         mockProductionService = mock(ProductionService.class);
 
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getServiceContainerSingleton()).thenReturn(mockServiceContainer);
     }
 
     @Test
