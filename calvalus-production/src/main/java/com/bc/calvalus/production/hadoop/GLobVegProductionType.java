@@ -18,7 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.Workflow;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.mosaic.MosaicConfig;
@@ -44,14 +44,14 @@ public class GLobVegProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new GLobVegProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new GLobVegProductionType(fileSystemService, processing, staging);
         }
     }
 
-    GLobVegProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    GLobVegProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                           StagingService stagingService) {
-        super("GLobVeg", inventoryService, processingService, stagingService);
+        super("GLobVeg", fileSystemService, processingService, stagingService);
     }
 
     @Override

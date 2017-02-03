@@ -221,6 +221,7 @@ public class ProcessorDescriptor {
         private String description;
         private String defaultValue;
         private String[] valueSet;
+        private String valueRange;
 
         // empty constructor for XML serialization
         public ParameterDescriptor() {
@@ -268,6 +269,10 @@ public class ProcessorDescriptor {
 
         public String[] getValueSet() {
             return valueSet;
+        }
+
+        public String getValueRange() {
+            return valueRange;
         }
     }
 

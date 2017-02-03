@@ -16,11 +16,13 @@
 
 package com.bc.calvalus.production.cli;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,14 +39,13 @@ public class ListProductSetsMain {
     public static void main(String[] args) throws IOException, ProductionException {
         Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         Map<String, String> config = ProductionServiceConfig.loadConfig(DEFAULT_CONFIG_FILE, defaultConfig);
-        HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
-        ProductionService productionService = productionServiceFactory.create(config, USER_APPDATA_DIR, new File("."));
+        HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
+        ServiceContainer serviceContainer = productionServiceFactory.create(config, USER_APPDATA_DIR, new File("."));
 
-
-        ProductSet[] productSets = productionService.getProductSets("marcoz", null);
+        ProductSet[] productSets = serviceContainer.getInventoryService().getProductSets("marcoz", null);
         printProductsets(productSets);
 
-        productionService.close();
+        serviceContainer.close();
     }
 
     private static void printProductsets(ProductSet[] productSets) {

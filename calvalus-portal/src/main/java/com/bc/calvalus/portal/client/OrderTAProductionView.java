@@ -17,6 +17,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
@@ -53,7 +54,6 @@ public class OrderTAProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -90,11 +90,12 @@ public class OrderTAProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(32);
         l3ConfigForm.compositingPeriodLength.setValue(4);
 
-        updateTemporalParameters(productSetFilterForm.getValueMap());
-
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -143,8 +144,14 @@ public class OrderTAProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override
@@ -173,5 +180,19 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        l3ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

@@ -39,7 +39,7 @@ public class SeasonalCompositingMapperTest {
             } else {
                 assertEquals(7, l);
             }
-            d = SeasonalCompositingMapper.nextWeek(d, start, stop);
+            d = SeasonalCompositingMapper.nextWeek(d, start, stop, 7);
             c.setTime(d);
         }
         assertEquals("2013-01-01", DATE_FORMAT.format(d));

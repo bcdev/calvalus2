@@ -136,6 +136,16 @@ class UserManagedFiles {
         return null;
     }
 
+    public void setSelectedFilePath(String filePath) {
+        for (int i = 0; i < contentListbox.getItemCount(); i++) {
+            if (contentListbox.getValue(i).equals(filePath)) {
+                contentListbox.setSelectedIndex(i);
+                return;
+            }
+        }
+        // TODO handle failure
+    }
+
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
 
         private Dialog fileUploadDialog;

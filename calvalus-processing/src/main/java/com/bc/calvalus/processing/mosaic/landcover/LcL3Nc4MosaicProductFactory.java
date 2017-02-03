@@ -48,6 +48,10 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         return String.format("h%02dv%02d", tileX, tileY);
     }
 
+    public static String tileName3(int tileY, int tileX) {
+        return String.format("h%03dv%03d", tileX, tileY);
+    }
+
     @Override
     public Product createProduct(Configuration configuration, int tileX, int tileY, Rectangle rect) {
 
@@ -73,13 +77,13 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         final String sensor = sensorConfig.getSensorName();
         final String platform = sensorConfig.getPlatformName();
         final String spatialResolution = sensorConfig.getGroundResolution();
-        final String temporalResolution = "P7D";  // TODO
+        final String temporalResolution = String.format("P%dD", sensorConfig.getPeriod());
         final String startTime = COMPACT_DATE_FORMAT.format(minDate);
         final String version = configuration.get(JobConfigNames.CALVALUS_LC_VERSION, "2.0");
         final float[] wavelength = sensorConfig.getWavelengths();
         final String productName = MessageFormat.format("ESACCI-LC-L3-SR-{0}-{1}-{2}-{3}-{4}-v{5}",
                                                   sensor, spatialResolution, temporalResolution,
-                                                  tileName(tileY, tileX), startTime,
+                                                  "MSI".equals(sensor) ? tileName3(tileY, tileX) : tileName(tileY, tileX), startTime,
                                                   version);
 
         final Product product = new Product(productName, "CALVALUS-Mosaic", rect.width, rect.height);

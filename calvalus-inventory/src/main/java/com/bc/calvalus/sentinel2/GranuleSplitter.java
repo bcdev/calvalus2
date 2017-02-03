@@ -28,12 +28,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
@@ -63,6 +65,9 @@ import java.util.zip.ZipOutputStream;
 public class GranuleSplitter {
 
     private static final boolean ADD_ZIP_SUFFIX = true;
+    private static final boolean COMPACT_FORMAT = false;
+
+    static Map<String,ZipEntry> entryMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         if (args.length != 2) {
@@ -77,6 +82,13 @@ public class GranuleSplitter {
             File inputFile = new File(args[0]);
             if (inputFile.exists()) {
                 if (inputFile.canRead()) {
+                    try (ZipFile zipFile = new ZipFile(inputFile)) {
+                        Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                        while (entries.hasMoreElements()) {
+                            ZipEntry entry = entries.nextElement();
+                            entryMap.put(entry.getName(), entry);
+                        }
+                    }
                     inputStream = new FileInputStream(inputFile);
                 } else {
                     throw new IllegalArgumentException("Can not read input file: " + inputFile.getAbsolutePath());
@@ -93,7 +105,8 @@ public class GranuleSplitter {
     }
 
     private static final int BUFFER_SIZE = 8192;
-    private static final Pattern TILE_PATTERN = Pattern.compile(".*(_T[0-9]{2}[A-Z]{3}).*");
+    private static final Pattern TILE_PATTERN = Pattern.compile(".*/GRANULE/.*(_T[0-9]{2}[A-Z]{3}).*");
+    private static final Pattern BASELINE_PATTERN = Pattern.compile(".*/GRANULE/.*_T[0-9]{2}[A-Z]{3}_N(..).(..).*");
 
     private final InputStream inputStream;
     private final File outputDir;
@@ -106,13 +119,18 @@ public class GranuleSplitter {
     private void run() throws IOException {
         Map<String, GranuleWriter> granuleWriters = new HashMap<>();
         String parentProductName = null;
+        byte[] parentProductTxt = new byte[0];
         try (ZipInputStream zipIn = new ZipInputStream(new BufferedInputStream(inputStream))) {
             List<ZipEntryBuffer> zipEntryBuffers = new ArrayList<>();
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 String entryName = entry.getName();
-                if (detectGranule(entryName) == null) {
-                    ZipEntryBuffer zipEntryBuffer = new ZipEntryBuffer(entryName, (int) entry.getSize(), zipIn);
+                long size = entry.getSize() >= 0 ? entry.getSize() : entryMap.containsKey(entry.getName()) ? entryMap.get(entry.getName()).getSize() : -1;
+                if (entryName.endsWith(GranuleMerger.PARENT_PRODUCT_TXT)) {
+                    ZipEntryBuffer buffer = new ZipEntryBuffer(entryName, (int) size, zipIn);
+                    parentProductTxt = buffer.getBuffer();
+                } else if (detectGranule(entryName) == null) {
+                    ZipEntryBuffer zipEntryBuffer = new ZipEntryBuffer(entryName, (int) size, zipIn);
                     zipEntryBuffers.add(zipEntryBuffer);
 
                     for (GranuleWriter granuleWriter : granuleWriters.values()) {
@@ -139,7 +157,7 @@ public class GranuleSplitter {
                             writeBufferToWriter(zipEntryBuffer, granuleWriter);
                         }
                     }
-                    copyToAWriter(entryName, zipIn, granuleWriter);
+                    copyToAWriter(entryName, size, zipIn, granuleWriter);
                 }
             }
         }
@@ -148,7 +166,7 @@ public class GranuleSplitter {
             newProductNames.add(granuleWriter.getOutputFile().getName());
         }
         for (GranuleWriter granuleWriter : granuleWriters.values()) {
-            granuleWriter.writeParentProductInfo(parentProductName, newProductNames);
+            granuleWriter.writeParentProductInfo(parentProductTxt, parentProductName, newProductNames);
             granuleWriter.close();
         }
         writeMarkerFile(parentProductName, newProductNames);
@@ -164,13 +182,21 @@ public class GranuleSplitter {
         return null;
     }
 
-    private static void copyToAWriter(String name, ZipInputStream zipIn, GranuleWriter writer) throws IOException {
-        copyToAllWriters(name, zipIn, Collections.singletonList(writer));
+    static String processingBaselineOf(String entryName) {
+        Matcher m = BASELINE_PATTERN.matcher(entryName);
+        if (m.matches()) {
+            return m.group(1) + m.group(2);
+        }
+        return null;
     }
 
-    private static void copyToAllWriters(String name, ZipInputStream zipIn, Collection<GranuleWriter> writers) throws IOException {
+    private static void copyToAWriter(String name, long size, ZipInputStream zipIn, GranuleWriter writer) throws IOException {
+        copyToAllWriters(name, size, zipIn, Collections.singletonList(writer));
+    }
+
+    private static void copyToAllWriters(String name, long size, ZipInputStream zipIn, Collection<GranuleWriter> writers) throws IOException {
         for (GranuleWriter writer : writers) {
-            writer.putNextEntry(name);
+            writer.putNextEntry(name, size);
         }
         if (!name.endsWith("/")) {
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -187,7 +213,7 @@ public class GranuleSplitter {
     }
 
     private static void writeBufferToWriter(ZipEntryBuffer zipEntryBuffer, GranuleWriter writer) throws IOException {
-        writer.putNextEntry(zipEntryBuffer.getName());
+        writer.putNextEntry(zipEntryBuffer.getName(), zipEntryBuffer.getSize());
         if (!zipEntryBuffer.getName().endsWith("/")) {
             byte[] buffer = zipEntryBuffer.getBuffer();
             writer.write(buffer, buffer.length);
@@ -238,17 +264,19 @@ public class GranuleSplitter {
             return outputFile;
         }
 
-        void putNextEntry(String entryName) throws IOException {
-            String[] entyNameParts = entryName.split("/");
-            entyNameParts[0] = granuleSpec.getTopDirName() + ".SAFE";
-            if (entyNameParts.length > 1 && entyNameParts[1].contains("SAFL1C") && entyNameParts[1].endsWith(".xml")) {
-                entyNameParts[1] = granuleSpec.convertXmlName(entyNameParts[1]);
+        void putNextEntry(String entryName, long size) throws IOException {
+            String[] entryNameParts = entryName.split("/");
+            entryNameParts[0] = granuleSpec.getTopDirName() + ".SAFE";
+            if (entryNameParts.length > 1 && entryNameParts[1].contains("SAFL1C") && entryNameParts[1].endsWith(".xml")) {
+                entryNameParts[1] = granuleSpec.convertXmlName(entryNameParts[1]);
             }
-            String newEntryName = String.join("/", entyNameParts);
+            String newEntryName = String.join("/", entryNameParts);
             if (entryName.endsWith("/")) {
                 newEntryName += "/";
             }
-            zipOutputStream.putNextEntry(new ZipEntry(newEntryName));
+            final ZipEntry entry = new ZipEntry(newEntryName);
+            entry.setSize(size);
+            zipOutputStream.putNextEntry(entry);
         }
 
         void write(byte[] buffer, int n) throws IOException {
@@ -259,8 +287,7 @@ public class GranuleSplitter {
             zipOutputStream.closeEntry();
         }
 
-        public void writeParentProductInfo(String productName, List<String> newProductNames) throws IOException {
-            putNextEntry(productName + ".SAFE/" + GranuleMerger.PARENT_PRODUCT_TXT);
+        public void writeParentProductInfo(byte[] oldParentProductTxt, String productName, List<String> newProductNames) throws IOException {
             StringBuilder sb = new StringBuilder();
             sb.append(productName);
             sb.append("\n");
@@ -270,6 +297,8 @@ public class GranuleSplitter {
             }
             byte[] buffer = sb.toString().getBytes(Charset.forName("UTF-8"));
 
+            putNextEntry(productName + ".SAFE/" + GranuleMerger.PARENT_PRODUCT_TXT, oldParentProductTxt.length + buffer.length);
+            write(oldParentProductTxt, oldParentProductTxt.length);
             write(buffer, buffer.length);
         }
 
@@ -302,18 +331,25 @@ public class GranuleSplitter {
         public byte[] getBuffer() {
             return buffer;
         }
+
+        public long getSize() {
+            return buffer.length;
+        }
     }
 
     static class GranuleSpec {
         private final String topDirName;
         private final String granuleName;
         private final String tileId;
+        private final String processingBaseline;
         private final String granuleProcessingTime;
+        public static final Pattern LONG_MSIL1CNAME_PATTERN = Pattern.compile("S2(.)_...._..._(......)_...._(........T......)_(....)_V(........T......)_(........T......).*");
 
-        GranuleSpec(String topDirName, String granuleName, String tileId, String granuleProcessingTime) {
+        GranuleSpec(String topDirName, String granuleName, String tileId, String processingBaseline, String granuleProcessingTime) {
             this.topDirName = topDirName;
             this.granuleName = granuleName;
             this.tileId = tileId;
+            this.processingBaseline = processingBaseline;
             this.granuleProcessingTime = granuleProcessingTime;
         }
 
@@ -329,22 +365,42 @@ public class GranuleSplitter {
             return tileId;
         }
 
+        String getProcessingBaseline() {
+            return processingBaseline;
+        }
+
         String getGranuleProcessingTime() {
             return granuleProcessingTime;
         }
 
         String convertXmlName(String xmlName) {
-            return convertName(xmlName, granuleProcessingTime, tileId, ".xml") + ".xml";
+            return convertName(xmlName, granuleProcessingTime, tileId, processingBaseline, ".xml") + ".xml";
         }
 
-        private static String convertName(String name, String granuleProcessingTime, String tileId, String extension) {
-            String p1 = name.substring(0, 25);
-            String p2 = name.substring(40);
-            int i = p2.indexOf(extension);
-            if (i > -1) {
-                p2 = p2.substring(0, i);
+        private static String convertName(String name, String granuleProcessingTime, String tileId, String processingBaseline, String extension) {
+            //S2A_OPER_PRD_MSIL1C_PDMC_20160921T112517_R092_V20160921T073612_20160921T075523.SAFE
+            //S2A_OPER_PRD_MSIL1C_PDMC_20160921T112517_R092_V20160921T073612_20160921T075523_T36LWL.SAFE
+            if (COMPACT_FORMAT) {
+                final Matcher m = LONG_MSIL1CNAME_PATTERN.matcher(name);
+                if (! m.matches()) {
+                    throw new IllegalArgumentException("dir name " + name + " does not match pattern " + LONG_MSIL1CNAME_PATTERN.pattern());
+                }
+                final String platform = m.group(1);
+                final String type = m.group(2);
+                final String relOrbit = m.group(4);
+                final String startTime = m.group(5);
+                //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
+                return "S2" + platform + "_" + type + "_" + startTime + "_N" + processingBaseline + "_" + relOrbit + tileId + "_" + granuleProcessingTime;
+                //return "S2%s_%s_%s_N%s_%s%s_%s".format(platform, type, startTime, processingBaseline, relOrbit, tileId, granuleProcessingTime);
+            } else {
+                String p1 = name.substring(0, 25);
+                String p2 = name.substring(40);
+                int i = p2.indexOf(extension);
+                if (i > -1) {
+                    p2 = p2.substring(0, i);
+                }
+                return p1 + granuleProcessingTime + p2 + tileId;
             }
-            return p1 + granuleProcessingTime + p2 + tileId;
         }
 
         static GranuleSpec parse(String entryName) {
@@ -355,9 +411,10 @@ public class GranuleSplitter {
 
                 String granuleProcessingTime = granuleName.substring(25, 40);
                 String tileId = detectGranule(entryName);
+                String processingBaseline = processingBaselineOf(entryName);
 
-                String topDirName = convertName(productName, granuleProcessingTime, tileId, ".SAFE");
-                return new GranuleSpec(topDirName, granuleName, tileId, granuleProcessingTime);
+                String topDirName = convertName(productName, granuleProcessingTime, tileId, processingBaseline, ".SAFE");
+                return new GranuleSpec(topDirName, granuleName, tileId, processingBaseline, granuleProcessingTime);
             }
             throw new IllegalArgumentException("unable to parse granule spec");
         }

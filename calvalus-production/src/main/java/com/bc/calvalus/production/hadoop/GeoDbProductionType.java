@@ -17,7 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.geodb.GeodbWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -42,14 +42,14 @@ public class GeoDbProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new GeoDbProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new GeoDbProductionType(fileSystemService, processing, staging);
         }
     }
 
-    GeoDbProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    GeoDbProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                         StagingService stagingService) {
-        super("GeoDB", inventoryService, processingService, stagingService);
+        super("GeoDB", fileSystemService, processingService, stagingService);
     }
 
     @Override

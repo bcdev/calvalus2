@@ -17,6 +17,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.Anchor;
@@ -56,8 +57,6 @@ public class OrderL3ProductionView extends OrderProductionView {
                 productSetFilterForm.setProductSet(productSet);
                 l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
-
             }
         });
 
@@ -92,6 +91,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "NetCDF4", "GeoTIFF", "BigGeoTiff");
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();
@@ -162,8 +162,14 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override
@@ -202,5 +208,19 @@ public class OrderL3ProductionView extends OrderProductionView {
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        l3ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

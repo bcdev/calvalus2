@@ -17,7 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
@@ -33,7 +33,9 @@ import org.apache.hadoop.conf.Configuration;
 
 import java.io.IOException;
 import java.text.DateFormat;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Abstract base class for production types that require a Hadoop processing system.
@@ -44,16 +46,16 @@ import java.util.*;
 public abstract class HadoopProductionType implements ProductionType {
 
     private final String name;
-    private final InventoryService inventoryService;
+    private final FileSystemService fileSystemService;
     private final HadoopProcessingService processingService;
     private final StagingService stagingService;
 
     protected HadoopProductionType(String name,
-                                   InventoryService inventoryService,
+                                   FileSystemService fileSystemService,
                                    HadoopProcessingService processingService,
                                    StagingService stagingService) {
         this.name = name;
-        this.inventoryService = inventoryService;
+        this.fileSystemService = fileSystemService;
         this.processingService = processingService;
         this.stagingService = stagingService;
     }
@@ -80,8 +82,8 @@ public abstract class HadoopProductionType implements ProductionType {
         return sb.toString().trim();
     }
 
-    public InventoryService getInventoryService() {
-        return inventoryService;
+    public FileSystemService getFileSystemService() {
+        return fileSystemService;
     }
 
     public HadoopProcessingService getProcessingService() {
@@ -173,7 +175,7 @@ public abstract class HadoopProductionType implements ProductionType {
             outputDir = outputDir.substring(0, outputDir.length() - 1);
         }
         try {
-            return getInventoryService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
+            return getFileSystemService().getQualifiedPath(productionRequest.getUserName(), outputDir + dirSuffix);
         } catch (IOException e) {
             throw new ProductionException(e);
         }
@@ -188,7 +190,7 @@ public abstract class HadoopProductionType implements ProductionType {
      */
     protected boolean successfullyCompleted(String outputDir) {
         try {
-            return inventoryService.pathExists(outputDir + "/_SUCCESS");
+            return fileSystemService.pathExists(outputDir + "/_SUCCESS");
         } catch (IOException e) {
             return false;
         }
@@ -216,7 +218,7 @@ public abstract class HadoopProductionType implements ProductionType {
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 jobConfig.set(hadoopName, entry.getValue());
-            } else if (name.startsWith("calvalus.")) {
+            } else if (name.startsWith("calvalus.") && !name.startsWith("calvalus.portal")) {
                 jobConfig.set(name, entry.getValue());
             }
         }
@@ -225,10 +227,10 @@ public abstract class HadoopProductionType implements ProductionType {
     public static abstract class Spi implements ProductionTypeSpi {
 
         @Override
-        public ProductionType create(InventoryService inventory, ProcessingService processing, StagingService staging) {
-            return create(inventory, (HadoopProcessingService) processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, ProcessingService processing, StagingService staging) {
+            return create(fileSystemService, (HadoopProcessingService) processing, staging);
         }
 
-        abstract public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging);
+        abstract public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging);
     }
 }

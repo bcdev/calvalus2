@@ -38,7 +38,7 @@ import java.util.List;
  * @author MarcoZ
  * @author Norman
  */
-class WpsProductionRequestConverter {
+public class WpsProductionRequestConverter {
     private final Document document;
     private XMLOutputter xmlOutputter;
 
@@ -46,14 +46,14 @@ class WpsProductionRequestConverter {
         this(new StringReader(xml));
     }
 
-    WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
+    public WpsProductionRequestConverter(Reader reader) throws JDOMException, IOException {
         SAXBuilder saxBuilder = new SAXBuilder();
         document = saxBuilder.build(reader);
         Format format = Format.getRawFormat().setLineSeparator("\n");
         xmlOutputter = new XMLOutputter(format);
     }
 
-    ProductionRequest loadProductionRequest(String userName) throws IOException {
+    public ProductionRequest loadProductionRequest(String userName) throws IOException {
 
         Element executeElement = document.getRootElement();
 
@@ -71,16 +71,16 @@ class WpsProductionRequestConverter {
 
         for (Element inputElement : inputElements) {
             String parameterName = inputElement.getChildText("Identifier", ows).trim();
+            String parameterValue = null;
 
             Element dataElement = inputElement.getChild("Data", wps);
-            String parameterValue = dataElement.getChildText("LiteralData", wps);
-            if (parameterValue == null) {
+            Element literalDataElement = dataElement.getChild("LiteralData", wps);
+            if (literalDataElement != null) {
+                parameterValue = getStringFromElement(literalDataElement);
+            } else {
                 Element complexDataElement = dataElement.getChild("ComplexData", wps);
                 if (complexDataElement != null) {
-                    StringWriter out = new StringWriter();
-                    Element complexContent = (Element) complexDataElement.getChildren().get(0);
-                    xmlOutputter.output(complexContent, out);
-                    parameterValue = out.toString();
+                    parameterValue = getStringFromElement(complexDataElement);
                 } else {
                     Element referenceElement = dataElement.getChild("Reference", wps);
                     if (referenceElement != null) {
@@ -98,5 +98,17 @@ class WpsProductionRequestConverter {
             }
         }
         return new ProductionRequest(processIdentifier, userName, parameterMap);
+    }
+
+    private String getStringFromElement(Element elem) throws IOException {
+        List children = elem.getChildren();
+        if (children.size() > 0) {
+            StringWriter out = new StringWriter();
+            Element complexContent = (Element) children.get(0);
+            xmlOutputter.output(complexContent, out);
+            return out.toString();
+        } else {
+            return  elem.getText();
+        }
     }
 }

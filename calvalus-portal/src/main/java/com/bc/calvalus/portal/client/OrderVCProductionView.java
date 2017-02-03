@@ -18,6 +18,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HTMLPanel;
@@ -63,7 +64,6 @@ public class OrderVCProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -120,6 +120,8 @@ public class OrderVCProductionView extends OrderProductionView {
         outputParametersForm.setAvailableOutputFormats("Report");
         outputParametersForm.allowedFailure.setValue(5);
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
@@ -157,8 +159,14 @@ public class OrderVCProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override

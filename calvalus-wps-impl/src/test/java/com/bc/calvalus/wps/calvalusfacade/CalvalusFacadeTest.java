@@ -8,11 +8,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.wps.utils.ProcessorNameParser;
 import com.bc.calvalus.wps.cmd.LdapHelper;
 import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
@@ -226,17 +229,19 @@ public class CalvalusFacadeTest {
     @Test
     public void testGetProductSets() throws Exception {
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        ProductionService mockProductionService = mock(ProductionService.class);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockServiceContainer);
+        InventoryService mockInventoryService = mock(InventoryService.class);
         ProductSet[] mockProductSets = new ProductSet[]{};
-        when(mockProductionService.getProductSets(anyString(), anyString())).thenReturn(mockProductSets);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        when(mockInventoryService.getProductSets(anyString(), anyString())).thenReturn(mockProductSets);
+        PowerMockito.when(mockServiceContainer.getInventoryService()).thenReturn(mockInventoryService);
         ArgumentCaptor<String> arg1 = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> arg2 = ArgumentCaptor.forClass(String.class);
 
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProductSets();
 
-        verify(mockProductionService, times(2)).getProductSets(arg1.capture(), arg2.capture());
+        verify(mockInventoryService, times(2)).getProductSets(arg1.capture(), arg2.capture());
 
         assertThat((arg1.getAllValues().get(0)), equalTo("mockUserName"));
         assertThat((arg2.getAllValues().get(0)), equalTo(""));
@@ -332,9 +337,11 @@ public class CalvalusFacadeTest {
 
     private void configureProductionServiceMocking() throws IOException, ProductionException {
         mockProductionService = mock(ProductionService.class);
+        ServiceContainer mockServiceContainer = mock(ServiceContainer.class);
         when(mockProductionService.getProductSets(anyString(), anyString())).thenReturn(new ProductSet[0]);
         PowerMockito.mockStatic(CalvalusProductionService.class);
-        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockProductionService);
+        PowerMockito.when(CalvalusProductionService.getProductionServiceSingleton()).thenReturn(mockServiceContainer);
+        PowerMockito.when(mockServiceContainer.getProductionService()).thenReturn(mockProductionService);
     }
 
 }

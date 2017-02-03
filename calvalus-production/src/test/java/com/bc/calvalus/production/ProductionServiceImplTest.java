@@ -2,7 +2,6 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +16,7 @@ public class ProductionServiceImplTest {
 
     private ProductionServiceImpl productionServiceUnderTest;
 
-    private TestInventoryService inventoryServiceMock;
+    private TestFileSystemService filesystemServiceMock;
     private TestProcessingService processingServiceMock;
     private TestStagingService stagingServiceMock;
     private MemoryProductionStore productionStoreMock;
@@ -25,26 +24,17 @@ public class ProductionServiceImplTest {
 
     @Before
     public void setUp() throws Exception {
-        inventoryServiceMock = new TestInventoryService();
+        filesystemServiceMock = new TestFileSystemService();
         processingServiceMock = new TestProcessingService();
         stagingServiceMock = new TestStagingService();
         productionTypeMock = new TestProductionType(processingServiceMock,
                                                     stagingServiceMock);
         productionStoreMock = new MemoryProductionStore();
-        productionServiceUnderTest = new ProductionServiceImpl(inventoryServiceMock,
+        productionServiceUnderTest = new ProductionServiceImpl(filesystemServiceMock,
                                                                processingServiceMock,
                                                                stagingServiceMock,
                                                                productionStoreMock,
                                                                productionTypeMock);
-    }
-
-    @Test
-    public void testGetProductSets() throws ProductionException {
-        ProductSet[] productSets = productionServiceUnderTest.getProductSets("ewa", null);
-        assertNotNull(productSets);
-        assertEquals(2, productSets.length);
-        assertEquals("pp0", productSets[0].getPath());
-        assertEquals("pp1", productSets[1].getPath());
     }
 
     @Test

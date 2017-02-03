@@ -18,14 +18,18 @@ import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ImageUtils;
 
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -43,9 +47,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
     private static final SimpleDateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
-    private static final String SR_FILENAME_FORMAT = "ESACCI-LC-L3-SR-%s-P7D-h%02dv%02d-%s-%s.nc";
+    private static final String SR_FILENAME_FORMAT = "ESACCI-LC-L3-SR-%s-P%dD-h%02dv%02d-%s-%s.nc";
+    private static final String SR_FILENAME_FORMAT_MSI = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
     private static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9][0-9])v([0-9][0-9])-........-([^-]*).nc");
+            Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
     public static final int NUM_SRC_BANDS = 1 + 5 + 13 + 1;
 
     @Override
@@ -63,10 +68,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
-        final int bandTileHeight = mosaicHeight / 36;  // 64800 / 36 = 1800, 16200 / 36 = 450
-        final int bandTileWidth = bandTileHeight;
+        final int numTileRows = mosaicHeight != 972000 ? 36 : 180;
+        final int numMicroTiles = mosaicHeight != 972000 ? 1 : 5;
+        final int tileSize = mosaicHeight / numTileRows;  // 64800 / 36 = 1800, 16200 / 36 = 450, 972000 / 72 = 13500
+        final int microTileSize = tileSize / numMicroTiles;
         final Path someTilePath = ((FileSplit) context.getInputSplit()).getPath();
-        final Path srRootDir = someTilePath.getParent().getParent().getParent();
+        final Path srRootDir = mosaicHeight != 972000 ? someTilePath.getParent().getParent().getParent() : someTilePath.getParent().getParent();
         final FileSystem fs = someTilePath.getFileSystem(conf);
 
         final Matcher matcher = SR_FILENAME_PATTERN.matcher(someTilePath.getName());
@@ -110,128 +117,129 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
-        float[][] accu = new float[numTargetBands][bandTileHeight * bandTileWidth];
-        final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
+        final List<MultiLevelImage[]> bandImages = new ArrayList<>();
+        final List<Product> products = new ArrayList<>();
+        final int daysPerWeek = mosaicHeight == 972000 ? 10 : 7;
         // loop over weeks
-        for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar)) {
+        for (Date week = start; ! stop.before(week); week = nextWeek(week, startCalendar, stopCalendar, daysPerWeek)) {
 
             // determine and read input tile for the week
-            final String weekFileName = String.format(SR_FILENAME_FORMAT, sensorAndResolution, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
-            final Path path = new Path(new Path(new Path(srRootDir, YEAR_FORMAT.format(week)), DATE_FORMAT.format(week)), weekFileName);
-            if (! fs.exists(path)) {
-                LOG.info("skipping non-existing week " + path);
+            final String weekFileName = String.format(mosaicHeight == 972000 ? SR_FILENAME_FORMAT_MSI : SR_FILENAME_FORMAT, sensorAndResolution, daysPerWeek, tileColumn, tileRow, COMPACT_DATE_FORMAT.format(week), version);
+            final Path path = new Path(new Path(mosaicHeight == 972000 ? srRootDir : new Path(srRootDir, YEAR_FORMAT.format(week)), DATE_FORMAT.format(week)), weekFileName);
+            if (!fs.exists(path)) {
+                LOG.info("skipping non-existing period " + path);
                 continue;
             }
-            LOG.info("aggregating week " + weekFileName);
+            LOG.info("aggregating period " + weekFileName);
 
             final Product product = readProduct(conf, fs, path);
+            final MultiLevelImage[] bandImage = new MultiLevelImage[numSourceBands];
             for (int b = 0; b < numSourceBands; ++b) {
                 bandImage[b] = product.getBandAt(sourceBandIndex[b]).getGeophysicalImage();
             }
+            bandImages.add(bandImage);
+            products.add(product);
+        }
 
-            // image tile loop
-            for (Point tileIndex : bandImage[0].getTileIndices(null)) {
-                final Raster[] bandTile = new Raster[numSourceBands];
-                final short[][] bandDataB = new short[numSourceBands][];
-                final short[][] bandDataS = new short[numSourceBands][];
-                final float[][] bandDataF = new float[numSourceBands][];
-                for (int b = 0; b < numSourceBands; b++) {
-                    bandTile[b] = bandImage[b].getTile(tileIndex.x, tileIndex.y);
-                    if (b == 0) {
-                        bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandTile[b].getDataBuffer());
-                    } else if (b < 6) {
-                        bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandTile[b].getDataBuffer());
-                    } else {
-                        bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandTile[b].getDataBuffer());
-                    }
+        float[][] accu = new float[numTargetBands][microTileSize * microTileSize];
+        final short[][] bandDataB = new short[numSourceBands][];
+        final short[][] bandDataS = new short[numSourceBands][];
+        final float[][] bandDataF = new float[numSourceBands][];
+        for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
+            for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
+                final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
+                for (int b = 0; b < numTargetBands; b++) {
+                    Arrays.fill(accu[b], 0.0f);
                 }
-                final int tileMinX = bandTile[0].getMinX();
-                final int tileMinY = bandTile[0].getMinY();
-                final int tileWidth = bandTile[0].getWidth();
-                final int tileHeight = bandTile[0].getHeight();
+                for (MultiLevelImage[] bandImage : bandImages) {
+                    for (int b = 0; b < numSourceBands; b++) {
+                        if (b == 0) {
+                            bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                        } else if (b < 6) {
+                            bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                        } else {
+                            bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                        }
+                    }
 
-                // pixel loop
-                for (int r = 0; r < tileHeight; ++r) {
-                    for (int c = 0; c < tileWidth; ++c) {
-                        final int iSrc = r * tileWidth + c;
-                        final int iDst = (tileMinY + r) * bandTileWidth + tileMinX + c;
+                    // pixel loop
+                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
 
                         // aggregate pixel-wise using aggregation rules
-                        final int state = (int) bandDataB[0][iSrc];
+                        final int state = (int) bandDataB[0][i];
                         if (state <= 0) {
                             continue;
                         }
-                        if (state == accu[0][iDst]) {
+                        if (state == accu[0][i]) {
                             // same state as before, aggregate ...
-                            final int stateCount = count(state, bandDataS, iSrc);
-                            accu[1][iDst] += stateCount;
-                            accu[2][iDst] += count(bandDataS, iSrc);
+                            final int stateCount = count(state, bandDataS, i);
+                            accu[1][i] += stateCount;
+                            accu[2][i] += count(bandDataS, i);
                             if (withMaxNdvi) {
-                                if (bandDataF[numTargetBands-1 + 3][iSrc] > accu[numTargetBands-1][iDst]) {
+                                if (bandDataF[numTargetBands - 1 + 3][i] > accu[numTargetBands - 1][i]) {
                                     for (int b = 3; b < numTargetBands; ++b) {
-                                        accu[b][iDst] = bandDataF[b + 3][iSrc];
+                                        accu[b][i] = bandDataF[b + 3][i];
                                     }
                                 }
                             } else {
                                 for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][iDst] += stateCount * bandDataF[b + 3][iSrc];
+                                    accu[b][i] += stateCount * bandDataF[b + 3][i];
                                 }
                             }
-                        } else if (rank(state) > rank(accu[0][iDst])) {
+                        } else if (rank(state) > rank(accu[0][i])) {
                             // better state, e.g. land instead of snow: restart counting ...
-                            final int stateCount = count(state, bandDataS, iSrc);
-                            accu[0][iDst] = state;
-                            accu[1][iDst] = stateCount;
-                            accu[2][iDst] = count(bandDataS, iSrc);
+                            final int stateCount = count(state, bandDataS, i);
+                            accu[0][i] = state;
+                            accu[1][i] = stateCount;
+                            accu[2][i] = count(bandDataS, i);
                             if (withMaxNdvi) {
                                 for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][iDst] = bandDataF[b+3][iSrc];
+                                    accu[b][i] = bandDataF[b + 3][i];
                                 }
                             } else {
                                 for (int b = 3; b < numTargetBands; ++b) {
-                                    accu[b][iDst] = stateCount * bandDataF[b+3][iSrc];
+                                    accu[b][i] = stateCount * bandDataF[b + 3][i];
                                 }
                             }
                         }
                     }
                 }
-                //LOG.info("image tile y " + tileIndex.y + " x " + tileIndex.x);
-            }
 
-            product.dispose();
-        }
-
-        // finish aggregation, divide by stateCount
-        if (! withMaxNdvi) {
-            for (int r = 0; r < bandTileHeight; ++r) {
-                for (int c = 0; c < bandTileWidth; ++c) {
-                    final int i = r * bandTileWidth + c;
-                    final float stateCount = accu[1][i];
-                    //if (stateCount > 0) {
-                    for (int b = 3; b < numTargetBands; ++b) {
-                        accu[b][i] /= stateCount;
+                // finish aggregation, divide by stateCount
+                if (!withMaxNdvi) {
+                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                        final float stateCount = accu[1][i];
+                        for (int b = 3; b < numTargetBands; ++b) {
+                            accu[b][i] /= stateCount;
+                        }
                     }
-                    //}
+                }
+
+                // statistics for logging
+                final int[] counts = new int[6];
+                for (float state : accu[0]) {
+                    ++counts[rank(state)];
+                }
+                LOG.info(counts[5] + " land, " + counts[4] + " water, " + counts[3] + " snow, " + counts[2] + " shadow, " + counts[1] + " cloud");
+                if (counts[5] == 0 && counts[4] == 0 && counts[3] == 0 && counts[2] == 0 && counts[1] == 0) {
+                    continue;
+                }
+
+                // stream results, one per band
+                for (int b = 0; b < numTargetBands; ++b) {
+                    // compose key from band and tile
+                    final int bandAndTile = ((sensorBands.length - 3) << 27) + (targetBandIndex[b] << 22) + ((tileRow * numMicroTiles + microTileY) << 11) + (tileColumn * numMicroTiles + microTileX);
+                    LOG.info("streaming band " + targetBandIndex[b] + " tile row " + (tileRow * numMicroTiles + microTileY) + " tile column " + (tileColumn * numMicroTiles + microTileX) + " key " + bandAndTile);
+                    // write tile
+                    final IntWritable key = new IntWritable(bandAndTile);
+                    final BandTileWritable value = new BandTileWritable(accu[b]);
+                    context.write(key, value);
                 }
             }
         }
 
-        // statistics for logging
-        final int[] counts = new int[6];
-        for (float state : accu[0]) {
-            ++counts[rank(state)];
-        }
-        LOG.info(counts[5] + " land, " + counts[4] + " water, " + counts[3] + " snow, " + counts[2] + " shadow, " + counts[1] + " cloud");
-
-        // stream results, one per band
-        for (int b = 0; b < numTargetBands; ++b) {
-            // compose key from band and tile
-            final int bandAndTile = ((sensorBands.length-3) << 24) + (targetBandIndex[b] << 16) + (tileRow << 8) + tileColumn;
-            LOG.info("streaming band " + targetBandIndex[b] + " tile row " + tileRow + " tile column " + tileColumn + " key " + bandAndTile);
-            // write tile
-            final IntWritable key = new IntWritable(bandAndTile);
-            final BandTileWritable value = new BandTileWritable(accu[b]);
-            context.write(key, value);
+        for (Product product : products) {
+            product.dispose();
         }
     }
 
@@ -242,6 +250,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             "AVHRR-1000m".equals(sensorAndResolution) ? (targetBandIndex < 5 ? 2 * targetBandIndex : targetBandIndex + 5) :  // sr_1 is source 6 target 3, bt_3 is source 10 target 6
             "VEGETATION-1000m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
             "VEGETATION-300m".equals(sensorAndResolution) ? 2 * targetBandIndex :  // sr_1 is source 6 target 3 etc.
+            "MSI-20m".equals(sensorAndResolution) ? (targetBandIndex < 3 ? targetBandIndex : targetBandIndex + 3) :  // sr_1 is source 6 target 3 etc.
             -1;
     }
 
@@ -272,6 +281,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             case "VEGETATION-1000m":
             case "VEGETATION-300m":
                 return SeasonalCompositingReducer.PROBA_BANDS;
+            case "MSI-20m":
+                return SeasonalCompositingReducer.MSI_BANDS;
             default:
                 throw new IllegalArgumentException("unknown sensor and resolution " + sensorAndResolution);
         }
@@ -292,10 +303,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
-    static Date nextWeek(Date week, Calendar start, Calendar stop) {
+    static Date nextWeek(Date week, Calendar start, Calendar stop, int daysPerWeek) {
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(week);
-        c.add(Calendar.DATE, lengthOfWeek(c));
+        c.add(Calendar.DATE, daysPerWeek == 7 ? lengthOfWeek(c) : daysPerWeek);
         if (c.after(stop)) {
             start.add(Calendar.YEAR, 1);
             stop.add(Calendar.YEAR, 1);
@@ -353,8 +364,6 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             case 3: return 3;
             case 5: return 2;
             case 4: return 1;
-//            case 4: return 2;
-//            case 5: return 1;
             default: return 0;
         }
     }

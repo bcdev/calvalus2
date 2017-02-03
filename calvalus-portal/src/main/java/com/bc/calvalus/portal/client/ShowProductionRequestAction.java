@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.geotools.gml3.GML.result;
+
 /**
  * @author Norman
  * @since 0.3
@@ -16,6 +18,14 @@ public class ShowProductionRequestAction {
 
     public static void run(String title, DtoProductionRequest result) {
         FlexTable flexTable = new FlexTable();
+        fillTable(flexTable, result);
+        ScrollPanel scrollPanel = new ScrollPanel(flexTable);
+        scrollPanel.setWidth("640px");
+        scrollPanel.setHeight("480px");
+        Dialog.info(title, scrollPanel);
+    }
+
+    public static void fillTable(FlexTable flexTable, DtoProductionRequest result) {
         FlexTable.FlexCellFormatter flexCellFormatter = flexTable.getFlexCellFormatter();
         flexCellFormatter.setColSpan(0, 0, 2);
         flexTable.setCellSpacing(5);
@@ -33,9 +43,5 @@ public class ShowProductionRequestAction {
             flexTable.setHTML(i, 1, "<pre>" + value + "</pre>");
             i++;
         }
-        ScrollPanel scrollPanel = new ScrollPanel(flexTable);
-        scrollPanel.setWidth("640px");
-        scrollPanel.setHeight("480px");
-        Dialog.info(title, scrollPanel);
     }
 }

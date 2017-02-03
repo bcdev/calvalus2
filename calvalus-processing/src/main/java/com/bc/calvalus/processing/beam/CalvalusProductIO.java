@@ -23,6 +23,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.GeoCoding;
@@ -43,6 +44,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -79,6 +81,9 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
+        if (inputFormat != null) {
+            LOG.info("Trying to find reader for inputFormat: " + inputFormat);
+        }
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
@@ -96,6 +101,13 @@ public class CalvalusProductIO {
             }
         }
         if (product == null) {
+            LOG.info("No reader found. Available plugin classes:");
+            Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+            while (allReaderPlugIns.hasNext()) {
+                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
+                String name = readerPlugIn.getClass().getName();
+                LOG.info(name);
+            }
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();

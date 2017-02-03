@@ -63,7 +63,7 @@ public class StreamingProductPlugin implements ProductReaderPlugIn, ProductWrite
 
     @Override
     public String getDescription(Locale locale) {
-        return "Hadoop Sequiential";
+        return "Hadoop Sequence file";
     }
 
     @Override

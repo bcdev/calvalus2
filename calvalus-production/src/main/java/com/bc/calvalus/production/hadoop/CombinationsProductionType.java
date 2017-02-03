@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.WorkflowItem;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.combinations.CombinationsWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -25,14 +25,14 @@ public class CombinationsProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new CombinationsProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new CombinationsProductionType(fileSystemService, processing, staging);
         }
     }
 
-    CombinationsProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    CombinationsProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                                StagingService stagingService) {
-        super("Combinations", inventoryService, processingService, stagingService);
+        super("Combinations", fileSystemService, processingService, stagingService);
     }
 
     @Override

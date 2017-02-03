@@ -3,9 +3,12 @@ package com.bc.calvalus.production;
 
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Information about a production.
@@ -21,6 +24,7 @@ public class Production {
     private final boolean autoStaging;
     private final ProductionRequest productionRequest;
     private final String outputPath;
+    private final String[] intermediateDataPath;
     private final String stagingPath;
     private volatile ProcessStatus stagingStatus; // must be volatile, because staging is performed in separate threads
 
@@ -31,11 +35,27 @@ public class Production {
                       boolean autoStaging,
                       ProductionRequest productionRequest,
                       WorkflowItem workflow) {
+        this(id, name, outputPath,
+             allIntermediatePathes(outputPath, workflow),
+             stagingPath, autoStaging, productionRequest, workflow);
+    }
+
+    public Production(String id,
+                      String name,
+                      String outputPath,
+                      String[] intermediateDataPath,
+                      String stagingPath,
+                      boolean autoStaging,
+                      ProductionRequest productionRequest,
+                      WorkflowItem workflow) {
         if (id == null) {
             throw new NullPointerException("id");
         }
         if (name == null) {
             throw new NullPointerException("name");
+        }
+        if (intermediateDataPath == null) {
+            throw new NullPointerException("intermediateDataPath");
         }
         if (productionRequest == null) {
             throw new NullPointerException("productionRequest");
@@ -43,6 +63,7 @@ public class Production {
         this.id = id;
         this.name = name;  // todo - check: remove field, instead get from productionRequest.name (nf)
         this.outputPath = outputPath;
+        this.intermediateDataPath = intermediateDataPath;
         this.stagingPath = stagingPath;
         this.autoStaging = autoStaging;
         this.workflow = workflow;
@@ -85,6 +106,10 @@ public class Production {
         return outputPath;
     }
 
+    public String[] getIntermediateDataPath() {
+        return intermediateDataPath;
+    }
+
     public String getStagingPath() {
         return stagingPath;
     }
@@ -120,4 +145,25 @@ public class Production {
                 '}';
     }
 
+    static String[] allIntermediatePathes(String outputPath, WorkflowItem workflow) {
+        if (outputPath == null || outputPath.isEmpty()) {
+            return new String[0];
+        }
+        Set<String> pathSet = new HashSet<>();
+        accumulateOutputPathes(workflow, pathSet);
+        pathSet.remove(outputPath);
+        return pathSet.toArray(new String[0]);
+    }
+
+    private static void accumulateOutputPathes(WorkflowItem workflowItem, Set<String> pathSet) {
+        if (workflowItem instanceof HadoopWorkflowItem) {
+            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
+            String outputDir = hadoopWorkflowItem.getOutputDir();
+            pathSet.add(outputDir);
+        } else {
+            for (WorkflowItem item : workflowItem.getItems()) {
+                accumulateOutputPathes(item, pathSet);
+            }
+        }
+    }
 }

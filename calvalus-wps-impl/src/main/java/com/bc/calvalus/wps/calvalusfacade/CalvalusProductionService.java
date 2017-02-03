@@ -3,7 +3,8 @@ package com.bc.calvalus.wps.calvalusfacade;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsServletContainer;
 
@@ -29,7 +30,7 @@ import java.util.Timer;
  */
 public class CalvalusProductionService implements ServletContextListener {
 
-    private static ProductionService productionService = null;
+    private static ServiceContainer serviceContainer = null;
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
     private static Set<String> remoteUserSet;
@@ -45,11 +46,11 @@ public class CalvalusProductionService implements ServletContextListener {
     private CalvalusProductionService() {
     }
 
-    public synchronized static ProductionService getProductionServiceSingleton() throws IOException, ProductionException {
-        if (productionService == null) {
-            productionService = createProductionService();
+    public synchronized static ServiceContainer getProductionServiceSingleton() throws IOException, ProductionException {
+        if (serviceContainer == null) {
+            serviceContainer = createServices();
         }
-        return productionService;
+        return serviceContainer;
     }
 
     public synchronized static Timer getStatusObserverSingleton() {
@@ -83,8 +84,8 @@ public class CalvalusProductionService implements ServletContextListener {
         return defaultConfig;
     }
 
-    private static ProductionService createProductionService() throws ProductionException, IOException {
-        HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
+    private static ServiceContainer createServices() throws ProductionException, IOException {
+        HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
         Map<String, String> defaultConfig = getDefaultConfig();
         Map<String, String> config = ProductionServiceConfig.loadConfig(getConfigFile(), defaultConfig);
         return productionServiceFactory

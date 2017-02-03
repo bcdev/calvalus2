@@ -11,7 +11,8 @@ import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
@@ -129,7 +130,7 @@ public class ProductionTool {
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
         defaultConfig.put("calvalus.snap.bundle", commandLine.getOptionValue("snap", DEFAULT_SNAP_BUNDLE));
 
-        ProductionService productionService = null;
+        ServiceContainer serviceContainer = null;
         try {
             String configFile = commandLine.getOptionValue("config", DEFAULT_CONFIG_PATH);
             say(String.format("Loading Calvalus configuration '%s'...", configFile));
@@ -162,12 +163,12 @@ public class ProductionTool {
                 return;
             }
 
-            HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
-            productionService = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(),
-                                                                new File("."));
+            HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
+            serviceContainer = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(),
+                                                                                new File("."));
 
             if (commandLine.hasOption("kill")) {
-                cancelProduction(productionService, commandLine.getOptionValue("kill"), config);
+                cancelProduction(serviceContainer.getProductionService(), commandLine.getOptionValue("kill"), config);
             }
             if (requestPath == null) {
                 return;
@@ -185,9 +186,9 @@ public class ProductionTool {
                 requestReader.close();
             }
 
-            Production production = orderProduction(productionService, request);
+            Production production = orderProduction(serviceContainer.getProductionService(), request);
             if (production.isAutoStaging()) {
-                stageProduction(productionService, production);
+                stageProduction(serviceContainer.getProductionService(), production);
             }
 
         } catch (JDOMException e) {
@@ -199,9 +200,9 @@ public class ProductionTool {
         } catch (InterruptedException e) {
             exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
         } finally {
-            if (productionService != null) {
+            if (serviceContainer != null && serviceContainer.getProductionService() != null) {
                 try {
-                    productionService.close();
+                    serviceContainer.getProductionService().close();
                 } catch (Exception e) {
                     exit("Warning: Failed to close production service! Job may be still alive!", 0);
                 }

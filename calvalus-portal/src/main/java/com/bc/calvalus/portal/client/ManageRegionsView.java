@@ -3,6 +3,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.bc.calvalus.portal.shared.DtoRegion;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -84,12 +85,18 @@ public class ManageRegionsView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Regions";
+        return "Regions";
     }
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        regionMapWidget.getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                regionMapWidget.getMapWidget().triggerResize();
+            }
+        });
     }
 }

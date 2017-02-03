@@ -13,17 +13,15 @@ import java.util.*;
  */
 public class MainMenuModel implements TreeViewModel {
 
-    private final PortalContext portalContext;
-
     /**
      * The top level categories.
      */
-    private final ListDataProvider<Category> categories = new ListDataProvider<Category>();
+    private final ListDataProvider<Category> categories = new ListDataProvider<>();
 
     /**
      * A mapping of {@link PortalView}s to their associated categories.
      */
-    private final Map<PortalView, Category> categoryMap = new HashMap<PortalView, Category>();
+    private final Map<PortalView, Category> categoryMap = new HashMap<>();
 
     /**
      * The cell used to render examples.
@@ -35,18 +33,14 @@ public class MainMenuModel implements TreeViewModel {
      */
     private final Map<String, PortalView> viewMap = new HashMap<String, PortalView>();
 
-    private PortalView[] views;
-
     /**
      * The selection model used to select examples.
      */
     private final SelectionModel<PortalView> selectionModel;
 
-    public MainMenuModel(PortalContext portalContext, PortalView[] views, SelectionModel<PortalView> selectionModel) {
-        this.portalContext = portalContext;
-        this.views = views;
+    public MainMenuModel(List<PortalView> views, SelectionModel<PortalView> selectionModel) {
         this.selectionModel = selectionModel;
-        initialize();
+        initialize(views);
     }
 
     @Override
@@ -93,7 +87,7 @@ public class MainMenuModel implements TreeViewModel {
      * @return the {@link PortalView}s
      */
     Set<PortalView> getViews() {
-        Set<PortalView> widgets = new HashSet<PortalView>();
+        Set<PortalView> widgets = new HashSet<>();
         for (Category category : categories.getList()) {
             for (PortalView example : category.items.getList()) {
                 widgets.add(example);
@@ -105,32 +99,59 @@ public class MainMenuModel implements TreeViewModel {
     /**
      * Initialize the top level categories in the tree.
      */
-    private void initialize() {
+    private void initialize(List<PortalView> views) {
         List<Category> catList = categories.getList();
 
-        // Production.
+        // Order.
         {
-            Category category = new Category("Production");
-            catList.add(category);
+            List<PortalView> selectedViews = new ArrayList<>();
             for (PortalView view : views) {
-                if (!(view instanceof FrameView)) {
+                if (view instanceof OrderProductionView) {
+                    selectedViews.add(view);
+                }
+            }
+            if (!selectedViews.isEmpty()) {
+                Category category = new Category("Order");
+                catList.add(category);
+                for (PortalView view : selectedViews) {
                     category.addItem(view);
                 }
             }
         }
 
-        // Cluster (FrameView instances)
+        // Management.
         {
-            Category category = new Category("Cluster");
-            catList.add(category);
+            List<PortalView> selectedViews = new ArrayList<>();
             for (PortalView view : views) {
-                if (view instanceof FrameView) {
-                    FrameView frameView = (FrameView) view;
-                    category.addItem(frameView);
+                if (view.getViewId().contains(".Manage")) {
+                    selectedViews.add(view);
+                }
+            }
+            if (!selectedViews.isEmpty()) {
+                Category category = new Category("Management");
+                catList.add(category);
+                for (PortalView view : selectedViews) {
+                    category.addItem(view);
                 }
             }
         }
 
+        // Links (FrameView instances)
+        {
+            List<PortalView> selectedViews = new ArrayList<>();
+            for (PortalView view : views) {
+                if (view instanceof FrameView) {
+                    selectedViews.add(view);
+                }
+            }
+            if (!selectedViews.isEmpty()) {
+                Category category = new Category("Links");
+                catList.add(category);
+                for (PortalView view : selectedViews) {
+                    category.addItem(view);
+                }
+            }
+        }
     }
 
     /**
@@ -187,7 +208,7 @@ public class MainMenuModel implements TreeViewModel {
          */
         public NodeInfo<PortalView> getNodeInfo() {
             if (nodeInfo == null) {
-                nodeInfo = new DefaultNodeInfo<PortalView>(items, viewCell, selectionModel, null);
+                nodeInfo = new DefaultNodeInfo<>(items, viewCell, selectionModel, null);
             }
             return nodeInfo;
         }

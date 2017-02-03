@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.cli;
 
 import com.bc.calvalus.commons.shared.BundleFilter;
+import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -24,7 +25,8 @@ import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
-import com.bc.calvalus.production.hadoop.HadoopProductionServiceFactory;
+import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,14 +47,16 @@ public class ListBundlesMain {
     public static void main(String[] args) throws IOException, ProductionException {
         Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         Map<String, String> config = ProductionServiceConfig.loadConfig(DEFAULT_CONFIG_FILE, defaultConfig);
-        HadoopProductionServiceFactory productionServiceFactory = new HadoopProductionServiceFactory();
-        ProductionService productionService = productionServiceFactory.create(config, USER_APPDATA_DIR, new File("."));
+        HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
+        ServiceContainer serviceContainer = productionServiceFactory.create(config, USER_APPDATA_DIR, new File("."));
+        ProductionService productionService = serviceContainer.getProductionService();
+        InventoryService inventoryService = serviceContainer.getInventoryService();
 
         printBundles("system", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_SYSTEM)));
         printDivider();
         printBundles("users", productionService.getBundles("marcoz", new BundleFilter().withProvider(BundleFilter.PROVIDER_ALL_USERS)));
         printDivider();
-        printProductSets(productionService.getProductSets("marcoz", "*"));
+        printProductSets(inventoryService.getProductSets("marcoz", "*"));
 
         productionService.close();
     }

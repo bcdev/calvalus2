@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.mosaic;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -67,19 +68,27 @@ public class MosaicGrid {
     private final int numTileY;
     private GeometryFactory geometryFactory;
 
+    Rectangle macroTileRegion;
+    int macroTileStepY;
+    int macroTileStepX;
+    int macroTileCountX;
+
     public static MosaicGrid create(Configuration conf) {
         int macroTileSize = conf.getInt("calvalus.mosaic.macroTileSize", 5);
         int numTileY = conf.getInt("calvalus.mosaic.numTileY", 180);
-        int tileSize = conf.getInt("calvalus.mosaic.tileSize", 370);
+        int tileSize = conf.getInt("calvalus.mosaic.tileSize", 360);  // for a 300m grid
         boolean withIntersectionCheck = conf.getBoolean("calvalus.mosaic.withIntersectionCheck", true);
-        return new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck);
+        int maxReducers = conf.getInt("calvalus.mosaic.maxReducers", 16);
+        int maxMacroTileCountX = conf.getInt("calvalus.mosaic.numXPartitions", 0);
+        String regionWkt = conf.get("calvalus.mosaic.regionGeometry");
+        return new MosaicGrid(macroTileSize, numTileY, tileSize, withIntersectionCheck,maxReducers, maxMacroTileCountX, regionWkt);
     }
 
     MosaicGrid() {
-        this(5, 180, 370, true);
+        this(5, 180, 370, true, 16, 1, null);
     }
 
-    MosaicGrid(int macroTileSize, int numTileY, int tileSize, boolean withIntersectionCheck) {
+    MosaicGrid(int macroTileSize, int numTileY, int tileSize, boolean withIntersectionCheck, int maxReducers, int maxMacroTileCountX, String regionWkt) {
         this.macroTileSize = macroTileSize;
         this.numTileY = numTileY;
         this.numTileX = numTileY * 2;
@@ -88,6 +97,44 @@ public class MosaicGrid {
         this.gridWidth = numTileX * tileSize;
         this.gridHeight = numTileY * tileSize;
         this.pixelSize = 180.0 / gridHeight;
+        if (maxMacroTileCountX == 0) {
+            // old behaviour
+            this.macroTileRegion = new Rectangle(0, 0, numTileX/macroTileSize, numTileY/macroTileSize);
+            this.macroTileStepY = 1;
+            this.macroTileStepX = numTileX;
+            this.macroTileCountX = 1;
+        } else {
+            if (regionWkt != null) {
+                Geometry regionGeometry = GeometryUtils.createGeometry(regionWkt);
+                Rectangle geometryBounds = computeBounds(regionGeometry);
+                this.macroTileRegion = macroTileRectangleOf(geometryBounds);
+            } else {
+                this.macroTileRegion = new Rectangle(0, 0, numTileX / macroTileSize, numTileY / macroTileSize);
+            }
+            int numMacroTilesY = (int) macroTileRegion.getHeight();
+            int numMacroTilesX = (int) macroTileRegion.getWidth();
+            if (numMacroTilesY * numMacroTilesX <= maxReducers && maxMacroTileCountX > 1) {
+                macroTileStepY = 1;
+                macroTileStepX = 1;
+                macroTileCountX = numMacroTilesX;
+                System.out.println("case full, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else if (numMacroTilesY * 2 <= maxReducers && maxMacroTileCountX > 1) {
+                macroTileStepY = 1;
+                macroTileStepX = (numMacroTilesX + (maxReducers / numMacroTilesY) - 1) / (maxReducers / numMacroTilesY);
+                macroTileCountX = (numMacroTilesX + macroTileStepX - 1) / macroTileStepX;
+                System.out.println("case partx, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else if (numMacroTilesY <= maxReducers) {
+                macroTileStepY = 1;
+                macroTileStepX = numMacroTilesX;
+                macroTileCountX = 1;
+                System.out.println("case fully, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            } else {
+                macroTileStepY = (numMacroTilesY + maxReducers - 1) / maxReducers;
+                macroTileStepX = numMacroTilesX;
+                macroTileCountX = 1;
+                System.out.println("case party, ty="+numMacroTilesY+" tx="+numMacroTilesX+" mr="+maxReducers+" dy="+macroTileStepY+" dx="+macroTileStepX+" nx="+macroTileCountX);
+            }
+        }
     }
 
     public void saveToConfiguration(Configuration conf) {
@@ -376,5 +423,22 @@ public class MosaicGrid {
             throw new IllegalStateException(e);
         }
         return geoCoding;
+    }
+
+    private Rectangle macroTileRectangleOf(Rectangle rectangle) {
+        int minX = rectangle.x / tileSize / macroTileSize;
+        int maxX = (rectangle.x + rectangle.width + tileSize * macroTileSize - 1) / tileSize / macroTileSize;
+        int minY = rectangle.y / tileSize / macroTileSize;
+        int maxY = (rectangle.y + rectangle.height + tileSize * macroTileSize - 1) / tileSize / macroTileSize;
+        return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    public int getPartition(int macroTileX, int macroTileY) {
+        return ((macroTileY - macroTileRegion.y) / macroTileStepY) * macroTileCountX + (macroTileX - macroTileRegion.x) / macroTileStepX;
+    }
+
+    public int getNumReducers() {
+        int numMacroTilesY = (int) macroTileRegion.getHeight();
+        return ((numMacroTilesY + macroTileStepY - 1) / macroTileStepY) * macroTileCountX;
     }
 }

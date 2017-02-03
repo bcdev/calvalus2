@@ -56,6 +56,7 @@ public class ManageProductionsView extends PortalView {
     private static final String GANGLIA_HTML = "<small><a href=\"" + GANGLIA_URL + "\" target=\"_blank\">Ganglia Monitoring</a><br><a href=\"" + MERCI_URL + "\" target=\"_blank\">Calvalus-Catalogue</a></small>";
 
     static final String RESTART = "Restart";
+    static final String EDIT = "Edit";
     static final String CANCEL = "Cancel";
     static final String STAGE = "Stage";
     static final String DOWNLOAD = "Download";
@@ -242,7 +243,7 @@ public class ManageProductionsView extends PortalView {
         Column<DtoProduction, String> actionColumn = new Column<DtoProduction, String>(new ButtonCell()) {
             @Override
             public void render(Cell.Context context, DtoProduction production, SafeHtmlBuilder sb) {
-                String action = getAction(production);
+                String action = getAction(production, isRestorable(production));
                 if (action != null) {
                     super.render(context, production, sb);
                 } else {
@@ -252,7 +253,11 @@ public class ManageProductionsView extends PortalView {
 
             @Override
             public String getValue(DtoProduction production) {
-                return getAction(production);
+                return getAction(production, isRestorable(production));
+            }
+
+            private boolean isRestorable(DtoProduction production) {
+                return getPortal().getViewForRestore(production.getProductionType()) != null;
             }
         };
         actionColumn.setFieldUpdater(new ProductionActionUpdater());
@@ -529,13 +534,17 @@ public class ManageProductionsView extends PortalView {
     }
 
 
-    static String getAction(DtoProduction production) {
+    static String getAction(DtoProduction production, boolean isRestorable) {
         if (production.getProcessingStatus().isUnknown() && production.getStagingStatus().isUnknown()) {
             return null;
         }
         if (production.getProcessingStatus().isDone()
             && (production.getStagingStatus().isDone() || production.getStagingStatus().isUnknown())) {
-            return RESTART;
+            if (isRestorable) {
+                return EDIT;
+            } else {
+                return RESTART;
+            }
         } else {
             return CANCEL;
         }
@@ -554,7 +563,7 @@ public class ManageProductionsView extends PortalView {
 
     @Override
     public String getTitle() {
-        return "Manage Productions";
+        return "Productions";
     }
 
     @Override
@@ -594,6 +603,30 @@ public class ManageProductionsView extends PortalView {
                         }
                     });
 
+                } else {
+                    Dialog.info(production.getId(), "No production request available.");
+                }
+            }
+        };
+        backendService.getProductionRequest(production.getId(), callback);
+    }
+
+    private void editProduction(final DtoProduction production) {
+        final BackendServiceAsync backendService = getPortal().getBackendService();
+
+        AsyncCallback<DtoProductionRequest> callback = new AsyncCallback<DtoProductionRequest>() {
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.info(production.getId(), "No production request available.");
+            }
+
+            @Override
+            public void onSuccess(final DtoProductionRequest request) {
+                if (request != null) {
+                    String productionType = request.getProductionType();
+                    OrderProductionView orderProductionView = getPortal().getViewForRestore(productionType);
+                    orderProductionView.setProductionParameters(request.getProductionParameters());
+                    getPortal().showView(orderProductionView.getViewId());
                 } else {
                     Dialog.info(production.getId(), "No production request available.");
                 }
@@ -737,6 +770,8 @@ public class ManageProductionsView extends PortalView {
         public void update(int index, DtoProduction production, String value) {
             if (RESTART.equals(value)) {
                 restartProduction(production);
+            } else if (EDIT.equals(value)) {
+                editProduction(production);
             } else if (CANCEL.equals(value)) {
                 cancelProduction(production);
             } else if (DOWNLOAD.equals(value)) {

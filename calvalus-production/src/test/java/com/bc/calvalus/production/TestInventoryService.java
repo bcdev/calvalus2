@@ -5,8 +5,6 @@ import com.bc.calvalus.inventory.ProductSet;
 import org.junit.Ignore;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.List;
 
 /**
  * Test implementation of InventoryService.
@@ -17,54 +15,12 @@ import java.util.List;
 public class TestInventoryService implements InventoryService {
 
     @Override
-    public ProductSet[] getProductSets(String username, String filter) throws Exception {
+    public ProductSet[] getProductSets(String username, String filter) throws IOException {
         return new ProductSet[]{
                 new ProductSet("pt0", "pn0", "pp0"),
                 new ProductSet("pt1", "pn1", "pp1"),
         };
     }
 
-    @Override
-    public String[] globPaths(String username, List<String> pathPatterns) {
-        String[] inputPathes = new String[pathPatterns.size()];
-        for (int i = 0; i < pathPatterns.size(); i++) {
-            String inputRegex = pathPatterns.get(i);
-            if (inputRegex.contains("*")) {
-                throw new IllegalArgumentException("Hey, wildcards are not supported! This is a test class!");
-            }
-            if (!inputRegex.startsWith("/")) {
-                inputRegex = "/calvalus/eodata/" + inputRegex;
-            }
-            inputPathes[i] = "hdfs://master00:9000" + inputRegex;
-        }
-        return inputPathes;
-    }
 
-    @Override
-    public String getQualifiedPath(String username, String outputPath) {
-        if (!outputPath.startsWith("/")) {
-            outputPath = "/calvalus/outputs/" + outputPath;
-        }
-        return "hdfs://master00:9000" + outputPath;
-    }
-
-    @Override
-    public OutputStream addFile(String username, String userPath) throws IOException {
-        return null;
-    }
-
-    @Override
-    public boolean removeFile(String username, String userPath) throws IOException {
-        return false;
-    }
-
-    @Override
-    public boolean removeDirectory(String username, String userPath) throws IOException {
-        return false;
-    }
-
-    @Override
-    public boolean pathExists(String path) throws IOException {
-        return false;
-    }
 }

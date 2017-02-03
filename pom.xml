@@ -13,9 +13,10 @@
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.10-SNAPSHOT</calvalus.version>
-        <snap.version>[4.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
-        <ceres.version>[4.0.0-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
+        <snap.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
+        <ceres.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
+        <slf4j.version>1.7.21</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -32,19 +33,7 @@
     </modules>
 
     <repositories>
-        <repository>
-            <id>bc-mvn-repo-http</id>
-            <name>Public Maven Repository at Brockmann Consult</name>
-            <url>http://www.brockmann-consult.de/mvn/os</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
+<!--
         <repository>
             <id>bc-mvn-repo-closed</id>
             <name>Private Maven Repository at Brockmann Consult</name>
@@ -58,6 +47,7 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
+        -->
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
@@ -287,6 +277,11 @@
                 </exclusions>
             </dependency>
             <dependency>
+                <groupId>org.esa.s3tbx</groupId>
+                <artifactId>s3tbx-landsat-reader</artifactId>
+                <version>${snap.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.esa.snap</groupId>
                 <artifactId>snap-netcdf</artifactId>
                 <version>${snap.version}</version>
@@ -479,22 +474,22 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-simple</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-jdk14</artifactId>
-                <version>1.4.3</version>
+                <version>${slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mortbay.jetty</groupId>

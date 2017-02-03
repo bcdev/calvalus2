@@ -31,8 +31,6 @@ public interface PortalContext {
     DtoProcessorDescriptor[] getProcessors(String filter);
     DtoAggregatorDescriptor[] getAggregators(String filter);
 
-    DtoMaskDescriptor[] getMasks();
-
     ListDataProvider<DtoProduction> getProductions();
 
     BackendServiceAsync getBackendService();
@@ -46,4 +44,6 @@ public interface PortalContext {
     void setProductionListFiltered(boolean filter);
 
     boolean withPortalFeature(String featureName);
+
+    OrderProductionView getViewForRestore(String productionType);
 }

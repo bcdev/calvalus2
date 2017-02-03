@@ -1,7 +1,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.inventory.InventoryService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ma.MAConfig;
@@ -32,14 +32,14 @@ public class MAProductionType extends HadoopProductionType {
     public static class Spi extends HadoopProductionType.Spi {
 
         @Override
-        public ProductionType create(InventoryService inventory, HadoopProcessingService processing, StagingService staging) {
-            return new MAProductionType(inventory, processing, staging);
+        public ProductionType create(FileSystemService fileSystemService, HadoopProcessingService processing, StagingService staging) {
+            return new MAProductionType(fileSystemService, processing, staging);
         }
     }
 
-    MAProductionType(InventoryService inventoryService, HadoopProcessingService processingService,
+    MAProductionType(FileSystemService fileSystemService, HadoopProcessingService processingService,
                      StagingService stagingService) {
-        super("MA", inventoryService, processingService, stagingService);
+        super("MA", fileSystemService, processingService, stagingService);
     }
 
     @Override

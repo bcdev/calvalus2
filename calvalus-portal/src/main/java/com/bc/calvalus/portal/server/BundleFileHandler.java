@@ -1,9 +1,11 @@
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.production.ServiceContainer;
 import com.bc.ceres.binding.BindingException;
 import org.apache.commons.fileupload.FileItem;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
@@ -24,7 +26,6 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import static com.bc.calvalus.portal.server.BackendServiceImpl.*;
 
 /**
  * @author Marco Peters
@@ -56,16 +57,19 @@ class BundleFileHandler implements FileUploadServlet.FileHandler {
                 }
 
                 String bundleDirPath = getSpecifiedDirectory(req) + String.format("%s-%s", bundleName, bundleVersion) + "/";
-                final String userName = getUserName(req).toLowerCase();
+                final String userName = BackendServiceImpl.getUserName(req).toLowerCase();
+                String userBundlePath = AbstractFileSystemService.getUserPath(userName, bundleDirPath);
 
-                ProductionService productionService = (ProductionService) context.getAttribute("productionService");
-                productionService.removeUserDirectory(userName, bundleDirPath);
+                ServiceContainer serviceContainer = (ServiceContainer) context.getAttribute("serviceContainer");
+                FileSystemService fileSystemService = serviceContainer.getFileSystemService();
+                fileSystemService.removeDirectory(userName, userBundlePath);
 
                 final Enumeration<? extends ZipEntry> zipEntries = zipFile.entries();
                 while (zipEntries.hasMoreElements()) {
                     ZipEntry zipEntry = zipEntries.nextElement();
                     String filePath = bundleDirPath + zipEntry.getName();
-                    OutputStream out = new BufferedOutputStream(productionService.addUserFile(userName, filePath), 64 * 1024);
+                    userBundlePath = AbstractFileSystemService.getUserPath(userName, filePath);
+                    OutputStream out = new BufferedOutputStream(fileSystemService.addFile(userName, userBundlePath), 64 * 1024);
                     copy(zipFile.getInputStream(zipEntry), out);
                 }
 
@@ -76,7 +80,7 @@ class BundleFileHandler implements FileUploadServlet.FileHandler {
             resp.setStatus(HttpServletResponse.SC_ACCEPTED);
             resp.setHeader("content-type", "text/html");
             resp.getWriter().print(item.getName());
-            context.log("Copied file " + item + " for user '" + getUserName(req) + "' to inventory");
+            context.log("Copied file " + item + " for user '" + BackendServiceImpl.getUserName(req) + "' to inventory");
         } finally {
             bundleTempFile.delete();
         }

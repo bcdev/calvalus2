@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.server;
 
-import com.bc.calvalus.production.ProductionService;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.production.ServiceContainer;
 import org.apache.commons.fileupload.FileItem;
 
 import javax.servlet.ServletContext;
@@ -30,10 +31,11 @@ class MaskFileHandler implements FileUploadServlet.FileHandler {
         String maskDirPath = getSpecifiedDirectory(req);
         final String userName = getUserName(req).toLowerCase();
 
-        ProductionService productionService = (ProductionService) context.getAttribute("productionService");
+        ServiceContainer serviceContainer = (ServiceContainer) context.getAttribute("serviceContainer");
 
         String filePath = maskDirPath + item.getName();
-        OutputStream out = new BufferedOutputStream(productionService.addUserFile(userName, filePath), 64 * 1024);
+        String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+        OutputStream out = new BufferedOutputStream(serviceContainer.getFileSystemService().addFile(userName, userPath), 64 * 1024);
         copy(item.getInputStream(), out);
 
         resp.setStatus(HttpServletResponse.SC_ACCEPTED);

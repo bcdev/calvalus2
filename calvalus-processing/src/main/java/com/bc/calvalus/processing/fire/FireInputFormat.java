@@ -3,7 +3,8 @@ package com.bc.calvalus.processing.fire;
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
+import com.bc.calvalus.inventory.AbstractFileSystemService;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
@@ -33,7 +34,7 @@ public class FireInputFormat extends InputFormat {
         validatePattern(inputPathPatterns);
 
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
-        HdfsInventoryService hdfsInventoryService = new HdfsInventoryService(jobClientsMap, "eodata");
+        HdfsFileSystemService hdfsInventoryService = new HdfsFileSystemService(jobClientsMap);
 
         List<InputSplit> splits = new ArrayList<>(1000);
         FileStatus[] fileStatuses = getFileStatuses(hdfsInventoryService, inputPathPatterns, conf);
@@ -61,13 +62,13 @@ public class FireInputFormat extends InputFormat {
                                         fileLengths.stream().mapToLong(Long::longValue).toArray()));
     }
 
-    protected FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
+    protected FileStatus[] getFileStatuses(AbstractFileSystemService fileSystemService,
                                             String inputPathPatterns,
                                             Configuration conf) throws IOException {
 
         InputPathResolver inputPathResolver = new InputPathResolver();
         List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return inventoryService.globFileStatuses(inputPatterns, conf);
+        return fileSystemService.globFileStatuses(inputPatterns, conf);
     }
 
     public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {

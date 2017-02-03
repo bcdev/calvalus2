@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
@@ -85,7 +86,6 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -107,6 +107,8 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         outputParametersForm.quicklooks.setValue(true);
         outputParametersForm.replaceNans.setValue(true);
         outputParametersForm.replaceNanValue.setValue(0.0);
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged(l2ConfigForm.getSelectedProcessorDescriptor(), bandsToSelect);
 
 
@@ -161,8 +163,14 @@ public class OrderFreshmonProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override

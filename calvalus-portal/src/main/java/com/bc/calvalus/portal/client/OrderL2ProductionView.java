@@ -18,6 +18,7 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.Anchor;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -53,7 +55,6 @@ public class OrderL2ProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -69,6 +70,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         outputParametersForm = new OutputParametersForm();
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged();
 
         VerticalPanel panel = new VerticalPanel();
@@ -130,8 +132,14 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     @Override
     public void onShowing() {
-        // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-        productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+        // make sure #triggerResize is called after the new view is shown
+        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
+            @Override
+            public void execute() {
+                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
+            }
+        });
     }
 
     @Override
@@ -166,5 +174,18 @@ public class OrderL2ProductionView extends OrderProductionView {
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

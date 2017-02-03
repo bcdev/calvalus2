@@ -103,14 +103,16 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
             int tileY = product.getMetadataRoot().getAttributeInt("tileY");
             int tileX = product.getMetadataRoot().getAttributeInt("tileX");
-            float latMax = 90.0f - 5.0f * tileY;
-            float latMin = latMax - 5.0f;
-            float lonMin = -180.0f + 5.0f * tileX;
-            float lonMax = lonMin + 5.0f;
+            //float macroTileSize = "MSI".equals(sensor) ? 2.5f : 5.0f;
+            float macroTileSize = "MSI".equals(sensor) ? 1.0f : 5.0f;
+            float latMax = 90.0f - macroTileSize * tileY;
+            float latMin = latMax - macroTileSize;
+            float lonMin = -180.0f + macroTileSize * tileX;
+            float lonMax = lonMin + macroTileSize;
 
-            String tileName = LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
-            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "NOAA AVHRR HRPT L1B";
-            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "0.011112";
+            String tileName = "MSI".equals(sensor) ? LcL3Nc4MosaicProductFactory.tileName3(tileY, tileX) : LcL3Nc4MosaicProductFactory.tileName(tileY, tileX);
+            String source = "MERIS".equals(sensor) ? "300m".equals(spatialResolution) ? "MERIS FR L1B v2013" : "MERIS RR L1B r03" : "SPOT".equals(sensor) ? "SPOT VGT P format V1.7" : "MSI".equals(sensor) ? "Sentinel 2 MSI L1C" : "NOAA AVHRR HRPT L1B";
+            String spatialResolutionDegrees = "300m".equals(spatialResolution) ? "0.002778" : "20m".equals(spatialResolution) ? "0.0001852" : "0.011112";
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
 
             // global attributes
@@ -134,6 +136,16 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                         "SDR beam 5.0.1\n" +
                         "SR Calvalus 2.7-SNAPSHOT LCL3 temporalCloudRadius=10d,mainBorderWidth=700\n" +
                         "SR beam 5.0.1\n" +
+                        "SR netcdf-bin 4.1.3 nccopy -k 4");
+            } else if ("MSI".equals(sensor)) {
+                writeable.addGlobalAttribute("history", "INPUT Sentinel 2 MSI L1C\n" +
+                        "Resample referenceBand=B5,downsampling=Mean\n" +
+                        "IdePix 2.2 computeCloudBufferForCloudAmbiguous=false\n" +
+                        "S2AC 1.0\n" +
+                        "S2TBX 5.0-SNAPSHOT\n" +
+                        "SNAP 5.0-SNAPSHOT\n" +
+                        "SR Calvalus 2.10-SNAPSHOT LCL3\n" +
+                        "SR SNAP 5.0-SNAPSHOT\n" +
                         "SR netcdf-bin 4.1.3 nccopy -k 4");
             } else {
                 writeable.addGlobalAttribute("history", "amorgos-4,0, lc-sdr-2.1, lc-sr-2.1");  // versions
@@ -162,14 +174,14 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             writeable.addGlobalAttribute("time_coverage_start", COMPACT_ISO_FORMAT.format(product.getStartTime().getAsDate()));
             writeable.addGlobalAttribute("time_coverage_end", COMPACT_ISO_FORMAT.format(product.getEndTime().getAsDate()));
-            writeable.addGlobalAttribute("time_coverage_duration", "P" + temporalResolution + "D");
-            writeable.addGlobalAttribute("time_coverage_resolution", "P" + temporalResolution + "D");
+            writeable.addGlobalAttribute("time_coverage_duration", temporalResolution);
+            writeable.addGlobalAttribute("time_coverage_resolution", temporalResolution);
 
             writeable.addGlobalAttribute("geospatial_lat_min", String.valueOf(latMin));
             writeable.addGlobalAttribute("geospatial_lat_max", String.valueOf(latMax));
             writeable.addGlobalAttribute("geospatial_lon_min", String.valueOf(lonMin));
             writeable.addGlobalAttribute("geospatial_lon_max", String.valueOf(lonMax));
-            writeable.addGlobalAttribute("spatial_resolution", spatialResolution + "m");
+            writeable.addGlobalAttribute("spatial_resolution", spatialResolution);
             writeable.addGlobalAttribute("geospatial_lat_units", "degrees_north");
             writeable.addGlobalAttribute("geospatial_lat_resolution", spatialResolutionDegrees);
             writeable.addGlobalAttribute("geospatial_lon_units", "degrees_east");
@@ -186,17 +198,21 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable = writeable.addVariable("current_pixel_state", DataTypeUtils.getNetcdfDataType(ProductData.TYPE_INT8), tileSize, dimensions);
             variable.addAttribute("long_name", "LC pixel type mask");
             variable.addAttribute("standard_name", "surface_bidirectional_reflectance status_flag");
-            final ArrayByte.D1 valids = new ArrayByte.D1(6);
+            final ArrayByte.D1 valids = new ArrayByte.D1(10);
             valids.set(0, (byte) 0);
             valids.set(1, (byte) 1);
             valids.set(2, (byte) 2);
             valids.set(3, (byte) 3);
             valids.set(4, (byte) 4);
             valids.set(5, (byte) 5);
+            valids.set(6, (byte) 11);
+            valids.set(7, (byte) 12);
+            valids.set(8, (byte) 14);
+            valids.set(9, (byte) 15);
             variable.addAttribute("flag_values", valids);
-            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow");
+            variable.addAttribute("flag_meanings", "invalid clear_land clear_water clear_snow_ice cloud cloud_shadow haze bright temporal_cloud dark");
             variable.addAttribute("valid_min", 0);
-            variable.addAttribute("valid_max", 5);
+            variable.addAttribute("valid_max", 15);
             variable.addAttribute(Constants.FILL_VALUE_ATT_NAME, (byte)0);
 
             StringBuffer ancillaryVariables = new StringBuffer("current_pixel_state");

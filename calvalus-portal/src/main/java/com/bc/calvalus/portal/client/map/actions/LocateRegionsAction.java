@@ -33,19 +33,23 @@ public class LocateRegionsAction extends AbstractMapAction {
             Dialog.error("Warning", "No region selected.<br/>Please select a region first.");
             return;
         }
-        locateSelection(regionMap);
+        locateSelectedRegion(regionMap);
     }
 
-    private void locateSelection(RegionMap regionMap) {
+    public static void locateSelectedRegion(RegionMap regionMap) {
         Region selectedRegion = regionMap.getRegionMapSelectionModel().getSelectedRegion();
         if (selectedRegion != null) {
-            Polygon regionPolygon = regionMap.getPolygon(selectedRegion);
-            if (regionPolygon != null) {
-                LatLngBounds bounds = Region.getBounds(regionPolygon);
-                regionMap.getMapWidget().fitBounds(bounds);
-                regionMap.getMapWidget().panTo(bounds.getCenter());
-            }
+            locateRegion(regionMap, selectedRegion);
         }
     }
 
+    public static void locateRegion(RegionMap regionMap, Region region) {
+        Polygon regionPolygon = regionMap.getPolygon(region);
+        if (regionPolygon == null) {
+            regionPolygon = region.createPolygon();
+        }
+        LatLngBounds bounds = Region.getBounds(regionPolygon);
+        regionMap.getMapWidget().fitBounds(bounds);
+        regionMap.getMapWidget().panTo(bounds.getCenter());
+    }
 }
