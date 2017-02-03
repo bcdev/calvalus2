@@ -18,7 +18,7 @@ public class JobDetailWriterTest {
 
         File file = new File(pathname);
         JobDetailWriter.GetEOFJobInfo getEOFJobInfo = new JobDetailWriter.GetEOFJobInfo(file);
-        Assert.assertEquals(getEOFJobInfo.getLastJobID(), "job_1484434434570_0373");
+        Assert.assertEquals(getEOFJobInfo.getLastJobID(), "job_1484434434570_0374");
     }
 
     @Ignore

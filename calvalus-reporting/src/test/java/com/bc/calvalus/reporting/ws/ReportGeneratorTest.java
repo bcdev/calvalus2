@@ -1,15 +1,17 @@
 package com.bc.calvalus.reporting.ws;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.*;
-
 import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
-import org.junit.*;
-
 import java.util.List;
 import java.util.Map;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * @author hans
@@ -119,6 +121,7 @@ public class ReportGeneratorTest {
         assertThat(pdfPath, containsString("monthly.pdf"));
     }
 
+    @Ignore
     @Test
     public void canGenerateSingleUserJson() throws Exception {
         List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserStatistic("cvop");
@@ -142,6 +145,7 @@ public class ReportGeneratorTest {
 
     }
 
+    @Ignore
     @Test
     public void canGenerateSingleUserYearJson() throws Exception {
         List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserYearStatistic("cvop", "2017");
