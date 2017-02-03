@@ -21,7 +21,7 @@ class JobDetailType {
     private String vCoresMillisTotal;
     private String mbMillisTotal;
     private String cpuMilliseconds;
-    private String totalMapReduced;
+    private String totalMaps;
     private String jobName;
     private String remoteUser;
     private String remoteRef;
@@ -156,12 +156,12 @@ class JobDetailType {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
-    public void setTotalMapReduced(String totalMapReduced) {
-        this.totalMapReduced = totalMapReduced;
+    public void setTotalMaps(String totalMaps) {
+        this.totalMaps = totalMaps;
     }
 
-    public String getTotalMapReduced() {
-        return totalMapReduced;
+    public String getTotalMaps() {
+        return totalMaps;
     }
 
     public void setJobName(String jobName) {

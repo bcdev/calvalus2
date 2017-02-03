@@ -26,7 +26,6 @@ public class JobResourceServiceImplTest {
         assertEquals(userInfo.getUser(), "hucke");
         assertEquals(userInfo.getJobsProcessed(), "1");
         assertEquals(userInfo.getTotalCpuTimeSpent(), "01:43:26");
-        assertEquals(userInfo.getTotalVcoresUsed(), "8,224");
         assertEquals(userInfo.getTotalMemoryUsedMbs(), "42,110,858");
         assertEquals(userInfo.getTotalFileReadingMb(), "36,293");
     }

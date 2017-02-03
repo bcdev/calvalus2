@@ -30,7 +30,7 @@ public class JobDetailWriterTest {
         jobDetailType.setUser("you");
         jobDetailType.setJobId("102");
         jobDetailType.setCpuMilliseconds("10");
-        jobDetailType.setTotalMapReduced("200");
+        jobDetailType.setTotalMaps("200");
         detailWriter.flushToFile(Collections.singletonList(jobDetailType), outputFile);
 
 

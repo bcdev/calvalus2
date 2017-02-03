@@ -43,7 +43,7 @@ public class UsageStatistic {
                           String processType,
                           String inputPath,
                           int mapsCompleted,
-                          int totalMaps,
+                          int totalMapReduced,
                           int reducesCompleted,
                           long fileBytesRead,
                           long fileBytesWritten,

@@ -175,7 +175,7 @@ public class JobDetailWriter {
         jobDetailType.setQueue(jobType.getQueue());
         jobDetailType.setStartTime(jobType.getStartTime());
         jobDetailType.setFinishTime(jobType.getFinishTime());
-        jobDetailType.setTotalMapReduced(jobType.getMapsTotal());
+        jobDetailType.setTotalMaps(jobType.getMapsTotal());
         jobDetailType.setMapsCompleted(jobType.getMapsCompleted());
         jobDetailType.setReducesCompleted(jobType.getReducesCompleted());
         jobDetailType.setState(jobType.getState());

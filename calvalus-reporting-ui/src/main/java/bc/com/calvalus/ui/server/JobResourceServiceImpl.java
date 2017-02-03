@@ -33,6 +33,9 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     public List<String> getAllUserName() {
         List<String> nameList = new ArrayList<>();
         String jsonUser = clientRequest("http://urbantep-test:9080/calvalus-reporting/reporting/all/users", MediaType.APPLICATION_JSON);
+        if (jsonUser == null) {
+            return null;
+        }
         List<UserInfo> gsonToUserInfo = getGsonToUserInfo(jsonUser);
         gsonToUserInfo.forEach(p -> nameList.add(p.getUser()));
         return nameList;
@@ -88,7 +91,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private List<UserInfo> getGsonToUserInfo(String jsonUser) {
-        if (jsonUser.contains(STATUS_FAILED)) {
+        if (jsonUser == null || jsonUser.contains(STATUS_FAILED)) {
             return null;
         }
         Gson gson = new Gson();
@@ -111,7 +114,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
                             convertMBToGB(p.getTotalFileWritingMb()),
                             convertMBToGB(p.getTotalMemoryUsedMbs()),
                             p.getTotalCpuTimeSpent(),
-                            p.getTotalVcoresUsed());
+                            p.getTotalMaps());
     }
 
     private String convertMBToGB(String totalFileReadingMb) {

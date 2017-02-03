@@ -13,7 +13,6 @@ public class UserInfo implements IsSerializable {
     private String totalFileWritingMb;
     private String totalMemoryUsedMbs;
     private String totalCpuTimeSpent;
-    private String totalVcoresUsed;
     private String totalMaps;
 
     public UserInfo() {
@@ -53,11 +52,6 @@ public class UserInfo implements IsSerializable {
     public String getTotalCpuTimeSpent() {
         return totalCpuTimeSpent;
     }
-
-    public String getTotalVcoresUsed() {
-        return totalVcoresUsed;
-    }
-
 
     public String getTotalMaps() {
         return totalMaps;
