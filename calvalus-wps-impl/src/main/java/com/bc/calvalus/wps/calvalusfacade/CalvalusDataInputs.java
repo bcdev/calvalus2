@@ -39,7 +39,10 @@ public class CalvalusDataInputs {
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
 
-    CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, WpsProcess calvalusProcessor, ProductSet[] productSets, String remoteUser)
+    CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor,
+                       WpsProcess calvalusProcessor,
+                       ProductSet[] productSets,
+                       Map<String, String> requestHeaderMap)
                 throws InvalidParameterValueException {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
@@ -52,7 +55,8 @@ public class CalvalusDataInputs {
         extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
-        this.inputMapFormatted.put("calvalus.wps.remote.user", remoteUser);
+        this.inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
+        this.inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
         this.inputMapFormatted.put("quicklooks", "true");
     }
 

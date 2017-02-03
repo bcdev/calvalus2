@@ -15,7 +15,9 @@ import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,13 +27,18 @@ public abstract class ProcessFacade {
 
     protected final String remoteUserName;
     protected final String systemUserName;
+    protected Map<String, String> requestHeaderMap = new HashMap<>();
+
+    private final String remoteRef;
 
     private static final String REMOTE_USER_KEY = PropertiesWrapper.get("remote.user.key");
+    private static final String REMOTE_REF_KEY = PropertiesWrapper.get("remote.ref.key");
     private static final String REMOTE_USER_PREFIX = PropertiesWrapper.get("remote.user.prefix");
 
     public ProcessFacade(WpsRequestContext wpsRequestContext) throws IOException {
         this.systemUserName = wpsRequestContext.getUserName();
         this.remoteUserName = resolveUserName(wpsRequestContext);
+        this.remoteRef = wpsRequestContext.getHeaderField(REMOTE_REF_KEY);
     }
 
     public String getRemoteUserName() {
@@ -40,6 +47,13 @@ public abstract class ProcessFacade {
 
     public String getSystemUserName() {
         return systemUserName;
+    }
+
+    public Map<String, String> getRequestHeaderMap() {
+        this.requestHeaderMap.put("remoteUser", this.remoteUserName);
+        this.requestHeaderMap.put("systemUser", this.systemUserName);
+        this.requestHeaderMap.put("remoteRef", this.remoteRef);
+        return requestHeaderMap;
     }
 
     private String resolveUserName(WpsRequestContext wpsRequestContext) throws IOException {
