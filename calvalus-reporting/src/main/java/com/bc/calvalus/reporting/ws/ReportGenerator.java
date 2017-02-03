@@ -166,9 +166,13 @@ class ReportGenerator {
         long totalFileWriting = 0;
         long totalFileReading = 0;
         long totalCpuTime = 0;
+        long totalMaps = 0;
         long totalMemoryUsed = 0;
         long totalVCoresUsed = 0;
         for (UsageStatistic usageStatistic : usageStatistics) {
+            totalMaps += usageStatistic.getTotalMaps();
+            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
+            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
             totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
             totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
@@ -178,6 +182,7 @@ class ReportGenerator {
         int jobNumbers = usageStatistics.size();
         jobReportJson.put("user", usageStatistics.get(0).getUser()); // TODO(hans-permana, 20170116): should generate the report per user
         jobReportJson.put("jobsProcessed", String.valueOf(jobNumbers));
+        jobReportJson.put("totalMaps", getFormattedNumber(totalMaps));
         jobReportJson.put("totalFileWritingMb", getFormattedNumber(totalFileWriting));
         jobReportJson.put("totalFileReadingMb", getFormattedNumber(totalFileReading));
         jobReportJson.put("totalCpuTimeSpent", getElapsedTime(totalCpuTime));
