@@ -28,11 +28,6 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
 
     @Override
-    protected void checkPermutationStrongName() throws SecurityException {
-
-    }
-
-    @Override
     public List<String> getAllUserName() {
         List<String> nameList = new ArrayList<>();
         String jsonUser = clientRequest("http://urbantep-test:9080/calvalus-reporting/reporting/all/users", MediaType.APPLICATION_JSON);
@@ -65,7 +60,8 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         String jsonUser = clientRequest(String.format("http://urbantep-test:9080/calvalus-reporting/reporting/%s/range/%s/%s", name, startDate, endDate), MediaType.TEXT_PLAIN);
         Gson gson = new Gson();
         UserInfo userInfo = gson.fromJson(jsonUser, UserInfo.class);
-        return Collections.singletonList(userInfo);
+
+        return Collections.singletonList(convertUnits(userInfo));
     }
 
     private List<UserInfo> getUserUsageSummary(String userName) {
@@ -94,19 +90,21 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         List<UserInfo> userInfoList = gson.fromJson(jsonUser, mapType);
 
         List<UserInfo> changUnit = new ArrayList<>();
-        userInfoList.forEach(p -> changUnit.add(convertUnits(p)));
+        for (UserInfo userInfo : userInfoList) {
+            changUnit.add(convertUnits(userInfo));
+        }
 
         return changUnit;
     }
 
     private UserInfo convertUnits(UserInfo p) {
         return new UserInfo(p.getUser(),
-                            p.getJobsProcessed(),
-                            convertMBToGB(p.getTotalFileReadingMb()),
-                            convertMBToGB(p.getTotalFileWritingMb()),
-                            convertMBToGB(p.getTotalMemoryUsedMbs()),
-                            p.getTotalCpuTimeSpent(),
-                            p.getTotalVcoresUsed());
+                p.getJobsProcessed(),
+                convertMBToGB(p.getTotalFileReadingMb()),
+                convertMBToGB(p.getTotalFileWritingMb()),
+                convertMBToGB(p.getTotalMemoryUsedMbs()),
+                p.getTotalCpuTimeSpent(),
+                p.getTotalVcoresUsed());
     }
 
     private String convertMBToGB(String totalFileReadingMb) {
@@ -119,11 +117,6 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
             e.printStackTrace();
         }
         return String.format("%.4f", parse.doubleValue() / (1024));
-    }
-
-    private String convertMilSecondToHour(String timeMilSeconds) {
-        long longTimeMiliSeconds = Long.parseLong(timeMilSeconds);
-        return Long.toString(longTimeMiliSeconds % (1000 * 60 * 60));
     }
 
     private static String clientRequest(String uri, String textPlain) {
