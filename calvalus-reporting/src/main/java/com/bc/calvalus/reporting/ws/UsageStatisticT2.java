@@ -11,8 +11,6 @@ import java.util.Locale;
  */
 public class UsageStatisticT2 {
 
-    private static final String BC_PROCESSING_CENTER_JOB_PREFIX = "bc_";
-
     private String id;
     private String accountPlatform;
     private String accountUserName;
@@ -26,15 +24,15 @@ public class UsageStatisticT2 {
     private String status;
 
     public UsageStatisticT2(UsageStatistic usageStatistic) {
-        this.id = BC_PROCESSING_CENTER_JOB_PREFIX + usageStatistic.getJobId();
+        this.id = usageStatistic.getJobId();
         this.accountPlatform = "Brockmann Consult Processing Center";
-        this.accountUserName = usageStatistic.getUser(); // may need to be changed to use remote user instead
-        this.accountRef = "DUMMY-xx-20170101"; // TODO(hans-permana, 20170116): get the information from the header of incoming WPS request REMOTE_REF, to be stored as a config
-        this.compoundId = "DUMMY-20170116_11212222"; //TODO(hans-permana, 20170116): get the compound ID info from the WPS job ID
-        this.compoundName = "Subsetting of Urban Mask"; //TODO(hans-permana, 20170116): get this from the job name in WPS request
-        this.compoundType = "Subset"; //TODO(hans-permana, 20170116): get this from processor or bundle name
+        this.accountUserName = usageStatistic.getRemoteUser();
+        this.accountRef = usageStatistic.getRemoteRef();
+        this.compoundId = usageStatistic.getWpsJobId();
+        this.compoundName = usageStatistic.getJobName();
+        this.compoundType = usageStatistic.getProcessType();
         this.quantity = parseQuantity(usageStatistic);
-        this.hostName = "www.brockmann-consult.de/bc-wps/wps/calvalus";
+        this.hostName = "www.brockmann-consult.de";
         this.timeStamp = getFormattedTime(new Date());
         this.status = usageStatistic.getState();
     }
