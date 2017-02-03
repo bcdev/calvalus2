@@ -7,11 +7,16 @@ public class NullUsageStatistic extends UsageStatistic {
 
     public NullUsageStatistic() {
         super("not-found",
-              "n/a",
+              "not-found",
               "",
               0,
               0,
               "NOT_FOUND",
+              "not-found",
+              "not-found",
+              "not-found",
+              "not-found",
+              "not-found",
               "",
               0,
               0,

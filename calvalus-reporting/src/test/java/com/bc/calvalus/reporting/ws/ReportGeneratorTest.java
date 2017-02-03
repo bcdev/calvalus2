@@ -1,17 +1,15 @@
 package com.bc.calvalus.reporting.ws;
 
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
+
 import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
+import org.junit.*;
+
 import java.util.List;
 import java.util.Map;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * @author hans
@@ -93,12 +91,12 @@ public class ReportGeneratorTest {
 
         assertThat(reportGenerator.generateTextMonthly(usageStatistics), equalTo("Usage statistic for user $USER in $MONTH $YEAR\n" +
                                                                                          "\n" +
-                                                                                         "Jobs processed : 3546" +
+                                                                                         "Jobs processed : 3547" +
                                                                                          "\nTotal file writing (MB) : 27,181,659\n" +
-                                                                                         "Total file reading (MB) : 73,412,230\n" +
-                                                                                         "Total CPU time spent : 26023:57:08\n" +
-                                                                                         "Total Memory used (MB s) :  334,310,830,833\n" +
-                                                                                         "Total vCores used (vCore s) :  92,738,732\n" +
+                                                                                         "Total file reading (MB) : 73,412,232\n" +
+                                                                                         "Total CPU time spent : 26023:57:32\n" +
+                                                                                         "Total Memory used (MB s) :  334,310,849,659\n" +
+                                                                                         "Total vCores used (vCore s) :  92,738,750\n" +
                                                                                          "\n" +
                                                                                          "\n" +
                                                                                          "Price breakdown\n" +

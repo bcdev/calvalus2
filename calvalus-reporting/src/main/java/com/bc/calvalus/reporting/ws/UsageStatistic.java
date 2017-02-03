@@ -12,6 +12,11 @@ public class UsageStatistic {
     private long finishTime;
     private String state;
 
+    private String wpsJobId;
+    private String remoteUser;
+    private String jobName;
+    private String remoteRef;
+    private String processType;
     private String inputPath;
 
     private int mapsCompleted;
@@ -30,6 +35,11 @@ public class UsageStatistic {
                           long startTime,
                           long finishTime,
                           String state,
+                          String wpsJobId,
+                          String remoteUser,
+                          String jobName,
+                          String remoteRef,
+                          String processType,
                           String inputPath,
                           int mapsCompleted,
                           int reducesCompleted,
@@ -46,6 +56,11 @@ public class UsageStatistic {
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
+        this.wpsJobId = wpsJobId;
+        this.remoteUser = remoteUser;
+        this.jobName = jobName;
+        this.remoteRef = remoteRef;
+        this.processType = processType;
         this.inputPath = inputPath;
         this.mapsCompleted = mapsCompleted;
         this.reducesCompleted = reducesCompleted;
@@ -84,6 +99,26 @@ public class UsageStatistic {
 
     public String getState() {
         return state;
+    }
+
+    public String getWpsJobId() {
+        return wpsJobId;
+    }
+
+    public String getRemoteUser() {
+        return remoteUser;
+    }
+
+    public String getJobName() {
+        return jobName;
+    }
+
+    public String getRemoteRef() {
+        return remoteRef;
+    }
+
+    public String getProcessType() {
+        return processType;
     }
 
     public String getInputPath() {

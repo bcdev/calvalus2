@@ -2,6 +2,11 @@ package com.bc.calvalus.reporting.ws;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -11,15 +16,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 /**
  * @author hans
  */
 class ReportGenerator {
+
+    private static final int KILO_BYTES = 1024;
+    private static final int MILI_SECONDS = 1000;
 
     public String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
         List<Map<String, String>> multiJobJsonContentsPerUserMap = new ArrayList<>();
@@ -109,11 +113,11 @@ class ReportGenerator {
         String startTime = getFormattedTime(usageStatistic.getStartTime());
         String finishTime = getFormattedTime(usageStatistic.getFinishTime());
         String totalTime = getElapsedTime(usageStatistic.getTotalTime());
-        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024));
-        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024));
+        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES));
+        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES));
         String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
-        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisTotal()) / (1000));
-        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (1000));
+        String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisTotal()) / MILI_SECONDS);
+        String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (MILI_SECONDS));
         jobReportJson.put("jobId", usageStatistic.getJobId());
         jobReportJson.put("project", usageStatistic.getQueue());
         jobReportJson.put("startTime", startTime);
@@ -133,8 +137,8 @@ class ReportGenerator {
         String startTime = getFormattedTime(usageStatistic.getStartTime());
         String finishTime = getFormattedTime(usageStatistic.getFinishTime());
         String totalTime = getElapsedTime(usageStatistic.getTotalTime());
-        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024));
-        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024));
+        String totalFileWriting = getFormattedNumber((usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES));
+        String totalFileReading = getFormattedNumber((usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES));
         String totalCpuTime = getElapsedTime(usageStatistic.getCpuMilliseconds());
         String totalMemoryUsed = getFormattedNumber((usageStatistic.getMbMillisTotal()) / (1000));
         String vCoresUsed = getFormattedNumber((usageStatistic.getvCoresMillisTotal()) / (1000));
@@ -161,11 +165,11 @@ class ReportGenerator {
         long totalMemoryUsed = 0;
         long totalVCoresUsed = 0;
         for (UsageStatistic usageStatistic : usageStatistics) {
-            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
-            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
+            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
+            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
-            totalMemoryUsed += (usageStatistic.getMbMillisTotal()) / (1000);
-            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (1000);
+            totalMemoryUsed += (usageStatistic.getMbMillisTotal()) / (MILI_SECONDS);
+            totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (MILI_SECONDS);
         }
         int jobNumbers = usageStatistics.size();
         jobReportJson.put("user", usageStatistics.get(0).getUser()); // TODO(hans-permana, 20170116): should generate the report per user
@@ -193,8 +197,8 @@ class ReportGenerator {
         long totalMemoryUsed = 0;
         long totalVCoresUsed = 0;
         for (UsageStatistic usageStatistic : usageStatistics) {
-            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
-            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
+            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
+            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
             totalMemoryUsed += (usageStatistic.getMbMillisTotal()) / (1000);
             totalVCoresUsed += (usageStatistic.getvCoresMillisTotal()) / (1000);
@@ -216,11 +220,11 @@ class ReportGenerator {
         double memoryPrice = PriceCalculator.getMemoryPrice(totalMemoryUsed);
         double diskPrice = PriceCalculator.getDiskPrice(totalFileWriting + totalFileReading);
         jobReport.add("CPU usage price = (Total vCores used) x € 0.0013 = € " +
-                              cpuPrice);
+                      cpuPrice);
         jobReport.add("Memory usage price = (Total Memory used) x € 0.00022 = € " +
-                              memoryPrice);
+                      memoryPrice);
         jobReport.add("Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € " +
-                              diskPrice);
+                      diskPrice);
         jobReport.add("");
         jobReport.add("Total = € " + (cpuPrice + memoryPrice + diskPrice));
         return jobReport;
