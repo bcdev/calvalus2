@@ -26,7 +26,9 @@ import org.jetbrains.annotations.NotNull;
  */
 public class JSONExtractor {
 
-    private static final String FIRST_DAY = "01";
+    private static final String INIT_FIRST_DAY = "01";
+
+
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
         List<UsageStatistic> usageStatistics = getAllStatistics();
@@ -91,13 +93,13 @@ public class JSONExtractor {
 
     public List<UsageStatistic> getSingleUserYearStatistic(String user, String year) throws IOException {
         Predicate<FilterUserTimeInterval> yearPredicate = p -> p.filterYear();
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearPredicate, user, year, FIRST_DAY, FIRST_DAY);
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearPredicate, user, year, INIT_FIRST_DAY, INIT_FIRST_DAY);
         return singleUserYearStatistic;
     }
 
     public List<UsageStatistic> getSingleUserYearMonthStatistic(String user, String year, String month) throws IOException {
         Predicate<FilterUserTimeInterval> yearMonthPredicate = p -> p.filterMonth();
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearMonthPredicate, user, year, month, FIRST_DAY);
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearMonthPredicate, user, year, month, INIT_FIRST_DAY);
         return singleUserYearStatistic;
     }
 

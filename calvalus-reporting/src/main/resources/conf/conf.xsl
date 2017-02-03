@@ -10,6 +10,34 @@
             <path>
                 <xsl:value-of select="conf/path"/>
             </path>
+            <xsl:for-each select="conf/property">
+                <xsl:if test="name='calvalus.l2.operator'">
+                    <br/>
+                    <processType>
+                        <xsl:value-of select="value"/>
+                    </processType>
+                </xsl:if>
+                <xsl:if test="name='mapreduce.job.name'">
+                    <jobName>
+                        <xsl:value-of select="value"/>
+                    </jobName>
+                </xsl:if>
+                <xsl:if test="name='calvalus.remote.user'">
+                    <remoteUser>
+                        <xsl:value-of select="value"/>
+                    </remoteUser>
+                </xsl:if>
+                <xsl:if test="name='calvalus.wps.remote.ref'">
+                    <remoteRef>
+                        <xsl:value-of select="value"/>
+                    </remoteRef>
+                </xsl:if>
+                <xsl:if test="name='calvalus.wps.id'">
+                    <wpsJobId>
+                        <xsl:value-of select="value"/>
+                    </wpsJobId>
+                </xsl:if>
+            </xsl:for-each>
         </conf>
     </xsl:template>
 

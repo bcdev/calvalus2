@@ -37,21 +37,58 @@ public class JobDetailWriter {
 
 
     private static final int INTERVAL = 10;
-    private GetJobInfo getJobInfo;
+    private GetEOFJobInfo getEOFJobInfo;
     private JobsType jobsTypeList;
     private File outputFile;
     private List<JobDetailType> jobDetailTypeList;
-    private Logger logger;
+    private static Logger logger = CalvalusLogger.getLogger();
 
 
     public JobDetailWriter(String pathToWrite) {
         try {
-            logger = CalvalusLogger.getLogger();
             jobDetailTypeList = new ArrayList<>();
             outputFile = confirmOutputFile(pathToWrite);
-            getJobInfo = new GetJobInfo(outputFile);
+            getEOFJobInfo = new GetEOFJobInfo(outputFile);
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    public void start() {
+        try {
+            String lastJobID = getLastJobID();
+            if (lastJobID == null) {
+                write(0, getJobType().getJob().size());
+            } else {
+                int[] startStopIndex = getStartStopIndex(lastJobID);
+                write(startStopIndex[0], startStopIndex[1]);
+            }
+        } catch (JAXBException | GenerateLogException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    public void flushToFile(List<JobDetailType> jobDetailTypeList, File outputFile) {
+        try (
+                FileWriter fileWriter = new FileWriter(outputFile, true);
+                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)
+        ) {
+            Gson gson = new Gson();
+            for (JobDetailType jobDetailType : jobDetailTypeList) {
+                bufferedWriter.append(gson.toJson(jobDetailType));
+                bufferedWriter.write(",");
+                bufferedWriter.newLine();
+            }
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    public static void stop() {
+        Thread thread = Thread.currentThread();
+        if (thread != null) {
+            Launcher.terminate = true;
+            thread.interrupt();
         }
     }
 
@@ -70,30 +107,7 @@ public class JobDetailWriter {
     }
 
     private String getLastJobID() {
-        return getJobInfo.getLastJobID();
-    }
-
-
-    public void start() {
-        try {
-            String lastJobID = getLastJobID();
-            if (lastJobID == null) {
-                write(0, getJobType().getJob().size());
-            } else {
-                int[] startStopIndex = getStartStopIndex(lastJobID);
-                write(startStopIndex[0], startStopIndex[1]);
-            }
-        } catch (JAXBException | GenerateLogException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-        }
-    }
-
-    private void stop() {
-        Thread thread = Thread.currentThread();
-        if (thread != null) {
-            Launcher.terminate = true;
-            thread.interrupt();
-        }
+        return getEOFJobInfo.getLastJobID();
     }
 
     private int[] getStartStopIndex(String lastJobID) {
@@ -143,7 +157,8 @@ public class JobDetailWriter {
                 addJobDetails(conf, countersType, jobType);
             }
         }
-        flushToFile();
+        flushToFile(jobDetailTypeList, outputFile);
+        jobDetailTypeList.clear();
     }
 
     private void addJobDetails(Conf conf, CountersType countersType, JobType jobType) {
@@ -160,6 +175,7 @@ public class JobDetailWriter {
         jobDetailType.setQueue(jobType.getQueue());
         jobDetailType.setStartTime(jobType.getStartTime());
         jobDetailType.setFinishTime(jobType.getFinishTime());
+        jobDetailType.setTotalMapReduced(jobType.getMapsTotal());
         jobDetailType.setMapsCompleted(jobType.getMapsCompleted());
         jobDetailType.setReducesCompleted(jobType.getReducesCompleted());
         jobDetailType.setState(jobType.getState());
@@ -174,8 +190,12 @@ public class JobDetailWriter {
     }
 
     private void writeConf(Conf conf, JobDetailType jobDetailType) {
-        String path = conf.getPath();
-        jobDetailType.setInputPath(path);
+        jobDetailType.setInputPath(conf.getPath());
+        jobDetailType.setJobName(conf.getJobName());
+        jobDetailType.setRemoteUser(conf.getRemoteUser());
+        jobDetailType.setRemoteRef(conf.getRemoteRef());
+        jobDetailType.setProcessType(conf.getProcessType());
+        jobDetailType.setWpsJobId(conf.getWpsJobId());
     }
 
     private void addCounterInfo(CounterType counterType, JobDetailType jobDetailType) {
@@ -198,22 +218,6 @@ public class JobDetailWriter {
         }
     }
 
-    private void flushToFile() {
-        try (
-                FileWriter fileWriter = new FileWriter(outputFile, true);
-                BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)
-        ) {
-            Gson gson = new Gson();
-            for (JobDetailType jobDetailType : jobDetailTypeList) {
-                bufferedWriter.append(gson.toJson(jobDetailType));
-                bufferedWriter.write(",");
-                bufferedWriter.newLine();
-            }
-            jobDetailTypeList.clear();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-        }
-    }
 
     private HashMap<String, CountersType> createCounterLog(int from, int to) throws GenerateLogException {
         CounterExtractor counterLog = new CounterExtractor();
@@ -227,10 +231,10 @@ public class JobDetailWriter {
         return confLog.extractInfo(from, to, jobsType);
     }
 
-    private class GetJobInfo {
+    static class GetEOFJobInfo {
         private String lastJobID;
 
-        public GetJobInfo(File saveLocation) {
+        public GetEOFJobInfo(File saveLocation) {
             try {
                 lastJobID = getLastJobId(saveLocation);
             } catch (IOException | JsonSyntaxException e) {

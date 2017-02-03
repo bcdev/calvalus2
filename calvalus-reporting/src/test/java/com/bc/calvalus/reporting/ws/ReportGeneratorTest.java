@@ -138,7 +138,8 @@ public class ReportGeneratorTest {
                                                                                                "  \"totalCpuTimeSpent\": \"6426:17:03\",\n" +
                                                                                                "  \"jobsProcessed\": \"1381\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
-                                                                                               "  \"totalVcoresUsed\": \"28,138,453\"\n" +
+                                                                                               "  \"totalVcoresUsed\": \"28,138,453\",\n" +
+                                                                                       "  \"totalMaps\": \"0\"\n"+
                                                                                                "}"));
 
     }
@@ -160,7 +161,8 @@ public class ReportGeneratorTest {
                                                                                                "  \"totalCpuTimeSpent\": \"6426:17:03\",\n" +
                                                                                                "  \"jobsProcessed\": \"1381\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
-                                                                                               "  \"totalVcoresUsed\": \"28,138,453\"\n" +
+                                                                                               "  \"totalVcoresUsed\": \"28,138,453\",\n" +
+                                                                                               "  \"totalMaps\": \"0\"\n"+
                                                                                                "}"));
 
     }

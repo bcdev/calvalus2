@@ -1,4 +1,5 @@
 package com.bc.calvalus.generator.writer;
+
 /**
  * @author muhammad.bc.
  */
@@ -20,6 +21,12 @@ class JobDetailType {
     private String vCoresMillisTotal;
     private String mbMillisTotal;
     private String cpuMilliseconds;
+    private String totalMapReduced;
+    private String jobName;
+    private String remoteUser;
+    private String remoteRef;
+    private String processType;
+    private String wpsJobId;
 
     public String getJobId() {
         return jobId;
@@ -149,4 +156,51 @@ class JobDetailType {
         this.cpuMilliseconds = cpuMilliseconds;
     }
 
+    public void setTotalMapReduced(String totalMapReduced) {
+        this.totalMapReduced = totalMapReduced;
+    }
+
+    public String getTotalMapReduced() {
+        return totalMapReduced;
+    }
+
+    public void setJobName(String jobName) {
+        this.jobName = jobName;
+    }
+
+    public String getJobName() {
+        return jobName;
+    }
+
+    public void setRemoteUser(String remoteUser) {
+        this.remoteUser = remoteUser;
+    }
+
+    public String getRemoteUser() {
+        return remoteUser;
+    }
+
+    public void setRemoteRef(String remoteRef) {
+        this.remoteRef = remoteRef;
+    }
+
+    public String getRemoteRef() {
+        return remoteRef;
+    }
+
+    public void setProcessType(String processType) {
+        this.processType = processType;
+    }
+
+    public String getProcessType() {
+        return processType;
+    }
+
+    public void setWpsJobId(String wpsJobId) {
+        this.wpsJobId = wpsJobId;
+    }
+
+    public String getWpsJobId() {
+        return wpsJobId;
+    }
 }

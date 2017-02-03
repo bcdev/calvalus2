@@ -15,6 +15,7 @@ public class UsageStatistic {
     private String inputPath;
 
     private int mapsCompleted;
+    private int totalMaps;
     private int reducesCompleted;
     private long fileBytesRead;
     private long fileBytesWritten;
@@ -32,6 +33,7 @@ public class UsageStatistic {
                           String state,
                           String inputPath,
                           int mapsCompleted,
+                          int totalMaps,
                           int reducesCompleted,
                           long fileBytesRead,
                           long fileBytesWritten,
@@ -48,6 +50,7 @@ public class UsageStatistic {
         this.state = state;
         this.inputPath = inputPath;
         this.mapsCompleted = mapsCompleted;
+        this.totalMaps = totalMaps;
         this.reducesCompleted = reducesCompleted;
         this.fileBytesRead = fileBytesRead;
         this.fileBytesWritten = fileBytesWritten;
@@ -124,5 +127,9 @@ public class UsageStatistic {
 
     public long getCpuMilliseconds() {
         return cpuMilliseconds;
+    }
+
+    public int getTotalMaps() {
+        return totalMaps;
     }
 }
