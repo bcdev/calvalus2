@@ -18,6 +18,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * @author muhammad.bc.
@@ -25,6 +26,7 @@ import javax.ws.rs.core.MediaType;
 
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
     private static final Client client = ClientBuilder.newClient();
+    public static final String STATUS_FAILED = "\"Status\": \"Failed\"";
 
 
     @Override
@@ -84,6 +86,9 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private List<UserInfo> getGsonToUserInfo(String jsonUser) {
+        if (jsonUser.contains(STATUS_FAILED)) {
+            return null;
+        }
         Gson gson = new Gson();
         Type mapType = new TypeToken<List<UserInfo>>() {
         }.getType();
@@ -121,7 +126,11 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     private static String clientRequest(String uri, String textPlain) {
         Invocation.Builder builder = client.target(uri).request();
-        builder.accept(textPlain).get();
-        return builder.get(String.class);
+        Response response = builder.accept(textPlain).get();
+        int status = response.getStatus();
+        if (status >= 200 && status < 300) {
+            return builder.get(String.class);
+        }
+        return null;
     }
 }

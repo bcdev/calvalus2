@@ -75,7 +75,11 @@ public class JobTableView<T> extends Composite {
     public void setDataList(List<T> dataList) {
         List<T> list = dataProvider.getList();
         list.clear();
-        list.addAll(dataList);
+        if (dataList == null) {
+            dataGrid.setEmptyTableWidget(new HTML("No Data to Display"));
+        } else {
+            list.addAll(dataList);
+        }
         dataProvider.refresh();
         dataGrid.redraw();
 
