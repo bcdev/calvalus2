@@ -14,19 +14,19 @@ public class UserInfo implements IsSerializable {
     private String totalMemoryUsedMbs;
     private String totalCpuTimeSpent;
     private String totalVcoresUsed;
-    private String string;
+    private String totalMaps;
 
     public UserInfo() {
     }
 
-    public UserInfo(String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalVcoresUsed) {
+    public UserInfo(String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalMaps) {
         this.user = user;
         this.jobsProcessed = jobsProcessed;
         this.totalFileReadingMb = totalFileReadingMb;
         this.totalFileWritingMb = totalFileWritingMb;
         this.totalMemoryUsedMbs = totalMemoryUsedMbs;
         this.totalCpuTimeSpent = totalCpuTimeSpent;
-        this.totalVcoresUsed = totalVcoresUsed;
+        this.totalMaps = totalMaps;
     }
 
     public String getUser() {
@@ -59,5 +59,7 @@ public class UserInfo implements IsSerializable {
     }
 
 
-
+    public String getTotalMaps() {
+        return totalMaps;
+    }
 }

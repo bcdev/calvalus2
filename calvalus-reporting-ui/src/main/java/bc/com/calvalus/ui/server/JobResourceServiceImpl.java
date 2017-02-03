@@ -60,9 +60,11 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     private List<UserInfo> getUserUsageSummary(String name, String startDate, String endDate) {
         String jsonUser = clientRequest(String.format("http://urbantep-test:9080/calvalus-reporting/reporting/%s/range/%s/%s", name, startDate, endDate), MediaType.TEXT_PLAIN);
+        if (jsonUser.contains(STATUS_FAILED)) {
+            return null;
+        }
         Gson gson = new Gson();
         UserInfo userInfo = gson.fromJson(jsonUser, UserInfo.class);
-
         return Collections.singletonList(convertUnits(userInfo));
     }
 
@@ -104,12 +106,12 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     private UserInfo convertUnits(UserInfo p) {
         return new UserInfo(p.getUser(),
-                p.getJobsProcessed(),
-                convertMBToGB(p.getTotalFileReadingMb()),
-                convertMBToGB(p.getTotalFileWritingMb()),
-                convertMBToGB(p.getTotalMemoryUsedMbs()),
-                p.getTotalCpuTimeSpent(),
-                p.getTotalVcoresUsed());
+                            p.getJobsProcessed(),
+                            convertMBToGB(p.getTotalFileReadingMb()),
+                            convertMBToGB(p.getTotalFileWritingMb()),
+                            convertMBToGB(p.getTotalMemoryUsedMbs()),
+                            p.getTotalCpuTimeSpent(),
+                            p.getTotalVcoresUsed());
     }
 
     private String convertMBToGB(String totalFileReadingMb) {
