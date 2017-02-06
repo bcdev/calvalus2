@@ -12,7 +12,7 @@ public class UsageStatistic {
     private long finishTime;
     private String state;
 
-    private String wpsJobId;
+    private String outputDir;
     private String remoteUser;
     private String jobName;
     private String remoteRef;
@@ -36,7 +36,7 @@ public class UsageStatistic {
                           long startTime,
                           long finishTime,
                           String state,
-                          String wpsJobId,
+                          String outputDir,
                           String remoteUser,
                           String jobName,
                           String remoteRef,
@@ -58,7 +58,7 @@ public class UsageStatistic {
         this.startTime = startTime;
         this.finishTime = finishTime;
         this.state = state;
-        this.wpsJobId = wpsJobId;
+        this.outputDir = outputDir;
         this.remoteUser = remoteUser;
         this.jobName = jobName;
         this.remoteRef = remoteRef;
@@ -104,8 +104,8 @@ public class UsageStatistic {
         return state;
     }
 
-    public String getWpsJobId() {
-        return wpsJobId;
+    public String getOutputDir() {
+        return outputDir;
     }
 
     public String getRemoteUser() {

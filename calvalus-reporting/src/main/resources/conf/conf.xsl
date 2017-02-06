@@ -22,7 +22,7 @@
                         <xsl:value-of select="value"/>
                     </jobName>
                 </xsl:if>
-                <xsl:if test="name='calvalus.remote.user'">
+                <xsl:if test="name='calvalus.wps.remote.user'">
                     <remoteUser>
                         <xsl:value-of select="value"/>
                     </remoteUser>
@@ -32,10 +32,10 @@
                         <xsl:value-of select="value"/>
                     </remoteRef>
                 </xsl:if>
-                <xsl:if test="name='calvalus.wps.id'">
-                    <wpsJobId>
+                <xsl:if test="name='calvalus.output.dir'">
+                    <outputDir>
                         <xsl:value-of select="value"/>
-                    </wpsJobId>
+                    </outputDir>
                 </xsl:if>
             </xsl:for-each>
         </conf>

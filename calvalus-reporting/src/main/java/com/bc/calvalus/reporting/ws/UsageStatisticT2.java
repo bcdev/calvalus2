@@ -28,30 +28,13 @@ public class UsageStatisticT2 {
         this.accountPlatform = "Brockmann Consult Processing Center";
         this.accountUserName = usageStatistic.getRemoteUser();
         this.accountRef = usageStatistic.getRemoteRef();
-        this.compoundId = usageStatistic.getWpsJobId();
+        this.compoundId = extractCompoundId(usageStatistic.getOutputDir());
         this.compoundName = usageStatistic.getJobName();
         this.compoundType = usageStatistic.getProcessType();
         this.quantity = parseQuantity(usageStatistic);
         this.hostName = "www.brockmann-consult.de";
         this.timeStamp = getFormattedTime(new Date());
         this.status = usageStatistic.getState();
-    }
-
-    private String getFormattedTime(Date date) {
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, new Locale("de", "DE"));
-        long startTime = date.getTime();
-        return df.format(startTime);
-    }
-
-    private List<Quantity> parseQuantity(UsageStatistic usageStatistic) {
-        List<Quantity> quantityList = new ArrayList<>();
-        quantityList.add(new Quantity("CPU_MILLISECONDS", usageStatistic.getCpuMilliseconds()));
-        quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisTotal())); //check with TD if the unit is MB or Bs
-        quantityList.add(new Quantity("BYTE_READ", usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()));
-        quantityList.add(new Quantity("BYTE_WRITTEN", usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()));
-        quantityList.add(new Quantity("PROC_INSTANCE", usageStatistic.getvCoresMillisTotal())); //check with TD if the unit is only the number of instances or for each second (or ms)
-        quantityList.add(new Quantity("NUM_REQ", 1L));
-        return quantityList;
     }
 
     public String getId() {
@@ -96,5 +79,26 @@ public class UsageStatisticT2 {
 
     public String getStatus() {
         return status;
+    }
+
+    private String extractCompoundId(String outputDir) {
+        return outputDir.substring(outputDir.lastIndexOf("/") + 1);
+    }
+
+    private String getFormattedTime(Date date) {
+        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, new Locale("de", "DE"));
+        long startTime = date.getTime();
+        return df.format(startTime);
+    }
+
+    private List<Quantity> parseQuantity(UsageStatistic usageStatistic) {
+        List<Quantity> quantityList = new ArrayList<>();
+        quantityList.add(new Quantity("CPU_MILLISECONDS", usageStatistic.getCpuMilliseconds()));
+        quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisTotal())); //check with TD if the unit is MB or Bs
+        quantityList.add(new Quantity("BYTE_READ", usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()));
+        quantityList.add(new Quantity("BYTE_WRITTEN", usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()));
+        quantityList.add(new Quantity("PROC_INSTANCE", usageStatistic.getvCoresMillisTotal())); //check with TD if the unit is only the number of instances or for each second (or ms)
+        quantityList.add(new Quantity("NUM_REQ", 1L));
+        return quantityList;
     }
 }
