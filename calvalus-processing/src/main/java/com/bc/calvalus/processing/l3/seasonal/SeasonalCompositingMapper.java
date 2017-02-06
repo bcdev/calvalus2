@@ -17,9 +17,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ImageUtils;
 
-import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
@@ -60,11 +58,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final Configuration conf = context.getConfiguration();
         final int mosaicHeight;
         final boolean withMaxNdvi;
+        final boolean withBestPixels;
         try {
             final BinningConfig binningConfig = BinningConfig.fromXml(conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
             mosaicHeight = binningConfig.getNumRows();
             withMaxNdvi = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "ON_MAX_SET".equals(binningConfig.getAggregatorConfigs()[0].getName());
-            LOG.info("compositing by " + (withMaxNdvi ? "maximum NDVI" : "averaging"));
+            withBestPixels = binningConfig.getAggregatorConfigs() != null && binningConfig.getAggregatorConfigs().length > 0 && "PERCENTILE".equals(binningConfig.getAggregatorConfigs()[0].getName());
+            LOG.info("compositing by " + (withMaxNdvi ? "maximum NDVI" : withBestPixels ? "best pixels" : "averaging"));
         } catch (BindingException e) {
             throw new IllegalArgumentException("L3 parameters not well formed: " + e.getMessage() + " in " + conf.get(JobConfigNames.CALVALUS_L3_PARAMETERS));
         }
@@ -145,9 +145,78 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final short[][] bandDataB = new short[numSourceBands][];
         final short[][] bandDataS = new short[numSourceBands][];
         final float[][] bandDataF = new float[numSourceBands][];
+
+        // maybe prepare arrays for ndvi/mndvi for best pixels aggregation
+        float[][] ndviSum = null;
+        float[][] ndviSqrSum = null;
+        int[][] ndviCount = null;
+        float[] ndviMean = null;
+        float[] ndviSdev = null;
+        int[] ndviState = null;
+        if (withBestPixels) {
+            ndviSum = new float[6][microTileSize*microTileSize];
+            ndviSqrSum = new float[6][microTileSize*microTileSize];
+            ndviCount = new int[6][microTileSize*microTileSize];
+            ndviMean = new float[microTileSize*microTileSize];
+            ndviSdev = new float[microTileSize*microTileSize];
+            ndviState = new int[microTileSize*microTileSize];
+        }
+
         for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
             for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
                 final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
+                // count status and average ndvi (or ndwi) for each status separately
+                if (withBestPixels) {
+                    Arrays.fill(ndviSum, 0.0f);
+                    Arrays.fill(ndviSqrSum, 0.0f);
+                    Arrays.fill(ndviCount, 0);
+                    for (MultiLevelImage[] bandImage : bandImages) {
+                        for (int b = 0; b < numSourceBands; b++) {
+                            if (b == 0) {
+                                bandDataB[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                            } else if (b < 6) {
+                                bandDataS[b] = (short[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                            } else {
+                                bandDataF[b] = (float[]) ImageUtils.getPrimitiveArray(bandImage[b].getData(microTileArea).getDataBuffer());
+                            }
+                        }
+                        // pixel loop
+                        for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                            final int state = (int) bandDataB[0][i];
+                            final int index = index(state);
+                            if (index < 0) {
+                                continue;
+                            }
+                            ndviCount[index][i]++;
+                            switch (state) {
+                                case 1:
+                                case 15:
+                                case 12:
+                                case 11:
+                                    float ndvi = bandDataF[numTargetBands - 1 + 3][i];
+                                    ndviSum[index][i] += ndvi;
+                                    ndviSqrSum[index][i] += ndvi * ndvi;
+                                    break;
+                                case 2:
+                                case 3:  // TODO TBC whether to use water index for snow as well
+                                    float ndwi = (bandDataF[numTargetBands - 1][i] - bandDataF[2][i]) / (bandDataF[numTargetBands - 1][i] + bandDataF[2][i]);
+                                    ndviSum[index][i] += ndwi;
+                                    ndviSqrSum[index][i] += ndwi * ndwi;
+                                    break;
+                            }
+                        }
+                    }
+                    // we have counted the different stati over time, and summed up ndvi per status,
+                    // ... determine majority/priority
+                    for (int i = 0; i < microTileSize * microTileSize; ++i) {
+                        int state = majorityPriorityStatusOf(ndviCount, i);
+                        int index = index(state);
+                        ndviState[i] = state;
+                        ndviMean[i] = ndviSum[index][i] / ndviCount[index][i];
+                        ndviSdev[i] = (float) Math.sqrt(ndviSqrSum[index][i] / ndviCount[index][i] - ndviMean[i] * ndviMean[i]);
+                    }
+                    // we have determined the majority/priority status and ndvi mean and sigma for it
+                }
                 for (int b = 0; b < numTargetBands; b++) {
                     Arrays.fill(accu[b], 0.0f);
                 }
@@ -170,7 +239,37 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         if (state <= 0) {
                             continue;
                         }
-                        if (state == accu[0][i]) {
+                        if (withBestPixels) {
+                            if (state == ndviState[i]) {
+                                switch (state) {
+                                    case 1:
+                                    case 15:
+                                    case 12:
+                                    case 11:
+                                        if (bandDataF[numTargetBands - 1 + 3][i] > ndviMean[i] - ndviSdev[i]) {
+                                            final int stateCount = count(state, bandDataS, i);
+                                            accu[1][i] += stateCount;
+                                            accu[2][i] += count(bandDataS, i);
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                        break;
+                                    case 2:
+                                    case 3:  // TODO TBC whether to use water index for snow as well
+                                        float ndwi = (bandDataF[numTargetBands - 1][i] - bandDataF[2][i]) / (bandDataF[numTargetBands - 1][i] + bandDataF[2][i]);
+                                        if (ndwi > ndviMean[i] - ndviSdev[i]) {
+                                            final int stateCount = count(state, bandDataS, i);
+                                            accu[1][i] += stateCount;
+                                            accu[2][i] += count(bandDataS, i);
+                                            for (int b = 3; b < numTargetBands; ++b) {
+                                                accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
+                        } else if (state == accu[0][i]) {
                             // same state as before, aggregate ...
                             final int stateCount = count(state, bandDataS, i);
                             accu[1][i] += stateCount;
@@ -216,12 +315,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 }
 
                 // statistics for logging
-                final int[] counts = new int[6];
+                final int[] counts = new int[16];
                 for (float state : accu[0]) {
                     ++counts[rank(state)];
                 }
-                LOG.info(counts[5] + " land, " + counts[4] + " water, " + counts[3] + " snow, " + counts[2] + " shadow, " + counts[1] + " cloud");
-                if (counts[5] == 0 && counts[4] == 0 && counts[3] == 0 && counts[2] == 0 && counts[1] == 0) {
+                LOG.info((counts[15]+counts[9]+counts[8]) + " land, " + (counts[14]+counts[10]) + " water, " + counts[13] + " snow, " + counts[3] + " shadow, " + (counts[1]+counts[2]) + " cloud");
+                if (counts[15]+counts[9]+counts[8] == 0 && counts[14]+counts[10] == 0 && counts[13] == 0 && counts[3] == 0 && counts[1]+counts[2] == 0) {
                     continue;
                 }
 
@@ -241,6 +340,15 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         for (Product product : products) {
             product.dispose();
         }
+    }
+
+    private int majorityPriorityStatusOf(int[][] ndviCount, int i) {
+        return (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[1][i] && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
+                (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
+                        ndviCount[2][i] > 0 ? 3 :
+                                ndviCount[3][i] > 0 ? 15 :
+                                        ndviCount[4][i] > 0 ? 12 :
+                                                ndviCount[5][i] > 0 ? 11 : 0;
     }
 
     static int sourceBandIndexOf(String sensorAndResolution, int targetBandIndex) {
@@ -340,9 +448,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     static int count(int state, short[][] bandData, int iSrc) {
-        if (state == 1) {
+        if (state == 1 || state == 12 || state == 11) {
             return (int) bandData[1][iSrc];
-        } else if (state == 2) {
+        } else if (state == 2 || state == 15) {
             return (int) bandData[2][iSrc];
         } else if (state == 3) {
             return (int) bandData[3][iSrc];
@@ -359,12 +467,28 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
     static int rank(float state) {
         switch ((int) state) {
-            case 1: return 5;
-            case 2: return 4;
-            case 3: return 3;
-            case 5: return 2;
+            case 1: return 15;
+            case 2: return 14;
+            case 3: return 13;
+            case 15: return 10;  // dark
+            case 12: return 9;  // bright
+            case 11: return 8;  // haze
+            case 5: return 3;  // shadow
+            case 14: return 2;  // temporal cloud
             case 4: return 1;
             default: return 0;
+        }
+    }
+
+    static int index(int state) {
+        switch (state) {
+            case 1: return 0;
+            case 2: return 1;
+            case 3: return 2;
+            case 15: return 3;  // dark
+            case 12: return 4;  // bright
+            case 11: return 5;  // haze
+            default: return -1;
         }
     }
 }
