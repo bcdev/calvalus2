@@ -25,15 +25,12 @@ import java.io.StringWriter;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Properties;
 import java.util.logging.Level;
 
 /**
  * @author muhammad.bc.
  */
 public abstract class Extractor {
-
-    private Properties properties;
 
     public abstract <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException;
 
@@ -70,18 +67,18 @@ public abstract class Extractor {
         return null;
     }
 
-    Reader getReadFromSource(String sourceUrl) {
+    public Reader getReadFromSource(String sourceUrl, ReadFormatType readFormatType) {
         //// todo: 28.12.2017 mba/ for test purpose only
         if (!sourceUrl.contains("master00")) {
             return new StringReader(sourceUrl);
         }
-        ReadHistory readHistory = new ReadHistory(sourceUrl, FormatType.XML);
+        ReadHistory readHistory = new ReadHistory(sourceUrl, readFormatType);
         String rawSource = readHistory.getRawSource();
         return new StringReader(rawSource);
     }
 
-    <T> T extractInfo(String sourceURL, StreamSource xsltSource, Class<T> typeClass) throws JAXBException {
-        Reader reader = getReadFromSource(sourceURL);
+    public <T> T extractInfo(String sourceURL, StreamSource xsltSource, Class<T> typeClass) throws JAXBException {
+        Reader reader = getReadFromSource(sourceURL, ReadFormatType.XML);
         String filterString = getFilterXMLWithXSLT(reader, xsltSource);
         assert filterString != null;
         JAXBContext jaxbContext = JAXBContext.newInstance(typeClass);
@@ -89,7 +86,7 @@ public abstract class Extractor {
         return (T) unmarshaller.unmarshal(new StringReader(filterString));
     }
 
-    String loadXSLTFile(String confXsl) {
+    public String loadXSLTFile(String confXsl) {
         String xsltAsString = null;
         try {
             URL xsltFileUrl = Extractor.class.getClassLoader().getResource(PropertiesWrapper.get("cli.resource.directory") + "/" + confXsl);

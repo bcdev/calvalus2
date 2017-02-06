@@ -41,7 +41,7 @@ public class ReadHistoryTest {
         assertTrue(connect);
         assertEquals(readHistory.getSourceUrl(), logURL);
         assertNotNull(readHistory.getRawSource());
-        assertEquals(readHistory.getFormatType(), FormatType.XML);
+        assertEquals(readHistory.getReadFormatType(), ReadFormatType.XML);
 
         readHistory.close();
     }
@@ -50,13 +50,13 @@ public class ReadHistoryTest {
     @Test
     public void testLogExtractorFormatType() throws Exception {
         String logURL = TestUtils.getJobHistoryURL();
-        readHistory = new ReadHistory(logURL, FormatType.JSON);
+        readHistory = new ReadHistory(logURL, ReadFormatType.JSON);
         boolean connect = readHistory.isConnect();
 
         assertTrue(connect);
         assertEquals(readHistory.getSourceUrl(), logURL);
         assertNotNull(readHistory.getRawSource());
-        assertEquals(readHistory.getFormatType(), FormatType.JSON);
+        assertEquals(readHistory.getReadFormatType(), ReadFormatType.JSON);
         readHistory.close();
     }
 

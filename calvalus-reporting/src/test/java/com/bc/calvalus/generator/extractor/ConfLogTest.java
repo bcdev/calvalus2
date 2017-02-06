@@ -5,6 +5,7 @@ import static com.bc.calvalus.generator.TestConstants.XMLSourceConf;
 import static org.junit.Assert.*;
 
 import com.bc.calvalus.generator.extractor.configuration.Conf;
+import com.bc.calvalus.generator.extractor.configuration.ConfExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
 import org.junit.*;
 

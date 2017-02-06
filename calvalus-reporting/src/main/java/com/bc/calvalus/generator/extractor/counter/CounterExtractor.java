@@ -1,7 +1,8 @@
-package com.bc.calvalus.generator.extractor;
+package com.bc.calvalus.generator.extractor.counter;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
@@ -33,13 +34,11 @@ public class CounterExtractor extends Extractor {
         List<JobType> jobTypes = jobsType.getJob();
 
         int size = jobTypes.size();
-
         if (!(size >= from && from >= 0) && !(size >= to && to >= 0) && (to >= from)) {
             throw new GenerateLogException("The range is out of bound");
         }
         try {
             for (int i = from; i < to; i++) {
-
                 JobType jobType = jobTypes.get(i);
                 String jobTypeId = jobType.getId();
                 CountersType confType = getType(jobTypeId);

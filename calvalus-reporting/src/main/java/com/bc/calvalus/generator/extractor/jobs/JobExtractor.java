@@ -1,10 +1,12 @@
-package com.bc.calvalus.generator.extractor;
+package com.bc.calvalus.generator.extractor.jobs;
 
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.extractor.jobs.JobsType;
+import com.bc.calvalus.generator.extractor.Extractor;
+import com.bc.calvalus.generator.extractor.ReadFormatType;
 import com.bc.wps.utilities.PropertiesWrapper;
+import com.google.gson.Gson;
 import org.apache.commons.lang.NotImplementedException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -22,7 +24,7 @@ public class JobExtractor extends Extractor {
     public JobExtractor() {
         super();
         String urlJobs = PropertiesWrapper.get("calvalus.history.jobs.url");
-        jobsType = getJobDetail(urlJobs);
+        jobsType = getAllPresentJobDetails(urlJobs);
     }
 
     @Override
@@ -44,9 +46,9 @@ public class JobExtractor extends Extractor {
         return jobsType;
     }
 
-    private JobsType getJobDetail(String sourceUrl) {
+    private JobsType getAllPresentJobDetails(String sourceUrl) {
         try {
-            Reader reader = getReadFromSource(sourceUrl);
+            Reader reader = getReadFromSource(sourceUrl, ReadFormatType.XML);
             JAXBContext jaxbContext = JAXBContext.newInstance(JobsType.class);
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             return (JobsType) unmarshaller.unmarshal(reader);
@@ -56,5 +58,9 @@ public class JobExtractor extends Extractor {
         return null;
     }
 
-
+    private JobType getJobDetail(String sourceUrl) {
+        Reader reader = getReadFromSource(sourceUrl, ReadFormatType.JSON);
+        Gson gson = new Gson();
+        return gson.fromJson(reader.toString(), JobType.class);
+    }
 }

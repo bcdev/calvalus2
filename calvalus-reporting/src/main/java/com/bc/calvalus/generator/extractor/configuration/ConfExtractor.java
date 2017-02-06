@@ -1,11 +1,12 @@
-package com.bc.calvalus.generator.extractor;
+package com.bc.calvalus.generator.extractor.configuration;
 
 
 import com.bc.calvalus.generator.GenerateLogException;
-import com.bc.calvalus.generator.extractor.configuration.Conf;
+import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.wps.utilities.PropertiesWrapper;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
@@ -17,12 +18,13 @@ import java.util.List;
  */
 public class ConfExtractor extends Extractor {
     private static final String CONF_XSL = "conf.xsl";
+    private static final String CALVALUS_HISTORY_CONFIGURATION_URL = "calvalus.history.configuration.url";
     private final String urlConf;
     private final String xsltAsString;
 
     public ConfExtractor() {
         super();
-        urlConf = PropertiesWrapper.get("calvalus.history.configuration.url");
+        urlConf = PropertiesWrapper.get(CALVALUS_HISTORY_CONFIGURATION_URL);
         xsltAsString = loadXSLTFile(CONF_XSL);
     }
 
@@ -30,19 +32,12 @@ public class ConfExtractor extends Extractor {
     public <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException {
         HashMap<String, Conf> confTypesHashMap = new HashMap<>();
         List<JobType> jobTypes = jobsType.getJob();
-
-        int size = jobTypes.size();
-
-        if (!(size >= from && from >= 0) || !(size >= to && to >= 0) || !(to >= from)) {
-            throw new GenerateLogException("The range is out of bound");
-        }
-
         try {
             for (int i = from; i < to; i++) {
                 JobType jobType = jobTypes.get(i);
                 String jobTypeId = jobType.getId();
-                Conf confType = getType(jobTypeId);
-                confTypesHashMap.put(jobTypeId, confType);
+                AtomicReference<Conf> confType = new AtomicReference<>(getType(jobTypeId));
+                confTypesHashMap.put(jobTypeId, confType.get());
             }
         } catch (JAXBException e) {
             e.printStackTrace();

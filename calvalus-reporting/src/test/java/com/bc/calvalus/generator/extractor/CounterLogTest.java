@@ -1,5 +1,6 @@
 package com.bc.calvalus.generator.extractor;
 
+import com.bc.calvalus.generator.extractor.counter.CounterExtractor;
 import com.bc.calvalus.generator.extractor.counter.CounterGroupType;
 import com.bc.calvalus.generator.extractor.counter.CountersType;
 import org.junit.Test;

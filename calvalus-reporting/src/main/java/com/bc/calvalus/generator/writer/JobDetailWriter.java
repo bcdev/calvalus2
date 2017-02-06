@@ -4,9 +4,9 @@ package com.bc.calvalus.generator.writer;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.Launcher;
-import com.bc.calvalus.generator.extractor.ConfExtractor;
-import com.bc.calvalus.generator.extractor.CounterExtractor;
-import com.bc.calvalus.generator.extractor.JobExtractor;
+import com.bc.calvalus.generator.extractor.configuration.ConfExtractor;
+import com.bc.calvalus.generator.extractor.counter.CounterExtractor;
+import com.bc.calvalus.generator.extractor.jobs.JobExtractor;
 import com.bc.calvalus.generator.extractor.configuration.Conf;
 import com.bc.calvalus.generator.extractor.counter.CounterGroupType;
 import com.bc.calvalus.generator.extractor.counter.CounterType;
@@ -221,14 +221,12 @@ public class JobDetailWriter {
 
     private HashMap<String, CountersType> createCounterLog(int from, int to) throws GenerateLogException {
         CounterExtractor counterLog = new CounterExtractor();
-        JobsType jobsType = getJobType();
-        return counterLog.extractInfo(from, to, jobsType);
+        return counterLog.extractInfo(from, to, getJobType());
     }
 
     private HashMap<String, Conf> createConfLog(int from, int to) throws GenerateLogException {
         ConfExtractor confLog = new ConfExtractor();
-        JobsType jobsType = getJobType();
-        return confLog.extractInfo(from, to, jobsType);
+        return confLog.extractInfo(from, to, getJobType());
     }
 
     static class GetEOFJobInfo {
@@ -274,6 +272,4 @@ public class JobDetailWriter {
             return jobDetailType.getJobId();
         }
     }
-
-
 }

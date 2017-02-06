@@ -16,7 +16,7 @@ import javax.ws.rs.core.Response;
  * @author muhammad.bc.
  */
 
-public abstract class ReaderHistorySource implements Closeable {
+public abstract class ReadHistoryFromSource implements Closeable {
 
     private static final int MSG_CODE_SUCCESSFUL_START = 200;
     private static final int MSG_CODE_SUCCESSFUL_END = 300;
@@ -24,7 +24,7 @@ public abstract class ReaderHistorySource implements Closeable {
     private boolean isConnected;
     private Invocation.Builder builder;
 
-    ReaderHistorySource(String sourceUrl) {
+    ReadHistoryFromSource(String sourceUrl) {
         clientRequest = ClientBuilder.newClient();
         try {
             builder = sendRequestBuilder(sourceUrl);
@@ -51,8 +51,8 @@ public abstract class ReaderHistorySource implements Closeable {
         return clientRequest.target(sourceUrl).request();
     }
 
-    String readSource(FormatType formatType) {
-        Invocation.Builder accept = builder.accept(formatType.getFormat());
+    String readSource(ReadFormatType readFormatType) {
+        Invocation.Builder accept = builder.accept(readFormatType.getFormat());
         return accept.get(String.class);
     }
 }

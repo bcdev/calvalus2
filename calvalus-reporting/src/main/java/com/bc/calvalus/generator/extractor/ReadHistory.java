@@ -3,29 +3,29 @@ package com.bc.calvalus.generator.extractor;
 /**
  * @author muhammad.bc.
  */
-public class ReadHistory extends ReaderHistorySource {
+public class ReadHistory extends ReadHistoryFromSource {
     private final String sourceUrl;
-    private final FormatType formatType;
+    private final ReadFormatType readFormatType;
 
     public ReadHistory(String sourceUrl) {
-        this(sourceUrl, FormatType.XML);
+        this(sourceUrl, ReadFormatType.XML);
     }
 
-    public ReadHistory(String sourceUrl, FormatType formatType) {
+    public ReadHistory(String sourceUrl, ReadFormatType readFormatType) {
         super(sourceUrl);
         this.sourceUrl = sourceUrl;
-        this.formatType = formatType;
+        this.readFormatType = readFormatType;
     }
 
     public String getSourceUrl() {
         return sourceUrl;
     }
 
-    public FormatType getFormatType() {
-        return formatType;
+    public ReadFormatType getReadFormatType() {
+        return readFormatType;
     }
 
     public String getRawSource() {
-        return readSource(formatType);
+        return readSource(readFormatType);
     }
 }
