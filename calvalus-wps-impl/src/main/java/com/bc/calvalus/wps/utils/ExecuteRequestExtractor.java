@@ -38,7 +38,6 @@ public class ExecuteRequestExtractor {
     public ExecuteRequestExtractor(Execute execute)
                 throws JAXBException, MissingParameterValueException, InvalidParameterValueException {
         inputParametersMapRaw = new HashMap<>();
-        inputParametersMapRaw.put("calvalus.wps.id", execute.getIdentifier().getValue());
         extractInputParameters(execute);
     }
 

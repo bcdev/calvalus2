@@ -55,8 +55,12 @@ public class CalvalusDataInputs {
         extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
-        this.inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
-        this.inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
+        if(requestHeaderMap.get("remoteUser") != null){
+            this.inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
+        }
+        if(requestHeaderMap.get("remoteRef") != null){
+            this.inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
+        }
         this.inputMapFormatted.put("quicklooks", "true");
     }
 
