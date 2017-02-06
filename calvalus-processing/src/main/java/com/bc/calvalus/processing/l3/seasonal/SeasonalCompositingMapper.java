@@ -115,6 +115,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 sourceBandIndex[numSourceBands++] = sourceBandIndexOf(sensorAndResolution, j);
             }
         }
+        final int b3BandIndex = 6 - 1 + 3;   // TODO only valid for S2
+        final int b11BandIndex = 6 - 1 + 10;   // TODO only valid for S2
+        final int ndviBandIndex = numSourceBands - 1;
 
         // initialise aggregation variables array, status, statusCount, count, bands 1-10,12-14, ndvi
         final List<MultiLevelImage[]> bandImages = new ArrayList<>();
@@ -152,24 +155,27 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         int[][] ndviCount = null;
         float[] ndviMean = null;
         float[] ndviSdev = null;
-        int[] ndviState = null;
         if (withBestPixels) {
             ndviSum = new float[6][microTileSize*microTileSize];
             ndviSqrSum = new float[6][microTileSize*microTileSize];
             ndviCount = new int[6][microTileSize*microTileSize];
             ndviMean = new float[microTileSize*microTileSize];
             ndviSdev = new float[microTileSize*microTileSize];
-            ndviState = new int[microTileSize*microTileSize];
         }
 
         for (int microTileY = 0; microTileY < numMicroTiles; ++microTileY) {
             for (int microTileX = 0; microTileX < numMicroTiles; ++microTileX) {
                 final Rectangle microTileArea = new Rectangle(microTileX * microTileSize, microTileY * microTileSize, microTileSize, microTileSize);
+                for (int b = 0; b < numTargetBands; b++) {
+                    Arrays.fill(accu[b], 0.0f);
+                }
                 // count status and average ndvi (or ndwi) for each status separately
                 if (withBestPixels) {
-                    Arrays.fill(ndviSum, 0.0f);
-                    Arrays.fill(ndviSqrSum, 0.0f);
-                    Arrays.fill(ndviCount, 0);
+                    for (int i=0; i<6; ++i) {
+                        Arrays.fill(ndviSum[i], 0.0f);
+                        Arrays.fill(ndviSqrSum[i], 0.0f);
+                        Arrays.fill(ndviCount[i], 0);
+                    }
                     for (MultiLevelImage[] bandImage : bandImages) {
                         for (int b = 0; b < numSourceBands; b++) {
                             if (b == 0) {
@@ -193,13 +199,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                 case 15:
                                 case 12:
                                 case 11:
-                                    float ndvi = bandDataF[numTargetBands - 1 + 3][i];
+                                    float ndvi = bandDataF[ndviBandIndex][i];
                                     ndviSum[index][i] += ndvi;
                                     ndviSqrSum[index][i] += ndvi * ndvi;
                                     break;
                                 case 2:
                                 case 3:  // TODO TBC whether to use water index for snow as well
-                                    float ndwi = (bandDataF[numTargetBands - 1][i] - bandDataF[2][i]) / (bandDataF[numTargetBands - 1][i] + bandDataF[2][i]);
+                                    float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
                                     ndviSum[index][i] += ndwi;
                                     ndviSqrSum[index][i] += ndwi * ndwi;
                                     break;
@@ -211,14 +217,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                     for (int i = 0; i < microTileSize * microTileSize; ++i) {
                         int state = majorityPriorityStatusOf(ndviCount, i);
                         int index = index(state);
-                        ndviState[i] = state;
+                        if (index < 0) { continue; }
+                        accu[0][i] = state;
                         ndviMean[i] = ndviSum[index][i] / ndviCount[index][i];
                         ndviSdev[i] = (float) Math.sqrt(ndviSqrSum[index][i] / ndviCount[index][i] - ndviMean[i] * ndviMean[i]);
                     }
                     // we have determined the majority/priority status and ndvi mean and sigma for it
-                }
-                for (int b = 0; b < numTargetBands; b++) {
-                    Arrays.fill(accu[b], 0.0f);
                 }
                 for (MultiLevelImage[] bandImage : bandImages) {
                     for (int b = 0; b < numSourceBands; b++) {
@@ -240,13 +244,13 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             continue;
                         }
                         if (withBestPixels) {
-                            if (state == ndviState[i]) {
+                            if (state == accu[0][i]) {
                                 switch (state) {
                                     case 1:
                                     case 15:
                                     case 12:
                                     case 11:
-                                        if (bandDataF[numTargetBands - 1 + 3][i] > ndviMean[i] - ndviSdev[i]) {
+                                        if (bandDataF[ndviBandIndex][i] > ndviMean[i] - ndviSdev[i]) {
                                             final int stateCount = count(state, bandDataS, i);
                                             accu[1][i] += stateCount;
                                             accu[2][i] += count(bandDataS, i);
@@ -257,7 +261,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                         break;
                                     case 2:
                                     case 3:  // TODO TBC whether to use water index for snow as well
-                                        float ndwi = (bandDataF[numTargetBands - 1][i] - bandDataF[2][i]) / (bandDataF[numTargetBands - 1][i] + bandDataF[2][i]);
+                                        float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
                                         if (ndwi > ndviMean[i] - ndviSdev[i]) {
                                             final int stateCount = count(state, bandDataS, i);
                                             accu[1][i] += stateCount;
@@ -275,7 +279,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             accu[1][i] += stateCount;
                             accu[2][i] += count(bandDataS, i);
                             if (withMaxNdvi) {
-                                if (bandDataF[numTargetBands - 1 + 3][i] > accu[numTargetBands - 1][i]) {
+                                if (bandDataF[ndviBandIndex][i] > accu[numTargetBands - 1][i]) {
                                     for (int b = 3; b < numTargetBands; ++b) {
                                         accu[b][i] = bandDataF[b + 3][i];
                                     }
