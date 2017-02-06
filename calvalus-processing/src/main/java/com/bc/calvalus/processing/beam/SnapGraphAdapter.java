@@ -67,6 +67,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.TimeZone;
 import java.util.logging.Logger;
@@ -298,7 +299,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     @Override
     public Product openProcessedProduct() {
-        return targetProduct;
+        return targetProduct != null ? targetProduct : graphContext.getOutputProducts().length > 0 ? graphContext.getOutputProducts()[0] : null;
     }
 
     @Override
@@ -592,6 +593,17 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 domElement.addContent(convertMetadataToDOM(element));
             }
             return domElement;
+        }
+
+        public String configToString(Configuration jobConfig) {
+            StringBuilder accu = new StringBuilder();
+            for (Map.Entry<String,String> entry : jobConfig) {
+                accu.append(entry.getKey());
+                accu.append("=");
+                accu.append(xmlEncode(entry.getValue()));
+                accu.append("\n");
+            }
+            return accu.toString();
         }
     }
 

@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.hadoop.HDFSSimpleFileSystem;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.ceres.core.ProgressMonitor;
@@ -154,12 +155,12 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 String targetBaseName = FileUtils.getFilenameWithoutExtension(targetFile);
                 vcx.put("targetBaseName", targetBaseName);
                 vcx.put("targetName", targetFile.getName());
-                vcx.put("targetSize", String.format("%.1f", targetProduct.getRawStorageSize() / (1024.0f * 1024.0f)));
+                vcx.put("targetSize", String.format("%.1f", targetProduct != null ? targetProduct.getRawStorageSize() / (1024.0f * 1024.0f) : 0.0));
 
                 vcx.put("configuration", jobConfig);
                 vcx.put("sourceProduct", sourceProduct);
                 vcx.put("targetProduct", targetProduct);
-                GeoCoding geoCoding = targetProduct.getSceneGeoCoding();
+                GeoCoding geoCoding = targetProduct != null ? targetProduct.getSceneGeoCoding() : null;
                 if (geoCoding != null) {
                     CoordinateReferenceSystem mapCRS = geoCoding.getMapCRS();
                     try {
@@ -199,7 +200,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 }
 
 
-                Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct);
+                Geometry geometry = FeatureUtils.createGeoBoundaryPolygon(targetProduct != null ? targetProduct : sourceProduct);
                 String wkt = new WKTWriter().write(geometry);
                 String gml = getGML(geometry);
                 Envelope envelope = geometry.getEnvelopeInternal();
@@ -207,6 +208,7 @@ public class L2Mapper extends Mapper<NullWritable, NullWritable, Text /*N1 input
                 vcx.put("targetProductWKT", wkt);
                 vcx.put("targetProductGML", gml);
                 vcx.put("targetProductEnvelope", envelope);
+                vcx.put("GlobalFunctions", new SnapGraphAdapter.GlobalFunctions(LOG));
 
                 metadataResourceEngine.readRelatedResource("source", sourcePath);
 
