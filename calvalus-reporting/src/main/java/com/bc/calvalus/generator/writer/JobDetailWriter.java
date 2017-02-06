@@ -68,7 +68,7 @@ public class JobDetailWriter {
         }
     }
 
-    public void flushToFile(List<JobDetailType> jobDetailTypeList, File outputFile) {
+    void flushToFile(List<JobDetailType> jobDetailTypeList, File outputFile) {
         try (
                 FileWriter fileWriter = new FileWriter(outputFile, true);
                 BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)
@@ -82,14 +82,13 @@ public class JobDetailWriter {
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage());
         }
+        logger.log(Level.INFO, String.format("Flush all cache job details to %s", outputFile.toString()));
     }
 
     public static void stop() {
         Thread thread = Thread.currentThread();
-        if (thread != null) {
-            Launcher.terminate = true;
-            thread.interrupt();
-        }
+        Launcher.terminate = true;
+        thread.interrupt();
     }
 
     private void write(int from, int to) throws JAXBException, GenerateLogException {
@@ -122,9 +121,11 @@ public class JobDetailWriter {
     }
 
     private void write_(int from, int to) throws GenerateLogException {
+        logger.log(Level.INFO, "Start extracting configuration and counter history from hadoop web service.");
         HashMap<String, Conf> confLog = createConfLog(from, to);
         HashMap<String, CountersType> counterLog = createCounterLog(from, to);
-        write(confLog, counterLog);
+        List<JobType> jobTypeList = getJobType().getJob();
+        write(confLog, counterLog, jobTypeList);
     }
 
     private JobsType getJobType() {
@@ -143,17 +144,16 @@ public class JobDetailWriter {
         return file;
     }
 
-    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo) throws GenerateLogException {
-        List<JobType> jobTypeList = getJobType().getJob();
+    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo, List<JobType> jobTypeList) throws GenerateLogException {
         if (confInfo.size() != counterInfo.size()) {
             throw new GenerateLogException("The size of the configuration and counter history have different size");
         }
         for (JobType jobType : jobTypeList) {
             String jobId = jobType.getId();
-
             Conf conf = confInfo.get(jobId);
             CountersType countersType = counterInfo.get(jobId);
             if (conf != null && countersType != null) {
+                logger.log(Level.INFO, String.format("Writing %s job detail to cache memory", jobId));
                 addJobDetails(conf, countersType, jobType);
             }
         }
@@ -234,7 +234,7 @@ public class JobDetailWriter {
     static class GetEOFJobInfo {
         private String lastJobID;
 
-        public GetEOFJobInfo(File saveLocation) {
+        GetEOFJobInfo(File saveLocation) {
             try {
                 lastJobID = getLastJobId(saveLocation);
             } catch (IOException | JsonSyntaxException e) {
@@ -250,13 +250,13 @@ public class JobDetailWriter {
         }
 
 
-        public String getLastJobID() {
+        String getLastJobID() {
             return lastJobID;
         }
 
         private String getLastJobId(File saveLocation) throws IOException, JsonSyntaxException {
             String lastLine = null;
-            JobDetailType jobDetailType = null;
+            JobDetailType jobDetailType;
             try (
                     FileReader fileReader = new FileReader(saveLocation);
                     BufferedReader bufferedReader = new BufferedReader(fileReader)

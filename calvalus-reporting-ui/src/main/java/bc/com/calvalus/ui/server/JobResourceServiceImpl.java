@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -27,12 +28,16 @@ import javax.ws.rs.core.Response;
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
     private static final Client client = ClientBuilder.newClient();
     public static final String STATUS_FAILED = "\"Status\": \"Failed\"";
+    public static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
+    public static final int HTTP_SUCCESSFULL_START = 200;
+    public static final int HTTP_SUCCESSFULL_END = 300;
+    public static final int MAGE_UNIT = 1024;
 
 
     @Override
     public List<String> getAllUserName() {
         List<String> nameList = new ArrayList<>();
-        String jsonUser = clientRequest("http://urbantep-test:9080/calvalus-reporting/reporting/all/users", MediaType.APPLICATION_JSON);
+        String jsonUser = clientRequest(CALVALUS_REPORTING_WS_URL.concat("/all/users"), MediaType.APPLICATION_JSON);
         if (jsonUser == null) {
             return null;
         }
@@ -60,9 +65,15 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         return null;
     }
 
+    @Override
+    public List<UserInfo> getAllUserTodaySummary() {
+        Instant now = Instant.now();
+        return getAllUserUsageSummaryBetween(now.toString(), now.toString());
+    }
+
 
     private List<UserInfo> getUserUsageSummary(String name, String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format("http://urbantep-test:9080/calvalus-reporting/reporting/%s/range/%s/%s", name, startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/%s/range/%s/%s"), name, startDate, endDate), MediaType.TEXT_PLAIN);
         if (jsonUser.contains(STATUS_FAILED)) {
             return null;
         }
@@ -72,12 +83,12 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private List<UserInfo> getUserUsageSummary(String userName) {
-        String jsonUser = clientRequest(String.format("http://urbantep-test:9080/calvalus-reporting/reporting/%s", userName), MediaType.APPLICATION_JSON);
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/%s"), userName), MediaType.APPLICATION_JSON);
         return getGsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllUserUsageSummaryBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format("http://urbantep-test:9080/calvalus-reporting/reporting/range/%s/%s", startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return getGsonToUserInfo(jsonUser);
     }
 
@@ -85,7 +96,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String endOfDay = LocalDate.now().atStartOfDay().format(formatter);
         String startDate = LocalDate.now().atStartOfDay().minusMonths(1).format(formatter);
-        String format = String.format("http://urbantep-test:9080/calvalus-reporting/reporting/range/%s/%s", startDate, endOfDay);
+        String format = String.format(CALVALUS_REPORTING_WS_URL.concat("/range/%s/%s"), startDate, endOfDay);
         String jsonUser = clientRequest(format, MediaType.TEXT_PLAIN);
         return getGsonToUserInfo(jsonUser);
     }
@@ -109,12 +120,12 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     private UserInfo convertUnits(UserInfo p) {
         return new UserInfo(p.getUser(),
-                            p.getJobsProcessed(),
-                            convertMBToGB(p.getTotalFileReadingMb()),
-                            convertMBToGB(p.getTotalFileWritingMb()),
-                            convertMBToGB(p.getTotalMemoryUsedMbs()),
-                            p.getTotalCpuTimeSpent(),
-                            p.getTotalMaps());
+                p.getJobsProcessed(),
+                convertMBToGB(p.getTotalFileReadingMb()),
+                convertMBToGB(p.getTotalFileWritingMb()),
+                convertMBToGB(p.getTotalMemoryUsedMbs()),
+                p.getTotalCpuTimeSpent(),
+                p.getTotalMaps());
     }
 
     private String convertMBToGB(String totalFileReadingMb) {
@@ -122,20 +133,30 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         try {
             NumberFormat instance = DecimalFormat.getInstance();
             parse = instance.parse(totalFileReadingMb);
-
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return String.format("%.4f", parse.doubleValue() / (1024));
+        return formatSize(parse.longValue());
+    }
+
+    public String formatSize(long i) {
+        double pow = Math.pow(MAGE_UNIT, 2);
+        if (i <= pow) {
+            return String.format("%.4f GBs", (i / 1024d));
+        } else {
+            return String.format("%.4f TBs", (i / pow));
+        }
     }
 
     private static String clientRequest(String uri, String textPlain) {
         Invocation.Builder builder = client.target(uri).request();
         Response response = builder.accept(textPlain).get();
         int status = response.getStatus();
-        if (status >= 200 && status < 300) {
+        if (status >= HTTP_SUCCESSFULL_START && status < HTTP_SUCCESSFULL_END) {
             return builder.get(String.class);
         }
         return null;
     }
+
+
 }

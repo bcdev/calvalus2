@@ -14,4 +14,6 @@ public interface JobResourcesService extends RemoteService {
     List<String> getAllUserName();
 
     List<UserInfo> getAllUserSummary(String userName, String startDate, String endDate);
+
+    List<UserInfo> getAllUserTodaySummary();
 }

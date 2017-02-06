@@ -16,9 +16,6 @@ public class ReportUI implements EntryPoint {
     private static JobTableView<UserInfo> infoReportTable = new JobTableView<>();
     private SearchPanel searchPanel;
 
-    public ReportUI() {
-    }
-
     @Override
     public void onModuleLoad() {
 
@@ -55,8 +52,20 @@ public class ReportUI implements EntryPoint {
                 infoReportTable.setDataList(result);
             }
         });
-
     }
 
+    static void searchRecordToday() {
+        resourcesServiceAsync.getAllUserTodaySummary(new AsyncCallback<List<UserInfo>>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+            }
+
+            @Override
+            public void onSuccess(List<UserInfo> userInfos) {
+                infoReportTable.setDataList(userInfos);
+            }
+        });
+    }
 
 }

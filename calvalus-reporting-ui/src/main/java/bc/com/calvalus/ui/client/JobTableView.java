@@ -104,7 +104,6 @@ public class JobTableView<T> extends Composite {
         dataGrid.addColumn(userName, "User Name");
         dataGrid.setColumnWidth(userName, 10, Style.Unit.EM);
 
-
         // ### jobsProcessed
         Column<T, String> jobsProcessed = new Column<T, String>(new TextCell()) {
             @Override
@@ -115,7 +114,6 @@ public class JobTableView<T> extends Composite {
         dataGrid.addColumn(jobsProcessed, "Jobs Processed");
         dataGrid.setColumnWidth(jobsProcessed, 20, Style.Unit.PCT);
 
-
         // ### totalFileReadingMb
         Column<T, String> totalFileReadingMb = new Column<T, String>(new TextCell()) {
             @Override
@@ -123,7 +121,7 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalFileReadingMb();
             }
         };
-        dataGrid.addColumn(totalFileReadingMb, "Total File Read GB");
+        dataGrid.addColumn(totalFileReadingMb, "Total File Read GBs");
         dataGrid.setColumnWidth(totalFileReadingMb, 20, Style.Unit.PCT);
 
         // ### totalFileWritingMb
@@ -133,7 +131,7 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalFileWritingMb();
             }
         };
-        dataGrid.addColumn(totalFileWritingMb, "Total File Write GB");
+        dataGrid.addColumn(totalFileWritingMb, "Total File Write GBs");
         dataGrid.setColumnWidth(totalFileWritingMb, 20, Style.Unit.PCT);
 
         // ### totalMemoryUsedMbs
@@ -143,9 +141,8 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalMemoryUsedMbs();
             }
         };
-        dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used GB");
+        dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used");
         dataGrid.setColumnWidth(totalMemoryUsedMbs, 20, Style.Unit.PCT);
-
 
         // #### totalCpuTimeSpent
         Column<T, String> totalCpuTimeSpent = new Column<T, String>(new TextCell()) {
@@ -171,14 +168,11 @@ public class JobTableView<T> extends Composite {
     public DialogBox getShowDialog(UserInfo userInfo) {
         DialogBox dialogBox = new DialogBox();
         dialogBox.setAnimationEnabled(true);
-
-
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
         dialogBox.setWidget(verticalPanel);
         dialogBox.center();
         dialogBox.hide();
-
         return dialogBox;
     }
 }

@@ -9,7 +9,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -27,7 +28,6 @@ import org.jetbrains.annotations.NotNull;
 public class JSONExtractor {
 
     private static final String INIT_FIRST_DAY = "01";
-
 
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
@@ -56,8 +56,8 @@ public class JSONExtractor {
         String reportingJsonString = extractJsonString(inputStream);
         Gson gson = new Gson();
         return gson.fromJson(reportingJsonString,
-                             new TypeToken<List<UsageStatistic>>() {
-                             }.getType());
+                new TypeToken<List<UsageStatistic>>() {
+                }.getType());
     }
 
     public Map<String, List<UsageStatistic>> getAllUserStatistic() throws IOException {
@@ -121,14 +121,14 @@ public class JSONExtractor {
         extractUserDate.put(user, userStatisticInYear);
         List<UsageStatistic> allStatistics = getAllStatistics();
         allStatistics.forEach(usage ->
-                                      extractUserDate.computeIfPresent(usage.getUser(), (s, usageStatistics) -> {
-                                          FilterUserTimeInterval filterUserTimeInterval =
-                                                  new FilterUserTimeInterval(usage.getFinishTime(), yr, mnth, dy);
-                                          if (intervalPredicate.test(filterUserTimeInterval)) {
-                                              userStatisticInYear.add(usage);
-                                          }
-                                          return userStatisticInYear;
-                                      })
+                extractUserDate.computeIfPresent(usage.getUser(), (s, usageStatistics) -> {
+                    FilterUserTimeInterval filterUserTimeInterval =
+                            new FilterUserTimeInterval(usage.getFinishTime(), yr, mnth, dy);
+                    if (intervalPredicate.test(filterUserTimeInterval)) {
+                        userStatisticInYear.add(usage);
+                    }
+                    return userStatisticInYear;
+                })
         );
         return userStatisticInYear;
     }
@@ -139,8 +139,9 @@ public class JSONExtractor {
         return new Predicate<Long>() {
             @Override
             public boolean test(Long aLong) {
-                Instant start = LocalDate.parse(startDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
-                Instant end = LocalDate.parse(endDate).atStartOfDay(ZoneId.systemDefault()).toInstant();
+                Instant end = LocalDate.parse(startDate).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
+                Instant start = LocalDate.parse(endDate).atStartOfDay().toInstant(ZoneOffset.UTC);
+
                 Instant instant = new Date(aLong).toInstant();
                 if (instant.isAfter(start) && instant.isBefore(end)) {
                     return true;

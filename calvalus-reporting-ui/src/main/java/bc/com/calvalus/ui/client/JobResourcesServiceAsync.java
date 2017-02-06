@@ -9,4 +9,6 @@ public interface JobResourcesServiceAsync {
     void getAllUserSummary(String userName, String startDate, String endDate, AsyncCallback<List<UserInfo>> async);
 
     void getAllUserName(AsyncCallback<List<String>> async);
+
+    void getAllUserTodaySummary(AsyncCallback<List<UserInfo>> async);
 }
