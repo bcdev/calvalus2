@@ -27,6 +27,7 @@ import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.velocity.VelocityContext;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.MetadataAttribute;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -585,9 +586,8 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
         public Element convertMetadataToDOM(MetadataElement metadataElement) {
             final Element domElement = new Element(metadataElement.getName());
-            for (String attributeName : metadataElement.getAttributeNames()) {
-                String attributeString = metadataElement.getAttributeString(attributeName);
-                domElement.addContent(new Element(attributeName).setText(attributeString));
+            for (MetadataAttribute attribute : metadataElement.getAttributes()) {
+                domElement.addContent(new Element(attribute.getName()).setText(attribute.getData().getElemString()));
             }
             for (MetadataElement element : metadataElement.getElements()) {
                 domElement.addContent(convertMetadataToDOM(element));
@@ -600,7 +600,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             for (Map.Entry<String,String> entry : jobConfig) {
                 accu.append(entry.getKey());
                 accu.append("=");
-                accu.append(xmlEncode(entry.getValue()));
+                accu.append(xmlEncode(entry.getValue()).replaceAll("\n", " "));
                 accu.append("\n");
             }
             return accu.toString();
