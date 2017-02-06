@@ -9,15 +9,15 @@ import org.junit.*;
 /**
  * @author hans
  */
-public class ProcessorNameParserTest {
+public class ProcessorNameConverterTest {
 
-    private ProcessorNameParser parser;
+    private ProcessorNameConverter parser;
 
     @Test
     public void testParseValidIdentifier() throws Exception {
         String identifier = "beam-idepix~2.0.9~Idepix.Water";
 
-        parser = new ProcessorNameParser(identifier);
+        parser = new ProcessorNameConverter(identifier);
 
         assertThat(parser.getBundleName(), equalTo("beam-idepix"));
         assertThat(parser.getBundleVersion(), equalTo("2.0.9"));
@@ -28,33 +28,39 @@ public class ProcessorNameParserTest {
     public void testParseIdentifierWithNoDelimiter() throws Exception {
         String identifier = "beam-idepix2.0.9Idepix.Water";
 
-        parser = new ProcessorNameParser(identifier);
+        parser = new ProcessorNameConverter(identifier);
     }
 
     @Test(expected = InvalidProcessorIdException.class)
     public void testParseIdentifierWithInvalidDelimiter() throws Exception {
         String identifier = "beam-idepix_2.0.9_Idepix.Water";
 
-        parser = new ProcessorNameParser(identifier);
+        parser = new ProcessorNameConverter(identifier);
     }
 
     @Test(expected = InvalidProcessorIdException.class)
     public void testParseIdentifierWithMissingProcessorName() throws Exception {
         String identifier = "beam-idepix~2.0.9";
 
-        parser = new ProcessorNameParser(identifier);
+        parser = new ProcessorNameConverter(identifier);
     }
 
     @Test(expected = InvalidProcessorIdException.class)
     public void testParseEmptyIdentifier() throws Exception {
         String identifier = "";
 
-        parser = new ProcessorNameParser(identifier);
+        parser = new ProcessorNameConverter(identifier);
     }
 
     @Test(expected = InvalidProcessorIdException.class)
     public void testParseNullIdentifier() throws Exception {
-        parser = new ProcessorNameParser(null);
+        parser = new ProcessorNameConverter(null);
     }
 
+    @Test
+    public void testConstructProcessorIdentifier() throws Exception {
+        parser = new ProcessorNameConverter("DummyBundle", "0.0.1", "DummyExecutableName");
+
+        assertThat(parser.getProcessorIdentifier(), equalTo("DummyBundle~0.0.1~DummyExecutableName"));
+    }
 }

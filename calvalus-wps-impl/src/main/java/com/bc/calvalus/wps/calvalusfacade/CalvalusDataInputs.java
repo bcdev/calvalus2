@@ -15,19 +15,16 @@ import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.wps.api.exceptions.InvalidParameterValueException;
-import com.bc.wps.utilities.WpsLogger;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.esa.snap.core.datamodel.ProductData;
 
-import java.text.DateFormat;
-import java.util.Arrays;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * This class transform the input parameters map into a format recognized by Calvalus Production Request.
@@ -36,25 +33,35 @@ import java.util.logging.Logger;
  */
 public class CalvalusDataInputs {
 
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
-    public static final int MIN_DATE = 0;
-    public static final long MAX_DATE = 4133894400000L;
+    public static final long MIN_DATE = 1451606400000L;
+    public static final long MAX_DATE = 1483228800000L;
 
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
 
-    public CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor, CalvalusProcessor calvalusProcessor, ProductSet[] productSets) throws InvalidParameterValueException {
+    CalvalusDataInputs(ExecuteRequestExtractor executeRequestExtractor,
+                       WpsProcess calvalusProcessor,
+                       ProductSet[] productSets,
+                       Map<String, String> requestHeaderMap)
+                throws InvalidParameterValueException {
         this.inputMapFormatted = new HashMap<>();
         this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
         if (calvalusProcessor != null) {
-            extractProductionInfoParameters(calvalusProcessor);
-            extractProcessorInfoParameters(calvalusProcessor);
-            transformProcessorParameters(calvalusProcessor);
+            extractProductionInfoParameters((CalvalusProcessor) calvalusProcessor);
+            extractProcessorInfoParameters((CalvalusProcessor) calvalusProcessor);
+            transformProcessorParameters((CalvalusProcessor) calvalusProcessor);
         }
-        extractProductSetParameters(productSets, calvalusProcessor);
+        extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         extractL3Parameters();
         this.inputMapFormatted.put("autoStaging", "true");
+        if(requestHeaderMap.get("remoteUser") != null){
+            this.inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
+        }
+        if(requestHeaderMap.get("remoteRef") != null){
+            this.inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
+        }
+        this.inputMapFormatted.put("quicklooks", "true");
     }
 
     /**
@@ -73,7 +80,7 @@ public class CalvalusDataInputs {
      *
      * @return A Map object that consists of key value pair of the input data.
      */
-    public Map<String, String> getInputMapFormatted() {
+    Map<String, String> getInputMapFormatted() {
         return inputMapFormatted;
     }
 
@@ -130,17 +137,24 @@ public class CalvalusDataInputs {
     }
 
     private void putDates(ProductSet productSet) {
-        Date minDate = productSet.getMinDate() == null ? new Date(MIN_DATE) : productSet.getMinDate();
-        Date maxDate = productSet.getMaxDate() == null ? new Date(MAX_DATE) : productSet.getMaxDate();
-        inputMapFormatted.putIfAbsent("minDateSource", DATE_FORMAT.format(minDate));
-        inputMapFormatted.putIfAbsent("maxDateSource", DATE_FORMAT.format(maxDate));
+        ZonedDateTime defaultMinDate = ZonedDateTime.ofInstant(new Date(MIN_DATE).toInstant(), ZoneId.systemDefault());
+        ZonedDateTime defaultMaxDate = ZonedDateTime.ofInstant(new Date(MAX_DATE).toInstant(), ZoneId.systemDefault());
+        ZonedDateTime minDate = productSet.getMinDate() == null ? defaultMinDate : ZonedDateTime.ofInstant(productSet.getMinDate().toInstant(), ZoneId.systemDefault());
+        ZonedDateTime maxDate = productSet.getMaxDate() == null ? defaultMaxDate : ZonedDateTime.ofInstant(productSet.getMaxDate().toInstant(), ZoneId.systemDefault());
+        inputMapFormatted.putIfAbsent("minDateSource", minDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        inputMapFormatted.putIfAbsent("maxDateSource", maxDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
     }
 
     private void putProductPath(ProductSet productSet) {
         if (StringUtils.isNotBlank(productSet.getGeoInventory())) {
             inputMapFormatted.put(INPUT_DATASET_GEODB.getIdentifier(), productSet.getGeoInventory());
         } else {
-            inputMapFormatted.put("inputPath", "/calvalus/" + productSet.getPath());
+            StringBuilder inputPathStringBuilder = new StringBuilder();
+            for (String productSetPath : productSet.getPath().split(",")) {
+                inputPathStringBuilder.append("/calvalus/").append(productSetPath).append(",");
+            }
+            String inputPathString = inputPathStringBuilder.substring(0, inputPathStringBuilder.length() - 1);
+            inputMapFormatted.put("inputPath", inputPathString);
         }
     }
 

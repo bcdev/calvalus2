@@ -7,14 +7,23 @@ import org.apache.commons.lang.StringUtils;
 /**
  * @author hans
  */
-public class ProcessorNameParser {
+public class ProcessorNameConverter {
 
     private String bundleName;
     private String bundleVersion;
     private String executableName;
+    private String processorIdentifier;
 
-    public ProcessorNameParser(String processorIdentifier) throws InvalidProcessorIdException {
-        parse(processorIdentifier);
+    public ProcessorNameConverter(String processorIdentifier) throws InvalidProcessorIdException {
+        this.processorIdentifier = processorIdentifier;
+        parseProcessorId();
+    }
+
+    public ProcessorNameConverter(String bundleName, String bundleVersion, String executableName){
+        this.bundleName = bundleName;
+        this.bundleVersion = bundleVersion;
+        this.executableName = executableName;
+        constructProcessorId();
     }
 
     public String getBundleName() {
@@ -29,7 +38,11 @@ public class ProcessorNameParser {
         return executableName;
     }
 
-    private void parse(String processorIdentifier) throws InvalidProcessorIdException {
+    public String getProcessorIdentifier() {
+        return processorIdentifier;
+    }
+
+    private void parseProcessorId() throws InvalidProcessorIdException {
         if (!StringUtils.isBlank(processorIdentifier)) {
             String parsedString[] = processorIdentifier.split(CalvalusProcessor.DELIMITER);
             if (parsedString.length < 3) {
@@ -41,5 +54,9 @@ public class ProcessorNameParser {
         } else {
             throw new InvalidProcessorIdException(processorIdentifier);
         }
+    }
+
+    private void constructProcessorId(){
+        this.processorIdentifier = bundleName.concat("~").concat(bundleVersion).concat("~").concat(executableName);
     }
 }

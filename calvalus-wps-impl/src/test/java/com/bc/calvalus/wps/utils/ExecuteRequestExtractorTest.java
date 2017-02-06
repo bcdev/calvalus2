@@ -92,6 +92,118 @@ public class ExecuteRequestExtractorTest {
     }
 
     @Test
+    public void canGetParameterMapTimeScanProcess() throws Exception {
+        String executeRequestString = getExecuteStringTimeScanProcess();
+        InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
+        Execute execute = (Execute) JaxbHelper.unmarshal(requestInputStream, new ObjectFactory());
+
+        requestExtractor = new ExecuteRequestExtractor(execute);
+
+        Map<String, String> parameterMap = requestExtractor.getInputParametersMapRaw();
+
+        assertThat(parameterMap.get("calvalus.l3.parameters"), equalTo("<parameters>\n" +
+                                                                       "<planetaryGrid>org.esa.snap.binning.support.PlateCarreeGrid</planetaryGrid>\n" +
+                                                                       "<numRows>972000</numRows>\n" +
+                                                                       "<compositingType>MOSAICKING</compositingType>\n" +
+                                                                       "<superSampling>1</superSampling>\n" +
+                                                                       "<maskExpr>! lc_invalid and ! lc_cloud</maskExpr>\n" +
+                                                                       "<variables>\n" +
+                                                                       "<variable>\n" +
+                                                                       "<name>ndbi</name>\n" +
+                                                                       "<expr>(B11 - B8A) / (B11 + B8A)</expr>\n" +
+                                                                       "</variable>\n" +
+                                                                       "<variable>\n" +
+                                                                       "<name>ndvi</name>\n" +
+                                                                       "<expr>(B8A - B4) / (B8A + B4)</expr>\n" +
+                                                                       "</variable>\n" +
+                                                                       "<variable>\n" +
+                                                                       "<name>ndwi</name>\n" +
+                                                                       "<expr>(B3 - B8A) / (B3 + B8A)</expr>\n" +
+                                                                       "</variable>\n" +
+                                                                       "<variable>\n" +
+                                                                       "<name>mndwi</name>\n" +
+                                                                       "<expr>(B3 - B11) / (B3 + B11)</expr>\n" +
+                                                                       "</variable>\n" +
+                                                                       "</variables>\n" +
+                                                                       "<aggregators>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>MIN_MAX</type>\n" +
+                                                                       "<varName>ndbi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>AVG</type>\n" +
+                                                                       "<varName>ndbi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>10</percentage>\n" +
+                                                                       "<varName>ndbi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>90</percentage>\n" +
+                                                                       "<varName>ndbi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>MIN_MAX</type>\n" +
+                                                                       "<varName>ndvi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>AVG</type>\n" +
+                                                                       "<varName>ndvi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>10</percentage>\n" +
+                                                                       "<varName>ndvi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>90</percentage>\n" +
+                                                                       "<varName>ndvi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>MIN_MAX</type>\n" +
+                                                                       "<varName>ndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>AVG</type>\n" +
+                                                                       "<varName>ndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>10</percentage>\n" +
+                                                                       "<varName>ndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>90</percentage>\n" +
+                                                                       "<varName>ndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>MIN_MAX</type>\n" +
+                                                                       "<varName>mndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>AVG</type>\n" +
+                                                                       "<varName>mndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>10</percentage>\n" +
+                                                                       "<varName>mndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "<aggregator>\n" +
+                                                                       "<type>PERCENTILE</type>\n" +
+                                                                       "<percentage>90</percentage>\n" +
+                                                                       "<varName>mndwi</varName>\n" +
+                                                                       "</aggregator>\n" +
+                                                                       "</aggregators>\n" +
+                                                                       "</parameters>"));
+
+    }
+
+    @Test
     public void canThrowExceptionWhenParameterValueIsMissing() throws Exception {
         String executeRequestString = getExecuteRequestStringWithEmptyInputValue();
         InputStream requestInputStream = new ByteArrayInputStream(executeRequestString.getBytes());
@@ -201,6 +313,182 @@ public class ExecuteRequestExtractorTest {
                "\t</wps:ResponseForm>\n" +
                "\n" +
                "</wps:Execute>\n";
+    }
+
+    private String getExecuteStringTimeScanProcess(){
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\" ?>\n" +
+               "\n" +
+               "<wps:Execute xsi:schemaLocation=\"http://www.opengis.net/wps/1.0.0 http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd\"\n" +
+               "             service=\"WPS\"\n" +
+               "             version=\"1.0.0\"\n" +
+               "             xmlns:wps=\"http://www.opengis.net/wps/1.0.0\"\n" +
+               "             xmlns:ows=\"http://www.opengis.net/ows/1.1\"\n" +
+               "             xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+               "             xmlns:cal=\"http://www.brockmann-consult.de/calwps/calwpsL3Parameters-schema.xsd\">\n" +
+               "\n" +
+               "    <ows:Identifier>urbantep-timescan~1.0~Idepix.Sentinel2</ows:Identifier>\n" +
+               "\n" +
+               "    <wps:DataInputs>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>productionType</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>L3</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>productionName</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>urban timescan</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>inputDataSetName</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>S2_GRANULES_URBAN</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>minDate</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>2015-06-01</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>maxDate</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>2016-10-31</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>regionWKT</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>POLYGON((100 -10,100 0,110 0,110 -10,100 -10))</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>outputFormat</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>NetCDF4</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>calvalus.l3.parameters</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:ComplexData>\n" +
+               "                    <cal:parameters>\n" +
+               "                        <cal:compositingType>MOSAICKING</cal:compositingType>\n" +
+               "                        <cal:planetaryGrid>org.esa.snap.binning.support.PlateCarreeGrid</cal:planetaryGrid>\n" +
+               "                        <cal:numRows>972000</cal:numRows>\n" +
+               "                        <cal:superSampling>1</cal:superSampling>\n" +
+               "                        <cal:maskExpr>! lc_invalid and ! lc_cloud</cal:maskExpr>\n" +
+               "                        <cal:variables>\n" +
+               "                            <cal:variable>\n" +
+               "                                <name>ndbi</name>\n" +
+               "                                <expr>(B11 - B8A) / (B11 + B8A)</expr>\n" +
+               "                            </cal:variable>\n" +
+               "                            <cal:variable>\n" +
+               "                                <name>ndvi</name>\n" +
+               "                                <expr>(B8A - B4) / (B8A + B4)</expr>\n" +
+               "                            </cal:variable>\n" +
+               "                            <cal:variable>\n" +
+               "                                <name>ndwi</name>\n" +
+               "                                <expr>(B3 - B8A) / (B3 + B8A)</expr>\n" +
+               "                            </cal:variable>\n" +
+               "                            <cal:variable>\n" +
+               "                                <name>mndwi</name>\n" +
+               "                                <expr>(B3 - B11) / (B3 + B11)</expr>\n" +
+               "                            </cal:variable>\n" +
+               "                        </cal:variables>\n" +
+               "                        <cal:aggregators>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>MIN_MAX</type>\n" +
+               "                                <varName>ndbi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>AVG</type>\n" +
+               "                                <varName>ndbi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>10</percentage>\n" +
+               "                                <varName>ndbi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>90</percentage>\n" +
+               "                                <varName>ndbi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>MIN_MAX</type>\n" +
+               "                                <varName>ndvi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>AVG</type>\n" +
+               "                                <varName>ndvi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>10</percentage>\n" +
+               "                                <varName>ndvi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>90</percentage>\n" +
+               "                                <varName>ndvi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>MIN_MAX</type>\n" +
+               "                                <varName>ndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>AVG</type>\n" +
+               "                                <varName>ndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>10</percentage>\n" +
+               "                                <varName>ndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>90</percentage>\n" +
+               "                                <varName>ndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>MIN_MAX</type>\n" +
+               "                                <varName>mndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>AVG</type>\n" +
+               "                                <varName>mndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>10</percentage>\n" +
+               "                                <varName>mndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                            <cal:aggregator>\n" +
+               "                                <type>PERCENTILE</type>\n" +
+               "                                <percentage>90</percentage>\n" +
+               "                                <varName>mndwi</varName>\n" +
+               "                            </cal:aggregator>\n" +
+               "                        </cal:aggregators>\n" +
+               "                    </cal:parameters>\n" +
+               "                </wps:ComplexData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
+               "\n" +
+               "\n" +
+               "    </wps:DataInputs>\n" +
+               "    <wps:ResponseForm>\n" +
+               "        <wps:ResponseDocument storeExecuteResponse=\"true\" status=\"true\">\n" +
+               "            <wps:Output>\n" +
+               "                <ows:Identifier>productionResults</ows:Identifier>\n" +
+               "            </wps:Output>\n" +
+               "        </wps:ResponseDocument>\n" +
+               "    </wps:ResponseForm>\n" +
+               "</wps:Execute>";
     }
 
     private String getExecuteRequestStringWithEmptyInputValue() {

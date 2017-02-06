@@ -73,7 +73,7 @@ public class ProductionRequest implements XmlConvertible {
         }
         this.productionType = productionType;
         this.userName = userName;
-        this.productionParameters = new HashMap<String, String>(productionParameters);
+        this.productionParameters = new HashMap<>(productionParameters);
         this.productionParameters.getClass();
     }
 
@@ -282,7 +282,7 @@ public class ProductionRequest implements XmlConvertible {
         }
 
         String[] splits = text.trim().split("\\s");
-        Set<String> dateSet = new TreeSet<String>(Arrays.asList(splits));
+        Set<String> dateSet = new TreeSet<>(Arrays.asList(splits));
         dateSet.remove("");
         splits = dateSet.toArray(new String[dateSet.size()]);
         Arrays.sort(splits);
@@ -334,7 +334,17 @@ public class ProductionRequest implements XmlConvertible {
     }
 
     public String getStagingDirectory(String productionId) {
-        return userName + "/" + productionId;
+        String remoteUser;
+        try {
+            remoteUser = getParameter("calvalus.wps.remote.user", true);
+        } catch (ProductionException exception) {
+            return userName + "/" + productionId;
+        }
+        if (remoteUser.equalsIgnoreCase(userName)) {
+            return userName + "/" + productionId;
+        } else {
+            return userName + "/" + remoteUser + "/" + productionId;
+        }
     }
 
     public String getRegionName() {
@@ -345,7 +355,7 @@ public class ProductionRequest implements XmlConvertible {
         Geometry regionGeometry = getRegionGeometry(null);
         if (regionGeometry == null) {
             throw new ProductionException(
-                    "Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
+                        "Missing region geometry, either parameter 'regionWKT' or 'minLon', 'minLat','maxLon','maxLat' must be provided");
         }
         return regionGeometry;
     }
@@ -362,12 +372,12 @@ public class ProductionRequest implements XmlConvertible {
         if (x1 != null && y1 != null && x2 != null && y2 != null) {
             GeometryFactory factory = new GeometryFactory();
             return factory.createPolygon(factory.createLinearRing(new Coordinate[]{
-                    new Coordinate(x1, y1),
-                    new Coordinate(x2, y1),
-                    new Coordinate(x2, y2),
-                    new Coordinate(x1, y2),
-                    new Coordinate(x1, y1),
-            }), null);
+                        new Coordinate(x1, y1),
+                        new Coordinate(x2, y1),
+                        new Coordinate(x2, y2),
+                        new Coordinate(x1, y2),
+                        new Coordinate(x1, y1),
+                        }), null);
         } else if (x1 == null && y1 == null && x2 == null && y2 == null) {
             return defaultGeometry;
         } else {
@@ -376,7 +386,7 @@ public class ProductionRequest implements XmlConvertible {
     }
 
     public List<DateRange> getDateRanges() throws ProductionException {
-        List<DateRange> dateRangeList = new ArrayList<DateRange>();
+        List<DateRange> dateRangeList = new ArrayList<>();
         Date[] dateList = getDates("dateList", null);
         if (dateList != null) {
             Arrays.sort(dateList);
@@ -420,7 +430,7 @@ public class ProductionRequest implements XmlConvertible {
     // Implementation helpers
 
     private static Map<String, String> mapify(String[] parametersKeyValuePairs) {
-        Map<String, String> productionParameters = new HashMap<String, String>();
+        Map<String, String> productionParameters = new HashMap<>();
         for (int i = 0; i < parametersKeyValuePairs.length; i += 2) {
             String name = parametersKeyValuePairs[i];
             if (name == null) {
@@ -483,7 +493,7 @@ public class ProductionRequest implements XmlConvertible {
             return wktReader.read(text);
         } catch (com.vividsolutions.jts.io.ParseException e) {
             throw new ProductionException(
-                    "Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
+                        "Production parameter '" + name + "' must be a geometry (ISO 19107 WKT format).");
         }
     }
 }
