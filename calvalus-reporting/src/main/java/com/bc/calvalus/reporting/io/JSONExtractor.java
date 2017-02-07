@@ -57,8 +57,8 @@ public class JSONExtractor {
         String reportingJsonString = extractJsonString(inputStream);
         Gson gson = new Gson();
         return gson.fromJson(reportingJsonString,
-                new TypeToken<List<UsageStatistic>>() {
-                }.getType());
+                             new TypeToken<List<UsageStatistic>>() {
+                             }.getType());
     }
 
     public Map<String, List<UsageStatistic>> getAllUserStatistic() throws IOException {
@@ -143,9 +143,8 @@ public class JSONExtractor {
     @NotNull
     private Predicate<Long> filterDateIntervals(final String startDate, final String endDate) {
         return aLong -> {
-            Instant end = LocalDate.parse(startDate).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
-            Instant start = LocalDate.parse(endDate).atStartOfDay().toInstant(ZoneOffset.UTC);
-
+            Instant end = LocalDate.parse(endDate).atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC);
+            Instant start = LocalDate.parse(startDate).atStartOfDay().toInstant(ZoneOffset.UTC);
             Instant instant = new Date(aLong).toInstant();
             if (instant.isAfter(start) && instant.isBefore(end)) {
                 return true;

@@ -121,7 +121,11 @@ public class JobDetailWriter {
     }
 
     private void write_(int from, int to) throws GenerateLogException {
-        logger.log(Level.INFO, "Start extracting configuration and counter history from hadoop web service.");
+        int interval = to - from;
+        if (interval < 0) {
+            return;
+        }
+        logger.log(Level.INFO, String.format("Start extracting %d configuration and counter history from hadoop web service.", interval));
         HashMap<String, Conf> confLog = createConfLog(from, to);
         HashMap<String, CountersType> counterLog = createCounterLog(from, to);
         List<JobType> jobTypeList = getJobType().getJob();
