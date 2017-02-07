@@ -155,14 +155,14 @@ public class JobTableView<T> extends Composite {
         dataGrid.setColumnWidth(totalCpuTimeSpent, 20, Style.Unit.PCT);
 
         // #### totalVcoresUsed
-        Column<T, String> totalVcoresUsed = new Column<T, String>(new TextCell()) {
+        Column<T, String> totalMaps = new Column<T, String>(new TextCell()) {
             @Override
             public String getValue(T object) {
                 return ((UserInfo) object).getTotalMaps();
             }
         };
-        dataGrid.addColumn(totalVcoresUsed, "Total Maps");
-        dataGrid.setColumnWidth(totalVcoresUsed, 20, Style.Unit.PCT);
+        dataGrid.addColumn(totalMaps, "Total Maps");
+        dataGrid.setColumnWidth(totalMaps, 20, Style.Unit.PCT);
     }
 
     public DialogBox getShowDialog(UserInfo userInfo) {

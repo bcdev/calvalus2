@@ -32,9 +32,16 @@ h1 {
     margin: 15px 6px 6px;
 }
 
-/*body {*/
-/*background: rgb(63, 76, 107)*/
-/*}*/
+.displayDateInterval {
+    font-family: "courier new", courier;
+    /*border: solid #d7dfe8;*/
+    font-size: 14px;
+    position: fixed;
+    /*left: 83%;*/
+    right: 63%;
+    top: 21%;
+    margin: auto;
+}
 
 h1 {
     font-size: 2em;
@@ -52,6 +59,7 @@ h1 {
     right: 0px;
     margin: auto;
 }
+
 .piechart {
     border: solid #d7dfe8;
     width: 70%;

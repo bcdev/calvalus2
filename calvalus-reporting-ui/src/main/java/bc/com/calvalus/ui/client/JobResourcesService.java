@@ -1,9 +1,8 @@
 package bc.com.calvalus.ui.client;
 
-import bc.com.calvalus.ui.shared.UserInfo;
+import bc.com.calvalus.ui.shared.UserInfoInDetails;
 import com.google.gwt.user.client.rpc.RemoteService;
 import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
-import java.util.List;
 
 /**
  * @author muhammad.bc.
@@ -11,9 +10,13 @@ import java.util.List;
 @RemoteServiceRelativePath("JobResourcesService")
 public interface JobResourcesService extends RemoteService {
 
-    List<String> getAllUserName();
+    UserInfoInDetails getAllUserTodaySummary();
 
-    List<UserInfo> getAllUserSummary(String userName, String startDate, String endDate);
+    UserInfoInDetails getAllUserWeekAgoSummary();
 
-    List<UserInfo> getAllUserTodaySummary();
+    UserInfoInDetails getAllUserMonthAgoSummary();
+
+    UserInfoInDetails getAllUserYesterdaySummary();
+
+    UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate);
 }
