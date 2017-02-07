@@ -7,6 +7,7 @@ import com.bc.wps.utilities.PropertiesWrapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -28,6 +29,7 @@ public class HandleOption extends PrintOption {
     private static final String VERSION = "version";
     private static final String CALVALUS_HISTORY_GENERATE_TIME_INTERVAL_DEFAULT = "calvalus.history.generate.time.interval.default";
     private CommandLine commandLine;
+    private final static Logger logger = CalvalusLogger.getLogger();
 
     public HandleOption(String args[]) {
         if (args.length == 0) {
@@ -92,6 +94,12 @@ public class HandleOption extends PrintOption {
         }
         int intervalInMinutes = Integer.parseInt(intervalS);
         String urlPath = commandLine.getOptionValue(OUTPUT_OPTION);
+
+        logger.log(Level.INFO, "################################################");
+        logger.log(Level.INFO, "#                START EXTRACTING              #");
+        logger.log(Level.INFO, "################################################");
+        logger.log(Level.INFO, "################################################");
+
         Launcher.builder().setUrlPath(urlPath)
                 .setTimeIntervalInMinutes(intervalInMinutes)
                 .start();

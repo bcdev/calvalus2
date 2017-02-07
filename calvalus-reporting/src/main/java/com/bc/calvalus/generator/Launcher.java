@@ -1,8 +1,10 @@
 package com.bc.calvalus.generator;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.writer.JobDetailWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -11,6 +13,7 @@ public class Launcher implements Runnable {
     private String urlPath;
     public static transient boolean terminate = false;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+
 
     public static Launcher builder() {
         return new Launcher();

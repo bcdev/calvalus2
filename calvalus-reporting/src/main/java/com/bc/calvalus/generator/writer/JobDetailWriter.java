@@ -122,7 +122,7 @@ public class JobDetailWriter {
 
     private void write_(int from, int to) throws GenerateLogException {
         int interval = to - from;
-        if (interval < 0) {
+        if (interval <= 0) {
             return;
         }
         logger.log(Level.INFO, String.format("Start extracting %d configuration and counter history from hadoop web service.", interval));
