@@ -168,8 +168,6 @@ class ReportGenerator {
         long totalVCoresUsed = 0;
         for (UsageStatistic usageStatistic : usageStatistics) {
             totalMaps += usageStatistic.getTotalMaps();
-            totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (1024 * 1024);
-            totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (1024 * 1024);
             totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);
             totalFileReading += (usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()) / (KILO_BYTES * KILO_BYTES);
             totalCpuTime += usageStatistic.getCpuMilliseconds();
