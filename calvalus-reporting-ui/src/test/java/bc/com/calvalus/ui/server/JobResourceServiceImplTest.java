@@ -4,6 +4,8 @@ import bc.com.calvalus.ui.shared.UserInfo;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.Test;
 
@@ -28,6 +30,51 @@ public class JobResourceServiceImplTest {
         assertEquals(userInfo.getTotalCpuTimeSpent(), "01:43:26");
         assertEquals(userInfo.getTotalMemoryUsedMbs(), "42,110,858");
         assertEquals(userInfo.getTotalFileReadingMb(), "36,293");
+    }
+
+    @Test
+    public void testThisWeek() throws Exception {
+        LocalDate now = LocalDate.parse("2017-02-08");
+        DayOfWeek dayOfWeek = now.getDayOfWeek();
+        LocalDate localDate = now.minusDays(dayOfWeek.getValue());
+
+        assertEquals(dayOfWeek.getValue(), 3);
+        assertEquals(dayOfWeek.toString(), "WEDNESDAY");
+        assertEquals(localDate.toString(), "2017-02-05");
+    }
+
+    @Test
+    public void testLastWeek() throws Exception {
+        LocalDate now = LocalDate.parse("2017-01-13");
+        DayOfWeek dayOfWeek = now.getDayOfWeek();
+
+        LocalDate endDate = now.minusDays(dayOfWeek.getValue());
+        LocalDate startDate = endDate.minusDays(7);
+
+        assertEquals(dayOfWeek.getValue(), 5);
+        assertEquals(dayOfWeek.toString(), "FRIDAY");
+
+        assertEquals(endDate.toString(), "2017-01-08");
+        assertEquals(startDate.toString(), "2017-01-01");
+    }
+
+    @Test
+    public void testThisMonth() throws Exception {
+        LocalDate endDate = LocalDate.parse("2017-02-23");
+        LocalDate startDate = endDate.withDayOfMonth(1);
+        assertEquals(startDate.toString(), "2017-02-01");
+        assertEquals(endDate.toString(), "2017-02-23");
+    }
+
+    @Test
+    public void testLastMonth() throws Exception {
+        LocalDate now = LocalDate.parse("2017-02-23");
+        now = now.minusMonths(1);
+        LocalDate startDate = now.withDayOfMonth(1);
+        LocalDate endDate = now.withDayOfMonth(now.getMonth().maxLength());
+
+        assertEquals(startDate.toString(), "2017-01-01");
+        assertEquals(endDate.toString(), "2017-01-31");
     }
 
     String json = "[\n" +

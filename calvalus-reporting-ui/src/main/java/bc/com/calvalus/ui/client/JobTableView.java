@@ -141,7 +141,7 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalMemoryUsedMbs();
             }
         };
-        dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used");
+        dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used TBs");
         dataGrid.setColumnWidth(totalMemoryUsedMbs, 20, Style.Unit.PCT);
 
         // #### totalCpuTimeSpent

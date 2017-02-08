@@ -10,10 +10,9 @@ import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -29,10 +28,12 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     private static final Client client = ClientBuilder.newClient();
     public static final String STATUS_FAILED = "\"Status\": \"Failed\"";
     public static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
-    public static final int HTTP_SUCCESSFULL_START = 200;
-    public static final int HTTP_SUCCESSFULL_END = 300;
+    public static final int HTTP_SUCCESSFUL_CODE_START = 200;
+    public static final int HTTP_SUCCESSFUL_CODE_END = 300;
 
-    public static final int MAGE_UNIT = 1024;
+    public static final int TO_GB = 1024;
+    public static final int FIRST_DAY = 1;
+    public static final int FIRST_MONTH = 1;
 
     @Override
     public UserInfoInDetails getAllUserTodaySummary() {
@@ -42,16 +43,37 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     @Override
-    public UserInfoInDetails getAllUserWeekAgoSummary() {
+    public UserInfoInDetails getAllUserThisWeekSummary() {
+
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusWeeks(1);
+        LocalDate startDate = endDate.minusDays(endDate.getDayOfWeek().getValue());
         return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
     }
 
     @Override
-    public UserInfoInDetails getAllUserMonthAgoSummary() {
+    public UserInfoInDetails getAllUserLastWeekSummary() {
+        LocalDate now = LocalDate.now();
+        DayOfWeek dayOfWeek = now.getDayOfWeek();
+
+        LocalDate endDate = now.minusDays(dayOfWeek.getValue());
+        LocalDate startDate = endDate.minusDays(7);
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+    }
+
+    @Override
+    public UserInfoInDetails getAllUserThisMonthSummary() {
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusMonths(1);
+        LocalDate startDate = endDate.withDayOfMonth(1);
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+    }
+
+    @Override
+    public UserInfoInDetails getAllUserLastMonthSummary() {
+        LocalDate now = LocalDate.now();
+        now = now.minusMonths(1);
+        LocalDate startDate = now.withDayOfMonth(1);
+        LocalDate endDate = now.withDayOfMonth(now.getMonth().maxLength());
+
         return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
     }
 
@@ -59,7 +81,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     @Override
     public UserInfoInDetails getAllUserYesterdaySummary() {
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(1);
+        LocalDate startDate = endDate.minusDays(FIRST_DAY);
         return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
     }
 
@@ -69,33 +91,8 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         return new UserInfoInDetails(allUserUsageSummaryBetween, startDate, endDate);
     }
 
-
-    private List<UserInfo> getUserUsageSummary(String name, String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/%s/range/%s/%s"), name, startDate, endDate), MediaType.TEXT_PLAIN);
-        if (jsonUser.contains(STATUS_FAILED)) {
-            return null;
-        }
-        Gson gson = new Gson();
-        UserInfo userInfo = gson.fromJson(jsonUser, UserInfo.class);
-        return Collections.singletonList(convertUnits(userInfo));
-    }
-
-    private List<UserInfo> getUserUsageSummary(String userName) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/%s"), userName), MediaType.APPLICATION_JSON);
-        return getGsonToUserInfo(jsonUser);
-    }
-
     private List<UserInfo> getAllUserUsageSummaryBetween(String startDate, String endDate) {
         String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
-        return getGsonToUserInfo(jsonUser);
-    }
-
-    private List<UserInfo> getAllUserSummaryForAMonth() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String startDate = LocalDate.now().atStartOfDay().minusMonths(1).format(formatter);
-        String endOfDay = LocalDate.now().atStartOfDay().format(formatter);
-        String responseJson = String.format(CALVALUS_REPORTING_WS_URL.concat("/range/%s/%s"), startDate, endOfDay);
-        String jsonUser = clientRequest(responseJson, MediaType.TEXT_PLAIN);
         return getGsonToUserInfo(jsonUser);
     }
 
@@ -119,14 +116,14 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     private UserInfo convertUnits(UserInfo p) {
         return new UserInfo(p.getUser(),
                             p.getJobsProcessed(),
-                            convertMBToGB(p.getTotalFileReadingMb()),
-                            convertMBToGB(p.getTotalFileWritingMb()),
-                            convertMBToGB(p.getTotalMemoryUsedMbs()),
+                            convertMBToGB(p.getTotalFileReadingMb(), TO_GB),
+                            convertMBToGB(p.getTotalFileWritingMb(), TO_GB),
+                            convertMBToGB(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2)),
                             p.getTotalCpuTimeSpent(),
                             p.getTotalMaps());
     }
 
-    private String convertMBToGB(String totalFileReadingMb) {
+    private String convertMBToGB(String totalFileReadingMb, double size) {
         Number parse = null;
         try {
             NumberFormat instance = DecimalFormat.getInstance();
@@ -134,23 +131,14 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return String.format("%.4f ", parse.longValue() / 1024d);
-    }
-
-    public String formatSize(long i) {
-        double pow = Math.pow(MAGE_UNIT, 2);
-        if (i <= pow) {
-            return String.format("%.4f GBs", (i / 1024d));
-        } else {
-            return String.format("%.4f TBs", (i / pow));
-        }
+        return String.format("%.4f ", parse.longValue() / size);
     }
 
     private static String clientRequest(String uri, String textPlain) {
         Invocation.Builder builder = client.target(uri).request();
         Response response = builder.accept(textPlain).get();
         int status = response.getStatus();
-        if (status >= HTTP_SUCCESSFULL_START && status < HTTP_SUCCESSFULL_END) {
+        if (status >= HTTP_SUCCESSFUL_CODE_START && status < HTTP_SUCCESSFUL_CODE_END) {
             return builder.get(String.class);
         }
         return null;

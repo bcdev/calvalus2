@@ -26,6 +26,7 @@ public class ReportUI implements EntryPoint {
         RootPanel.get("tableDisplayId").add(infoReportTable);
     }
 
+
     static void searchRecordYesterday() {
         resourcesServiceAsync.getAllUserYesterdaySummary(new AsyncCallback<UserInfoInDetails>() {
             @Override
@@ -57,17 +58,12 @@ public class ReportUI implements EntryPoint {
         });
     }
 
-    private static void displayDateInterval(UserInfoInDetails userInfos) {
-        if (userInfos.getStartDate() != null && userInfos.getEndDate() != null) {
-            label.setText("Search result from : " + userInfos.getStartDate() + "  to " + userInfos.getEndDate());
-        }
-    }
 
-    static void searchRecordWeekAgo() {
-        resourcesServiceAsync.getAllUserWeekAgoSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordThisWeekAgo() {
+        resourcesServiceAsync.getAllUserThisWeekSummary(new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in load Pie or the table" + throwable.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
             }
 
             @Override
@@ -78,11 +74,11 @@ public class ReportUI implements EntryPoint {
         });
     }
 
-    static void searchRecordMonthAgo() {
-        resourcesServiceAsync.getAllUserMonthAgoSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordThisMonthAgo() {
+        resourcesServiceAsync.getAllUserThisMonthSummary(new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in load Pie or the table" + throwable.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
             }
 
             @Override
@@ -98,7 +94,7 @@ public class ReportUI implements EntryPoint {
         resourcesServiceAsync.getAllUserSummaryBetween(start, end, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable caught) {
-                RootPanel.get().add(new HTML("Error in load Pie or the table" + caught.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading the table" + caught.getMessage()));
             }
 
             @Override
@@ -109,6 +105,42 @@ public class ReportUI implements EntryPoint {
         });
     }
 
+    static void searchRecordLastWeekAgo() {
+        resourcesServiceAsync.getAllUserLastWeekSummary(new AsyncCallback<UserInfoInDetails>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+            }
+
+            @Override
+            public void onSuccess(UserInfoInDetails userInfoInDetails) {
+                infoReportTable.setDataList(userInfoInDetails.getUserInfos());
+                displayDateInterval(userInfoInDetails);
+            }
+        });
+    }
+
+    static void searchRecordLastMonthAgo() {
+        resourcesServiceAsync.getAllUserLastMonthSummary(new AsyncCallback<UserInfoInDetails>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+            }
+
+            @Override
+            public void onSuccess(UserInfoInDetails userInfoInDetails) {
+                infoReportTable.setDataList(userInfoInDetails.getUserInfos());
+                displayDateInterval(userInfoInDetails);
+            }
+        });
+    }
+
+    private static void displayDateInterval(UserInfoInDetails userInfos) {
+        if (userInfos.getStartDate() != null && userInfos.getEndDate() != null) {
+            label.setText("Search result from : " + userInfos.getStartDate() + "  to " + userInfos.getEndDate());
+            searchPanel.updateDatePicker(userInfos.getStartDate(), userInfos.getEndDate());
+        }
+    }
 
     private void initDisplayTableandChart() {
         searchRecord(null, null);

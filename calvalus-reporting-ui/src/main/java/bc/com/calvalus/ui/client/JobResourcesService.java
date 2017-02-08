@@ -12,9 +12,13 @@ public interface JobResourcesService extends RemoteService {
 
     UserInfoInDetails getAllUserTodaySummary();
 
-    UserInfoInDetails getAllUserWeekAgoSummary();
+    UserInfoInDetails getAllUserThisWeekSummary();
 
-    UserInfoInDetails getAllUserMonthAgoSummary();
+    UserInfoInDetails getAllUserThisMonthSummary();
+
+    UserInfoInDetails getAllUserLastWeekSummary();
+
+    UserInfoInDetails getAllUserLastMonthSummary();
 
     UserInfoInDetails getAllUserYesterdaySummary();
 
