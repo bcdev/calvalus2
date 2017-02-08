@@ -101,6 +101,13 @@ public class JobTableView<T> extends Composite {
                 return object.getUser();
             }
         };
+        userName.setSortable(true);
+        sortHandler.setComparator(userName, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            return o11.compareTo(o12);
+        });
         dataGrid.addColumn(userName, "User Name");
         dataGrid.setColumnWidth(userName, 10, Style.Unit.EM);
 
@@ -111,8 +118,18 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getJobsProcessed();
             }
         };
+        jobsProcessed.setSortable(true);
+        sortHandler.setComparator(jobsProcessed, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            Integer integerO = new Integer(o11.getJobsProcessed());
+            Integer integerM = new Integer(o12.getJobsProcessed());
+            return integerO.compareTo(integerM);
+        });
         dataGrid.addColumn(jobsProcessed, "Jobs Processed");
         dataGrid.setColumnWidth(jobsProcessed, 20, Style.Unit.PCT);
+
 
         // ### totalFileReadingMb
         Column<T, String> totalFileReadingMb = new Column<T, String>(new TextCell()) {

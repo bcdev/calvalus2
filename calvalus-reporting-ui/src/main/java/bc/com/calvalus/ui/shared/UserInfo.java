@@ -6,7 +6,7 @@ import com.google.gwt.user.client.rpc.IsSerializable;
 /**
  * @author muhammad.bc.
  */
-public class UserInfo implements IsSerializable {
+public class UserInfo implements IsSerializable, Comparable<UserInfo> {
     private String user;
     private String jobsProcessed;
     private String totalFileReadingMb;
@@ -55,5 +55,19 @@ public class UserInfo implements IsSerializable {
 
     public String getTotalMaps() {
         return totalMaps;
+    }
+
+
+    @Override
+    public int compareTo(UserInfo o) {
+        return (o == null || o.user == null) ? -1 : -o.user.compareTo(user);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof UserInfo) {
+            return user == ((UserInfo) o).user;
+        }
+        return false;
     }
 }
