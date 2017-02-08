@@ -130,6 +130,26 @@ public class JobTableView<T> extends Composite {
         dataGrid.addColumn(jobsProcessed, "Jobs Processed");
         dataGrid.setColumnWidth(jobsProcessed, 20, Style.Unit.PCT);
 
+        // #### totalMaps
+        Column<T, String> totalMaps = new Column<T, String>(new TextCell()) {
+            @Override
+            public String getValue(T object) {
+                return ((UserInfo) object).getTotalMaps();
+            }
+        };
+        dataGrid.addColumn(totalMaps, "Total Maps");
+        dataGrid.setColumnWidth(totalMaps, 20, Style.Unit.PCT);
+
+
+        // #### totalCpuTimeSpent
+        Column<T, String> totalCpuTimeSpent = new Column<T, String>(new TextCell()) {
+            @Override
+            public String getValue(T object) {
+                return ((UserInfo) object).getTotalCpuTimeSpent();
+            }
+        };
+        dataGrid.addColumn(totalCpuTimeSpent, "Total Cpu Time Spent");
+        dataGrid.setColumnWidth(totalCpuTimeSpent, 20, Style.Unit.PCT);
 
         // ### totalFileReadingMb
         Column<T, String> totalFileReadingMb = new Column<T, String>(new TextCell()) {
@@ -161,25 +181,7 @@ public class JobTableView<T> extends Composite {
         dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used TBs");
         dataGrid.setColumnWidth(totalMemoryUsedMbs, 20, Style.Unit.PCT);
 
-        // #### totalCpuTimeSpent
-        Column<T, String> totalCpuTimeSpent = new Column<T, String>(new TextCell()) {
-            @Override
-            public String getValue(T object) {
-                return ((UserInfo) object).getTotalCpuTimeSpent();
-            }
-        };
-        dataGrid.addColumn(totalCpuTimeSpent, "Total Cpu Time Spent");
-        dataGrid.setColumnWidth(totalCpuTimeSpent, 20, Style.Unit.PCT);
 
-        // #### totalVcoresUsed
-        Column<T, String> totalMaps = new Column<T, String>(new TextCell()) {
-            @Override
-            public String getValue(T object) {
-                return ((UserInfo) object).getTotalMaps();
-            }
-        };
-        dataGrid.addColumn(totalMaps, "Total Maps");
-        dataGrid.setColumnWidth(totalMaps, 20, Style.Unit.PCT);
     }
 
     public DialogBox getShowDialog(UserInfo userInfo) {
