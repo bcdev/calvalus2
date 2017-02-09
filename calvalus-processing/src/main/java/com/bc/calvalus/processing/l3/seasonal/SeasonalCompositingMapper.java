@@ -42,6 +42,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
+    public static final int STATUS_CLOUD_SHADOW = 5;
+
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
     private static final SimpleDateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
@@ -49,7 +51,14 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     private static final String SR_FILENAME_FORMAT_MSI = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
     private static final Pattern SR_FILENAME_PATTERN =
             Pattern.compile("ESACCI-LC-L3-SR-([^-]*-[^-]*)-[^-]*-h([0-9]*)v([0-9]*)-........-([^-]*).nc");
+
     public static final int NUM_SRC_BANDS = 1 + 5 + 13 + 1;
+    public static final int DEBUG_X = 21151 % 5400;
+    public static final int DEBUG_Y = 9993 % 5400;
+    public static final int DEBUG_X2 = 7063 % 5400;
+    public static final int DEBUG_Y2 = 21595 % 5400;
+    public static final boolean DEBUG = false;
+    private static final float EPS = 1.0E-6f;
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -149,16 +158,16 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         final short[][] bandDataS = new short[numSourceBands][];
         final float[][] bandDataF = new float[numSourceBands][];
 
-        // maybe prepare arrays for ndvi/mndvi for best pixels aggregation
+        // prepare arrays for and in case of ndvi/mndvi for best pixels aggregation
         float[][] ndviSum = null;
         float[][] ndviSqrSum = null;
         int[][] ndviCount = null;
         float[] ndviMean = null;
         float[] ndviSdev = null;
         if (withBestPixels) {
-            ndviSum = new float[6][microTileSize*microTileSize];
-            ndviSqrSum = new float[6][microTileSize*microTileSize];
-            ndviCount = new int[6][microTileSize*microTileSize];
+            ndviSum = new float[7][microTileSize*microTileSize];
+            ndviSqrSum = new float[7][microTileSize*microTileSize];
+            ndviCount = new int[8][microTileSize*microTileSize];
             ndviMean = new float[microTileSize*microTileSize];
             ndviSdev = new float[microTileSize*microTileSize];
         }
@@ -171,10 +180,10 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 }
                 // count status and average ndvi (or ndwi) for each status separately
                 if (withBestPixels) {
-                    for (int i=0; i<6; ++i) {
-                        Arrays.fill(ndviSum[i], 0.0f);
-                        Arrays.fill(ndviSqrSum[i], 0.0f);
-                        Arrays.fill(ndviCount[i], 0);
+                    for (int j=0; j<7; ++j) {
+                        Arrays.fill(ndviSum[j], 0.0f);
+                        Arrays.fill(ndviSqrSum[j], 0.0f);
+                        Arrays.fill(ndviCount[j], 0);
                     }
                     for (MultiLevelImage[] bandImage : bandImages) {
                         for (int b = 0; b < numSourceBands; b++) {
@@ -199,15 +208,28 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                                 case 15:
                                 case 12:
                                 case 11:
+                                case 5:
                                     float ndvi = bandDataF[ndviBandIndex][i];
                                     ndviSum[index][i] += ndvi;
                                     ndviSqrSum[index][i] += ndvi * ndvi;
+                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                        LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndvi=" + ndvi);
+                                    }
+                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                        LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndvi=" + ndvi);
+                                    }
                                     break;
                                 case 2:
                                 case 3:  // TODO TBC whether to use water index for snow as well
                                     float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
                                     ndviSum[index][i] += ndwi;
                                     ndviSqrSum[index][i] += ndwi * ndwi;
+                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                        LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndwi=" + ndwi);
+                                    }
+                                    if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                        LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " index=" + index + " count=" + ndviCount[index][i] + " ndwi=" + ndwi);
+                                    }
                                     break;
                             }
                         }
@@ -219,8 +241,19 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         int index = index(state);
                         if (index < 0) { continue; }
                         accu[0][i] = state;
-                        ndviMean[i] = ndviSum[index][i] / ndviCount[index][i];
-                        ndviSdev[i] = (float) Math.sqrt(ndviSqrSum[index][i] / ndviCount[index][i] - ndviMean[i] * ndviMean[i]);
+                        if (index < 7) {
+                            ndviMean[i] = ndviSum[index][i] / ndviCount[index][i];
+                            ndviSdev[i] = (float) Math.sqrt(ndviSqrSum[index][i] / ndviCount[index][i] - ndviMean[i] * ndviMean[i]);
+                        } else {  // cloud or temporal cloud
+                            ndviMean[i] = Float.NaN;
+                            ndviSdev[i] = Float.NaN;
+                        }
+                        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                            LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " majostate=" + state + " majoindex=" + index + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
+                        }
+                        if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                            LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " majostate=" + state + " majoindex=" + index + " mean=" + ndviMean[i] + " sigma=" + ndviSdev[i]);
+                        }
                     }
                     // we have determined the majority/priority status and ndvi mean and sigma for it
                 }
@@ -244,32 +277,63 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                             continue;
                         }
                         if (withBestPixels) {
+                            accu[2][i] += count(bandDataS, i);
                             if (state == accu[0][i]) {
                                 switch (state) {
                                     case 1:
                                     case 15:
                                     case 12:
                                     case 11:
-                                        if (bandDataF[ndviBandIndex][i] > ndviMean[i] - ndviSdev[i]) {
-                                            final int stateCount = count(state, bandDataS, i);
+                                    case 5:
+                                        if (bandDataF[ndviBandIndex][i] >= ndviMean[i] - ndviSdev[i] - EPS) {
+                                            final int stateCount = count(state == 1 ? state : STATUS_CLOUD_SHADOW, bandDataS, i);  // cloud shadow count abused for dark, bright, haze
                                             accu[1][i] += stateCount;
-                                            accu[2][i] += count(bandDataS, i);
                                             for (int b = 3; b < numTargetBands; ++b) {
                                                 accu[b][i] += stateCount * bandDataF[b + 3][i];
+                                            }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " count=" + stateCount + " ndvi=" + bandDataF[ndviBandIndex][i] + " high. aggregated");
+                                            }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " count=" + stateCount + " ndvi=" + bandDataF[ndviBandIndex][i] + " high. aggregated");
+                                            }
+                                        } else {
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " ndvi=" + bandDataF[ndviBandIndex][i] + " low. skipped");
+                                            }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " ndvi=" + bandDataF[ndviBandIndex][i] + " low. skipped");
                                             }
                                         }
                                         break;
                                     case 2:
                                     case 3:  // TODO TBC whether to use water index for snow as well
                                         float ndwi = (bandDataF[b11BandIndex][i] - bandDataF[b3BandIndex][i]) / (bandDataF[b11BandIndex][i] + bandDataF[b3BandIndex][i]);
-                                        if (ndwi > ndviMean[i] - ndviSdev[i]) {
+                                        if (ndwi >= ndviMean[i] - ndviSdev[i] - EPS) {
                                             final int stateCount = count(state, bandDataS, i);
                                             accu[1][i] += stateCount;
-                                            accu[2][i] += count(bandDataS, i);
                                             for (int b = 3; b < numTargetBands; ++b) {
                                                 accu[b][i] += stateCount * bandDataF[b + 3][i];
                                             }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " count=" + stateCount + " ndwi=" + ndwi + " high. aggregated");
+                                            }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " count=" + stateCount + " ndwi=" + ndwi + " high. aggregated");
+                                            }
+                                        } else {
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " state=" + state + " ndwi=" + ndwi + " low. skipped");
+                                            }
+                                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " state=" + state + " ndwi=" + ndwi + " low. skipped");
+                                            }
                                         }
+                                        break;
+                                    case 4:
+                                    case 14:
+                                        final int stateCount = count(state, bandDataS, i);
+                                        accu[1][i] += stateCount;
                                         break;
                                 }
                             }
@@ -314,6 +378,12 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                         final float stateCount = accu[1][i];
                         for (int b = 3; b < numTargetBands; ++b) {
                             accu[b][i] /= stateCount;
+                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X, DEBUG_Y)) {
+                                LOG.info("x=" + DEBUG_X + " y=" + DEBUG_Y + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
+                            }
+                            if (DEBUG && isAtPosition(i, microTileX, microTileY, microTileSize, numMicroTiles, DEBUG_X2, DEBUG_Y2)) {
+                                LOG.info("x=" + DEBUG_X2 + " y=" + DEBUG_Y2 + " i=" + i + " count=" + stateCount + " b=" + b + " bandvalue=" + accu[b][i]);
+                            }
                         }
                     }
                 }
@@ -323,8 +393,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 for (float state : accu[0]) {
                     ++counts[rank(state)];
                 }
-                LOG.info((counts[15]+counts[9]+counts[8]) + " land, " + (counts[14]+counts[10]) + " water, " + counts[13] + " snow, " + counts[3] + " shadow, " + (counts[1]+counts[2]) + " cloud");
-                if (counts[15]+counts[9]+counts[8] == 0 && counts[14]+counts[10] == 0 && counts[13] == 0 && counts[3] == 0 && counts[1]+counts[2] == 0) {
+                LOG.info((counts[15]+counts[10]+counts[9]+counts[8]) + " land, " + (counts[14]) + " water, " + counts[13] + " snow, " + counts[5] + " shadow, " + (counts[1]+counts[2]) + " cloud");
+                if (counts[15]+counts[10]+counts[9]+counts[8] == 0 && counts[14] == 0 && counts[13] == 0 && counts[5] == 0 && counts[1]+counts[2] == 0) {
                     continue;
                 }
 
@@ -346,13 +416,19 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
         }
     }
 
+    private boolean isAtPosition(int i, int microTileX, int microTileY, int microTileSize, int numMicroTiles, int x, int y) {
+        return x == microTileX * microTileSize + (i % microTileSize) && y == microTileY * microTileSize + (i / microTileSize);
+    }
+
     private int majorityPriorityStatusOf(int[][] ndviCount, int i) {
-        return (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[1][i] && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
-                (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
-                        ndviCount[2][i] > 0 ? 3 :
-                                ndviCount[3][i] > 0 ? 15 :
-                                        ndviCount[4][i] > 0 ? 12 :
-                                                ndviCount[5][i] > 0 ? 11 : 0;
+        return (ndviCount[1][i] > 0 && ndviCount[1][i] >= ndviCount[0][i] && ndviCount[1][i] >= ndviCount[2][i]) ? 2 :
+               (ndviCount[0][i] > 0 && ndviCount[0][i] >= ndviCount[2][i]) ? 1 :
+               ndviCount[2][i] > 0 ? 3 :
+               ndviCount[3][i] > 0 ? 15 :
+               ndviCount[4][i] > 0 ? 12 :
+               ndviCount[5][i] > 0 ? 11 :
+               ndviCount[6][i] > 0 ? 5 :
+               ndviCount[7][i] > 0 ? 4 : 0;
     }
 
     static int sourceBandIndexOf(String sensorAndResolution, int targetBandIndex) {
@@ -451,33 +527,29 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
                 + (int) bandData[5][iSrc];
     }
 
-    static int count(int state, short[][] bandData, int iSrc) {
-        if (state == 1 || state == 12 || state == 11) {
-            return (int) bandData[1][iSrc];
-        } else if (state == 2 || state == 15) {
-            return (int) bandData[2][iSrc];
-        } else if (state == 3) {
-            return (int) bandData[3][iSrc];
-/* UCL does not count cloud and cloud shadow
-        } else if (state == 4) {
-            return (int) bandData[4][iSrc];
-*/
-        } else if (state == 5) {
-            return (int) bandData[5][iSrc];
-        } else {
-            return 0;
+    static int count(int state, short[][] bandData, int i) {
+        switch (state) {
+            case 1: return (int) bandData[1][i];
+            case 2: return (int) bandData[2][i];
+            case 3: return (int) bandData[3][i];
+            case 4: return (int) bandData[4][i];
+            case 5:
+            case 12:
+            case 11:
+            case 15: return (int) bandData[5][i];
+            default: return 0;
         }
     }
 
     static int rank(float state) {
         switch ((int) state) {
-            case 1: return 15;
-            case 2: return 14;
+            case 2: return 15;
+            case 1: return 14;
             case 3: return 13;
             case 15: return 10;  // dark
             case 12: return 9;  // bright
             case 11: return 8;  // haze
-            case 5: return 3;  // shadow
+            case 5: return 5;  // shadow
             case 14: return 2;  // temporal cloud
             case 4: return 1;
             default: return 0;
@@ -492,6 +564,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
             case 15: return 3;  // dark
             case 12: return 4;  // bright
             case 11: return 5;  // haze
+            case 5: return 6;  // shadow
+            case 4:
+            case 14: return 7;  // cloud or temporal cloud
             default: return -1;
         }
     }
