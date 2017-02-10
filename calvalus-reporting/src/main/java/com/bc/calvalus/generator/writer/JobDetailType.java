@@ -1,9 +1,11 @@
 package com.bc.calvalus.generator.writer;
 
+import java.time.Instant;
+
 /**
  * @author muhammad.bc.
  */
-class JobDetailType {
+class JobDetailType implements Comparable<String> {
 
     private String jobId;
     private String user;
@@ -202,5 +204,28 @@ class JobDetailType {
 
     public String getWpsJobId() {
         return wpsJobId;
+    }
+
+    @Override
+    public int compareTo(String oType) {
+        Instant dateTimeInstance = getDateTimeInstance(oType);
+        if (this.getDateTimeInstance(this.getFinishTime()).isAfter(dateTimeInstance)) {
+            return 1;
+        }
+        if (this.getDateTimeInstance(this.getFinishTime()).isBefore(dateTimeInstance)) {
+            return -1;
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        JobDetailType jobDetailType = (JobDetailType) obj;
+        return jobDetailType.getJobId() == jobId;
+    }
+
+    private Instant getDateTimeInstance(String finishTime) {
+        long epochMilli = Long.parseLong(finishTime);
+        return Instant.ofEpochMilli(epochMilli);
     }
 }

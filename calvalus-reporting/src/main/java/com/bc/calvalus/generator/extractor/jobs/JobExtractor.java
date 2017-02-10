@@ -7,6 +7,7 @@ import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.ReadFormatType;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
+import java.util.List;
 import org.apache.commons.lang.NotImplementedException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -28,7 +29,7 @@ public class JobExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws GenerateLogException {
         throw new NotImplementedException("Not implemented");
     }
 

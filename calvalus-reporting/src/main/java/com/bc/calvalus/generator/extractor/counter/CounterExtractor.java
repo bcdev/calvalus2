@@ -3,9 +3,7 @@ package com.bc.calvalus.generator.extractor.counter;
 
 import com.bc.calvalus.generator.GenerateLogException;
 import com.bc.calvalus.generator.extractor.Extractor;
-import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
-import com.bc.calvalus.generator.extractor.jobs.JobsType;
 import com.bc.wps.utilities.PropertiesWrapper;
 import javax.xml.bind.JAXBException;
 import javax.xml.transform.stream.StreamSource;
@@ -29,10 +27,8 @@ public class CounterExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, JobsType jobsType) throws GenerateLogException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws GenerateLogException {
         HashMap<String, CountersType> confTypesHashMap = new HashMap<>();
-        List<JobType> jobTypes = jobsType.getJob();
-
         int size = jobTypes.size();
         if (!(size >= from && from >= 0) && !(size >= to && to >= 0) && (to >= from)) {
             throw new GenerateLogException("The range is out of bound");
