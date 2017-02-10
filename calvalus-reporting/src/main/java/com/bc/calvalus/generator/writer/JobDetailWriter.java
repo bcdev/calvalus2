@@ -58,7 +58,7 @@ public class JobDetailWriter {
     }
 
     public void start() {
-        JobDetailType lastJobInfo = getEOFJobInfo.getLastJobID();
+        JobDetailType lastJobInfo = getEOFJobInfo.getLastJobDetailsType();
         List<JobType> sortedJobTypeList = sortedJobsType();
         if (lastJobInfo == null) {
             writeWithIntervals(sortedJobTypeList);
@@ -262,7 +262,7 @@ public class JobDetailWriter {
         }
 
 
-        JobDetailType getLastJobID() {
+        JobDetailType getLastJobDetailsType() {
             return lastJobID;
         }
 
