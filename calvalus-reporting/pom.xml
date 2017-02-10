@@ -150,7 +150,7 @@
                                     <mainClass>com.bc.calvalus.generator.GenerateCalvalusReport</mainClass>
                                 </manifest>
                             </archive>
-                            <finalName>generate-calvalus-report</finalName>
+                            <finalName>calvalus-report-generator</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>
