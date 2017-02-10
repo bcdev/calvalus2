@@ -36,11 +36,11 @@ public class JobResourceServiceImplTest {
     public void testThisWeek() throws Exception {
         LocalDate now = LocalDate.parse("2017-02-08");
         DayOfWeek dayOfWeek = now.getDayOfWeek();
-        LocalDate localDate = now.minusDays(dayOfWeek.getValue());
+        LocalDate localDate = now.minusDays(dayOfWeek.getValue()-1);
 
         assertEquals(dayOfWeek.getValue(), 3);
         assertEquals(dayOfWeek.toString(), "WEDNESDAY");
-        assertEquals(localDate.toString(), "2017-02-05");
+        assertEquals(localDate.toString(), "2017-02-06");
     }
 
     @Test
@@ -49,13 +49,13 @@ public class JobResourceServiceImplTest {
         DayOfWeek dayOfWeek = now.getDayOfWeek();
 
         LocalDate endDate = now.minusDays(dayOfWeek.getValue());
-        LocalDate startDate = endDate.minusDays(7);
+        LocalDate startDate = endDate.minusDays(6);
 
         assertEquals(dayOfWeek.getValue(), 5);
         assertEquals(dayOfWeek.toString(), "FRIDAY");
 
+        assertEquals(startDate.toString(), "2017-01-02");
         assertEquals(endDate.toString(), "2017-01-08");
-        assertEquals(startDate.toString(), "2017-01-01");
     }
 
     @Test

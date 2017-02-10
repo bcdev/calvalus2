@@ -60,6 +60,10 @@ h1 {
     margin: auto;
 }
 
+.tableAlign {
+    alignment: right;
+}
+
 .piechart {
     border: solid #d7dfe8;
     width: 70%;

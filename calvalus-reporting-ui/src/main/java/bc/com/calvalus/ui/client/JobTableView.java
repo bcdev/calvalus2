@@ -118,6 +118,7 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getJobsProcessed();
             }
         };
+
         jobsProcessed.setSortable(true);
         sortHandler.setComparator(jobsProcessed, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;

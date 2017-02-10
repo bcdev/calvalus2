@@ -33,7 +33,6 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     public static final int TO_GB = 1024;
     public static final int FIRST_DAY = 1;
-    public static final int FIRST_MONTH = 1;
 
     @Override
     public UserInfoInDetails getAllUserTodaySummary() {
@@ -46,7 +45,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     public UserInfoInDetails getAllUserThisWeekSummary() {
 
         LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(endDate.getDayOfWeek().getValue());
+        LocalDate startDate = endDate.minusDays(endDate.getDayOfWeek().getValue() - 1);
         return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
     }
 
@@ -56,7 +55,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         DayOfWeek dayOfWeek = now.getDayOfWeek();
 
         LocalDate endDate = now.minusDays(dayOfWeek.getValue());
-        LocalDate startDate = endDate.minusDays(7);
+        LocalDate startDate = endDate.minusDays(6);
         return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
     }
 
@@ -80,9 +79,8 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
     @Override
     public UserInfoInDetails getAllUserYesterdaySummary() {
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusDays(FIRST_DAY);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+        LocalDate startDate = LocalDate.now().minusDays(FIRST_DAY);
+        return getAllUserSummaryBetween(startDate.toString(), startDate.toString());
     }
 
     @Override
@@ -114,16 +112,20 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private UserInfo convertUnits(UserInfo p) {
+        String totalFileReadingMb = convertSize(p.getTotalFileReadingMb(), TO_GB);
+        String totalFileWritingMb = convertSize(p.getTotalFileWritingMb(), TO_GB);
+        String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2));
+
         return new UserInfo(p.getUser(),
                             p.getJobsProcessed(),
-                            convertMBToGB(p.getTotalFileReadingMb(), TO_GB),
-                            convertMBToGB(p.getTotalFileWritingMb(), TO_GB),
-                            convertMBToGB(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2)),
+                            totalFileReadingMb,
+                            totalFileWritingMb,
+                            totalMemoryUsedMbs,
                             p.getTotalCpuTimeSpent(),
                             p.getTotalMaps());
     }
 
-    private String convertMBToGB(String totalFileReadingMb, double size) {
+    private String convertSize(String totalFileReadingMb, double size) {
         Number parse = null;
         try {
             NumberFormat instance = DecimalFormat.getInstance();
@@ -131,7 +133,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        return String.format("%.4f ", parse.longValue() / size);
+        return String.format("%.3f ", parse.longValue() / size);
     }
 
     private static String clientRequest(String uri, String textPlain) {
