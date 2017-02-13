@@ -155,6 +155,17 @@ public interface BackendService extends RemoteService {
     boolean removeUserFile(String filePath) throws BackendServiceException;
 
     /**
+     * Deletes multiple files from the user's file space in the inventory.
+     *
+     * @param filePaths     A list of relative path into the user's file space.
+     *
+     * @return true, if the files could be found and removed.
+     *
+     * @throws BackendServiceException If an error occurred (file exists, but can't be removed).
+     */
+    boolean removeUserFiles(String[] filePaths) throws BackendServiceException;
+
+    /**
      * Deletes a directory from the user's file space in the inventory.
      *
      * @param filePath     A relative path into the user's file space.

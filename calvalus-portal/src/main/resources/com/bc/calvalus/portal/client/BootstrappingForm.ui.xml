@@ -21,6 +21,7 @@
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addBootstrapSourceButton' text="Add"/>
                         <g:Button ui:field='removeBootstrapSourceButton' text="Remove"/>
+                        <g:Button ui:field='removeAllBootstrapSourceButton' text="Remove All"/>
                     </g:HorizontalPanel>
                 </g:VerticalPanel>
 

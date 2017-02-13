@@ -499,6 +499,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
+    public boolean removeUserFiles(String... filePaths) throws BackendServiceException {
+        boolean deleted = true;
+        for (String filePath : filePaths) {
+            deleted = deleted && removeUserFile(filePath);
+        }
+        return deleted;
+    }
+
+    @Override
     public boolean removeUserDirectory(String filePath) throws BackendServiceException {
         try {
             String userName = getUserName();

@@ -17,6 +17,8 @@ public interface BackendServiceAsync {
 
     void removeUserFile(String path, AsyncCallback<Boolean> callback);
 
+    void removeUserFiles(String[] paths, AsyncCallback<Boolean> callback);
+
     void removeUserDirectory(String path, AsyncCallback<Boolean> callback);
 
     void getProductSets(String filter, AsyncCallback<DtoProductSet[]> callback);
