@@ -19,7 +19,9 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
+import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -128,29 +130,67 @@ public class JobTableView<T> extends Composite {
             Integer integerM = new Integer(o12.getJobsProcessed());
             return integerO.compareTo(integerM);
         });
-        dataGrid.addColumn(jobsProcessed, "Jobs Processed");
+        dataGrid.addColumn(jobsProcessed, "Jobs");
         dataGrid.setColumnWidth(jobsProcessed, 20, Style.Unit.PCT);
 
-        // #### totalMaps
-        Column<T, String> totalMaps = new Column<T, String>(new TextCell()) {
+        // #### products
+        Column<T, String> products = new Column<T, String>(new TextCell()) {
             @Override
             public String getValue(T object) {
                 return ((UserInfo) object).getTotalMaps();
             }
         };
-        dataGrid.addColumn(totalMaps, "Total Maps");
-        dataGrid.setColumnWidth(totalMaps, 20, Style.Unit.PCT);
+        products.setSortable(true);
+        sortHandler.setComparator(products, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+            String longVal1 = o11.getTotalMaps().replace(",", "");
+            String longVal2 = o12.getTotalMaps().replace(",", "");
+            return longVal1.compareTo(longVal2);
+        });
+        dataGrid.addColumn(products, "Products");
+        dataGrid.setColumnWidth(products, 20, Style.Unit.PCT);
 
 
-        // #### totalCpuTimeSpent
-        Column<T, String> totalCpuTimeSpent = new Column<T, String>(new TextCell()) {
+        // #### cpuHours
+        Column<T, String> cpuHours = new Column<T, String>(new TextCell()) {
             @Override
             public String getValue(T object) {
                 return ((UserInfo) object).getTotalCpuTimeSpent();
             }
         };
-        dataGrid.addColumn(totalCpuTimeSpent, "Total Cpu Time Spent");
-        dataGrid.setColumnWidth(totalCpuTimeSpent, 20, Style.Unit.PCT);
+        cpuHours.setSortable(true);
+        sortHandler.setComparator(cpuHours, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            String longVal1 = o11.getTotalCpuTimeSpent().replace(",", "");
+            String longVal2 = o12.getTotalCpuTimeSpent().replace(",", "");
+            return longVal1.compareTo(longVal2);
+        });
+        dataGrid.addColumn(cpuHours, "Cpu Hours");
+        dataGrid.setColumnWidth(cpuHours, 20, Style.Unit.PCT);
+
+
+        // ### totalMemoryUsedMbs
+        Column<T, String> totalMemoryUsedMbs = new Column<T, String>(new TextCell()) {
+            @Override
+            public String getValue(T object) {
+                return ((UserInfo) object).getTotalMemoryUsedMbs();
+            }
+        };
+        totalMemoryUsedMbs.setSortable(true);
+        sortHandler.setComparator(totalMemoryUsedMbs, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            String longVal1 = o11.getTotalMemoryUsedMbs().replace(",", "");
+            String longVal2 = o12.getTotalMemoryUsedMbs().replace(",", "");
+            return longVal1.compareTo(longVal2);
+        });
+        dataGrid.addColumn(totalMemoryUsedMbs, "RAM GB hours");
+        dataGrid.setColumnWidth(totalMemoryUsedMbs, 20, Style.Unit.PCT);
+
 
         // ### totalFileReadingMb
         Column<T, String> totalFileReadingMb = new Column<T, String>(new TextCell()) {
@@ -159,7 +199,16 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalFileReadingMb();
             }
         };
-        dataGrid.addColumn(totalFileReadingMb, "Total File Read GBs");
+        totalFileReadingMb.setSortable(true);
+        sortHandler.setComparator(totalFileReadingMb, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            String longVal1 = o11.getTotalFileReadingMb().replace(",", "");
+            String longVal2 = o12.getTotalFileReadingMb().replace(",", "");
+            return longVal1.compareTo(longVal2);
+        });
+        dataGrid.addColumn(totalFileReadingMb, "TB Read");
         dataGrid.setColumnWidth(totalFileReadingMb, 20, Style.Unit.PCT);
 
         // ### totalFileWritingMb
@@ -169,20 +218,17 @@ public class JobTableView<T> extends Composite {
                 return ((UserInfo) object).getTotalFileWritingMb();
             }
         };
-        dataGrid.addColumn(totalFileWritingMb, "Total File Write GBs");
+        totalFileWritingMb.setSortable(true);
+        sortHandler.setComparator(totalFileWritingMb, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            String longVal1 = o11.getTotalFileWritingMb().replace(",", "");
+            String longVal2 = o12.getTotalFileWritingMb().replace(",", "");
+            return longVal1.compareTo(longVal2);
+        });
+        dataGrid.addColumn(totalFileWritingMb, "TB Write");
         dataGrid.setColumnWidth(totalFileWritingMb, 20, Style.Unit.PCT);
-
-        // ### totalMemoryUsedMbs
-        Column<T, String> totalMemoryUsedMbs = new Column<T, String>(new TextCell()) {
-            @Override
-            public String getValue(T object) {
-                return ((UserInfo) object).getTotalMemoryUsedMbs();
-            }
-        };
-        dataGrid.addColumn(totalMemoryUsedMbs, "Total Memory Used TBs");
-        dataGrid.setColumnWidth(totalMemoryUsedMbs, 20, Style.Unit.PCT);
-
-
     }
 
     public DialogBox getShowDialog(UserInfo userInfo) {
