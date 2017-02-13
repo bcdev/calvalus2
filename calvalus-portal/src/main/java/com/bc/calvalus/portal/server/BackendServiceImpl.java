@@ -491,7 +491,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public boolean removeUserFile(String filePath) throws BackendServiceException {
         try {
             String userName = getUserName();
-            return serviceContainer.getFileSystemService().removeFile(userName, filePath);
+            String userPath = AbstractFileSystemService.getUserPath(userName, filePath);
+            return serviceContainer.getFileSystemService().removeFile(userName, userPath);
         } catch (IOException e) {
             throw convert(e);
         }
