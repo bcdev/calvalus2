@@ -78,10 +78,18 @@ public class ReportGeneratorTest {
 
 
     @Test
-    public void testGenerateAllJobUserSummary() throws Exception {
+    public void testGenerateAllUserJobSummary() throws Exception {
         reportGenerator = new ReportGenerator();
-        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserStatistic();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserUsageStatistic();
         String jsonAllUserJobSummary = reportGenerator.generateJsonAllUserJobSummary(allUserStatistic);
+        assertNotNull(jsonAllUserJobSummary);
+    }
+
+    @Test
+    public void testGenerateAllUserJobSummaryDate() throws Exception {
+        reportGenerator = new ReportGenerator();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUsageBetween("2017-01-09", "2017-01-12");
+        String jsonAllUserJobSummary = reportGenerator.generateJsonAllUserJobSummary_(allUserStatistic);
         assertNotNull(jsonAllUserJobSummary);
     }
 
@@ -140,7 +148,7 @@ public class ReportGeneratorTest {
                                                                                                "  \"jobsProcessed\": \"1381\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
                                                                                                "  \"totalVcoresUsed\": \"28,138,453\",\n" +
-                                                                                       "  \"totalMaps\": \"0\"\n"+
+                                                                                               "  \"totalMaps\": \"0\"\n" +
                                                                                                "}"));
 
     }
@@ -148,7 +156,7 @@ public class ReportGeneratorTest {
     @Ignore
     @Test
     public void canGenerateSingleUserYearJson() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserYearStatistic("cvop", "2017");
+        List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserUsageInYear("cvop", "2017");
 
         reportGenerator = new ReportGenerator();
 
@@ -164,7 +172,7 @@ public class ReportGeneratorTest {
                                                                                                "  \"jobsProcessed\": \"1381\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
                                                                                                "  \"totalVcoresUsed\": \"28,138,453\",\n" +
-                                                                                               "  \"totalMaps\": \"0\"\n"+
+                                                                                               "  \"totalMaps\": \"0\"\n" +
                                                                                                "}"));
 
     }

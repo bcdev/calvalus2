@@ -81,7 +81,7 @@ public class JSONExtractorTest {
     @Test
     public void testSummaryOfAllUsers() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserStatistic();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserUsageStatistic();
         Set<String> keySet = allUserStatistic.keySet();
         assertEquals(keySet.size(), 11);
     }
@@ -96,7 +96,7 @@ public class JSONExtractorTest {
     @Test
     public void testUSerStatisticInYear() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearStatistic("jessica", "2017");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageInYear("jessica", "2017");
         assertEquals(usageStatisticList.size(), 2);
         UsageStatistic usageStatistic = usageStatisticList.get(0);
 
@@ -121,7 +121,7 @@ public class JSONExtractorTest {
     @Test
     public void testUSerStatisticInYearMonth() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthStatistic("thomas", "2017", "01");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageInYearMonth("thomas", "2017", "01");
         assertEquals(usageStatisticList.size(), 626);
         UsageStatistic usageStatistic = usageStatisticList.get(0);
 
@@ -146,7 +146,7 @@ public class JSONExtractorTest {
     @Test
     public void testUSerStatisticInYearMonthDay() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthDayStatistic("martin", "2017", "01", "09");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageYearMonthDay("martin", "2017", "01", "09");
         assertEquals(usageStatisticList.size(), 5);
         UsageStatistic usageStatistic = usageStatisticList.get(0);
 
@@ -172,15 +172,41 @@ public class JSONExtractorTest {
     @Test
     public void testUserStatisticRange() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserStartEndDateStatistic("martin", "2017-01-09", "2017-01-15");
+        List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageBetween("martin", "2017-01-09", "2017-01-15");
         assertEquals(usageStatisticList.size(), 1484);
     }
 
-    @Ignore
     @Test
-    public void testAllUserStatisticRange() throws Exception {
+    public void testAllUserStatisticRangeGroupByDate() throws Exception {
         JSONExtractor jsonExtractor = new JSONExtractor();
-        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsersStartEndDateStatistic("2017-01-09", "2017-01-15");
-        assertEquals(allUsersStartEndDateStatistic.size(), 8);
+        Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsageBetween("2017-01-09", "2017-01-15");
+        assertEquals(allUsersStartEndDateStatistic.size(), 7);
+    }
+
+    @Test
+    public void testDateBetween() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        Set<String> datesBetween = jsonExtractor.getDatesBetween("2017-01-01", "2017-01-13");
+        assertEquals(datesBetween.size(), 13);
+
+        assertTrue(datesBetween.contains("2017-01-01"));
+        assertTrue(datesBetween.contains("2017-01-02"));
+        assertTrue(datesBetween.contains("2017-01-03"));
+        assertTrue(datesBetween.contains("2017-01-04"));
+        assertTrue(datesBetween.contains("2017-01-05"));
+        assertTrue(datesBetween.contains("2017-01-06"));
+        assertTrue(datesBetween.contains("2017-01-07"));
+        assertTrue(datesBetween.contains("2017-01-08"));
+        assertTrue(datesBetween.contains("2017-01-09"));
+        assertTrue(datesBetween.contains("2017-01-10"));
+        assertTrue(datesBetween.contains("2017-01-11"));
+        assertTrue(datesBetween.contains("2017-01-13"));
+    }
+
+    @Test
+    public void testDateNotBetween() throws Exception {
+        JSONExtractor jsonExtractor = new JSONExtractor();
+        Set<String> datesBetween = jsonExtractor.getDatesBetween("2019-01-01", "2017-01-13");
+        assertEquals(datesBetween.size(), 0);
     }
 }

@@ -63,7 +63,7 @@ public class ReportingService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getAllUserSummary() {
         try {
-            Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserStatistic();
+            Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserUsageStatistic();
             if (allUserStatistics.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }
@@ -75,29 +75,12 @@ public class ReportingService {
 
 
     @GET
-    @Path("/range/{date_start}/{date_end}")
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getTimeRangeSpecificJobReportTxt(
-            @PathParam("date_start") String start,
-            @PathParam("date_end") String end) {
-        try {
-            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsersStartEndDateStatistic(start, end);
-            if (allUsersStartEndDateStatistic.size() < 1) {
-                throw new JobNotFoundException("No job found for any user ");
-            }
-            return reportGenerator.generateJsonAllUserJobSummary(allUsersStartEndDateStatistic);
-        } catch (IOException | JobNotFoundException excep) {
-            return getErrorResponse(excep);
-        }
-    }
-
-    @GET
     @Path("{user}/time/{year}")
     @Produces(MediaType.TEXT_PLAIN)
     public String getYearlyJobReportTxt(@PathParam("user") String user,
                                         @PathParam("year") String year) {
         try {
-            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearStatistic(user, year);
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageInYear(user, year);
             if (usageStatisticList.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }
@@ -114,7 +97,7 @@ public class ReportingService {
                                          @PathParam("year") String year,
                                          @PathParam("month") String month) {
         try {
-            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthStatistic(user, year, month);
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageInYearMonth(user, year, month);
             if (usageStatisticList.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }
@@ -133,7 +116,7 @@ public class ReportingService {
                                          @PathParam("month") String month,
                                          @PathParam("day") String day) {
         try {
-            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserYearMonthDayStatistic(user, year, month, day);
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageYearMonthDay(user, year, month, day);
             if (usageStatisticList.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }
@@ -150,7 +133,7 @@ public class ReportingService {
                                               @PathParam("date_start") String start,
                                               @PathParam("date_end") String end) {
         try {
-            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserStartEndDateStatistic(user, start, end);
+            List<UsageStatistic> usageStatisticList = jsonExtractor.getSingleUserUsageBetween(user, start, end);
             if (usageStatisticList.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }
@@ -160,6 +143,39 @@ public class ReportingService {
         }
     }
 
+    @GET
+    @Path("/range/{date_start}/{date_end}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getDateRangeSpecificJobReportTxt(
+            @PathParam("date_start") String start,
+            @PathParam("date_end") String end) {
+        try {
+            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUserUsageBetween(start, end);
+            if (allUsersStartEndDateStatistic.size() < 1) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonAllUserJobSummary(allUsersStartEndDateStatistic);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
+    }
+
+    @GET
+    @Path("/range-date/{date_start}/{date_end}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getDateRangeSpecificJobReportTxt_(
+            @PathParam("date_start") String start,
+            @PathParam("date_end") String end) {
+        try {
+            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsageBetween(start, end);
+            if (allUsersStartEndDateStatistic.size() <= 0) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonAllUserJobSummary_(allUsersStartEndDateStatistic);
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
+    }
 
     private String getErrorResponse(Exception exception) {
         Map<String, String> responseMap = new HashMap<>();

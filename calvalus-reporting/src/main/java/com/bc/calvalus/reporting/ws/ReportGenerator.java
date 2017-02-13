@@ -36,6 +36,17 @@ class ReportGenerator {
         return gson.toJson(multiJobJsonContentsPerUserMap);
     }
 
+    public String generateJsonAllUserJobSummary_(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
+        List<Map<String, String>> multiJobJsonContentsPerUserMap = new ArrayList<>();
+        allUserStatisticsMap.forEach((key, usageStatisticsList) -> {
+            Map<String, String> multiJobJsonContentsPerUser = getMultiJobJsonContents(usageStatisticsList);
+            multiJobJsonContentsPerUser.put("jobsInDate", key);
+            multiJobJsonContentsPerUserMap.add(multiJobJsonContentsPerUser);
+        });
+        Gson gson = new Gson();
+        return gson.toJson(multiJobJsonContentsPerUserMap);
+    }
+
     String generatePdfSingleJob(UsageStatistic usageStatistic) throws IOException {
         PDDocument document = new PDDocument();
         PDPage page = new PDPage();
@@ -224,11 +235,11 @@ class ReportGenerator {
         double memoryPrice = PriceCalculator.getMemoryPrice(totalMemoryUsed);
         double diskPrice = PriceCalculator.getDiskPrice(totalFileWriting + totalFileReading);
         jobReport.add("CPU usage price = (Total vCores used) x € 0.0013 = € " +
-                      cpuPrice);
+                              cpuPrice);
         jobReport.add("Memory usage price = (Total Memory used) x € 0.00022 = € " +
-                      memoryPrice);
+                              memoryPrice);
         jobReport.add("Disk space usage price = (Total file writing GB + Total file reading GB) x € 0.011 = € " +
-                      diskPrice);
+                              diskPrice);
         jobReport.add("");
         jobReport.add("Total = € " + (cpuPrice + memoryPrice + diskPrice));
         return jobReport;

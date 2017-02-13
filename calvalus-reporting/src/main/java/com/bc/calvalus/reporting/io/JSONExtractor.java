@@ -7,14 +7,19 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
@@ -29,6 +34,7 @@ import org.jetbrains.annotations.NotNull;
 public class JSONExtractor {
 
     private static final String INIT_FIRST_DAY = "01";
+    public static final String INIT_FIRST_MONTH = "01";
 
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
@@ -61,61 +67,91 @@ public class JSONExtractor {
                              }.getType());
     }
 
-    public Map<String, List<UsageStatistic>> getAllUserStatistic() throws IOException {
+    public Map<String, List<UsageStatistic>> getAllUserUsageStatistic() throws IOException {
         List<UsageStatistic> allStatistics = getAllStatistics();
         ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
         allStatistics.stream().forEach(p -> {
             String user = p.getUser();
             groupUserUsageStatistic.computeIfAbsent(user, userName -> {
+                List<UsageStatistic> singleUserStatistic = null;
                 try {
-                    return getSingleUserStatistic(userName);
+                    singleUserStatistic = getSingleUserStatistic(userName);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                throw new NullPointerException("The user %userName have no statistic information.");
+                return singleUserStatistic;
             });
         });
         return groupUserUsageStatistic;
     }
 
 
-    public Map<String, List<UsageStatistic>> getAllUsersStartEndDateStatistic(String start, String end) throws IOException {
+    public Map<String, List<UsageStatistic>> getAllUserUsageBetween(String start, String end) throws IOException {
         Predicate<Long> predicate = filterDateIntervals(start, end);
         List<UsageStatistic> allStatistics = getAllStatistics();
         return getUsageStatisticsIfUserNull(predicate, allStatistics);
     }
 
-    public List<UsageStatistic> getSingleUserStartEndDateStatistic(String user, String startDate, String endDate) throws IOException {
+    public Map<String, List<UsageStatistic>> getAllUsageBetween(String start, String end) throws IOException {
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        Set<String> dates = getDatesBetween(start, end);
+        Map<String, List<UsageStatistic>> usageWithDate = new HashMap<>();
+
+        dates.forEach(date -> {
+            Predicate<Long> predicate = filterDateIntervals(date, date);
+            List<UsageStatistic> usageStatisticList = allStatistics
+                    .stream()
+                    .filter(p -> predicate.test(p.getFinishTime()))
+                    .collect(Collectors.toList());
+            usageWithDate.put(date, usageStatisticList);
+        });
+
+        return usageWithDate;
+    }
+
+    Set<String> getDatesBetween(String start, String end) {
+        LocalDateTime startOfDay = LocalDate.parse(start).atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.parse(end).atStartOfDay();
+        long l = Duration.between(startOfDay, endOfDay).toDays();
+        Set<String> dates = new TreeSet<>();
+        for (int i = 0; i <= l; i++) {
+            LocalDate localDate = startOfDay.plusDays(i).toLocalDate();
+            dates.add(localDate.toString());
+        }
+        return dates;
+    }
+
+    public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = getAllStatistics();
         List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
         return singleUserYearStatistic;
     }
 
-    public List<UsageStatistic> getSingleUserYearStatistic(String user, String year) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageInYear(String user, String year) throws IOException {
         Predicate<FilterUserTimeInterval> yearPredicate = FilterUserTimeInterval::filterYear;
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearPredicate, user, year, INIT_FIRST_DAY, INIT_FIRST_DAY);
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDate(yearPredicate, user, year, INIT_FIRST_MONTH, INIT_FIRST_DAY);
         return singleUserYearStatistic;
     }
 
-    public List<UsageStatistic> getSingleUserYearMonthStatistic(String user, String year, String month) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageInYearMonth(String user, String year, String month) throws IOException {
         Predicate<FilterUserTimeInterval> yearMonthPredicate = FilterUserTimeInterval::filterMonth;
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(yearMonthPredicate, user, year, month, INIT_FIRST_DAY);
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDate(yearMonthPredicate, user, year, month, INIT_FIRST_DAY);
         return singleUserYearStatistic;
     }
 
-    public List<UsageStatistic> getSingleUserYearMonthDayStatistic(String user, String year, String month, String day) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageYearMonthDay(String user, String year, String month, String day) throws IOException {
         Predicate<FilterUserTimeInterval> ymdPredicate = FilterUserTimeInterval::filterDay;
-        List<UsageStatistic> singleUserYearStatistic = getSingleUserDateStatistic(ymdPredicate, user, year, month, day);
+        List<UsageStatistic> singleUserYearStatistic = getSingleUserDate(ymdPredicate, user, year, month, day);
         return singleUserYearStatistic;
     }
 
 
-    private List<UsageStatistic> getSingleUserDateStatistic(Predicate<FilterUserTimeInterval> intervalPredicate,
-                                                            String user,
-                                                            String yr,
-                                                            String mnth,
-                                                            String dy) throws IOException {
+    private List<UsageStatistic> getSingleUserDate(Predicate<FilterUserTimeInterval> intervalPredicate,
+                                                   String user,
+                                                   String yr,
+                                                   String mnth,
+                                                   String dy) throws IOException {
 
         final ConcurrentHashMap<String, List<UsageStatistic>> extractUserDate = new ConcurrentHashMap<>();
         final List<UsageStatistic> userStatisticInYear = new ArrayList<>();
