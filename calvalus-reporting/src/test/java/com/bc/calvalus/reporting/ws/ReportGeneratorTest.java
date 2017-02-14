@@ -86,12 +86,31 @@ public class ReportGeneratorTest {
     }
 
     @Test
-    public void testGenerateAllUserJobSummaryDate() throws Exception {
+    public void testGenerateAllDateJobSummaryBetween() throws Exception {
         reportGenerator = new ReportGenerator();
-        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUsageBetween("2017-01-09", "2017-01-12");
-        String jsonAllUserJobSummary = reportGenerator.generateJsonAllUserJobSummary_(allUserStatistic);
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllDateUsageBetween("2017-01-01", "2017-01-12");
+        String jsonAllUserJobSummary = reportGenerator.generateJsonUsageBetween(allUserStatistic, "jobsInDate");
         assertNotNull(jsonAllUserJobSummary);
     }
+
+    @Test
+    public void testGenerateAllUserJobSummaryBetween() throws Exception {
+        reportGenerator = new ReportGenerator();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserUsageBetween("2017-01-01", "2017-01-30");
+        String jsonAllUserJobSummary = reportGenerator.generateJsonAllUserJobSummary(allUserStatistic);
+        assertNotNull(jsonAllUserJobSummary);
+        //todo mba*** add more assertion
+    }
+
+    @Test
+    public void testGenerateAllQueueJobSummaryBetween() throws Exception {
+        reportGenerator = new ReportGenerator();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllQueueUsageBetween("2017-01-01", "2017-01-30");
+        String queue = reportGenerator.generateJsonUsageBetween(allUserStatistic,"jobsInQueue");
+        assertNotNull(queue);
+        //todo mba*** add more assertion
+    }
+
 
     @Test
     public void canGenerateTextMonthly() throws Exception {
@@ -101,11 +120,11 @@ public class ReportGeneratorTest {
 
         assertThat(reportGenerator.generateTextMonthly(usageStatistics), equalTo("Usage statistic for user $USER in $MONTH $YEAR\n" +
                                                                                          "\n" +
-                                                                                         "Jobs processed : 3547" +
-                                                                                         "\nTotal file writing (MB) : 27,181,659\n" +
-                                                                                         "Total file reading (MB) : 73,412,232\n" +
-                                                                                         "Total CPU time spent : 26023:57:32\n" +
-                                                                                         "Total Memory used (MB s) :  334,310,849,659\n" +
+                                                                                         "Jobs processed : 3549" +
+                                                                                         "\nTotal file writing (MB) : 27,181,661\n" +
+                                                                                         "Total file reading (MB) : 73,412,234\n" +
+                                                                                         "Total CPU time spent : 26024:32:29\n" +
+                                                                                         "Total Memory used (MB s) :  334,310,851,755\n" +
                                                                                          "Total vCores used (vCore s) :  92,738,750\n" +
                                                                                          "\n" +
                                                                                          "\n" +

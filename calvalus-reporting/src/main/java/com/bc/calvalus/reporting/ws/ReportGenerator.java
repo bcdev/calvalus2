@@ -2,11 +2,6 @@ package com.bc.calvalus.reporting.ws;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.pdmodel.PDPageContentStream;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
-
 import java.io.File;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -16,6 +11,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 
 /**
@@ -26,7 +25,8 @@ class ReportGenerator {
     private static final int KILO_BYTES = 1024;
     private static final int MILI_SECONDS = 1000;
 
-    public String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
+
+    String generateJsonAllUserJobSummary(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
         List<Map<String, String>> multiJobJsonContentsPerUserMap = new ArrayList<>();
         allUserStatisticsMap.forEach((key, usageStatisticsList) -> {
             Map<String, String> multiJobJsonContentsPerUser = getMultiJobJsonContents(usageStatisticsList);
@@ -36,12 +36,14 @@ class ReportGenerator {
         return gson.toJson(multiJobJsonContentsPerUserMap);
     }
 
-    public String generateJsonAllUserJobSummary_(Map<String, List<UsageStatistic>> allUserStatisticsMap) {
+    String generateJsonUsageBetween(Map<String, List<UsageStatistic>> allUserStatisticsMap, String keyToCreate) {
         List<Map<String, String>> multiJobJsonContentsPerUserMap = new ArrayList<>();
         allUserStatisticsMap.forEach((key, usageStatisticsList) -> {
             Map<String, String> multiJobJsonContentsPerUser = getMultiJobJsonContents(usageStatisticsList);
-            multiJobJsonContentsPerUser.put("jobsInDate", key);
-            multiJobJsonContentsPerUserMap.add(multiJobJsonContentsPerUser);
+            if (multiJobJsonContentsPerUser != null) {
+                multiJobJsonContentsPerUser.put(keyToCreate, key);
+                multiJobJsonContentsPerUserMap.add(multiJobJsonContentsPerUser);
+            }
         });
         Gson gson = new Gson();
         return gson.toJson(multiJobJsonContentsPerUserMap);
@@ -177,6 +179,10 @@ class ReportGenerator {
         long totalMaps = 0;
         long totalMemoryUsed = 0;
         long totalVCoresUsed = 0;
+
+        if (usageStatistics.size() == 0) {
+            return null;
+        }
         for (UsageStatistic usageStatistic : usageStatistics) {
             totalMaps += usageStatistic.getTotalMaps();
             totalFileWriting += (usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()) / (KILO_BYTES * KILO_BYTES);

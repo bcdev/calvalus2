@@ -144,9 +144,9 @@ public class ReportingService {
     }
 
     @GET
-    @Path("/range/{date_start}/{date_end}")
+    @Path("/range-user/{date_start}/{date_end}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getDateRangeSpecificJobReportTxt(
+    public String getRangeUserBetween(
             @PathParam("date_start") String start,
             @PathParam("date_end") String end) {
         try {
@@ -163,15 +163,32 @@ public class ReportingService {
     @GET
     @Path("/range-date/{date_start}/{date_end}")
     @Produces(MediaType.TEXT_PLAIN)
-    public String getDateRangeSpecificJobReportTxt_(
+    public String getRangeDateBetween(
             @PathParam("date_start") String start,
             @PathParam("date_end") String end) {
         try {
-            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllUsageBetween(start, end);
+            Map<String, List<UsageStatistic>> allUsersStartEndDateStatistic = jsonExtractor.getAllDateUsageBetween(start, end);
             if (allUsersStartEndDateStatistic.size() <= 0) {
                 throw new JobNotFoundException("No job found for any user ");
             }
-            return reportGenerator.generateJsonAllUserJobSummary_(allUsersStartEndDateStatistic);
+            return reportGenerator.generateJsonUsageBetween(allUsersStartEndDateStatistic, "jobsInDate");
+        } catch (IOException | JobNotFoundException excep) {
+            return getErrorResponse(excep);
+        }
+    }
+
+    @GET
+    @Path("/range-queue/{date_start}/{date_end}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public String getRangeQueueBetween(
+            @PathParam("date_start") String start,
+            @PathParam("date_end") String end) {
+        try {
+            Map<String, List<UsageStatistic>> usageBetween = jsonExtractor.getAllQueueUsageBetween(start, end);
+            if (usageBetween.size() <= 0) {
+                throw new JobNotFoundException("No job found for any user ");
+            }
+            return reportGenerator.generateJsonUsageBetween(usageBetween, "jobsInQueue");
         } catch (IOException | JobNotFoundException excep) {
             return getErrorResponse(excep);
         }

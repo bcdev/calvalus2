@@ -15,10 +15,9 @@ public class JobDetailWriterTest {
 
     @Test
     public void readLastJobID() throws Exception {
-
         File file = new File(pathname);
         JobDetailWriter.GetEOFJobInfo getEOFJobInfo = new JobDetailWriter.GetEOFJobInfo(file);
-        Assert.assertEquals(getEOFJobInfo.getLastJobDetailsType().getJobId(), "job_1484434434570_0374");
+        Assert.assertEquals(getEOFJobInfo.getLastJobDetailsType().getJobId(), "job_1484434434570_0376");
     }
 
     @Ignore

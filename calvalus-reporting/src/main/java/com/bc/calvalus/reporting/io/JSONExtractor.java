@@ -36,6 +36,14 @@ public class JSONExtractor {
     private static final String INIT_FIRST_DAY = "01";
     public static final String INIT_FIRST_MONTH = "01";
 
+    public List<UsageStatistic> getAllStatistics() throws IOException {
+        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(PropertiesWrapper.get("reporting.file"));
+        String reportingJsonString = extractJsonString(inputStream);
+        Gson gson = new Gson();
+        return gson.fromJson(reportingJsonString,
+                             new TypeToken<List<UsageStatistic>>() {
+                             }.getType());
+    }
 
     public UsageStatistic getSingleStatistic(String jobId) throws IOException {
         List<UsageStatistic> usageStatistics = getAllStatistics();
@@ -45,26 +53,6 @@ public class JSONExtractor {
             }
         }
         return new NullUsageStatistic();
-    }
-
-    public List<UsageStatistic> getSingleUserStatistic(String userName) throws IOException {
-        List<UsageStatistic> usageStatistics = getAllStatistics();
-        List<UsageStatistic> singleUserStatistics = new ArrayList<>();
-        for (UsageStatistic usageStatistic : usageStatistics) {
-            if (userName.equalsIgnoreCase(usageStatistic.getUser())) {
-                singleUserStatistics.add(usageStatistic);
-            }
-        }
-        return singleUserStatistics;
-    }
-
-    public List<UsageStatistic> getAllStatistics() throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(PropertiesWrapper.get("reporting.file"));
-        String reportingJsonString = extractJsonString(inputStream);
-        Gson gson = new Gson();
-        return gson.fromJson(reportingJsonString,
-                             new TypeToken<List<UsageStatistic>>() {
-                             }.getType());
     }
 
     public Map<String, List<UsageStatistic>> getAllUserUsageStatistic() throws IOException {
@@ -85,14 +73,35 @@ public class JSONExtractor {
         return groupUserUsageStatistic;
     }
 
+    public List<UsageStatistic> getSingleUserStatistic(String userName) throws IOException {
+        List<UsageStatistic> usageStatistics = getAllStatistics();
+        List<UsageStatistic> singleUserStatistics = new ArrayList<>();
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            if (userName.equalsIgnoreCase(usageStatistic.getUser())) {
+                singleUserStatistics.add(usageStatistic);
+            }
+        }
+        return singleUserStatistics;
+    }
+
 
     public Map<String, List<UsageStatistic>> getAllUserUsageBetween(String start, String end) throws IOException {
         Predicate<Long> predicate = filterDateIntervals(start, end);
         List<UsageStatistic> allStatistics = getAllStatistics();
-        return getUsageStatisticsIfUserNull(predicate, allStatistics);
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+
+        ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
+        usageStatisticList.forEach(p -> groupUserUsageStatistic.computeIfAbsent(p.getUser(), stringKey ->
+                filterUser(stringKey, usageStatisticList)
+        ));
+        return groupUserUsageStatistic;
     }
 
-    public Map<String, List<UsageStatistic>> getAllUsageBetween(String start, String end) throws IOException {
+    private List<UsageStatistic> filterUser(String stringKey, List<UsageStatistic> usageStatisticList) {
+        return usageStatisticList.stream().filter(p -> p.getUser().equalsIgnoreCase(stringKey)).collect(Collectors.toList());
+    }
+
+    public Map<String, List<UsageStatistic>> getAllDateUsageBetween(String start, String end) throws IOException {
         List<UsageStatistic> allStatistics = getAllStatistics();
         Set<String> dates = getDatesBetween(start, end);
         Map<String, List<UsageStatistic>> usageWithDate = new HashMap<>();
@@ -109,23 +118,41 @@ public class JSONExtractor {
         return usageWithDate;
     }
 
-    Set<String> getDatesBetween(String start, String end) {
-        LocalDateTime startOfDay = LocalDate.parse(start).atStartOfDay();
-        LocalDateTime endOfDay = LocalDate.parse(end).atStartOfDay();
-        long l = Duration.between(startOfDay, endOfDay).toDays();
-        Set<String> dates = new TreeSet<>();
-        for (int i = 0; i <= l; i++) {
-            LocalDate localDate = startOfDay.plusDays(i).toLocalDate();
-            dates.add(localDate.toString());
-        }
-        return dates;
+    public Map<String, List<UsageStatistic>> getAllQueueUsageBetween(String start, String end) throws IOException {
+        Predicate<Long> predicate = filterDateIntervals(start, end);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+        ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
+
+        usageStatisticList.forEach(p -> groupUserUsageStatistic.computeIfAbsent(p.getQueue(), queue ->
+                filterQueue(queue, usageStatisticList)
+        ));
+        return groupUserUsageStatistic;
     }
+
+    private List<UsageStatistic> filterQueue(String queue, List<UsageStatistic> usageStatisticList) {
+        return usageStatisticList.stream().filter(p -> p.getQueue().equalsIgnoreCase(queue)).collect(Collectors.toList());
+    }
+
 
     public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = getAllStatistics();
         List<UsageStatistic> singleUserYearStatistic = getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
         return singleUserYearStatistic;
+    }
+
+    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> predTime, String userName, List<UsageStatistic> allStatisticUsage) {
+        ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate = new ConcurrentHashMap<>();
+        List<UsageStatistic> userStatisticInYear = new ArrayList<>();
+        filterUserWithDate.put(userName, userStatisticInYear);
+        allStatisticUsage.forEach(p -> filterUserWithDate.computeIfPresent(p.getUser(), (s, usageStatistics) -> {
+            if (predTime.test(p.getFinishTime())) {
+                userStatisticInYear.add(p);
+            }
+            return userStatisticInYear;
+        }));
+        return userStatisticInYear;
     }
 
     public List<UsageStatistic> getSingleUserUsageInYear(String user, String year) throws IOException {
@@ -190,44 +217,24 @@ public class JSONExtractor {
     }
 
 
-    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> predTime, String userName, List<UsageStatistic> allStatisticUsage) {
-        ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate = new ConcurrentHashMap<>();
-        List<UsageStatistic> userStatisticInYear = new ArrayList<>();
-        filterUserWithDate.put(userName, userStatisticInYear);
-
-        allStatisticUsage.forEach(usageStatistic -> getUsageStatisticsIfUserNotNull(predTime, filterUserWithDate, userStatisticInYear, usageStatistic));
-        return userStatisticInYear;
-    }
-
-
-    private List<UsageStatistic> getUsageStatisticsIfUserNotNull(Predicate<Long> intervalPredicate,
-                                                                 ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate,
-                                                                 List<UsageStatistic> userStatisticInYear,
-                                                                 UsageStatistic usageStatistic) {
-        return filterUserWithDate.computeIfPresent(usageStatistic.getUser(), (s, usageStatistics) -> {
-            if (intervalPredicate.test(usageStatistic.getFinishTime())) {
-                userStatisticInYear.add(usageStatistic);
-            }
-            return userStatisticInYear;
-        });
-    }
-
-    private Map<String, List<UsageStatistic>> getUsageStatisticsIfUserNull(Predicate<Long> intervalPredicate, List<UsageStatistic> allStatistics) {
-        ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
-        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> intervalPredicate.test(p.getFinishTime())).collect(Collectors.toList());
-
-        usageStatisticList.forEach(p -> groupUserUsageStatistic.computeIfAbsent(p.getUser(), stringKey ->
-                getSingleUserRangeStatistic(intervalPredicate, stringKey, usageStatisticList)
-        ));
-        return groupUserUsageStatistic;
-    }
-
     @NotNull
     private String extractJsonString(InputStream inputStream) throws IOException {
         String reportingJsonString = IOUtils.toString(inputStream);
         reportingJsonString = StringUtils.stripEnd(reportingJsonString.trim(), ",");
         reportingJsonString = "[" + reportingJsonString + "]";
         return reportingJsonString;
+    }
+
+    Set<String> getDatesBetween(String start, String end) {
+        LocalDateTime startOfDay = LocalDate.parse(start).atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.parse(end).atStartOfDay();
+        long l = Duration.between(startOfDay, endOfDay).toDays();
+        Set<String> dates = new TreeSet<>();
+        for (int i = 0; i <= l; i++) {
+            LocalDate localDate = startOfDay.plusDays(i).toLocalDate();
+            dates.add(localDate.toString());
+        }
+        return dates;
     }
 
     static class FilterUserTimeInterval {
