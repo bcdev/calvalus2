@@ -1,6 +1,7 @@
 package bc.com.calvalus.ui.server;
 
 import bc.com.calvalus.ui.client.JobResourcesService;
+import bc.com.calvalus.ui.client.TableType;
 import bc.com.calvalus.ui.shared.UserInfo;
 import bc.com.calvalus.ui.shared.UserInfoInDetails;
 import com.google.gson.Gson;
@@ -35,62 +36,81 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     public static final int FIRST_DAY = 1;
 
     @Override
-    public UserInfoInDetails getAllUserTodaySummary() {
+    public UserInfoInDetails getAllUserTodaySummary(TableType tableType) {
         LocalDate now = LocalDate.now();
-        List<UserInfo> allUserUsageSummaryBetween = getAllUserUsageSummaryBetween(now.toString(), now.toString());
-        return new UserInfoInDetails(allUserUsageSummaryBetween, now.toString(), now.toString());
+        return getAllUserSummaryBetween(now.toString(), now.toString(), tableType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserThisWeekSummary() {
-
+    public UserInfoInDetails getAllUserThisWeekSummary(TableType tableType) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(endDate.getDayOfWeek().getValue() - 1);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserLastWeekSummary() {
+    public UserInfoInDetails getAllUserLastWeekSummary(TableType tableType) {
         LocalDate now = LocalDate.now();
         DayOfWeek dayOfWeek = now.getDayOfWeek();
 
         LocalDate endDate = now.minusDays(dayOfWeek.getValue());
         LocalDate startDate = endDate.minusDays(6);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserThisMonthSummary() {
+    public UserInfoInDetails getAllUserThisMonthSummary(TableType tableType) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.withDayOfMonth(1);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserLastMonthSummary() {
+    public UserInfoInDetails getAllUserLastMonthSummary(TableType tableType) {
         LocalDate now = LocalDate.now();
         now = now.minusMonths(1);
         LocalDate startDate = now.withDayOfMonth(1);
         LocalDate endDate = now.withDayOfMonth(now.getMonth().maxLength());
 
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString());
+        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
     }
 
 
     @Override
-    public UserInfoInDetails getAllUserYesterdaySummary() {
+    public UserInfoInDetails getAllUserYesterdaySummary(TableType tableType) {
         LocalDate startDate = LocalDate.now().minusDays(FIRST_DAY);
-        return getAllUserSummaryBetween(startDate.toString(), startDate.toString());
+        return getAllUserSummaryBetween(startDate.toString(), startDate.toString(), tableType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate) {
-        List<UserInfo> allUserUsageSummaryBetween = getAllUserUsageSummaryBetween(startDate, endDate);
-        return new UserInfoInDetails(allUserUsageSummaryBetween, startDate, endDate);
+    public UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate, TableType tableType) {
+        List<UserInfo> allUsageSummaryBetween = null;
+        switch (tableType) {
+            case USER:
+                allUsageSummaryBetween = getAllUserUsageSummaryBetween(startDate, endDate);
+                break;
+            case DATE:
+                allUsageSummaryBetween = getAllDateUsageSummaryBetween(startDate, endDate);
+                break;
+            case QUEUE:
+                allUsageSummaryBetween = getAllQueueUsageSummaryBetween(startDate, endDate);
+                break;
+        }
+        return new UserInfoInDetails(allUsageSummaryBetween, startDate, endDate);
+    }
+
+    private List<UserInfo> getAllDateUsageSummaryBetween(String startDate, String endDate) {
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        return getGsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllUserUsageSummaryBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        return getGsonToUserInfo(jsonUser);
+    }
+
+    private List<UserInfo> getAllQueueUsageSummaryBetween(String startDate, String endDate) {
+        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return getGsonToUserInfo(jsonUser);
     }
 
@@ -116,7 +136,9 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         String totalFileWritingMb = convertSize(p.getTotalFileWritingMb(), TO_GB);
         String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2));
 
-        return new UserInfo(p.getUser(),
+        return new UserInfo(p.getJobsInDate(),
+                            p.getJobsInQueue(),
+                            p.getUser(),
                             p.getJobsProcessed(),
                             totalFileReadingMb,
                             totalFileWritingMb,

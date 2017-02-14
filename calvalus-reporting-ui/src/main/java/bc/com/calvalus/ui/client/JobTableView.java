@@ -4,10 +4,6 @@ import bc.com.calvalus.ui.shared.UserInfo;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style;
-import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
-import com.google.gwt.text.shared.AbstractSafeHtmlRenderer;
-import com.google.gwt.text.shared.SafeHtmlRenderer;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.DataGrid;
@@ -19,9 +15,7 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
-import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -39,6 +33,7 @@ public class JobTableView<T> extends Composite {
     private ListDataProvider<T> dataProvider;
     private List<T> dataList;
     private DockPanel dock = new DockPanel();
+    private final ColumnSortEvent.ListHandler<T> sortHandler;
 
     public JobTableView() {
         initWidget(dock);
@@ -52,7 +47,7 @@ public class JobTableView<T> extends Composite {
         dataProvider = new ListDataProvider<T>();
         dataProvider.setList(new ArrayList<T>());
         dataGrid.setEmptyTableWidget(new HTML("No Data to Display"));
-        ColumnSortEvent.ListHandler<T> sortHandler = new ColumnSortEvent.ListHandler<T>(dataProvider.getList());
+        sortHandler = new ColumnSortEvent.ListHandler<T>(dataProvider.getList());
 
         initTableColumns(dataGrid, sortHandler);
 
@@ -87,31 +82,88 @@ public class JobTableView<T> extends Composite {
 
     }
 
-    public void initTableColumns(DataGrid<T> dataGrid, ColumnSortEvent.ListHandler<T> sortHandler) {
-        SafeHtmlRenderer<String> anchorRenderer = new AbstractSafeHtmlRenderer<String>() {
-            public SafeHtml render(String object) {
-                SafeHtmlBuilder sb = new SafeHtmlBuilder();
-                sb.appendHtmlConstant("(<a href=\"javascript:;\">").appendEscaped(object)
-                        .appendHtmlConstant("</a>)");
-                return sb.toSafeHtml();
-            }
-        };
-
-        Column userName = new Column<UserInfo, String>(new TextCell()) {
+    public void initDateTable() {
+        initNewColumn();
+        Column dateTime = new Column<UserInfo, String>(new TextCell()) {
             @Override
             public String getValue(UserInfo object) {
-                return object.getUser();
+                return object.getJobsInDate();
             }
         };
-        userName.setSortable(true);
-        sortHandler.setComparator(userName, (o1, o2) -> {
+        dateTime.setSortable(true);
+        sortHandler.setComparator(dateTime, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;
             UserInfo o12 = (UserInfo) o2;
 
             return o11.compareTo(o12);
         });
-        dataGrid.addColumn(userName, "User Name");
-        dataGrid.setColumnWidth(userName, 10, Style.Unit.EM);
+        dataGrid.insertColumn(0, dateTime, "Date");
+        dataGrid.setColumnWidth(dateTime, 10, Style.Unit.EM);
+    }
+
+    public void initUserTable() {
+        initNewColumn();
+        Column user = new Column<UserInfo, String>(new TextCell()) {
+            @Override
+            public String getValue(UserInfo object) {
+                return object.getUser();
+            }
+        };
+        user.setSortable(true);
+        sortHandler.setComparator(user, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            return o11.compareTo(o12);
+        });
+        dataGrid.insertColumn(0, user, "User");
+        dataGrid.setColumnWidth(user, 10, Style.Unit.EM);
+    }
+
+    public void initQueueTable() {
+        initNewColumn();
+        Column queue = new Column<UserInfo, String>(new TextCell()) {
+            @Override
+            public String getValue(UserInfo object) {
+                return object.getJobsInQueue();
+            }
+        };
+        queue.setSortable(true);
+        sortHandler.setComparator(queue, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            return o11.compareTo(o12);
+        });
+        dataGrid.insertColumn(0, queue, "Queue");
+        dataGrid.setColumnWidth(queue, 10, Style.Unit.EM);
+    }
+
+    private void initNewColumn() {
+        dataGrid.removeColumn(0);
+        List<T> list = dataProvider.getList();
+        list.clear();
+        dataProvider.refresh();
+        dataGrid.redraw();
+    }
+
+
+    public void initTableColumns(DataGrid<T> dataGrid, ColumnSortEvent.ListHandler<T> sortHandler) {
+        Column dateTime = new Column<UserInfo, String>(new TextCell()) {
+            @Override
+            public String getValue(UserInfo object) {
+                return object.getJobsInDate();
+            }
+        };
+        dateTime.setSortable(true);
+        sortHandler.setComparator(dateTime, (o1, o2) -> {
+            UserInfo o11 = (UserInfo) o1;
+            UserInfo o12 = (UserInfo) o2;
+
+            return o11.compareTo(o12);
+        });
+        dataGrid.addColumn(dateTime, "Date");
+        dataGrid.setColumnWidth(dateTime, 10, Style.Unit.EM);
 
         // ### jobsProcessed
         Column<T, String> jobsProcessed = new Column<T, String>(new TextCell()) {

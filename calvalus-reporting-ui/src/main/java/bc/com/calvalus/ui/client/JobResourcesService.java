@@ -10,17 +10,17 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("JobResourcesService")
 public interface JobResourcesService extends RemoteService {
 
-    UserInfoInDetails getAllUserTodaySummary();
+    UserInfoInDetails getAllUserTodaySummary(TableType tableType);
 
-    UserInfoInDetails getAllUserThisWeekSummary();
+    UserInfoInDetails getAllUserThisWeekSummary(TableType tableType);
 
-    UserInfoInDetails getAllUserThisMonthSummary();
+    UserInfoInDetails getAllUserThisMonthSummary(TableType tableType);
 
-    UserInfoInDetails getAllUserLastWeekSummary();
+    UserInfoInDetails getAllUserLastWeekSummary(TableType tableType);
 
-    UserInfoInDetails getAllUserLastMonthSummary();
+    UserInfoInDetails getAllUserLastMonthSummary(TableType tableType);
 
-    UserInfoInDetails getAllUserYesterdaySummary();
+    UserInfoInDetails getAllUserYesterdaySummary(TableType tableType);
 
-    UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate);
+    UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate,TableType tableType);
 }

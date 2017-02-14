@@ -9,14 +9,12 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
-
-/**
- */
 public class ReportUI implements EntryPoint {
     private static final JobResourcesServiceAsync resourcesServiceAsync = GWT.create(JobResourcesService.class);
     private static final JobTableView<UserInfo> infoReportTable = new JobTableView<>();
     private static final SearchPanel searchPanel = new SearchPanel();
     private static final Label label = new Label();
+
 
     @Override
     public void onModuleLoad() {
@@ -26,12 +24,26 @@ public class ReportUI implements EntryPoint {
         RootPanel.get("tableDisplayId").add(infoReportTable);
     }
 
+    static void setTableType(TableType tableType) {
+        switch (tableType) {
+            case USER:
+                infoReportTable.initUserTable();
+                break;
+            case DATE:
+                infoReportTable.initDateTable();
+                break;
+            case QUEUE:
+                infoReportTable.initQueueTable();
+                break;
+        }
 
-    static void searchRecordYesterday() {
-        resourcesServiceAsync.getAllUserYesterdaySummary(new AsyncCallback<UserInfoInDetails>() {
+    }
+
+    static void searchRecordYesterday(TableType tableType) {
+        resourcesServiceAsync.getAllUserYesterdaySummary(tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in load Pie or the table" + throwable.getMessage()));
+                RootPanel.get().add(new HTML("Error in load yesterday data to the table" + throwable.getMessage()));
             }
 
             @Override
@@ -42,25 +54,8 @@ public class ReportUI implements EntryPoint {
         });
     }
 
-    static void searchRecordToday() {
-        resourcesServiceAsync.getAllUserTodaySummary(new AsyncCallback<UserInfoInDetails>() {
-            @Override
-            public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
-            }
-
-            @Override
-            public void onSuccess(UserInfoInDetails userInfos) {
-                infoReportTable.setDataList(userInfos.getUserInfos());
-                displayDateInterval(userInfos);
-
-            }
-        });
-    }
-
-
-    static void searchRecordThisWeekAgo() {
-        resourcesServiceAsync.getAllUserThisWeekSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordToday(TableType tableType) {
+        resourcesServiceAsync.getAllUserTodaySummary(tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
@@ -70,15 +65,16 @@ public class ReportUI implements EntryPoint {
             public void onSuccess(UserInfoInDetails userInfos) {
                 infoReportTable.setDataList(userInfos.getUserInfos());
                 displayDateInterval(userInfos);
+
             }
         });
     }
 
-    static void searchRecordThisMonthAgo() {
-        resourcesServiceAsync.getAllUserThisMonthSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordThisWeek(TableType tableType) {
+        resourcesServiceAsync.getAllUserThisWeekSummary(tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading this week data the table" + throwable.getMessage()));
             }
 
             @Override
@@ -89,12 +85,26 @@ public class ReportUI implements EntryPoint {
         });
     }
 
+    static void searchRecordThisMonthAgo(TableType tableType) {
+        resourcesServiceAsync.getAllUserThisMonthSummary(tableType, new AsyncCallback<UserInfoInDetails>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                RootPanel.get().add(new HTML("Error in loading this month data to the table" + throwable.getMessage()));
+            }
 
-    static void searchRecord(String start, String end) {
-        resourcesServiceAsync.getAllUserSummaryBetween(start, end, new AsyncCallback<UserInfoInDetails>() {
+            @Override
+            public void onSuccess(UserInfoInDetails userInfos) {
+                infoReportTable.setDataList(userInfos.getUserInfos());
+                displayDateInterval(userInfos);
+            }
+        });
+    }
+
+    static void searchRecord(String start, String end, TableType tableType) {
+        resourcesServiceAsync.getAllUserSummaryBetween(start, end, tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable caught) {
-                RootPanel.get().add(new HTML("Error in loading the table" + caught.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading data from " + start + " to " + end + " the table" + caught.getMessage()));
             }
 
             @Override
@@ -105,11 +115,11 @@ public class ReportUI implements EntryPoint {
         });
     }
 
-    static void searchRecordLastWeekAgo() {
-        resourcesServiceAsync.getAllUserLastWeekSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordLastWeekAgo(TableType tableType) {
+        resourcesServiceAsync.getAllUserLastWeekSummary(tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
-                RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+                RootPanel.get().add(new HTML("Error in loading last week data to the table" + throwable.getMessage()));
             }
 
             @Override
@@ -120,8 +130,8 @@ public class ReportUI implements EntryPoint {
         });
     }
 
-    static void searchRecordLastMonthAgo() {
-        resourcesServiceAsync.getAllUserLastMonthSummary(new AsyncCallback<UserInfoInDetails>() {
+    static void searchRecordLastMonthAgo(TableType tableType) {
+        resourcesServiceAsync.getAllUserLastMonthSummary(tableType, new AsyncCallback<UserInfoInDetails>() {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
@@ -143,6 +153,6 @@ public class ReportUI implements EntryPoint {
     }
 
     private void initDisplayTableandChart() {
-        searchRecord(null, null);
+        searchRecord(null, null, TableType.DATE);
     }
 }

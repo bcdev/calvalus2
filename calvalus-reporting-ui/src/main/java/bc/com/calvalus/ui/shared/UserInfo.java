@@ -8,6 +8,8 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  */
 public class UserInfo implements IsSerializable, Comparable<UserInfo> {
     private String user;
+    private String jobsInDate;
+    private String jobsInQueue;
     private String jobsProcessed;
     private String totalFileReadingMb;
     private String totalFileWritingMb;
@@ -18,7 +20,9 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
     public UserInfo() {
     }
 
-    public UserInfo(String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalMaps) {
+    public UserInfo(String jobsInDate, String jobsInQueue, String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalMaps) {
+        this.jobsInDate = jobsInDate;
+        this.jobsInQueue = jobsInQueue;
         this.user = user;
         this.jobsProcessed = jobsProcessed;
         this.totalFileReadingMb = totalFileReadingMb;
@@ -57,10 +61,18 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
         return totalMaps;
     }
 
+    public String getJobsInDate() {
+        return jobsInDate;
+    }
+
+    public String getJobsInQueue() {
+        return jobsInQueue;
+    }
 
     @Override
     public int compareTo(UserInfo o) {
-        return (o == null || o.user == null) ? -1 : -o.user.compareTo(user);
+//        return (o == null || o.user == null) ? -1 : -o.user.compareTo(user);
+        return 0;
     }
 
     @Override

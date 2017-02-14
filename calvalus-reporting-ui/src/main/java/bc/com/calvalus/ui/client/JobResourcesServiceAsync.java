@@ -5,17 +5,17 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface JobResourcesServiceAsync {
 
-    void getAllUserTodaySummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserTodaySummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserThisWeekSummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserThisWeekSummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserThisMonthSummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserThisMonthSummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserYesterdaySummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserLastWeekSummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserSummaryBetween(String startDate, String endDate, AsyncCallback<UserInfoInDetails> async);
+    void getAllUserLastMonthSummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserLastMonthSummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserYesterdaySummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
-    void getAllUserLastWeekSummary(AsyncCallback<UserInfoInDetails> async);
+    void getAllUserSummaryBetween(String startDate, String endDate, TableType tableType, AsyncCallback<UserInfoInDetails> async);
 }
