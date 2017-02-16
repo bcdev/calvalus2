@@ -15,12 +15,12 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
     private String totalFileWritingMb;
     private String totalMemoryUsedMbs;
     private String totalCpuTimeSpent;
-    private String totalMaps;
+    private String totalMapReduce;
 
     public UserInfo() {
     }
 
-    public UserInfo(String jobsInDate, String jobsInQueue, String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalMaps) {
+    public UserInfo(String jobsInDate, String jobsInQueue, String user, String jobsProcessed, String totalFileReadingMb, String totalFileWritingMb, String totalMemoryUsedMbs, String totalCpuTimeSpent, String totalMapReduce) {
         this.jobsInDate = jobsInDate;
         this.jobsInQueue = jobsInQueue;
         this.user = user;
@@ -29,7 +29,7 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
         this.totalFileWritingMb = totalFileWritingMb;
         this.totalMemoryUsedMbs = totalMemoryUsedMbs;
         this.totalCpuTimeSpent = totalCpuTimeSpent;
-        this.totalMaps = totalMaps;
+        this.totalMapReduce = totalMapReduce;
     }
 
     public String getUser() {
@@ -57,8 +57,8 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
         return totalCpuTimeSpent;
     }
 
-    public String getTotalMaps() {
-        return totalMaps;
+    public String getTotalMapReduce() {
+        return totalMapReduce;
     }
 
     public String getJobsInDate() {

@@ -18,4 +18,6 @@ public interface JobResourcesServiceAsync {
     void getAllUserYesterdaySummary(TableType tableType, AsyncCallback<UserInfoInDetails> async);
 
     void getAllUserSummaryBetween(String startDate, String endDate, TableType tableType, AsyncCallback<UserInfoInDetails> async);
+
+    void compareDate(String start, String end, AsyncCallback<Integer> async);
 }

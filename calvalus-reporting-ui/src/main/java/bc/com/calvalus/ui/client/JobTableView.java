@@ -3,17 +3,17 @@ package bc.com.calvalus.ui.client;
 import bc.com.calvalus.ui.shared.UserInfo;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.builder.shared.TableRowBuilder;
 import com.google.gwt.dom.client.Style;
+import com.google.gwt.user.cellview.client.AbstractHeaderOrFooterBuilder;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent;
 import com.google.gwt.user.cellview.client.DataGrid;
 import com.google.gwt.user.cellview.client.SimplePager;
 import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.DialogBox;
 import com.google.gwt.user.client.ui.DockPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
-import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.ListDataProvider;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,26 +23,24 @@ import java.util.List;
  */
 
 public class JobTableView<T> extends Composite {
-    public static final String WIDTH_100_PERCENT = "100%";
-    public static final boolean SHOW_FAST_FORWARD_BUTTON = false;
-    public static final int FAST_FORWARD_ROWS = 0;
-    public static final boolean SHOW_LAST_PAGE_BUTTON = true;
+    private static final String WIDTH_100_PERCENT = "100%";
+    private static final boolean SHOW_FAST_FORWARD_BUTTON = false;
+    private static final int FAST_FORWARD_ROWS = 0;
+    private static final boolean SHOW_LAST_PAGE_BUTTON = true;
     private DataGrid<T> dataGrid;
-    private SimplePager pager;
-    private String height;
     private ListDataProvider<T> dataProvider;
     private List<T> dataList;
     private DockPanel dock = new DockPanel();
     private final ColumnSortEvent.ListHandler<T> sortHandler;
 
-    public JobTableView() {
+    JobTableView() {
         initWidget(dock);
         dataGrid = new DataGrid<T>();
         dataGrid.setWidth(WIDTH_100_PERCENT);
         dataGrid.setHeight("700px");
 
         SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
-        pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, SHOW_FAST_FORWARD_BUTTON, FAST_FORWARD_ROWS, SHOW_LAST_PAGE_BUTTON);
+        SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, SHOW_FAST_FORWARD_BUTTON, FAST_FORWARD_ROWS, SHOW_LAST_PAGE_BUTTON);
         pager.setDisplay(dataGrid);
         dataProvider = new ListDataProvider<T>();
         dataProvider.setList(new ArrayList<T>());
@@ -55,6 +53,7 @@ public class JobTableView<T> extends Composite {
         dataProvider.addDataDisplay(dataGrid);
         pager.setVisible(true);
         dataGrid.setVisible(true);
+        dataGrid.setFooterBuilder(new SumColumnValueFooterBuilder());
 
         dock.add(dataGrid, DockPanel.CENTER);
         dock.add(pager, DockPanel.SOUTH);
@@ -64,12 +63,7 @@ public class JobTableView<T> extends Composite {
         dock.setCellHorizontalAlignment(pager, HasHorizontalAlignment.ALIGN_CENTER);
     }
 
-    public void setHeight(String height) {
-        this.height = height;
-        dataGrid.setHeight(height);
-    }
-
-    public void setDataList(List<T> dataList) {
+    void setDataList(List<T> dataList) {
         List<T> list = dataProvider.getList();
         list.clear();
         if (dataList == null) {
@@ -82,7 +76,7 @@ public class JobTableView<T> extends Composite {
 
     }
 
-    public void initDateTable() {
+    void initDateTable() {
         initNewColumn();
         Column dateTime = new Column<UserInfo, String>(new TextCell()) {
             @Override
@@ -92,16 +86,16 @@ public class JobTableView<T> extends Composite {
         };
         dateTime.setSortable(true);
         sortHandler.setComparator(dateTime, (o1, o2) -> {
-            UserInfo o11 = (UserInfo) o1;
-            UserInfo o12 = (UserInfo) o2;
+            String firstDate = ((UserInfo) o1).getJobsInDate();
+            String secondDate = ((UserInfo) o1).getJobsInDate();
+            return ReportUI.compareDate(firstDate, secondDate);
 
-            return o11.compareTo(o12);
         });
         dataGrid.insertColumn(0, dateTime, "Date");
         dataGrid.setColumnWidth(dateTime, 10, Style.Unit.EM);
     }
 
-    public void initUserTable() {
+    void initUserTable() {
         initNewColumn();
         Column user = new Column<UserInfo, String>(new TextCell()) {
             @Override
@@ -113,14 +107,13 @@ public class JobTableView<T> extends Composite {
         sortHandler.setComparator(user, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;
             UserInfo o12 = (UserInfo) o2;
-
             return o11.compareTo(o12);
         });
         dataGrid.insertColumn(0, user, "User");
         dataGrid.setColumnWidth(user, 10, Style.Unit.EM);
     }
 
-    public void initQueueTable() {
+    void initQueueTable() {
         initNewColumn();
         Column queue = new Column<UserInfo, String>(new TextCell()) {
             @Override
@@ -132,7 +125,6 @@ public class JobTableView<T> extends Composite {
         sortHandler.setComparator(queue, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;
             UserInfo o12 = (UserInfo) o2;
-
             return o11.compareTo(o12);
         });
         dataGrid.insertColumn(0, queue, "Queue");
@@ -148,7 +140,7 @@ public class JobTableView<T> extends Composite {
     }
 
 
-    public void initTableColumns(DataGrid<T> dataGrid, ColumnSortEvent.ListHandler<T> sortHandler) {
+    private void initTableColumns(DataGrid<T> dataGrid, ColumnSortEvent.ListHandler<T> sortHandler) {
         Column dateTime = new Column<UserInfo, String>(new TextCell()) {
             @Override
             public String getValue(UserInfo object) {
@@ -189,15 +181,15 @@ public class JobTableView<T> extends Composite {
         Column<T, String> products = new Column<T, String>(new TextCell()) {
             @Override
             public String getValue(T object) {
-                return ((UserInfo) object).getTotalMaps();
+                return ((UserInfo) object).getTotalMapReduce();
             }
         };
         products.setSortable(true);
         sortHandler.setComparator(products, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;
             UserInfo o12 = (UserInfo) o2;
-            String longVal1 = o11.getTotalMaps().replace(",", "");
-            String longVal2 = o12.getTotalMaps().replace(",", "");
+            String longVal1 = o11.getTotalMapReduce().replace(",", "");
+            String longVal2 = o12.getTotalMapReduce().replace(",", "");
             return longVal1.compareTo(longVal2);
         });
         dataGrid.addColumn(products, "Products");
@@ -283,15 +275,29 @@ public class JobTableView<T> extends Composite {
         dataGrid.setColumnWidth(totalFileWritingMb, 20, Style.Unit.PCT);
     }
 
-    public DialogBox getShowDialog(UserInfo userInfo) {
-        DialogBox dialogBox = new DialogBox();
-        dialogBox.setAnimationEnabled(true);
-        VerticalPanel verticalPanel = new VerticalPanel();
-        verticalPanel.setHorizontalAlignment(VerticalPanel.ALIGN_LEFT);
-        dialogBox.setWidget(verticalPanel);
-        dialogBox.center();
-        dialogBox.hide();
-        return dialogBox;
+    private class SumColumnValueFooterBuilder extends AbstractHeaderOrFooterBuilder<T> {
+        SumColumnValueFooterBuilder() {
+            super(dataGrid, true);
+        }
+
+        @Override
+        protected boolean buildHeaderOrFooterImpl() {
+            List<UserInfo> visibleData = (List<UserInfo>) dataGrid.getVisibleItems();
+            if (visibleData.size() > 0) {
+                int totalTBWrite = 0;
+                int totalTBRead = 0;
+                int totalProduct = 0;
+
+                for (UserInfo visibleDatum : visibleData) {
+                    totalTBRead += Long.parseLong(visibleDatum.getTotalFileReadingMb());
+                    totalProduct += Long.parseLong(visibleDatum.getJobsProcessed());
+                    totalTBWrite += Long.parseLong(visibleDatum.getTotalFileWritingMb());
+                }
+            }
+            TableRowBuilder tableRowBuilder = startRow();
+            TableRowBuilder tableRow = tableRowBuilder.align(HasHorizontalAlignment.ALIGN_CENTER.getTextAlignString());
+            return false;
+        }
     }
 }
 

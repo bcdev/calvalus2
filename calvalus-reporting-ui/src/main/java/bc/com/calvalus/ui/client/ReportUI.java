@@ -4,8 +4,10 @@ import bc.com.calvalus.ui.shared.UserInfo;
 import bc.com.calvalus.ui.shared.UserInfoInDetails;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Hyperlink;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 
@@ -44,6 +46,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in load yesterday data to the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -59,6 +62,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -75,6 +79,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading this week data the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -90,6 +95,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading this month data to the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -105,6 +111,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable caught) {
                 RootPanel.get().add(new HTML("Error in loading data from " + start + " to " + end + " the table" + caught.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -120,6 +127,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading last week data to the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -135,6 +143,7 @@ public class ReportUI implements EntryPoint {
             @Override
             public void onFailure(Throwable throwable) {
                 RootPanel.get().add(new HTML("Error in loading the table" + throwable.getMessage()));
+                Window.open("failure-page.html", "_self", "");
             }
 
             @Override
@@ -154,5 +163,21 @@ public class ReportUI implements EntryPoint {
 
     private void initDisplayTableandChart() {
         searchRecord(null, null, TableType.DATE);
+    }
+
+    public static int compareDate(String firstDate, String secondDate) {
+        final int[] result = {0};
+        resourcesServiceAsync.compareDate(firstDate, secondDate, new AsyncCallback<Integer>() {
+            @Override
+            public void onFailure(Throwable throwable) {
+                Window.open("failure-page.html", "_self", "");
+            }
+
+            @Override
+            public void onSuccess(Integer integer) {
+                result[0] = integer.intValue();
+            }
+        });
+        return result[0];
     }
 }

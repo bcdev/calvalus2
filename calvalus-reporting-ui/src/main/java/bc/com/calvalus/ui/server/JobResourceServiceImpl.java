@@ -99,6 +99,13 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         return new UserInfoInDetails(allUsageSummaryBetween, startDate, endDate);
     }
 
+    @Override
+    public int compareDate(String start, String end) {
+        LocalDate parseStart = LocalDate.parse(start);
+        LocalDate parseEnd = LocalDate.parse(end);
+        return parseStart.compareTo(parseEnd);
+    }
+
     private List<UserInfo> getAllDateUsageSummaryBetween(String startDate, String endDate) {
         String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return getGsonToUserInfo(jsonUser);
@@ -137,14 +144,14 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2));
 
         return new UserInfo(p.getJobsInDate(),
-                            p.getJobsInQueue(),
-                            p.getUser(),
-                            p.getJobsProcessed(),
-                            totalFileReadingMb,
-                            totalFileWritingMb,
-                            totalMemoryUsedMbs,
-                            p.getTotalCpuTimeSpent(),
-                            p.getTotalMaps());
+                p.getJobsInQueue(),
+                p.getUser(),
+                p.getJobsProcessed(),
+                totalFileReadingMb,
+                totalFileWritingMb,
+                totalMemoryUsedMbs,
+                p.getTotalCpuTimeSpent(),
+                p.getTotalMapReduce());
     }
 
     private String convertSize(String totalFileReadingMb, double size) {

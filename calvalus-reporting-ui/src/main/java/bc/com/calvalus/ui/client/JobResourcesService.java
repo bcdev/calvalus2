@@ -23,4 +23,6 @@ public interface JobResourcesService extends RemoteService {
     UserInfoInDetails getAllUserYesterdaySummary(TableType tableType);
 
     UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate,TableType tableType);
+
+    int compareDate(String start,String end);
 }
