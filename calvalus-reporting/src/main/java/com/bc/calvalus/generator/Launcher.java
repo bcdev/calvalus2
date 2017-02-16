@@ -1,10 +1,8 @@
 package com.bc.calvalus.generator;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.generator.writer.JobDetailWriter;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.logging.Logger;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 

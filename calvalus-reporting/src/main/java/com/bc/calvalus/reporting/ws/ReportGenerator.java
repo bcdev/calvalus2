@@ -18,7 +18,7 @@ import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 
 /**
- * @author hans
+ * @author hans, muhamamd
  */
 class ReportGenerator {
 
