@@ -137,7 +137,6 @@ public class ReportUI implements EntryPoint {
             public void onFailure(Throwable caught) {
                 RootPanel.get().add(new HTML("Error in loading data from " + start + " to " + end + " the table" + caught.getMessage()));
             }
-
             @Override
             public void onSuccess(UserInfoInDetails result) {
                 infoReportTable.setDataList(result.getUserInfos());

@@ -6,6 +6,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.builder.shared.TableRowBuilder;
 import com.google.gwt.dom.client.Style;
 import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.NumberFormat;
 import com.google.gwt.user.cellview.client.AbstractHeaderOrFooterBuilder;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.ColumnSortEvent;
@@ -24,20 +25,20 @@ import java.util.List;
  * @author muhammad.bc.
  */
 
-public class JobTableView<T> extends Composite {
+class JobTableView<T> extends Composite {
     private static final String WIDTH_100_PERCENT = "100%";
     private static final boolean SHOW_FAST_FORWARD_BUTTON = false;
     private static final int FAST_FORWARD_ROWS = 0;
     private static final boolean SHOW_LAST_PAGE_BUTTON = true;
-    public static final String DATE_COLUMN = "Date";
-    public static final String USER_COLUMN = "User";
-    public static final String QUEUE_COLUMN = "Queue";
-    public static final String PRODUCTS_COLUMN = "Products";
-    public static final String CPU_HOURS_COLUMN = "Cpu Hours";
-    public static final String RAM_GB_HOURS_COLUMN = "RAM GB hours";
-    public static final String GB_READ_COLUMN = "GB Read";
-    public static final String GB_WRITE_COLUMN = "GB Write";
-    public static final String YYYY_MM_DD = "yyyy-MM-dd";
+    private static final String DATE_COLUMN = "Date";
+    private static final String USER_COLUMN = "User";
+    private static final String QUEUE_COLUMN = "Queue";
+    private static final String PRODUCTS_COLUMN = "Products";
+    private static final String CPU_HOURS_COLUMN = "Cpu Hours";
+    private static final String RAM_GB_HOURS_COLUMN = "RAM GB hours";
+    private static final String GB_READ_COLUMN = "GB Read";
+    private static final String GB_WRITE_COLUMN = "GB Write";
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
     private DataGrid<T> dataGrid;
     private ListDataProvider<T> dataProvider;
     private List<T> dataList;
@@ -49,6 +50,7 @@ public class JobTableView<T> extends Composite {
         dataGrid = new DataGrid<T>();
         dataGrid.setWidth(WIDTH_100_PERCENT);
         dataGrid.setHeight("700px");
+        dataGrid.setWidth("100%");
 
         SimplePager.Resources pagerResources = GWT.create(SimplePager.Resources.class);
         SimplePager pager = new SimplePager(SimplePager.TextLocation.CENTER, pagerResources, SHOW_FAST_FORWARD_BUTTON, FAST_FORWARD_ROWS, SHOW_LAST_PAGE_BUTTON);
@@ -64,7 +66,7 @@ public class JobTableView<T> extends Composite {
         dataProvider.addDataDisplay(dataGrid);
         pager.setVisible(true);
         dataGrid.setVisible(true);
-//        dataGrid.setFooterBuilder(new SumColumnValueFooterBuilder());
+        dataGrid.setFooterBuilder(new SumColumnValueFooterBuilder());
 
         dock.add(dataGrid, DockPanel.CENTER);
         dock.add(pager, DockPanel.SOUTH);
@@ -99,8 +101,8 @@ public class JobTableView<T> extends Composite {
         sortHandler.setComparator(dateTime, (o1, o2) -> {
             String first = ((UserInfo) o1).getJobsInDate();
             String second = ((UserInfo) o2).getJobsInDate();
-            Date firstDate = DateTimeFormat.getFormat(YYYY_MM_DD).parse(first);
-            Date secondDate = DateTimeFormat.getFormat(YYYY_MM_DD).parse(second);
+            Date firstDate = DateTimeFormat.getFormat(DATE_FORMAT).parse(first);
+            Date secondDate = DateTimeFormat.getFormat(DATE_FORMAT).parse(second);
             return firstDate.compareTo(secondDate);
         });
         dataGrid.insertColumn(0, dateTime, DATE_COLUMN);
@@ -161,7 +163,7 @@ public class JobTableView<T> extends Composite {
         };
         dateTime.setSortable(true);
         sortHandler.setComparator(dateTime, (o1, o2) -> {
-            DateTimeFormat format = DateTimeFormat.getFormat(YYYY_MM_DD);
+            DateTimeFormat format = DateTimeFormat.getFormat(DATE_FORMAT);
             Date firstDate = format.parse(((UserInfo) o1).getJobsInDate());
             Date secondDate = format.parse(((UserInfo) o2).getJobsInDate());
             return firstDate.compareTo(secondDate);
@@ -286,20 +288,38 @@ public class JobTableView<T> extends Composite {
         @Override
         protected boolean buildHeaderOrFooterImpl() {
             List<UserInfo> visibleData = (List<UserInfo>) dataGrid.getVisibleItems();
+            float totalFileWrite = 0;
+            float totalFileRead = 0;
+            float totalProduct = 0;
             if (visibleData.size() > 0) {
-                int totalTBWrite = 0;
-                int totalTBRead = 0;
-                int totalProduct = 0;
+                for (UserInfo vDatum : visibleData) {
+                    String jobsProcessed = vDatum.getJobsProcessed() != null ? vDatum.getJobsProcessed() : "0.0";
+                    String fileRead = !vDatum.getTotalFileReadingMb().isEmpty() ? vDatum.getTotalFileReadingMb() : "0.0";
+                    String fileWrite = vDatum.getTotalFileWritingMb() != null ? vDatum.getTotalFileWritingMb() : "0.0";
 
-                for (UserInfo visibleDatum : visibleData) {
-                    totalTBRead += Long.parseLong(visibleDatum.getTotalFileReadingMb());
-                    totalProduct += Long.parseLong(visibleDatum.getJobsProcessed());
-                    totalTBWrite += Long.parseLong(visibleDatum.getTotalFileWritingMb());
+                    totalProduct += Float.parseFloat(jobsProcessed);
+                    totalFileRead += Float.parseFloat(fileRead);
+                    totalFileWrite += Float.parseFloat(fileWrite);
                 }
             }
-            TableRowBuilder tableRowBuilder = startRow();
-            TableRowBuilder tableRow = tableRowBuilder.align(HasHorizontalAlignment.ALIGN_CENTER.getTextAlignString());
-            return false;
+            String jobs = "Total Jobs :" + NumberFormat.getFormat("#.000").format(totalProduct);
+            String read = "Total GB Read :" + NumberFormat.getFormat("#.000").format(totalFileRead);
+            String write = "Total GB Write :" + NumberFormat.getFormat("#.000").format(totalFileWrite);
+            columnTotal(jobs, read, write);
+
+            return true;
+        }
+
+        private void columnTotal(String jobs, String read, String write) {
+            String footerStyle = dataGrid.getResources().style().footer();
+            TableRowBuilder tr = startRow();
+
+            tr.startTH().colSpan(5).align(HasHorizontalAlignment.ALIGN_LEFT.getTextAlignString()).className(footerStyle).text(jobs).endTH();
+            tr.startTH().tabIndex(1).align(HasHorizontalAlignment.ALIGN_LEFT.getTextAlignString()).className(footerStyle).text(read).endTH();
+            tr.startTH().align(HasHorizontalAlignment.ALIGN_LEFT.getTextAlignString()).className(footerStyle).text(write).endTH();
+
+            tr.startTH().colSpan(6).className(footerStyle).endTH();
+            tr.endTR();
         }
     }
 }
