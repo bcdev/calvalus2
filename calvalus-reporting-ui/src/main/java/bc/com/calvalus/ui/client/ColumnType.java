@@ -3,6 +3,6 @@ package bc.com.calvalus.ui.client;
 /**
  * @author muhammad.bc.
  */
-public enum TableType {
+public enum ColumnType {
     USER, DATE, QUEUE;
 }

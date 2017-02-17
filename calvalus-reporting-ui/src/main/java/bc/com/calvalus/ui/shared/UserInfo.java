@@ -71,8 +71,7 @@ public class UserInfo implements IsSerializable, Comparable<UserInfo> {
 
     @Override
     public int compareTo(UserInfo o) {
-//        return (o == null || o.user == null) ? -1 : -o.user.compareTo(user);
-        return 0;
+        return (o == null || o.user == null) ? -1 : -o.user.compareTo(user);
     }
 
     @Override
