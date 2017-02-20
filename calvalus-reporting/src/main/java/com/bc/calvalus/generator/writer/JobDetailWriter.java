@@ -2,7 +2,7 @@ package com.bc.calvalus.generator.writer;
 
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.ExtractCalvalusReportException;
 import com.bc.calvalus.generator.Launcher;
 import com.bc.calvalus.generator.extractor.configuration.Conf;
 import com.bc.calvalus.generator.extractor.configuration.ConfExtractor;
@@ -84,13 +84,13 @@ public class JobDetailWriter {
                 mergeConfCounterRecord(start, stop, sortedJobTypeList);
             }
             mergeConfCounterRecord(stop, size, sortedJobTypeList);
-        } catch (GenerateLogException e) {
+        } catch (ExtractCalvalusReportException e) {
             logger.log(Level.SEVERE, e.getMessage());
         }
     }
 
 
-    private void mergeConfCounterRecord(int from, int to, List<JobType> sortedJobTypeList) throws GenerateLogException {
+    private void mergeConfCounterRecord(int from, int to, List<JobType> sortedJobTypeList) throws ExtractCalvalusReportException {
         int interval = to - from;
         if (interval <= 0) {
             return;
@@ -101,9 +101,9 @@ public class JobDetailWriter {
         write(confLog, counterLog, sortedJobTypeList);
     }
 
-    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo, List<JobType> jobTypeList) throws GenerateLogException {
+    private void write(HashMap<String, Conf> confInfo, HashMap<String, CountersType> counterInfo, List<JobType> jobTypeList) throws ExtractCalvalusReportException {
         if (confInfo.size() != counterInfo.size()) {
-            throw new GenerateLogException("The size of the configuration and counter history have different size");
+            throw new ExtractCalvalusReportException("The size of the configuration and counter history have different size");
         }
         for (JobType jobType : jobTypeList) {
             String jobId = jobType.getId();
@@ -158,12 +158,12 @@ public class JobDetailWriter {
     }
 
 
-    private HashMap<String, CountersType> createCounterLog(int from, int to, List<JobType> sortedJobTypeList) throws GenerateLogException {
+    private HashMap<String, CountersType> createCounterLog(int from, int to, List<JobType> sortedJobTypeList) throws ExtractCalvalusReportException {
         CounterExtractor counterLog = new CounterExtractor();
         return counterLog.extractInfo(from, to, sortedJobTypeList);
     }
 
-    private HashMap<String, Conf> createConfLog(int from, int to, List<JobType> sortedJobTypeList) throws GenerateLogException {
+    private HashMap<String, Conf> createConfLog(int from, int to, List<JobType> sortedJobTypeList) throws ExtractCalvalusReportException {
         ConfExtractor confLog = new ConfExtractor();
         return confLog.extractInfo(from, to, sortedJobTypeList);
     }

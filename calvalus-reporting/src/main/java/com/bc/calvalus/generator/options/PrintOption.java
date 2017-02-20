@@ -8,7 +8,6 @@ import org.apache.commons.cli.Options;
 
 abstract class PrintOption {
 
-
     private static final String CMD_LINE_SYNTAX = "generate-calvalus-report [commands]";
     private static final String CMD_LINE_START = "generate-calvalus-report start";
     private static final String CMD_LINE_STOP = "generate-calvalus-report stop";
@@ -76,6 +75,4 @@ abstract class PrintOption {
         options.addOption(Option.builder("o").longOpt("output-file-path").hasArg(true).desc("Location where to save the extracted history").build());
         return options;
     }
-
-
 }

@@ -1,7 +1,7 @@
 package com.bc.calvalus.generator.extractor.counter;
 
 
-import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.ExtractCalvalusReportException;
 import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -27,11 +27,11 @@ public class CounterExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws GenerateLogException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws ExtractCalvalusReportException {
         HashMap<String, CountersType> confTypesHashMap = new HashMap<>();
         int size = jobTypes.size();
         if (!(size >= from && from >= 0) && !(size >= to && to >= 0) && (to >= from)) {
-            throw new GenerateLogException("The range is out of bound");
+            throw new ExtractCalvalusReportException("The range is out of bound");
         }
         try {
             for (int i = from; i < to; i++) {

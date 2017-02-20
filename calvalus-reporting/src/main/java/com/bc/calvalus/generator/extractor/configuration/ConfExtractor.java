@@ -1,7 +1,7 @@
 package com.bc.calvalus.generator.extractor.configuration;
 
 
-import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.ExtractCalvalusReportException;
 import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -28,7 +28,7 @@ public class ConfExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws GenerateLogException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws ExtractCalvalusReportException {
         HashMap<String, Conf> confTypesHashMap = new HashMap<>();
         try {
             for (int i = from; i < to; i++) {

@@ -17,7 +17,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author muhammad.bc
  */
-public class HandleOptionTest {
+public class CLIHandlerOptionTest {
 
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
@@ -33,14 +33,14 @@ public class HandleOptionTest {
 
     @Test
     public void testNonParameter() throws Exception {
-        HandleOption handleOption = new HandleOption(new String[]{});
+        CLIHandlerOption CLIHandlerOption = new CLIHandlerOption(new String[]{});
         assertThat(outputStream.toString().replaceAll("[\r\n]+", ""), is("Please specify a parameter, for more detail type '-h'"));
 
     }
 
     @Test
     public void testOptionVersion() throws Exception {
-        HandleOption printOption = new HandleOption(new String[]{"-v"});
+        CLIHandlerOption printOption = new CLIHandlerOption(new String[]{"-v"});
         String version = PropertiesWrapper.get("version");
         String actual = String.format("Calvalus Generator version %s.", version);
         assertEquals(outputStream.toString().replaceAll("[\r\n]+", ""), actual);
@@ -48,7 +48,7 @@ public class HandleOptionTest {
 
     @Test
     public void testOptionParameter() throws Exception {
-        HandleOption printOption = new HandleOption(new String[]{"start", "-i", "30", "-o", "c:/test",});
+        CLIHandlerOption printOption = new CLIHandlerOption(new String[]{"start", "-i", "30", "-o", "c:/test",});
         CommandLine commandLine = printOption.getCommandLine();
         assertEquals("30", printOption.getOptionValue("i"));
         assertEquals("c:/test", printOption.getOptionValue("o"));
@@ -56,7 +56,7 @@ public class HandleOptionTest {
 
     @Test
     public void testOptionWrongParameter() throws Exception {
-        HandleOption printOption = new HandleOption(new String[]{"start", "-z", "30", "-o", "c:/test"});
+        CLIHandlerOption printOption = new CLIHandlerOption(new String[]{"start", "-z", "30", "-o", "c:/test"});
         CommandLine commandLine = printOption.getCommandLine();
         assertNull(commandLine);
     }

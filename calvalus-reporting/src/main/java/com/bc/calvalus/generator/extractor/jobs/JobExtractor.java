@@ -2,7 +2,7 @@ package com.bc.calvalus.generator.extractor.jobs;
 
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.generator.GenerateLogException;
+import com.bc.calvalus.generator.ExtractCalvalusReportException;
 import com.bc.calvalus.generator.extractor.Extractor;
 import com.bc.calvalus.generator.extractor.ReadFormatType;
 import com.bc.wps.utilities.PropertiesWrapper;
@@ -29,7 +29,7 @@ public class JobExtractor extends Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws GenerateLogException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws ExtractCalvalusReportException {
         throw new NotImplementedException("Not implemented");
     }
 

@@ -18,7 +18,7 @@ import org.apache.commons.cli.ParseException;
 /**
  * @author muhammad.bc.
  */
-public class HandleOption extends PrintOption {
+public class CLIHandlerOption extends PrintOption {
 
     private static final String HELP_OPTION = "h";
     private static final String VERSION_OPTION = "v";
@@ -31,7 +31,7 @@ public class HandleOption extends PrintOption {
     private CommandLine commandLine;
     private final static Logger logger = CalvalusLogger.getLogger();
 
-    public HandleOption(String args[]) {
+    public CLIHandlerOption(String args[]) {
         if (args.length == 0) {
             printMsg("Please specify a parameter, for more detail type '-h'");
             return;

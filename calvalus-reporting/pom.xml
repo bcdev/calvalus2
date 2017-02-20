@@ -147,10 +147,10 @@
                             </descriptors>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.bc.calvalus.generator.GenerateCalvalusReport</mainClass>
+                                    <mainClass>com.bc.calvalus.generator.ExtractCalvalusReport</mainClass>
                                 </manifest>
                             </archive>
-                            <finalName>calvalus-report-generator</finalName>
+                            <finalName>calvalus-report-extractor</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>
