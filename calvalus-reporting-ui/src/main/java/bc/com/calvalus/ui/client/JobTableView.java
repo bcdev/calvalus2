@@ -41,7 +41,6 @@ class JobTableView<T> extends Composite {
     private static final String DATE_FORMAT = "yyyy-MM-dd";
     private DataGrid<T> dataGrid;
     private ListDataProvider<T> dataProvider;
-    private List<T> dataList;
     private DockPanel dock = new DockPanel();
     private final ColumnSortEvent.ListHandler<T> sortHandler;
 
@@ -195,14 +194,14 @@ class JobTableView<T> extends Composite {
         Column<T, String> products = new Column<T, String>(new TextCell()) {
             @Override
             public String getValue(T object) {
-                return ((UserInfo) object).getTotalMapReduce();
+                return ((UserInfo) object).getTotalMap();
             }
         };
         products.setSortable(true);
         sortHandler.setComparator(products, (o1, o2) -> {
             UserInfo o11 = (UserInfo) o1;
             UserInfo o12 = (UserInfo) o2;
-            return compareValues(o11.getTotalMapReduce(), o12.getTotalMapReduce());
+            return compareValues(o11.getTotalMap(), o12.getTotalMap());
         });
         dataGrid.addColumn(products, PRODUCTS_COLUMN);
         dataGrid.setColumnWidth(products, 20, Style.Unit.PCT);

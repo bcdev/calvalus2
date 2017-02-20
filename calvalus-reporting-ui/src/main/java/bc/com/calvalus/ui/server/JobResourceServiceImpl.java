@@ -144,7 +144,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
                 totalFileWritingMb,
                 totalMemoryUsedMbs,
                 p.getTotalCpuTimeSpent(),
-                p.getTotalMapReduce());
+                p.getTotalMap());
     }
 
     private String convertSize(String totalFileReadingMb, double size) {
