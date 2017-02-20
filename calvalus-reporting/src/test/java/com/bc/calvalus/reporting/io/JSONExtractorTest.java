@@ -46,7 +46,7 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(2989591L));
         assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(58939L));
         assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(18385L));
-        assertThat(usageStatistic.getMbMillisTotal(), equalTo(18826240L));
+        assertThat(usageStatistic.getMbMillisMapTotal(), equalTo(18826240L));
         assertThat(usageStatistic.getCpuMilliseconds(), equalTo(23240L));
     }
 
@@ -114,7 +114,7 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(6972918194L));
         assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(1776409134L));
         assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(3255256L));
-        assertThat(usageStatistic.getMbMillisTotal(), equalTo(8333455360L));
+        assertThat(usageStatistic.getMbMillisMapTotal(), equalTo(8333455360L));
         assertThat(usageStatistic.getCpuMilliseconds(), equalTo(357650L));
     }
 
@@ -139,7 +139,7 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(37483768696L));
         assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(0L));
         assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(0L));
-        assertThat(usageStatistic.getMbMillisTotal(), equalTo(0L));
+        assertThat(usageStatistic.getMbMillisMapTotal(), equalTo(0L));
         assertThat(usageStatistic.getCpuMilliseconds(), equalTo(6757140L));
     }
 
@@ -164,7 +164,7 @@ public class JSONExtractorTest {
         assertThat(usageStatistic.getHdfsBytesRead(), equalTo(732875870L));
         assertThat(usageStatistic.getHdfsBytesWritten(), equalTo(1148345579L));
         assertThat(usageStatistic.getvCoresMillisTotal(), equalTo(148076365L));
-        assertThat(usageStatistic.getMbMillisTotal(), equalTo(909781186560L));
+        assertThat(usageStatistic.getMbMillisMapTotal(), equalTo(909781186560L));
         assertThat(usageStatistic.getCpuMilliseconds(), equalTo(29974960L));
     }
 

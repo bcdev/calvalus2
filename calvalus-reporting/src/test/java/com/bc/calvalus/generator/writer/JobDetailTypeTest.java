@@ -10,16 +10,6 @@ import static org.junit.Assert.assertTrue;
  * @author muhammad.bc.
  */
 public class JobDetailTypeTest {
-    @Test
-    public void testTheSame() throws Exception {
-        JobDetailType jobDetailType = new JobDetailType();
-        jobDetailType.setJobId("123");
-
-        JobDetailType secondDetailType = new JobDetailType();
-        secondDetailType.setJobId("123");
-
-        assertTrue(jobDetailType.equals(secondDetailType));
-    }
 
     @Test
     public void testAfterDateTime() throws Exception {

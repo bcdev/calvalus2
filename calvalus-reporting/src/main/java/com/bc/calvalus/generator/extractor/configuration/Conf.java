@@ -19,6 +19,10 @@ import javax.xml.bind.annotation.XmlType;
         "jobName",
         "remoteRef",
         "processType",
+        "workflowType",
+        "dataProcessorUsed",
+        "inProductType"
+
 
 })
 
@@ -38,6 +42,36 @@ public class Conf {
     private String remoteRef;
     @XmlElement(required = true)
     private String processType;
+    @XmlElement(required = true)
+    private String workflowType;
+    @XmlElement(required = true)
+    private String dataProcessorUsed;
+    @XmlElement(required = true)
+    private String inProductType;
+
+    public String getInProductType() {
+        return inProductType;
+    }
+
+    public void setInProductType(String inProductType) {
+        this.inProductType = inProductType;
+    }
+
+    public String getDataProcessorUsed() {
+        return dataProcessorUsed;
+    }
+
+    public void setDataProcessorUsed(String dataProcessorUsed) {
+        this.dataProcessorUsed = dataProcessorUsed;
+    }
+
+    public String getWorkflowType() {
+        return workflowType;
+    }
+
+    public void setWorkflowType(String workflowType) {
+        this.workflowType = workflowType;
+    }
 
     public String getWpsJobId() {
         return wpsJobId;

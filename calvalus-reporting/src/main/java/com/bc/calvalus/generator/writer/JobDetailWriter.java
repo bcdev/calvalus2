@@ -7,8 +7,6 @@ import com.bc.calvalus.generator.Launcher;
 import com.bc.calvalus.generator.extractor.configuration.Conf;
 import com.bc.calvalus.generator.extractor.configuration.ConfExtractor;
 import com.bc.calvalus.generator.extractor.counter.CounterExtractor;
-import com.bc.calvalus.generator.extractor.counter.CounterGroupType;
-import com.bc.calvalus.generator.extractor.counter.CounterType;
 import com.bc.calvalus.generator.extractor.counter.CountersType;
 import com.bc.calvalus.generator.extractor.jobs.JobExtractor;
 import com.bc.calvalus.generator.extractor.jobs.JobType;
@@ -37,8 +35,6 @@ import java.util.stream.Collectors;
  * @author muhammad.bc
  */
 public class JobDetailWriter {
-
-
     private static final int INTERVAL = 10;
     private GetEOFJobInfo getEOFJobInfo;
     private File outputFile;
@@ -51,7 +47,6 @@ public class JobDetailWriter {
             jobDetailTypeList = new ArrayList<>();
             outputFile = confirmOutputFile(pathToWrite);
             getEOFJobInfo = new GetEOFJobInfo(outputFile);
-
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage());
         }
@@ -156,59 +151,10 @@ public class JobDetailWriter {
 
     private void addJobDetails(Conf conf, CountersType countersType, JobType jobType) {
         JobDetailType jobDetailType = new JobDetailType();
-        writeJobs(jobType, jobDetailType);
-        writeConf(conf, jobDetailType);
-        writeCounter(countersType, jobDetailType);
+        jobDetailType.setJobInfo(jobType);
+        jobDetailType.setConfInfo(conf);
+        jobDetailType.setCounterInfo(countersType);
         jobDetailTypeList.add(jobDetailType);
-    }
-
-    private void writeJobs(JobType jobType, JobDetailType jobDetailType) {
-        jobDetailType.setJobId(jobType.getId());
-        jobDetailType.setUser(jobType.getUser());
-        jobDetailType.setQueue(jobType.getQueue());
-        jobDetailType.setStartTime(jobType.getStartTime());
-        jobDetailType.setFinishTime(jobType.getFinishTime());
-        jobDetailType.setTotalMaps(jobType.getMapsTotal());
-        jobDetailType.setMapsCompleted(jobType.getMapsCompleted());
-        jobDetailType.setReducesCompleted(jobType.getReducesCompleted());
-        jobDetailType.setState(jobType.getState());
-    }
-
-    private void writeCounter(CountersType conf, JobDetailType jobDetailType) {
-        CounterGroupType counterGroup = conf.getCounterGroup();
-        List<CounterType> counter = counterGroup.getCounter();
-        for (CounterType counterType : counter) {
-            addCounterInfo(counterType, jobDetailType);
-        }
-    }
-
-    private void writeConf(Conf conf, JobDetailType jobDetailType) {
-        jobDetailType.setInputPath(conf.getPath());
-        jobDetailType.setJobName(conf.getJobName());
-        jobDetailType.setRemoteUser(conf.getRemoteUser());
-        jobDetailType.setRemoteRef(conf.getRemoteRef());
-        jobDetailType.setProcessType(conf.getProcessType());
-        jobDetailType.setWpsJobId(conf.getWpsJobId());
-    }
-
-    private void addCounterInfo(CounterType counterType, JobDetailType jobDetailType) {
-        String counterTypeName = counterType.getName();
-
-        if (counterTypeName.equalsIgnoreCase("FILE_BYTES_READ")) {
-            jobDetailType.setFileBytesRead(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("FILE_BYTES_WRITTEN")) {
-            jobDetailType.setFileBytesWritten(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("HDFS_BYTES_READ")) {
-            jobDetailType.setHdfsBytesRead(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("HDFS_BYTES_WRITTEN")) {
-            jobDetailType.setHdfsBytesWritten(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("VCORES_MILLIS_MAPS")) {
-            jobDetailType.setvCoresMillisTotal(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("MB_MILLIS_MAPS")) {
-            jobDetailType.setMbMillisTotal(counterType.getTotalCounterValue().toString());
-        } else if (counterTypeName.equalsIgnoreCase("CPU_MILLISECONDS")) {
-            jobDetailType.setCpuMilliseconds(counterType.getTotalCounterValue().toString());
-        }
     }
 
 

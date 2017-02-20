@@ -96,7 +96,7 @@ public class HandleOption extends PrintOption {
         String urlPath = commandLine.getOptionValue(OUTPUT_OPTION);
 
         logger.log(Level.INFO, "################################################");
-        logger.log(Level.INFO, "#                START EXTRACTING              #");
+        logger.log(Level.INFO, "#                START COLLECTION               #");
         logger.log(Level.INFO, "################################################");
         logger.log(Level.INFO, "################################################");
 
