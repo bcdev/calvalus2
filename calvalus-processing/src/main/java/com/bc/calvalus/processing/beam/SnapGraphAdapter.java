@@ -132,7 +132,11 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             XppDom calvalusAppData = graph.getApplicationData("calvalus");
 
             if (mode == MODE.EXECUTE && calvalusAppData != null) {
-                return executeGraphAndCollectOutput(graph, calvalusAppData, pm);
+                boolean success = executeGraphAndCollectOutput(graph, calvalusAppData, pm);
+                if (graphContext.getOutputProducts().length > 0) {
+                    targetProduct = graphContext.getOutputProducts()[0];
+                }
+                return success;
             } else {
                 if (target == null || target.getNodeId() == null) {
                     throw new IllegalArgumentException("no 'target' product given in graph.");
@@ -300,7 +304,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     @Override
     public Product openProcessedProduct() {
-        return targetProduct != null ? targetProduct : graphContext.getOutputProducts().length > 0 ? graphContext.getOutputProducts()[0] : null;
+        return targetProduct;
     }
 
     @Override
