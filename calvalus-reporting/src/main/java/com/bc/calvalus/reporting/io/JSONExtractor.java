@@ -45,16 +45,6 @@ public class JSONExtractor {
                              }.getType());
     }
 
-    public UsageStatistic getSingleStatistic(String jobId) throws IOException {
-        List<UsageStatistic> usageStatistics = getAllStatistics();
-        for (UsageStatistic usageStatistic : usageStatistics) {
-            if (jobId.equalsIgnoreCase(usageStatistic.getJobId())) {
-                return usageStatistic;
-            }
-        }
-        return new NullUsageStatistic();
-    }
-
     public Map<String, List<UsageStatistic>> getAllUserUsageStatistic() throws IOException {
         List<UsageStatistic> allStatistics = getAllStatistics();
         ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
@@ -73,18 +63,6 @@ public class JSONExtractor {
         return groupUserUsageStatistic;
     }
 
-    public List<UsageStatistic> getSingleUserStatistic(String userName) throws IOException {
-        List<UsageStatistic> usageStatistics = getAllStatistics();
-        List<UsageStatistic> singleUserStatistics = new ArrayList<>();
-        for (UsageStatistic usageStatistic : usageStatistics) {
-            if (userName.equalsIgnoreCase(usageStatistic.getUser())) {
-                singleUserStatistics.add(usageStatistic);
-            }
-        }
-        return singleUserStatistics;
-    }
-
-
     public Map<String, List<UsageStatistic>> getAllUserUsageBetween(String start, String end) throws IOException {
         Predicate<Long> predicate = filterDateIntervals(start, end);
         List<UsageStatistic> allStatistics = getAllStatistics();
@@ -95,10 +73,6 @@ public class JSONExtractor {
                 filterUser(stringKey, usageStatisticList)
         ));
         return groupUserUsageStatistic;
-    }
-
-    private List<UsageStatistic> filterUser(String stringKey, List<UsageStatistic> usageStatisticList) {
-        return usageStatisticList.stream().filter(p -> p.getUser().equalsIgnoreCase(stringKey)).collect(Collectors.toList());
     }
 
     public Map<String, List<UsageStatistic>> getAllDateUsageBetween(String start, String end) throws IOException {
@@ -130,10 +104,34 @@ public class JSONExtractor {
         return groupUserUsageStatistic;
     }
 
-    private List<UsageStatistic> filterQueue(String queue, List<UsageStatistic> usageStatisticList) {
-        return usageStatisticList.stream().filter(p -> p.getQueue().equalsIgnoreCase(queue)).collect(Collectors.toList());
+    public List<UsageStatistic> getAllJobsBetween(String start, String end) throws IOException {
+        Predicate<Long> predicate = filterDateTimeIntervals(start, end);
+        List<UsageStatistic> allStatistics = getAllStatistics();
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+        return usageStatisticList;
     }
 
+
+    public UsageStatistic getSingleStatistic(String jobId) throws IOException {
+        List<UsageStatistic> usageStatistics = getAllStatistics();
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            if (jobId.equalsIgnoreCase(usageStatistic.getJobId())) {
+                return usageStatistic;
+            }
+        }
+        return new NullUsageStatistic();
+    }
+
+    public List<UsageStatistic> getSingleUserStatistic(String userName) throws IOException {
+        List<UsageStatistic> usageStatistics = getAllStatistics();
+        List<UsageStatistic> singleUserStatistics = new ArrayList<>();
+        for (UsageStatistic usageStatistic : usageStatistics) {
+            if (userName.equalsIgnoreCase(usageStatistic.getUser())) {
+                singleUserStatistics.add(usageStatistic);
+            }
+        }
+        return singleUserStatistics;
+    }
 
     public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
@@ -198,6 +196,16 @@ public class JSONExtractor {
         };
     }
 
+    @NotNull
+    private List<UsageStatistic> filterUser(String stringKey, List<UsageStatistic> usageStatisticList) {
+        return usageStatisticList.stream().filter(p -> p.getUser().equalsIgnoreCase(stringKey)).collect(Collectors.toList());
+    }
+
+
+    @NotNull
+    private List<UsageStatistic> filterQueue(String queue, List<UsageStatistic> usageStatisticList) {
+        return usageStatisticList.stream().filter(p -> p.getQueue().equalsIgnoreCase(queue)).collect(Collectors.toList());
+    }
 
     @NotNull
     private Predicate<Long> filterDateIntervals(final String startDate, final String endDate) {
@@ -209,6 +217,15 @@ public class JSONExtractor {
         };
     }
 
+    @NotNull
+    private Predicate<Long> filterDateTimeIntervals(final String startDate, final String endDate) {
+        return aLong -> {
+            Instant end = LocalDateTime.parse(endDate).toInstant(ZoneOffset.UTC);
+            Instant start = LocalDateTime.parse(startDate).toInstant(ZoneOffset.UTC);
+            Instant instant = new Date(aLong).toInstant();
+            return instant.isAfter(start) && instant.isBefore(end);
+        };
+    }
 
     @NotNull
     private String extractJsonString(InputStream inputStream) throws IOException {

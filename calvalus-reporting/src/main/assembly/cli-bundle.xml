@@ -15,14 +15,15 @@
         <fileSet>
             <directory>${project.basedir}/target/classes</directory>
             <includes>
-                <include>calvalus-report-extractor.sh</include>
+                <include>calvalus-extractor.sh</include>
+                <include>calvalus-extractor-inst.sh</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/target</directory>
             <includes>
-                <include>calvalus-report-extractor.jar</include>
+                <include>calvalus-extractor.jar</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>

@@ -143,14 +143,14 @@
                         <id>calvalus-wps-jar</id>
                         <configuration>
                             <descriptors>
-                                <descriptor>src/main/assembly/calvalus-report-jar.xml</descriptor>
+                                <descriptor>src/main/assembly/calvalus-reporting-jar.xml</descriptor>
                             </descriptors>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.bc.calvalus.generator.ExtractCalvalusReport</mainClass>
+                                    <mainClass>com.bc.calvalus.extractor.ExtractCalvalusReport</mainClass>
                                 </manifest>
                             </archive>
-                            <finalName>calvalus-report-extractor</finalName>
+                            <finalName>calvalus-extractor</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <attach>false</attach>
                         </configuration>
