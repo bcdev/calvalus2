@@ -1,5 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.bc.calvalus</groupId>
@@ -32,36 +32,36 @@
         <module>calvalus-reporting</module>
         <module>calvalus-reporting-ui</module>
         <module>calvalus-wps-impl</module>
-        <module>calvalus-reporting-ui</module>
-    </modules>
+    <module>calvalus-code-de</module>
+  </modules>
 
     <repositories>
-        <!--<repository>-->
-            <!--<id>bc-mvn-repo-http</id>-->
-            <!--<name>Public Maven Repository at Brockmann Consult</name>-->
-            <!--<url>http://www.brockmann-consult.de/mvn/os</url>-->
-            <!--<releases>-->
-                <!--<enabled>true</enabled>-->
-                <!--<checksumPolicy>warn</checksumPolicy>-->
-            <!--</releases>-->
-            <!--<snapshots>-->
-                <!--<enabled>true</enabled>-->
-                <!--<checksumPolicy>warn</checksumPolicy>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
-        <!--<repository>-->
-            <!--<id>bc-mvn-repo-closed</id>-->
-            <!--<name>Private Maven Repository at Brockmann Consult</name>-->
-            <!--<url>scp://www.brockmann-consult.de/home/maven-cs</url>-->
-            <!--<releases>-->
-                <!--<enabled>true</enabled>-->
-                <!--<checksumPolicy>warn</checksumPolicy>-->
-            <!--</releases>-->
-            <!--<snapshots>-->
-                <!--<enabled>true</enabled>-->
-                <!--<checksumPolicy>warn</checksumPolicy>-->
-            <!--</snapshots>-->
-        <!--</repository>-->
+        <repository>
+            <id>bc-mvn-repo-http</id>
+            <name>Public Maven Repository at Brockmann Consult</name>
+            <url>http://www.brockmann-consult.de/mvn/os</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>bc-mvn-repo-closed</id>
+            <name>Private Maven Repository at Brockmann Consult</name>
+            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>

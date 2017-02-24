@@ -27,13 +27,13 @@ import javax.ws.rs.core.Response;
 
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
     private static final Client client = ClientBuilder.newClient();
-    public static final String STATUS_FAILED = "\"Status\": \"Failed\"";
-    public static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
-    public static final int HTTP_SUCCESSFUL_CODE_START = 200;
-    public static final int HTTP_SUCCESSFUL_CODE_END = 300;
+    static final String STATUS_FAILED = "\"Status\": \"Failed\"";
+    static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
+    static final int HTTP_SUCCESSFUL_CODE_START = 200;
+    static final int HTTP_SUCCESSFUL_CODE_END = 300;
 
-    public static final int TO_GB = 1024;
-    public static final int FIRST_DAY = 1;
+    static final int TO_GB = 1024;
+    static final int FIRST_DAY = 1;
 
     @Override
     public UserInfoInDetails getAllUserUsageForToday(ColumnType columnType) {

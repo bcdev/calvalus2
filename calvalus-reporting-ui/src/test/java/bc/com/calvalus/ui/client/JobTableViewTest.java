@@ -1,9 +1,6 @@
 package bc.com.calvalus.ui.client;
 
-import java.util.Date;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * @author ubits on 2/15/2017.
@@ -11,11 +8,7 @@ import static org.junit.Assert.*;
 public class JobTableViewTest {
     @Test
     public void testCool() throws Exception {
-
-
-        Date date = new Date("2014/12/04");
-        Date date1 = new Date("2014/12/4");
-
-        System.out.println("date1.compareTo(date) = " + date1.compareTo(date));
+        Float aFloat = Float.valueOf("6455.180");
+        System.out.println("aLong = " + aFloat);
     }
 }
