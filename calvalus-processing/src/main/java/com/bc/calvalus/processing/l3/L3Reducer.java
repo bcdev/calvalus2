@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.l3;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
+import com.bc.calvalus.processing.l2.L2FormattingMapper;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
@@ -97,6 +98,10 @@ public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable,
 
                 // todo - specify common Calvalus L3 productName convention (mz)
                 String productName = String.format("%s_%s_%s", outputPrefix, dateStart, dateStop);
+                if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+                        && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+                    productName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+                }
 
                 L3Formatter.write(context, temporalBinSource,
                                   dateStart, dateStop,
