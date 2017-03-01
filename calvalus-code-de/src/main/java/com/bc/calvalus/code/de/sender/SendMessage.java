@@ -4,6 +4,8 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.Connection;
@@ -20,6 +22,8 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class SendMessage {
 
+    public static final String MESSAGE_CONSUMER_URL = "message.consumer.url";
+    public static final String QUEUE_NAME = "queue.name";
     private ProcessedMessage[] processedMessages;
     private Session session;
     private MessageProducer producer;
@@ -31,10 +35,8 @@ public class SendMessage {
         try {
             PropertiesWrapper.loadConfigFile("conf/code-de.properties");
             initMessageProvider();
-        } catch (JMSException e) {
-            logger.log(Level.SEVERE, e.getMessage());
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage());
         }
     }
 
@@ -51,16 +53,22 @@ public class SendMessage {
     }
 
 
-    private void initMessageProvider() throws JMSException {
-        ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
-        connection = activeMQConnectionFactory.createConnection();
-        connection.start();
-        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-
-        String queueName = PropertiesWrapper.get("queue.name");
-        Destination destination = session.createQueue(queueName);
-        producer = session.createProducer(destination);
-        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+    private void initMessageProvider() {
+        try {
+            URI uri = new URI(PropertiesWrapper.get(MESSAGE_CONSUMER_URL));
+            ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
+            connection = activeMQConnectionFactory.createConnection();
+            connection.start();
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            String queueName = PropertiesWrapper.get(QUEUE_NAME);
+            Destination destination = session.createQueue(queueName);
+            producer = session.createProducer(destination);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        } catch (JMSException e) {
+            logger.log(Level.WARNING, e.getMessage());
+        } catch (URISyntaxException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+        }
     }
 
     private void close() throws JMSException {
