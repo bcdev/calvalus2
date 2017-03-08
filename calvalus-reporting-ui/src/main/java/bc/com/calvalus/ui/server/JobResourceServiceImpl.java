@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -70,7 +71,12 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         LocalDate now = LocalDate.now();
         now = now.minusMonths(1);
         LocalDate startDate = now.withDayOfMonth(1);
-        LocalDate endDate = now.withDayOfMonth(now.getMonth().maxLength());
+        GregorianCalendar calendar = new GregorianCalendar();
+        int dayOfMonth = now.getMonth().minLength();
+        if (calendar.isLeapYear(now.getYear())) {
+            dayOfMonth = now.getMonth().maxLength();
+        }
+        LocalDate endDate = now.withDayOfMonth(dayOfMonth);
 
         return getAllUserUsageBetween(startDate.toString(), endDate.toString(), columnType);
     }
@@ -137,14 +143,14 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
         String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), TO_GB * 3600);
 
         return new UserInfo(p.getJobsInDate(),
-                p.getJobsInQueue(),
-                p.getUser(),
-                p.getJobsProcessed(),
-                totalFileReadingMb,
-                totalFileWritingMb,
-                totalMemoryUsedMbs,
-                p.getTotalCpuTimeSpent(),
-                p.getTotalMap());
+                            p.getJobsInQueue(),
+                            p.getUser(),
+                            p.getJobsProcessed(),
+                            totalFileReadingMb,
+                            totalFileWritingMb,
+                            totalMemoryUsedMbs,
+                            p.getTotalCpuTimeSpent(),
+                            p.getTotalMap());
     }
 
     private String convertSize(String totalFileReadingMb, double size) {
