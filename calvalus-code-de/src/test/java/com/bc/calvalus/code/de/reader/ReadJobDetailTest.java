@@ -21,7 +21,7 @@ public class ReadJobDetailTest {
     }
 
     @Test
-    public void testCursorPosition() throws Exception {
+    public void testCursorPosition() throws CodeDeException {
         ReadJobDetail.CursorPosition cursorPosition = new ReadJobDetail.CursorPosition();
         LocalDateTime now = LocalDateTime.now();
         cursorPosition.writeLastCursorPosition(now);
@@ -29,17 +29,6 @@ public class ReadJobDetailTest {
 
         assertNotNull(readLastCursorPosition);
         assertEquals(readLastCursorPosition.toString(), now.toString());
-    }
-
-    @Test
-    public void testCreateQuery() throws Exception {
-        LocalDateTime localDateTime = LocalDateTime.now();
-        String codeDeUrl = PropertiesWrapper.get("report.ws.url");
-        String format = String.format(codeDeUrl + "%s/%s", localDateTime.toString(), localDateTime.toString());
-
-        ReadJobDetail readFromSource = new ReadJobDetail();
-        String query = readFromSource.createURL(localDateTime, LocalDateTime.now());
-        assertEquals(query, format);
     }
 
     @Test

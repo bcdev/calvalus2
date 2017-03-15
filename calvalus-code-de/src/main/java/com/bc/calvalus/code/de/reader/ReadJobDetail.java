@@ -50,10 +50,9 @@ public class ReadJobDetail {
                 cursorPosition.writeLastCursorPosition(endDateTime);
             }
         } catch (CodeDeException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage());
         }
     }
-
 
     public List<JobDetail> getJobDetail() {
         if (jobDetailJson == null || jobDetailJson.contains(STATUS_FAILED)) {
@@ -65,8 +64,16 @@ public class ReadJobDetail {
         return gson.fromJson(jobDetailJson, mapType);
     }
 
+    public LocalDateTime startDateTime() {
+        return cursorPosition;
+    }
+
+    public LocalDateTime endDateTime() {
+        return endDateTime;
+    }
+
     String createURL(LocalDateTime lastCursorPosition, LocalDateTime now) {
-        String codeDeUrl = PropertiesWrapper.get("report.ws.url");
+        String codeDeUrl = PropertiesWrapper.get("code.de.url");
         return String.format(codeDeUrl + "%s/%s", lastCursorPosition.toString(), now.toString());
     }
 
@@ -86,24 +93,25 @@ public class ReadJobDetail {
                                            status);
                 throw new CodeDeException(msg);
             }
-        } catch (CodeDeException | ProcessingException e) {
+        } catch (ProcessingException e) {
             logger.log(Level.SEVERE, e.getMessage());
+        } catch (CodeDeException e) {
+            logger.log(Level.WARNING, e.getMessage());
         }
         return "";
-    }
-
-    public LocalDateTime startDateTime() {
-        return cursorPosition;
-    }
-
-    public LocalDateTime endDateTime() {
-        return endDateTime;
     }
 
     static class CursorPosition implements Serializable {
         private LocalDateTime cursorPosition;
 
-        LocalDateTime readLastCursorPosition() {
+        synchronized void deleteSerializeFile() {
+            File file = new File("cursor.ser");
+            if (file.exists()) {
+                file.delete();
+            }
+        }
+
+        synchronized LocalDateTime readLastCursorPosition() throws CodeDeException {
             try {
                 File file = new File("cursor.ser");
                 if (!file.exists()) {
@@ -116,35 +124,42 @@ public class ReadJobDetail {
                 FileInputStream fileInputStream = new FileInputStream("cursor.ser");
                 ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
                 CursorPosition cursorPosition = (CursorPosition) objectInputStream.readObject();
+                fileInputStream.close();
+                objectInputStream.close();
                 return cursorPosition.cursorPosition;
             } catch (IOException | ClassNotFoundException e) {
-                logger.log(Level.SEVERE, e.getMessage());
-            } catch (CodeDeException e) {
-                logger.log(Level.SEVERE, e.getMessage());
+                throw new CodeDeException(e.getMessage());
             }
-            return LocalDateTime.MIN;
+
         }
 
-        private LocalDateTime getStartDateTime() throws CodeDeException {
-            LocalDateTime localDateTime = null;
+        synchronized void writeLastCursorPosition(LocalDateTime localDateTime) {
             try {
-                String startDateTime = PropertiesWrapper.get("start.date.time");
-                localDateTime = LocalDateTime.parse(startDateTime);
-            } catch (DateTimeParseException | NullPointerException e) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
-            return localDateTime;
-        }
-
-        void writeLastCursorPosition(LocalDateTime localDateTime) {
-            try {
+                if (localDateTime == null) {
+                    throw new NullPointerException("The last date time most not be null");
+                }
                 this.cursorPosition = localDateTime;
                 FileOutputStream fileOutputStream = new FileOutputStream("cursor.ser");
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(this);
+                fileOutputStream.close();
+                objectOutputStream.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage());
             }
+        }
+
+        private LocalDateTime getStartDateTime() {
+            LocalDateTime localDateTime = null;
+            try {
+                String startDateTime = PropertiesWrapper.get("start.date.time");
+                localDateTime = LocalDateTime.parse(startDateTime);
+            } catch (DateTimeParseException e) {
+                logger.log(Level.WARNING, e.getMessage());
+            } catch (NullPointerException e) {
+                logger.log(Level.SEVERE, e.getMessage());
+            }
+            return localDateTime;
         }
     }
 }
