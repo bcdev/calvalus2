@@ -56,7 +56,7 @@ public class S2FinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     static final int TILE_SIZE = 256;
-    public static final String VERSION = "fv4.2";
+    public static final String VERSION = "fv1.0";
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -142,7 +142,7 @@ public class S2FinaliseMapper extends Mapper {
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
         velocityContext.put("zoneId", area.nicename);
         velocityContext.put("zoneName", area.nicename);
-        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2016).atMonth(6).atDay(29)));
+        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
         velocityContext.put("westLon", area.left - 180);
         velocityContext.put("eastLon", area.right - 180);
         velocityContext.put("northLat", 90 - area.top);
@@ -425,7 +425,7 @@ public class S2FinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci Pixel MSI Burned Area product v4.2 - Zone ${zoneId}: ${zoneName}" +
+            "                        <gco:CharacterString>Fire_cci SFD Burned Area product v1.0 – Zone ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -446,7 +446,7 @@ public class S2FinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2016-07-12</gco:Date>" +
+            "                                <gco:Date>2017-02-25</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -460,7 +460,7 @@ public class S2FinaliseMapper extends Mapper {
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString>FILL IN</gco:CharacterString>" + // todo - find out DOI
+            "                                <gco:CharacterString></gco:CharacterString>" +
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
@@ -481,30 +481,31 @@ public class S2FinaliseMapper extends Mapper {
             "<gco:CharacterString>" +
             "#[[" +
             "The product is a multi-layer TIFF with the following naming convention: ${IndicativeDate}-ESACCI-L3S_FIRE-BA-" +
-            "${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif. " +
+            "${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif." +
             "${Indicative Date} is the identifying date for this data set. Format is YYYY[MM[DD]], where YYYY is the " +
             "four digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to " +
             "31. For monthly products the date will be set to 01. " +
             "${Indicative sensor} is MSI. ${Additional Segregator} " +
-            "is the AREA_${TILE_NUMBER} being the tile number the subset index described in Extent. fv" +
+            "is the AREA_${TILE_CODE} being the tile code described in the Product User Guide. " +
             "${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional " +
             ". and another 1 or more digits.). An example is: " +
-            "20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_1-f${REPLACE_WITH_VERSION}.tif.]]#" +
+            "20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h38v16-${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3_PUG_v2 available at: www.esa-fire.cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3_PUG_SFD available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 10m; Pixel " +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00017966 deg (approx. 20m); Pixel " +
             "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
-            "the month or it is not observed; a value of 999 is allocated to pixels that are not taken into account in " +
-            "the burned area processing (continuous water, ocean).; Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is allocated to pixels " +
+            "that are not taken into account in " +
+            "the burned area processing (continuous water, ocean). Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 10m; Pixel value = 0 to " +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00017966 deg (approx. 20m); Pixel value = 0 to " +
             "100, where the value is the probability in percentage that the pixel is actually burned, as a result " +
             "of both the pre-processing and the actual burned area classification. The higher the value, the " +
-            "higher the confidence that the pixel is actually burned. A value of 999 is allocated to pixels that are " +
-            "not taken into account in the burned area processing (continuous water, ocean). Data type = Integer; " +
+            "higher the confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are " +
+            "not burned, or not observed in the month, or not taken into account in the burned area processing (continuous water, ocean). Data type = Byte; " +
             "Number of layers = 1;" +
-            "Data depth = 16" +
+            "Data depth = 8" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover (LC). N is the " +
             "number of the land cover category in the reference " +
@@ -527,7 +528,7 @@ public class S2FinaliseMapper extends Mapper {
             "160 = Tree cover, flooded, fresh or brackish water; " +
             "170 = Tree cover, flooded, saline water; " +
             "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
-            "Pixel Spacing = 10m; Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "Pixel Spacing = 0.00017966 deg (approx. 20m); Data type = Byte; Number of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
@@ -568,21 +569,21 @@ public class S2FinaliseMapper extends Mapper {
             "                <gmd:CI_ResponsibleParty>" +
             "                    <!-- Distributor-->" +
             "                    <gmd:organisationName>" +
-            "                        <gco:CharacterString>ESA CCI</gco:CharacterString>" +
+            "                        <gco:CharacterString>ESA Fire_cci</gco:CharacterString>" +
             "                    </gmd:organisationName>" +
             "                    <gmd:contactInfo>" +
             "                        <gmd:CI_Contact>" +
             "                            <gmd:address>" +
             "                                <gmd:CI_Address>" +
             "                                    <gmd:electronicMailAddress>" +
-            "                                        <gco:CharacterString>help@esa-portal-cci.org</gco:CharacterString>" +
+            "                                        <gco:CharacterString>emilio.chuvieco@uah.es</gco:CharacterString>" +
             "                                    </gmd:electronicMailAddress>" +
             "                                </gmd:CI_Address>" +
             "                            </gmd:address>" +
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://cci.esa.int/data/</gmd:URL>" +
+            "                                        <gmd:URL>http://esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -700,7 +701,7 @@ public class S2FinaliseMapper extends Mapper {
             "            <gmd:spatialResolution>" +
             "                <gmd:MD_Resolution>" +
             "                    <gmd:distance>" +
-            "                        <gco:Distance uom=\"degrees\">0.00277778</gco:Distance>" +
+            "                        <gco:Distance uom=\"degrees\">0.00017966</gco:Distance>" +
             "                    </gmd:distance>" +
             "                </gmd:MD_Resolution>" +
             "            </gmd:spatialResolution>" +

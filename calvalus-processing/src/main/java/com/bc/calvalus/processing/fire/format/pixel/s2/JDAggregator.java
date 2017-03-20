@@ -118,8 +118,8 @@ public class JDAggregator extends AbstractAggregator {
             // don't overwrite valid or cloud with NO_DATA
             targetVector.set(0, NO_DATA);
             targetVector.set(1, 0);
-            ctx.put(CURRENT_VALUE, jd);
-            ctx.put(CURRENT_CL_VALUE, cl);
+            ctx.put(CURRENT_VALUE, NO_DATA);
+            ctx.put(CURRENT_CL_VALUE, 0);
         }
     }
 

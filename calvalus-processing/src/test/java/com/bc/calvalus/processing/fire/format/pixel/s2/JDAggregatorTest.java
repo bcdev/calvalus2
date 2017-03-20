@@ -114,6 +114,65 @@ public class JDAggregatorTest {
     }
 
     @Test
+    public void testAggregate_cloudsFirst() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0F, 0), spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5F, temporalVector.get(1), 1E-7);
+    }
+
+    @Test
+    public void testAggregate_temporalCloudsAreOverwritten() throws Exception {
+        JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{1, 30});
+
+        SpatialBin spatialCtx = new SpatialBin();
+        SpatialBin spatialCtx2 = new SpatialBin();
+        TemporalBin temporalCtx = new TemporalBin();
+
+        VectorImpl spatialVector = new VectorImpl(new float[2]);
+        VectorImpl spatialVector2 = new VectorImpl(new float[2]);
+        VectorImpl temporalVector = new VectorImpl(new float[2]);
+
+        aggregator.initSpatial(spatialCtx, spatialVector);
+        aggregator.initSpatial(spatialCtx2, spatialVector2);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 20F, 0.5F), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx, new ObservationImpl(0, 0, 0, 0F, 0), spatialVector);
+        aggregator.aggregateSpatial(spatialCtx2, new ObservationImpl(0, 0, 0, 998F, 0), spatialVector2);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector);
+        aggregator.completeSpatial(spatialCtx, NUM_OBS, spatialVector2);
+
+        assertEquals(20F, spatialVector.get(0), 1E-7);
+        assertEquals(0.5F, spatialVector.get(1), 1E-7);
+        assertEquals(998F, spatialVector2.get(0), 1E-7);
+
+        aggregator.initTemporal(temporalCtx, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
+        aggregator.aggregateTemporal(temporalCtx, spatialVector2, 0, temporalVector);
+        aggregator.completeTemporal(temporalCtx, 0, temporalVector);
+
+        assertEquals(20F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5F, temporalVector.get(1), 1E-7);
+
+    }
+
+    @Test
     public void testAggregate_NoValidObservations() throws Exception {
         JDAggregator aggregator = new JDAggregator(null, null, null, null, new int[]{32, 60});
 

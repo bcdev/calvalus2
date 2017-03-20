@@ -70,4 +70,38 @@ public class S2StrategyTest {
 
 //        ProductIO.writeProduct(binningOp.getTargetProduct(), "C:\\ssd\\binningtest.nc", "NetCDF-CF");
     }
+
+    @Test
+    @Ignore
+    public void name() throws Exception {
+        String pattern =
+                "                <Placemark>\n" +
+                        "                        <name>%s</name>\n" +
+                        "                        <Snippet maxLines=\"0\"></Snippet>\n" +
+                        "                        <styleUrl>#MapRollOver</styleUrl>\n" +
+                        "                        <MultiGeometry>\n" +
+                        "                                <Polygon>\n" +
+                        "                                        <outerBoundaryIs>\n" +
+                        "                                                <LinearRing>\n" +
+                        "                                                        <coordinates>\n" +
+                        "                                                                %s,%s,0 %s,%s,0 %s,%s,0 %s,%s,0 %s,%s,0\n" +
+                        "                                                        </coordinates>\n" +
+                        "                                                </LinearRing>\n" +
+                        "                                        </outerBoundaryIs>\n" +
+                        "                                </Polygon>\n" +
+                        "</MultiGeometry>\n" +
+                        "                </Placemark>";
+
+
+        PixelProductArea[] allAreas = new S2Strategy().getAllAreas();
+        for (PixelProductArea area : allAreas) {
+            System.out.println(String.format(pattern, area.nicename,
+                    area.left - 180, area.top - 90,
+                    area.left - 180, area.top - 90 + 5,
+                    area.left - 180 + 5, area.top - 90 + 5,
+                    area.left - 180 + 5, area.top - 90,
+                    area.left - 180, area.top - 90));
+        }
+
+    }
 }
