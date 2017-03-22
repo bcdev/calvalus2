@@ -5,6 +5,9 @@ import com.bc.calvalus.reporting.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.Duration;
@@ -37,7 +40,13 @@ public class JSONExtractor {
     private static final String INIT_FIRST_MONTH = "01";
 
     public List<UsageStatistic> getAllStatistics() throws IOException {
-        InputStream inputStream = getClass().getClassLoader().getResourceAsStream(PropertiesWrapper.get("reporting.file"));
+        String databasePath = PropertiesWrapper.get("reporting.file");
+        InputStream inputStream;
+        if (databasePath.startsWith("/")) {
+            inputStream = new BufferedInputStream(new FileInputStream(databasePath));
+        } else {
+            inputStream = getClass().getClassLoader().getResourceAsStream(databasePath);
+        }
         String reportingJsonString = extractJsonString(inputStream);
         Gson gson = new Gson();
         return gson.fromJson(reportingJsonString,

@@ -13,7 +13,7 @@ import java.util.logging.Level;
 public class ExtractCalvalusReport {
     public static void main(String[] args) {
         try {
-            PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+            PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
         } catch (IOException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, "error in GenerateCalvalusReport class", e);
         }

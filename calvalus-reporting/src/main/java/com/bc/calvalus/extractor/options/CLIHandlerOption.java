@@ -28,6 +28,8 @@ public class CLIHandlerOption extends PrintOption {
     private static final String STOP_OPTION = "stop";
     private static final String VERSION = "version";
     private static final String CALVALUS_HISTORY_GENERATE_TIME_INTERVAL_DEFAULT = "calvalus.history.generate.time.interval.default";
+    private static final String CALVALUS_REPORTING_DATABASE = "reporting.file";
+
     private CommandLine commandLine;
     private final static Logger logger = CalvalusLogger.getLogger();
 
@@ -93,8 +95,13 @@ public class CLIHandlerOption extends PrintOption {
             intervalS = PropertiesWrapper.get(CALVALUS_HISTORY_GENERATE_TIME_INTERVAL_DEFAULT);
         }
         int intervalInMinutes = Integer.parseInt(intervalS);
-        String urlPath = commandLine.getOptionValue(OUTPUT_OPTION);
-
+        String urlPath;
+        if (commandLine.hasOption(OUTPUT_OPTION)) {
+            urlPath = commandLine.getOptionValue(OUTPUT_OPTION);
+        } else {
+            urlPath = PropertiesWrapper.get(CALVALUS_REPORTING_DATABASE);
+        }
+        
         logger.log(Level.INFO, "################################################");
         logger.log(Level.INFO, "#                START EXTRACTING               #");
         logger.log(Level.INFO, "################################################");

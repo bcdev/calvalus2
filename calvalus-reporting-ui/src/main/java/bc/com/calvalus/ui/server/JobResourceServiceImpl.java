@@ -4,9 +4,12 @@ import bc.com.calvalus.ui.client.JobResourcesService;
 import bc.com.calvalus.ui.client.ColumnType;
 import bc.com.calvalus.ui.shared.UserInfo;
 import bc.com.calvalus.ui.shared.UserInfoInDetails;
+import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+
+import java.io.IOException;
 import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -29,12 +32,17 @@ import javax.ws.rs.core.Response;
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
     private static final Client client = ClientBuilder.newClient();
     static final String STATUS_FAILED = "\"Status\": \"Failed\"";
-    static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
+    String calvalusReportingWebServicesUrl;
     static final int HTTP_SUCCESSFUL_CODE_START = 200;
     static final int HTTP_SUCCESSFUL_CODE_END = 300;
 
     static final int TO_GB = 1024;
     static final int FIRST_DAY = 1;
+
+    public JobResourceServiceImpl() throws IOException {
+        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
+        calvalusReportingWebServicesUrl = PropertiesWrapper.get("reporting.webservice");
+    }
 
     @Override
     public UserInfoInDetails getAllUserUsageForToday(ColumnType columnType) {
@@ -106,17 +114,17 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private List<UserInfo> getAllDateUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return gsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllUserUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return gsonToUserInfo(jsonUser);
     }
 
     private List<UserInfo> getAllQueueUsageBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
         return gsonToUserInfo(jsonUser);
     }
 
