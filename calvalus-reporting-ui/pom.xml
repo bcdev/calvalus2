@@ -37,17 +37,11 @@
     </dependencyManagement>
 
     <dependencies>
-        <dependency>
-                    <groupId>com.bc.wps</groupId>
-                    <artifactId>bc-wps-commons</artifactId>
-                    <version>1.0</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>xerces</groupId>
-                            <artifactId>xercesImpl</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
+<!--        <dependency>
+            <groupId>com.bc.wps</groupId>
+            <artifactId>bc-wps-commons</artifactId>
+            <version>1.0</version>
+        </dependency>-->
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>

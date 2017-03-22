@@ -1,15 +1,14 @@
 package bc.com.calvalus.ui.server;
 
-import bc.com.calvalus.ui.client.JobResourcesService;
 import bc.com.calvalus.ui.client.ColumnType;
+import bc.com.calvalus.ui.client.JobResourcesService;
 import bc.com.calvalus.ui.shared.UserInfo;
 import bc.com.calvalus.ui.shared.UserInfoInDetails;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
-
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -19,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -40,8 +40,11 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     static final int FIRST_DAY = 1;
 
     public JobResourceServiceImpl() throws IOException {
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
-        calvalusReportingWebServicesUrl = PropertiesWrapper.get("reporting.webservice");
+        try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("calvalus-reporting.properties")) {
+            Properties properties = new Properties();
+            properties.load(resourceAsStream);
+            calvalusReportingWebServicesUrl = (String) properties.get("reporting.webservice");
+        }
     }
 
     @Override
