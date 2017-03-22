@@ -133,8 +133,10 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
             if (mode == MODE.EXECUTE && calvalusAppData != null) {
                 boolean success = executeGraphAndCollectOutput(graph, calvalusAppData, pm);
-                if (graphContext.getOutputProducts().length > 0) {
-                    targetProduct = graphContext.getOutputProducts()[0];
+                if (success && target != null && target.getNodeId() != null && graphContext.getOutputProducts().length > 0) {
+                    //graphContext.getOutputProducts()[0];
+                    targetProduct = getTargetProductFromGraph(graph, target.getNodeId());
+                    return postprocessTargetProduct();
                 }
                 return success;
             } else {
@@ -175,6 +177,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         // collect results files
         List<File> outputFileList = new ArrayList<>();
         if (appData.outputFiles != null) {
+            graphContext.dispose();
             for (String outputFile : appData.outputFiles) {
                 File file = new File(outputFile);
                 if (file.exists()) {
@@ -185,6 +188,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             }
         }
         if (appData.outputNodes != null) {
+            graphContext.dispose();
             for (OutputNodeRef ref : appData.outputNodes) {
                 Node node = graph.getNode(ref.nodeId);
                 if (node != null) {
