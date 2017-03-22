@@ -93,6 +93,21 @@ public class S2GridMapper extends AbstractGridMapper {
         return false;
     }
 
+    @Override
+    protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+        double lcAreaSum = 0.0F;
+        for (int i = 0; i < baInLcFirst.size(); i++) {
+            float[] firstBaValues = baInLcFirst.get(i);
+            float[] secondBaValues = baInLcSecond.get(i);
+            lcAreaSum += firstBaValues[targetPixelIndex];
+            lcAreaSum += secondBaValues[targetPixelIndex];
+        }
+        float lcAreaSumFraction = getFraction(lcAreaSum, area);
+        if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
+            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+        }
+    }
+
     public static void setGcToLcProduct(Product lcProduct) throws IOException {
         String tile = lcProduct.getName().substring(8, 14);
         int tileX = Integer.parseInt(tile.substring(4, 6));

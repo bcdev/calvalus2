@@ -95,6 +95,11 @@ public class AbstractGridMapperTest {
             protected boolean maskUnmappablePixels() {
                 return false;
             }
+
+            @Override
+            protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+
+            }
         };
         File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-v07h16.nc");
         Product lcProduct = ProductIO.readProduct(file);

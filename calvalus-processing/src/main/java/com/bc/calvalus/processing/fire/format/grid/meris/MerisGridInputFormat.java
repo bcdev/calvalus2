@@ -67,30 +67,30 @@ public class MerisGridInputFormat extends InputFormat {
                     fileLengths.stream().mapToLong(Long::longValue).toArray()));
             usedTiles.add(CommonUtils.getMerisTile(path.toString()));
         }
-        for (String tile : CommonUtils.getMissingTiles(usedTiles)) {
-            List<Path> filePaths = new ArrayList<>();
-            List<Long> fileLengths = new ArrayList<>();
-            // dummy for BA input
-            filePaths.add(new Path("dummy"));
-            fileLengths.add(0L);
-
-            // dummy for LC input
-            filePaths.add(new Path("dummy"));
-            fileLengths.add(0L);
-
-            // srStatuses
-            FileStatus[] srPaths = getSrFileStatuses(conf.get("calvalus.year"), conf.get("calvalus.month"), tile, FileSystem.get(conf));
-            for (FileStatus status : srPaths) {
-                filePaths.add(status.getPath());
-                fileLengths.add(status.getLen());
-            }
-
-            boolean hasSrData = srPaths.length > 0;
-            if (hasSrData) {
-                splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
-                        fileLengths.stream().mapToLong(Long::longValue).toArray()));
-            }
-        }
+//        for (String tile : CommonUtils.getMissingTiles(usedTiles)) {
+//            List<Path> filePaths = new ArrayList<>();
+//            List<Long> fileLengths = new ArrayList<>();
+        // dummy for BA input
+//            filePaths.add(new Path("dummy"));
+//            fileLengths.add(0L);
+//
+        // dummy for LC input
+//            filePaths.add(new Path("dummy"));
+//            fileLengths.add(0L);
+//
+        // srStatuses
+//            FileStatus[] srPaths = getSrFileStatuses(conf.get("calvalus.year"), conf.get("calvalus.month"), tile, FileSystem.get(conf));
+//            for (FileStatus status : srPaths) {
+//                filePaths.add(status.getPath());
+//                fileLengths.add(status.getLen());
+//            }
+//
+//            boolean hasSrData = srPaths.length > 0;
+//            if (hasSrData) {
+//                splits.add(new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+//                        fileLengths.stream().mapToLong(Long::longValue).toArray()));
+//            }
+//        }
     }
 
     private FileStatus getLcFileStatus(Path path, FileSystem fileSystem) throws IOException {
@@ -128,7 +128,8 @@ public class MerisGridInputFormat extends InputFormat {
         int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         String basePath = baInputPath.substring(0, baInputPath.indexOf("meris-ba") - 1);
-        return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
+//        return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
+        return String.format("%s/sr-fr-default/%s/l3-%s-%02d-*-fire-nc/CCI-Fire-*%s-%02d-*-%s*.nc", basePath, year, year, month, year, month, tile);
     }
 
     private static String lcYear(int year) {

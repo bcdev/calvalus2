@@ -69,7 +69,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, targetRasterHeight));
             for (int x = 0; x < targetRasterWidth; x++) {
-                alreadyConsideredDoys.clear();
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     continue;
@@ -83,10 +82,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
                 for (int i = 0; i < data.pixels.length; i++) {
                     int doy = data.pixels[i];
-                    if (alreadyConsideredDoys.contains(doy)) {
-                        continue;
-                    }
-                    alreadyConsideredDoys.add(doy);
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         boolean hasLcClass = false;
@@ -167,23 +162,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         return gridCell;
     }
 
-    private boolean doyAlreadyConsidered(int doy) {
-        return alreadyConsideredDoys.contains(doy);
-    }
-
-    private void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
-        double lcAreaSum = 0.0F;
-        for (int i = 0; i < baInLcFirst.size(); i++) {
-            float[] firstBaValues = baInLcFirst.get(i);
-            float[] secondBaValues = baInLcSecond.get(i);
-            lcAreaSum += firstBaValues[targetPixelIndex];
-            lcAreaSum += secondBaValues[targetPixelIndex];
-        }
-        float lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
-            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
-        }
-    }
+    protected abstract void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area);
 
     protected abstract boolean maskUnmappablePixels();
 
@@ -222,7 +201,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    private static float getFraction(double value, double area) {
+    protected static float getFraction(double value, double area) {
         return (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
     }
 

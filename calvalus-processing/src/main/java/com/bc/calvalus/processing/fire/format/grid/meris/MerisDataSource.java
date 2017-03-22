@@ -3,7 +3,9 @@ package com.bc.calvalus.processing.fire.format.grid.meris;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
+import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.dataio.netcdf.util.NetcdfFileOpener;
 import ucar.ma2.Array;
@@ -28,6 +30,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
     private final boolean computeBA;
     private final int targetWidth;
     private final int targetHeight;
+    private GeoCoding geoCoding;
 
     MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts) {
         this(sourceProduct, lcProduct, srProducts, 90, 90);
@@ -40,6 +43,16 @@ public class MerisDataSource extends AbstractFireGridDataSource {
         this.computeBA = sourceProduct != null;
         this.targetWidth = targetWidth;
         this.targetHeight = targetHeight;
+
+        if (computeBA) {
+            geoCoding = sourceProduct.getSceneGeoCoding();
+        } else {
+            try {
+                geoCoding = ProductIO.readProduct(srProducts.get(0)).getSceneGeoCoding();
+            } catch (IOException e) {
+                throw new IllegalStateException("product '" + srProducts.get(0).getName() + "' does not have a geo-coding");
+            }
+        }
     }
 
     @Override
@@ -54,8 +67,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
-
-        getAreas(sourceProduct.getSceneGeoCoding(), targetWidth, targetHeight, data.areas);
+        getAreas(geoCoding, targetWidth, targetHeight, data.areas);
 
         byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
         byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];

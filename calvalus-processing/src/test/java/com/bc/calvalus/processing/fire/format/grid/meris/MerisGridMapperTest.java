@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+
 public class MerisGridMapperTest {
 
     @Ignore
@@ -35,4 +37,8 @@ public class MerisGridMapperTest {
         System.out.println(gridCell);
     }
 
+    @Test
+    public void testGetTile() throws Exception {
+        assertEquals("v04h07", MerisGridMapper.getTile("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v04h07/2008/2008-06-01-fire-nc/CCI-Fire-MERIS-SDR-L3-300m-v1.0-2008-06-01-v04h07.nc"));
+    }
 }

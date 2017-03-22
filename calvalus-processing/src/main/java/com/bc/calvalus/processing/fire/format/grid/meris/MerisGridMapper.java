@@ -49,6 +49,8 @@ public class MerisGridMapper extends AbstractGridMapper {
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
+        System.setProperty("snap.dataio.netcdf.metadataElementLimit", "100");
+
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
@@ -63,19 +65,21 @@ public class MerisGridMapper extends AbstractGridMapper {
             LOG.info("v4.0 file; masking pixels which accidentally fall into unmappable LC class");
         }
 
-        Product sourceProduct;
-        Product lcProduct;
+        Product sourceProduct = null;
+        Product lcProduct = null;
+        List<File> srProducts = new ArrayList<>();
         if (computeBA) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[0], context.getConfiguration());
             sourceProduct = ProductIO.readProduct(sourceProductFile);
 
             File lcTile = CalvalusProductIO.copyFileToLocal(paths[1], context.getConfiguration());
             lcProduct = ProductIO.readProduct(lcTile);
-        } else {
-            // because coverage is computed in reducer
-            return;
         }
-        List<File> srProducts = new ArrayList<>();
+
+        for (int i = 2; i < paths.length; i++) {
+            File srProduct = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            srProducts.add(srProduct);
+        }
 
         setDataSource(new MerisDataSource(sourceProduct, lcProduct, srProducts));
 
@@ -84,11 +88,12 @@ public class MerisGridMapper extends AbstractGridMapper {
 
         context.progress();
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[1].toString()))), gridCell); // use LC input for determining tile
+//        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[1].toString()))), gridCell); // use LC input for determining tile
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCell); // use LC input for determining tile
         errorPredictor.dispose();
     }
 
-    private static String getTile(String path) {
+    static String getTile(String path) {
         // path.toString() = hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v04h07/2008/2008-06-01-fire-nc/CCI-Fire-MERIS-SDR-L3-300m-v1.0-2008-06-01-v04h07.nc
         int startIndex = path.length() - 9;
         return path.substring(startIndex, startIndex + 6);
@@ -99,4 +104,8 @@ public class MerisGridMapper extends AbstractGridMapper {
         return maskUnmappablePixels;
     }
 
+    @Override
+    protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+        // no burnable fraction computed for MERIS dataset
+    }
 }
