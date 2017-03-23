@@ -92,6 +92,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     private GraphContext graphContext;
     private Product targetProduct;
+    private boolean shallSaveTarget;
 
     public SnapGraphAdapter(MapContext mapContext) {
         super(mapContext);
@@ -143,6 +144,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 if (target == null || target.getNodeId() == null) {
                     throw new IllegalArgumentException("no 'target' product given in graph.");
                 }
+                shallSaveTarget = true;
                 targetProduct = getTargetProductFromGraph(graph, target.getNodeId());
                 return postprocessTargetProduct();
             }
@@ -173,11 +175,11 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         getLogger().info("Executing graph");
         GraphProcessor processor = new GraphProcessor();
         processor.executeGraph(graphContext, pm);
+        graphContext.dispose();
 
         // collect results files
         List<File> outputFileList = new ArrayList<>();
         if (appData.outputFiles != null) {
-            graphContext.dispose();
             for (String outputFile : appData.outputFiles) {
                 File file = new File(outputFile);
                 if (file.exists()) {
@@ -188,7 +190,6 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
             }
         }
         if (appData.outputNodes != null) {
-            graphContext.dispose();
             for (OutputNodeRef ref : appData.outputNodes) {
                 Node node = graph.getNode(ref.nodeId);
                 if (node != null) {
@@ -313,7 +314,9 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
     @Override
     public void saveProcessedProducts(ProgressMonitor pm) throws IOException {
-        saveTargetProduct(targetProduct, pm);
+        if (shallSaveTarget) {
+            saveTargetProduct(targetProduct, pm);
+        }
     }
 
     @Override
