@@ -100,7 +100,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                             write(stat.getHeader());
                             headerWritten = true;
                         }
-                        stat.finalize();
+                        stat.finish();
                         write(stat.getStats());
                     }
                     long[] dateRange = dateRanges[trIndex];
@@ -116,7 +116,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             if (!headerWritten) {
                 write(stat.getHeader());
             }
-            stat.finalize();
+            stat.finish();
             write(stat.getStats());
         }
         // close netcdf
@@ -183,9 +183,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             }
         }
 
-        public void finalize() {
+        public void finish() {
             for (BandStat bandStat : bandStats) {
-                bandStat.finalize();
+                bandStat.finish();
             }
         }
 
@@ -243,7 +243,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             }
         }
 
-        public void finalize() {
+        public void finish() {
             if (numValid > 0) {
                 mean = sum / numValid;
                 double sigmaSqr = sumSQ / numValid - mean * mean;
