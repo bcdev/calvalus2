@@ -20,7 +20,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
-import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -46,6 +45,7 @@ import java.awt.*;
 import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 /**
@@ -74,15 +74,18 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, numRegions));
             if (product != null) {
                 Extractor extractor = new Extractor(product, raConfig);
-                RAConfig.Region[] regions = raConfig.getRegions();
-                for (int regionId = 0; regionId < regions.length; regionId++) {
-                    RAConfig.Region region = regions[regionId];
-                    Extract extract = extractor.performExtraction(region, SubProgressMonitor.create(pm, 1));
+                Iterator<NamedRegion> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
+                int regionId = 0;
+                while (regionIterator.hasNext()) {
+                    NamedRegion namedRegion = regionIterator.next();
+                    ProgressMonitor subPM = SubProgressMonitor.create(pm, 1);
+                    Extract extract = extractor.performExtraction(namedRegion.name, namedRegion.geometry, subPM);
                     if (extract != null) {
                         RAKey key = new RAKey(regionId, extract.time);
                         RAValue value = new RAValue(extract.numPixel, extract.samples, extract.time, product.getName());
                         context.write(key, value);
                     }
+                    regionId++;
                 }
             } else {
                 LOG.warning("product does not cover region, skipping processing.");
@@ -141,11 +144,10 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             }
         }
 
-        public Extract performExtraction(RAConfig.Region region, ProgressMonitor pm) {
-            final Geometry geometry = GeometryUtils.createGeometry(region.getWkt());
+        public Extract performExtraction(String name, Geometry geometry, ProgressMonitor pm) {
             regionRect = SubsetOp.computePixelRegion(product, geometry, 1);
             if (regionRect.isEmpty()) {
-                LOG.info("Nothing to extract for region " + region.getName());
+                LOG.info("Nothing to extract for region " + name);
             }
             PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(geometry);
             geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);

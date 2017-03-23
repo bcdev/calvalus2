@@ -140,10 +140,10 @@ public class RAProductionType extends HadoopProductionType {
     static RAConfig getRAConfig(ProductionRequest productionRequest) throws ProductionException {
         RAConfig raConfig = new RAConfig();
 
-        String wkt = productionRequest.getString("regionWKT");
-        String name = productionRequest.getString("regionName", "region");
-        raConfig.setRegions(new RAConfig.Region(name, wkt));
-
+//        String wkt = productionRequest.getString("regionWKT");
+//        String name = productionRequest.getString("regionName", "region");
+//        raConfig.setRegions(new RAConfig.Region(name, wkt));
+//
         String bandList = productionRequest.getParameter("bandList", true);
         raConfig.setBandNames(bandList.split(","));
         raConfig.setValidExpressions(productionRequest.getString("maskExpr", "true"));

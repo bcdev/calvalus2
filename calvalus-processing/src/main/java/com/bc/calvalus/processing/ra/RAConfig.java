@@ -21,8 +21,15 @@ import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.geotools.feature.FeatureCollection;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+
+import java.io.IOException;
+import java.util.Iterator;
 
 /**
  * The configuration for the region analysis workflow
@@ -61,8 +68,18 @@ public class RAConfig implements XmlConvertible {
     private Region[] regions;
 
     @Parameter
+    private String shapeFilePath;
+
+    @Parameter
+    private String filterAttributeName;
+
+    @Parameter
+    private String filterAttributeValues;
+
+    @Parameter
     private String validExpressions;
 
+    // TODO bandNames have to be given, switch to all if not given ?
     @Parameter
     private String[] bandNames;
 
@@ -116,6 +133,25 @@ public class RAConfig implements XmlConvertible {
             return new ParameterBlockConverter().convertObjectToXml(this);
         } catch (ConversionException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public Iterator<NamedRegion> createNamedRegionIterator(Configuration conf) throws IOException {
+        if (shapeFilePath != null && !shapeFilePath.isEmpty()) {
+            FeatureCollection<SimpleFeatureType, SimpleFeature> collection = RARegions.openShapefile(new Path(shapeFilePath), conf);
+            String[] attributeValues = new String[0];
+            if (filterAttributeValues != null) {
+                String[] split = filterAttributeValues.split(",");
+                attributeValues = new String[split.length];
+                for (int i = 0; i < split.length; i++) {
+                    attributeValues[i] = split[i].trim();
+                }
+            }
+            return RARegions.createIterator(collection, filterAttributeName, attributeValues);
+        } else if (regions != null) {
+            return new RARegions.RegionIteratorFromWKT(regions);
+        } else {
+            throw new IllegalArgumentException("Neither regions nor a shapefile is given");
         }
     }
 }

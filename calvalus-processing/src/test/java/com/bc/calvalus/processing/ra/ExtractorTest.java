@@ -16,7 +16,9 @@
 
 package com.bc.calvalus.processing.ra;
 
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
+import com.vividsolutions.jts.geom.Geometry;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
@@ -47,12 +49,12 @@ public class ExtractorTest {
         product.setEndTime(ProductData.UTC.parse("01-JAN-2011 12:20:30"));
 
         RAConfig config = new RAConfig();
-        config.setRegions(new RAConfig.Region[]{new RAConfig.Region("r1", NORTH_SEA_WKT)});
         config.setBandNames(new String[]{"x", "l", "c"});
         config.setValidExpressions("LAT > 50");
 
         RAMapper.Extractor extractor = new RAMapper.Extractor(product, config);
-        RAMapper.Extract extract = extractor.performExtraction(config.getRegions()[0], ProgressMonitor.NULL);
+        Geometry northSea = GeometryUtils.createGeometry(NORTH_SEA_WKT);
+        RAMapper.Extract extract = extractor.performExtraction("r1", northSea, ProgressMonitor.NULL);
         assertNotNull(extract);
         assertEquals(574, extract.numPixel);
         assertEquals(3, extract.samples.length);
