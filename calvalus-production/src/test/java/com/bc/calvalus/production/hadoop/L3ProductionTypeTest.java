@@ -131,7 +131,7 @@ public class L3ProductionTypeTest {
     }
 
     @Test
-    public void testGetDatePairList_MinMax() throws ProductionException, ParseException {
+    public void testGetDatePairList_MinMax_complex() throws ProductionException, ParseException {
         ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
                                                                     "minDate", "2010-06-15",
                                                                     "maxDate", "2010-08-15",
@@ -148,6 +148,26 @@ public class L3ProductionTypeTest {
 
         assertEquals("2010-07-25", asString(dateRangeList.get(2).getStartDate()));
         assertEquals("2010-07-29", asString(dateRangeList.get(2).getStopDate()));
+    }
+
+    @Test
+    public void testGetDatePairList_MinMax_simple() throws ProductionException, ParseException {
+        ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
+                                                                    "minDate", "2010-06-15",
+                                                                    "maxDate", "2010-08-15",
+                                                                    "periodLength", "20",
+                                                                    "compositingPeriodLength", "20");
+
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        assertEquals(3, dateRangeList.size());
+        assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-07-04", asString(dateRangeList.get(0).getStopDate()));
+
+        assertEquals("2010-07-05", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-07-24", asString(dateRangeList.get(1).getStopDate()));
+
+        assertEquals("2010-07-25", asString(dateRangeList.get(2).getStartDate()));
+        assertEquals("2010-08-13", asString(dateRangeList.get(2).getStopDate()));
     }
 
     @Test
