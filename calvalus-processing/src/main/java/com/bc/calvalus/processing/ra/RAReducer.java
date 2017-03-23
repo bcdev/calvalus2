@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.ra;
 
-import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -27,9 +26,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -40,8 +37,7 @@ import java.util.*;
 public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritable> {
 
     private RAConfig raConfig;
-    private long[][] dateRanges;
-    private DateFormat dateFormat;
+    private RADateRanges dateRanges;
     private Writer writer;
     private boolean headerWritten = false;
 
@@ -50,19 +46,16 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         Configuration conf = context.getConfiguration();
         this.raConfig = RAConfig.get(conf);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_RA_DATE_RANGES);
-        dateRanges = createDateRanges(dateRangesString);
-        dateFormat = createDateFormat();
+        try {
+            dateRanges = RADateRanges.create(dateRangesString);
+        } catch (ParseException e) {
+            throw new IOException(e);
+        }
 
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), "region-analysis.csv");
         writer = new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
     }
 
-    private static DateFormat createDateFormat() {
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-        final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        dateFormat.setCalendar(calendar);
-        return dateFormat;
-    }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
@@ -70,18 +63,18 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
     }
 
     // key == region
-    // values == ordered by time, extracts
+    // values == extracts, ordered by time
     @Override
     protected void reduce(RAKey key, Iterable<RAValue> values, Context context) throws IOException, InterruptedException {
-        // write netcdf file
-        // compute stats
-        // write CSV
+        // 1) write netCDF file
+        // 2) compute stats
+        // 3) write CSV
 
-        int regionId = key.getRegionId();
-        String regionName = raConfig.getRegions()[regionId].getName();
+        final int regionId = key.getRegionId();
+        final String regionName = raConfig.getRegions()[regionId].getName();
         System.out.println("regionName = " + regionName);
 
-        // open netcdf
+        // open netCDF
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
         Stat stat = null;
         int currentTimeRangeIndex = -1;
@@ -89,9 +82,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         for (RAValue extract : values) {
             long time = extract.getTime();
             System.out.println("time = " + time + "  numSamples = " + extract.getSamples()[0].length);
-            int trIndex = findDateRangeIndex(time);
+            int trIndex = dateRanges.findIndex(time);
             if (trIndex == -1) {
-                String out_ouf_range_date = dateFormat.format(new Date(time));
+                String out_ouf_range_date = dateRanges.format(time);
                 System.out.println("out_ouf_range_date = " + out_ouf_range_date);
             } else {
                 if (trIndex != currentTimeRangeIndex) {
@@ -103,9 +96,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                         stat.finish();
                         write(stat.getStats());
                     }
-                    long[] dateRange = dateRanges[trIndex];
-                    String dStart = dateFormat.format(new Date(dateRange[0]));
-                    String dEnd = dateFormat.format(new Date(dateRange[1]));
+                    String dStart = dateRanges.formatStart(trIndex);
+                    String dEnd = dateRanges.formatEnd(trIndex);
                     stat = new Stat(regionName, raConfig.getBandNames(), dStart, dEnd);
                     currentTimeRangeIndex = trIndex;
                 }
@@ -119,39 +111,13 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             stat.finish();
             write(stat.getStats());
         }
-        // close netcdf
+        // close netCDF
     }
 
     private void write(List<String> strings) throws IOException {
         System.out.println(String.join(",", strings));
         writer.write(String.join("\t", strings));
         writer.write("\n");
-    }
-
-    private int findDateRangeIndex(long time) {
-        for (int i = 0; i < dateRanges.length; i++) {
-            long[] dateRange = dateRanges[i];
-            if (time > dateRange[0] && time <= dateRange[1]) {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    private static long[][] createDateRanges(String dateRangesString) throws IOException {
-        String[] dateRangesStrings = dateRangesString.split(",");
-        long[][] dateRanges = new long[dateRangesStrings.length][2];
-        for (int i = 0; i < dateRangesStrings.length; i++) {
-            try {
-                String dateRangeString = dateRangesStrings[i];
-                DateRange dateRange = DateRange.parseDateRange(dateRangeString);
-                dateRanges[i][0] = dateRange.getStartDate().getTime();
-                dateRanges[i][1] = dateRange.getStopDate().getTime() + 24 * 60 * 60 * 1000L;
-            } catch (ParseException e) {
-                throw new IOException(e);
-            }
-        }
-        return dateRanges;
     }
 
     private static class Stat {
