@@ -85,8 +85,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             int currentTimeRange = dateRanges.findIndex(time);
             if (currentTimeRange == -1) {
                 String out_ouf_range_date = dateRanges.format(time);
-                System.out.println("out_ouf_range_date = " + out_ouf_range_date);
-                System.out.println("ignoring extract data");
+                System.out.println("out_ouf_range_date = " + out_ouf_range_date + " --> ignoring extract data");
             } else {
                 if (currentTimeRange != lastTimeRange) {
                     // next/new time-range
@@ -111,21 +110,24 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
     }
 
     private static class Stat {
-        private final BandStat[] bandStats;
+
+        private final Accumulator[] accus;
         private final String dStart;
         private final String dEnd;
         private final String regionName;
+
+        private Stx[] bandStats;
         int numPasses;
         int numObs;
         boolean headerWritten;
 
         public Stat(String regionName, String[] bandNames, String dStart, String dEnd) {
             this.regionName = regionName;
-            this.bandStats = new BandStat[bandNames.length];
+            this.accus = new Accumulator[bandNames.length];
             this.dStart = dStart;
             this.dEnd = dEnd;
             for (int i = 0; i < bandNames.length; i++) {
-                this.bandStats[i] = new BandStat(bandNames[i].trim());
+                this.accus[i] = new Accumulator(bandNames[i].trim());
             }
             this.numObs = 0;
             this.numPasses = 0;
@@ -136,13 +138,14 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             numObs += extract.getNumPixel();
             float[][] samples = extract.getSamples();
             for (int bandId = 0; bandId < samples.length; bandId++) {
-                bandStats[bandId].accumulate(samples[bandId]);
+                accus[bandId].accumulate(samples[bandId]);
             }
         }
 
         public void finish() {
-            for (BandStat bandStat : bandStats) {
-                bandStat.finish();
+            bandStats = new Stx[accus.length];
+            for (int i = 0; i < accus.length; i++) {
+                bandStats[i] = new Stx(accus[i].getBandname(), accus[i].getValues());
             }
         }
 
@@ -153,7 +156,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             header.add("TimeWindow_end");
             header.add("numPasses");
             header.add("numObs");
-            for (BandStat bandStat : bandStats) {
+            for (Stx bandStat : bandStats) {
                 header.addAll(bandStat.getHeader());
             }
             return header;
@@ -166,7 +169,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             stats.add(dEnd);
             stats.add(Integer.toString(numPasses));
             stats.add(Integer.toString(numObs));
-            for (BandStat bandStat : bandStats) {
+            for (Stx bandStat : bandStats) {
                 stats.addAll(bandStat.getStats());
             }
             return stats;
@@ -186,39 +189,125 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
     }
 
-    private static class BandStat {
+    static class Accumulator {
 
         private final String bandname;
-        private int numValid = 0;
-        private double min = +Double.MAX_VALUE;
-        private double max = -Double.MAX_VALUE;
-        private double sum = 0;
-        private double sumSQ = 0;
-        private double mean = Double.NaN;
-        private double sigma = Double.NaN;
+        private float[] values = new float[0];
 
-        public BandStat(String bandname) {
+        public Accumulator(String bandname) {
             this.bandname = bandname;
         }
 
-        public void accumulate(float[] samples) {
+        public void accumulate(float... samples) {
+            float[] buffer = new float[samples.length];
+            int i = 0;
             for (float sample : samples) {
-                if (!Double.isNaN(sample)) {
-                    numValid++;
-                    min = Math.min(min, sample);
-                    max = Math.max(max, sample);
-                    sum += sample;
-                    sumSQ += sample * sample;
+                if (!Float.isNaN(sample)) {
+                    buffer[i++] = sample;
                 }
+            }
+            values = concat(values, buffer);
+        }
+
+        public String getBandname() {
+            return bandname;
+        }
+
+        public float[] getValues() {
+            return values;
+        }
+
+        static float[] concat(float[] a1, float[] a2) {
+            float[] b = new float[a1.length + a2.length];
+            System.arraycopy(a1, 0, b, 0, a1.length);
+            System.arraycopy(a2, 0, b, a1.length, a2.length);
+            return b;
+        }
+    }
+
+    static class Stx {
+
+        private final String bandname;
+        private final int numValid;
+        private double min = +Double.MAX_VALUE;
+        private double max = -Double.MAX_VALUE;
+        private final double arithMean;
+        private final double sigma;
+        private final double geomMean;
+        private final double p5;
+        private final double p25;
+        private final double p50;
+        private final double p75;
+        private final double p95;
+//        private final double mode; //TODO
+
+        public Stx(String name, float[] values) {
+            this.bandname = name;
+            this.numValid = values.length;
+            if (numValid > 0) {
+                double sum = 0;
+                double sumSQ = 0;
+                double product = 1;
+                boolean geomMeanValid = true;
+                for (float value : values) {
+                    min = Math.min(min, value);
+                    max = Math.max(max, value);
+                    sum += value;
+                    sumSQ += value * value;
+                    if (geomMeanValid) {
+                        if (value > 0) {
+                            product *= value;
+                        } else {
+                            geomMeanValid = false;
+                        }
+                    }
+                }
+                arithMean = sum / numValid;
+                double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
+                sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
+                geomMean = geomMeanValid ? Math.pow(product, 1.0 / numValid) : Double.NaN;
+                Arrays.sort(values);
+                p5 = computePercentile(5, values);
+                p25 = computePercentile(25, values);
+                p50 = computePercentile(50, values);
+                p75 = computePercentile(75, values);
+                p95 = computePercentile(95, values);
+            } else {
+                arithMean = Double.NaN;
+                sigma = Double.NaN;
+                geomMean = Double.NaN;
+                p5 = Double.NaN;
+                p25 = Double.NaN;
+                p50 = Double.NaN;
+                p75 = Double.NaN;
+                p95 = Double.NaN;
             }
         }
 
-        public void finish() {
-            if (numValid > 0) {
-                mean = sum / numValid;
-                double sigmaSqr = sumSQ / numValid - mean * mean;
-                sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
+        /**
+         * Computes the p-th percentile of an array of measurements following
+         * the "Engineering Statistics Handbook: Percentile". NIST.
+         * http://www.itl.nist.gov/div898/handbook/prc/section2/prc252.htm.
+         * Retrieved 2011-03-16.
+         *
+         * @param p            The percentage in percent ranging from 0 to 100.
+         * @param measurements Sorted array of measurements.
+         * @return The  p-th percentile.
+         */
+        static double computePercentile(int p, float[] measurements) {
+            int N = measurements.length;
+            double n = (p / 100.0) * (N + 1);
+            int k = (int) Math.floor(n);
+            double d = n - k;
+            double yp;
+            if (k == 0) {
+                yp = measurements[0];
+            } else if (k >= N) {
+                yp = measurements[N - 1];
+            } else {
+                yp = measurements[k - 1] + d * (measurements[k] - measurements[k - 1]);
             }
+            return yp;
         }
 
         public List<String> getHeader() {
@@ -226,8 +315,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             header.add(bandname + "_count");
             header.add(bandname + "_min");
             header.add(bandname + "_max");
-            header.add(bandname + "_mean");
+            header.add(bandname + "_arithMean");
             header.add(bandname + "_sigma");
+            header.add(bandname + "_geomMean");
             return header;
         }
 
@@ -236,8 +326,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             stats.add(Integer.toString(numValid));
             stats.add(Double.toString(min));
             stats.add(Double.toString(max));
-            stats.add(Double.toString(mean));
+            stats.add(Double.toString(arithMean));
             stats.add(Double.toString(sigma));
+            stats.add(Double.toString(geomMean));
             return stats;
         }
     }
