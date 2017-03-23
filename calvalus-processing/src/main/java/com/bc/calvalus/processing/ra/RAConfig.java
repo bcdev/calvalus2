@@ -63,13 +63,17 @@ public class RAConfig implements XmlConvertible {
         }
     }
 
+    // TODO generate union of all regions for geo inventory query ( in ProductionType)
 
+    // either regions or shapeFilePath has to be given
     @Parameter(itemAlias = "region")
     private Region[] regions;
 
     @Parameter
     private String shapeFilePath;
 
+    // the filter* parameter are used to specify the shapefile attributes and the allowed values
+    // if not given all geometries from the shapefile will be used
     @Parameter
     private String filterAttributeName;
 
