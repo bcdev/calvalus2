@@ -77,47 +77,37 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         // open netCDF
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
         Stat stat = null;
-        int currentTimeRangeIndex = -1;
+        int lastTimeRange = -1;
 
         for (RAValue extract : values) {
             long time = extract.getTime();
             System.out.println("time = " + time + "  numSamples = " + extract.getSamples()[0].length);
-            int trIndex = dateRanges.findIndex(time);
-            if (trIndex == -1) {
+            int currentTimeRange = dateRanges.findIndex(time);
+            if (currentTimeRange == -1) {
                 String out_ouf_range_date = dateRanges.format(time);
                 System.out.println("out_ouf_range_date = " + out_ouf_range_date);
+                System.out.println("ignoring extract data");
             } else {
-                if (trIndex != currentTimeRangeIndex) {
+                if (currentTimeRange != lastTimeRange) {
+                    // next/new time-range
                     if (stat != null) {
-                        if (!headerWritten) {
-                            write(stat.getHeader());
-                            headerWritten = true;
-                        }
-                        stat.finish();
-                        write(stat.getStats());
+                        stat.write(writer);
                     }
-                    String dStart = dateRanges.formatStart(trIndex);
-                    String dEnd = dateRanges.formatEnd(trIndex);
+                    String dStart = dateRanges.formatStart(currentTimeRange);
+                    String dEnd = dateRanges.formatEnd(currentTimeRange);
                     stat = new Stat(regionName, raConfig.getBandNames(), dStart, dEnd);
-                    currentTimeRangeIndex = trIndex;
+                    lastTimeRange = currentTimeRange;
                 }
                 stat.accumulate(extract);
             }
         }
         if (stat != null) {
-            if (!headerWritten) {
-                write(stat.getHeader());
-            }
-            stat.finish();
-            write(stat.getStats());
+            stat.write(writer);
         }
         // close netCDF
     }
 
     private void write(List<String> strings) throws IOException {
-        System.out.println(String.join(",", strings));
-        writer.write(String.join("\t", strings));
-        writer.write("\n");
     }
 
     private static class Stat {
@@ -127,6 +117,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         private final String regionName;
         int numPasses;
         int numObs;
+        boolean headerWritten;
 
         public Stat(String regionName, String[] bandNames, String dStart, String dEnd) {
             this.regionName = regionName;
@@ -179,6 +170,19 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                 stats.addAll(bandStat.getStats());
             }
             return stats;
+        }
+
+        public void write(Writer writer) throws IOException {
+            if (!headerWritten) {
+                writeLine(writer, getHeader());
+                headerWritten = true;
+            }
+            finish();
+            writeLine(writer, getStats());
+        }
+
+        private static void writeLine(Writer writer, List<String> fields) throws IOException {
+            writer.write(String.join("\t", fields) + "\n");
         }
     }
 
