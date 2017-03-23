@@ -96,33 +96,15 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         }
     }
 
-    static class Extract {
-
-        final float[][] samples;
-        int numPixel;
-        long time;
-
-        public Extract(int numBands, int numPixelsMax) {
-            samples = new float[numBands][numPixelsMax];
-            numPixel = 0;
-            time = -1;
-        }
-    }
-
     static class Extractor {
 
         private final Product product;
         private final PlanarImage maskImage;
         private final PlanarImage[] dataImages;
-        private final RAConfig raConfig;
-
-        private Rectangle regionRect;
-        private GeometryFilter geometryFilter;
-        private int extractedSamples;
+        private final boolean equalTileGrids;
 
         public Extractor(Product product, RAConfig raConfig) {
             this.product = product;
-            this.raConfig = raConfig;
 
             if (product.getSceneTimeCoding() == null && product.getStartTime() == null && product.getEndTime() == null) {
                 throw new IllegalArgumentException("Product has no time information");
@@ -131,6 +113,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             String expression = StringUtils.isNotNullAndNotEmpty(raConfig.getValidExpressions()) ? raConfig.getValidExpressions() : "true";
             Band maskBand = product.addBand("_RA_MASK", expression, ProductData.TYPE_UINT8);
             maskImage = maskBand.getSourceImage();
+            boolean tEqualTileGrid = true;
 
             String[] bandNames = raConfig.getBandNames();
             dataImages = new PlanarImage[bandNames.length];
@@ -140,37 +123,55 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                 if (band == null) {
                     throw new IllegalArgumentException("Product does not contain band " + bandName);
                 }
+                if (band.getRasterHeight() != maskBand.getRasterHeight() ||
+                        band.getRasterWidth() != maskBand.getRasterWidth()) {
+                    // TODO
+                    throw new IllegalArgumentException("Multi-size not supported !!!");
+                }
                 dataImages[i] = band.getGeophysicalImage();
+                if (!hasSameTiling(maskImage, dataImages[i])) {
+                    tEqualTileGrid = false;
+                }
             }
+            this.equalTileGrids = tEqualTileGrid;
         }
 
-        public Extract performExtraction(String name, Geometry geometry, ProgressMonitor pm) {
-            regionRect = SubsetOp.computePixelRegion(product, geometry, 1);
-            if (regionRect.isEmpty()) {
-                LOG.info("Nothing to extract for region " + name);
+        private boolean hasSameTiling(PlanarImage im1, PlanarImage im2) {
+            return im1.getTileWidth() == im2.getTileWidth() &&
+                    im1.getTileHeight() == im2.getTileHeight() &&
+                    im1.getTileGridXOffset() == im2.getTileGridXOffset() &&
+                    im1.getTileGridYOffset() == im2.getTileGridYOffset();
+        }
+
+        public Extract performExtraction(String regionName, Geometry geometry, ProgressMonitor pm) {
+            Rectangle rect = SubsetOp.computePixelRegion(product, geometry, 1);
+            if (rect.isEmpty()) {
+                LOG.info("Nothing to extract for region " + regionName);
             }
             PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(geometry);
-            geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);
+            GeometryFilter geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);
 
             int numBands = dataImages.length;
-            int numPixelsMax = regionRect.width * regionRect.height;
-            LOG.info("numPixelsMax = " + numPixelsMax);
+            int numPixelsMax = rect.width * rect.height;
+            String fmt = "%s bounds: [x=%d,y=%d,width=%d,height=%d]  area: %d pixel";
+            LOG.info(String.format(fmt, regionName, rect.x, rect.y, rect.width, rect.height, numPixelsMax));
 
-            extractedSamples = 0;
             Extract extract = new Extract(numBands, numPixelsMax);
-            Point[] tileIndices = maskImage.getTileIndices(regionRect);
+            Point[] tileIndices = maskImage.getTileIndices(rect);
             LOG.info(String.format("Extracting data from %d tiles", tileIndices.length));
             pm.beginTask("extraction", tileIndices.length);
-            for (Point tileIndex : tileIndices) {
-                handleSingleTile(tileIndex, extract);
+            for (Point maskTileIndex : tileIndices) {
+                handleSingleTile(maskTileIndex, rect, geometryFilter, extract);
                 pm.worked(1);
             }
-            LOG.info(String.format("Extracted %d valid samples", extractedSamples));
+            LOG.info(String.format("Visited %d pixels          ", extract.numPixel));
+            LOG.info(String.format("Extracted %d valid samples ", extract.numExtracts));
             pm.done();
-            if (extractedSamples > 0) {
+            if (extract.numExtracts > 0) {
+                // truncate array to used size
                 for (int i = 0; i < extract.samples.length; i++) {
                     float[] samples = extract.samples[i];
-                    extract.samples[i] = Arrays.copyOf(samples, extractedSamples);
+                    extract.samples[i] = Arrays.copyOf(samples, extract.numExtracts);
                 }
                 return extract;
             } else {
@@ -178,34 +179,46 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             }
         }
 
-        private void handleSingleTile(Point tileIndex, Extract extract) {
-            Rectangle tileRect = maskImage.getTileRect(tileIndex.x, tileIndex.y);
+        private RasterStack getRasters(Point maskTileIndex, Rectangle regionRect) {
+            Rectangle tileRect = maskImage.getTileRect(maskTileIndex.x, maskTileIndex.y);
             Rectangle rect = tileRect.intersection(regionRect);
 
-            Raster maskTile = maskImage.getTile(tileIndex.x, tileIndex.y);
+            Raster maskTile = maskImage.getTile(maskTileIndex.x, maskTileIndex.y);
             Raster[] dataTiles = new Raster[dataImages.length];
-            for (int i = 0; i < dataImages.length; i++) {
-                dataTiles[i] = dataImages[i].getTile(tileIndex.x, tileIndex.y);
-            }
 
+            if (equalTileGrids) {
+                for (int i = 0; i < dataImages.length; i++) {
+                    dataTiles[i] = dataImages[i].getTile(maskTileIndex.x, maskTileIndex.y);
+                }
+            } else {
+                for (int i = 0; i < dataImages.length; i++) {
+                    dataTiles[i] = dataImages[i].getData(tileRect);
+                }
+            }
+            return new RasterStack(rect, maskTile, dataTiles);
+        }
+
+        private void handleSingleTile(Point maskTileIndex, Rectangle regionRect, GeometryFilter geometryFilter, Extract extract) {
+            final RasterStack rasterStack = getRasters(maskTileIndex, regionRect);
+            final Rectangle rect = rasterStack.rect;
 
             for (int y = rect.y; y < rect.y + rect.height; y++) {
                 for (int x = rect.x; x < rect.x + rect.width; x++) {
                     if (geometryFilter.test(x, y)) {
                         extract.numPixel++;
                         // test valid mask
-                        if (maskTile.getSample(x, y, 0) != 0) {
+                        if (rasterStack.maskTile.getSample(x, y, 0) != 0) {
                             // extract pixel
                             boolean oneSampleGood = false;
-                            for (int i = 0; i < dataTiles.length; i++) {
-                                float sample = dataTiles[i].getSampleFloat(x, y, 0);
-                                extract.samples[i][extractedSamples] = sample;
+                            for (int i = 0; i < rasterStack.dataTiles.length; i++) {
+                                float sample = rasterStack.dataTiles[i].getSampleFloat(x, y, 0);
+                                extract.samples[i][extract.numExtracts] = sample;
                                 if (!Float.isNaN(sample)) {
                                     oneSampleGood = true;
                                 }
                             }
                             if (oneSampleGood) {
-                                extractedSamples++;
+                                extract.numExtracts++;
                                 if (extract.time == -1 ) {
                                     ProductData.UTC pixelScanTime = ProductUtils.getPixelScanTime(product, x + 0.5, y + 0.5);
                                     extract.time = pixelScanTime.getAsDate().getTime();
@@ -218,12 +231,40 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         }
     }
 
+    static class Extract {
+
+        final float[][] samples;
+        int numPixel;
+        int numExtracts;
+        long time;
+
+        public Extract(int numBands, int numPixelsMax) {
+            samples = new float[numBands][numPixelsMax];
+            numPixel = 0;
+            numExtracts = 0;
+            time = -1;
+        }
+    }
+
+    static class RasterStack {
+
+        private final Rectangle rect;
+        private final Raster maskTile;
+        private final Raster[] dataTiles;
+
+        RasterStack(Rectangle rect, Raster maskTile, Raster[] dataTiles) {
+            this.rect = rect;
+            this.maskTile = maskTile;
+            this.dataTiles = dataTiles;
+        }
+    }
+
     static class GeometryFilter {
         private final GeoCoding geoCoding;
         private final PreparedGeometry geometry;
         private final GeometryFactory geometryFactory;
 
-        public GeometryFilter(GeoCoding geoCoding, PreparedGeometry geometry) {
+        GeometryFilter(GeoCoding geoCoding, PreparedGeometry geometry) {
             this.geoCoding = geoCoding;
             this.geometry = geometry;
             this.geometryFactory = new GeometryFactory();

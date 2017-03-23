@@ -36,6 +36,7 @@ public class RAValue extends CompressedWritable {
     private long time;
     private String productName;
 
+    // required by Hadoop
     public RAValue() {
     }
 
