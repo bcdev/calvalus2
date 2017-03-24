@@ -14,8 +14,9 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.ra;
+package com.bc.calvalus.processing.ra.stat;
 
+import com.bc.calvalus.processing.ra.stat.Accumulator;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -24,7 +25,7 @@ public class AccumulatorTest {
 
     @Test
     public void test() throws Exception {
-        RAReducer.Accumulator acc = new RAReducer.Accumulator("b1");
+        Accumulator acc = new Accumulator("b1");
         assertEquals("b1", acc.getBandname());
         assertArrayEquals(new float[0], acc.getValues(), 1E-5f);
 

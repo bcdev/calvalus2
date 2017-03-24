@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.ra;
+package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.commons.DateRange;
 
@@ -27,7 +27,7 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.TimeZone;
 
-class RADateRanges {
+public class RADateRanges {
 
     private static final DateFormat dateFormat = createDateFormat();
 
@@ -55,7 +55,6 @@ class RADateRanges {
     private RADateRanges(long[][] dateRanges) {
         this.dateRanges = dateRanges;
     }
-
 
     public int findIndex(long time) {
         for (int i = 0; i < dateRanges.length; i++) {

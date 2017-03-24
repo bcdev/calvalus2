@@ -14,8 +14,9 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.ra;
+package com.bc.calvalus.processing.ra.stat;
 
+import com.bc.calvalus.processing.ra.stat.RADateRanges;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
