@@ -96,7 +96,7 @@ class StatiticsComputer {
         return yp;
     }
 
-    public List<String> getHeader() {
+    public static List<String> getHeader(String bandname) {
         List<String> header = new ArrayList<>();
         header.add(bandname + "_count");
         header.add(bandname + "_min");

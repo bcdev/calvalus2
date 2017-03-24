@@ -39,8 +39,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
     private RAConfig raConfig;
     private RADateRanges dateRanges;
-    private Writer statisticsWriter;
-    private boolean headerWritten = false;
+    private Writer statisticsWriter ;
+    private Statistics statistics;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -55,6 +55,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         Path path = new Path(FileOutputFormat.getWorkOutputPath(context), "region-analysis.csv");
         statisticsWriter = new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
+        statistics = new Statistics(dateRanges, raConfig.getBandNames(), statisticsWriter);
     }
 
 
@@ -77,33 +78,16 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         // open netCDF
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
-        Statistics statistics = null;
-        int lastTimeRange = -1;
+        statistics.startRegion(regionName);
 
         for (RAValue extract : values) {
             long time = extract.getTime();
-            System.out.println("time = " + time + "  numSamples = " + extract.getSamples()[0].length);
-            int currentTimeRange = dateRanges.findIndex(time);
-            if (currentTimeRange == -1) {
-                String out_ouf_range_date = dateRanges.format(time);
-                System.out.println("out_ouf_range_date = " + out_ouf_range_date + " --> ignoring extract data");
-            } else {
-                if (currentTimeRange != lastTimeRange) {
-                    // next/new time-range
-                    if (statistics != null) {
-                        statistics.write(statisticsWriter);
-                    }
-                    String dStart = dateRanges.formatStart(currentTimeRange);
-                    String dEnd = dateRanges.formatEnd(currentTimeRange);
-                    statistics = new Statistics(regionName, raConfig.getBandNames(), dStart, dEnd);
-                    lastTimeRange = currentTimeRange;
-                }
-                statistics.accumulate(extract);
-            }
+            int numPixel = extract.getNumPixel();
+            float[][] samples = extract.getSamples();
+            System.out.println("statistics.addData time = " + time + " numPixel = " + numPixel + "  numSamples = " + extract.getSamples()[0].length);
+            statistics.addData(time, numPixel, samples);
         }
-        if (statistics != null) {
-            statistics.write(statisticsWriter);
-        }
+        statistics.endRegion();
         // close netCDF
     }
 }

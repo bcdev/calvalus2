@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.ra.stat;
 
-import com.bc.calvalus.processing.ra.stat.StatiticsComputer;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -25,11 +24,10 @@ public class StatiticsComputerTest {
 
     @Test
     public void test_header() throws Exception {
-        StatiticsComputer stx = new StatiticsComputer("b1");
         String[] expected = {"b1_count",
                 "b1_min", "b1_max", "b1_arithMean", "b1_sigma", "b1_geomMean",
                 "b1_p5", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
-        assertArrayEquals(expected, stx.getHeader().toArray());
+        assertArrayEquals(expected, StatiticsComputer.getHeader("b1").toArray());
     }
 
     @Test
