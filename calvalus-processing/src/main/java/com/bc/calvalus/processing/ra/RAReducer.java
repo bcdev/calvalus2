@@ -229,8 +229,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         private final String bandname;
         private final int numValid;
-        private double min = +Double.MAX_VALUE;
-        private double max = -Double.MAX_VALUE;
+        private double min;
+        private double max;
         private final double arithMean;
         private final double sigma;
         private final double geomMean;
@@ -241,10 +241,12 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         private final double p95;
 //        private final double mode; //TODO
 
-        public Stx(String name, float[] values) {
+        public Stx(String name, float...values) {
             this.bandname = name;
             this.numValid = values.length;
             if (numValid > 0) {
+                min = +Double.MAX_VALUE;
+                max = -Double.MAX_VALUE;
                 double sum = 0;
                 double sumSQ = 0;
                 double product = 1;
@@ -273,6 +275,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
                 p75 = computePercentile(75, values);
                 p95 = computePercentile(95, values);
             } else {
+                min = Double.NaN;
+                max = Double.NaN;
                 arithMean = Double.NaN;
                 sigma = Double.NaN;
                 geomMean = Double.NaN;
@@ -318,6 +322,11 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             header.add(bandname + "_arithMean");
             header.add(bandname + "_sigma");
             header.add(bandname + "_geomMean");
+            header.add(bandname + "_p5");
+            header.add(bandname + "_p25");
+            header.add(bandname + "_p50");
+            header.add(bandname + "_p75");
+            header.add(bandname + "_p95");
             return header;
         }
 
@@ -329,6 +338,11 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             stats.add(Double.toString(arithMean));
             stats.add(Double.toString(sigma));
             stats.add(Double.toString(geomMean));
+            stats.add(Double.toString(p5));
+            stats.add(Double.toString(p25));
+            stats.add(Double.toString(p50));
+            stats.add(Double.toString(p75));
+            stats.add(Double.toString(p95));
             return stats;
         }
     }

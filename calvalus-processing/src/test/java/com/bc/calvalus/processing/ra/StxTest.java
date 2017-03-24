@@ -18,13 +18,54 @@ package com.bc.calvalus.processing.ra;
 
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 public class StxTest {
 
     @Test
-    public void test_empty() throws Exception {
-        RAReducer.Stx stx = new RAReducer.Stx("b1", new float[0]);
+    public void test_header() throws Exception {
+        RAReducer.Stx stx = new RAReducer.Stx("b1");
+        String[] expected = {"b1_count",
+                "b1_min", "b1_max", "b1_arithMean", "b1_sigma", "b1_geomMean",
+                "b1_p5", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
+        assertArrayEquals(expected, stx.getHeader().toArray());
+    }
 
+    @Test
+    public void test_empty() throws Exception {
+        RAReducer.Stx stx = new RAReducer.Stx("b1");
+        String[] expected = {"0",
+                "NaN", "NaN", "NaN", "NaN", "NaN",
+                "NaN", "NaN", "NaN", "NaN", "NaN"};
+        assertArrayEquals(expected, stx.getStats().toArray());
+    }
+
+    @Test
+    public void test_one() throws Exception {
+        RAReducer.Stx stx = new RAReducer.Stx("b1", 42f);
+        String[] expected = {"1",
+                "42.0", "42.0", "42.0", "0.0", "42.0",
+                "42.0", "42.0", "42.0", "42.0", "42.0"};
+        assertArrayEquals(expected, stx.getStats().toArray());
+    }
+
+    @Test
+    public void test_two() throws Exception {
+        RAReducer.Stx stx = new RAReducer.Stx("b1", 42f, 44f);
+        String[] expected = {"2",
+                "42.0", "44.0", "43.0", "1.0", "42.988370520409354",
+                "42.0", "42.0", "43.0", "44.0", "44.0"};
+        assertArrayEquals(expected, stx.getStats().toArray());
+    }
+
+    @Test
+    public void test_many() throws Exception {
+        RAReducer.Stx stx = new RAReducer.Stx("b1", 1f, 2f, 3f, 4f, 5f, 6f, 7f);
+        String[] expected = {"7",
+                "1.0", "7.0", "4.0", "2.0", "3.3800151591412964",
+                "1.0", "2.0", "4.0", "6.0", "7.0"};
+        assertArrayEquals(expected, stx.getStats().toArray());
     }
 }
