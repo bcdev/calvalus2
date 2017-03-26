@@ -38,7 +38,6 @@ import java.text.ParseException;
 public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritable> {
 
     private RAConfig raConfig;
-    private RADateRanges dateRanges;
     private Writer statisticsWriter ;
     private Statistics statistics;
 
@@ -47,6 +46,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         Configuration conf = context.getConfiguration();
         this.raConfig = RAConfig.get(conf);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_RA_DATE_RANGES);
+        RADateRanges dateRanges;
         try {
             dateRanges = RADateRanges.create(dateRangesString);
         } catch (ParseException e) {

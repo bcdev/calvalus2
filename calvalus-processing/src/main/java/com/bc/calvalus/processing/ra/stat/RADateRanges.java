@@ -31,7 +31,7 @@ public class RADateRanges {
 
     private static final DateFormat dateFormat = createDateFormat();
 
-    private static DateFormat createDateFormat() {
+    static DateFormat createDateFormat() {
         final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
         final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         dateFormat.setCalendar(calendar);

@@ -81,16 +81,18 @@ public class Statistics {
     }
 
     private void writeCurrentRecord() throws IOException {
-        String dStart = dateRanges.formatStart(currentDateRange);
-        String dEnd = dateRanges.formatEnd(currentDateRange);
-        writeLine(writer, getStats(dStart, dEnd, numPasses, numObs, emptyStats));
+        if (currentDateRange > -1) {
+            String dStart = dateRanges.formatStart(currentDateRange);
+            String dEnd = dateRanges.formatEnd(currentDateRange);
+            writeLine(writer, getStats(dStart, dEnd, numPasses, numObs, compute()));
+        }
     }
 
     private void writeEmptyRecords(int beginIndex, int endIndex) throws IOException {
         for (int i = beginIndex; i < endIndex; i++) {
             String dStart = dateRanges.formatStart(i);
             String dEnd = dateRanges.formatEnd(i);
-            writeLine(writer, getStats(dStart, dEnd, 0, 0, compute()));
+            writeLine(writer, getStats(dStart, dEnd, 0, 0, emptyStats));
         }
     }
 

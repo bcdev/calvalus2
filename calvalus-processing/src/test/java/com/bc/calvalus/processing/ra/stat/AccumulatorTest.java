@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.ra.stat;
 
-import com.bc.calvalus.processing.ra.stat.Accumulator;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
