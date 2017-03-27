@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.ra.stat;
 
+import com.bc.calvalus.processing.ra.RAConfig;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,11 +17,19 @@ import static org.junit.Assert.*;
 public class RegionAnalysisTest {
 
     private static DateFormat dateFormat = RADateRanges.createDateFormat();
+    private RAConfig.BandConfig b1;
+    private RAConfig.BandConfig b2;
+
+    @Before
+    public void setUp() throws Exception {
+        b1 = new RAConfig.BandConfig("b1", 5, 0.0, 10.0);
+        b2 = new RAConfig.BandConfig("b2", 5, 0.0, 10.0);
+    }
 
     @Test
     public void test_empty() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1", "b2"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1, b2);
         String actual = ra.writerMap.get("region-analysis.csv").toString();
         assertEquals("RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p5\tb1_p25\tb1_p50\tb1_p75\tb1_p95\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p5\tb2_p25\tb2_p50\tb2_p75\tb2_p95\n", actual);
     }
@@ -27,7 +37,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_oneRange_nodata() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1);
         ra.startRegion("r1");
         ra.endRegion();
         String actual = ra.writerMap.get("region-analysis.csv").toString();
@@ -38,7 +48,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_oneRange_data() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.endRegion();
@@ -50,7 +60,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_manyRanges_nodata() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1);
         ra.startRegion("r1");
         ra.endRegion();
         String actual = ra.writerMap.get("region-analysis.csv").toString();
@@ -64,7 +74,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_manyRanges_data() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -82,7 +92,7 @@ public class RegionAnalysisTest {
     @Test
     public void test_manyRanges_data_multipleRegions() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
-        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, new String[]{"b1"});
+        InMemRegionAnalysis ra = new InMemRegionAnalysis(dateRanges, b1);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
         ra.addData(dateFormat.parse("2010-01-15 11:00:00").getTime(), 8, new float[][]{{4, 5, 6}});
@@ -96,6 +106,7 @@ public class RegionAnalysisTest {
 
         Set<String> keySet = ra.writerMap.keySet();
         assertEquals(2, keySet.size());
+        System.out.println("keySet = " + keySet);
         assertTrue(keySet.contains("region-analysis.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
@@ -122,8 +133,8 @@ public class RegionAnalysisTest {
 
         Map<String, Writer> writerMap;
 
-        InMemRegionAnalysis(RADateRanges dateRanges, String[] bandNames) throws IOException, InterruptedException {
-            super(dateRanges, bandNames);
+        InMemRegionAnalysis(RADateRanges dateRanges, RAConfig.BandConfig...bandConfigs) throws IOException, InterruptedException {
+            super(dateRanges, bandConfigs);
         }
 
         @Override

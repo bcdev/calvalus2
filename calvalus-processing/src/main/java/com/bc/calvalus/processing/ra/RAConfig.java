@@ -63,6 +63,48 @@ public class RAConfig implements XmlConvertible {
         }
     }
 
+    public static class BandConfig {
+        @Parameter
+        private String name;
+        @Parameter
+        private Integer numBins;
+        @Parameter
+        private Double lowValue;
+        @Parameter
+        private Double highValue;
+
+        // empty constructor for XML serialization
+        public BandConfig() {
+        }
+
+        public BandConfig(String name) {
+            this(name, null, null, null);
+        }
+
+        public BandConfig(String name, Integer numBins, Double lowValue, Double highValue) {
+            this.name = name;
+            this.numBins = numBins;
+            this.lowValue = lowValue;
+            this.highValue = highValue;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public Integer getNumBins() {
+            return numBins;
+        }
+
+        public Double getLowValue() {
+            return lowValue;
+        }
+
+        public Double getHighValue() {
+            return highValue;
+        }
+    }
+
     // TODO generate union of all regions for geo inventory query ( in ProductionType)
 
     // either regions or shapeFilePath has to be given
@@ -84,35 +126,42 @@ public class RAConfig implements XmlConvertible {
     private String validExpressions;
 
     // TODO bandNames have to be given, switch to all if not given ?
+    @Parameter(itemAlias = "band")
+    private BandConfig[] bandConfigs;
+
     @Parameter
-    private String[] bandNames;
+    private int numRegions;
 
 
     public RAConfig() {
-    }
-
-    public Region[] getRegions() {
-        return regions;
     }
 
     public String getValidExpressions() {
         return validExpressions;
     }
 
-    public String[] getBandNames() {
-        return bandNames;
+    public BandConfig[] getBandConfigs() {
+        return bandConfigs;
     }
 
     public void setRegions(Region...regions) {
         this.regions = regions;
     }
 
+    public int getNumRegions() {
+        return numRegions;
+    }
+
+    public void setNumRegions(int numRegions) {
+        this.numRegions = numRegions;
+    }
+
     public void setValidExpressions(String validExpressions) {
         this.validExpressions = validExpressions;
     }
 
-    public void setBandNames(String...bandNames) {
-        this.bandNames = bandNames;
+    public void setBandConfigs(BandConfig...bandConfigs) {
+        this.bandConfigs = bandConfigs;
     }
 
     public static RAConfig get(Configuration conf) {

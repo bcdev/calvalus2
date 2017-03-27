@@ -49,7 +49,10 @@ public class ExtractorTest {
         product.setEndTime(ProductData.UTC.parse("01-JAN-2011 12:20:30"));
 
         RAConfig config = new RAConfig();
-        config.setBandNames(new String[]{"x", "l", "c"});
+        RAConfig.BandConfig x = new RAConfig.BandConfig("x");
+        RAConfig.BandConfig l = new RAConfig.BandConfig("l");
+        RAConfig.BandConfig c = new RAConfig.BandConfig("c");
+        config.setBandConfigs(x, l, c);
         config.setValidExpressions("LAT > 50");
 
         RAMapper.Extractor extractor = new RAMapper.Extractor(product, config);

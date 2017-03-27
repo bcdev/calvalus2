@@ -67,7 +67,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         final RAConfig raConfig = RAConfig.get(jobConfig);
 
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        int numRegions = raConfig.getRegions().length;
+        int numRegions = raConfig.getNumRegions();
         pm.beginTask("Region Analysis", numRegions * 2);
         try {
             ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
@@ -75,17 +75,17 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             if (product != null) {
                 Extractor extractor = new Extractor(product, raConfig);
                 Iterator<NamedRegion> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
-                int regionId = 0;
+                int regionIndex = 0;
                 while (regionIterator.hasNext()) {
                     NamedRegion namedRegion = regionIterator.next();
                     ProgressMonitor subPM = SubProgressMonitor.create(pm, 1);
                     Extract extract = extractor.performExtraction(namedRegion.name, namedRegion.geometry, subPM);
                     if (extract != null) {
-                        RAKey key = new RAKey(regionId, extract.time);
+                        RAKey key = new RAKey(regionIndex, namedRegion.name, extract.time);
                         RAValue value = new RAValue(extract.numPixel, extract.samples, extract.time, product.getName());
                         context.write(key, value);
                     }
-                    regionId++;
+                    regionIndex++;
                 }
             } else {
                 LOG.warning("product does not cover region, skipping processing.");
@@ -115,10 +115,10 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             maskImage = maskBand.getSourceImage();
             boolean tEqualTileGrid = true;
 
-            String[] bandNames = raConfig.getBandNames();
-            dataImages = new PlanarImage[bandNames.length];
-            for (int i = 0; i < bandNames.length; i++) {
-                String bandName = bandNames[i].trim();
+            RAConfig.BandConfig[] bandConfigs = raConfig.getBandConfigs();
+            dataImages = new PlanarImage[bandConfigs.length];
+            for (int i = 0; i < bandConfigs.length; i++) {
+                String bandName = bandConfigs[i].getName().trim();
                 Band band = product.getBand(bandName);
                 if (band == null) {
                     throw new IllegalArgumentException("Product does not contain band " + bandName);

@@ -52,7 +52,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             throw new IOException(e);
         }
 
-        regionAnalysis = new RegionAnalysis(dateRanges, raConfig.getBandNames()) {
+        regionAnalysis = new RegionAnalysis(dateRanges, raConfig.getBandConfigs()) {
 
             @Override
             public Writer createWriter(String fileName) throws IOException, InterruptedException {
@@ -75,8 +75,8 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         // 2) compute stats
         // 3) write CSV
 
-        final int regionId = key.getRegionId();
-        final String regionName = raConfig.getRegions()[regionId].getName();
+        final int regionId = key.getRegionId(); // TODO is this needed
+        final String regionName = key.getRegionName();
         System.out.println("regionName = " + regionName);
 
         // open netCDF

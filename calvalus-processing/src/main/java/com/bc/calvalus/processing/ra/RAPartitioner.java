@@ -39,7 +39,7 @@ public class RAPartitioner extends Partitioner<RAKey, RAValue> implements Config
     public void setConf(Configuration conf) {
         this.conf = conf;
         RAConfig raConfig = RAConfig.get(conf);
-        numRegions = raConfig.getRegions().length;
+        numRegions = raConfig.getNumRegions();
     }
 
     @Override

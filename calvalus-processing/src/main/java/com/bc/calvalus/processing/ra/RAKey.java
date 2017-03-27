@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.ra;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 
@@ -33,15 +34,18 @@ import java.io.IOException;
 public class RAKey implements WritableComparable<RAKey> {
 
     private IntWritable regionId;
+    private Text regionName;
     private LongWritable time;
 
     public RAKey() {
         regionId = new IntWritable();
+        regionName = new Text();
         time = new LongWritable();
     }
 
-    public RAKey(int regionId, long time) {
-        this.regionId = new IntWritable(regionId);
+    public RAKey(int regionIndxe, String regionName, long time) {
+        this.regionId = new IntWritable(regionIndxe);
+        this.regionName = new Text(regionName);
         this.time = new LongWritable(time);
     }
 
@@ -49,28 +53,26 @@ public class RAKey implements WritableComparable<RAKey> {
         return regionId.get();
     }
 
-    public void setRegionId(int regionId) {
-        this.regionId.set(regionId);
+    public String getRegionName() {
+        return regionName.toString();
     }
 
     public long getTime() {
         return time.get();
     }
 
-    public void setTime(long time) {
-        this.time.set(time);
-    }
-
     @Override
     public void write(DataOutput out) throws IOException {
         time.write(out);
         regionId.write(out);
+        regionName.write(out);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
         time.readFields(in);
         regionId.readFields(in);
+        regionName.readFields(in);
     }
 
     @Override

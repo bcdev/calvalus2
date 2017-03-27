@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.ra.stat;
 
+import com.bc.calvalus.processing.ra.RAConfig;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -21,23 +23,23 @@ public abstract class RegionAnalysis {
     private int numObs;
     private int currentDateRange;
 
-    protected RegionAnalysis(RADateRanges dateRanges, String[] bandNames) throws IOException, InterruptedException {
+    protected RegionAnalysis(RADateRanges dateRanges, RAConfig.BandConfig[] bandConfigs) throws IOException, InterruptedException {
         this.dateRanges = dateRanges;
 
-        stats = new Statistics.Stat[bandNames.length][3];
-        for (int i = 0; i < bandNames.length; i++) {
+        stats = new Statistics.Stat[bandConfigs.length][3];
+        String[] bandNames = new String[bandConfigs.length];
+        for (int i = 0; i < bandConfigs.length; i++) {
+            RAConfig.BandConfig bConfig = bandConfigs[i];
+            bandNames[i] = bConfig.getName();
             stats[i][0] = new Statistics.StatStreaming();
             stats[i][1] = new Statistics.StatAccu();
-            stats[i][2] = new Statistics.StatHisto(1000, // TODO
-                                                   0.0,  // TODO
-                                                   100.0 // TODO
-            );
+            stats[i][2] = new Statistics.StatHisto(bConfig.getNumBins(), bConfig.getLowValue(), bConfig.getHighValue());
         }
         analysisWriter = createWriter("region-analysis.csv");
         writeLine(analysisWriter, getHeader(bandNames, 0, 1));
 
-        histogramWriters = new Writer[bandNames.length];
-        for (int i = 0; i < bandNames.length; i++) {
+        histogramWriters = new Writer[bandConfigs.length];
+        for (int i = 0; i < bandConfigs.length; i++) {
             histogramWriters[i] = createWriter("region-histogram-" + bandNames[i] + ".csv");
             writeLine(histogramWriters[i], getHeader(bandNames, 2));
         }
