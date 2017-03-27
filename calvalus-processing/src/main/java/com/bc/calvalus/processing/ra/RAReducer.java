@@ -18,7 +18,7 @@ package com.bc.calvalus.processing.ra;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ra.stat.RADateRanges;
-import com.bc.calvalus.processing.ra.stat.Statistics;
+import com.bc.calvalus.processing.ra.stat.RegionAnalysis;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -38,8 +38,7 @@ import java.text.ParseException;
 public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritable> {
 
     private RAConfig raConfig;
-    private Writer statisticsWriter ;
-    private Statistics statistics;
+    private RegionAnalysis regionAnalysis;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
@@ -53,15 +52,19 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             throw new IOException(e);
         }
 
-        Path path = new Path(FileOutputFormat.getWorkOutputPath(context), "region-analysis.csv");
-        statisticsWriter = new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
-        statistics = new Statistics(dateRanges, raConfig.getBandNames(), statisticsWriter);
-    }
+        regionAnalysis = new RegionAnalysis(dateRanges, raConfig.getBandNames()) {
 
+            @Override
+            public Writer createWriter(String fileName) throws IOException, InterruptedException {
+                Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
+                return new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
+            }
+        };
+    }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-        statisticsWriter.close();
+        regionAnalysis.close();
     }
 
     // key == region
@@ -78,16 +81,16 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         // open netCDF
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
-        statistics.startRegion(regionName);
+        regionAnalysis.startRegion(regionName);
 
         for (RAValue extract : values) {
             long time = extract.getTime();
             int numPixel = extract.getNumPixel();
             float[][] samples = extract.getSamples();
             System.out.println("statistics.addData time = " + time + " numPixel = " + numPixel + "  numSamples = " + extract.getSamples()[0].length);
-            statistics.addData(time, numPixel, samples);
+            regionAnalysis.addData(time, numPixel, samples);
         }
-        statistics.endRegion();
+        regionAnalysis.endRegion();
         // close netCDF
     }
 }

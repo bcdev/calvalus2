@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.ra;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -29,7 +30,6 @@ public class JtsTest {
     private static final String BALTIC_SEA_WKT = "polygon((10.00 54.00,  14.27 53.47,  20.00 54.00, 21.68 54.77, 22.00 56.70, 24.84 56.70, 30.86 60.01, 26.00 62.00, 26.00 66.00, 22.00 66.00, 10.00 60.00, 10.00 54.00))";
     private static final String ACADIA_WKT = "polygon((-71.00 41.00, -52.00 41.00, -52.00 52.00, -71.00 52.00, -71.00 41.00))";
 
-    @Test
     public void testJTS() throws Exception {
         final Geometry poly1= GeometryUtils.createGeometry(NORTH_SEA_WKT);
         final Geometry poly2= GeometryUtils.createGeometry(ACADIA_WKT);

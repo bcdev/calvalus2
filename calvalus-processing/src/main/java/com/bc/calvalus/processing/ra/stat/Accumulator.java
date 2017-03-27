@@ -5,11 +5,10 @@ package com.bc.calvalus.processing.ra.stat;
  */
 class Accumulator {
 
-    private final String bandname;
-    private float[] values = new float[0];
+    private float[] values;
 
-    public Accumulator(String bandname) {
-        this.bandname = bandname;
+    public Accumulator() {
+        values = new float[0];
     }
 
     public void accumulate(float... samples) {
@@ -23,8 +22,8 @@ class Accumulator {
         values = concat(values, buffer);
     }
 
-    public String getBandname() {
-        return bandname;
+    void clear() {
+        values = new float[0];
     }
 
     public float[] getValues() {

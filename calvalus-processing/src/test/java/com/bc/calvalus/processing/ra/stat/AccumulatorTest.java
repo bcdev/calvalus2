@@ -24,8 +24,7 @@ public class AccumulatorTest {
 
     @Test
     public void test() throws Exception {
-        Accumulator acc = new Accumulator("b1");
-        assertEquals("b1", acc.getBandname());
+        Accumulator acc = new Accumulator();
         assertArrayEquals(new float[0], acc.getValues(), 1E-5f);
 
         acc.accumulate();
