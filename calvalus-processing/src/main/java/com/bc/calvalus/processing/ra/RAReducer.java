@@ -44,7 +44,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         this.raConfig = RAConfig.get(conf);
-        String dateRangesString = conf.get(JobConfigNames.CALVALUS_RA_DATE_RANGES);
+        String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         RADateRanges dateRanges;
         try {
             dateRanges = RADateRanges.create(dateRangesString);

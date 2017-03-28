@@ -86,18 +86,14 @@ public class RAProductionType extends HadoopProductionType {
             throw new ProductionException("No time ranges specified.");
         }
 
-        Date startDate = dateRanges.get(0).getStartDate();
-        Date stopDate = dateRanges.get(dateRanges.size() - 1).getStopDate();
-        String inputDateRange = new DateRange(startDate, stopDate).toString();
         setInputLocationParameters(productionRequest, raJobConfig);
         raJobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
-        raJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, inputDateRange);
+        raJobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
 
         raJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
         raJobConfig.set(JobConfigNames.CALVALUS_RA_PARAMETERS, maParametersXml);
 
-        raJobConfig.set(JobConfigNames.CALVALUS_RA_DATE_RANGES, StringUtils.join(dateRanges, ","));
-
+        // TODO create union of all given regions
         raJobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
                         regionGeometry != null ? regionGeometry.toString() : "");
         WorkflowItem workflowItem = new RAWorkflowItem(getProcessingService(), productionRequest.getUserName(),
@@ -124,12 +120,13 @@ public class RAProductionType extends HadoopProductionType {
     static String getRAConfigXml(ProductionRequest productionRequest) throws ProductionException {
         String raParametersXml = productionRequest.getString("calvalus.ra.parameters", null);
         if (raParametersXml == null) {
-            RAConfig raConfig = getRAConfig(productionRequest);
-            raParametersXml = raConfig.toXml();
+            throw new IllegalArgumentException("missing paramter 'calvalus.ra.parameters'");
+//            RAConfig raConfig = getRAConfig(productionRequest);
+//            raParametersXml = raConfig.toXml();
         } else {
             // Check MA XML before sending it to Hadoop
             try {
-                MAConfig.fromXml(raParametersXml);
+                RAConfig.fromXml(raParametersXml);
             } catch (BindingException e) {
                 throw new ProductionException("Illegal match-up configuration: " + e.getMessage(), e);
             }
@@ -144,9 +141,9 @@ public class RAProductionType extends HadoopProductionType {
 //        String name = productionRequest.getString("regionName", "region");
 //        raConfig.setRegions(new RAConfig.Region(name, wkt));
 //
-        String bandList = productionRequest.getParameter("bandList", true);
-        raConfig.setBandNames(bandList.split(","));
-        raConfig.setValidExpressions(productionRequest.getString("maskExpr", "true"));
+//        String bandList = productionRequest.getParameter("bandList", true);
+//        raConfig.setBandNames(bandList.split(","));
+//        raConfig.setValidExpressions(productionRequest.getString("maskExpr", "true"));
         return raConfig;
     }
 
