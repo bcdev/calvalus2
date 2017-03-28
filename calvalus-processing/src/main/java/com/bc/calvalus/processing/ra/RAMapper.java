@@ -37,6 +37,7 @@ import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.common.SubsetOp;
+import org.esa.snap.core.image.ImageManager;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.core.util.StringUtils;
 
@@ -74,16 +75,19 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, numRegions));
             if (product != null) {
                 Extractor extractor = new Extractor(product, raConfig);
-                Iterator<NamedRegion> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
+                Iterator<RAConfig.NamedGeometry> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
                 int regionIndex = 0;
                 while (regionIterator.hasNext()) {
-                    NamedRegion namedRegion = regionIterator.next();
+                    RAConfig.NamedGeometry namedRegion = regionIterator.next();
                     ProgressMonitor subPM = SubProgressMonitor.create(pm, 1);
                     Extract extract = extractor.performExtraction(namedRegion.name, namedRegion.geometry, subPM);
                     if (extract != null) {
                         RAKey key = new RAKey(regionIndex, namedRegion.name, extract.time);
-                        RAValue value = new RAValue(extract.numPixel, extract.samples, extract.time, product.getName());
+                        RAValue value = new RAValue(extract.numObs, extract.samples, extract.time, product.getName());
                         context.write(key, value);
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixel").increment(1);
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Observations").increment(extract.numObs);
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Valid Samples").increment(extract.numValid);
                     }
                     regionIndex++;
                 }
@@ -128,12 +132,13 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                     // TODO
                     throw new IllegalArgumentException("Multi-size not supported !!!");
                 }
-                dataImages[i] = band.getGeophysicalImage();
+                dataImages[i] = ImageManager.createMaskedGeophysicalImage(band, Float.NaN);
                 if (!hasSameTiling(maskImage, dataImages[i])) {
                     tEqualTileGrid = false;
                 }
             }
             this.equalTileGrids = tEqualTileGrid;
+            System.out.println("equalTileGrids = " + equalTileGrids);
         }
 
         private boolean hasSameTiling(PlanarImage im1, PlanarImage im2) {
@@ -147,6 +152,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             Rectangle rect = SubsetOp.computePixelRegion(product, geometry, 1);
             if (rect.isEmpty()) {
                 LOG.info("Nothing to extract for region " + regionName);
+                return null;
             }
             PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(geometry);
             GeometryFilter geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);
@@ -164,14 +170,14 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                 handleSingleTile(maskTileIndex, rect, geometryFilter, extract);
                 pm.worked(1);
             }
-            LOG.info(String.format("Visited %d pixels          ", extract.numPixel));
-            LOG.info(String.format("Extracted %d valid samples ", extract.numExtracts));
+            LOG.info(String.format("Observations  %20d", extract.numObs));
+            LOG.info(String.format("Valid samples %20d", extract.numValid));
             pm.done();
-            if (extract.numExtracts > 0) {
+            if (extract.numValid > 0) {
                 // truncate array to used size
                 for (int i = 0; i < extract.samples.length; i++) {
                     float[] samples = extract.samples[i];
-                    extract.samples[i] = Arrays.copyOf(samples, extract.numExtracts);
+                    extract.samples[i] = Arrays.copyOf(samples, extract.numValid);
                 }
                 return extract;
             } else {
@@ -205,20 +211,20 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             for (int y = rect.y; y < rect.y + rect.height; y++) {
                 for (int x = rect.x; x < rect.x + rect.width; x++) {
                     if (geometryFilter.test(x, y)) {
-                        extract.numPixel++;
+                        extract.numObs++;
                         // test valid mask
                         if (rasterStack.maskTile.getSample(x, y, 0) != 0) {
                             // extract pixel
                             boolean oneSampleGood = false;
                             for (int i = 0; i < rasterStack.dataTiles.length; i++) {
                                 float sample = rasterStack.dataTiles[i].getSampleFloat(x, y, 0);
-                                extract.samples[i][extract.numExtracts] = sample;
+                                extract.samples[i][extract.numValid] = sample;
                                 if (!Float.isNaN(sample)) {
                                     oneSampleGood = true;
                                 }
                             }
                             if (oneSampleGood) {
-                                extract.numExtracts++;
+                                extract.numValid++;
                                 if (extract.time == -1 ) {
                                     ProductData.UTC pixelScanTime = ProductUtils.getPixelScanTime(product, x + 0.5, y + 0.5);
                                     extract.time = pixelScanTime.getAsDate().getTime();
@@ -234,14 +240,14 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
     static class Extract {
 
         final float[][] samples;
-        int numPixel;
-        int numExtracts;
+        int numObs;
+        int numValid;
         long time;
 
         public Extract(int numBands, int numPixelsMax) {
             samples = new float[numBands][numPixelsMax];
-            numPixel = 0;
-            numExtracts = 0;
+            numObs = 0;
+            numValid = 0;
             time = -1;
         }
     }

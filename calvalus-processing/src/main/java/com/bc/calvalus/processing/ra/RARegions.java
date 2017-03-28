@@ -23,13 +23,18 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
 import org.esa.snap.core.util.FeatureUtils;
+import org.geotools.data.crs.ReprojectFeatureResults;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
+import org.geotools.feature.SchemaException;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,12 +62,17 @@ public class RARegions {
         if (shpFile == null) {
             throw new IllegalFileFormatException("input has no <shp> file.");
         }
-        return FeatureUtils.loadFeatureCollectionFromShapefile(shpFile);
+        FeatureCollection<SimpleFeatureType, SimpleFeature> features = FeatureUtils.loadFeatureCollectionFromShapefile(shpFile);
+        try {
+            return new ReprojectFeatureResults(features, DefaultGeographicCRS.WGS84);
+        } catch (SchemaException | TransformException | FactoryException e) {
+            throw new IOException("Could not reproject shapefile", e);
+        }
     }
 
-    public static Iterator<NamedRegion> createIterator(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
-                                                       String attributeName,
-                                                       String[] attributeValues) {
+    public static Iterator<RAConfig.NamedGeometry> createIterator(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
+                                                                  String attributeName,
+                                                                  String[] attributeValues) {
 
         NameProvider nameProvider = createNameProvider(featureCollection.getSchema(), attributeName);
         Filter filter = Filter.INCLUDE;
@@ -139,7 +149,7 @@ public class RARegions {
         }
     }
 
-    static class RegionIteratorFromFeatures implements Iterator<NamedRegion> {
+    static class RegionIteratorFromFeatures implements Iterator<RAConfig.NamedGeometry> {
         private final FeatureIterator<SimpleFeature> featureIterator;
         private final NameProvider nameProvider;
 
@@ -154,15 +164,15 @@ public class RARegions {
         }
 
         @Override
-        public NamedRegion next() {
+        public RAConfig.NamedGeometry next() {
             SimpleFeature simpleFeature = featureIterator.next();
             Geometry defaultGeometry = (Geometry) simpleFeature.getDefaultGeometry();
             String name = nameProvider.getName(simpleFeature);
-            return new NamedRegion(name, defaultGeometry);
+            return new RAConfig.NamedGeometry(name, defaultGeometry);
         }
     }
 
-    static class RegionIteratorFromWKT implements Iterator<NamedRegion> {
+    static class RegionIteratorFromWKT implements Iterator<RAConfig.NamedGeometry> {
 
         private final Iterator<RAConfig.Region> iterator;
 
@@ -176,22 +186,24 @@ public class RARegions {
         }
 
         @Override
-        public NamedRegion next() {
+        public RAConfig.NamedGeometry next() {
             RAConfig.Region region = iterator.next();
             String name = region.getName();
             Geometry geometry = GeometryUtils.createGeometry(region.getWkt());
-            return new NamedRegion(name, geometry);
+            return new RAConfig.NamedGeometry(name, geometry);
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, SchemaException, FactoryException, TransformException {
         File file = new File(args[0]);
         FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection = FeatureUtils.loadFeatureCollectionFromShapefile(file);
+        FeatureCollection<SimpleFeatureType, SimpleFeature> reprojected = new ReprojectFeatureResults(featureCollection, DefaultGeographicCRS.WGS84);
 
-        int size = featureCollection.size();
+        int size = reprojected.size();
         System.out.println("size = " + size);
-        SimpleFeatureType schema = featureCollection.getSchema();
+        SimpleFeatureType schema = reprojected.getSchema();
         System.out.println("schema = " + schema);
+        System.out.println("schema.crs = " + schema.getCoordinateReferenceSystem());
         System.out.println();
 
         List<AttributeDescriptor> attributeDescriptors = schema.getAttributeDescriptors();
@@ -200,13 +212,13 @@ public class RARegions {
         }
         System.out.println();
 
-        String[] attributeValues = {"SEA-001", "SEA-002"};
-        String attributeName = "HELCOM_ID";
+        String[] attributeValues = null;//{"SEA-001", "SEA-002"};
+        String attributeName = null;//"HELCOM_ID";
 
-        Iterator<NamedRegion> regionIterator = createIterator(featureCollection, attributeName, attributeValues);
+        Iterator<RAConfig.NamedGeometry> regionIterator = createIterator(reprojected, attributeName, attributeValues);
         while (regionIterator.hasNext()) {
-            NamedRegion next = regionIterator.next();
-            System.out.println("next.name = " + next.name);
+            RAConfig.NamedGeometry next = regionIterator.next();
+            System.out.println("next.name = " + next.geometry);
         }
     }
 }

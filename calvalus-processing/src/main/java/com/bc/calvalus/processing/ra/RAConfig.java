@@ -20,6 +20,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.gpf.annotations.Parameter;
@@ -93,15 +94,15 @@ public class RAConfig implements XmlConvertible {
         }
 
         public int getNumBins() {
-            return numBins != null ? numBins : 0;
+            return numBins != null && lowValue != null && highValue != null ? numBins : 0;
         }
 
         public double getLowValue() {
-            return lowValue != 0 ? lowValue : Double.NaN;
+            return lowValue != null ? lowValue : Double.NaN;
         }
 
         public double getHighValue() {
-            return highValue != 0 ? highValue : Double.NaN;
+            return highValue != null ? highValue : Double.NaN;
         }
     }
 
@@ -127,7 +128,7 @@ public class RAConfig implements XmlConvertible {
 
     // TODO bandNames have to be given, switch to all if not given ?
     @Parameter(itemAlias = "band")
-    private BandConfig[] bandConfigs;
+    private BandConfig[] bands;
 
     @Parameter
     private int numRegions;
@@ -141,7 +142,7 @@ public class RAConfig implements XmlConvertible {
     }
 
     public BandConfig[] getBandConfigs() {
-        return bandConfigs;
+        return bands;
     }
 
     public void setRegions(Region...regions) {
@@ -161,7 +162,7 @@ public class RAConfig implements XmlConvertible {
     }
 
     public void setBandConfigs(BandConfig...bandConfigs) {
-        this.bandConfigs = bandConfigs;
+        this.bands = bandConfigs;
     }
 
     public static RAConfig get(Configuration conf) {
@@ -189,7 +190,18 @@ public class RAConfig implements XmlConvertible {
         }
     }
 
-    public Iterator<NamedRegion> createNamedRegionIterator(Configuration conf) throws IOException {
+    public static class NamedGeometry {
+
+        public final String name;
+        public final Geometry geometry;
+
+        NamedGeometry(String name, Geometry geometry) {
+            this.name = name;
+            this.geometry = geometry;
+        }
+    }
+
+    public Iterator<NamedGeometry> createNamedRegionIterator(Configuration conf) throws IOException {
         if (shapeFilePath != null && !shapeFilePath.isEmpty()) {
             FeatureCollection<SimpleFeatureType, SimpleFeature> collection = RARegions.openShapefile(new Path(shapeFilePath), conf);
             String[] attributeValues = new String[0];

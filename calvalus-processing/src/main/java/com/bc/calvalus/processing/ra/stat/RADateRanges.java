@@ -29,7 +29,7 @@ import java.util.TimeZone;
 
 public class RADateRanges {
 
-    private static final DateFormat dateFormat = createDateFormat();
+    public static final DateFormat dateFormat = createDateFormat();
 
     static DateFormat createDateFormat() {
         final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);

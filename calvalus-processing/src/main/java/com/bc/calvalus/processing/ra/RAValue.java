@@ -31,7 +31,7 @@ import java.io.IOException;
  */
 public class RAValue extends CompressedWritable {
 
-    private int numPixel;
+    private int numObs;
     private float[][] sampleValues;
     private long time;
     private String productName;
@@ -40,16 +40,16 @@ public class RAValue extends CompressedWritable {
     public RAValue() {
     }
 
-    public RAValue(int numPixel, float[][] samples, long time, String productName) {
-        this.numPixel = numPixel;
+    public RAValue(int numObs, float[][] samples, long time, String productName) {
+        this.numObs = numObs;
         this.sampleValues = samples;
         this.time = time;
         this.productName = productName;
     }
 
-    public int getNumPixel() {
+    public int getNumObs() {
         ensureInflated();
-        return numPixel;
+        return numObs;
     }
 
     public String getProductName() {
@@ -69,7 +69,7 @@ public class RAValue extends CompressedWritable {
 
     @Override
     public void writeCompressed(DataOutput out) throws IOException {
-        out.writeInt(numPixel);
+        out.writeInt(numObs);
         out.writeLong(time);
         Text.writeString(out, productName);
         float[][] array2D = sampleValues;
@@ -86,7 +86,7 @@ public class RAValue extends CompressedWritable {
 
     @Override
     public void readFieldsCompressed(DataInput in) throws IOException {
-        numPixel = in.readInt();
+        numObs = in.readInt();
         time = in.readLong();
         productName = Text.readString(in);
         int numBands = in.readInt();

@@ -53,6 +53,7 @@ class Statistics {
                     if (value > 0) {
                         geomMeanProduct *= value;
                     } else {
+                        // the geometric mean is only defined, if all values are bigger than zero
                         geomMeanValid = false;
                     }
                 }

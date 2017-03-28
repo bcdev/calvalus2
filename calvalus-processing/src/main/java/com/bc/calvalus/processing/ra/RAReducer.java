@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.ParseException;
+import java.util.Date;
 
 /**
  * The reducer for the region analysis workflow
@@ -77,7 +78,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         final int regionId = key.getRegionId(); // TODO is this needed
         final String regionName = key.getRegionName();
-        System.out.println("regionName = " + regionName);
+        System.out.println("regionName: " + regionName);
 
         // open netCDF
         // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
@@ -85,10 +86,14 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         for (RAValue extract : values) {
             long time = extract.getTime();
-            int numPixel = extract.getNumPixel();
+            int numObs = extract.getNumObs();
             float[][] samples = extract.getSamples();
-            System.out.println("statistics.addData time = " + time + " numPixel = " + numPixel + "  numSamples = " + extract.getSamples()[0].length);
-            regionAnalysis.addData(time, numPixel, samples);
+            int numSamples = extract.getSamples()[0].length;
+
+            String timeFormatted = RADateRanges.dateFormat.format(new Date(time));
+            System.out.printf("    data time = %s numObs = %15d  numSamples = %15d%n", timeFormatted, numObs, numSamples);
+
+            regionAnalysis.addData(time, numObs, samples);
         }
         regionAnalysis.endRegion();
         // close netCDF

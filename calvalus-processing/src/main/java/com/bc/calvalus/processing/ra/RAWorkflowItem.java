@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.ra;
 
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobUtils;
+import com.bc.calvalus.processing.beam.SimpleOutputFormat;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import org.apache.hadoop.conf.Configuration;
@@ -75,6 +76,7 @@ public class RAWorkflowItem extends HadoopWorkflowItem {
 
         job.setNumReduceTasks(1); // TODO
         job.setReducerClass(RAReducer.class);
+        job.setOutputFormatClass(SimpleOutputFormat.class);
 
         JobUtils.clearAndSetOutputDir(getOutputDir(), job, this);
     }

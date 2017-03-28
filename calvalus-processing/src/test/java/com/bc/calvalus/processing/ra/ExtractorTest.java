@@ -59,7 +59,7 @@ public class ExtractorTest {
         Geometry northSea = GeometryUtils.createGeometry(NORTH_SEA_WKT);
         RAMapper.Extract extract = extractor.performExtraction("r1", northSea, ProgressMonitor.NULL);
         assertNotNull(extract);
-        assertEquals(574, extract.numPixel);
+        assertEquals(574, extract.numObs);
         assertEquals(3, extract.samples.length);
         assertEquals(373, extract.samples[0].length);
         ProductData.UTC actualUTC = ProductData.UTC.create(new Date(extract.time), 0);

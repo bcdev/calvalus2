@@ -16,7 +16,7 @@ import static org.junit.Assert.*;
 
 public class RegionAnalysisTest {
 
-    private static DateFormat dateFormat = RADateRanges.createDateFormat();
+    private static DateFormat dateFormat = RADateRanges.dateFormat;
     private RAConfig.BandConfig b1;
     private RAConfig.BandConfig b2;
 

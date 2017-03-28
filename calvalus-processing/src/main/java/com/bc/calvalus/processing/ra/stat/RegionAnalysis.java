@@ -38,14 +38,16 @@ public abstract class RegionAnalysis {
 
         histogramWriters = new Writer[bandConfigs.length];
         for (int i = 0; i < bandConfigs.length; i++) {
-            histogramWriters[i] = createWriter("region-histogram-" + bandNames[i] + ".csv");
-            writeLine(histogramWriters[i], getHeader(bandNames, false));
+            if (bandConfigs[i].getNumBins() > 0) {
+                histogramWriters[i] = createWriter("region-histogram-" + bandNames[i] + ".csv");
+                writeLine(histogramWriters[i], getHeader(bandNames, false));
+            }
         }
     }
 
     public abstract Writer createWriter(String fileName) throws IOException, InterruptedException;
 
-    public void addData(long time, int numPixel, float[][] samples) throws IOException {
+    public void addData(long time, int numObs, float[][] samples) throws IOException {
         int newDateRange = dateRanges.findIndex(time);
         if (newDateRange == -1) {
             String out_ouf_range_date = dateRanges.format(time);
@@ -57,7 +59,7 @@ public abstract class RegionAnalysis {
                 writeEmptyRecords(currentDateRange + 1, newDateRange);
                 currentDateRange = newDateRange;
             }
-            accumulate(numPixel, samples);
+            accumulate(numObs, samples);
         }
     }
 
@@ -75,15 +77,17 @@ public abstract class RegionAnalysis {
     public void close() throws IOException {
         analysisWriter.close();
         for (Writer writer : histogramWriters) {
-            writer.close();
+            if (writer != null) {
+                writer.close();
+            }
         }
     }
 
     /////////////////////////////////
 
-    private void accumulate(int numPixel, float[][] samples) {
-        numPasses++;
-        numObs += numPixel;
+    private void accumulate(int numObs, float[][] samples) {
+        this.numPasses++;
+        this.numObs += numObs;
         if (samples.length != stats.length) {
             throw new IllegalArgumentException("samples.length does not match num bands");
         }
@@ -125,9 +129,11 @@ public abstract class RegionAnalysis {
         writeLine(analysisWriter, records);
 
         for (int bandIndex = 0; bandIndex < this.stats.length; bandIndex++) {
-            records = new ArrayList<>(commonStats);
-            records.addAll(stats[bandIndex].getHistogramRecords());
-            writeLine(histogramWriters[bandIndex], records);
+            if (histogramWriters[bandIndex] != null) {
+                records = new ArrayList<>(commonStats);
+                records.addAll(stats[bandIndex].getHistogramRecords());
+                writeLine(histogramWriters[bandIndex], records);
+            }
         }
     }
 
