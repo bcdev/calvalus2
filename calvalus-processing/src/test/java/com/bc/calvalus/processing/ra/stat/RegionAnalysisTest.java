@@ -106,7 +106,6 @@ public class RegionAnalysisTest {
 
         Set<String> keySet = ra.writerMap.keySet();
         assertEquals(2, keySet.size());
-        System.out.println("keySet = " + keySet);
         assertTrue(keySet.contains("region-analysis.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 

@@ -92,16 +92,16 @@ public class RAConfig implements XmlConvertible {
             return name;
         }
 
-        public Integer getNumBins() {
-            return numBins;
+        public int getNumBins() {
+            return numBins != null ? numBins : 0;
         }
 
-        public Double getLowValue() {
-            return lowValue;
+        public double getLowValue() {
+            return lowValue != 0 ? lowValue : Double.NaN;
         }
 
-        public Double getHighValue() {
-            return highValue;
+        public double getHighValue() {
+            return highValue != 0 ? highValue : Double.NaN;
         }
     }
 

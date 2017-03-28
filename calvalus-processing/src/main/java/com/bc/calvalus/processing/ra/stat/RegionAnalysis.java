@@ -14,7 +14,7 @@ public abstract class RegionAnalysis {
 
     private final RADateRanges dateRanges;
 
-    private final Statistics.Stat[][] stats;
+    private final Statistics[] stats;
     private final Writer analysisWriter;
     private final Writer[] histogramWriters;
 
@@ -26,22 +26,20 @@ public abstract class RegionAnalysis {
     protected RegionAnalysis(RADateRanges dateRanges, RAConfig.BandConfig[] bandConfigs) throws IOException, InterruptedException {
         this.dateRanges = dateRanges;
 
-        stats = new Statistics.Stat[bandConfigs.length][3];
+        stats = new Statistics[bandConfigs.length];
         String[] bandNames = new String[bandConfigs.length];
         for (int i = 0; i < bandConfigs.length; i++) {
             RAConfig.BandConfig bConfig = bandConfigs[i];
             bandNames[i] = bConfig.getName();
-            stats[i][0] = new Statistics.StatStreaming();
-            stats[i][1] = new Statistics.StatAccu();
-            stats[i][2] = new Statistics.StatHisto(bConfig.getNumBins(), bConfig.getLowValue(), bConfig.getHighValue());
+            stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getLowValue(), bConfig.getHighValue());
         }
         analysisWriter = createWriter("region-analysis.csv");
-        writeLine(analysisWriter, getHeader(bandNames, 0, 1));
+        writeLine(analysisWriter, getHeader(bandNames, true));
 
         histogramWriters = new Writer[bandConfigs.length];
         for (int i = 0; i < bandConfigs.length; i++) {
             histogramWriters[i] = createWriter("region-histogram-" + bandNames[i] + ".csv");
-            writeLine(histogramWriters[i], getHeader(bandNames, 2));
+            writeLine(histogramWriters[i], getHeader(bandNames, false));
         }
     }
 
@@ -90,19 +88,15 @@ public abstract class RegionAnalysis {
             throw new IllegalArgumentException("samples.length does not match num bands");
         }
         for (int bandId = 0; bandId < samples.length; bandId++) {
-            stats[bandId][0].process(samples[bandId]);
-            stats[bandId][1].process(samples[bandId]);
-            stats[bandId][2].process(samples[bandId]);
+            stats[bandId].process(samples[bandId]);
         }
     }
 
     private void resetRecord() {
         numObs = 0;
         numPasses = 0;
-        for (Statistics.Stat[] stat : stats) {
-            for (Statistics.Stat aStat : stat) {
-                aStat.reset();
-            }
+        for (Statistics stat : stats) {
+            stat.reset();
         }
     }
 
@@ -125,19 +119,19 @@ public abstract class RegionAnalysis {
 
         List<String> records = new ArrayList<>();
         records.addAll(commonStats);
-        for (int bandIndex = 0; bandIndex < stats.length; bandIndex++) {
-            records.addAll(stats[bandIndex][0].getStats());
-            records.addAll(stats[bandIndex][1].getStats());
+        for (Statistics stat : stats) {
+            records.addAll(stat.getStatisticsRecords());
         }
         writeLine(analysisWriter, records);
+
         for (int bandIndex = 0; bandIndex < this.stats.length; bandIndex++) {
             records = new ArrayList<>(commonStats);
-            records.addAll(stats[bandIndex][2].getStats());
+            records.addAll(stats[bandIndex].getHistogramRecords());
             writeLine(histogramWriters[bandIndex], records);
         }
     }
 
-    private List<String> getHeader(String[] bandNames, int...statsIndices) {
+    private List<String> getHeader(String[] bandNames, boolean stat) {
         List<String> records = new ArrayList<>();
         records.add("RegionId");
         records.add("TimeWindow_start");
@@ -145,8 +139,10 @@ public abstract class RegionAnalysis {
         records.add("numPasses");
         records.add("numObs");
         for (int bandIndex = 0; bandIndex < bandNames.length; bandIndex++) {
-            for (int statIndex = 0; statIndex < statsIndices.length; statIndex++) {
-                records.addAll(stats[bandIndex][statIndex].getHeaders(bandNames[bandIndex]));
+            if (stat) {
+                records.addAll(stats[bandIndex].getStatisticsHeaders(bandNames[bandIndex]));
+            } else {
+                records.addAll(stats[bandIndex].getHistogramHeaders());
             }
         }
         return records;

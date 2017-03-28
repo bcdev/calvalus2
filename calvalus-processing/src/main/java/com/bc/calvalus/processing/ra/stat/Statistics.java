@@ -6,125 +6,59 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * computes a variety of statsitics from float values
+ * Computes a variety of statistics from float values
  */
 class Statistics {
 
-    interface Stat {
 
-        void process(float... samples);
+    private int numValid;
+    private double min;
+    private double max;
+    private double sum;
+    private double sumSQ;
+    private double geomMeanProduct;
+    private boolean geomMeanValid;
 
-        void reset();
+    private final Histogram histogram;
+    private int belowHistogram;
+    private int aboveHistogram;
 
-        List<String> getHeaders(String bandName);
+    private final Accumulator accu;
 
-        List<String> getStats();
+    Statistics() {
+        this(0, Double.NaN, Double.NaN);
     }
 
-    /**
-     * Statistics that can be gathered without acquiring all data
-     */
-    static class StatStreaming implements Stat {
-
-        private int numValid;
-        private double min;
-        private double max;
-        private double sum;
-        private double sumSQ;
-        private double geomMeanProduct;
-        private boolean geomMeanValid;
-
-
-        StatStreaming() {
-            reset();
+    Statistics(int numBins,
+               double lowValue,
+               double highValue) {
+        if (numBins > 0) {
+            histogram = new Histogram(numBins, lowValue, highValue, 1);
+        } else {
+            histogram = null;
         }
+        accu = new Accumulator();
+        reset();
+    }
 
-        @Override
-        public void process(float... samples) {
-            for (float value : samples) {
-                if (!Float.isNaN(value)) {
-                    numValid++;
-                    min = Math.min(min, value);
-                    max = Math.max(max, value);
-                    sum += value;
-                    sumSQ += value * value;
-                    if (geomMeanValid) {
-                        if (value > 0) {
-                            geomMeanProduct *= value;
-                        } else {
-                            geomMeanValid = false;
-                        }
+    public void process(float... samples) {
+        for (float value : samples) {
+            if (!Float.isNaN(value)) {
+                numValid++;
+                min = Math.min(min, value);
+                max = Math.max(max, value);
+                sum += value;
+                sumSQ += value * value;
+                if (geomMeanValid) {
+                    if (value > 0) {
+                        geomMeanProduct *= value;
+                    } else {
+                        geomMeanValid = false;
                     }
                 }
             }
         }
-
-        @Override
-        public void reset() {
-            numValid = 0;
-            min = +Double.MAX_VALUE;
-            max = -Double.MAX_VALUE;
-            sum = 0;
-            sumSQ = 0;
-            geomMeanProduct = 1;
-            geomMeanValid = true;
-        }
-
-        @Override
-        public List<String> getHeaders(String bandName) {
-            List<String> header = new ArrayList<>();
-            header.add(bandName + "_count");
-            header.add(bandName + "_min");
-            header.add(bandName + "_max");
-            header.add(bandName + "_arithMean");
-            header.add(bandName + "_sigma");
-            header.add(bandName + "_geomMean");
-            return header;
-        }
-
-        @Override
-        public List<String> getStats() {
-            List<String> stats = new ArrayList<>();
-            stats.add(Integer.toString(numValid));
-            if (numValid > 0) {
-                final double arithMean = sum / numValid;
-                final double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
-                final double sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
-                final double geomMean = geomMeanValid ? Math.pow(geomMeanProduct, 1.0 / numValid) : Double.NaN;
-
-                stats.add(Double.toString(min));
-                stats.add(Double.toString(max));
-                stats.add(Double.toString(arithMean));
-                stats.add(Double.toString(sigma));
-                stats.add(Double.toString(geomMean));
-            } else {
-                stats.add(Double.toString(Double.NaN));
-                stats.add(Double.toString(Double.NaN));
-                stats.add(Double.toString(Double.NaN));
-                stats.add(Double.toString(Double.NaN));
-                stats.add(Double.toString(Double.NaN));
-            }
-            return stats;
-        }
-    }
-
-    /**
-     * The histogram of a dataset
-     */
-    static class StatHisto implements Stat {
-
-        private final Histogram histogram;
-        private int belowHistogram;
-        private int aboveHistogram;
-
-        StatHisto(int numBins,
-                  double lowValue,
-                  double highValue) {
-            histogram = new Histogram(numBins, lowValue, highValue, 1);
-        }
-
-        @Override
-        public void process(float... samples) {
+        if (histogram != null) {
             final int[] bins = histogram.getBins(0);
             final double lowValue = histogram.getLowValue(0);
             final double highValue = histogram.getHighValue(0);
@@ -146,14 +80,44 @@ class Statistics {
             }
         }
 
-        @Override
-        public void reset() {
+        accu.accumulate(samples);
+    }
+
+    public void reset() {
+        numValid = 0;
+        min = +Double.MAX_VALUE;
+        max = -Double.MAX_VALUE;
+        sum = 0;
+        sumSQ = 0;
+        geomMeanProduct = 1;
+        geomMeanValid = true;
+        if (histogram != null) {
             histogram.clearHistogram();
         }
+        accu.clear();
+    }
 
-        @Override
-        public List<String> getHeaders(String bandName) {
-            List<String> header = new ArrayList<>();
+    public List<String> getStatisticsHeaders(String bandName) {
+        List<String> header = new ArrayList<>();
+        header.add(bandName + "_count");
+        header.add(bandName + "_min");
+        header.add(bandName + "_max");
+        header.add(bandName + "_arithMean");
+        header.add(bandName + "_sigma");
+        header.add(bandName + "_geomMean");
+
+        header.add(bandName + "_p5");
+        header.add(bandName + "_p25");
+        header.add(bandName + "_p50");
+        header.add(bandName + "_p75");
+        header.add(bandName + "_p95");
+
+        return header;
+    }
+
+    public List<String> getHistogramHeaders() {
+        List<String> header = new ArrayList<>();
+        if (histogram != null) {
             header.add("belowHistogram");
             header.add("aboveHistogram");
             header.add("numBins");
@@ -162,12 +126,47 @@ class Statistics {
             for (int i = 0; i < histogram.getNumBins(0); i++) {
                 header.add("bin_" + i);
             }
-            return header;
+        }
+        return header;
+    }
+
+
+    public List<String> getStatisticsRecords() {
+        List<String> stats = new ArrayList<>();
+        stats.add(Integer.toString(numValid));
+        if (numValid > 0) {
+            final double arithMean = sum / numValid;
+            final double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
+            final double sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
+            final double geomMean = geomMeanValid ? Math.pow(geomMeanProduct, 1.0 / numValid) : Double.NaN;
+
+            stats.add(Double.toString(min));
+            stats.add(Double.toString(max));
+            stats.add(Double.toString(arithMean));
+            stats.add(Double.toString(sigma));
+            stats.add(Double.toString(geomMean));
+        } else {
+            stats.add(Double.toString(Double.NaN));
+            stats.add(Double.toString(Double.NaN));
+            stats.add(Double.toString(Double.NaN));
+            stats.add(Double.toString(Double.NaN));
+            stats.add(Double.toString(Double.NaN));
         }
 
-        @Override
-        public List<String> getStats() {
-            List<String> stats = new ArrayList<>();
+        float[] values = accu.getValues();
+        Arrays.sort(values);
+        stats.add(Double.toString(computePercentile(5, values)));
+        stats.add(Double.toString(computePercentile(25, values)));
+        stats.add(Double.toString(computePercentile(50, values)));
+        stats.add(Double.toString(computePercentile(75, values)));
+        stats.add(Double.toString(computePercentile(95, values)));
+
+        return stats;
+    }
+
+    public List<String> getHistogramRecords() {
+        List<String> stats = new ArrayList<>();
+        if (histogram != null) {
             stats.add(Integer.toString(belowHistogram));
             stats.add(Integer.toString(aboveHistogram));
             stats.add(Integer.toString(histogram.getNumBins(0)));
@@ -177,56 +176,9 @@ class Statistics {
             for (int bin : bins) {
                 stats.add(Integer.toString(bin));
             }
-            return stats;
         }
+        return stats;
     }
-
-    /**
-     * Statistics that require the complete dataset.
-     */
-    static class StatAccu implements Stat {
-
-        private final Accumulator accu;
-
-        StatAccu() {
-            accu = new Accumulator();
-        }
-
-        @Override
-        public void process(float... samples) {
-            accu.accumulate(samples);
-        }
-
-        @Override
-        public void reset() {
-            accu.clear();
-        }
-
-        @Override
-        public List<String> getHeaders(String bandName) {
-            List<String> header = new ArrayList<>();
-            header.add(bandName + "_p5");
-            header.add(bandName + "_p25");
-            header.add(bandName + "_p50");
-            header.add(bandName + "_p75");
-            header.add(bandName + "_p95");
-            return header;
-        }
-
-        @Override
-        public List<String> getStats() {
-            float[] values = accu.getValues();
-            Arrays.sort(values);
-            List<String> stats = new ArrayList<>();
-            stats.add(Double.toString(computePercentile(5, values)));
-            stats.add(Double.toString(computePercentile(25, values)));
-            stats.add(Double.toString(computePercentile(50, values)));
-            stats.add(Double.toString(computePercentile(75, values)));
-            stats.add(Double.toString(computePercentile(95, values)));
-            return stats;
-        }
-    }
-
 
     /**
      * Computes the p-th percentile of an array of measurements following

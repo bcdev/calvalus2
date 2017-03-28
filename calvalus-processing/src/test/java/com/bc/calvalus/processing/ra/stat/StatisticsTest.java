@@ -28,56 +28,76 @@ public class StatisticsTest {
 
     @Test
     public void test_header() throws Exception {
-        String[] expected = {"b1_count", "b1_min", "b1_max", "b1_arithMean", "b1_sigma", "b1_geomMean"};
-        assertArrayEquals(expected, new Statistics.StatStreaming().getHeaders("b1").toArray());
+        String[] expected = {"b1_count", "b1_min", "b1_max", "b1_arithMean", "b1_sigma", "b1_geomMean",
+                "b1_p5", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
+        assertArrayEquals(expected, new Statistics().getStatisticsHeaders("b1").toArray());
+        assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getStatisticsHeaders("b1").toArray());
 
-        expected = new String[]{"b1_p5", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
-        assertArrayEquals(expected, new Statistics.StatAccu().getHeaders("b1").toArray());
+        expected = new String[]{};
+        assertArrayEquals(expected, new Statistics().getHistogramHeaders().toArray());
+
+        expected = new String[]{"belowHistogram", "aboveHistogram", "numBins", "lowValue", "highValue", "bin_0", "bin_1", "bin_2"};
+        assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getHistogramHeaders().toArray());
+
+        expected = new String[]{"belowHistogram", "aboveHistogram", "numBins", "lowValue", "highValue", "bin_0", "bin_1", "bin_2", "bin_3", "bin_4"};
+        assertArrayEquals(expected, new Statistics(5, 0.0, 1.0).getHistogramHeaders().toArray());
     }
 
     @Test
     public void test_zero() throws Exception {
-        String[] expected = {"0", "NaN", "NaN", "NaN", "NaN", "NaN"};
-        testStat(expected, new Statistics.StatStreaming());
+        String[] stat = {"0", "NaN", "NaN", "NaN", "NaN", "NaN", "NaN", "NaN", "NaN", "NaN", "NaN"};
+        String[] histo = {};
+        testStat(new Statistics(), stat, histo);
 
-        expected = new String[]{"NaN", "NaN", "NaN", "NaN", "NaN"};
-        testStat(expected, new Statistics.StatAccu());
+        histo = new String[]{"0", "0", "3", "0.0", "1.0", "0", "0", "0"};
+        testStat(new Statistics(3, 0.0, 1.0), stat, histo);
     }
 
     @Test
     public void test_one() throws Exception {
         float[] samples = {42f};
-        String[] expected = {"1", "42.0", "42.0", "42.0", "0.0", "42.0"};
-        testStat(expected, new Statistics.StatStreaming(), samples);
+        String[] stat = {"1", "42.0", "42.0", "42.0", "0.0", "42.0", "42.0", "42.0", "42.0", "42.0", "42.0"};
+        String[] histo = {};
+        testStat(new Statistics(), stat, histo, samples);
 
-        expected = new String[]{"42.0", "42.0", "42.0", "42.0", "42.0"};
-        testStat(expected, new Statistics.StatAccu(), samples);
+        histo = new String[]{"0", "0", "4", "0.0", "100.0", "0", "1", "0", "0"};
+        testStat(new Statistics(4, 0.0, 100.0), stat, histo, samples);
     }
 
     @Test
     public void test_two() throws Exception {
         float[] samples = {42f, 44f};
-        String[] expected = {"2", "42.0", "44.0", "43.0", "1.0", "42.988370520409354"};
-        testStat(expected, new Statistics.StatStreaming(), samples);
+        String[] stat = {"2", "42.0", "44.0", "43.0", "1.0", "42.988370520409354", "42.0", "42.0", "43.0", "44.0", "44.0"};
+        String[] histo = {};
+        testStat(new Statistics(), stat, histo, samples);
 
-        expected = new String[]{"42.0", "42.0", "43.0", "44.0", "44.0"};
-        testStat(expected, new Statistics.StatAccu(), samples);
+        histo = new String[]{"0", "0", "4", "0.0", "100.0", "0", "2", "0", "0"};
+        testStat(new Statistics(4, 0.0, 100.0), stat, histo, samples);
     }
 
     @Test
     public void test_many() throws Exception {
         float[] samples = {1f, 2f, 3f, 4f, 5f, 6f, 7f};
-        String[] expected = {"7", "1.0", "7.0", "4.0", "2.0", "3.3800151591412964"};
-        testStat(expected, new Statistics.StatStreaming(), samples);
+        String[] stat = {"7", "1.0", "7.0", "4.0", "2.0", "3.3800151591412964", "1.0", "2.0", "4.0", "6.0", "7.0"};
+        String[] histo = {};
+        testStat(new Statistics(), stat, histo, samples);
 
-        expected = new String[]{"1.0", "2.0", "4.0", "6.0", "7.0"};
-        testStat(expected, new Statistics.StatAccu(), samples);
+        histo = new String[]{"0", "0", "4", "0.0", "10.0", "2", "2", "3", "0"};
+        testStat(new Statistics(4, 0.0, 10.0), stat, histo, samples);
+
+        float[] samples2 = {-1f, Float.NaN, 1f, 2f, 3f, 4f, Float.NaN, 5f, 6f, 7f, 11f};
+        String[] stat2 = {"9", "-1.0", "11.0", "4.222222222222222", "3.3591592128513272", "NaN", "-1.0", "0.0", "3.0", "6.0", "11.0"};
+        String[] histo2 = {"1", "1", "4", "0.0", "10.0", "2", "2", "3", "0"};
+        testStat(new Statistics(4, 0.0, 10.0), stat2, histo2, samples2);
     }
 
-    private static void testStat(String[] expected, Statistics.Stat stat, float... samples) {
-        List<String> records = new ArrayList<>();
+    private static void testStat(Statistics stat, String[] recordsStat, String[] recordsHisto, float... samples) {
         stat.process(samples);
-        records.addAll(stat.getStats());
-        assertArrayEquals(expected, records.toArray());
+        Object[] stats = stat.getStatisticsRecords().toArray();
+        //System.out.println("StatisticsRecords = " + Arrays.toString(stats));
+        assertArrayEquals("statitics", recordsStat, stats);
+        Object[] histo = stat.getHistogramRecords().toArray();
+        //System.out.println("HistogramRecords = " + Arrays.toString(histo));
+        assertArrayEquals("histogram", recordsHisto, histo);
     }
 }
