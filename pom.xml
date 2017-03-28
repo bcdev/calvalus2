@@ -32,7 +32,8 @@
         <module>calvalus-reporting</module>
         <module>calvalus-reporting-ui</module>
         <module>calvalus-wps-impl</module>
-    </modules>
+    <module>calvalus-code-de</module>
+  </modules>
 
     <repositories>
 <!--

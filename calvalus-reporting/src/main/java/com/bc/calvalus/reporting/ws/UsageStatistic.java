@@ -26,7 +26,8 @@ public class UsageStatistic {
     private long fileBytesWritten;
     private long hdfsBytesRead;
     private long hdfsBytesWritten;
-    private long mbMillisTotal;
+    private long mbMillisMapTotal;
+    private long mbMillisReduceTotal;
     private long vCoresMillisTotal;
     private long cpuMilliseconds;
 
@@ -43,13 +44,13 @@ public class UsageStatistic {
                           String processType,
                           String inputPath,
                           int mapsCompleted,
-                          int totalMapReduced,
                           int reducesCompleted,
                           long fileBytesRead,
                           long fileBytesWritten,
                           long hdfsBytesRead,
                           long hdfsBytesWritten,
-                          long mbMillisTotal,
+                          long mbMillisMapTotal,
+                          long mbMillisReduceTotal,
                           long vCoresMillisTotal,
                           long cpuMilliseconds) {
         this.jobId = jobId;
@@ -71,7 +72,8 @@ public class UsageStatistic {
         this.fileBytesWritten = fileBytesWritten;
         this.hdfsBytesRead = hdfsBytesRead;
         this.hdfsBytesWritten = hdfsBytesWritten;
-        this.mbMillisTotal = mbMillisTotal;
+        this.mbMillisReduceTotal = mbMillisReduceTotal;
+        this.mbMillisMapTotal = mbMillisMapTotal;
         this.vCoresMillisTotal = vCoresMillisTotal;
         this.cpuMilliseconds = cpuMilliseconds;
     }
@@ -152,8 +154,12 @@ public class UsageStatistic {
         return hdfsBytesWritten;
     }
 
-    public long getMbMillisTotal() {
-        return mbMillisTotal;
+    public long getMbMillisMapTotal() {
+        return mbMillisMapTotal;
+    }
+
+    public long getMbMillisReduceTotal() {
+        return mbMillisReduceTotal;
     }
 
     public long getvCoresMillisTotal() {

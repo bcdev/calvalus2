@@ -1,12 +1,14 @@
 package bc.com.calvalus.ui.server;
 
+import bc.com.calvalus.ui.client.ColumnType;
 import bc.com.calvalus.ui.client.JobResourcesService;
-import bc.com.calvalus.ui.client.TableType;
 import bc.com.calvalus.ui.shared.UserInfo;
 import bc.com.calvalus.ui.shared.UserInfoInDetails;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -14,7 +16,9 @@ import java.text.ParseException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.Properties;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
@@ -27,94 +31,107 @@ import javax.ws.rs.core.Response;
 
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
     private static final Client client = ClientBuilder.newClient();
-    public static final String STATUS_FAILED = "\"Status\": \"Failed\"";
-    public static final String CALVALUS_REPORTING_WS_URL = "http://urbantep-test:9080/calvalus-reporting/reporting";
-    public static final int HTTP_SUCCESSFUL_CODE_START = 200;
-    public static final int HTTP_SUCCESSFUL_CODE_END = 300;
+    static final String STATUS_FAILED = "\"Status\": \"Failed\"";
+    String calvalusReportingWebServicesUrl;
+    static final int HTTP_SUCCESSFUL_CODE_START = 200;
+    static final int HTTP_SUCCESSFUL_CODE_END = 300;
 
-    public static final int TO_GB = 1024;
-    public static final int FIRST_DAY = 1;
+    static final int TO_GB = 1024;
+    static final int FIRST_DAY = 1;
 
-    @Override
-    public UserInfoInDetails getAllUserTodaySummary(TableType tableType) {
-        LocalDate now = LocalDate.now();
-        return getAllUserSummaryBetween(now.toString(), now.toString(), tableType);
+    public JobResourceServiceImpl() throws IOException {
+        try (InputStream resourceAsStream = getClass().getClassLoader().getResourceAsStream("calvalus-reporting.properties")) {
+            Properties properties = new Properties();
+            properties.load(resourceAsStream);
+            calvalusReportingWebServicesUrl = (String) properties.get("reporting.webservice");
+        }
     }
 
     @Override
-    public UserInfoInDetails getAllUserThisWeekSummary(TableType tableType) {
+    public UserInfoInDetails getAllUserUsageForToday(ColumnType columnType) {
+        LocalDate now = LocalDate.now();
+        return getAllUserUsageBetween(now.toString(), now.toString(), columnType);
+    }
+
+    @Override
+    public UserInfoInDetails getAllUserUsageForThisWeek(ColumnType columnType) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(endDate.getDayOfWeek().getValue() - 1);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
+        return getAllUserUsageBetween(startDate.toString(), endDate.toString(), columnType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserLastWeekSummary(TableType tableType) {
+    public UserInfoInDetails getAllUserUsageForLastWeek(ColumnType columnType) {
         LocalDate now = LocalDate.now();
         DayOfWeek dayOfWeek = now.getDayOfWeek();
 
         LocalDate endDate = now.minusDays(dayOfWeek.getValue());
         LocalDate startDate = endDate.minusDays(6);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
+        return getAllUserUsageBetween(startDate.toString(), endDate.toString(), columnType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserThisMonthSummary(TableType tableType) {
+    public UserInfoInDetails getAllUserUsageForThisMonth(ColumnType columnType) {
         LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.withDayOfMonth(1);
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
+        return getAllUserUsageBetween(startDate.toString(), endDate.toString(), columnType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserLastMonthSummary(TableType tableType) {
+    public UserInfoInDetails getAllUserUsageForLastMonth(ColumnType columnType) {
         LocalDate now = LocalDate.now();
         now = now.minusMonths(1);
         LocalDate startDate = now.withDayOfMonth(1);
-        LocalDate endDate = now.withDayOfMonth(now.getMonth().maxLength());
+        GregorianCalendar calendar = new GregorianCalendar();
+        int dayOfMonth = now.getMonth().minLength();
+        if (calendar.isLeapYear(now.getYear())) {
+            dayOfMonth = now.getMonth().maxLength();
+        }
+        LocalDate endDate = now.withDayOfMonth(dayOfMonth);
 
-        return getAllUserSummaryBetween(startDate.toString(), endDate.toString(), tableType);
+        return getAllUserUsageBetween(startDate.toString(), endDate.toString(), columnType);
     }
 
 
     @Override
-    public UserInfoInDetails getAllUserYesterdaySummary(TableType tableType) {
+    public UserInfoInDetails getAllUserUsageForYesterday(ColumnType columnType) {
         LocalDate startDate = LocalDate.now().minusDays(FIRST_DAY);
-        return getAllUserSummaryBetween(startDate.toString(), startDate.toString(), tableType);
+        return getAllUserUsageBetween(startDate.toString(), startDate.toString(), columnType);
     }
 
     @Override
-    public UserInfoInDetails getAllUserSummaryBetween(String startDate, String endDate, TableType tableType) {
+    public UserInfoInDetails getAllUserUsageBetween(String startDate, String endDate, ColumnType columnType) {
         List<UserInfo> allUsageSummaryBetween = null;
-        switch (tableType) {
+        switch (columnType) {
             case USER:
-                allUsageSummaryBetween = getAllUserUsageSummaryBetween(startDate, endDate);
+                allUsageSummaryBetween = getAllUserUsageBetween(startDate, endDate);
                 break;
             case DATE:
-                allUsageSummaryBetween = getAllDateUsageSummaryBetween(startDate, endDate);
+                allUsageSummaryBetween = getAllDateUsageBetween(startDate, endDate);
                 break;
             case QUEUE:
-                allUsageSummaryBetween = getAllQueueUsageSummaryBetween(startDate, endDate);
+                allUsageSummaryBetween = getAllQueueUsageBetween(startDate, endDate);
                 break;
         }
         return new UserInfoInDetails(allUsageSummaryBetween, startDate, endDate);
     }
 
-    private List<UserInfo> getAllDateUsageSummaryBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
-        return getGsonToUserInfo(jsonUser);
+    private List<UserInfo> getAllDateUsageBetween(String startDate, String endDate) {
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-date/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        return gsonToUserInfo(jsonUser);
     }
 
-    private List<UserInfo> getAllUserUsageSummaryBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
-        return getGsonToUserInfo(jsonUser);
+    private List<UserInfo> getAllUserUsageBetween(String startDate, String endDate) {
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-user/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        return gsonToUserInfo(jsonUser);
     }
 
-    private List<UserInfo> getAllQueueUsageSummaryBetween(String startDate, String endDate) {
-        String jsonUser = clientRequest(String.format(CALVALUS_REPORTING_WS_URL.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
-        return getGsonToUserInfo(jsonUser);
+    private List<UserInfo> getAllQueueUsageBetween(String startDate, String endDate) {
+        String jsonUser = clientRequest(String.format(calvalusReportingWebServicesUrl.concat("/range-queue/%s/%s"), startDate, endDate), MediaType.TEXT_PLAIN);
+        return gsonToUserInfo(jsonUser);
     }
 
-    private List<UserInfo> getGsonToUserInfo(String jsonUser) {
+    private List<UserInfo> gsonToUserInfo(String jsonUser) {
         if (jsonUser == null || jsonUser.contains(STATUS_FAILED)) {
             return null;
         }
@@ -125,16 +142,16 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
 
         List<UserInfo> changUnit = new ArrayList<>();
         for (UserInfo userInfo : userInfoList) {
-            changUnit.add(convertUnits(userInfo));
+            changUnit.add(convertToUnits(userInfo));
         }
 
         return changUnit;
     }
 
-    private UserInfo convertUnits(UserInfo p) {
+    private UserInfo convertToUnits(UserInfo p) {
         String totalFileReadingMb = convertSize(p.getTotalFileReadingMb(), TO_GB);
         String totalFileWritingMb = convertSize(p.getTotalFileWritingMb(), TO_GB);
-        String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), Math.pow(TO_GB, 2));
+        String totalMemoryUsedMbs = convertSize(p.getTotalMemoryUsedMbs(), TO_GB * 3600);
 
         return new UserInfo(p.getJobsInDate(),
                             p.getJobsInQueue(),
@@ -144,7 +161,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
                             totalFileWritingMb,
                             totalMemoryUsedMbs,
                             p.getTotalCpuTimeSpent(),
-                            p.getTotalMaps());
+                            p.getTotalMap());
     }
 
     private String convertSize(String totalFileReadingMb, double size) {

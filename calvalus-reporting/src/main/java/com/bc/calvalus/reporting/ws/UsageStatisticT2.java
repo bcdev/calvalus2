@@ -94,7 +94,7 @@ public class UsageStatisticT2 {
     private List<Quantity> parseQuantity(UsageStatistic usageStatistic) {
         List<Quantity> quantityList = new ArrayList<>();
         quantityList.add(new Quantity("CPU_MILLISECONDS", usageStatistic.getCpuMilliseconds()));
-        quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisTotal())); //check with TD if the unit is MB or Bs
+        quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", usageStatistic.getMbMillisMapTotal() + usageStatistic.getMbMillisReduceTotal())); //check with TD if the unit is MB or Bs
         quantityList.add(new Quantity("BYTE_READ", usageStatistic.getFileBytesRead() + usageStatistic.getHdfsBytesRead()));
         quantityList.add(new Quantity("BYTE_WRITTEN", usageStatistic.getFileBytesWritten() + usageStatistic.getHdfsBytesWritten()));
         quantityList.add(new Quantity("PROC_INSTANCE", usageStatistic.getvCoresMillisTotal())); //check with TD if the unit is only the number of instances or for each second (or ms)

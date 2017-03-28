@@ -37,6 +37,30 @@
                         <xsl:value-of select="value"/>
                     </outputDir>
                 </xsl:if>
+                <xsl:if test="name='calvalus.productionType'">
+                    <workflowType>
+                        <xsl:value-of select="value"/>
+                    </workflowType>
+                </xsl:if>
+
+                <xsl:if test="name='calvalus.l2.operator'">
+                    <dataProcessorUsed>
+                        <xsl:value-of select="value"/>
+                    </dataProcessorUsed>
+                </xsl:if>
+
+                <xsl:choose>
+                    <xsl:when test="name='calvalus.input.pathPatterns'">
+                        <inProductType>
+                            <xsl:value-of select="value"/>
+                        </inProductType>
+                    </xsl:when>
+                    <xsl:when test="name='calvalus.input.collection'">
+                        <inProductType>
+                            <xsl:value-of select="value"/>
+                        </inProductType>
+                    </xsl:when>
+                </xsl:choose>
             </xsl:for-each>
         </conf>
     </xsl:template>
