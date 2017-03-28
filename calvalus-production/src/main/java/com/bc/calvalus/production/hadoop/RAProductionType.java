@@ -33,10 +33,9 @@ import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
+import org.geotools.index.CloseableIterator;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -113,19 +112,20 @@ public class RAProductionType extends HadoopProductionType {
     private String[] getRAConfigXmlAndRegion(ProductionRequest productionRequest) throws ProductionException {
         String raParametersXml = productionRequest.getString("calvalus.ra.parameters", null);
         if (raParametersXml == null) {
-            throw new IllegalArgumentException("missing paramter 'calvalus.ra.parameters'");
+            throw new ProductionException("missing parameter 'calvalus.ra.parameters'");
 //            RAConfig raConfig = getRAConfig(productionRequest);
 //            raParametersXml = raConfig.toXml();
         } else {
             // Check MA XML before sending it to Hadoop
+            CloseableIterator<RAConfig.NamedGeometry> regionsIterator = null;
             try {
                 RAConfig raConfig = RAConfig.fromXml(raParametersXml);
                 Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
-                Iterator<RAConfig.NamedGeometry> regions = raConfig.createNamedRegionIterator(conf);
+                regionsIterator = raConfig.createNamedRegionIterator(conf);
                 int regionCounter = 0;
                 Geometry union = null;
-                while (regions.hasNext()) {
-                    RAConfig.NamedGeometry namedGeometry = regions.next();
+                while (regionsIterator.hasNext()) {
+                    RAConfig.NamedGeometry namedGeometry = regionsIterator.next();
                     if (union == null) {
                         union = namedGeometry.geometry;
                     } else {
@@ -141,8 +141,16 @@ public class RAProductionType extends HadoopProductionType {
                 }
                 raConfig.setNumRegions(regionCounter);
                 return new String[]{raConfig.toXml(), union.toString()};
-            } catch (BindingException|IOException e) {
+            } catch (BindingException | IOException e) {
                 throw new ProductionException("Illegal Region-analysis configuration: " + e.getMessage(), e);
+            } finally {
+                if (regionsIterator != null) {
+                    try {
+                        regionsIterator.close();
+                    } catch (IOException e) {
+                        throw new ProductionException("Failed to remove temp file: " + e.getMessage(), e);
+                    }
+                }
             }
         }
     }

@@ -114,7 +114,7 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
+                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
                 // find manifest file
                 File mtlFile = null;

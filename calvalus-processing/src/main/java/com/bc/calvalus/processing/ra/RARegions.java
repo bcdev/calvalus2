@@ -18,15 +18,18 @@ package com.bc.calvalus.processing.ra;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.bc.ceres.core.VirtualDir;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
 import org.esa.snap.core.util.FeatureUtils;
+import org.esa.snap.core.util.io.FileUtils;
 import org.geotools.data.crs.ReprojectFeatureResults;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.SchemaException;
+import org.geotools.index.CloseableIterator;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -49,8 +52,9 @@ import java.util.Set;
  */
 public class RARegions {
 
-    public static FeatureCollection<SimpleFeatureType, SimpleFeature> openShapefile(Path path, Configuration conf) throws IOException {
-        File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(path, conf);
+    public static FeatureCollection<SimpleFeatureType, SimpleFeature> openShapefile(Path path, File tempDir, Configuration conf) throws IOException {
+        File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToDir(path, tempDir, conf);
+        System.out.println("unzippedFiles = " + Arrays.toString(unzippedFiles));
         // find *.dim file
         File shpFile = null;
         for (File file : unzippedFiles) {
@@ -70,11 +74,12 @@ public class RARegions {
         }
     }
 
-    public static Iterator<RAConfig.NamedGeometry> createIterator(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
-                                                                  String attributeName,
-                                                                  String[] attributeValues) {
+    public static FeatureCollection<SimpleFeatureType, SimpleFeature> filterCollection(
+            FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
+            String attributeName,
+            String[] attributeValues) {
 
-        NameProvider nameProvider = createNameProvider(featureCollection.getSchema(), attributeName);
+
         Filter filter = Filter.INCLUDE;
         if (attributeName != null && !attributeName.isEmpty() &&
                 attributeValues != null && attributeValues.length > 0) {
@@ -98,7 +103,7 @@ public class RARegions {
                 }
             };
         }
-        return new RegionIteratorFromFeatures(featureCollection.subCollection(filter), nameProvider);
+        return featureCollection.subCollection(filter);
     }
 
     static NameProvider createNameProvider(SimpleFeatureType schema, String attributeName) {
@@ -149,13 +154,25 @@ public class RARegions {
         }
     }
 
-    static class RegionIteratorFromFeatures implements Iterator<RAConfig.NamedGeometry> {
+    static class RegionIteratorFromShapefile implements CloseableIterator<RAConfig.NamedGeometry> {
         private final FeatureIterator<SimpleFeature> featureIterator;
         private final NameProvider nameProvider;
+        private final File tempDir;
 
-        RegionIteratorFromFeatures(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection, NameProvider nameProvider) {
-            this.featureIterator = featureCollection.features();
-            this.nameProvider = nameProvider;
+        RegionIteratorFromShapefile(String shapeFilePath, String filterAttributeName, String filterAttributeValues, Configuration conf) throws IOException {
+            tempDir = VirtualDir.createUniqueTempDir();
+            FeatureCollection<SimpleFeatureType, SimpleFeature> collection = RARegions.openShapefile(new Path(shapeFilePath), tempDir, conf);
+            String[] attributeValues = new String[0];
+            if (filterAttributeValues != null) {
+                String[] split = filterAttributeValues.split(",");
+                attributeValues = new String[split.length];
+                for (int i = 0; i < split.length; i++) {
+                    attributeValues[i] = split[i].trim();
+                }
+            }
+            collection = filterCollection(collection, filterAttributeName, attributeValues);
+            this.featureIterator = collection.features();
+            this.nameProvider = createNameProvider(collection.getSchema(), filterAttributeName);
         }
 
         @Override
@@ -170,9 +187,16 @@ public class RARegions {
             String name = nameProvider.getName(simpleFeature);
             return new RAConfig.NamedGeometry(name, defaultGeometry);
         }
+
+        @Override
+        public void close() throws IOException {
+            if (tempDir != null) {
+                FileUtils.deleteTree(tempDir);
+            }
+        }
     }
 
-    static class RegionIteratorFromWKT implements Iterator<RAConfig.NamedGeometry> {
+    static class RegionIteratorFromWKT implements CloseableIterator<RAConfig.NamedGeometry> {
 
         private final Iterator<RAConfig.Region> iterator;
 
@@ -191,6 +215,11 @@ public class RARegions {
             String name = region.getName();
             Geometry geometry = GeometryUtils.createGeometry(region.getWkt());
             return new RAConfig.NamedGeometry(name, geometry);
+        }
+
+        @Override
+        public void close() throws IOException {
+            // nothing here.
         }
     }
 
@@ -212,13 +241,10 @@ public class RARegions {
         }
         System.out.println();
 
-        String[] attributeValues = null;//{"SEA-001", "SEA-002"};
-        String attributeName = null;//"HELCOM_ID";
-
-        Iterator<RAConfig.NamedGeometry> regionIterator = createIterator(reprojected, attributeName, attributeValues);
-        while (regionIterator.hasNext()) {
-            RAConfig.NamedGeometry next = regionIterator.next();
-            System.out.println("next.name = " + next.geometry);
+        FeatureIterator<SimpleFeature> features = reprojected.features();
+        while (features.hasNext()) {
+            SimpleFeature feature = features.next();
+            System.out.println("feature = " + feature);
         }
     }
 }

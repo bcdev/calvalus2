@@ -26,6 +26,7 @@ import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 import org.geotools.feature.FeatureCollection;
+import org.geotools.index.CloseableIterator;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 
@@ -201,18 +202,9 @@ public class RAConfig implements XmlConvertible {
         }
     }
 
-    public Iterator<NamedGeometry> createNamedRegionIterator(Configuration conf) throws IOException {
+    public CloseableIterator<NamedGeometry> createNamedRegionIterator(Configuration conf) throws IOException {
         if (shapeFilePath != null && !shapeFilePath.isEmpty()) {
-            FeatureCollection<SimpleFeatureType, SimpleFeature> collection = RARegions.openShapefile(new Path(shapeFilePath), conf);
-            String[] attributeValues = new String[0];
-            if (filterAttributeValues != null) {
-                String[] split = filterAttributeValues.split(",");
-                attributeValues = new String[split.length];
-                for (int i = 0; i < split.length; i++) {
-                    attributeValues[i] = split[i].trim();
-                }
-            }
-            return RARegions.createIterator(collection, filterAttributeName, attributeValues);
+            return new RARegions.RegionIteratorFromShapefile(shapeFilePath, filterAttributeName, filterAttributeValues, conf);
         } else if (regions != null) {
             return new RARegions.RegionIteratorFromWKT(regions);
         } else {

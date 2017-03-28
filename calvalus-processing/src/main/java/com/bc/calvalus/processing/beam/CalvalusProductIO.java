@@ -159,7 +159,11 @@ public class CalvalusProductIO {
         return localFile;
     }
 
-    public static File[] uncompressArchiveToLocalDir(Path path, Configuration conf) throws IOException {
+    public static File[] uncompressArchiveToCWD(Path path, Configuration conf) throws IOException {
+        return uncompressArchiveToDir(path, new File("."), conf);
+    }
+
+    public static File[] uncompressArchiveToDir(Path path, File localDir, Configuration conf) throws IOException {
         FileSystem fs = path.getFileSystem(conf);
         InputStream inputStream = new BufferedInputStream(fs.open(path));
         List<File> extractedFiles = new ArrayList<>();
@@ -169,14 +173,14 @@ public class CalvalusProductIO {
             try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
                 ZipEntry entry;
                 while ((entry = zipIn.getNextEntry()) != null) {
-                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), zipIn));
+                    extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), zipIn));
                 }
             }
         } else if (isTarCompressed(archiveName)) {
             try (TarInputStream tarIn = getTarInputStream(archiveName, inputStream)) {
                 TarEntry entry;
                 while ((entry = tarIn.getNextEntry()) != null) {
-                    extractedFiles.add(handleEntry(entry.getName(), entry.isDirectory(), tarIn));
+                    extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), tarIn));
                 }
             }
         } else {
@@ -185,8 +189,8 @@ public class CalvalusProductIO {
         return extractedFiles.toArray(new File[0]);
     }
 
-    private static File handleEntry(String name, boolean isDirectory, InputStream zipIn) throws IOException {
-        File file = new File(".", name);
+    private static File handleEntry(File localDir, String name, boolean isDirectory, InputStream zipIn) throws IOException {
+        File file = new File(localDir, name);
         if (isDirectory) {
             file.mkdirs();
         } else {
