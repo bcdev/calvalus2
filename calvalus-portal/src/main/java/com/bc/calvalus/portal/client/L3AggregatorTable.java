@@ -68,7 +68,7 @@ public class L3AggregatorTable {
             this.editor = new ParametersEditorGenerator(title, aggregatorDescriptor.getParameterDescriptors(), style);
         }
 
-        private String getParametersAsText() {
+        private String getParametersForDisplay() {
             StringBuilder sb = new StringBuilder();
             DtoParameterDescriptor[] parameterDescriptors = aggregatorDescriptor.getParameterDescriptors();
 
@@ -106,7 +106,7 @@ public class L3AggregatorTable {
             return usedVarNames;
         }
 
-        public void fillParametersFromEditors() {
+        public void fillParametersFromEditors() throws ValidationException {
             parameters.clear();
             for (DtoParameterDescriptor parameterDescriptor : aggregatorDescriptor.getParameterDescriptors()) {
                 parameters.put(parameterDescriptor, editor.getParameterValue(parameterDescriptor));
@@ -168,10 +168,47 @@ public class L3AggregatorTable {
             ConfiguredAggregator aggregator = new ConfiguredAggregator();
             aggregator.setAggregatorDescriptor(aggregatorDescriptors.get(0));
             aggregator.editor.setAvailableVariables(availableVariables);
-            aggregator.fillParametersFromEditors();
+            try {
+                aggregator.fillParametersFromEditors();
+            } catch (ValidationException ignore) {
+            }
             getAggregatorList().add(aggregator);
             dataProvider.refresh();
         }
+    }
+
+    public void addRow(String aggregatorName, String[] paramNames, String[] paramValues) {
+        DtoAggregatorDescriptor useAggregatorDescriptor = null;
+        for (DtoAggregatorDescriptor aggregatorDescriptor : aggregatorDescriptors) {
+            if (aggregatorDescriptor.getAggregator().equals(aggregatorName)) {
+                useAggregatorDescriptor = aggregatorDescriptor;
+                break;
+            }
+        }
+        if (useAggregatorDescriptor == null) {
+            // TODO handle failure
+            return;
+        }
+        ConfiguredAggregator aggregator = new ConfiguredAggregator();
+        aggregator.setAggregatorDescriptor(useAggregatorDescriptor);
+        aggregator.editor.setAvailableVariables(availableVariables);
+        try {
+            aggregator.fillParametersFromEditors();
+        } catch (ValidationException ignore) {
+            // TODO handle failure
+        }
+        for (int i = 0; i < paramNames.length; i++) {
+            String paramName = paramNames[i];
+            String paramValue = paramValues[i];
+            for (DtoParameterDescriptor parameterDescriptor : useAggregatorDescriptor.getParameterDescriptors()) {
+                if (parameterDescriptor.getName().equals(paramName)) {
+                    aggregator.parameters.put(parameterDescriptor, paramValue);
+                    aggregator.editor.setParameterValue(parameterDescriptor, paramValue);
+                }
+            }
+        }
+        getAggregatorList().add(aggregator);
+        dataProvider.refresh();
     }
 
     public void removeSelectedRow() {
@@ -243,7 +280,7 @@ public class L3AggregatorTable {
         return new Column<ConfiguredAggregator, String>(new TextCell()) {
             @Override
             public String getValue(ConfiguredAggregator configuredAggregator) {
-                return configuredAggregator.getParametersAsText();
+                return configuredAggregator.getParametersForDisplay();
             }
         };
     }
@@ -269,9 +306,15 @@ public class L3AggregatorTable {
         String description = aggregator.aggregatorDescriptor.getDescriptionHtml();
         aggregator.editor.showDialog("600px", "320px", description, new ParametersEditorGenerator.OnOkHandler() {
             @Override
-            public void onOk() {
-                aggregator.fillParametersFromEditors();
-                cellTable.redrawRow(index);
+            public boolean onOk() {
+                try {
+                    aggregator.fillParametersFromEditors();
+                    cellTable.redrawRow(index);
+                    return true;
+                } catch (ValidationException e) {
+                    e.handle();
+                    return false;
+                }
             }
         });
     }

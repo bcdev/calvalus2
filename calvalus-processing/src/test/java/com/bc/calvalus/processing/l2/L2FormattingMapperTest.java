@@ -84,4 +84,27 @@ public class L2FormattingMapperTest {
     private static String newName(String productName, String regex, String replacement) {
         return L2FormattingMapper.getNewProductName(productName, regex, replacement);
     }
+
+    @Test
+    public void testGetProductName() throws Exception {
+        JobConf jobConfig = new JobConf();
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX, "MER_RR__1P(.*)");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, "MER_RR__2P$1");
+        String input = "MER_RR__1PRLRA20120408_022952_000026243113_00262_52862_0643.N1";
+        String output = L2FormattingMapper.getProductName(jobConfig, input);
+        assertEquals("MER_RR__2PRLRA20120408_022952_000026243113_00262_52862_0643", output);
+    }
+
+    @Test
+    public void testGetProductNameWithDate() throws Exception {
+        JobConf jobConfig = new JobConf();
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REGEX, "LC8(......)(.......).*");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT, "yyyyMMdd'-L8-$1-Elbe_Tideelbe'");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DATE_ELEMENT, "$2");
+        jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DATE_FORMAT, "yyyyDDD");
+        String input = "LC81370352016335LGN00.tgz";
+        String output = L2FormattingMapper.getProductName(jobConfig, input);
+        assertEquals("20161130-L8-137035-Elbe_Tideelbe", output);
+    }
+
 }

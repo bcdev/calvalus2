@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.beam;
 
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.dataio.AbstractProductReader;
@@ -40,7 +41,10 @@ import java.util.Locale;
  */
 public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_NAME = "CALVALUS-Landsat";
+    private static final String FORMAT_15M = "CALVALUS-Landsat-15M";
+    private static final String FORMAT_30M = "CALVALUS-Landsat-30M";
+    private static final String FORMAT_MULTI = "CALVALUS-Landsat";
+
     private static final String L4_FILENAME_REGEX = "LT4\\d{13}\\w{3}\\d{2}";
     private static final String L5_FILENAME_REGEX = "LT5\\d{13}.{3}\\d{2}";
     private static final String L7_FILENAME_REGEX = "LE7\\d{13}.{3}\\d{2}";
@@ -80,7 +84,7 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{FORMAT_NAME};
+        return new String[]{FORMAT_15M, FORMAT_30M, FORMAT_MULTI};
     }
 
     @Override
@@ -123,7 +127,17 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
                 if (mtlFile == null) {
                     throw new IllegalFileFormatException("input has no MTL file.");
                 }
-                return ProductIO.readProduct(mtlFile);
+                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_30M);
+                System.out.println("inputFormat = " + inputFormat);
+
+                switch (inputFormat) {
+                    case FORMAT_15M:
+                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF15m");
+                    case FORMAT_30M:
+                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF30m");
+                    default:
+                        return ProductIO.readProduct(mtlFile);
+                }
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
             }

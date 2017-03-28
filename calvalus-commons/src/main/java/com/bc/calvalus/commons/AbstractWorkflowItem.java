@@ -66,7 +66,7 @@ public abstract class AbstractWorkflowItem implements WorkflowItem, WorkflowStat
      */
     @Override
     public final void setStatus(ProcessStatus newStatus) {
-        if (!newStatus.equals(status)) {
+        if (!newStatus.equals(status) && !newStatus.equals(ProcessStatus.UNKNOWN)) {
             ProcessStatus oldStatus = status;
             status = newStatus;
             fireStatusChanged(new WorkflowStatusEvent(this, oldStatus, newStatus, new Date()));

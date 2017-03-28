@@ -64,7 +64,6 @@ public class OrderVCProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -120,6 +119,8 @@ public class OrderVCProductionView extends OrderProductionView {
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
         outputParametersForm.allowedFailure.setValue(5);
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");

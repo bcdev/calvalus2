@@ -55,7 +55,6 @@ public class OrderL2ProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -71,6 +70,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         outputParametersForm = new OutputParametersForm();
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged();
 
         VerticalPanel panel = new VerticalPanel();
@@ -185,7 +185,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
-        //l2ConfigForm.setValues(parameters);
-        //outputParametersForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

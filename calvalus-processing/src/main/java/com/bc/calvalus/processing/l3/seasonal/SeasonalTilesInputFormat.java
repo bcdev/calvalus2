@@ -33,7 +33,7 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
 
     // ESACCI-LC-L3-SR-MERIS-300m-P7D-h36v08-20090108-v2.0.nc
     static final Pattern SR_FILENAME_PATTERN =
-            Pattern.compile("ESACCI-LC-L3-SR-[^-]*-[^-]*-[^-]*-(h[0-9][0-9]v[0-9][0-9])-........-[^-]*.nc");
+            Pattern.compile("ESACCI-LC-L3-SR-[^-]*-[^-]*-[^-]*-(h[0-9]*v[0-9]*)-........-[^-]*.nc");
 
     @Override
     protected void createSplits(ProductInventory productInventory,

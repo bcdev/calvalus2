@@ -218,7 +218,7 @@ public abstract class HadoopProductionType implements ProductionType {
             if (name.startsWith("calvalus.hadoop.")) {
                 String hadoopName = name.substring("calvalus.hadoop.".length());
                 jobConfig.set(hadoopName, entry.getValue());
-            } else if (name.startsWith("calvalus.")) {
+            } else if (name.startsWith("calvalus.") && !name.startsWith("calvalus.portal")) {
                 jobConfig.set(name, entry.getValue());
             }
         }

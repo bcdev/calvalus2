@@ -202,6 +202,39 @@ public class OutputParametersForm extends Composite {
         return sb.toString();
     }
 
+    public void setValues(Map<String, String> parameters) {
+        String productionNameValue = parameters.get("productionName");
+        if (productionNameValue != null) {
+            productionName.setValue(productionNameValue);
+        }
+        String outputFormatValue = parameters.get("outputFormat");
+        if (outputFormatValue != null) {
+            if (outputFormatValue.equals("SEQ")) {
+                autoStaging.setValue(false);
+                processingFormatCluster.setValue(true, true);
+            } else {
+                outputFormat.setSelectedIndex(0);
+                for (int i = 0; i < outputFormat.getItemCount(); i++) {
+                    if (outputFormat.getItemText(i).equals(outputFormatValue)) {
+                        outputFormat.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
+        } else {
+            outputFormat.setSelectedIndex(0);
+            processingFormatUser.setValue(true, true);
+        }
+        String autoStagingValue = parameters.get("autoStaging");
+        if (autoStagingValue != null) {
+            autoStaging.setValue(Boolean.valueOf(autoStagingValue));
+        }
+        String allowedFailureValue = parameters.get("calvalus.hadoop.mapreduce.map.failures.maxpercent");
+        if (allowedFailureValue != null) {
+            allowedFailure.setValue(Integer.valueOf(allowedFailureValue));
+        }
+    }
+
     public void setAvailableOutputFormats(String... formatNames) {
         int selectedIndex = outputFormat.getSelectedIndex();
         outputFormat.clear();

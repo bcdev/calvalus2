@@ -54,7 +54,6 @@ public class OrderTAProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -91,11 +90,12 @@ public class OrderTAProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(32);
         l3ConfigForm.compositingPeriodLength.setValue(4);
 
-        updateTemporalParameters(productSetFilterForm.getValueMap());
-
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+        updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();
         panel.setWidth("100%");
@@ -180,5 +180,19 @@ public class OrderTAProductionView extends OrderProductionView {
         parameters.putAll(outputParametersForm.getValueMap());
         parameters.put("autoStaging", "true");
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        l3ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

@@ -86,7 +86,6 @@ public class OrderFreshmonProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -108,6 +107,8 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         outputParametersForm.quicklooks.setValue(true);
         outputParametersForm.replaceNans.setValue(true);
         outputParametersForm.replaceNanValue.setValue(0.0);
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged(l2ConfigForm.getSelectedProcessorDescriptor(), bandsToSelect);
 
 

@@ -21,6 +21,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.security.AccessControlException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,7 +93,11 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     public boolean removeDirectory(String username, String path) throws IOException {
         FileSystem fileSystem = jobClientsMap.getFileSystem(username, path);
         Path qualifiedPath = makeQualified(fileSystem, path);
-        return fileSystem.delete(qualifiedPath, true);
+        if (fileSystem.exists(qualifiedPath)) {
+            return fileSystem.delete(qualifiedPath, true);
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -166,22 +171,24 @@ public abstract class AbstractFileSystemService implements FileSystemService {
             matcher = pattern.matcher("");
         }
         for (FileStatus fStat : fileStatuses) {
-            String filename = fStat.getPath().getName();
-            if (!filename.startsWith("_") && !filename.startsWith(".")) {
-                if (fStat.isDirectory()) {
-                    collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
-                } else {
-                    String fPath = fStat.getPath().toString();
-                    if (matcher != null) {
-                        matcher.reset(fPath);
-                        if (matcher.matches()) {
+            try {
+                String filename = fStat.getPath().getName();
+                if (!filename.startsWith("_") && !filename.startsWith(".")) {
+                    if (fStat.isDirectory()) {
+                        collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
+                    } else {
+                        String fPath = fStat.getPath().toString();
+                        if (matcher != null) {
+                            matcher.reset(fPath);
+                            if (matcher.matches()) {
+                                result.add(fStat);
+                            }
+                        } else {
                             result.add(fStat);
                         }
-                    } else {
-                        result.add(fStat);
                     }
                 }
-            }
+            } catch (AccessControlException ignore) {}
         }
     }
 

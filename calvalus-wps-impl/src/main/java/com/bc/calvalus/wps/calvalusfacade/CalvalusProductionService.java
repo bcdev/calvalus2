@@ -1,7 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
 import com.bc.calvalus.production.ProductionException;
-import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
@@ -17,7 +16,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 
 /**
@@ -31,6 +32,7 @@ public class CalvalusProductionService implements ServletContextListener {
     private static ServiceContainer serviceContainer = null;
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
+    private static Set<String> remoteUserSet;
 
     private static final String DEFAULT_BEAM_BUNDLE = PropertiesWrapper.get("default.beam.bundle");
     private static final String DEFAULT_SNAP_BUNDLE = PropertiesWrapper.get("default.snap.bundle");
@@ -43,13 +45,6 @@ public class CalvalusProductionService implements ServletContextListener {
     private CalvalusProductionService() {
     }
 
-    public synchronized static ServiceContainer getProductionServiceSingleton() throws IOException, ProductionException {
-        if (serviceContainer == null) {
-            serviceContainer = createServices();
-        }
-        return serviceContainer;
-    }
-
     public synchronized static Timer getStatusObserverSingleton() {
         if (statusObserver == null) {
             WpsServletContainer.addServletContextListener(new CalvalusProductionService());
@@ -58,14 +53,48 @@ public class CalvalusProductionService implements ServletContextListener {
         return statusObserver;
     }
 
-    public synchronized static Map<String, Integer> getUserProductionMap() {
+    public synchronized static Set<String> getRemoteUserSet() {
+        if (remoteUserSet == null) {
+            remoteUserSet = new HashSet<>();
+        }
+        return remoteUserSet;
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Starting Calvalus WPS *********");
+        System.out.println("*****************************************");
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        System.out.println("*****************************************");
+        System.out.println("********* Stopping Calvalus WPS *********");
+        System.out.println("*****************************************");
+        System.out.println("Shutting down statusObserver...");
+        synchronized (CalvalusProductionService.class) {
+            if (statusObserver != null) {
+                statusObserver.cancel();
+            }
+        }
+    }
+
+    synchronized static ServiceContainer getServiceContainerSingleton() throws IOException, ProductionException {
+        if (serviceContainer == null) {
+            serviceContainer = createServices();
+        }
+        return serviceContainer;
+    }
+
+    synchronized static Map<String, Integer> getUserProductionMap() {
         if (userProductionMap == null) {
             userProductionMap = new HashMap<>();
         }
         return userProductionMap;
     }
 
-    protected static Map<String, String> getDefaultConfig() {
+    static Map<String, String> getDefaultConfig() {
         Map<String, String> defaultConfig = ProductionServiceConfig.getCalvalusDefaultConfig();
         defaultConfig.put("calvalus.calvalus.bundle", DEFAULT_CALVALUS_BUNDLE);
         defaultConfig.put("calvalus.beam.bundle", DEFAULT_BEAM_BUNDLE);
@@ -99,28 +128,8 @@ public class CalvalusProductionService implements ServletContextListener {
         return configFile;
     }
 
-    public static File getUserAppDataCalWpsDir() {
+    private static File getUserAppDataCalWpsDir() {
         String userHome = System.getProperty("user.home");
         return userHome != null ? new File(userHome, ".calwps") : null;
-    }
-
-    @Override
-    public void contextInitialized(ServletContextEvent servletContextEvent) {
-        System.out.println("*****************************************");
-        System.out.println("********* Starting Calvalus WPS *********");
-        System.out.println("*****************************************");
-    }
-
-    @Override
-    public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        System.out.println("*****************************************");
-        System.out.println("********* Stopping Calvalus WPS *********");
-        System.out.println("*****************************************");
-        System.out.println("Shutting down statusObserver...");
-        synchronized (CalvalusProductionService.class) {
-            if (statusObserver != null) {
-                statusObserver.cancel();
-            }
-        }
     }
 }

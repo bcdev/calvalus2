@@ -157,13 +157,7 @@ public abstract class OrderProductionView extends PortalView {
                 Dialog.info("Save Request", "Failed to safe request:\n" + caught.getMessage());
             }
         };
-        DtoProductionRequest request;
-        try {
-            request = getProductionRequest();
-            getPortal().getBackendService().saveRequest(request, callback);
-        } catch (Throwable e) {
-            GWT.log("save request:", e);
-        }
+        getPortal().getBackendService().saveRequest(getProductionRequest(), callback);
     }
 
     protected HorizontalPanel createOrderPanel() {
@@ -191,7 +185,9 @@ public abstract class OrderProductionView extends PortalView {
         HorizontalPanel buttonPanel = new HorizontalPanel();
         buttonPanel.setSpacing(4);
         buttonPanel.add(checkButton);
-        buttonPanel.add(saveButton);
+        if (isRestoringRequestPossible()) {
+            buttonPanel.add(saveButton);
+        }
         buttonPanel.add(orderButton);
 
         HorizontalPanel orderPanel = new HorizontalPanel();

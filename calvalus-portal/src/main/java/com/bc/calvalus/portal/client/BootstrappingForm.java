@@ -36,6 +36,8 @@ public class BootstrappingForm extends Composite {
     Button addBootstrapSourceButton;
     @UiField
     Button removeBootstrapSourceButton;
+    @UiField
+    Button removeAllBootstrapSourceButton;
 
     @UiField(provided = true)
     L2ConfigForm l2ConfigForm;
@@ -62,6 +64,7 @@ public class BootstrappingForm extends Composite {
                                                   description);
         addBootstrapSourceButton.addClickHandler(userManagedContent.getAddAction());
         removeBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAction());
+        removeAllBootstrapSourceButton.addClickHandler(userManagedContent.getRemoveAllAction());
         userManagedContent.updateList();
 
         //TODO filter bootstrap processor(s) in all other views

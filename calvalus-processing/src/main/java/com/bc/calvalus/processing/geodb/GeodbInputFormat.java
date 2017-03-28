@@ -24,10 +24,12 @@ import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.ma.MAConfig;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
+import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.inventory.search.Constrain;
 import com.bc.inventory.search.StreamFactory;
 import com.bc.inventory.search.coverage.CoverageInventory;
 import com.bc.inventory.utils.SimpleRecord;
+import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
@@ -124,6 +126,12 @@ public class GeodbInputFormat extends InputFormat {
     private static List<Constrain> parseConstraint(Configuration conf) throws IOException {
         List<Constrain> constrains = new ArrayList<>();
         String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
+        if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
+            Geometry geometry = GeometryUtils.parseWKT(geometryWkt);
+            if (geometry == null || GeometryUtils.isGlobalCoverageGeometry(geometry)) {
+                geometryWkt = null;
+            }
+        }
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         boolean isDateRangeSet = StringUtils.isNotNullAndNotEmpty(dateRangesString);
         if (isDateRangeSet) {

@@ -26,13 +26,11 @@ public class ServiceContainer {
     private final ProductionService productionService;
     private final FileSystemService fileSystemService;
     private final InventoryService inventoryService;
-    private final RequestService requestService;
 
-    public ServiceContainer(ProductionService productionService, FileSystemService fileSystemService, InventoryService inventoryService, RequestService requestService) {
+    public ServiceContainer(ProductionService productionService, FileSystemService fileSystemService, InventoryService inventoryService) {
         this.productionService = productionService;
         this.fileSystemService = fileSystemService;
         this.inventoryService = inventoryService;
-        this.requestService = requestService;
     }
 
     public ProductionService getProductionService() {
@@ -45,10 +43,6 @@ public class ServiceContainer {
 
     public InventoryService getInventoryService() {
         return inventoryService;
-    }
-
-    public RequestService getRequestService() {
-        return requestService;
     }
 
     public void close() throws ProductionException {

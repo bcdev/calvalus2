@@ -56,7 +56,6 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
             }
         });
 
@@ -94,6 +93,8 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(15);
         l3ConfigForm.compositingPeriodLength.setValue(15);
         l3ConfigForm.compositingType.setEnabled(false);
+
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 

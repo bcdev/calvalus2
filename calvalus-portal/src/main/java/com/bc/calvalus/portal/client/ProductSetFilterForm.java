@@ -19,6 +19,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
+import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -190,8 +191,8 @@ public class ProductSetFilterForm extends Composite {
                     List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
                     for (Region region : regionList) {
                         if (region.getName().equalsIgnoreCase(regionName)) {
-                            regionMap.getRegionMapSelectionModel().setSelected(region, true);
-                            return;
+                            LocateRegionsAction.locateRegion(regionMap, region);
+                            break;
                         }
                     }
                 }
@@ -335,6 +336,7 @@ public class ProductSetFilterForm extends Composite {
         }
 
         if (spatialFilterOff.getValue()) {
+            // TODO mz remove these ??? unused
             parameters.put("regionName", "Globe");
             parameters.put("regionWKT", "POLYGON((-180 -90, 180 -90, 180 90, -180 90, -180 -90))");
             parameters.put("minLon", "-180.0");
@@ -348,6 +350,7 @@ public class ProductSetFilterForm extends Composite {
                 LatLngBounds bounds = Region.getBounds(polygon);
                 parameters.put("regionName", region.getName());
                 parameters.put("regionWKT", region.getGeometryWkt());
+                // TODO mz remove these ??? unused
                 parameters.put("minLon", bounds.getSouthWest().getLongitude() + "");
                 parameters.put("minLat", bounds.getSouthWest().getLatitude() + "");
                 parameters.put("maxLon", bounds.getNorthEast().getLongitude() + "");
@@ -359,7 +362,49 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public void setValues(Map<String, String> parameters) {
-        // TODO mz
+        String dateListValue = parameters.get("dateList");
+        if (dateListValue != null) {
+            dateList.setValue(dateListValue);
+            temporalFilterByDateList.setValue(true, true);
+        } else {
+            String minDateValue = parameters.get("minDate");
+            if (minDateValue != null) {
+                minDate.setValue(DATE_FORMAT.parse(minDateValue));
+            }
+            String maxDateValue = parameters.get("maxDate");
+            if (maxDateValue != null) {
+                maxDate.setValue(DATE_FORMAT.parse(maxDateValue));
+            }
+            if (minDateValue != null || maxDateValue != null) {
+                temporalFilterByDateRange.setValue(true, true);
+            } else {
+                temporalFilterOff.setValue(true, true);
+            }
+        }
+        String regionNameValue = parameters.get("regionName");
+        if (regionNameValue != null) {
+            Region region = regionMap.getRegion(regionNameValue);
+            if (region != null) {
+                spatialFilterByRegion.setValue(true, true);
+                regionMap.getRegionMapSelectionModel().setSelected(region, true);
+                return;
+            }
+            // TODO handle failure
+        }
+        String regionWKTValue = parameters.get("regionWKT");
+        if (regionWKTValue != null) {
+            List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
+            for (Region region : list) {
+                if (region.getGeometryWkt() != null && region.getGeometryWkt().equals(regionWKTValue)) {
+                    spatialFilterByRegion.setValue(true, true);
+                    regionMap.getRegionMapSelectionModel().setSelected(region, true);
+                    return;
+                }
+            }
+            // TODO handle failure
+        }
+        spatialFilterOff.setValue(true, true);
+        regionMap.getRegionMapSelectionModel().clearSelection();
     }
 
     public interface ChangeHandler {

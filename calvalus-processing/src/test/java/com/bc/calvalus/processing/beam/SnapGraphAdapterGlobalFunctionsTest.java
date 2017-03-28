@@ -14,7 +14,7 @@ public class SnapGraphAdapterGlobalFunctionsTest {
     public void testOcNnRdAuxdata_MERIS_TOMS() throws Exception {
 
         String merisProductName = "MER_RR__1PNACR20020523_103543_xyz";
-        SnapGraphAdapter.GlobalsFunctions gf = new SnapGraphAdapter.GlobalsFunctions(Logger.getLogger("test"));
+        SnapGraphAdapter.GlobalFunctions gf = new SnapGraphAdapter.GlobalFunctions(Logger.getLogger("test"));
 
         String dateString = merisProductName.substring(14, 29);
         assertEquals("20020523_103543", dateString);
@@ -42,7 +42,7 @@ public class SnapGraphAdapterGlobalFunctionsTest {
     public void testOcNnRdAuxdata_MERIS_NCEP() throws Exception {
 
         String merisProductName = "MER_RR__1PNACR20020523_103543_xyz";
-        SnapGraphAdapter.GlobalsFunctions gf = new SnapGraphAdapter.GlobalsFunctions(Logger.getLogger("test"));
+        SnapGraphAdapter.GlobalFunctions gf = new SnapGraphAdapter.GlobalFunctions(Logger.getLogger("test"));
 
         String dateString = merisProductName.substring(14, 29);
         assertEquals("20020523_103543", dateString);
@@ -75,7 +75,7 @@ public class SnapGraphAdapterGlobalFunctionsTest {
     public void testOcNnRdAuxdata_MODIS_TOMS() throws Exception {
 
         String modisProductName = "A2003001000000.L1B_LAC";
-        SnapGraphAdapter.GlobalsFunctions gf = new SnapGraphAdapter.GlobalsFunctions(Logger.getLogger("test"));
+        SnapGraphAdapter.GlobalFunctions gf = new SnapGraphAdapter.GlobalFunctions(Logger.getLogger("test"));
 
         String dateString = modisProductName.substring(1, 14);
         assertEquals("2003001000000", dateString);

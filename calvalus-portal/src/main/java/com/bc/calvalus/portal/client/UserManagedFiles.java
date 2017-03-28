@@ -31,6 +31,7 @@ class UserManagedFiles {
     private final FileUpload fileUpload;
     private final FormPanel uploadForm;
     private final RemoveAction removeAction;
+    private final RemoveAllAction removeAllAction;
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
 
@@ -49,6 +50,7 @@ class UserManagedFiles {
 
         addAction = new AddAction();
         removeAction = new RemoveAction();
+        removeAllAction = new RemoveAllAction();
 
         FileUploadManager.configureForm(uploadForm,
                                         "dir=" + baseDir,
@@ -81,6 +83,24 @@ class UserManagedFiles {
             @Override
             public void onFailure(Throwable caught) {
                 Dialog.error("Error", "Failed to remove file '" + fileToRemove + "' from server.");
+            }
+        });
+    }
+
+    private void removeRecordSources(final String...filesToRemove) {
+        String[] pathsToRemove = new String[filesToRemove.length];
+        for (int i = 0; i < pathsToRemove.length; i++) {
+            pathsToRemove[i] = baseDir + "/" + filesToRemove[i];
+        }
+        backendService.removeUserFiles(pathsToRemove, new AsyncCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean removed) {
+                updateList();
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Error", "Failed to remove '" + pathsToRemove.length + "' files from server.");
             }
         });
     }
@@ -123,6 +143,10 @@ class UserManagedFiles {
         return removeAction;
     }
 
+    ClickHandler getRemoveAllAction() {
+        return removeAllAction;
+    }
+
     ClickHandler getAddAction() {
         return addAction;
     }
@@ -134,6 +158,16 @@ class UserManagedFiles {
             return contentListbox.getItemText(selectedIndex);
         }
         return null;
+    }
+
+    public void setSelectedFilePath(String filePath) {
+        for (int i = 0; i < contentListbox.getItemCount(); i++) {
+            if (contentListbox.getValue(i).equals(filePath)) {
+                contentListbox.setSelectedIndex(i);
+                return;
+            }
+        }
+        // TODO handle failure
     }
 
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
@@ -223,4 +257,27 @@ class UserManagedFiles {
             }
         }
     }
+
+    private class RemoveAllAction implements ClickHandler {
+
+        @Override
+        public void onClick(ClickEvent event) {
+            if (!items.isEmpty()) {
+                String[] filePaths = items.values().toArray(new String[0]);
+                Dialog.ask("Remove all Files",
+                           new HTML("All files will be permanently deleted.<br/>" +
+                                    "Do you really want to continue?"),
+                           new Runnable() {
+                               @Override
+                               public void run() {
+                                   removeRecordSources(filePaths);
+                               }
+                           });
+            } else {
+                Dialog.error("Remove all Files",
+                             "No file to remove.");
+            }
+        }
+    }
+
 }

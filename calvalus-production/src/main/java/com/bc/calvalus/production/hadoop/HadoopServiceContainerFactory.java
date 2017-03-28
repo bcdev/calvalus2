@@ -41,17 +41,16 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
-        String archiveRootDir = serviceConfiguration.get("calvalus.portal.archiveRootDir");
-        if (archiveRootDir == null) {
-            archiveRootDir = "eodata";
-        }
+        String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
+        String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
+                                                               HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
             final HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
             final InventoryService inventoryService = new DefaultInventoryService(hdfsFileSystemService, archiveRootDir);
-            final HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap);
+            final HadoopProcessingService processingService = new HadoopProcessingService(jobClientsMap, softwareDir);
             final ProductionStore productionStore;
             if ("memory".equals(serviceConfiguration.get("production.db.type"))) {
                 productionStore = new MemoryProductionStore();
@@ -67,12 +66,12 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
             }
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType[] productionTypes = getProductionTypes(hdfsFileSystemService, processingService, stagingService);
-            ProductionService productionService = new ProductionServiceImpl(inventoryService,
+            ProductionService productionService = new ProductionServiceImpl(hdfsFileSystemService,
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,
                                                                             productionTypes);
-            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, null);
+            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }

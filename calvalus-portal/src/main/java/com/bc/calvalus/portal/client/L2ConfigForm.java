@@ -103,18 +103,13 @@ public class L2ConfigForm extends Composite {
     @UiField
     Anchor showProcessorSelectionHelp;
 
-    private DtoProductSet productSet;
-
-    public void setProductSet(DtoProductSet productSet) {
-        this.productSet = productSet;
-    }
-
     private final boolean selectionMandatory;
     private final PortalContext portalContext;
     private final Filter<DtoProcessorDescriptor> processorFilter;
     private final List<DtoProcessorDescriptor> processorDescriptors;
 
     private HandlerRegistration editParamsHandlerRegistration;
+    private DtoProductSet productSet;
 
     public L2ConfigForm(PortalContext portalContext, boolean selectionMandatory) {
         this(portalContext, new L2ProcessorFilter(), selectionMandatory);
@@ -166,12 +161,19 @@ public class L2ConfigForm extends Composite {
         showSystemProcessors.addValueChangeHandler(valueChangeHandler);
         filterProcessorByVersion.addValueChangeHandler(valueChangeHandler);
         filterProcessorByProductType.addValueChangeHandler(valueChangeHandler);
+        filterProcessorByProductType.setEnabled(false);
 
         showAllUserProcessors.setEnabled(portalContext.withPortalFeature("otherSets"));
 
         updateProcessorDetails();
 
         HelpSystem.addClickHandler(showProcessorSelectionHelp, "processorSelection");
+    }
+
+    public void setProductSet(DtoProductSet productSet) {
+        this.productSet = productSet;
+        filterProcessorByProductType.setEnabled(productSet != null);
+        updateProcessorList();
     }
 
     public void updateProcessorList() {
@@ -206,11 +208,7 @@ public class L2ConfigForm extends Composite {
         int newSelectionIndex = 0;
         boolean productSetChanged = true;
         for (DtoProcessorDescriptor processor : processorDescriptors) {
-            String label = processor.getProcessorName() + " v" + processor.getProcessorVersion();
-            if (!processor.getOwner().isEmpty()) {
-                label = "(by " + processor.getOwner() +") " + label;
-            }
-            processorList.addItem(label);
+            processorList.addItem(processor.getDisplayText());
             if (oldSelection != null && oldSelection.equals(processor)) {
                 newSelectionIndex = processorList.getItemCount() - 1;
                 productSetChanged = false;
@@ -274,7 +272,8 @@ public class L2ConfigForm extends Composite {
             String defaultParameter = processor.getDefaultParameter();
             DtoParameterDescriptor[] parameters = processor.getParameterDescriptors();
             boolean hasParameterDescriptors = parameters.length > 0;
-            if (defaultParameter.isEmpty() && hasParameterDescriptors) {
+            if (hasParameterDescriptors) {
+                // ignore processor.getDefaultParameter(), if parameter descriptors are given
                 defaultParameter = ParametersEditorGenerator.formatAsXMLFromDefaults(parameters);
             }
             processorParametersArea.setValue(defaultParameter);
@@ -286,11 +285,21 @@ public class L2ConfigForm extends Composite {
                 editParamsHandlerRegistration = editParametersButton.addClickHandler(new ClickHandler() {
                     @Override
                     public void onClick(ClickEvent event) {
+                        String textboxValue = processorParametersArea.getValue().trim();
+                        if (!textboxValue.isEmpty()) {
+                            parametersEditorGenerator.setFromXML(textboxValue);
+                        }
                         parametersEditorGenerator.showDialog("800px", "640px", new ParametersEditorGenerator.OnOkHandler() {
                             @Override
-                            public void onOk() {
-                                String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
-                                processorParametersArea.setValue(xml);
+                            public boolean onOk() {
+                                try {
+                                    String xml = parametersEditorGenerator.formatAsXMLFromWidgets();
+                                    processorParametersArea.setValue(xml);
+                                    return true;
+                                } catch (ValidationException e) {
+                                    e.handle();
+                                    return false;
+                                }
                             }
                         });
                     }
@@ -344,6 +353,49 @@ public class L2ConfigForm extends Composite {
             parameters.put(ProcessorProductionRequest.PROCESSOR_PARAMETERS + suffix, getProcessorParameters());
         }
         return parameters;
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        String bundleNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_NAME);
+        String bundleVersionValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_VERSION);
+        String bundleLocationValue = parameters.get(ProcessorProductionRequest.PROCESSOR_BUNDLE_LOCATION);
+        String processorNameValue = parameters.get(ProcessorProductionRequest.PROCESSOR_NAME);
+        String processorParameterValue = parameters.get(ProcessorProductionRequest.PROCESSOR_PARAMETERS);
+
+        boolean processorSelected = false;
+        if (bundleNameValue != null && bundleVersionValue != null && processorNameValue != null) {
+            int selectionIndex = findProcessor(processorDescriptors,
+                                               bundleNameValue, bundleVersionValue,
+                                               bundleLocationValue, processorNameValue);
+            if (selectionIndex > -1) {
+                processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
+                updateProcessorDetails();
+                if (processorParameterValue != null) {
+                    processorParametersArea.setValue(processorParameterValue);
+                }
+                processorSelected = true;
+            }
+        }
+        if (!processorSelected) {
+            // no matching processor found, select the first
+            processorList.setSelectedIndex(0);
+            updateProcessorDetails();
+        }
+        // TODO handle failure
+    }
+
+    private int findProcessor(List<DtoProcessorDescriptor> descriptorList,
+                              String bundleName, String bundleVersion, String bundleLocation, String processorName) {
+        for (int i = 0; i < descriptorList.size(); i++) {
+            DtoProcessorDescriptor processorDescriptor = descriptorList.get(i);
+            if (bundleName.equals(processorDescriptor.getBundleName()) &&
+                    bundleVersion.equals(processorDescriptor.getBundleVersion()) &&
+                    processorName.equals(processorDescriptor.getExecutableName()) &&
+                    (bundleLocation == null || bundleLocation.equals(processorDescriptor.getBundleLocation()))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static class L2ProcessorFilter implements Filter<DtoProcessorDescriptor> {

@@ -133,7 +133,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "org.hsqldb.jdbcDriver",
                                                                     "jdbc:hsqldb:file:" + databaseFile.getPath(), "SA", "",
                                                                     !databaseLogFile.exists());
-        ProductionServiceImpl productionService = new ProductionServiceImpl(inventoryService,
+        ProductionServiceImpl productionService = new ProductionServiceImpl(fileSystemService,
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,
@@ -154,7 +154,7 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "autoStaging", "false"));
         }
 
-        return new ServiceContainer(productionService, fileSystemService, inventoryService, null);
+        return new ServiceContainer(productionService, fileSystemService, inventoryService);
 
     }
 

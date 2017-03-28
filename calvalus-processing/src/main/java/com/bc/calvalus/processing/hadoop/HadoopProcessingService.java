@@ -70,12 +70,13 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.10-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.11-SNAPSHOT";
     public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0-SNAPSHOT";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
 
     private final JobClientsMap jobClientsMap;
+    private final String softwareDir;
     private final Map<JobID, ProcessStatus> jobStatusMap;
     private final List<BundleQueryCacheEntry> bundleQueryCache;
     private final Timer bundlesQueryCleaner;
@@ -83,9 +84,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
+        this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
+    }
+
+    public HadoopProcessingService(JobClientsMap jobClientsMap, String softwareDir) throws IOException {
         this.jobClientsMap = jobClientsMap;
+        this.softwareDir = softwareDir;
         this.jobStatusMap = new WeakHashMap<>();
 
         this.bundleQueryCache = new ArrayList<>();
@@ -212,8 +217,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 descriptors.addAll(allUserDescriptors);
             }
             if (filter.isProviderSupported(BundleFilter.PROVIDER_SYSTEM)) {
-                final String calvalusSoftwarePath = (jobClientsMap.getConfiguration().get("calvalus.portal.softwareDir", CALVALUS_SOFTWARE_PATH));
-                String bundleLocationPattern = String.format("%s/%s/%s", calvalusSoftwarePath, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
+                String bundleLocationPattern = String.format("%s/%s/%s", softwareDir, bundleDirName, BUNDLE_DESCRIPTOR_XML_FILENAME);
                 FileSystem fileSystem = getFileSystem(username, bundleLocationPattern);
                 List<BundleDescriptor> systemDescriptors = getBundleDescriptors(fileSystem, bundleLocationPattern, filter);
                 descriptors.addAll(systemDescriptors);

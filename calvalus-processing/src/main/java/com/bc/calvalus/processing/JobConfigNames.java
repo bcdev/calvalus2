@@ -73,6 +73,8 @@ public interface JobConfigNames {
     String CALVALUS_L3_COMPUTE_OUTPUTS = "calvalus.l3.computeOutputs";
     String CALVALUS_MOSAIC_PARAMETERS = "calvalus.mosaic.parameters";
     String CALVALUS_MA_PARAMETERS = "calvalus.ma.parameters";
+    String CALVALUS_RA_PARAMETERS = "calvalus.ra.parameters";
+    String CALVALUS_RA_DATE_RANGES = "calvalus.ra.dateRanges";
     String CALVALUS_TA_PARAMETERS = "calvalus.ta.parameters";
     String PROCESSING_HISTORY = "processing_history";
 
@@ -102,4 +104,8 @@ public interface JobConfigNames {
     String CALVALUS_TA_KEEPL3_FLAG = "keepL3";
 
     String CALVALUS_DEBUG_TILECACHE = "calvalus.debug.tileCache";
+    String CALVALUS_INPUT_SUBSETTING = "calvalus.input.subsetting";
+    String CALVALUS_OUTPUT_SUBSETTING = "calvalus.output.subsetting";
+    String CALVALUS_OUTPUT_DATE_ELEMENT = "calvalus.output.dateElement";
+    String CALVALUS_OUTPUT_DATE_FORMAT = "calvalus.output.dateFormat";
 }

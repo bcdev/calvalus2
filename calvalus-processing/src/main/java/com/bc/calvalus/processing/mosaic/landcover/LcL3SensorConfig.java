@@ -671,7 +671,7 @@ public abstract class LcL3SensorConfig {
                     sb.append(" or status == ");
                     sb.append(i);
                 }
-                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
+                maskExpr = "(status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
             } else {
                 maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
@@ -840,7 +840,7 @@ public abstract class LcL3SensorConfig {
 
         @Override
         public int getMosaicTileSize() {
-            return 2700;
+            return 1080;
         }
         @Override
         public String getGroundResolution() {
@@ -882,7 +882,9 @@ public abstract class LcL3SensorConfig {
 
         public MosaicConfig getCloudMosaicConfig(String sdrBandName, String asLandText, int borderWidth) {
             String maskExpr;
-            if (asLandText != null) {
+            if ("tc4".equals(sdrBandName)) {
+                maskExpr = "status & 3 != 0 and not nan(B2_ac) and not nan(B3_ac) and not nan(B4_ac) and not nan(B8A_ac) and not nan(B11_ac) and not nan(B12_ac)";
+            } else if (asLandText != null) {
                 StatusRemapper statusRemapper = StatusRemapper.create(asLandText);
                 int[] statusesToLand = statusRemapper.getStatusesToLand();
                 StringBuilder sb = new StringBuilder();
@@ -890,16 +892,22 @@ public abstract class LcL3SensorConfig {
                     sb.append(" or status == ");
                     sb.append(i);
                 }
-                maskExpr = "((status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
+                maskExpr = "(status & 3 != 0" + sb.toString() + ") and not nan(" + sdrBandName + ")";
             } else {
                 maskExpr = "status & 3 != 0 and not nan(" + sdrBandName + ")";
             }
             String[] varNames = new String[] {"status", sdrBandName};
             final String[] virtualVariableName = {
-                    "ndvi"
+//                    "ndvi",
+                    "tc1",
+                    "tc4",
+                    "mjd"
             };
             final String[] virtualVariableExpr = {
-                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)"
+//                    "(B8A_ac - B4_ac) / (B8A_ac + B4_ac)",
+                    "(0.3029*B2_ac + 0.2786*B3_ac + 0.4733*B4_ac + 0.5599*B8A_ac + 0.508*B11_ac + 0.1872*B12_ac)",
+                    "(-0.8239*B2_ac + 0.0849*B3_ac + 0.4396*B4_ac - 0.058*B8A_ac + 0.2013*B11_ac - 0.2773*B12_ac)",
+                    "MJD"
             };
             String type = LcSDR8MosaicAlgorithm.class.getName();
             return new MosaicConfig(type, maskExpr, varNames, virtualVariableName, virtualVariableExpr);

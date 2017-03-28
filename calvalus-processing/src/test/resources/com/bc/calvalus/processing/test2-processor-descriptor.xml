@@ -56,5 +56,11 @@ done by the cool folks at Brockmann-Consult.
             <defaultValue>simple</defaultValue>
             <valueSet>simple,complex</valueSet>
         </parameterDescriptor>
+        <parameterDescriptor>
+            <name>salinity</name>
+            <type>float</type>
+            <defaultValue>3.14</defaultValue>
+            <valueRange>[2,4.44)</valueRange>
+        </parameterDescriptor>
     </parameterDescriptors>
 </processorDescriptor>

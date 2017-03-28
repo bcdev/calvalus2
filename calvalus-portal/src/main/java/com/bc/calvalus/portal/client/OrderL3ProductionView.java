@@ -57,8 +57,6 @@ public class OrderL3ProductionView extends OrderProductionView {
                 productSetFilterForm.setProductSet(productSet);
                 l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
                 l2ConfigForm.setProductSet(productSet);
-                l2ConfigForm.updateProcessorList();
-
             }
         });
 
@@ -93,6 +91,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         outputParametersForm = new OutputParametersForm();
         outputParametersForm.setAvailableOutputFormats("BEAM-DIMAP", "NetCDF", "NetCDF4", "GeoTIFF", "BigGeoTiff");
 
+        l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
         VerticalPanel panel = new VerticalPanel();
@@ -209,5 +208,19 @@ public class OrderL3ProductionView extends OrderProductionView {
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
+    }
+
+    @Override
+    public boolean isRestoringRequestPossible() {
+        return true;
+    }
+
+    @Override
+    public void setProductionParameters(Map<String, String> parameters) {
+        productSetSelectionForm.setValues(parameters);
+        productSetFilterForm.setValues(parameters);
+        l2ConfigForm.setValues(parameters);
+        l3ConfigForm.setValues(parameters);
+        outputParametersForm.setValues(parameters);
     }
 }

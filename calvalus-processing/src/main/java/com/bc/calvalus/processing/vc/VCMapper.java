@@ -197,7 +197,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     LOG.info("Processing to Level 2: " + l1DiffFile);
                     l2ProcessorAdapter.closeInputProduct();
                     l2ProcessorAdapter.setInputFile(l1DiffFile);
-                    l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
+                    l2ProcessorAdapter.processSourceProduct(ProcessorAdapter.MODE.TARGET, SubProgressMonitor.create(mainLoopPM, 30));
                     Product l2DiffProduct = l2ProcessorAdapter.openProcessedProduct();
 
                     // extract Level 2 match-ups
@@ -240,7 +240,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 LOG.info("Processing to Level 2: " + l1LocalFile);
                 l2ProcessorAdapter.closeInputProduct();
                 l2ProcessorAdapter.setInputFile(l1LocalFile);
-                l2ProcessorAdapter.processSourceProduct(SubProgressMonitor.create(mainLoopPM, 30));
+                l2ProcessorAdapter.processSourceProduct(ProcessorAdapter.MODE.TARGET, SubProgressMonitor.create(mainLoopPM, 30));
                 Product l2Product = l2ProcessorAdapter.openProcessedProduct();
 
                 // extract Level 2 match-ups

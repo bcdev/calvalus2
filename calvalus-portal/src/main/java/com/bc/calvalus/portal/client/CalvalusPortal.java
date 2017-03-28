@@ -19,6 +19,7 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -29,6 +30,7 @@ import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +50,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             "newsView",
             "l2View",
             "maView",
+            "raView",
             "l3View",
             "taView",
             "freshmonView",
@@ -74,7 +77,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private DtoAggregatorDescriptor[] systemAggregators;
     private DtoAggregatorDescriptor[] userAggregators;
     private DtoAggregatorDescriptor[] allUserAggregators;
-    private DtoMaskDescriptor[] userMasks;
     private ListDataProvider<DtoProduction> productions;
     private Map<String, DtoProduction> productionsMap;
     // A timer that periodically retrieves production statuses from server
@@ -131,10 +133,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 final BundleFilter allUserFilter = new BundleFilter();
                 allUserFilter.withProvider(BundleFilter.PROVIDER_ALL_USERS);
                 backendService.getProcessors(allUserFilter.toString(), new InitProcessorsCallback(BundleFilter.PROVIDER_ALL_USERS));
-                backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
+                // aggregators from other users are currently not shown
+                // backendService.getAggregators(allUserFilter.toString(), new InitAggregatorsCallback(BundleFilter.PROVIDER_ALL_USERS));
                 backendService.getProductions(getProductionFilterString(), new InitProductionsCallback());
-
-                backendService.getMasks(new InitMasksCallback());
 
                 GWT.log("checking for user roles asynchronously");
                 backendService.getCalvalusConfig(new CalvalusConfigCallback());
@@ -185,11 +186,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             return allUserAggregators;
         }
         return new DtoAggregatorDescriptor[0];
-    }
-
-    @Override
-    public DtoMaskDescriptor[] getMasks() {
-        return userMasks;
     }
 
     @Override
@@ -245,6 +241,8 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 return new OrderL2ProductionView(this);
             case "maView":
                 return new OrderMAProductionView(this);
+            case "raView":
+                return new OrderRAProductionView(this);
             case "l3View":
                 return new OrderL3ProductionView(this);
             case "taView":
@@ -300,7 +298,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         mainMenu = new MainMenu(views);
 
         DeckLayoutPanel viewPanel = new DeckLayoutPanel();
-        viewPanel.setSize("95em", "500em"); // TODO this is very long, but works
+        viewPanel.setSize("105em", "220em");  // TODO use as minimum, and fill window size if window is larger
         viewPanel.setVisible(true);
         for (PortalView view : views) {
             viewPanel.add(view.asWidget());
@@ -324,7 +322,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                             currentView = selected;
                             GWT.log("Now showing: " + selected.getTitle());
                             viewPanel.showWidget(selected.asWidget());
-
+                            Window.scrollTo (0 , 0);
                             selected.onShowing();
                         }
                     }
@@ -357,8 +355,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return regions != null
                 && productSets != null
                 && systemProcessors != null && userProcessors != null && allUserProcessors != null
-                && systemAggregators != null && userAggregators != null && allUserAggregators != null
-                && userMasks != null
+                && systemAggregators != null && userAggregators != null
                 && productions != null
                 && calvalusConfig != null;
     }
@@ -469,6 +466,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         }
 
         private void assign(DtoProcessorDescriptor[] processors) {
+            Arrays.sort(processors, (o1, o2) -> o1.getDisplayText().compareToIgnoreCase(o2.getDisplayText()));
             if (filter.equals(BundleFilter.PROVIDER_SYSTEM)) {
                 CalvalusPortal.this.systemProcessors = processors;
             } else if (filter.equals(BundleFilter.PROVIDER_USER)) {
@@ -476,22 +474,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             } else if (filter.equals(BundleFilter.PROVIDER_ALL_USERS)) {
                 CalvalusPortal.this.allUserProcessors = processors;
             }
-        }
-    }
-
-    private class InitMasksCallback implements AsyncCallback<DtoMaskDescriptor[]> {
-
-        @Override
-        public void onSuccess(DtoMaskDescriptor[] maskDescriptors) {
-            CalvalusPortal.this.userMasks = maskDescriptors;
-            maybeInitFrontend();
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            caught.printStackTrace(System.err);
-            Dialog.error("Server-side Error", caught.getMessage());
-            CalvalusPortal.this.userMasks = new DtoMaskDescriptor[0];
         }
     }
 

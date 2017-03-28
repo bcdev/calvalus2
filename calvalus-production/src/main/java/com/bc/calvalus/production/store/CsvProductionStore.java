@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,6 +129,12 @@ public class CsvProductionStore implements ProductionStore {
             String id = decodeTSV(tokens[0]);
             String name = decodeTSV(tokens[1]);
             String outputPath = decodeTSV(tokens[2]);
+            String[] intermediatePathes = new String[0];
+            if (outputPath != null && outputPath.contains(";")) {
+                String[] elems = outputPath.split(";");
+                outputPath = elems[0];
+                intermediatePathes = Arrays.copyOfRange(elems, 1, elems.length);
+            }
             String stagingPath = decodeTSV(tokens[3]);
             int[] offpt = new int[]{4};
             ProductionRequest productionRequest = decodeProductionRequestTSV(tokens, offpt);
@@ -139,6 +146,7 @@ public class CsvProductionStore implements ProductionStore {
             boolean autoStaging = Boolean.parseBoolean(productionRequest.getString("autoStaging", "false"));
             Production production = new Production(id, name,
                                                    outputPath,
+                                                   intermediatePathes,
                                                    stagingPath,
                                                    autoStaging,
                                                    productionRequest,
@@ -153,7 +161,7 @@ public class CsvProductionStore implements ProductionStore {
             writer.printf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\tEoR\n",
                           encodeTSV(production.getId()),
                           encodeTSV(production.getName()),
-                          encodeTSV(production.getOutputPath()),
+                          encodeTSVArray(production.getOutputPath(), production.getIntermediateDataPath()),
                           encodeTSV(production.getStagingPath()),
                           encodeProductionRequestTSV(production.getProductionRequest()),
                           encodeJobIdsTSV(production.getJobIds()),
@@ -161,6 +169,14 @@ public class CsvProductionStore implements ProductionStore {
                           encodeProductionStatusTSV(production.getProcessingStatus()),
                           encodeProductionStatusTSV(production.getStagingStatus()));
         }
+    }
+
+    private String encodeTSVArray(String outputPath, String[] intermediateDataPath) {
+        StringBuilder sb = new StringBuilder(encodeTSV(outputPath));
+        for (String path : intermediateDataPath) {
+            sb.append(";").append(encodeTSV(path));
+        }
+        return sb.toString();
     }
 
 

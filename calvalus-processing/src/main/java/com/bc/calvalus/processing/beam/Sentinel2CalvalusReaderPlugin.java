@@ -58,7 +58,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
-            if (filename.matches("^S2.*_PRD_MSI.*")) {
+            if (filename.matches("^S2.*_MSI.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -97,7 +97,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     static class Sentinel2CalvalusReader extends AbstractProductReader {
 
-        private static final Pattern NAME_TIME_PATTERN = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        //S2A_OPER_PRD_MSIL1C_PDMC_20161201T211507_R108_V20161201T103412_20161201T103412
+        private static final Pattern NAME_TIME_PATTERN1 = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
+        //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
+        private static final Pattern NAME_TIME_PATTERN2 = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
 
         Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
@@ -112,10 +115,10 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 Configuration configuration = pathConfig.getConfiguration();
                 File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToLocalDir(pathConfig.getPath(), configuration);
 
-                // find *SAF*xml file
+                // find *MTD*xml file
                 File productXML = null;
                 for (File file : unzippedFiles) {
-                    if (file.getName().matches(".*MTD_SAF.*xml$")) {
+                    if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
                         productXML = file;
                         break;
                     }
@@ -154,7 +157,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         }
 
         static void setTimeFromFilename(Product product, String filename) {
-            Matcher matcher = NAME_TIME_PATTERN.matcher(filename);
+            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3,11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
             if (matcher.matches()) {
                 try {
                     ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);

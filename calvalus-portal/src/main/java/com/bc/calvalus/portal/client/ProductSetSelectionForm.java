@@ -20,6 +20,7 @@ import com.google.gwt.user.client.ui.Widget;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+
 import java.util.Map;
 
 /**
@@ -95,18 +96,8 @@ public class ProductSetSelectionForm extends Composite {
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
         userProductionProductSets.addValueChangeHandler(valueChangeHandler);
         allProductionProductSets.addValueChangeHandler(valueChangeHandler);
-        userProductionProductSets.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                if (portal.withPortalFeature("otherSets")) {
-                    allProductionProductSets.setEnabled(booleanValueChangeEvent.getValue());
-                }
-            }
-        });
 
-        //if (! portal.withPortalFeature("otherSets")) {
-        allProductionProductSets.setEnabled(false);
-        //}
+        allProductionProductSets.setEnabled(portal.withPortalFeature("otherSets"));
         updateListBox(portal.getProductSets());
         updateDetailsView();
 
@@ -259,6 +250,7 @@ public class ProductSetSelectionForm extends Composite {
                 break;
             }
         }
+        // TODO handle error
 
         if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
             productSetListBox.setSelectedIndex(newSelectionIndex);

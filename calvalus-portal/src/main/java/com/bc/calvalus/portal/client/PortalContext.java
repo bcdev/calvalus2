@@ -31,8 +31,6 @@ public interface PortalContext {
     DtoProcessorDescriptor[] getProcessors(String filter);
     DtoAggregatorDescriptor[] getAggregators(String filter);
 
-    DtoMaskDescriptor[] getMasks();
-
     ListDataProvider<DtoProduction> getProductions();
 
     BackendServiceAsync getBackendService();

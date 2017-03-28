@@ -158,4 +158,12 @@ public class DtoProcessorDescriptor implements IsSerializable {
         BOOTSTRAPPING,
         DIFFERENTIATION
     }
+
+    public String getDisplayText() {
+        String text = processorName + " v" + processorVersion;
+        if (!owner.isEmpty()) {
+            text = "(by " + owner + ") " + text;
+        }
+        return text;
+    }
 }

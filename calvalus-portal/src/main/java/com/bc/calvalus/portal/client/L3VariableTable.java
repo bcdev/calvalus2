@@ -47,8 +47,17 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
 
     class ConfiguredVariable {
         private final Integer id = ++lastId;
-        private String name = "";
-        private String expression = "";
+        private String name;
+        private String expression;
+
+        public ConfiguredVariable() {
+            this("", "");
+        }
+
+        public ConfiguredVariable(String name, String expr) {
+            this.name = name;
+            this.expression = expr;
+        }
 
         public String getName() {
             return name;
@@ -106,6 +115,13 @@ public class L3VariableTable implements HasValueChangeHandlers<L3VariableTable.C
         getVariableList().add(new ConfiguredVariable());
         dataProvider.refresh();
     }
+
+    public void addRow(String name, String expr) {
+        getVariableList().add(new ConfiguredVariable(name, expr));
+        dataProvider.refresh();
+        VariableListChangeEvent.fire(L3VariableTable.this);
+    }
+
 
     public void removeSelectedRow() {
         ConfiguredVariable selectedVariable = selectionModel.getSelectedObject();
