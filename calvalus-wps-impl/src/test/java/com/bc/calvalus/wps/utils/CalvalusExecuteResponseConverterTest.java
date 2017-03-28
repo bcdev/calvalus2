@@ -55,11 +55,7 @@ public class CalvalusExecuteResponseConverterTest {
 
     @Test
     public void canGetAcceptedResponseWithLineage() throws Exception {
-        DataInputsType dataInputs = new DataInputsType();
-        InputType input1 = getInputType("inputDataSetName", "MERIS FSG v2013 L1b 2002-2012");
-        dataInputs.getInput().add(input1);
-        InputType input2 = getInputType("maxDate", "2009-06-03");
-        dataInputs.getInput().add(input2);
+        DataInputsType dataInputs = getDataInputsType();
 
         OutputDefinitionsType output = new OutputDefinitionsType();
         DocumentOutputDefinitionType outputType = getOutputType();
@@ -118,11 +114,7 @@ public class CalvalusExecuteResponseConverterTest {
 
     @Test
     public void canGetSuccessfulResponseWithLineage() throws Exception {
-        DataInputsType dataInputs = new DataInputsType();
-        InputType input1 = getInputType("inputDataSetName", "MERIS FSG v2013 L1b 2002-2012");
-        dataInputs.getInput().add(input1);
-        InputType input2 = getInputType("maxDate", "2009-06-03");
-        dataInputs.getInput().add(input2);
+        DataInputsType dataInputs = getDataInputsType();
 
         OutputDefinitionsType output = new OutputDefinitionsType();
         DocumentOutputDefinitionType outputType = getOutputType();
@@ -183,6 +175,68 @@ public class CalvalusExecuteResponseConverterTest {
         assertThat(executeResponse.getStatus().getProcessStarted().getValue(), equalTo("RUNNING"));
         assertThat(executeResponse.getStatus().getProcessStarted().getPercentCompleted(), equalTo(50));
 
+    }
+
+    @Test
+    public void canGetQuotationResponse() throws Exception {
+        DataInputsType dataInputs = getDataInputsType();
+
+        ExecuteResponse executeResponse = calvalusExecuteResponse.getQuotationResponse(dataInputs);
+
+        assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been quoted successfully."));
+        assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(1));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("QUOTATION"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Job Quotation"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   equalTo("{\n" +
+                           "  \"id\" : \"t2cp_cluster5342_application_1479400262723_8995\",\n" +
+                           "  \"account\" : {\n" +
+                           "    \"platform\": \"urban-tep\",\n" +
+                           "    \"username\": \"emathot\",\n" +
+                           "    \"ref\": \"1738ad7b-534e-4aca-9861-b26fb9c0f983\"\n" +
+                           "  }\n  \"compound\": {\n" +
+                           "    \"id\": \"t2cp_cluster5342_oozie_0004218-161117173256693-oozie-oozi-W\",\n" +
+                           "    \"name\": \"oozie:action:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
+                           "    \"type\": \"WPS-OOZIE\"\n" +
+                           "    \"any\": {\n" +
+                           "      \"jobid\": \"oozie:action:T=map-reduce:W=t2-subset-snap:A=streaming-8247:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
+                           "    }\n" +
+                           "  },\n" +
+                           "  \"quantity\" : [\n" +
+                           "    {\n" +
+                           "      \"id\": \"CPU_MILLISECONDS\",\n" +
+                           "      \"value\": 900000\n    },\n" +
+                           "    {\n" +
+                           "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+                           "      \"value\": 2684354560\n" +
+                           "    },\n" +
+                           "    {\n      \"id\": \"PROC_INSTANCE\",\n" +
+                           "      \"value\": 1\n " +
+                           "   },\n" +
+                           "    {\n" +
+                           "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+                           "      \"value\": 2097152\n" +
+                           "    }\n" +
+                           "  ]\n" +
+                           "  \"hostname\": \"cloud.terradue.com\",\n" +
+                           "  \"timestamp\": \"2017-01-10T10:32:16Z\",\n" +
+                           "  \"status\": \"QUOTATION\",\n" +
+                           "  \"location\": {\n" +
+                           "    \"coordinates\": [\n" +
+                           "      9.491,\n" +
+                           "      51.2993\n" +
+                           "    ],\n" +
+                           "  }\n" +
+                           "}"));
+    }
+
+    private DataInputsType getDataInputsType() {
+        DataInputsType dataInputs = new DataInputsType();
+        InputType input1 = getInputType("inputDataSetName", "MERIS FSG v2013 L1b 2002-2012");
+        dataInputs.getInput().add(input1);
+        InputType input2 = getInputType("maxDate", "2009-06-03");
+        dataInputs.getInput().add(input2);
+        return dataInputs;
     }
 
     private DocumentOutputDefinitionType getOutputType() {

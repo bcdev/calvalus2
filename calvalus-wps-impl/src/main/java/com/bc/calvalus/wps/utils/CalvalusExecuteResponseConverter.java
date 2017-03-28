@@ -3,7 +3,9 @@ package com.bc.calvalus.wps.utils;
 
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.WpsRuntimeException;
+import com.bc.wps.api.schema.ComplexDataType;
 import com.bc.wps.api.schema.DataInputsType;
+import com.bc.wps.api.schema.DataType;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.ExceptionReport;
 import com.bc.wps.api.schema.ExceptionType;
@@ -143,6 +145,83 @@ public class CalvalusExecuteResponseConverter {
         return executeResponse;
     }
 
+    public ExecuteResponse getQuotationResponse(DataInputsType dataInputs) {
+        StatusType statusType = new StatusType();
+        GregorianCalendar stopTimeGregorian = new GregorianCalendar();
+        stopTimeGregorian.setTime(new Date());
+        XMLGregorianCalendar stopTimeXmlGregorian = getXmlGregorianCalendar(stopTimeGregorian);
+        statusType.setCreationTime(stopTimeXmlGregorian);
+        statusType.setProcessSucceeded("The request has been quoted successfully.");
+        executeResponse.setStatus(statusType);
+
+        ExecuteResponse.ProcessOutputs quoteJson = getQuoteProcessOutputs(dataInputs);
+        executeResponse.setProcessOutputs(quoteJson);
+
+        return executeResponse;
+    }
+
+    private ExecuteResponse.ProcessOutputs getQuoteProcessOutputs(DataInputsType dataInputs) {
+        ExecuteResponse.ProcessOutputs processOutputs = new ExecuteResponse.ProcessOutputs();
+        OutputDataType output = new OutputDataType();
+        output.setIdentifier(WpsTypeConverter.str2CodeType("QUOTATION"));
+        output.setTitle(WpsTypeConverter.str2LanguageStringType("Job Quotation"));
+        DataType quoteData = new DataType();
+        ComplexDataType quoteComplexData = new ComplexDataType();
+        quoteComplexData.setMimeType("application/json");
+        String quoteJsonString = getQuoteJsonString(dataInputs);
+        quoteComplexData.getContent().add(quoteJsonString);
+        quoteData.setComplexData(quoteComplexData);
+        output.setData(quoteData);
+        processOutputs.getOutput().add(output);
+        return processOutputs;
+    }
+
+    private String getQuoteJsonString(DataInputsType dataInputs) {
+        return "{\n" +
+               "  \"id\" : \"t2cp_cluster5342_application_1479400262723_8995\",\n" +
+               "  \"account\" : {\n" +
+               "    \"platform\": \"urban-tep\",\n" +
+               "    \"username\": \"emathot\",\n" +
+               "    \"ref\": \"1738ad7b-534e-4aca-9861-b26fb9c0f983\"\n" +
+               "  }\n" +
+               "  \"compound\": {\n" +
+               "    \"id\": \"t2cp_cluster5342_oozie_0004218-161117173256693-oozie-oozi-W\",\n" +
+               "    \"name\": \"oozie:action:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
+               "    \"type\": \"WPS-OOZIE\"\n" +
+               "    \"any\": {\n" +
+               "      \"jobid\": \"oozie:action:T=map-reduce:W=t2-subset-snap:A=streaming-8247:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
+               "    }\n" +
+               "  },\n" +
+               "  \"quantity\" : [\n" +
+               "    {\n" +
+               "      \"id\": \"CPU_MILLISECONDS\",\n" +
+               "      \"value\": 900000\n" +
+               "    },\n" +
+               "    {\n" +
+               "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+               "      \"value\": 2684354560\n" +
+               "    },\n" +
+               "    {\n" +
+               "      \"id\": \"PROC_INSTANCE\",\n" +
+               "      \"value\": 1\n" +
+               "    },\n" +
+               "    {\n" +
+               "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+               "      \"value\": 2097152\n" +
+               "    }\n" +
+               "  ]\n" +
+               "  \"hostname\": \"cloud.terradue.com\",\n" +
+               "  \"timestamp\": \"2017-01-10T10:32:16Z\",\n" +
+               "  \"status\": \"QUOTATION\",\n" +
+               "  \"location\": {\n" +
+               "    \"coordinates\": [\n" +
+               "      9.491,\n" +
+               "      51.2993\n" +
+               "    ],\n" +
+               "  }\n" +
+               "}";
+    }
+
     private ExecuteResponse.ProcessOutputs getProcessOutputs(List<String> resultUrls) {
         ExecuteResponse.ProcessOutputs productUrl = new ExecuteResponse.ProcessOutputs();
 
@@ -151,7 +230,7 @@ public class CalvalusExecuteResponseConverter {
             String title = "Production result";
             String abstractText = "This is the URL link to the production result";
             String mimeType = "application/octet-stream";
-            if(productionResultUrl.endsWith("-metadata")){
+            if (productionResultUrl.endsWith("-metadata")) {
                 identifier = "result_metadata";
                 title = "Metadata OWS context XML";
                 abstractText = "The URL to the result metadata file";
