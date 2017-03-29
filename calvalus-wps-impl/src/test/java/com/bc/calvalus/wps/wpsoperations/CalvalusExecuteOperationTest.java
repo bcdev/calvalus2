@@ -17,8 +17,12 @@ import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.schema.DataInputsType;
+import com.bc.wps.api.schema.DataType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.api.schema.InputType;
+import com.bc.wps.api.schema.LiteralDataType;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
 import com.bc.wps.api.utils.WpsTypeConverter;
@@ -32,7 +36,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author hans
@@ -70,9 +76,11 @@ public class CalvalusExecuteOperationTest {
     public void canExecuteAsync() throws Exception {
         ResponseFormType mockResponseForm = mock(ResponseFormType.class);
         ResponseDocumentType mockResponseDocument = mock(ResponseDocumentType.class);
+        DataInputsType mockDataInputs = getDataInputs();
         when(mockResponseDocument.isStatus()).thenReturn(true);
         when(mockResponseDocument.isLineage()).thenReturn(false);
         when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
+        when(mockExecuteRequest.getDataInputs()).thenReturn(mockDataInputs);
         when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
         when(mockExecuteRequest.getIdentifier()).thenReturn(WpsTypeConverter.str2CodeType("process1"));
         configureProcessingMock();
@@ -98,9 +106,11 @@ public class CalvalusExecuteOperationTest {
     public void canExecuteSync() throws Exception {
         ResponseFormType mockResponseForm = mock(ResponseFormType.class);
         ResponseDocumentType mockResponseDocument = mock(ResponseDocumentType.class);
+        DataInputsType mockDataInputs = getDataInputs();
         when(mockResponseDocument.isStatus()).thenReturn(false);
         when(mockResponseDocument.isLineage()).thenReturn(false);
         when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
+        when(mockExecuteRequest.getDataInputs()).thenReturn(mockDataInputs);
         when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
         when(mockExecuteRequest.getIdentifier()).thenReturn(WpsTypeConverter.str2CodeType("process1"));
         configureProcessingMock();
@@ -129,6 +139,80 @@ public class CalvalusExecuteOperationTest {
         assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(2));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getReference().getHref(), equalTo("resultUrl1"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(1).getReference().getHref(), equalTo("resultUrl2"));
+    }
+
+    @Test
+    public void canReturnQuotation() throws Exception {
+        DataInputsType mockDataInputs = getQuotationDataInputs();
+        when(mockExecuteRequest.getDataInputs()).thenReturn(mockDataInputs);
+        when(mockExecuteRequest.getIdentifier()).thenReturn(WpsTypeConverter.str2CodeType("process1"));
+        configureProcessingMock();
+        CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
+        Map<String, String> mockRequestHeaderMap = new HashMap<>();
+        mockRequestHeaderMap.put("remoteUser", "user");
+        mockRequestHeaderMap.put("remoteRef", "ref-1");
+        when(mockCalvalusFacade.getRequestHeaderMap()).thenReturn(mockRequestHeaderMap);
+        PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
+
+        executeOperation = new CalvalusExecuteOperation(MOCK_PROCESSOR_ID, mockRequestContext);
+        ExecuteResponse executeResponse = executeOperation.execute(mockExecuteRequest);
+
+        assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been quoted successfully."));
+        assertThat(executeResponse.getProcess().getIdentifier().getValue(), equalTo("process1"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(1));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().size(), equalTo(1));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString(
+                               "{\n" +
+                               "  \"id\": \"ref-1\",\n" +
+                               "  \"account\": {\n" +
+                               "    \"platform\": \"Brockmann Consult Processing Center\",\n" +
+                               "    \"username\": \"user\",\n" +
+                               "    \"ref\": \"ref-1\"\n" +
+                               "  },\n  \"compound\": {\n" +
+                               "    \"id\": \"any-id\",\n" +
+                               "    \"name\": \"processName\",\n" +
+                               "    \"type\": \"processType\"\n" +
+                               "  },\n  \"quantity\": [\n" +
+                               "    {\n" +
+                               "      \"id\": \"CPU_MILLISECONDS\",\n" +
+                               "      \"value\": 1\n" +
+                               "    },\n" +
+                               "    {\n" +
+                               "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+                               "      \"value\": 1\n" +
+                               "    },\n" +
+                               "    {\n" +
+                               "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+                               "      \"value\": 1\n" +
+                               "    },\n" +
+                               "    {\n" +
+                               "      \"id\": \"PROC_INSTANCE\",\n" +
+                               "      \"value\": 1\n" +
+                               "    }\n" +
+                               "  ],\n" +
+                               "  \"hostName\": \"www.brockmann-consult.de\",\n"));
+    }
+
+    private DataInputsType getQuotationDataInputs() {
+        return getDataInputsWithQuotation("true");
+    }
+
+    private DataInputsType getDataInputs() {
+        return getDataInputsWithQuotation("false");
+    }
+
+    private DataInputsType getDataInputsWithQuotation(String isQuoatation) {
+        DataInputsType mockDataInputs = new DataInputsType();
+        InputType input1 = new InputType();
+        input1.setIdentifier(WpsTypeConverter.str2CodeType("QUOTATION"));
+        DataType quotationData = new DataType();
+        LiteralDataType data = new LiteralDataType();
+        data.setValue(isQuoatation);
+        quotationData.setLiteralData(data);
+        input1.setData(quotationData);
+        mockDataInputs.getInput().add(input1);
+        return mockDataInputs;
     }
 
     private ProductionRequest configureProcessingMock() throws Exception {

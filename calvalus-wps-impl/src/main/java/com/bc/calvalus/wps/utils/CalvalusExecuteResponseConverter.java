@@ -1,6 +1,12 @@
 package com.bc.calvalus.wps.utils;
 
 
+import com.bc.calvalus.wps.accounting.Account;
+import com.bc.calvalus.wps.accounting.AccountBuilder;
+import com.bc.calvalus.wps.accounting.Compound;
+import com.bc.calvalus.wps.accounting.CompoundBuilder;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2Builder;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.WpsRuntimeException;
 import com.bc.wps.api.schema.ComplexDataType;
@@ -145,7 +151,7 @@ public class CalvalusExecuteResponseConverter {
         return executeResponse;
     }
 
-    public ExecuteResponse getQuotationResponse(DataInputsType dataInputs) {
+    public ExecuteResponse getQuotationResponse(String username, String remoteRef, DataInputsType dataInputs) {
         StatusType statusType = new StatusType();
         GregorianCalendar stopTimeGregorian = new GregorianCalendar();
         stopTimeGregorian.setTime(new Date());
@@ -154,13 +160,13 @@ public class CalvalusExecuteResponseConverter {
         statusType.setProcessSucceeded("The request has been quoted successfully.");
         executeResponse.setStatus(statusType);
 
-        ExecuteResponse.ProcessOutputs quoteJson = getQuoteProcessOutputs(dataInputs);
+        ExecuteResponse.ProcessOutputs quoteJson = getQuoteProcessOutputs(username, remoteRef, dataInputs);
         executeResponse.setProcessOutputs(quoteJson);
 
         return executeResponse;
     }
 
-    private ExecuteResponse.ProcessOutputs getQuoteProcessOutputs(DataInputsType dataInputs) {
+    private ExecuteResponse.ProcessOutputs getQuoteProcessOutputs(String username, String remoteRef, DataInputsType dataInputs) {
         ExecuteResponse.ProcessOutputs processOutputs = new ExecuteResponse.ProcessOutputs();
         OutputDataType output = new OutputDataType();
         output.setIdentifier(WpsTypeConverter.str2CodeType("QUOTATION"));
@@ -168,7 +174,7 @@ public class CalvalusExecuteResponseConverter {
         DataType quoteData = new DataType();
         ComplexDataType quoteComplexData = new ComplexDataType();
         quoteComplexData.setMimeType("application/json");
-        String quoteJsonString = getQuoteJsonString(dataInputs);
+        String quoteJsonString = getQuoteJsonString(username, remoteRef, dataInputs);
         quoteComplexData.getContent().add(quoteJsonString);
         quoteData.setComplexData(quoteComplexData);
         output.setData(quoteData);
@@ -176,50 +182,31 @@ public class CalvalusExecuteResponseConverter {
         return processOutputs;
     }
 
-    private String getQuoteJsonString(DataInputsType dataInputs) {
-        return "{\n" +
-               "  \"id\" : \"t2cp_cluster5342_application_1479400262723_8995\",\n" +
-               "  \"account\" : {\n" +
-               "    \"platform\": \"urban-tep\",\n" +
-               "    \"username\": \"emathot\",\n" +
-               "    \"ref\": \"1738ad7b-534e-4aca-9861-b26fb9c0f983\"\n" +
-               "  }\n" +
-               "  \"compound\": {\n" +
-               "    \"id\": \"t2cp_cluster5342_oozie_0004218-161117173256693-oozie-oozi-W\",\n" +
-               "    \"name\": \"oozie:action:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
-               "    \"type\": \"WPS-OOZIE\"\n" +
-               "    \"any\": {\n" +
-               "      \"jobid\": \"oozie:action:T=map-reduce:W=t2-subset-snap:A=streaming-8247:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
-               "    }\n" +
-               "  },\n" +
-               "  \"quantity\" : [\n" +
-               "    {\n" +
-               "      \"id\": \"CPU_MILLISECONDS\",\n" +
-               "      \"value\": 900000\n" +
-               "    },\n" +
-               "    {\n" +
-               "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
-               "      \"value\": 2684354560\n" +
-               "    },\n" +
-               "    {\n" +
-               "      \"id\": \"PROC_INSTANCE\",\n" +
-               "      \"value\": 1\n" +
-               "    },\n" +
-               "    {\n" +
-               "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
-               "      \"value\": 2097152\n" +
-               "    }\n" +
-               "  ]\n" +
-               "  \"hostname\": \"cloud.terradue.com\",\n" +
-               "  \"timestamp\": \"2017-01-10T10:32:16Z\",\n" +
-               "  \"status\": \"QUOTATION\",\n" +
-               "  \"location\": {\n" +
-               "    \"coordinates\": [\n" +
-               "      9.491,\n" +
-               "      51.2993\n" +
-               "    ],\n" +
-               "  }\n" +
-               "}";
+    private String getQuoteJsonString(String username, String remoteRef, DataInputsType dataInputs) {
+        Account account = AccountBuilder
+                    .create()
+                    .withPlatform("Brockmann Consult Processing Center")
+                    .withUsername(username)
+                    .withRef(remoteRef)
+                    .build();
+        Compound compound = CompoundBuilder
+                    .create()
+                    .withId("any-id")
+                    .withName("processName")
+                    .withType("processType")
+                    .build();
+        UsageStatisticT2 usageStatistic = UsageStatisticT2Builder
+                    .create()
+                    .withJobId(remoteRef)
+                    .withAccount(account)
+                    .withCompound(compound)
+                    .withCpuMilliSeconds(1)
+                    .withMemoryBytes(1)
+                    .withInstanceNumber(1)
+                    .withVolumeBytes(1)
+                    .withStatus("QUOTATION")
+                    .build();
+        return usageStatistic.getAsJson();
     }
 
     private ExecuteResponse.ProcessOutputs getProcessOutputs(List<String> resultUrls) {

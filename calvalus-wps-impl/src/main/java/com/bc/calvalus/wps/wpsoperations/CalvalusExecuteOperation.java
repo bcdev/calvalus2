@@ -12,9 +12,11 @@ import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.schema.DataInputsType;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.api.schema.InputType;
 import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
@@ -48,6 +50,16 @@ public class CalvalusExecuteOperation {
     public ExecuteResponse execute(Execute executeRequest)
                 throws InvalidProcessorIdException, WpsProductionException,
                        WpsResultProductException, ProductionException, IOException {
+        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+        DataInputsType dataInputs = executeRequest.getDataInputs();
+        if (isQuotationRequest(dataInputs)) {
+            ExecuteResponse quotationResponse = executeResponse.getQuotationResponse(processFacade.getRequestHeaderMap().get("remoteUser"),
+                                                                                     processFacade.getRequestHeaderMap().get("remoteRef"),
+                                                                                     dataInputs);
+            ProcessBriefType processBriefType = getQuotationBriefType(executeRequest);
+            quotationResponse.setProcess(processBriefType);
+            return quotationResponse;
+        }
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -58,14 +70,13 @@ public class CalvalusExecuteOperation {
             GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
         }
 
-        CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
         if (isAsynchronous) {
             LocalProductionStatus status = processFacade.orderProductionAsynchronous(executeRequest);
             ExecuteResponse asyncExecuteResponse;
             if (isLineage) {
                 List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
                 asyncExecuteResponse = executeResponse.getAcceptedWithLineageResponse(status.getJobId(),
-                                                                                      executeRequest.getDataInputs(),
+                                                                                      dataInputs,
                                                                                       outputType,
                                                                                       context.getServerContext());
             } else {
@@ -81,7 +92,7 @@ public class CalvalusExecuteOperation {
             } else if (isLineage) {
                 List<DocumentOutputDefinitionType> outputType = executeRequest.getResponseForm().getResponseDocument().getOutput();
                 syncExecuteResponse = executeResponse.getSuccessfulWithLineageResponse(status.getResultUrls(),
-                                                                                       executeRequest.getDataInputs(),
+                                                                                       dataInputs,
                                                                                        outputType);
             } else {
                 syncExecuteResponse = executeResponse.getSuccessfulResponse(status.getResultUrls(), status.getStopTime());
@@ -91,12 +102,31 @@ public class CalvalusExecuteOperation {
         }
     }
 
+    private boolean isQuotationRequest(DataInputsType dataInputs) {
+        for (InputType inputType : dataInputs.getInput()) {
+            if ("quotation".equalsIgnoreCase(inputType.getIdentifier().getValue())) {
+                if (inputType.getData().getLiteralData() != null && "true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private ProcessBriefType getProcessBriefType(Execute executeRequest) throws InvalidProcessorIdException {
         ProcessBriefType processBriefType = new ProcessBriefType();
         processBriefType.setIdentifier(executeRequest.getIdentifier());
         processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(executeRequest.getIdentifier().getValue()));
         ProcessorNameConverter parser = new ProcessorNameConverter(executeRequest.getIdentifier().getValue());
         processBriefType.setProcessVersion(parser.getBundleVersion());
+        return processBriefType;
+    }
+
+    private ProcessBriefType getQuotationBriefType(Execute executeRequest) {
+        ProcessBriefType processBriefType = new ProcessBriefType();
+        processBriefType.setIdentifier(executeRequest.getIdentifier());
+        processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(executeRequest.getIdentifier().getValue()));
+        processBriefType.setProcessVersion("1.0");
         return processBriefType;
     }
 }

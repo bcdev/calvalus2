@@ -181,53 +181,47 @@ public class CalvalusExecuteResponseConverterTest {
     public void canGetQuotationResponse() throws Exception {
         DataInputsType dataInputs = getDataInputsType();
 
-        ExecuteResponse executeResponse = calvalusExecuteResponse.getQuotationResponse(dataInputs);
+        ExecuteResponse executeResponse = calvalusExecuteResponse.getQuotationResponse("tepUser", "ref-1", dataInputs);
 
         assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been quoted successfully."));
         assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(1));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("QUOTATION"));
         assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Job Quotation"));
-        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
-                   equalTo("{\n" +
-                           "  \"id\" : \"t2cp_cluster5342_application_1479400262723_8995\",\n" +
-                           "  \"account\" : {\n" +
-                           "    \"platform\": \"urban-tep\",\n" +
-                           "    \"username\": \"emathot\",\n" +
-                           "    \"ref\": \"1738ad7b-534e-4aca-9861-b26fb9c0f983\"\n" +
-                           "  }\n  \"compound\": {\n" +
-                           "    \"id\": \"t2cp_cluster5342_oozie_0004218-161117173256693-oozie-oozi-W\",\n" +
-                           "    \"name\": \"oozie:action:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
-                           "    \"type\": \"WPS-OOZIE\"\n" +
-                           "    \"any\": {\n" +
-                           "      \"jobid\": \"oozie:action:T=map-reduce:W=t2-subset-snap:A=streaming-8247:ID=0004218-161117173256693-oozie-oozi-W\"\n" +
-                           "    }\n" +
-                           "  },\n" +
-                           "  \"quantity\" : [\n" +
-                           "    {\n" +
-                           "      \"id\": \"CPU_MILLISECONDS\",\n" +
-                           "      \"value\": 900000\n    },\n" +
-                           "    {\n" +
-                           "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
-                           "      \"value\": 2684354560\n" +
-                           "    },\n" +
-                           "    {\n      \"id\": \"PROC_INSTANCE\",\n" +
-                           "      \"value\": 1\n " +
-                           "   },\n" +
-                           "    {\n" +
-                           "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
-                           "      \"value\": 2097152\n" +
-                           "    }\n" +
-                           "  ]\n" +
-                           "  \"hostname\": \"cloud.terradue.com\",\n" +
-                           "  \"timestamp\": \"2017-01-10T10:32:16Z\",\n" +
-                           "  \"status\": \"QUOTATION\",\n" +
-                           "  \"location\": {\n" +
-                           "    \"coordinates\": [\n" +
-                           "      9.491,\n" +
-                           "      51.2993\n" +
-                           "    ],\n" +
-                           "  }\n" +
-                           "}"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("{\n" +
+                                  "  \"id\": \"ref-1\",\n" +
+                                  "  \"account\": {\n" +
+                                  "    \"platform\": \"Brockmann Consult Processing Center\",\n" +
+                                  "    \"username\": \"tepUser\",\n" +
+                                  "    \"ref\": \"ref-1\"\n" +
+                                  "  },\n" +
+                                  "  \"compound\": {\n" +
+                                  "    \"id\": \"any-id\",\n" +
+                                  "    \"name\": \"processName\",\n" +
+                                  "    \"type\": \"processType\"\n" +
+                                  "  },\n" +
+                                  "  \"quantity\": [\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"CPU_MILLISECONDS\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_INSTANCE\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    }\n" +
+                                  "  ],\n" +
+                                  "  \"hostName\": \"www.brockmann-consult.de\",\n"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("  \"status\": \"QUOTATION\"\n" +
+                                  "}"));
     }
 
     private DataInputsType getDataInputsType() {
