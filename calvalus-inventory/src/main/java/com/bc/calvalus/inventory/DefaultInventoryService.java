@@ -90,6 +90,9 @@ public class DefaultInventoryService implements InventoryService {
         final String userDirsPattern = String.format("home/%s", filterUserName);
         final Path userDirsPath = fileSystemService.makeQualified(fileSystem, userDirsPattern);
         final FileStatus[] userDirsStatuses = fileSystem.globStatus(userDirsPath);
+        if (userDirsStatuses == null) {
+            return new ProductSet[0];
+        }
         for (FileStatus userDirStatus : userDirsStatuses) {
             try {
                 final FileStatus[] userDatasetsStatus = fileSystem.listStatus(userDirStatus.getPath());
