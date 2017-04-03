@@ -30,7 +30,7 @@ public class ReportGeneratorTest {
 
     @Test
     public void canGenerateTextSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052");
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052","2017-01-10");
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateTextSingleJob(usageStatistic), equalTo("Usage statistic for job 'job_1481485063251_20052'\n" +
@@ -48,7 +48,7 @@ public class ReportGeneratorTest {
 
     @Test
     public void canGenerateJsonSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052");
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_20052","2017-01-10");
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateJsonSingleJob(usageStatistic), equalTo("{\n" +
@@ -69,7 +69,7 @@ public class ReportGeneratorTest {
     @Ignore // to avoid creating pdf in every maven install
     @Test
     public void canGeneratePdfSingleJob() throws Exception {
-        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_7037");
+        UsageStatistic usageStatistic = jsonExtractor.getSingleStatistic("job_1481485063251_7037","2017-01-10");
         reportGenerator = new ReportGenerator();
         String pdfPath = reportGenerator.generatePdfSingleJob(usageStatistic);
 
@@ -80,7 +80,7 @@ public class ReportGeneratorTest {
     @Test
     public void testGenerateAllUserJobSummary() throws Exception {
         reportGenerator = new ReportGenerator();
-        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserUsageStatistic();
+        Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllUserUsageStatistic("2017-01-10");
         String jsonAllUserJobSummary = reportGenerator.generateJsonAllUserJobSummary(allUserStatistic);
         assertNotNull(jsonAllUserJobSummary);
     }
@@ -106,7 +106,7 @@ public class ReportGeneratorTest {
     public void testGenerateAllQueueJobSummaryBetween() throws Exception {
         reportGenerator = new ReportGenerator();
         Map<String, List<UsageStatistic>> allUserStatistic = jsonExtractor.getAllQueueUsageBetween("2017-01-01", "2017-01-30");
-        String queue = reportGenerator.generateJsonUsageBetween(allUserStatistic,"jobsInQueue");
+        String queue = reportGenerator.generateJsonUsageBetween(allUserStatistic, "jobsInQueue");
         assertNotNull(queue);
         //todo mba*** add more assertion
     }
@@ -114,7 +114,7 @@ public class ReportGeneratorTest {
 
     @Test
     public void canGenerateTextMonthly() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.getAllStatistics();
+        List<UsageStatistic> usageStatistics = jsonExtractor.loadStatisticOf("2017-01-10");
 
         reportGenerator = new ReportGenerator();
 
@@ -140,7 +140,7 @@ public class ReportGeneratorTest {
     @Ignore // to avoid creating pdf in every maven install
     @Test
     public void canGeneratePdfMonthly() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.getAllStatistics();
+        List<UsageStatistic> usageStatistics = jsonExtractor.loadStatisticOf("2017-02-10");
 
         reportGenerator = new ReportGenerator();
         String pdfPath = reportGenerator.generatePdfMonthly(usageStatistics);
@@ -148,10 +148,9 @@ public class ReportGeneratorTest {
         assertThat(pdfPath, containsString("monthly.pdf"));
     }
 
-    @Ignore
     @Test
     public void canGenerateSingleUserJson() throws Exception {
-        List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserStatistic("cvop");
+        List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserStatistic("cvop", "2017-01-20");
 
         reportGenerator = new ReportGenerator();
 
@@ -167,12 +166,11 @@ public class ReportGeneratorTest {
                                                                                                "  \"jobsProcessed\": \"1381\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
                                                                                                "  \"totalVcoresUsed\": \"28,138,453\",\n" +
-                                                                                               "  \"totalMaps\": \"0\"\n" +
+                                                                                               "  \"totalMap\": \"0\"\n" +
                                                                                                "}"));
 
     }
 
-    @Ignore
     @Test
     public void canGenerateSingleUserYearJson() throws Exception {
         List<UsageStatistic> usageStatistics = jsonExtractor.getSingleUserUsageInYear("cvop", "2017");
@@ -180,19 +178,18 @@ public class ReportGeneratorTest {
         reportGenerator = new ReportGenerator();
 
         assertThat(reportGenerator.generateJsonUserSingleJob(usageStatistics), equalTo("{\n" +
-                                                                                               "  \"memoryUsagePrice\": \"1.78\",\n" +
-                                                                                               "  \"totalFileReadingMb\": \"37,826,596\",\n" +
-                                                                                               "  \"cpuUsagePrice\": \"10.33\",\n" +
-                                                                                               "  \"diskUsageprice\": \"415.15\",\n" +
-                                                                                               "  \"totalPrice\": \"427.26\",\n" +
-                                                                                               "  \"totalFileWritingMb\": \"130,388\",\n" +
-                                                                                               "  \"totalMemoryUsedMbs\": \"29,343,671,531\",\n" +
-                                                                                               "  \"totalCpuTimeSpent\": \"6426:17:03\",\n" +
-                                                                                               "  \"jobsProcessed\": \"1381\",\n" +
+                                                                                               "  \"memoryUsagePrice\": \"3.55\",\n" +
+                                                                                               "  \"totalFileReadingMb\": \"75,653,192\",\n" +
+                                                                                               "  \"cpuUsagePrice\": \"20.67\",\n" +
+                                                                                               "  \"diskUsageprice\": \"830.3\",\n" +
+                                                                                               "  \"totalPrice\": \"854.52\",\n" +
+                                                                                               "  \"totalFileWritingMb\": \"260,776\",\n" +
+                                                                                               "  \"totalMemoryUsedMbs\": \"58,687,343,062\",\n" +
+                                                                                               "  \"totalCpuTimeSpent\": \"12852:34:07\",\n" +
+                                                                                               "  \"jobsProcessed\": \"2762\",\n" +
                                                                                                "  \"user\": \"cvop\",\n" +
-                                                                                               "  \"totalVcoresUsed\": \"28,138,453\",\n" +
-                                                                                               "  \"totalMaps\": \"0\"\n" +
+                                                                                               "  \"totalVcoresUsed\": \"56,276,906\",\n" +
+                                                                                               "  \"totalMap\": \"0\"\n" +
                                                                                                "}"));
-
     }
 }
