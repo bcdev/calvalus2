@@ -28,7 +28,8 @@ public class CLIHandlerOption extends PrintOption {
     private static final String STOP_OPTION = "stop";
     private static final String VERSION = "version";
     private static final String CALVALUS_HISTORY_GENERATE_TIME_INTERVAL_DEFAULT = "calvalus.history.generate.time.interval.default";
-    private static final String CALVALUS_REPORTING_DATABASE = "reporting.file";
+    private static final String CALVALUS_REPORTING_DATABASE = "reporting.folder.path";
+    public static final int FIRST_INDEX_ARG = 0;
 
     private CommandLine commandLine;
     private final static Logger logger = CalvalusLogger.getLogger();
@@ -55,7 +56,7 @@ public class CLIHandlerOption extends PrintOption {
             CommandLineParser commandLineParser = new DefaultParser();
             Options options = createAllOptions();
             commandLine = commandLineParser.parse(options, args);
-            String firstArg = args[0];
+            String firstArg = args[FIRST_INDEX_ARG];
             if (commandLine.hasOption(HELP_OPTION)) {
                 displayHelp(firstArg);
                 return;

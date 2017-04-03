@@ -2,18 +2,20 @@ package com.bc.calvalus.extractor.configuration;
 
 
 import com.bc.calvalus.extractor.ExtractCalvalusReportException;
+import com.bc.calvalus.extractor.Extractor;
+import com.bc.calvalus.extractor.jobs.JobType;
 import com.bc.wps.utilities.PropertiesWrapper;
-import java.util.concurrent.atomic.AtomicReference;
-import javax.xml.bind.JAXBException;
-import javax.xml.transform.stream.StreamSource;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.xml.bind.JAXBException;
+import javax.xml.transform.stream.StreamSource;
 
 /**
  * @author muhammad.bc.
  */
-public class ConfExtractor extends com.bc.calvalus.extractor.Extractor {
+public class ConfExtractor extends Extractor {
     private static final String CONF_XSL = "conf.xsl";
     private static final String CALVALUS_HISTORY_CONFIGURATION_URL = "calvalus.history.configuration.url";
     private final String urlConf;
@@ -26,11 +28,11 @@ public class ConfExtractor extends com.bc.calvalus.extractor.Extractor {
     }
 
     @Override
-    public <T> HashMap<String, T> extractInfo(int from, int to, List<com.bc.calvalus.extractor.jobs.JobType> jobTypes) throws ExtractCalvalusReportException {
+    public <T> HashMap<String, T> extractInfo(int from, int to, List<JobType> jobTypes) throws ExtractCalvalusReportException {
         HashMap<String, Conf> confTypesHashMap = new HashMap<>();
         try {
             for (int i = from; i < to; i++) {
-                com.bc.calvalus.extractor.jobs.JobType jobType = jobTypes.get(i);
+                JobType jobType = jobTypes.get(i);
                 String jobTypeId = jobType.getId();
                 AtomicReference<Conf> confType = new AtomicReference<>(getType(jobTypeId));
                 confTypesHashMap.put(jobTypeId, confType.get());
