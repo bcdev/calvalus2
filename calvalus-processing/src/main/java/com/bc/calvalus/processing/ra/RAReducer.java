@@ -19,6 +19,7 @@ package com.bc.calvalus.processing.ra;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ra.stat.RADateRanges;
 import com.bc.calvalus.processing.ra.stat.RegionAnalysis;
+import com.bc.calvalus.processing.ra.stat.WriterFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -53,14 +54,9 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             throw new IOException(e);
         }
 
-        regionAnalysis = new RegionAnalysis(dateRanges, raConfig.getBandConfigs()) {
+        HdfsWriterFactory hdfsWriterFactory = new HdfsWriterFactory(context);
 
-            @Override
-            public Writer createWriter(String fileName) throws IOException, InterruptedException {
-                Path path = new Path(FileOutputFormat.getWorkOutputPath(context), fileName);
-                return new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
-            }
-        };
+        regionAnalysis = new RegionAnalysis(dateRanges, raConfig, hdfsWriterFactory);
     }
 
     @Override
@@ -97,5 +93,26 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
         }
         regionAnalysis.endRegion();
         // close netCDF
+    }
+
+    private class HdfsWriterFactory implements WriterFactory {
+
+        private final Context context;
+
+        private HdfsWriterFactory(Context context) {
+            this.context = context;
+        }
+
+        @Override
+        public Writer createWriter(String filePath) throws IOException {
+            Path workOutputPath = null;
+            try {
+                workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            } catch (InterruptedException ie) {
+                throw new IOException(ie);
+            }
+            Path path = new Path(workOutputPath, filePath);
+            return new OutputStreamWriter(path.getFileSystem(context.getConfiguration()).create(path));
+        }
     }
 }

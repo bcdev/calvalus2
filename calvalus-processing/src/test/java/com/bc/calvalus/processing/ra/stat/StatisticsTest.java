@@ -18,11 +18,7 @@ package com.bc.calvalus.processing.ra.stat;
 
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 public class StatisticsTest {
 
@@ -34,13 +30,13 @@ public class StatisticsTest {
         assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getStatisticsHeaders("b1").toArray());
 
         expected = new String[]{};
-        assertArrayEquals(expected, new Statistics().getHistogramHeaders().toArray());
+        assertArrayEquals(expected, new Statistics().getHistogramHeaders("b1").toArray());
 
-        expected = new String[]{"belowHistogram", "aboveHistogram", "numBins", "lowValue", "highValue", "bin_0", "bin_1", "bin_2"};
-        assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getHistogramHeaders().toArray());
+        expected = new String[]{"a1_belowHistogram", "a1_aboveHistogram", "a1_numBins", "a1_lowValue", "a1_highValue", "a1_bin_0", "a1_bin_1", "a1_bin_2"};
+        assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getHistogramHeaders("a1").toArray());
 
-        expected = new String[]{"belowHistogram", "aboveHistogram", "numBins", "lowValue", "highValue", "bin_0", "bin_1", "bin_2", "bin_3", "bin_4"};
-        assertArrayEquals(expected, new Statistics(5, 0.0, 1.0).getHistogramHeaders().toArray());
+        expected = new String[]{"a1_belowHistogram", "a1_aboveHistogram", "a1_numBins", "a1_lowValue", "a1_highValue", "a1_bin_0", "a1_bin_1", "a1_bin_2", "a1_bin_3", "a1_bin_4"};
+        assertArrayEquals(expected, new Statistics(5, 0.0, 1.0).getHistogramHeaders("a1").toArray());
     }
 
     @Test

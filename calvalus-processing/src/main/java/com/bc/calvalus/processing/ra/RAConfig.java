@@ -22,16 +22,11 @@ import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
-import org.geotools.feature.FeatureCollection;
 import org.geotools.index.CloseableIterator;
-import org.opengis.feature.simple.SimpleFeature;
-import org.opengis.feature.simple.SimpleFeatureType;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 /**
  * The configuration for the region analysis workflow
@@ -131,39 +126,63 @@ public class RAConfig implements XmlConvertible {
     @Parameter(itemAlias = "band")
     private BandConfig[] bands;
 
+    @Parameter(defaultValue = "true")
+    private boolean writeStatisticsFilePerRegion = true;
+
+    @Parameter(defaultValue = "true")
+    private boolean writeSeparateHistogramFile = true;
+
+
+    // internal, will be set by the production type, to prevent repeated reading
     @Parameter
-    private int numRegions;
+    private String[] internalRegionNames;
 
 
     public RAConfig() {
-    }
-
-    public String getValidExpressions() {
-        return validExpressions;
-    }
-
-    public BandConfig[] getBandConfigs() {
-        return bands;
     }
 
     public void setRegions(Region...regions) {
         this.regions = regions;
     }
 
-    public int getNumRegions() {
-        return numRegions;
+    public String[] getInternalRegionNames() {
+        return internalRegionNames;
     }
 
-    public void setNumRegions(int numRegions) {
-        this.numRegions = numRegions;
+    public void setInternalRegionNames(String...internalRegionNames) {
+        this.internalRegionNames = internalRegionNames;
+    }
+
+    public String getValidExpressions() {
+        return validExpressions;
     }
 
     public void setValidExpressions(String validExpressions) {
         this.validExpressions = validExpressions;
     }
 
+    public BandConfig[] getBandConfigs() {
+        return bands;
+    }
+
     public void setBandConfigs(BandConfig...bandConfigs) {
         this.bands = bandConfigs;
+    }
+
+    public boolean isWriteStatisticsFilePerRegion() {
+        return writeStatisticsFilePerRegion;
+    }
+
+    public void setWriteStatisticsFilePerRegion(boolean writeStatisticsFilePerRegion) {
+        this.writeStatisticsFilePerRegion = writeStatisticsFilePerRegion;
+    }
+
+    public boolean isWriteSeparateHistogramFile() {
+        return writeSeparateHistogramFile;
+    }
+
+    public void setWriteSeparateHistogramFile(boolean writeSeparateHistogramFile) {
+        this.writeSeparateHistogramFile = writeSeparateHistogramFile;
     }
 
     public static RAConfig get(Configuration conf) {

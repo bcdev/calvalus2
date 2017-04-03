@@ -68,7 +68,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         final RAConfig raConfig = RAConfig.get(jobConfig);
 
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
-        int numRegions = raConfig.getNumRegions();
+        int numRegions = raConfig.getInternalRegionNames().length;
         pm.beginTask("Region Analysis", numRegions * 2);
         try {
             ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
@@ -107,7 +107,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         private final PlanarImage[] dataImages;
         private final boolean equalTileGrids;
 
-        public Extractor(Product product, RAConfig raConfig) {
+        Extractor(Product product, RAConfig raConfig) {
             this.product = product;
 
             if (product.getSceneTimeCoding() == null && product.getStartTime() == null && product.getEndTime() == null) {
@@ -148,7 +148,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                     im1.getTileGridYOffset() == im2.getTileGridYOffset();
         }
 
-        public Extract performExtraction(String regionName, Geometry geometry, ProgressMonitor pm) {
+        Extract performExtraction(String regionName, Geometry geometry, ProgressMonitor pm) {
             Rectangle rect = SubsetOp.computePixelRegion(product, geometry, 1);
             if (rect.isEmpty()) {
                 LOG.info("Nothing to extract for region " + regionName);
@@ -244,7 +244,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
         int numValid;
         long time;
 
-        public Extract(int numBands, int numPixelsMax) {
+        Extract(int numBands, int numPixelsMax) {
             samples = new float[numBands][numPixelsMax];
             numObs = 0;
             numValid = 0;

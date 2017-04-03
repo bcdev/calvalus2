@@ -116,16 +116,16 @@ class Statistics {
         return header;
     }
 
-    public List<String> getHistogramHeaders() {
+    public List<String> getHistogramHeaders(String bandName) {
         List<String> header = new ArrayList<>();
         if (histogram != null) {
-            header.add("belowHistogram");
-            header.add("aboveHistogram");
-            header.add("numBins");
-            header.add("lowValue");
-            header.add("highValue");
+            header.add(bandName + "_belowHistogram");
+            header.add(bandName + "_aboveHistogram");
+            header.add(bandName + "_numBins");
+            header.add(bandName + "_lowValue");
+            header.add(bandName + "_highValue");
             for (int i = 0; i < histogram.getNumBins(0); i++) {
-                header.add("bin_" + i);
+                header.add(bandName + "_bin_" + i);
             }
         }
         return header;

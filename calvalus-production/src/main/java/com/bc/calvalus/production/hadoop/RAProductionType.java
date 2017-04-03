@@ -36,6 +36,7 @@ import org.esa.snap.core.util.StringUtils;
 import org.geotools.index.CloseableIterator;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -122,7 +123,7 @@ public class RAProductionType extends HadoopProductionType {
                 RAConfig raConfig = RAConfig.fromXml(raParametersXml);
                 Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
                 regionsIterator = raConfig.createNamedRegionIterator(conf);
-                int regionCounter = 0;
+                List<String> regionNames = new ArrayList<>();
                 Geometry union = null;
                 while (regionsIterator.hasNext()) {
                     RAConfig.NamedGeometry namedGeometry = regionsIterator.next();
@@ -131,15 +132,15 @@ public class RAProductionType extends HadoopProductionType {
                     } else {
                         union = union.union(namedGeometry.geometry);
                     }
-                    regionCounter++;
+                    regionNames.add(namedGeometry.name);
                 }
-                if (regionCounter == 0) {
+                if (regionNames.isEmpty()) {
                     throw new ProductionException("No region defined");
                 }
                 if (union == null) {
                     throw new ProductionException("Can not build union from given regions");
                 }
-                raConfig.setNumRegions(regionCounter);
+                raConfig.setInternalRegionNames(regionNames.toArray(new String[0]));
                 return new String[]{raConfig.toXml(), union.toString()};
             } catch (BindingException | IOException e) {
                 throw new ProductionException("Illegal Region-analysis configuration: " + e.getMessage(), e);
