@@ -5,16 +5,15 @@ import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * @author hans , muhammad
@@ -32,11 +31,11 @@ public class ReportingService {
     }
 
     @GET
-    @Path("job/{jobId}")
+    @Path("job/{jobId}/{date}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getSingleJobReportTxt(@PathParam("jobId") String jobId) {
+    public String getSingleJobReportTxt(@PathParam("jobId") String jobId,@PathParam("date") String date) {
         try {
-            UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId);
+            UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId,date);
             return reportGenerator.generateJsonSingleJob(singleStatistic);
         } catch (IOException exception) {
             return getErrorResponse(exception);
@@ -48,7 +47,7 @@ public class ReportingService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getAllJobReportTxt(@PathParam("user") String user) {
         try {
-            List<UsageStatistic> singleUserStatistics = jsonExtractor.getSingleUserStatistic(user);
+            List<UsageStatistic> singleUserStatistics = jsonExtractor.getSingleUserStatistic(user, "2017-01-20");
             if (singleUserStatistics.size() < 1) {
                 throw new JobNotFoundException("Jobs not found for user '" + user + "'");
             }
@@ -63,7 +62,7 @@ public class ReportingService {
     @Produces(MediaType.APPLICATION_JSON)
     public String getAllUserSummary() {
         try {
-            Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserUsageStatistic();
+            Map<String, List<UsageStatistic>> allUserStatistics = jsonExtractor.getAllUserUsageStatistic("2017-02-10");
             if (allUserStatistics.size() < 1) {
                 throw new JobNotFoundException("No job found for any user ");
             }

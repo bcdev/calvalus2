@@ -16,16 +16,16 @@ public interface UsageStatisticConverter {
      * assumed that jobId is unique.
      *
      * @param jobId The requested job identifier
-     *
      * @return UsageStatistic of the specified job
      */
-    UsageStatisticT2 extractSingleStatistic(String jobId) throws ExtractionException;
+    UsageStatisticT2 extractSingleStatistic(String jobId, String date) throws ExtractionException;
 
     /**
      * This method returns all available {@link UsageStatistic}
      *
+     * @param fileNameByDate
      * @return All {@link UsageStatistic}
      */
-    List<UsageStatisticT2> extractAllStatistics() throws ExtractionException;
+    List<UsageStatisticT2> extractAllStatistics(String fileNameByDate) throws ExtractionException;
 
 }

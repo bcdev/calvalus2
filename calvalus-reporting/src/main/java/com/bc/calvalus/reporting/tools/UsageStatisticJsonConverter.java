@@ -4,7 +4,6 @@ import com.bc.calvalus.reporting.exceptions.ExtractionException;
 import com.bc.calvalus.reporting.io.JSONExtractor;
 import com.bc.calvalus.reporting.ws.UsageStatistic;
 import com.bc.calvalus.reporting.ws.UsageStatisticT2;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,9 +20,9 @@ public class UsageStatisticJsonConverter implements UsageStatisticConverter {
     }
 
     @Override
-    public UsageStatisticT2 extractSingleStatistic(String jobId) throws ExtractionException {
+    public UsageStatisticT2 extractSingleStatistic(String jobId, String date) throws ExtractionException {
         try {
-            UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId);
+            UsageStatistic singleStatistic = jsonExtractor.getSingleStatistic(jobId, date);
             return new UsageStatisticT2(singleStatistic);
         } catch (IOException exception) {
             throw new ExtractionException(exception);
@@ -31,9 +30,9 @@ public class UsageStatisticJsonConverter implements UsageStatisticConverter {
     }
 
     @Override
-    public List<UsageStatisticT2> extractAllStatistics() throws ExtractionException {
+    public List<UsageStatisticT2> extractAllStatistics(String fileNameByDate) throws ExtractionException {
         try {
-            List<UsageStatistic> usageStatistics = jsonExtractor.getAllStatistics();
+            List<UsageStatistic> usageStatistics = jsonExtractor.loadStatisticOf(fileNameByDate);
             List<UsageStatisticT2> usageStatisticT2List = new ArrayList<>();
             for (UsageStatistic usageStatistic : usageStatistics) {
                 usageStatisticT2List.add(new UsageStatisticT2(usageStatistic));
