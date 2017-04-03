@@ -11,7 +11,12 @@ public class Launcher implements Runnable {
     private String urlPath;
     public static transient boolean terminate = false;
     private final ScheduledExecutorService scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();
+    private final JobDetailWriter writeJobDetail;
 
+
+    public Launcher() {
+        writeJobDetail = new JobDetailWriter();
+    }
 
     public static Launcher builder() {
         return new Launcher();
@@ -29,7 +34,6 @@ public class Launcher implements Runnable {
 
     @Override
     public void run() {
-        JobDetailWriter writeJobDetail = new JobDetailWriter(urlPath);
         if (!terminate) {
             writeJobDetail.start();
         } else {
