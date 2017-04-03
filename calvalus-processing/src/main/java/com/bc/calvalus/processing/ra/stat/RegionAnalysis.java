@@ -33,7 +33,7 @@ public abstract class RegionAnalysis {
             bandNames[i] = bConfig.getName();
             stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getLowValue(), bConfig.getHighValue());
         }
-        analysisWriter = createWriter("region-analysis.csv");
+        analysisWriter = createWriter("region-statistics.csv");
         writeLine(analysisWriter, getHeader(bandNames, true));
 
         histogramWriters = new Writer[bandConfigs.length];
