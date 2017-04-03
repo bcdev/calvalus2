@@ -128,7 +128,7 @@ public class GeodbInputFormat extends InputFormat {
         String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
             Geometry geometry = GeometryUtils.parseWKT(geometryWkt);
-            if (geometry == null || GeometryUtils.isGlobalCoverageGeometry(geometry)) {
+            if (geometry == null || isBiggerThanAHalfSphere(geometry)) {
                 geometryWkt = null;
             }
         }
@@ -162,6 +162,16 @@ public class GeodbInputFormat extends InputFormat {
             constrains.add(cb.build());
         }
         return constrains;
+    }
+
+    private static boolean isBiggerThanAHalfSphere(Geometry geometry) {
+        double geometryArea = geometry.getArea();
+        double halfSphereCartesian = 360 * 180 * 0.5;
+        if (geometryArea > halfSphereCartesian) {
+            System.out.printf("geometryArea %s is bigger than half a sphere an not supported by S2, dropping it for DB query.%n", halfSphereCartesian);
+            return true;
+        }
+        return false;
     }
 
     private static void parseMatchupParameters(Configuration conf, Constrain.Builder cb) {
