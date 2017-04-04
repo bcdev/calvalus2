@@ -214,16 +214,16 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                         extract.numObs++;
                         // test valid mask
                         if (rasterStack.maskTile.getSample(x, y, 0) != 0) {
-                            // extract pixel
-                            boolean oneSampleGood = false;
+                            // extract sample
+                            boolean oneValueValid = false;
                             for (int i = 0; i < rasterStack.dataTiles.length; i++) {
                                 float sample = rasterStack.dataTiles[i].getSampleFloat(x, y, 0);
                                 extract.samples[i][extract.numValid] = sample;
                                 if (!Float.isNaN(sample)) {
-                                    oneSampleGood = true;
+                                    oneValueValid = true;
                                 }
                             }
-                            if (oneSampleGood) {
+                            if (oneValueValid) {
                                 extract.numValid++;
                                 if (extract.time == -1 ) {
                                     ProductData.UTC pixelScanTime = ProductUtils.getPixelScanTime(product, x + 0.5, y + 0.5);
