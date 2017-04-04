@@ -23,6 +23,7 @@ class Statistics {
     private int belowHistogram;
     private int aboveHistogram;
 
+    private final int[] percentiles;
     private final Accumulator accu;
 
     Statistics() {
@@ -30,14 +31,27 @@ class Statistics {
     }
 
     Statistics(int numBins,
+                   double lowValue,
+                   double highValue) {
+        this(numBins, lowValue, highValue, new int[]{5,25,50,75,95});
+    }
+
+    Statistics(int numBins,
                double lowValue,
-               double highValue) {
+               double highValue,
+               int[] percentiles) {
         if (numBins > 0) {
             histogram = new Histogram(numBins, lowValue, highValue, 1);
         } else {
             histogram = null;
         }
-        accu = new Accumulator();
+        if (percentiles != null && percentiles.length > 0) {
+            this.percentiles = percentiles;
+            this.accu = new Accumulator();
+        } else {
+            this.percentiles = null;
+            this.accu = null;
+        }
         reset();
     }
 
@@ -80,8 +94,9 @@ class Statistics {
                 }
             }
         }
-
-        accu.accumulate(samples);
+        if (accu != null) {
+            accu.accumulate(samples);
+        }
     }
 
     public void reset() {
@@ -95,7 +110,9 @@ class Statistics {
         if (histogram != null) {
             histogram.clearHistogram();
         }
-        accu.clear();
+        if (accu != null) {
+            accu.clear();
+        }
     }
 
     public List<String> getStatisticsHeaders(String bandName) {
@@ -107,12 +124,11 @@ class Statistics {
         header.add(bandName + "_sigma");
         header.add(bandName + "_geomMean");
 
-        header.add(bandName + "_p5");
-        header.add(bandName + "_p25");
-        header.add(bandName + "_p50");
-        header.add(bandName + "_p75");
-        header.add(bandName + "_p95");
-
+        if (percentiles != null) {
+            for (int percentile : percentiles) {
+                header.add(String.format("%s_p%02d", bandName, percentile));
+            }
+        }
         return header;
     }
 
@@ -153,15 +169,13 @@ class Statistics {
             stats.add(Double.toString(Double.NaN));
             stats.add(Double.toString(Double.NaN));
         }
-
-        float[] values = accu.getValues();
-        Arrays.sort(values);
-        stats.add(Double.toString(computePercentile(5, values)));
-        stats.add(Double.toString(computePercentile(25, values)));
-        stats.add(Double.toString(computePercentile(50, values)));
-        stats.add(Double.toString(computePercentile(75, values)));
-        stats.add(Double.toString(computePercentile(95, values)));
-
+        if (accu != null) {
+            float[] values = accu.getValues();
+            Arrays.sort(values);
+            for (int percentile : percentiles) {
+                stats.add(Double.toString(computePercentile(percentile, values)));
+            }
+        }
         return stats;
     }
 

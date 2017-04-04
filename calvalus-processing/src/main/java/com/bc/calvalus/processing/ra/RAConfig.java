@@ -43,6 +43,7 @@ public class RAConfig implements XmlConvertible {
         private String wkt;
 
         // empty constructor for XML serialization
+        @SuppressWarnings("unused")
         public Region() {
         }
 
@@ -71,6 +72,7 @@ public class RAConfig implements XmlConvertible {
         private Double highValue;
 
         // empty constructor for XML serialization
+        @SuppressWarnings("unused")
         public BandConfig() {
         }
 
@@ -102,8 +104,6 @@ public class RAConfig implements XmlConvertible {
         }
     }
 
-    // TODO generate union of all regions for geo inventory query ( in ProductionType)
-
     // either regions or shapeFilePath has to be given
     @Parameter(itemAlias = "region")
     private Region[] regions;
@@ -122,6 +122,9 @@ public class RAConfig implements XmlConvertible {
     @Parameter
     private String validExpressions;
 
+    @Parameter(defaultValue = "5,25,50,75,95")
+    private int[] percentiles;
+
     // TODO bandNames have to be given, switch to all if not given ?
     @Parameter(itemAlias = "band")
     private BandConfig[] bands;
@@ -137,7 +140,8 @@ public class RAConfig implements XmlConvertible {
     @Parameter
     private String[] internalRegionNames;
 
-
+    // empty constructor for XML serialization
+    @SuppressWarnings("unused")
     public RAConfig() {
     }
 
@@ -159,6 +163,14 @@ public class RAConfig implements XmlConvertible {
 
     public void setValidExpressions(String validExpressions) {
         this.validExpressions = validExpressions;
+    }
+
+    public int[] getPercentiles() {
+        return percentiles;
+    }
+
+    public void setPercentiles(int...percentiles) {
+        this.percentiles = percentiles;
     }
 
     public BandConfig[] getBandConfigs() {

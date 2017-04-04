@@ -25,7 +25,7 @@ public class StatisticsTest {
     @Test
     public void test_header() throws Exception {
         String[] expected = {"b1_count", "b1_min", "b1_max", "b1_arithMean", "b1_sigma", "b1_geomMean",
-                "b1_p5", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
+                "b1_p05", "b1_p25", "b1_p50", "b1_p75", "b1_p95"};
         assertArrayEquals(expected, new Statistics().getStatisticsHeaders("b1").toArray());
         assertArrayEquals(expected, new Statistics(3, 0.0, 1.0).getStatisticsHeaders("b1").toArray());
 
