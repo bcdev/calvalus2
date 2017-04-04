@@ -48,8 +48,7 @@ public class RegionAnalysis {
             if (newDateRange != dataRangeHandler.current()) {
                 writeCurrentRecord();
                 resetRecord();
-                int[] indices = dataRangeHandler.next(newDateRange);
-                writeEmptyRecords(indices);
+                writeEmptyRecords(regionHandler.current(), dataRangeHandler.next(newDateRange));
             }
             accumulate(numObs, samples);
         }
@@ -59,7 +58,7 @@ public class RegionAnalysis {
         dataRangeHandler.reset();
         for (int regionIndex : regionHandler.next(regionNameList.indexOf(regionName))) {
             this.currentRegionName = regionNameList.get(regionIndex);
-            writeEmptyRecords(dataRangeHandler.remaining());
+            writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
         }
         this.currentRegionName = regionName;
     }
@@ -67,15 +66,14 @@ public class RegionAnalysis {
     public void endRegion() throws IOException {
         writeCurrentRecord();
         resetRecord();
-        int[] remaining = dataRangeHandler.remaining();
-        writeEmptyRecords(remaining);
+        writeEmptyRecords(regionHandler.current(), dataRangeHandler.remaining());
     }
 
     public void close() throws IOException {
         dataRangeHandler.reset();
         for (int regionIndex : regionHandler.remaining()) {
             this.currentRegionName = regionNameList.get(regionIndex);
-            writeEmptyRecords(dataRangeHandler.remaining());
+            writeEmptyRecords(regionIndex, dataRangeHandler.remaining());
         }
         statisticsWriter.close();
     }
@@ -86,7 +84,7 @@ public class RegionAnalysis {
         this.numPasses++;
         this.numObs += numObs;
         if (samples.length != stats.length) {
-            throw new IllegalArgumentException("samples.length does not match num bands");
+            throw new IllegalArgumentException(String.format("samples.length(%d) does not match num bands(%d)", samples.length, stats.length));
         }
         for (int bandId = 0; bandId < samples.length; bandId++) {
             stats[bandId].process(samples[bandId]);
@@ -103,25 +101,25 @@ public class RegionAnalysis {
 
     private void writeCurrentRecord() throws IOException {
         if (dataRangeHandler.current() > -1) {
-            writeRecord(dataRangeHandler.current());
+            writeRecord(regionHandler.current(), dataRangeHandler.current());
         }
     }
 
-    private void writeEmptyRecords(int[] indices) throws IOException {
-        for (int index : indices) {
-            writeRecord(index);
+    private void writeEmptyRecords(int regionIndex, int[] dateIndices) throws IOException {
+        for (int dateIndex : dateIndices) {
+            writeRecord(regionIndex, dateIndex);
         }
     }
 
-    private void writeRecord(int dateIndex) throws IOException {
+    private void writeRecord(int regionIndex, int dateIndex) throws IOException {
         String dStart = dateRanges.formatStart(dateIndex);
         String dEnd = dateRanges.formatEnd(dateIndex);
-        List<String> commonStats = getStats(dStart, dEnd, numPasses, numObs);
+        List<String> commonStats = getCommonStats(dStart, dEnd, numPasses, numObs);
 
-        statisticsWriter.writeRecord(regionHandler.current(), commonStats);
+        statisticsWriter.writeRecord(regionIndex, commonStats);
     }
 
-    private List<String> getStats(String dStart, String dEnd, int numPasses, int numObs) {
+    private List<String> getCommonStats(String dStart, String dEnd, int numPasses, int numObs) {
         List<String> records = new ArrayList<>();
         records.add(currentRegionName);
         records.add(dStart);
