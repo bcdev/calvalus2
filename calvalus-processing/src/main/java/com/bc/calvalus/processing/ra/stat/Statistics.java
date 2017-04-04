@@ -7,6 +7,15 @@ import java.util.List;
 
 /**
  * Computes a variety of statistics from float values
+ *
+ * For geometric mean:
+ * see: https://en.wikipedia.org/wiki/Geometric_mean#Relationship_with_logarithms
+ *
+ * The log form of the geometric mean is generally the preferred alternative for implementation
+ * in computer languages because calculating the product of many numbers can lead to an
+ * arithmetic overflow or arithmetic underflow.
+ * This is less likely to occur with the sum of the logarithms for each number.
+ *
  */
 class Statistics {
 
@@ -16,8 +25,8 @@ class Statistics {
     private double max;
     private double sum;
     private double sumSQ;
-    private double geomMeanProduct;
-    private boolean geomMeanValid;
+    private int geomNumValid;
+    private double geomLogSum;
 
     private final Histogram histogram;
     private int belowHistogram;
@@ -63,13 +72,10 @@ class Statistics {
                 max = Math.max(max, value);
                 sum += value;
                 sumSQ += value * value;
-                if (geomMeanValid) {
-                    if (value > 0) {
-                        geomMeanProduct *= value;
-                    } else {
-                        // the geometric mean is only defined, if all values are bigger than zero
-                        geomMeanValid = false;
-                    }
+                if (value > 0) {
+                    // the geometric mean is only defined, if for values bigger than zero
+                    geomNumValid++;
+                    geomLogSum += Math.log(value);
                 }
             }
         }
@@ -105,8 +111,8 @@ class Statistics {
         max = -Double.MAX_VALUE;
         sum = 0;
         sumSQ = 0;
-        geomMeanProduct = 1;
-        geomMeanValid = true;
+        geomNumValid = 0;
+        geomLogSum = 0;
         if (histogram != null) {
             histogram.clearHistogram();
         }
@@ -155,7 +161,7 @@ class Statistics {
             final double arithMean = sum / numValid;
             final double sigmaSqr = sumSQ / numValid - arithMean * arithMean;
             final double sigma = sigmaSqr > 0.0 ? Math.sqrt(sigmaSqr) : 0.0;
-            final double geomMean = geomMeanValid ? Math.pow(geomMeanProduct, 1.0 / numValid) : Double.NaN;
+            final double geomMean = geomNumValid > 0 ? Math.exp(geomLogSum / geomNumValid) : Double.NaN;
 
             stats.add(Double.toString(min));
             stats.add(Double.toString(max));

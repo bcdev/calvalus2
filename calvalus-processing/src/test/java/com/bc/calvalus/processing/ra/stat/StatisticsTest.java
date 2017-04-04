@@ -52,7 +52,7 @@ public class StatisticsTest {
     @Test
     public void test_one() throws Exception {
         float[] samples = {42f};
-        String[] stat = {"1", "42.0", "42.0", "42.0", "0.0", "42.0", "42.0", "42.0", "42.0", "42.0", "42.0"};
+        String[] stat = {"1", "42.0", "42.0", "42.0", "0.0", "42.00000000000001", "42.0", "42.0", "42.0", "42.0", "42.0"};
         String[] histo = {};
         testStat(new Statistics(), stat, histo, samples);
 
@@ -82,7 +82,7 @@ public class StatisticsTest {
         testStat(new Statistics(4, 0.0, 10.0), stat, histo, samples);
 
         float[] samples2 = {-1f, Float.NaN, 1f, 2f, 3f, 4f, Float.NaN, 5f, 6f, 7f, 11f};
-        String[] stat2 = {"9", "-1.0", "11.0", "4.222222222222222", "3.3591592128513272", "NaN", "-1.0", "0.0", "3.0", "6.0", "11.0"};
+        String[] stat2 = {"9", "-1.0", "11.0", "4.222222222222222", "3.3591592128513272", "3.9172194543068826", "-1.0", "0.0", "3.0", "6.0", "11.0"};
         String[] histo2 = {"1", "1", "4", "0.0", "10.0", "2", "2", "3", "0"};
         testStat(new Statistics(4, 0.0, 10.0), stat2, histo2, samples2);
     }
