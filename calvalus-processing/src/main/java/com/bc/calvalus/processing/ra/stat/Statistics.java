@@ -117,7 +117,7 @@ class Statistics {
 
     public List<String> getStatisticsHeaders(String bandName) {
         List<String> header = new ArrayList<>();
-        header.add(bandName + "_count");
+        header.add(bandName + "_numValid");
         header.add(bandName + "_min");
         header.add(bandName + "_max");
         header.add(bandName + "_arithMean");

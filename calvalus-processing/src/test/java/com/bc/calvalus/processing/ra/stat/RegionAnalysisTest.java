@@ -55,7 +55,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-statistics.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n";
         String actual = writer.writerMap.get("region-statistics.csv").toString();
         assertEquals(expected, actual);
@@ -80,7 +80,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
         String actual = writer.writerMap.get("region-statistics.csv").toString();
-        assertEquals("RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        assertEquals("RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                              "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n", actual);
     }
 
@@ -98,7 +98,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-statistics.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t1\t7\t3\t1.0\t3.0\t2.0\t0.8164965809277263\t1.8171205928321397\t1.0\t1.0\t2.0\t3.0\t3.0\n";
         String actual = writer.writerMap.get("region-statistics.csv").toString();
         assertEquals(expected, actual);
@@ -122,7 +122,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-statistics.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r1\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -157,7 +157,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
         String actual = writer.writerMap.get("region-statistics.csv").toString();
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t3\t24\t9\t1.0\t9.0\t5.0\t2.5819888974716116\t4.147166274396913\t1.0\t2.5\t5.0\t7.5\t9.0\n" +
                 "r1\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -195,7 +195,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-statistics.csv"));
         assertTrue(keySet.contains("region-histogram-b1.csv"));
 
-        String expected1 = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected1 = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t3\t24\t9\t1.0\t9.0\t5.0\t2.5819888974716116\t4.147166274396913\t1.0\t2.5\t5.0\t7.5\t9.0\n" +
                 "r1\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -250,7 +250,7 @@ public class RegionAnalysisTest {
         assertEquals(1, keySet.size());
         assertTrue(keySet.contains("region-statistics.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t5\t0.0\t10.0\t0\t0\t0\t0\t0\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t3\t24\t9\t1.0\t9.0\t5.0\t2.5819888974716116\t4.147166274396913\t1.0\t2.5\t5.0\t7.5\t9.0\t0\t0\t5\t0.0\t10.0\t1\t2\t2\t2\t2\n" +
                 "r1\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t5\t0.0\t10.0\t0\t0\t0\t0\t0\n" +
@@ -295,7 +295,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-r2-histogram-b1.csv"));
         assertTrue(keySet.contains("region-r3-histogram-b1.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t3\t24\t9\t1.0\t9.0\t5.0\t2.5819888974716116\t4.147166274396913\t1.0\t2.5\t5.0\t7.5\t9.0\n" +
                 "r1\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -303,7 +303,7 @@ public class RegionAnalysisTest {
         String actual = writer.writerMap.get("region-r1-statistics.csv").toString();
         assertEquals(expected, actual);
 
-        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r2\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r2\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r2\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -311,7 +311,7 @@ public class RegionAnalysisTest {
         actual = writer.writerMap.get("region-r2-statistics.csv").toString();
         assertEquals(expected, actual);
 
-        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                 "r3\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r3\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
                 "r3\t2010-01-21 00:00:00\t2010-01-31 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n" +
@@ -360,7 +360,7 @@ public class RegionAnalysisTest {
         assertEquals(1, keySet.size());
         assertTrue(keySet.contains("region-statistics.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t1\t7\t3\t1.0\t3.0\t2.0\t0.8164965809277263\t1.8171205928321397\t2.0\t3.0\t0\t0\t5\t0.0\t10.0\t1\t2\t0\t0\t0\t5\t4.0\t8.0\t6.0\t1.4142135623730951\t5.827386917152385\t6.0\t8.0\t3\t3.0\t5.0\t4.0\t0.8164965809277268\t3.9148676411688634\t4.0\t5.0\t0\t0\t2\t0.0\t10.0\t2\t1\n" +
                 "r2\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t5\t0.0\t10.0\t0\t0\t0\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t2\t0.0\t10.0\t0\t0\n";
         String actual = writer.writerMap.get("region-statistics.csv").toString();
@@ -385,12 +385,12 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-r1-statistics.csv"));
         assertTrue(keySet.contains("region-r2-statistics.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t1\t7\t3\t1.0\t3.0\t2.0\t0.8164965809277263\t1.8171205928321397\t2.0\t3.0\t0\t0\t5\t0.0\t10.0\t1\t2\t0\t0\t0\t5\t4.0\t8.0\t6.0\t1.4142135623730951\t5.827386917152385\t6.0\t8.0\t3\t3.0\t5.0\t4.0\t0.8164965809277268\t3.9148676411688634\t4.0\t5.0\t0\t0\t2\t0.0\t10.0\t2\t1\n";
         String actual = writer.writerMap.get("region-r1-statistics.csv").toString();
         assertEquals(expected, actual);
 
-        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
+        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\tb2_belowHistogram\tb2_aboveHistogram\tb2_numBins\tb2_lowValue\tb2_highValue\tb2_bin_0\tb2_bin_1\n" +
                 "r2\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t5\t0.0\t10.0\t0\t0\t0\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\t0\t2\t0.0\t10.0\t0\t0\n";
         actual = writer.writerMap.get("region-r2-statistics.csv").toString();
         assertEquals(expected, actual);
@@ -416,7 +416,7 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-histogram-b1.csv"));
         assertTrue(keySet.contains("region-histogram-b2.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t1\t7\t3\t1.0\t3.0\t2.0\t0.8164965809277263\t1.8171205928321397\t2.0\t3.0\t5\t4.0\t8.0\t6.0\t1.4142135623730951\t5.827386917152385\t6.0\t8.0\t3\t3.0\t5.0\t4.0\t0.8164965809277268\t3.9148676411688634\t4.0\t5.0\n" +
                 "r2\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n";
         String actual = writer.writerMap.get("region-statistics.csv").toString();
@@ -457,12 +457,12 @@ public class RegionAnalysisTest {
         assertTrue(keySet.contains("region-r2-histogram-b1.csv"));
         assertTrue(keySet.contains("region-r2-histogram-b2.csv"));
 
-        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
                 "r1\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t1\t7\t3\t1.0\t3.0\t2.0\t0.8164965809277263\t1.8171205928321397\t2.0\t3.0\t5\t4.0\t8.0\t6.0\t1.4142135623730951\t5.827386917152385\t6.0\t8.0\t3\t3.0\t5.0\t4.0\t0.8164965809277268\t3.9148676411688634\t4.0\t5.0\n";
         String actual = writer.writerMap.get("region-r1-statistics.csv").toString();
         assertEquals(expected, actual);
 
-        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_count\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_count\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_count\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
+        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p50\tb1_p98\tb3_numValid\tb3_min\tb3_max\tb3_arithMean\tb3_sigma\tb3_geomMean\tb3_p50\tb3_p98\tb2_numValid\tb2_min\tb2_max\tb2_arithMean\tb2_sigma\tb2_geomMean\tb2_p50\tb2_p98\n" +
                 "r2\t2010-01-11 00:00:00\t2010-01-20 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n";
         actual = writer.writerMap.get("region-r2-statistics.csv").toString();
         assertEquals(expected, actual);
