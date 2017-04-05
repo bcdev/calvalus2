@@ -135,6 +135,12 @@ public class RAConfig implements XmlConvertible {
     @Parameter(defaultValue = "true")
     private boolean writeSeparateHistogramFile = true;
 
+    // TODO
+//    @Parameter(defaultValue = "false")
+//    private boolean writeProductStatistics = false;
+
+    @Parameter(defaultValue = "false")
+    private boolean writePixelValues = false;
 
     // internal, will be set by the production type, to prevent repeated reading
     @Parameter
@@ -145,7 +151,7 @@ public class RAConfig implements XmlConvertible {
     public RAConfig() {
     }
 
-    public void setRegions(Region...regions) {
+    public void setRegions(Region... regions) {
         this.regions = regions;
     }
 
@@ -153,7 +159,7 @@ public class RAConfig implements XmlConvertible {
         return internalRegionNames;
     }
 
-    public void setInternalRegionNames(String...internalRegionNames) {
+    public void setInternalRegionNames(String... internalRegionNames) {
         this.internalRegionNames = internalRegionNames;
     }
 
@@ -169,7 +175,7 @@ public class RAConfig implements XmlConvertible {
         return percentiles;
     }
 
-    public void setPercentiles(int...percentiles) {
+    public void setPercentiles(int... percentiles) {
         this.percentiles = percentiles;
     }
 
@@ -177,7 +183,7 @@ public class RAConfig implements XmlConvertible {
         return bands;
     }
 
-    public void setBandConfigs(BandConfig...bandConfigs) {
+    public void setBandConfigs(BandConfig... bandConfigs) {
         this.bands = bandConfigs;
     }
 
@@ -195,6 +201,22 @@ public class RAConfig implements XmlConvertible {
 
     public void setWriteSeparateHistogramFile(boolean writeSeparateHistogramFile) {
         this.writeSeparateHistogramFile = writeSeparateHistogramFile;
+    }
+
+//    public boolean isWriteProductStatistics() {
+//        return writeProductStatistics;
+//    }
+//
+//    public void setWriteProductStatistics(boolean writeProductStatistics) {
+//        this.writeProductStatistics = writeProductStatistics;
+//    }
+
+    public boolean isWritePixelValues() {
+        return writePixelValues;
+    }
+
+    public void setWritePixelValues(boolean writePixelValues) {
+        this.writePixelValues = writePixelValues;
     }
 
     public static RAConfig get(Configuration conf) {
@@ -220,6 +242,16 @@ public class RAConfig implements XmlConvertible {
         } catch (ConversionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public String[] getBandNames() {
+        RAConfig.BandConfig[] bandConfigs = getBandConfigs();
+        String[] bandNames = new String[bandConfigs.length];
+        for (int i = 0; i < bandConfigs.length; i++) {
+            RAConfig.BandConfig bConfig = bandConfigs[i];
+            bandNames[i] = bConfig.getName().trim();
+        }
+        return bandNames;
     }
 
     public static class NamedGeometry {

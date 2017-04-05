@@ -38,17 +38,13 @@ class StatisticsWriter {
         this.statisticsPerRegion = raConfig.isWriteStatisticsFilePerRegion();
         this.separateHistogram = raConfig.isWriteSeparateHistogramFile();
         this.stats = stats;
-        RAConfig.BandConfig[] bandConfigs = raConfig.getBandConfigs();
-        String[] bandNames = new String[bandConfigs.length];
-        for (int i = 0; i < bandConfigs.length; i++) {
-            RAConfig.BandConfig bConfig = bandConfigs[i];
-            bandNames[i] = bConfig.getName();
-        }
+        String[] bandNames = raConfig.getBandNames();
         int numWriter = 1;
         if (separateHistogram) {
-            numWriter = 1 + bandConfigs.length;
+            numWriter = 1 + bandNames.length;
         }
 
+        RAConfig.BandConfig[] bandConfigs = raConfig.getBandConfigs();
         List<String> commonHeader = getCommonHeader();
         if (statisticsPerRegion) {
             writer = new Writer[raConfig.getInternalRegionNames().length][numWriter];

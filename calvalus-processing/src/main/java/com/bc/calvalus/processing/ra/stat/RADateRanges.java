@@ -29,10 +29,10 @@ import java.util.TimeZone;
 
 public class RADateRanges {
 
-    public static final DateFormat dateFormat = createDateFormat();
+    public static final DateFormat dateFormat = createDateFormat("yyyy-MM-dd HH:mm:ss");
 
-    static DateFormat createDateFormat() {
-        final DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+    static DateFormat createDateFormat(String format) {
+        final DateFormat dateFormat = new SimpleDateFormat(format, Locale.ENGLISH);
         final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
         dateFormat.setCalendar(calendar);
         return dateFormat;

@@ -17,6 +17,8 @@
 package com.bc.calvalus.processing.ra;
 
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.l2.ProductFormatter;
+import com.bc.calvalus.processing.ra.stat.PixelArchiver;
 import com.bc.calvalus.processing.ra.stat.RADateRanges;
 import com.bc.calvalus.processing.ra.stat.RegionAnalysis;
 import com.bc.calvalus.processing.ra.stat.WriterFactory;
@@ -26,7 +28,12 @@ import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.ParseException;
@@ -68,16 +75,16 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
     // values == extracts, ordered by time
     @Override
     protected void reduce(RAKey key, Iterable<RAValue> values, Context context) throws IOException, InterruptedException {
-        // 1) write netCDF file
-        // 2) compute stats
-        // 3) write CSV
 
         final int regionId = key.getRegionId(); // TODO is this needed
         final String regionName = key.getRegionName();
         System.out.println("regionName: " + regionName);
 
-        // open netCDF
-        // NFileWriteable nFileWriteable = N4FileWriteable.create("region " + regionId);
+        PixelArchiver pixelArchiver = null;
+        if (raConfig.isWritePixelValues()) {
+            pixelArchiver = new PixelArchiver(regionName, raConfig.getBandNames());
+        }
+
         regionAnalysis.startRegion(regionName);
 
         for (RAValue extract : values) {
@@ -85,14 +92,29 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
             int numObs = extract.getNumObs();
             float[][] samples = extract.getSamples();
             int numSamples = extract.getSamples()[0].length;
+            String productName = extract.getProductName();
 
             String timeFormatted = RADateRanges.dateFormat.format(new Date(time));
             System.out.printf("    data time = %s numObs = %15d  numSamples = %15d%n", timeFormatted, numObs, numSamples);
 
             regionAnalysis.addData(time, numObs, samples);
+            if (pixelArchiver != null) {
+                pixelArchiver.addProductPixels(time, numObs, samples, productName);
+            }
         }
         regionAnalysis.endRegion();
-        // close netCDF
+
+        if (pixelArchiver != null) {
+            System.out.println();
+            File[] netcdfFiles = pixelArchiver.createMergedNetcdf();
+            Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
+            for (File file : netcdfFiles) {
+                InputStream is = new BufferedInputStream(new FileInputStream(file));
+                Path workPath = new Path(workOutputPath, file.getName());
+                OutputStream os = workPath.getFileSystem(context.getConfiguration()).create(workPath);
+                ProductFormatter.copyAndClose(is, os, context);
+            }
+        }
     }
 
     private class HdfsWriterFactory implements WriterFactory {

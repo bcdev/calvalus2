@@ -25,7 +25,7 @@
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>/calvalus/home/marcoz/ra-example/002</wps:LiteralData>
+                <wps:LiteralData>/calvalus/home/marcoz/ra-example/003</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
@@ -38,7 +38,7 @@
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-09</wps:LiteralData>
+                <wps:LiteralData>2010-03-30</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -63,6 +63,7 @@
                         -->
                         <shapeFilePath>/calvalus/home/marcoz/shapefiles/HELCOM_grid100_LAEA5210.zip</shapeFilePath>
                         <filterAttributeName>CellCode</filterAttributeName>
+                        <filterAttributeValues>100kmE40N28,100kmE40N29,100kmE40N30,100kmE40N31,100kmE40N32,100kmE40N33,100kmE40N34,100kmE40N35</filterAttributeValues>
                         <validExpressions>!l1_flags.LAND_OCEAN</validExpressions>
                         <bands>
                             <band>
@@ -81,6 +82,8 @@
                                 <name>radiance_3</name>
                             </band>
                         </bands>
+                        <percentiles>2,50,75,98</percentiles>
+                        <writePixelValues>true</writePixelValues>
                     </parameters>
                 </wps:ComplexData>
             </wps:Data>

@@ -119,13 +119,12 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             maskImage = maskBand.getSourceImage();
             boolean tEqualTileGrid = true;
 
-            RAConfig.BandConfig[] bandConfigs = raConfig.getBandConfigs();
-            dataImages = new PlanarImage[bandConfigs.length];
-            for (int i = 0; i < bandConfigs.length; i++) {
-                String bandName = bandConfigs[i].getName().trim();
-                Band band = product.getBand(bandName);
+            String[] bandNames = raConfig.getBandNames();
+            dataImages = new PlanarImage[bandNames.length];
+            for (int i = 0; i < bandNames.length; i++) {
+                Band band = product.getBand(bandNames[i]);
                 if (band == null) {
-                    throw new IllegalArgumentException("Product does not contain band " + bandName);
+                    throw new IllegalArgumentException("Product does not contain band " + bandNames[i]);
                 }
                 if (band.getRasterHeight() != maskBand.getRasterHeight() ||
                         band.getRasterWidth() != maskBand.getRasterWidth()) {
