@@ -3,6 +3,7 @@ package com.bc.calvalus.portal.client;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
@@ -105,20 +106,26 @@ class UserManagedFiles {
         });
     }
 
+    // javascript to add tool tips to listbox entries
+    private static native void addItemWithTitle(Element element, String name, String value)/*-{
+        var opt = $doc.createElement("OPTION");
+        opt.title = value;
+        opt.text = name;
+        opt.value = value;
+        element.options.add(opt);
+
+    }-*/;
+
     private void setItems(String[] filePaths) {
         for (String path : items.keySet()) {
             contentListbox.removeItem(getIndexOf(path));
         }
         items.clear();
         for (String filePath : filePaths) {
-            int baseDirPos = filePath.lastIndexOf(baseDir + "/");
-            if (baseDirPos >= 0) {
-                items.put(filePath, filePath.substring(baseDirPos + baseDir.length() + 1));
-                contentListbox.addItem(filePath.substring(baseDirPos + baseDir.length() + 1), filePath);
-            } else {
-                items.put(filePath, filePath);
-                contentListbox.addItem(filePath, filePath);
-            }
+            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
+            items.put(filePath, fileName);
+            //contentListbox.addItem(fileName, filePath);
+            addItemWithTitle(contentListbox.getElement(), fileName, filePath);
         }
         if (contentListbox.getItemCount() > 0) {
             contentListbox.setSelectedIndex(0);
