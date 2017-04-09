@@ -101,7 +101,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(true);
         outputParametersForm.showTailoringRelatedSettings(true);
         outputParametersForm.quicklooks.setValue(true);

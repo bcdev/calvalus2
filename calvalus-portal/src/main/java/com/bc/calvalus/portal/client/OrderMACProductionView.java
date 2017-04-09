@@ -83,7 +83,7 @@ public class OrderMACProductionView extends OrderProductionView {
         maConfigForm = new MAConfigForm(portalContext);
         maConfigForm.expressionTable.setVisible(false);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 

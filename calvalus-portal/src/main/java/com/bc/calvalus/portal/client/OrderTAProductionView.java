@@ -90,7 +90,7 @@ public class OrderTAProductionView extends OrderProductionView {
         l3ConfigForm.steppingPeriodLength.setValue(32);
         l3ConfigForm.compositingPeriodLength.setValue(4);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 
