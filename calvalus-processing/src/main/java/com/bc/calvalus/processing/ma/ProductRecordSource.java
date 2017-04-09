@@ -98,7 +98,7 @@ public class ProductRecordSource implements RecordSource {
 
     private static boolean shallApplyTimeCriterion(MAConfig config) {
         Double maxTimeDifference = config.getMaxTimeDifference();
-        return maxTimeDifference != null && maxTimeDifference > 0;
+        return maxTimeDifference != null && maxTimeDifference != 0;
     }
 
     private static boolean canApplyTimeCriterion(Header referenceHeader) {

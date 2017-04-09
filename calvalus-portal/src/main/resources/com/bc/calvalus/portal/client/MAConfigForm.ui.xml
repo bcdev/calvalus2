@@ -44,7 +44,7 @@
                             <td>
                                 <g:DoubleBox ui:field="maxTimeDifference" visibleLength="8"/>
                             </td>
-                            <td>hours</td>
+                            <td>hours (0=unbound, -1=same day)</td>
                         </tr>
                         <tr>
                             <td>

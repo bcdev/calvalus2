@@ -26,9 +26,12 @@ import java.awt.Rectangle;
 import java.awt.geom.Area;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Logger;
 
 /**
@@ -114,7 +117,7 @@ public class PixelPosProvider {
     }
 
     private boolean testTime() {
-        return maxTimeDifference > 0 && pixelTimeProvider != null;
+        return maxTimeDifference != 0 && pixelTimeProvider != null;
     }
 
     private PixelPos getSpatiallyValidPixelPos(Record referenceRecord) {
@@ -139,20 +142,40 @@ public class PixelPosProvider {
         return null;
     }
 
-    private long getMinReferenceTime(Record referenceRecord) {
+    GregorianCalendar utc = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+
+    /** warning: not synchronized, must not be called concurrently */
+    long getMinReferenceTime(Record referenceRecord) {
         Date time = referenceRecord.getTime();
         if (time == null) {
             throw new IllegalArgumentException("Point record has no time information.");
         }
-        return time.getTime() - maxTimeDifference;
+        if (maxTimeDifference >= 0.0) {
+            return time.getTime() - maxTimeDifference;
+        } else {
+            double lon = referenceRecord.getLocation().getLon();
+            utc.setTimeInMillis(time.getTime() + (long) (lon / 15 * 60 * 60 * 1000));
+            int hour = utc.get(Calendar.HOUR_OF_DAY);
+            // screw to beginning of calendar day, or of previous day in case maxTD is -2 * ...
+            return time.getTime() - hour * 60 * 60 * 1000 + 24 * (maxTimeDifference+60*60*1000);
+        }
     }
 
-    private long getMaxReferenceTime(Record referenceRecord) {
+    /** warning: not synchronized, must not be called concurrently */
+    long getMaxReferenceTime(Record referenceRecord) {
         Date time = referenceRecord.getTime();
         if (time == null) {
             throw new IllegalArgumentException("Point record has no time information.");
         }
-        return time.getTime() + maxTimeDifference;
+        if (maxTimeDifference >= 0.0) {
+            return time.getTime() + maxTimeDifference;
+        } else {
+            double lon = referenceRecord.getLocation().getLon();
+            utc.setTimeInMillis(time.getTime() + (long) (lon / 15 * 60 * 60 * 1000));
+            int hour = utc.get(Calendar.HOUR_OF_DAY);
+            // screw to beginning of next calendar day, or of day after in case maxTD is -2 * ...
+            return time.getTime() + (24 - hour) * 60 * 60 * 1000 - 24 * (maxTimeDifference+60*60*1000);
+        }
     }
 
     private List<PixelPosRecord> getInputRecordsSortedByPixelYX(Iterable<Record> inputRecords) {
