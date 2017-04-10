@@ -41,6 +41,9 @@ import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,14 +60,19 @@ public class RARegions {
         System.out.println("unzippedFiles = " + Arrays.toString(unzippedFiles));
         // find *.dim file
         File shpFile = null;
+        File prjFile = null;
         for (File file : unzippedFiles) {
             if (file.getName().toLowerCase().endsWith(".shp")) {
                 shpFile = file;
-                break;
+            } else if (file.getName().toLowerCase().endsWith(".prj")) {
+                prjFile = file;
             }
         }
         if (shpFile == null) {
             throw new IllegalFileFormatException("input has no <shp> file.");
+        }
+        if (prjFile != null) {
+            mayFixPrjFile(prjFile);
         }
         FeatureCollection<SimpleFeatureType, SimpleFeature> features = FeatureUtils.loadFeatureCollectionFromShapefile(shpFile);
         try {
@@ -72,6 +80,23 @@ public class RARegions {
         } catch (SchemaException | TransformException | FactoryException e) {
             throw new IOException("Could not reproject shapefile", e);
         }
+    }
+
+    private static void mayFixPrjFile(File prjFile) throws IOException {
+        // read existing PRJ file
+        Charset cs = Charset.forName("ISO-8859-1");
+        List<String> strings = Files.readAllLines(prjFile.toPath(), cs);
+        String originalWKT = String.join("", strings);
+        String newWKT = removeMetadataFromWkt(originalWKT);
+        // write back PRJ file
+        List<String> lines = new ArrayList<>();
+        lines.add(newWKT);
+        Files.write(prjFile.toPath(), lines, cs);
+    }
+
+    static String removeMetadataFromWkt(String originalWKT) {
+        // remove ",METADATA[...]"
+        return originalWKT.replaceAll(",\\s*METADATA\\s*\\[[^\\]]+\\]", "");
     }
 
     public static FeatureCollection<SimpleFeatureType, SimpleFeature> filterCollection(
@@ -224,8 +249,11 @@ public class RARegions {
     }
 
     public static void main(String[] args) throws IOException, SchemaException, FactoryException, TransformException {
-        File file = new File(args[0]);
-        FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection = FeatureUtils.loadFeatureCollectionFromShapefile(file);
+        File shpFile = new File(args[0]);
+        File prjFile = new File(shpFile.getParent(), shpFile.getName().replace(".shp", ".prj"));
+        mayFixPrjFile(prjFile);
+        
+        FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection = FeatureUtils.loadFeatureCollectionFromShapefile(shpFile);
         FeatureCollection<SimpleFeatureType, SimpleFeature> reprojected = new ReprojectFeatureResults(featureCollection, DefaultGeographicCRS.WGS84);
 
         int size = reprojected.size();
