@@ -115,7 +115,7 @@ public class OrderVCProductionView extends OrderProductionView {
         vcPanel.add(verticalPanel);
         ///////////
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
         outputParametersForm.allowedFailure.setValue(5);

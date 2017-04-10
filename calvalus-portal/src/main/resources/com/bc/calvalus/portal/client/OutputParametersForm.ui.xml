@@ -116,6 +116,15 @@
                     <p/>
                 </g:HTML>
 
+                <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
+                    <g:Label>Request queue:</g:Label>
+                    <g:ListBox ui:field="requestQueue" visibleItemCount="1"/>
+                </g:HorizontalPanel>
+                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                    If you are entitled for several queues select the queue for the project you are processing for.
+                    <p/>
+                </g:HTML>
+
             </g:VerticalPanel>
 
         </g:VerticalPanel>

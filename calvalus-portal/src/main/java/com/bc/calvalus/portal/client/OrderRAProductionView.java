@@ -97,7 +97,7 @@ public class OrderRAProductionView extends OrderProductionView {
 
         raConfigForm = new RAConfigForm(portalContext);
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
 

@@ -98,7 +98,7 @@ public class OrderL2toL3ProductionView extends OrderProductionView {
 
         updateTemporalParameters(productSetFilterForm.getValueMap());
 
-        outputParametersForm = new OutputParametersForm();
+        outputParametersForm = new OutputParametersForm(portalContext);
         outputMeanL3Products = new CheckBox("Output mean Level-3 products.");
         outputMeanL3Products.setValue(false);
         outputParametersForm.productRelatedPanel.add(outputMeanL3Products);

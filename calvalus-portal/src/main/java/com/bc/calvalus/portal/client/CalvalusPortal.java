@@ -85,6 +85,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     private ManageProductionsView manageProductionsView;
     private boolean productionListFiltered;
     private Map<String, Boolean> calvalusConfig = null;
+    private String[] queues = null;
     private MainMenu mainMenu;
     private PortalView currentView = null;
     private Map<String, OrderProductionView> productionTypeViews;
@@ -92,6 +93,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     public boolean withPortalFeature(String featureName) {
         Boolean v = calvalusConfig.get(featureName);
         return v != null && v;
+    }
+
+    public String[] getRequestQueues() {
+        return queues;
     }
 
     public CalvalusPortal() {
@@ -546,11 +551,25 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         @Override
         public void onSuccess(DtoCalvalusConfig config) {
             calvalusConfig = new HashMap<>();
+            List<String> queueList = new ArrayList<>();
+            if (config.getConfig().containsKey("calvalus.hadoop.mapreduce.job.queuename")) {
+                queueList.add(config.getConfig().get("calvalus.hadoop.mapreduce.job.queuename"));
+            }
             for (String key : config.getConfig().keySet()) {
                 if (key.startsWith("calvalus.portal.")) {
                     calvalusConfig.put(key.substring("calvalus.portal.".length()),
                             roleSupports(key, config.getRoles(), config.getConfig()));
+                } else if (key.startsWith("calvalus.queue.")
+                        && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
+                    for (String queue : config.getConfig().get(key).split(" ")) {
+                        if (! queueList.contains(queue)) {
+                            queueList.add(queue);
+                        }
+                    }
                 }
+            }
+            if (queueList.size() > 0) {
+                queues = queueList.toArray(new String[queueList.size()]);
             }
             maybeInitFrontend();
         }
@@ -560,6 +579,18 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             caught.printStackTrace(System.err);
             GWT.log("Failed to read Calvalus config from server", caught);
         }
+    }
+
+    private void addQueues(String[] split) {
+    }
+
+    private static boolean contains(String[] roles, String role) {
+        for (String r : roles) {
+            if (r.equals(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static boolean roleSupports(String viewName, String[] roles, Map<String, String> config) {
