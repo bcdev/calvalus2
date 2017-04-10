@@ -17,11 +17,20 @@
         </wps:Input>
 
         <wps:Input>
+            <ows:Identifier>inputPath</ows:Identifier>
+            <wps:Data>
+                <wps:LiteralData>/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/MER_..._1.*${yyyy}${MM}${dd}.*.N1</wps:LiteralData>
+            </wps:Data>
+        </wps:Input>
+        <!--or-->
+        <wps:Input>
             <ows:Identifier>geoInventory</ows:Identifier>
             <wps:Data>
                 <wps:LiteralData>/calvalus/geoInventory/MER_RR__1P_r03</wps:LiteralData>
             </wps:Data>
         </wps:Input>
+        
+        
         <wps:Input>
             <ows:Identifier>calvalus.output.dir</ows:Identifier>
             <wps:Data>
@@ -38,7 +47,7 @@
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-30</wps:LiteralData>
+                <wps:LiteralData>2010-03-31</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
@@ -52,7 +61,7 @@
             <wps:Data>
                 <wps:ComplexData>
                     <parameters>
-                        <!--
+<!--
                         <regions>
                             <region>
                                 <name>northsea</name>
@@ -60,7 +69,7 @@
                                 </wkt>
                             </region>
                         </regions>
-                        -->
+-->
                         <shapeFilePath>/calvalus/home/marcoz/shapefiles/HELCOM_grid100_LAEA5210.zip</shapeFilePath>
                         <filterAttributeName>CellCode</filterAttributeName>
                         <filterAttributeValues>100kmE40N28,100kmE40N29,100kmE40N30,100kmE40N31,100kmE40N32,100kmE40N33,100kmE40N34,100kmE40N35</filterAttributeValues>
