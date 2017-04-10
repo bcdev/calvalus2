@@ -140,6 +140,7 @@ public class RAProductionType extends HadoopProductionType {
                 if (union == null) {
                     throw new ProductionException("Can not build union from given regions");
                 }
+                union = union.convexHull();
                 raConfig.setInternalRegionNames(regionNames.toArray(new String[0]));
                 return new String[]{raConfig.toXml(), union.toString()};
             } catch (BindingException | IOException e) {
