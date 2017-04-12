@@ -32,25 +32,24 @@
         <module>calvalus-reporting</module>
         <module>calvalus-reporting-ui</module>
         <module>calvalus-wps-impl</module>
-    <module>calvalus-code-de</module>
-  </modules>
+    </modules>
 
     <repositories>
-<!--
-        <repository>
-            <id>bc-mvn-repo-closed</id>
-            <name>Private Maven Repository at Brockmann Consult</name>
-            <url>scp://www.brockmann-consult.de/home/maven-cs</url>
-            <releases>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
-                <checksumPolicy>warn</checksumPolicy>
-            </snapshots>
-        </repository>
-        -->
+        <!--
+                <repository>
+                    <id>bc-mvn-repo-closed</id>
+                    <name>Private Maven Repository at Brockmann Consult</name>
+                    <url>scp://www.brockmann-consult.de/home/maven-cs</url>
+                    <releases>
+                        <enabled>true</enabled>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </releases>
+                    <snapshots>
+                        <enabled>true</enabled>
+                        <checksumPolicy>warn</checksumPolicy>
+                    </snapshots>
+                </repository>
+                -->
         <repository>
             <id>snap-repo-public</id>
             <name>Public Maven Repository for SNAP</name>
@@ -393,59 +392,59 @@
 
             <!--  Hadoop -->
 
-<!--
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-common</artifactId>
-                <artifactId>hadoop-client</artifactId>
-                <version>${hadoop.version}</version>
--->
-                <!--
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.eclipse.jdt</groupId>
-                        <artifactId>core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jetty-util</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-runtime</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>tomcat</groupId>
-                        <artifactId>jasper-compiler</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-api-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.mortbay.jetty</groupId>
-                        <artifactId>jsp-2.1</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>commons-el</groupId>
-                        <artifactId>commons-el</artifactId>
-                    </exclusion>
-                </exclusions>
-                -->
-<!--
-            </dependency>
-        -->
-<!--
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-mapreduce-client-core</artifactId>
-                <version>2.6.0</version>
-            </dependency>
--->
+            <!--
+                        <dependency>
+                            <groupId>org.apache.hadoop</groupId>
+                            <artifactId>hadoop-common</artifactId>
+                            <artifactId>hadoop-client</artifactId>
+                            <version>${hadoop.version}</version>
+            -->
+            <!--
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jdt</groupId>
+                    <artifactId>core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jetty</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jetty-util</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>tomcat</groupId>
+                    <artifactId>jasper-runtime</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>tomcat</groupId>
+                    <artifactId>jasper-compiler</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jsp-api-2.1</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>jsp-2.1</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>commons-el</groupId>
+                    <artifactId>commons-el</artifactId>
+                </exclusion>
+            </exclusions>
+            -->
+            <!--
+                        </dependency>
+                    -->
+            <!--
+                        <dependency>
+                            <groupId>org.apache.hadoop</groupId>
+                            <artifactId>hadoop-mapreduce-client-core</artifactId>
+                            <version>2.6.0</version>
+                        </dependency>
+            -->
             <dependency>
                 <groupId>org.apache.hadoop</groupId>
                 <artifactId>hadoop-client</artifactId>
