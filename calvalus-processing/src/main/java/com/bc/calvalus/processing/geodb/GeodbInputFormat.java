@@ -103,22 +103,24 @@ public class GeodbInputFormat extends InputFormat {
     }
 
     public static Set<String> queryGeoInventory(boolean failOnMissingDB, Configuration conf) throws IOException {
-        String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
-        CoverageInventory inventory = new CoverageInventory(streamFactory);
-        if (!inventory.hasIndex()) {
-            if (failOnMissingDB) {
-                throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
-            } else {
-                return Collections.EMPTY_SET;
-            }
-        }
-        inventory.loadIndex();
         List<Constrain> constrains = parseConstraint(conf);
         Set<String> paths = new HashSet<>();
-        for (Constrain constrain : constrains) {
-            LOG.fine("query for constrain: " + constrain.toString());
-            paths.addAll(inventory.query(constrain).getPaths());
+        String[] geoInventories = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY).split(",");
+        for (String geoInventory : geoInventories) {
+            StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
+            CoverageInventory inventory = new CoverageInventory(streamFactory);
+            if (!inventory.hasIndex()) {
+                if (failOnMissingDB) {
+                    throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
+                } else {
+                    return Collections.EMPTY_SET;
+                }
+            }
+            inventory.loadIndex();
+            for (Constrain constrain : constrains) {
+                LOG.fine("query for constrain: " + constrain.toString());
+                paths.addAll(inventory.query(constrain).getPaths());
+            }
         }
         return paths;
     }

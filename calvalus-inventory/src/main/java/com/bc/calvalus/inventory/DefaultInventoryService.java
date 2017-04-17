@@ -74,7 +74,11 @@ public class DefaultInventoryService implements InventoryService {
             // check if the datasets are all still available and if the user has access rights
             for (ProductSet productSet : productSets) {
                 try {
-                    fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getPath()));
+                    if (productSet.getGeoInventory() != null) {
+                        fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getGeoInventory() + "/" + ProductSetPersistable.INDEX));
+                    } else {
+                        fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getPath()));
+                    }
                     accu.add(productSet);
                 } catch (AccessControlException ignore) {
                 }
