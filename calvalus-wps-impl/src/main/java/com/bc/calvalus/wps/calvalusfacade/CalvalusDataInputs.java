@@ -39,9 +39,9 @@ public class CalvalusDataInputs {
     public static final long MIN_DATE = 1451606400000L;
     public static final long MAX_DATE = 1483228800000L;
     public static SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    static {
-        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+//    static {
+//        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+//    }
 
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;
@@ -51,8 +51,8 @@ public class CalvalusDataInputs {
                        ProductSet[] productSets,
                        Map<String, String> requestHeaderMap)
                 throws InvalidParameterValueException {
-        this.inputMapFormatted = new HashMap<>();
-        this.inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
+        inputMapFormatted = new HashMap<>();
+        inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
         extractProductionParameters();
         if (calvalusProcessor != null) {
             extractProductionInfoParameters((CalvalusProcessor) calvalusProcessor);
@@ -62,17 +62,27 @@ public class CalvalusDataInputs {
         extractProductSetParameters(productSets, (CalvalusProcessor) calvalusProcessor);
         if (extractL3Parameters(calvalusProcessor)) {
             inputMapFormatted.put("productionType", "L3");
+            String productionName = executeRequestExtractor.getValue("productionName");
+            if (productionName != null) {
+                inputMapFormatted.put("calvalus.output.prefix", productionName.replaceAll(" ", "_"));
+            }
         } else {
             inputMapFormatted.put("productionType", "L2Plus");
         }
-        this.inputMapFormatted.put("autoStaging", "true");
+//        if (inputMapRaw.containsKey("calvalus.ql.parameters")) {
+//            inputMapFormatted.put("calvalus.ql.parameters", inputMapRaw.get("calvalus.ql.parameters"));
+//        } else if (calvalusProcessor.getJobConfiguration().containsKey("calvalus.ql.parameters")) {
+//            inputMapFormatted.put("calvalus.ql.parameters", calvalusProcessor.getJobConfiguration().get("calvalus.ql.parameters"));
+//        }
+        inputMapFormatted.put("autoStaging", "true");
+        inputMapFormatted.put("calvalus.output.compression", "none");
         if(requestHeaderMap.get("remoteUser") != null){
-            this.inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
+            inputMapFormatted.put("calvalus.wps.remote.user", requestHeaderMap.get("remoteUser"));
         }
         if(requestHeaderMap.get("remoteRef") != null){
-            this.inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
+            inputMapFormatted.put("calvalus.wps.remote.ref", requestHeaderMap.get("remoteRef"));
         }
-        this.inputMapFormatted.put("quicklooks", "true");
+        inputMapFormatted.put("quicklooks", "true");
     }
 
     /**
@@ -236,7 +246,7 @@ public class CalvalusDataInputs {
         }
         try {
             long millis = ISO_DATE_FORMAT.parse(maxDate).getTime() - ISO_DATE_FORMAT.parse(minDate).getTime();
-            int periodLength = (int) ((millis + (1000 * 60 * 60 * 24) / 2) / (1000 * 60 * 60 * 24));
+            int periodLength = (int) ((millis + (1000 * 60 * 60 * 24) * 3 / 2) / (1000 * 60 * 60 * 24));
             inputMapFormatted.put("periodLength", String.valueOf(periodLength));
         } catch (ParseException e) {
             throw new InvalidParameterValueException("failed to parse date " + minDate + " or " + maxDate, e, "minDate or maxDate or dataset temporal coverage");

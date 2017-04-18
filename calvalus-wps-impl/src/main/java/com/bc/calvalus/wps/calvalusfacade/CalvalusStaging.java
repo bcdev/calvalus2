@@ -118,7 +118,7 @@ class CalvalusStaging {
         if (productResultFiles == null) {
             throw new ProductMetadataException("No available product result files.");
         }
-        File outputMetadata = new File(stagingDirectory, production.getName() + "-metadata");
+        File outputMetadata = new File(stagingDirectory, production.getName().replaceAll(" ", "_") + "-metadata");
         if (outputMetadata.exists()) {
             return;
         }
@@ -163,8 +163,8 @@ class CalvalusStaging {
                     .port(wpsServerContext.getPort())
                     .path(APP_NAME)
                     .path(stagingDirectoryPath)
-                    .path(production.getName() + "-metadata")
-                    .build().toString();
+                    .path(production.getName().replaceAll(" ", "_") + "-metadata")
+                .build().toString();
         productResultUrls.add(metadataUrl);
         return productResultUrls;
     }

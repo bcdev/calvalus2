@@ -140,6 +140,7 @@ public class L3ProductionType extends HadoopProductionType {
         }
 
         boolean hasQuicklookParameters = productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null;
+        CalvalusLogger.getLogger().info("singleReducer="+singleReducer+" requiresFormatting="+requiresFormatting+" hasQuicklookParameters="+hasQuicklookParameters);
         if (!singleReducer && requiresFormatting) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
@@ -162,6 +163,7 @@ public class L3ProductionType extends HadoopProductionType {
             workflow = new Workflow.Sequential(workflow, formatItem);
 
             if (hasQuicklookParameters) {
+                CalvalusLogger.getLogger().info("creating ql step for reducers+formatting");
                 Configuration qlJobConfig = createJobConfig(productionRequest);
                 setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
                 setRequestParameters(productionRequest, qlJobConfig);
@@ -175,6 +177,7 @@ public class L3ProductionType extends HadoopProductionType {
                 workflow.add(qlItem);
             }
         } else if (singleReducer && requiresFormatting && hasQuicklookParameters) {
+            CalvalusLogger.getLogger().info("creating ql step for single reducer+formatting");
             Configuration qlJobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, qlJobConfig);
             setRequestParameters(productionRequest, qlJobConfig);
