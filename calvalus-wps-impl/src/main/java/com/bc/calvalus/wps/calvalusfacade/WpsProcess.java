@@ -2,6 +2,8 @@ package com.bc.calvalus.wps.calvalusfacade;
 
 import com.bc.calvalus.processing.ProcessorDescriptor;
 
+import java.util.Map;
+
 /**
  * @author hans
  */
@@ -18,6 +20,8 @@ public interface WpsProcess {
     boolean isLocal();
 
     ProcessorDescriptor.ParameterDescriptor[] getParameterDescriptors();
+
+    Map<String,String> getJobConfiguration();
 
     String getDefaultParameters();
 

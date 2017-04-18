@@ -41,12 +41,12 @@ public class CalvalusFacade extends ProcessFacade {
 
     @Override
     public LocalProductionStatus orderProductionAsynchronous(Execute executeRequest) throws WpsProductionException {
-        return calvalusProduction.orderProductionAsynchronous(executeRequest, systemUserName, this);
+        return calvalusProduction.orderProductionAsynchronous(executeRequest, remoteUserName, this);
     }
 
     @Override
     public LocalProductionStatus orderProductionSynchronous(Execute executeRequest) throws WpsProductionException {
-        return calvalusProduction.orderProductionSynchronous(executeRequest, systemUserName, this);
+        return calvalusProduction.orderProductionSynchronous(executeRequest, remoteUserName, this);
     }
 
     @Override

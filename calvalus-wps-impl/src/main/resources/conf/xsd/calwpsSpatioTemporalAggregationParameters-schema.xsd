@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://www.brockmann-consult.de/calwps/calwpsSpatioTemporalAggregationParameters-schema.xsd" xmlns:wps="http://www.brockmann-consult.de/calwps/calwpsSpatioTemporalAggregationParameters-schema.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="spatioTemporalAggregationParameters">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="aggregate" type="xs:string" form="qualified" default="false" minOccurs="0"/>
+                <xs:element name="spatialResolution" type="xs:int" form="qualified" default="60" minOccurs="0"/>
+                <xs:element name="spatialRule" type="wps:SpatialRuleType" form="qualified" default="NEAREST" minOccurs="0"/>
+                <xs:element name="temporalRules" type="xs:string" form="qualified" default="AVG" minOccurs="0"/>
+                <xs:element name="variables" type="xs:string" form="qualified"/>
+                <xs:element name="validPixelExpression" type="xs:string" form="qualified" default="true" minOccurs="0"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="SpatialRuleType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="NEAREST"/>
+            <xs:enumeration value="BINNING"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

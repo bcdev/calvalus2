@@ -5,6 +5,8 @@ import static com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 
+import java.util.Map;
+
 /**
  * @author hans
  */
@@ -59,6 +61,10 @@ public class CalvalusProcessor implements WpsProcess {
     @Override
     public ParameterDescriptor[] getParameterDescriptors() {
         return processorDescriptor.getParameterDescriptors();
+    }
+
+    public Map<String,String> getJobConfiguration() {
+        return processorDescriptor.getJobConfiguration();
     }
 
     /**

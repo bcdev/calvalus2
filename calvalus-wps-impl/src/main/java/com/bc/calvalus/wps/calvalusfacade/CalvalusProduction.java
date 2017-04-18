@@ -52,7 +52,7 @@ class CalvalusProduction {
             return doProductionAsynchronous(request, serviceContainer.getProductionService(), userName);
         } catch (ProductionException | IOException | InvalidParameterValueException | WpsProcessorNotFoundException |
                     MissingParameterValueException | InvalidProcessorIdException | JAXBException exception) {
-            throw new WpsProductionException("Processing failed : " + exception.getMessage());
+            throw new WpsProductionException("Processing failed : " + exception.getMessage(), exception);
         }
     }
 
@@ -72,7 +72,7 @@ class CalvalusProduction {
         } catch (WpsResultProductException | JAXBException | MissingParameterValueException | InvalidProcessorIdException | WpsStagingException |
                     ProductMetadataException | InterruptedException | WpsProcessorNotFoundException | ProductionException |
                     InvalidParameterValueException | IOException exception) {
-            throw new WpsProductionException("Processing failed : " + exception.getMessage());
+            throw new WpsProductionException("Processing failed : " + exception.getMessage(), exception);
         }
     }
 

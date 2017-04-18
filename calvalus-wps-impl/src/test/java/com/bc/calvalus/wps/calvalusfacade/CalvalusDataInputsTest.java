@@ -52,7 +52,8 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+        //assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
@@ -71,7 +72,8 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithDateRange, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+//        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
@@ -90,7 +92,8 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsWithGeoDb, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+//        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L3"));
+        assertThat(calvalusDataInputs.getInputMapFormatted().get("productionType"), equalTo("L2Plus"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.calvalus.bundle"), equalTo("calvalus-2.10-SNAPSHOT"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getInputMapFormatted().get("productionName"), equalTo("dummyProductionName"));
@@ -109,7 +112,8 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
+//        assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L3"));
+        assertThat(calvalusDataInputs.getValue("productionType"), equalTo("L2Plus"));
         assertThat(calvalusDataInputs.getValue("calvalus.calvalus.bundle"), equalTo("calvalus-2.0b411"));
         assertThat(calvalusDataInputs.getValue("calvalus.snap.bundle"), equalTo("snap-3.0.0"));
         assertThat(calvalusDataInputs.getValue("productionName"), equalTo("dummyProductionName"));
@@ -277,7 +281,8 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
                                                           "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
-                                                          "productionType : L3\n" +
+//                                                          "productionType : L3\n" +
+                                                          "productionType : L2Plus\n" +
                                                           "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
                                                           "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
@@ -315,6 +320,7 @@ public class CalvalusDataInputsTest {
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
                                                           "processorBundleLocation : null\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
+                                                          "productionType : L2Plus\n" +
                                                           "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
                                                           "processorBundleVersion : null\n" +
                                                           "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
@@ -423,7 +429,7 @@ public class CalvalusDataInputsTest {
     private Map<String, String> getProductionParametersRawMap() {
         Map<String, String> mockInputMapRaw = new HashMap<>();
         mockInputMapRaw.put("inputDataSetName", "MERIS RR  r03 L1b 2002-2012");
-        mockInputMapRaw.put("productionType", "L3");
+        mockInputMapRaw.put("calvalus", "L3");
         mockInputMapRaw.put("productionName", "dummyProductionName");
         return mockInputMapRaw;
     }

@@ -202,53 +202,27 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     .create()
                     .withIdentifier("productionName")
                     .withTitle("Production name")
-                    .withAbstract("The name of the product. When not specified, a random unique name is generated")
+                    .withAbstract("User's reference of the production, should be unique, generated if left empty")
                     .withDataType("string")
                     .build();
         dataInputs.getInput().add(productionNameInput);
 
-        List<Object> allowedProductionTypes = new ArrayList<>();
-        ValueType allowedProductionType = new ValueType();
-        allowedProductionType.setValue("L2Plus");
-        allowedProductionTypes.add(allowedProductionType);
-
-        InputDescriptionType productionType = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("productionType")
-                    .withTitle("Production type")
-                    .withAbstract("The type of the requested product. When not specified, L2Plus type is used")
-                    .withDataType("string")
-                    .withAllowedValues(allowedProductionTypes)
-                    .withDefaultValue("L2Plus")
-                    .build();
-        dataInputs.getInput().add(productionType);
-
-        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
-        if (parameterDescriptors != null) {
-            for (ProcessorDescriptor.ParameterDescriptor parameterDescriptor : parameterDescriptors) {
-                InputDescriptionType input = InputDescriptionTypeBuilder
-                            .create()
-                            .withIdentifier(parameterDescriptor.getName())
-                            .withTitle(parameterDescriptor.getName())
-                            .withAbstract(parameterDescriptor.getDescription())
-                            .withDefaultValue(parameterDescriptor.getDefaultValue())
-                            .withDataType(parameterDescriptor.getType())
-                            .build();
-
-                dataInputs.getInput().add(input);
-            }
-        } else if (!StringUtils.isBlank(processor.getDefaultParameters())) {
-            InputDescriptionType input = InputDescriptionTypeBuilder
-                        .create()
-                        .withIdentifier("processorParameters")
-                        .withTitle("Processor parameters")
-                        .withAbstract("Parameters specific to this processor")
-                        .withDefaultValue(processor.getDefaultParameters())
-                        .withDataType("string")
-                        .build();
-
-            dataInputs.getInput().add(input);
-        }
+// MB, 2017-04-16: should be read from bundle descriptor, and if not specified, should be added in execute
+//        List<Object> allowedProductionTypes = new ArrayList<>();
+//        ValueType allowedProductionType = new ValueType();
+//        allowedProductionType.setValue("L2Plus");
+//        allowedProductionTypes.add(allowedProductionType);
+//
+//        InputDescriptionType productionType = InputDescriptionTypeBuilder
+//                    .create()
+//                    .withIdentifier("productionType")
+//                    .withTitle("Production type")
+//                    .withAbstract("The type of the requested product. When not specified, L2Plus type is used")
+//                    .withDataType("string")
+//                    .withAllowedValues(allowedProductionTypes)
+//                    .withDefaultValue("L2Plus")
+//                    .build();
+//        dataInputs.getInput().add(productionType);
 
         InputDescriptionType inputDataSetName;
         if ("urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
@@ -286,45 +260,44 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                         .create()
                         .withIdentifier("inputDataSetName")
                         .withTitle("Input data set name")
-                        .withAbstract("The input dataset required for the processing")
+                        .withAbstract("The input dataset the processor is applied to")
                         .withDataType("string");
             if (!allowedInputDataSets.isEmpty()) {
                 inputDataSetNameBuilder = inputDataSetNameBuilder.withAllowedValues(allowedInputDataSets);
             }
             inputDataSetName = inputDataSetNameBuilder.build();
         }
-
         dataInputs.getInput().add(inputDataSetName);
 
+// MB, 2017-04-16: needs to be included only if input is time series, may be left empty
         InputDescriptionType minDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("minDate")
                     .withTitle("Date from")
-                    .withAbstract("The desired start date of the product")
+                    .withAbstract("Start date of period to be processed (leave empty if input is not a time series)")
                     .withDataType("string")
                     .build();
-
         dataInputs.getInput().add(minDate);
 
         InputDescriptionType maxDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("maxDate")
                     .withTitle("Date to")
-                    .withAbstract("The desired end date of the product")
+                    .withAbstract("End date (inclusive) of the period to be processed (leave empty if input is not a time series)")
                     .withDataType("string")
                     .build();
-
         dataInputs.getInput().add(maxDate);
 
-        InputDescriptionType periodLength = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("periodLength")
-                    .withTitle("Period length")
-                    .withAbstract("The desired temporal range of the product")
-                    .withDataType("string")
-                    .build();
-
-        dataInputs.getInput().add(periodLength);
+// MB, 2017-04-16: should be computed from minDate and maxDate in execute
+//        InputDescriptionType periodLength = InputDescriptionTypeBuilder
+//                    .create()
+//                    .withIdentifier("periodLength")
+//                    .withTitle("Period length")
+//                    .withAbstract("The desired temporal range of the product")
+//                    .withDataType("string")
+//                    .build();
+//
+//        dataInputs.getInput().add(periodLength);
 
         InputDescriptionType regionWkt = InputDescriptionTypeBuilder
                     .create()
@@ -333,17 +306,56 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     .withAbstract("The spatial range in the format of text. Example: POLYGON((100 -10,100 0,110 0,110 -10,100 -10))")
                     .withDataType("string")
                     .build();
-
         dataInputs.getInput().add(regionWkt);
 
         InputDescriptionType regionBoundingBox = getBoundingBoxInputType();
-
         dataInputs.getInput().add(regionBoundingBox);
 
-        InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema(
-                    PropertiesWrapper.get("wps.l3.parameters.schema.location"));
-        dataInputs.getInput().add(l3ParametersComplexType);
+        ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
+        if (parameterDescriptors != null) {
+            for (ProcessorDescriptor.ParameterDescriptor parameterDescriptor : parameterDescriptors) {
+                InputDescriptionType input = InputDescriptionTypeBuilder
+                            .create()
+                            .withIdentifier(parameterDescriptor.getName())
+                            .withTitle(parameterDescriptor.getName())
+                            .withAbstract(parameterDescriptor.getDescription())
+                            .withDefaultValue(parameterDescriptor.getDefaultValue())
+                            .withDataType(parameterDescriptor.getType())
+                            .build();
+                dataInputs.getInput().add(input);
+            }
+        } else if (!StringUtils.isBlank(processor.getDefaultParameters())) {
+            InputDescriptionType input = InputDescriptionTypeBuilder
+                        .create()
+                        .withIdentifier("processorParameters")
+                        .withTitle("Processor parameters")
+                        .withAbstract("Parameters specific to this processor")
+                        .withDefaultValue(processor.getDefaultParameters())
+                        .withDataType("string")
+                        .build();
+            dataInputs.getInput().add(input);
+        }
 
+// MB, 2017-04-16: introduces new parameter spatioTemporalAggregation with default structure from processor descriptor property
+        if (! "urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
+//            InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema((CalvalusProcessor) processor,
+//                    PropertiesWrapper.get("wps.l3.parameters.schema.location"));
+//            dataInputs.getInput().add(l3ParametersComplexType);
+            String parameters = processor.getJobConfiguration().get("calvalus.wps.spatioTemporalAggregation");
+            if (parameters != null) {
+                InputDescriptionType aggregationParameters = InputDescriptionTypeBuilder
+                        .create()
+                        .withIdentifier("spatioTemporalAggregationParameters")
+                        .withTitle("Parameters for spatio-temporal aggregation")
+                        .withAbstract("Parameters for spatio-temporal aggregation, optional, with defaults")
+                        .withDefaultValue(parameters)
+                        .withDataType("string")
+                        .build();
+                dataInputs.getInput().add(aggregationParameters);
+            }
+        }
+
+// MB, 2017-04-16: there should be a good default for the output format
         List<String> allowedOutputFormat;
         if (processor.getPossibleOutputFormats() != null) {
             allowedOutputFormat = Arrays.asList(processor.getPossibleOutputFormats());
@@ -363,21 +375,23 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     .withAbstract("The desired format of the product")
                     .withDataType("string");
         if (!allowedValues.isEmpty()) {
-            calvalusOutputFormatBuilder = calvalusOutputFormatBuilder.withAllowedValues(allowedValues);
+            calvalusOutputFormatBuilder = calvalusOutputFormatBuilder
+                    .withAllowedValues(allowedValues)
+                    .withDefaultValue(((ValueType) allowedValues.get(0)).getValue());
         }
         InputDescriptionType calvalusOutputFormat = calvalusOutputFormatBuilder.build();
-
         dataInputs.getInput().add(calvalusOutputFormat);
+
         return dataInputs;
     }
 
-    private InputDescriptionType getL3ParametersComplexTypeWithSchema(String schemaUrl) {
+    private InputDescriptionType getL3ParametersComplexTypeWithSchema(CalvalusProcessor processor, String schemaUrl) {
         InputDescriptionType l3ParametersComplexType = new InputDescriptionType();
 
         l3ParametersComplexType.setMinOccurs(BigInteger.ZERO);
         l3ParametersComplexType.setMaxOccurs(BigInteger.ONE);
-        l3ParametersComplexType.setIdentifier(str2CodeType("calvalus.l3.parameters"));
-        l3ParametersComplexType.setTitle(str2LanguageStringType("Specific Calvalus parameters for L3 processing"));
+        l3ParametersComplexType.setIdentifier(str2CodeType("spatioTemporalAggregation"));
+        l3ParametersComplexType.setTitle(str2LanguageStringType("Optional aggregation parameters, default configured if unset"));
 
         SupportedComplexDataInputType l3Parameters = new SupportedComplexDataInputType();
         ComplexDataCombinationType complexDataCombinationType = new ComplexDataCombinationType();
