@@ -4,6 +4,9 @@ import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 
+import java.util.Observable;
+import java.util.Observer;
+
 /**
  * The interface to the Calvalus production service.
  *
@@ -120,5 +123,26 @@ public interface ProductionService {
      * Invocation has no additional effect if already closed.
      */
     void close() throws ProductionException;
+
+    /**
+     * Called once by service to register an observer for production events (final status change).
+     * The service has to implement the Observer interface.
+     * The method Observer.update(Observable productionService, Object production) will be called after staging is done.
+     * It is called in a thread that can be used to write a report to a file.
+     * @param observer
+     */
+    void addObserver(Observer observer);
+
+    /**
+     * Called once by service to de-register an observer.
+     * @param observer
+     */
+    void deleteObserver(Observer observer);
+
+    /**
+     * Called by staging every time a job changes to a final state.
+     * @param arg
+     */
+    void notifyObservers(Object arg);
 
 }

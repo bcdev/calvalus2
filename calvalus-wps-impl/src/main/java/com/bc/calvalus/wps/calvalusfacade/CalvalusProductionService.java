@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
@@ -30,6 +31,7 @@ import java.util.Timer;
 public class CalvalusProductionService implements ServletContextListener {
 
     private static ServiceContainer serviceContainer = null;
+    private static ReportingHandler reportingHandler = null;
     private static Timer statusObserver;
     private static Map<String, Integer> userProductionMap;
     private static Set<String> remoteUserSet;
@@ -74,6 +76,9 @@ public class CalvalusProductionService implements ServletContextListener {
         System.out.println("*****************************************");
         System.out.println("Shutting down statusObserver...");
         synchronized (CalvalusProductionService.class) {
+            if (reportingHandler != null) {
+                serviceContainer.getProductionService().deleteObserver(reportingHandler);
+            }
             if (statusObserver != null) {
                 statusObserver.cancel();
             }
@@ -107,8 +112,13 @@ public class CalvalusProductionService implements ServletContextListener {
         HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
         Map<String, String> defaultConfig = getDefaultConfig();
         Map<String, String> config = ProductionServiceConfig.loadConfig(getConfigFile(), defaultConfig);
-        return productionServiceFactory
-                    .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
+        ServiceContainer serviceContainer = productionServiceFactory
+                .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
+        if (config.containsKey("wps.reporting.db.path")) {
+            reportingHandler = new ReportingHandler(serviceContainer.getProductionService(), config);
+            serviceContainer.getProductionService().addObserver(reportingHandler);
+        }
+        return serviceContainer;
     }
 
     private static File getConfigFile() throws FileNotFoundException {

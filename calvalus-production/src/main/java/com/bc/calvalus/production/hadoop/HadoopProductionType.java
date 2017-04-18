@@ -25,6 +25,7 @@ import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionStaging;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.staging.Staging;
@@ -108,6 +109,7 @@ public abstract class HadoopProductionType implements ProductionType {
     public Staging createStaging(Production production) throws ProductionException {
         try {
             Staging staging = createUnsubmittedStaging(production);
+            ((ProductionStaging) staging).setProductionService(stagingService.getProductionService());
             getStagingService().submitStaging(staging);
             return staging;
         } catch (IOException e) {

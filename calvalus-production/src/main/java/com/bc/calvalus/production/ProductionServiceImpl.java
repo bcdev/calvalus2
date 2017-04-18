@@ -23,6 +23,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -35,7 +37,7 @@ import java.util.regex.Pattern;
  * To use it, specify the servlet init-parameter 'calvalus.portal.backendService.class'
  * (context.xml or web.xml)
  */
-public class ProductionServiceImpl implements ProductionService {
+public class ProductionServiceImpl extends Observable implements ProductionService {
 
     public static enum Action {
         CANCEL,

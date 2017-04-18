@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Observable;
 import java.util.ServiceLoader;
 
 /**
@@ -71,6 +72,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                             stagingService,
                                                                             productionStore,
                                                                             productionTypes);
+            stagingService.setProductionService((Observable) productionService);
             return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);

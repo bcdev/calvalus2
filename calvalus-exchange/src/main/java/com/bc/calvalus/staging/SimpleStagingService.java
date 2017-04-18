@@ -4,6 +4,7 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Observable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -16,6 +17,7 @@ import java.util.concurrent.Executors;
 public class SimpleStagingService implements StagingService {
     private final File stagingDir;
     private final ExecutorService executorService;
+    private Observable productionService;
 
     public SimpleStagingService(File stagingDir, int numParallelJobs) throws IOException {
         this.stagingDir = stagingDir.getCanonicalFile();
@@ -48,5 +50,16 @@ public class SimpleStagingService implements StagingService {
     @Override
     public void close() {
         executorService.shutdown();
+    }
+
+    @Override
+    public void setProductionService(Observable productionService)
+    {
+        this.productionService = productionService;
+    }
+
+    @Override
+    public Observable getProductionService() {
+        return productionService;
     }
 }
