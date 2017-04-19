@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
+import javax.script.ScriptException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,10 +41,16 @@ import java.util.List;
  */
 public class MerisGridMapper extends AbstractGridMapper {
 
+    private final ErrorPredictor errorPredictor;
     private boolean maskUnmappablePixels;
 
     protected MerisGridMapper() {
         super(40, 40);
+        try {
+            errorPredictor = new ErrorPredictor();
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
@@ -83,13 +90,11 @@ public class MerisGridMapper extends AbstractGridMapper {
 
         setDataSource(new MerisDataSource(sourceProduct, lcProduct, srProducts));
 
-        ErrorPredictor errorPredictor = new ErrorPredictor();
-        GridCell gridCell = computeGridCell(year, month, errorPredictor);
+        GridCell gridCell = computeGridCell(year, month);
 
         context.progress();
 
-//        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[1].toString()))), gridCell); // use LC input for determining tile
-        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCell); // use LC input for determining tile
+        context.write(new Text(String.format("%d-%02d-%s", year, month, getTile(paths[2].toString()))), gridCell);
         errorPredictor.dispose();
     }
 
@@ -107,5 +112,21 @@ public class MerisGridMapper extends AbstractGridMapper {
     @Override
     protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
         // no burnable fraction computed for MERIS dataset
+    }
+
+    @Override
+    protected float getErrorPerPixel(float[] ba, double[] probabilityOfBurn) {
+        // getting pixels for areas instead, see MerisGridMapper#predict
+        return Float.NaN;
+    }
+
+    @Override
+    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+        try {
+            float[] errors = errorPredictor.predictError(ba, areas);
+            System.arraycopy(errors, 0, originalErrors, 0, errors.length);
+        } catch (ScriptException e) {
+            throw new RuntimeException(String.format("Unable to predict error from BA %s, areas %s", Arrays.toString(ba), Arrays.toString(areas)), e);
+        }
     }
 }

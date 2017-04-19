@@ -6,6 +6,9 @@ import java.util.Arrays;
 
 class UncertaintyEngine {
 
+    private UncertaintyEngine() {
+    }
+
     public static Complex dft(int r, int n) {
         // return np.exp ( 2.j*r*np.pi/(n+1.))
         return new Complex(0, 2.0).multiply(r * Math.PI).divide(n + 1.0).exp();

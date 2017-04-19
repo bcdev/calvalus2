@@ -2,7 +2,6 @@ package com.bc.calvalus.processing.fire.format.grid.s2;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.ErrorPredictor;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -31,6 +30,10 @@ import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSourc
  */
 public class S2GridMapper extends AbstractGridMapper {
 
+    private Context context;
+    private boolean firstHalf = true;
+    static int count = 0;
+
     S2GridMapper() {
         super(STEP * 4, STEP * 4);
     }
@@ -38,7 +41,8 @@ public class S2GridMapper extends AbstractGridMapper {
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
-        int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
+        this.context = context;
+        int year = Integer.parseInt(this.context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
 
         CombineFileSplit inputSplit = (CombineFileSplit) context.getInputSplit();
@@ -81,11 +85,9 @@ public class S2GridMapper extends AbstractGridMapper {
         dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
-        ErrorPredictor errorPredictor = new ErrorPredictor();
-        GridCell gridCell = computeGridCell(year, month, errorPredictor);
+        GridCell gridCell = computeGridCell(year, month);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, fiveDegTile)), gridCell);
-        errorPredictor.dispose();
     }
 
     @Override
@@ -126,4 +128,44 @@ public class S2GridMapper extends AbstractGridMapper {
         lcProduct.setSceneGeoCoding(sceneGeoCoding);
     }
 
+    @Override
+    protected float getErrorPerPixel(float[] ba, double[] probabilityOfBurn) {
+//        np.sqrt(((1-a)*a).sum())
+        double sum = 0.0;
+        for (double a : probabilityOfBurn) {
+            sum += (1 - a) * a;
+        }
+        return (float) Math.sqrt(sum);
+
+        /*
+
+        LOG.info(String.format("Starting to compute errors...."));
+        double[] pdf = UncertaintyEngine.poisson_binomial(probabilityOfBurn);
+        LOG.info(String.format("done. Writing result..."));
+        String year = context.getConfiguration().get("calvalus.year");
+        String month = context.getConfiguration().get("calvalus.month");
+        String filename = String.format("pdf-%s-%s-%s-%s.csv", year, month, firstHalf ? "07" : "22", count++);
+        try (FileWriter fw = new FileWriter(filename)) {
+            CsvWriter csvWriter = new CsvWriter(fw, ";");
+            csvWriter.writeRecord(pdf);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        LOG.info(String.format("done. Exporting result..."));
+        try {
+            CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/home/thomas/", filename), new File(filename), context.getConfiguration());
+            new File(filename).delete();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        LOG.info(String.format("done."));
+        firstHalf = false;
+        return 0;
+        */
+    }
+
+    @Override
+    protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+        // just keep the original errors
+    }
 }

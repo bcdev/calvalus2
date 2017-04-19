@@ -6,7 +6,6 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
-import javax.script.ScriptException;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -20,16 +19,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     protected static final Logger LOG = CalvalusLogger.getLogger();
     private final int targetRasterWidth;
     private final int targetRasterHeight;
-    private final List<Integer> alreadyConsideredDoys;
     private FireGridDataSource dataSource;
 
     protected AbstractGridMapper(int targetRasterWidth, int targetRasterHeight) {
         this.targetRasterWidth = targetRasterWidth;
         this.targetRasterHeight = targetRasterHeight;
-        alreadyConsideredDoys = new ArrayList<>();
     }
 
-    public GridCell computeGridCell(int year, int month, ErrorPredictor errorPredictor) throws IOException {
+    public GridCell computeGridCell(int year, int month) throws IOException {
         LOG.info("Computing grid cell...");
         if (dataSource == null) {
             throw new NullPointerException("dataSource == null");
@@ -52,6 +49,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         float[] coverageSecondHalf = new float[targetRasterWidth * targetRasterHeight];
         float[] patchNumberFirstHalf = new float[targetRasterWidth * targetRasterHeight];
         float[] patchNumberSecondHalf = new float[targetRasterWidth * targetRasterHeight];
+        float[] errorsFirstHalf = new float[targetRasterWidth * targetRasterHeight];
+        float[] errorsSecondHalf = new float[targetRasterWidth * targetRasterHeight];
         float[] burnableFraction = new float[targetRasterWidth * targetRasterHeight];
 
         List<float[]> baInLcFirstHalf = new ArrayList<>();
@@ -99,6 +98,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                             }
                         }
                         burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
+
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         boolean hasLcClass = false;
@@ -132,12 +132,15 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
+                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(baFirstHalf, data.probabilityOfBurnFirstHalf);
+                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(baSecondHalf, data.probabilityOfBurnSecondHalf);
+
                 targetPixelIndex++;
             }
         }
 
-        float[] errorsFirstHalf = predict(errorPredictor, baFirstHalf, areas);
-        float[] errorsSecondHalf = predict(errorPredictor, baSecondHalf, areas);
+        predict(baFirstHalf, areas, errorsFirstHalf);
+        predict(baSecondHalf, areas, errorsSecondHalf);
 
         validate(errorsFirstHalf, baFirstHalf);
         validate(errorsSecondHalf, baSecondHalf);
@@ -161,6 +164,10 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         LOG.info("...done.");
         return gridCell;
     }
+
+    protected abstract float getErrorPerPixel(float[] ba, double[] probabilityOfBurn);
+
+    protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
 
     protected abstract void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area);
 
@@ -192,6 +199,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             if (error > 0 && !(ba[i] > 0)) {
                 throw new IllegalStateException("error > 0 && !(ba[i] > 0)");
             }
+            if (Float.isNaN(error)) {
+                throw new IllegalStateException("error is NaN");
+            }
         }
     }
 
@@ -215,14 +225,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
     public void setDataSource(FireGridDataSource dataSource) {
         this.dataSource = dataSource;
-    }
-
-    private float[] predict(ErrorPredictor errorPredictor, float[] ba, double[] areas) {
-        try {
-            return errorPredictor.predictError(ba, areas);
-        } catch (ScriptException e) {
-            throw new RuntimeException(String.format("Unable to predict error from BA %s, areas %s", Arrays.toString(ba), Arrays.toString(areas)), e);
-        }
     }
 
 }

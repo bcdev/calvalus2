@@ -18,6 +18,8 @@ public class SourceData {
     public int patchCountSecondHalf;
     public int[] statusPixelsFirstHalf;
     public int[] statusPixelsSecondHalf;
+    public double[] probabilityOfBurnFirstHalf;
+    public double[] probabilityOfBurnSecondHalf;
 
     public SourceData(int width, int height) {
         pixels = new int[width * height];
@@ -26,6 +28,8 @@ public class SourceData {
         statusPixelsSecondHalf = new int[width * height];
         lcClasses = new int[width * height];
         burnable = new boolean[width * height];
+        probabilityOfBurnFirstHalf = new double[width * height];
+        probabilityOfBurnSecondHalf = new double[width * height];
     }
 
     public void reset() {
@@ -35,6 +39,9 @@ public class SourceData {
         Arrays.fill(statusPixelsFirstHalf, 0);
         Arrays.fill(statusPixelsSecondHalf, 0);
         Arrays.fill(burnable, false);
+        Arrays.fill(probabilityOfBurnFirstHalf, 0.0);
+        Arrays.fill(probabilityOfBurnSecondHalf, 0.0);
+
     }
 
 }

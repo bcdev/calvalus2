@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.meris;
 
-import com.bc.calvalus.processing.fire.format.grid.ErrorPredictor;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
@@ -33,7 +32,7 @@ public class MerisGridMapperTest {
         Collections.addAll(srProducts, srFiles);
 
         mapper.setDataSource(new MerisDataSource(product, lcProduct, srProducts));
-        GridCell gridCell = mapper.computeGridCell(2008, 1, new ErrorPredictor());
+        GridCell gridCell = mapper.computeGridCell(2008, 1);
         System.out.println(gridCell);
     }
 

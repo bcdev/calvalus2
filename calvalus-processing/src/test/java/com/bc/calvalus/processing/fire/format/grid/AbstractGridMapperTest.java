@@ -74,6 +74,11 @@ public class AbstractGridMapperTest {
         assertTrue(AbstractGridMapper.isValidSecondHalfPixel(28, 7, 28));
     }
 
+    @Test
+    public void testGetFraction() throws Exception {
+        System.out.println(AbstractGridMapper.getFraction(1, 1000));
+    }
+
     @Ignore
     @Test
     public void acceptanceTestS2GridFormat() throws Exception {
@@ -94,6 +99,16 @@ public class AbstractGridMapperTest {
             @Override
             protected boolean maskUnmappablePixels() {
                 return false;
+            }
+
+            @Override
+            protected float getErrorPerPixel(float[] ba, double[] probabilityOfBurn) {
+                return 0;
+            }
+
+            @Override
+            protected void predict(float[] ba, double[] areas, float[] originalErrors) {
+
             }
 
             @Override
@@ -118,7 +133,7 @@ public class AbstractGridMapperTest {
         S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables);
         mapper.setDataSource(dataSource);
 
-        GridCell gridCell = mapper.computeGridCell(2016, 1, errorPredictor);
+        GridCell gridCell = mapper.computeGridCell(2016, 1);
         Product product = new Product("test", "test", 8, 8);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
         ba1.setData(new ProductData.Float(gridCell.baFirstHalf));

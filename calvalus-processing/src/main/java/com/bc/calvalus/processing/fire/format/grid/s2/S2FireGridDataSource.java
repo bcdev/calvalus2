@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
@@ -98,15 +99,20 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), "UTF-8"));
 
             String line;
-            ProductData.Int intRasterData = new ProductData.Int(1);
+            Band jd = product.getBand("JD");
+            Band cl = product.getBand("CL");
+            ProductData jdData = ProductData.createInstance(jd.getDataType(), 1);
+            ProductData clData = ProductData.createInstance(cl.getDataType(), 1);
             while ((line = br.readLine()) != null) {
                 String[] splitLine = line.split(" ");
                 int targetX = Integer.parseInt(splitLine[0]);
                 int targetY = Integer.parseInt(splitLine[1]);
                 int sourceX = Integer.parseInt(splitLine[2]);
                 int sourceY = Integer.parseInt(splitLine[3]);
-                product.getBand("JD").readRasterData(sourceX, sourceY, 1, 1, intRasterData);
-                int sourceJD = intRasterData.getElemIntAt(0);
+                jd.readRasterData(sourceX, sourceY, 1, 1, jdData);
+                cl.readRasterData(sourceX, sourceY, 1, 1, clData);
+                int sourceJD = (int) jdData.getElemFloatAt(0);
+                float sourceCL = clData.getElemFloatAt(0);
                 int pixelIndex = targetY * width + targetX;
                 int oldValue = data.pixels[pixelIndex];
                 if (sourceJD > oldValue && sourceJD < 900) {
@@ -115,8 +121,10 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 if (sourceJD < 999) {
                     int productJD = getProductJD(product);
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
+                        data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                         data.statusPixelsFirstHalf[pixelIndex] = 1;
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
+                        data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                         data.statusPixelsSecondHalf[pixelIndex] = 1;
                     }
                 }
