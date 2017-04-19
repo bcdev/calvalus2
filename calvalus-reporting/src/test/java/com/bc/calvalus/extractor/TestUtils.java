@@ -18,7 +18,7 @@ public class TestUtils {
 
         if (properties == null) {
             try {
-                PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+                PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
             } catch (IOException e) {
                 e.printStackTrace();
             }

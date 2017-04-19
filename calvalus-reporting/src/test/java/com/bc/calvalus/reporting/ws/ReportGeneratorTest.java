@@ -25,7 +25,7 @@ public class ReportGeneratorTest {
 
     @Before
     public void setUp() throws Exception {
-        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
         jsonExtractor = new JSONExtractor();
     }
 

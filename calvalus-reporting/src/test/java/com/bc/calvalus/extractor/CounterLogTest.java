@@ -25,7 +25,7 @@ public class CounterLogTest {
     @Before
     public void CounterLogTest() {
         try {
-            PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+            PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
             counterExtractor = new CounterExtractor();
         } catch (IOException e) {
             e.printStackTrace();

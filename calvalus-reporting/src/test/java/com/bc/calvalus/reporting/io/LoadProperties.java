@@ -31,11 +31,11 @@ public class LoadProperties extends BlockJUnit4ClassRunner {
         if (!executeConnection) {
             System.out.println("Absolute file path to resource/log-file. Set VM param '-D" + CALVALUS_LOG_EXECUTE_TEST + "=true' to enable.");
         }
-        PropertiesWrapper.loadConfigFile("conf/calvalus-reporting.properties");
+        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
         String filePath = PropertiesWrapper.get("reporting.folder.path");
         boolean exists = Paths.get(filePath).toFile().exists();
         if (!exists) {
-            System.out.println("Set the absolute file path to resource/log-file, In the conf/calvalus-reporting.properties");
+            System.out.println("Set the absolute file path to resource/log-file, In the calvalus-reporting.properties");
             executeConnection = false;
         }
     }
