@@ -16,8 +16,8 @@ import java.util.Observer;
  */
 public class ReportingHandler implements Observer {
     private String reportPath;
-    public ReportingHandler(ProductionService productionService, Map<String, String> config) {
-        reportPath = config.get("wps.reporting.db.path");
+    public ReportingHandler(ProductionService productionService, String reportPath) {
+        this.reportPath = reportPath;
         CalvalusLogger.getLogger().info("reporting handler created to log into " + reportPath);
     }
 
