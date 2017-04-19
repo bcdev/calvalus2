@@ -1,4 +1,4 @@
-package com.bc.uban;
+package com.bc.calvalus.urban;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;

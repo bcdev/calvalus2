@@ -1,4 +1,4 @@
-package com.bc.uban;
+package com.bc.calvalus.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.wps.utilities.PropertiesWrapper;
