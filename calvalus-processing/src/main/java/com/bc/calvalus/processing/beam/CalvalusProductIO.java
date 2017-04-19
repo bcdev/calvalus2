@@ -132,6 +132,8 @@ public class CalvalusProductIO {
         GeoCoding geoCoding = product.getSceneGeoCoding();
         if (geoCoding != null) {
             LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
+        } else {
+            LOG.warning("GeoCoding: null");
         }
         return product;
     }

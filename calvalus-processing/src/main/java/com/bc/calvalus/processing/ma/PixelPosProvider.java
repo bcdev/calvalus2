@@ -52,6 +52,9 @@ public class PixelPosProvider {
     public PixelPosProvider(Product product, PixelTimeProvider pixelTimeProvider, Double maxTimeDifference,
                             boolean hasReferenceTime) {
         this.product = product;
+        if (product.getSceneGeoCoding() == null) {
+            throw new NullPointerException("product has no geo-coding");
+        }
         this.pixelTimeProvider = pixelTimeProvider;
 
         if (maxTimeDifference != null && hasReferenceTime) {
