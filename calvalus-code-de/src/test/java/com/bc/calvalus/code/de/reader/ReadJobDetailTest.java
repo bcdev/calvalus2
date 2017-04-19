@@ -17,7 +17,7 @@ public class ReadJobDetailTest {
 
     @BeforeAll
     public static void testOnceBefereAllTest() throws Exception {
-        PropertiesWrapper.loadConfigFile("conf/code-de.properties");
+        PropertiesWrapper.loadConfigFile("code-de.properties");
     }
 
     @Test
