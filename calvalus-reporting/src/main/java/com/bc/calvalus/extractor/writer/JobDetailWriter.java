@@ -75,7 +75,7 @@ public class JobDetailWriter {
                         .stream()
                         .filter(p -> lastJobInfo.compareTo(p.getFinishTime()) == -1)
                         .collect(Collectors.toList());
-                if (filterAfterDate.size()==0) {
+                if (filterAfterDate.size() == 0) {
                     return;
                 }
                 writeWithIntervals(filterAfterDate);
@@ -172,8 +172,8 @@ public class JobDetailWriter {
         jobDetailTypeList.clear();
     }
 
-    private File confirmOutputFile(String pathToWrite) throws IOException {
-        String fileNameFormat = fileNameFormat(pathToWrite);
+    private File confirmOutputFile(String startDateAsFileName) throws IOException {
+        String fileNameFormat = fileNameFormat(startDateAsFileName);
 
         File file = Paths.get(outputPath).resolve(fileNameFormat).toFile();
         if (!file.exists()) {
@@ -183,8 +183,7 @@ public class JobDetailWriter {
     }
 
     private String fileNameFormat(String firstDayDateMonth) {
-        String lastDayDate = null;
-        lastDayDate = LocalDate
+        String lastDayDate = LocalDate
                 .parse(firstDayDateMonth)
                 .plusMonths(1)
                 .withDayOfMonth(FIRST_DAY_OF_MONTH)
