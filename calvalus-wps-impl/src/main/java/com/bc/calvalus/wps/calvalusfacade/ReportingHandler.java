@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.TimeZone;
@@ -22,22 +21,22 @@ import java.util.logging.Level;
  * @author Muhammad
  */
 public class ReportingHandler implements Observer {
-    private static SimpleDateFormat FILE_NAME_FORMAT = new SimpleDateFormat("'calvalus-wps-'yyyy-MM'.report'");
+    private static SimpleDateFormat REPORT_FILENAME_FORMAT = new SimpleDateFormat("'calvalus-wps-'yyyy-MM'.report'");
     private static ReportingHandler reportingHandler;
-    private String reportPathString;
+    private String reportPath;
 
     static {
-        FILE_NAME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        REPORT_FILENAME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
-    private ReportingHandler(ProductionService productionService, Map<String, String> config) {
-        reportPathString = config.get("wps.reporting.db.path");
-        CalvalusLogger.getLogger().info("reporting handler created to log into " + reportPathString);
+    private ReportingHandler(ProductionService productionService, String reportPath) {
+        this.reportPath = reportPath;
+        CalvalusLogger.getLogger().info("reporting handler created to log into " + reportPath);
     }
 
-    public static ReportingHandler createReportHandler(ProductionService productionService, Map<String, String> config) {
+    public static ReportingHandler createReportHandler(ProductionService productionService, String reportPath) {
         if (reportingHandler == null) {
-            reportingHandler = new ReportingHandler(productionService, config);
+            reportingHandler = new ReportingHandler(productionService, reportPath);
         }
         return reportingHandler;
     }
@@ -46,9 +45,9 @@ public class ReportingHandler implements Observer {
     public void update(Observable o, Object arg) {
         Production production = (Production) arg;
         Date stopTime = production.getWorkflow().getStopTime();
-        String fileName = FILE_NAME_FORMAT.format(stopTime);
-        appendToReport(new File(reportPathString, fileName), production);
-        CalvalusLogger.getLogger().info("request " + production.getName() + " reported " + production.getProcessingStatus() + " should be logged in " + reportPathString);
+        String fileName = REPORT_FILENAME_FORMAT.format(stopTime);
+        appendToReport(new File(reportPath, fileName), production);
+        CalvalusLogger.getLogger().info("request " + production.getName() + " reported " + production.getProcessingStatus() + " should be logged in " + reportPath);
     }
 
 

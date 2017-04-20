@@ -104,10 +104,11 @@ public class QuicklookGenerator {
                 rgbBands[i] = rgbBand;
             }
             masterBand = rgbBands[0];
-            for (Band band : rgbBands) {
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
-            }
+// commented away in order to avoid parsing errors for expressions in RGB statement
+//            for (Band band : rgbBands) {
+//                band.setNoDataValue(Float.NaN);
+//                band.setNoDataValueUsed(true);
+//            }
             multiLevelSource = ColoredBandImageMultiLevelSource.create(rgbBands, ProgressMonitor.NULL);
             if (qlConfig.getRGBAMinSamples() != null && qlConfig.getRGBAMaxSamples() != null &&
                 qlConfig.getRGBAMinSamples().length == qlConfig.getRGBAMaxSamples().length) {

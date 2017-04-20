@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
@@ -114,8 +115,9 @@ public class CalvalusProductionService implements ServletContextListener {
                 .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
         String reportPath = PropertiesWrapper.get("wps.reporting.db.path");
         if (reportPath != null) {
-            reportingHandler = ReportingHandler.createReportHandler(serviceContainer.getProductionService(), config);
+            reportingHandler = ReportingHandler.createReportHandler(serviceContainer.getProductionService(), reportPath);
             serviceContainer.getProductionService().addObserver(reportingHandler);
+            CalvalusLogger.getLogger().info("reporting handler added as observer for production events");
         }
         return serviceContainer;
     }

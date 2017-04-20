@@ -1,5 +1,6 @@
 package com.bc.calvalus.production;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.staging.Staging;
@@ -34,6 +35,7 @@ public abstract class ProductionStaging extends Staging {
     @Override
     public final void run() {
         try {
+            CalvalusLogger.getLogger().info("perform staging ...");
             performStaging();
             notifyRequestObservers();
         } catch (Throwable t) {
@@ -49,7 +51,10 @@ public abstract class ProductionStaging extends Staging {
 
     public void notifyRequestObservers() {
         if (productionService != null) {
+            CalvalusLogger.getLogger().info("notifying observers of " + productionService);
             productionService.notifyObservers(production);
+        } else {
+            CalvalusLogger.getLogger().warning("reporting not done because productionService is not set in ProductionStaging.");
         }
     }
 
