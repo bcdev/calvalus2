@@ -74,7 +74,7 @@ public class ReportingHandler implements Observer {
     }
 
     private void writeLog(String fileToLogIn) {
-        
+
     }
 
     private Predicate<String> getPredictFileNameByDate(Date stopDateTime) {

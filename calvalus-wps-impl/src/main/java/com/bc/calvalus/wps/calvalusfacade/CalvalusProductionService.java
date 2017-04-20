@@ -1,15 +1,11 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsServletContainer;
-
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -21,6 +17,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
 
 /**
  * This class handles the production service operations. It has also been extended to include
@@ -115,7 +113,7 @@ public class CalvalusProductionService implements ServletContextListener {
         ServiceContainer serviceContainer = productionServiceFactory
                 .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
         if (config.containsKey("wps.reporting.db.path")) {
-            reportingHandler = new ReportingHandler(serviceContainer.getProductionService(), config);
+            reportingHandler = ReportingHandler.createReportHandler(serviceContainer.getProductionService(), config);
             serviceContainer.getProductionService().addObserver(reportingHandler);
         }
         return serviceContainer;
