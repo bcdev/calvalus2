@@ -3,8 +3,11 @@ package com.bc.calvalus.wps.calvalusfacade;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionService;
+import com.google.gson.Gson;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -56,7 +59,7 @@ public class ReportingHandler implements Observer {
                 throw new FileNotFoundException(String.format("The file reportPath %s doest not exist", reportPath));
             }
             String filePathToLog = getFilePathToLog(reportPathString, stopDateTime);
-            writeLog(filePathToLog);
+            writeLog(filePathToLog,production);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -73,8 +76,16 @@ public class ReportingHandler implements Observer {
         return fileNameOptional.orElseGet(() -> createFile(stopDateTime, reportPathString).getPath());
     }
 
-    private void writeLog(String fileToLogIn) {
-
+    private void writeLog(String fileToLogIn, Production production) {
+        try (FileWriter fileWriter = new FileWriter(fileToLogIn, true);
+             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
+            Gson gson = new Gson();
+            bufferedWriter.append(production.getId()).append(production.getName());
+            bufferedWriter.write(",");
+            bufferedWriter.newLine();
+        } catch (IOException e) {
+            CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage());
+        }
     }
 
     private Predicate<String> getPredictFileNameByDate(Date stopDateTime) {
