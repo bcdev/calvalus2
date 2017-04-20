@@ -94,7 +94,8 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.jobStatusMap = new WeakHashMap<>();
 
         this.bundleQueryCache = new ArrayList<>();
-        this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner");
+        // TODO there should be one Timer for a process that is used for all timer tasks
+        this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner", true);
         TimerTask bundlesQueryCleanTask = new TimerTask() {
             @Override
             public void run() {

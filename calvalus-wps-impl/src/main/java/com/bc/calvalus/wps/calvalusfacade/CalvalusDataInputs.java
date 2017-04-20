@@ -1,6 +1,7 @@
 package com.bc.calvalus.wps.calvalusfacade;
 
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
@@ -53,6 +54,9 @@ public class CalvalusDataInputs {
                 throws InvalidParameterValueException {
         inputMapFormatted = new HashMap<>();
         inputMapRaw = executeRequestExtractor.getInputParametersMapRaw();
+        for (String key : calvalusProcessor.getJobConfiguration().keySet()) {
+            CalvalusLogger.getLogger().info("job config " + key + " = " + calvalusProcessor.getJobConfiguration().get(key));
+        }
         extractProductionParameters();
         if (calvalusProcessor != null) {
             extractProductionInfoParameters((CalvalusProcessor) calvalusProcessor);
@@ -69,11 +73,12 @@ public class CalvalusDataInputs {
         } else {
             inputMapFormatted.put("productionType", "L2Plus");
         }
-//        if (inputMapRaw.containsKey("calvalus.ql.parameters")) {
-//            inputMapFormatted.put("calvalus.ql.parameters", inputMapRaw.get("calvalus.ql.parameters"));
-//        } else if (calvalusProcessor.getJobConfiguration().containsKey("calvalus.ql.parameters")) {
-//            inputMapFormatted.put("calvalus.ql.parameters", calvalusProcessor.getJobConfiguration().get("calvalus.ql.parameters"));
-//        }
+        if (inputMapRaw.containsKey("calvalus.ql.parameters")) {
+            inputMapFormatted.put("calvalus.ql.parameters", inputMapRaw.get("calvalus.ql.parameters"));
+            CalvalusLogger.getLogger().info("ql parameters found in request:" + inputMapRaw.get("calvalus.ql.parameters"));
+        } else if (calvalusProcessor.getJobConfiguration().containsKey("calvalus.ql.parameters")) {
+            inputMapFormatted.put("calvalus.ql.parameters", calvalusProcessor.getJobConfiguration().get("calvalus.ql.parameters"));
+        }
         inputMapFormatted.put("autoStaging", "true");
         inputMapFormatted.put("calvalus.output.compression", "none");
         if(requestHeaderMap.get("remoteUser") != null){
@@ -156,6 +161,9 @@ public class CalvalusDataInputs {
                 return false;
             } else if ("true".equals(requestParameters)) {
                 aggregate = true;
+            } else if (requestParameters != null && requestParameters.trim().length() > 0 && !requestParameters.trim().startsWith("<")) {
+                aggregate = true;
+                spatialResolution = Integer.parseInt(requestParameters.trim());
             } else if (requestParameters != null && requestParameters.trim().length() > 0) {
                 Document requestDoc = xbuilder.parse(new InputSource(new StringReader(requestParameters)));
                 String value = xpath.evaluate("/spatioTemporalAggregationParameters/aggregate", requestDoc);

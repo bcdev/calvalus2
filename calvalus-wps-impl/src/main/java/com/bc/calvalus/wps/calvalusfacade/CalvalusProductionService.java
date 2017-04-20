@@ -112,7 +112,8 @@ public class CalvalusProductionService implements ServletContextListener {
         Map<String, String> config = ProductionServiceConfig.loadConfig(getConfigFile(), defaultConfig);
         ServiceContainer serviceContainer = productionServiceFactory
                 .create(config, getUserAppDataCalWpsDir(), new File(CALWPS_ROOT, config.get("calvalus.wps.staging.path")));
-        if (config.containsKey("wps.reporting.db.path")) {
+        String reportPath = PropertiesWrapper.get("wps.reporting.db.path");
+        if (reportPath != null) {
             reportingHandler = ReportingHandler.createReportHandler(serviceContainer.getProductionService(), config);
             serviceContainer.getProductionService().addObserver(reportingHandler);
         }
