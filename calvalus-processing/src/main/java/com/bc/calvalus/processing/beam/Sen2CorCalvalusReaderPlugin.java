@@ -29,37 +29,31 @@ import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.io.SnapFileFilter;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 /**
- * A reader for handling Sentinel-2 data on calvalus.
+ * A reader for handling Sen2Cor data on calvalus.
  * It unzips the products and opens from the local file.
  */
-public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
+public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_10M = "CALVALUS-SENTINEL-2-MSI-10M";
-    private static final String FORMAT_20M = "CALVALUS-SENTINEL-2-MSI-20M";
     private static final String FORMAT_60M = "CALVALUS-SENTINEL-2-MSI-60M";
-    private static final String FORMAT_MULTI = "CALVALUS-SENTINEL-2-MSI-MultiRes";
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (input instanceof PathConfiguration) {
             PathConfiguration pathConfig = (PathConfiguration) input;
             String filename = pathConfig.getPath().getName();
-            if (filename.matches("^S2.*_MSIL1C.*")) {
+            if (filename.matches("^S2A.*_MSIL2A.*")) {
                 return DecodeQualification.INTENDED;
             }
         }
@@ -73,22 +67,22 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
 
     @Override
     public ProductReader createReaderInstance() {
-        return new Sentinel2CalvalusReader(this);
+        return new Sen2CorCalvalusReader(this);
     }
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{FORMAT_10M, FORMAT_20M, FORMAT_60M, FORMAT_MULTI};
+        return new String[]{"Sen2Cor"};
     }
 
     @Override
     public String[] getDefaultFileExtensions() {
-        return new String[]{".none"};
+        return new String[]{".zip"};
     }
 
     @Override
     public String getDescription(Locale locale) {
-        return "Sentinel-2 L1C on Calvalus";
+        return "Sentinel-2 L2A on Calvalus";
     }
 
     @Override
@@ -96,15 +90,15 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         return null; // only used in UI
     }
 
-    static class Sentinel2CalvalusReader extends AbstractProductReader {
+    static class Sen2CorCalvalusReader extends AbstractProductReader {
 
         //S2A_OPER_PRD_MSIL1C_PDMC_20161201T211507_R108_V20161201T103412_20161201T103412
         private static final Pattern NAME_TIME_PATTERN1 = Pattern.compile(".*_V([0-9]{8}T[0-9]{6})_([0-9]{8}T[0-9]{6}).*");
         //S2A_MSIL1C_20161212T100412_N0204_R122_T33UVT_20161212T100409
-        private static final Pattern NAME_TIME_PATTERN2 = Pattern.compile("S2._MSIL1C_(([0-9]{8}T[0-9]{6})).*");
+        private static final Pattern NAME_TIME_PATTERN2 = Pattern.compile("S2._MSIL2A_(([0-9]{8}T[0-9]{6})).*");
         private static final String DATE_FORMAT_PATTERN = "yyyyMMdd'T'HHmmss";
 
-        Sentinel2CalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
+        Sen2CorCalvalusReader(ProductReaderPlugIn productReaderPlugIn) {
             super(productReaderPlugIn);
         }
 
@@ -136,21 +130,6 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, productXML.getName());
                 }
-                if (!inputFormat.equals(FORMAT_MULTI)) {
-                    product.setProductReader(this);
-                    Map<String, Object> params = new HashMap<>();
-                    if (inputFormat.equals(FORMAT_10M) && product.containsBand("B2")) {
-                        params.put("referenceBand", "B2");
-                    } else if (inputFormat.equals(FORMAT_20M) && product.containsBand("B5")) {
-                        params.put("referenceBand", "B5");
-                    } else if (inputFormat.equals(FORMAT_60M) && product.containsBand("B1")) {
-                        params.put("referenceBand", "B1");
-                    } else {
-                        String msg = String.format("Resampling not possible. inputformat=%s productType=%s", inputFormat, product.getProductType());
-                        throw new IllegalArgumentException(msg);
-                    }
-                    product = GPF.createProduct("Resample", params, product);
-                }
                 return product;
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");
@@ -158,7 +137,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
         }
 
         static void setTimeFromFilename(Product product, String filename) {
-            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3,11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
+            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3, 11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
             if (matcher.matches()) {
                 try {
                     ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);
