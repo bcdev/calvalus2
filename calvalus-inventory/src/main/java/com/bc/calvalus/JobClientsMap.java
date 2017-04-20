@@ -45,7 +45,8 @@ public class JobClientsMap {
     public JobClientsMap(JobConf jobConf) {
         this.jobConfTemplate = jobConf;
         jobClientsCache = new HashMap<>();
-        this.cacheCleaner = new Timer("jobClientsCacheCleaner");
+        // TODO there should be one Timer for a process that is used for all timer tasks
+        this.cacheCleaner = new Timer("jobClientsCacheCleaner", true);
         TimerTask bundlesQueryCleanTask = new TimerTask() {
             @Override
             public void run() {
