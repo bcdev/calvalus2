@@ -98,8 +98,11 @@ public class QuicklookGenerator {
                                               determineWidth(expression, product),
                                               determineHeight(expression, product),
                                               expression);
-                    rgbBand.setOwner(product);
-                    rgbBand.setModified(false);
+//                    rgbBand.setOwner(product);
+//                    rgbBand.setModified(false);
+                    product.addBand(rgbBand);
+                    rgbBand.setNoDataValue(Float.NaN);
+                    rgbBand.setNoDataValueUsed(true);
                 }
                 rgbBands[i] = rgbBand;
             }
