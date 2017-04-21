@@ -6,9 +6,6 @@ import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 /**
  * @author muhammad.bc.
  */
@@ -20,7 +17,7 @@ public class ReadJobDetailTest {
         PropertiesWrapper.loadConfigFile("code-de.properties");
     }
 
-    @Test
+/*    @Test
     public void testCursorPosition() throws CodeDeException {
         ReadJobDetail.CursorPosition cursorPosition = new ReadJobDetail.CursorPosition();
         LocalDateTime now = LocalDateTime.now();
@@ -29,7 +26,7 @@ public class ReadJobDetailTest {
 
         assertNotNull(readLastCursorPosition);
         assertEquals(readLastCursorPosition.toString(), now.toString());
-    }
+    }*/
 
     @Test
     void DateTime() {

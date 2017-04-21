@@ -1,18 +1,10 @@
 package com.bc.calvalus.code.de.reader;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-
-
 /**
  * @author muhammad.bc.
  */
 class CursorPositionTest {
+/*
 
     private static ReadJobDetail.CursorPosition cursorPosition;
 
@@ -44,6 +36,7 @@ class CursorPositionTest {
     void writeNullCursorPosition() throws Exception {
         assertThrows(NullPointerException.class, () -> cursorPosition.writeLastCursorPosition(null));
     }
+*/
 
 
 

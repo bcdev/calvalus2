@@ -1,0 +1,34 @@
+#####################################
+###      Calvalus Reporting       ###
+#####################################
+
+reporting.wps.url=http://master00:8080/calvalus-reporting/reporting
+
+#####################################
+###              Remote           ###
+#####################################
+
+remote.private.key.path=
+remote.file.path=
+remote.host.name=urbanTEP-test
+remote.user.name=muhammad
+remote.passphrase=life200
+
+
+
+#####################################
+###        Account Server         ###
+#####################################
+
+
+account.server.url=https://usage.terradue.com/accounting/partners/brockmann/quantity/record
+account.server.username=brockmann
+account.server.password=
+account.log.send.path=/
+
+
+#####################################
+###           HOST INFO           ###
+#####################################
+host.name=www.brockmann-consult.de
+
