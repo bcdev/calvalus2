@@ -1,19 +1,12 @@
 package com.bc.calvalus.code.de.reader;
 
+import com.bc.calvalus.code.de.CursorPosition;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,8 +27,8 @@ public class ReadJobDetail {
     private static final int HTTP_SUCCESSFUL_CODE_END = 300;
     private static final String STATUS_FAILED = "\"Status\": \"Failed\"";
     private static final int MAX_LENGTH = 2;
-    private String jobDetailJson;
     private static Logger logger = CalvalusLogger.getLogger();
+    private String jobDetailJson;
     private LocalDateTime cursorPosition;
     private LocalDateTime endDateTime;
 
@@ -87,11 +80,11 @@ public class ReadJobDetail {
             if (status >= HTTP_SUCCESSFUL_CODE_START && status < HTTP_SUCCESSFUL_CODE_END) {
                 return builder.get(String.class);
             } else {
-                String msg = String.format("Error %s, %s status code %d ",
+              /*  String msg = String.format("Error %s, %s status code %d ",
                                            response.getStatusInfo().getFamily(),
                                            response.getStatusInfo().getReasonPhrase(),
-                                           status);
-                throw new CodeDeException(msg);
+                                           status);*/
+                throw new CodeDeException("msg");
             }
         } catch (ProcessingException e) {
             logger.log(Level.SEVERE, e.getMessage());
@@ -99,67 +92,5 @@ public class ReadJobDetail {
             logger.log(Level.WARNING, e.getMessage());
         }
         return "";
-    }
-
-    static class CursorPosition implements Serializable {
-        private LocalDateTime cursorPosition;
-
-        synchronized void deleteSerializeFile() {
-            File file = new File("cursor.ser");
-            if (file.exists()) {
-                file.delete();
-            }
-        }
-
-        synchronized LocalDateTime readLastCursorPosition() throws CodeDeException {
-            try {
-                File file = new File("cursor.ser");
-                if (!file.exists()) {
-                    LocalDateTime startDateTime = getStartDateTime();
-                    if (startDateTime != null) {
-                        return startDateTime;
-                    }
-                    return LocalDateTime.now().minusMinutes(5);
-                }
-                FileInputStream fileInputStream = new FileInputStream("cursor.ser");
-                ObjectInputStream objectInputStream = new ObjectInputStream(fileInputStream);
-                CursorPosition cursorPosition = (CursorPosition) objectInputStream.readObject();
-                fileInputStream.close();
-                objectInputStream.close();
-                return cursorPosition.cursorPosition;
-            } catch (IOException | ClassNotFoundException e) {
-                throw new CodeDeException(e.getMessage());
-            }
-
-        }
-
-        synchronized void writeLastCursorPosition(LocalDateTime localDateTime) {
-            try {
-                if (localDateTime == null) {
-                    throw new NullPointerException("The last date time most not be null");
-                }
-                this.cursorPosition = localDateTime;
-                FileOutputStream fileOutputStream = new FileOutputStream("cursor.ser");
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(fileOutputStream);
-                objectOutputStream.writeObject(this);
-                fileOutputStream.close();
-                objectOutputStream.close();
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
-        }
-
-        private LocalDateTime getStartDateTime() {
-            LocalDateTime localDateTime = null;
-            try {
-                String startDateTime = PropertiesWrapper.get("start.date.time");
-                localDateTime = LocalDateTime.parse(startDateTime);
-            } catch (DateTimeParseException e) {
-                logger.log(Level.WARNING, e.getMessage());
-            } catch (NullPointerException e) {
-                logger.log(Level.SEVERE, e.getMessage());
-            }
-            return localDateTime;
-        }
     }
 }
