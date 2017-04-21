@@ -17,10 +17,8 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Level;
@@ -36,17 +34,20 @@ public class WpsService {
     private static final String hostName = PropertiesWrapper.get("host.name");
     private final static Gson gson = new Gson();
     private Logger logger = CalvalusLogger.getLogger();
-    private LocalDateTime cursorPosition;
     private ReadCalvalusReport calvalusReport;
+    private LocalDateTime lastCursorPosition;
+    private CursorPosition cursorPosition;
 
 
     public WpsService() {
         try {
 
-            cursorPosition = CursorPosition.readLastCursorPosition();
+            cursorPosition = new CursorPosition();
+            lastCursorPosition = cursorPosition.readLastCursorPosition();
+
             calvalusReport = new ReadCalvalusReport();
             CopyReportFile scpCommand = new CopyReportFile();
-            Optional<BufferedReader> bufferedReaderOptional = scpCommand.readFile(cursorPosition.toString());
+            Optional<BufferedReader> bufferedReaderOptional = scpCommand.readFile(lastCursorPosition.toString());
             BufferedReader bufferedReader = bufferedReaderOptional.get();
 
         } catch (IOException | JSchException e) {
@@ -54,26 +55,24 @@ public class WpsService {
         }
     }
 
+    public void getReportLog(BufferedReader bufferedReader) throws IOException {
+        String readLine = null;
+        Gson gson = new Gson();
+        while ((readLine = bufferedReader.readLine()) != null) {
+            WpsReport wpsReport = gson.fromJson(readLine, WpsReport.class);
+            if (!lastCursorPosition.isAfter(wpsReport.getFinishDateTime())) {
+                handleNewWpsReport(wpsReport);
+                cursorPosition.writeLastCursorPosition(wpsReport.getFinishDateTime());
+            }
+        }
+    }
 
-    public void writeMessage(String jobId, Message message) {
+    private void writeMessage(String jobId, Message message) {
         File file = new File(this.logAccountMessagePath, String.format("account-message-%s.json", jobId));
         try (FileWriter fileWriter = new FileWriter(file)) {
             fileWriter.append(gson.toJson(message)).append('\n');
         } catch (IOException e) {
             CalvalusLogger.getLogger().log(Level.WARNING, e.getMessage());
-        }
-    }
-
-    private void getReportLog(BufferedReader bufferedReader) throws IOException {
-        String readLine = null;
-        Gson gson = new Gson();
-        List<WpsReport> reportLogList = new ArrayList<>();
-        while ((readLine = bufferedReader.readLine()) != null) {
-            WpsReport wpsReport = gson.fromJson(readLine, WpsReport.class);
-            if (!cursorPosition.isAfter(wpsReport.getFinishDateTime())) {
-                handleNewWpsReport(wpsReport);
-                CursorPosition.writeLastCursorPosition(wpsReport.getFinishDateTime());
-            }
         }
     }
 

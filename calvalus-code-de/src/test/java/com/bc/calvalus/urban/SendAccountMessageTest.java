@@ -7,9 +7,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -25,12 +23,12 @@ class SendAccountMessageTest {
 
     @Test
     void sendAccoundMessage() {
-        List<Message> messageList = Arrays.asList(
+ /*       List<Message> messageList = Arrays.asList(
                 createMessage("2017-02-02"),
                 createMessage("2017-04-05"));
 
         SendAccountMessage sendAccountMessage = SendAccountMessage.getInstance();
-        sendAccountMessage.send(messageList);
+        sendAccountMessage.send(messageList);*/
     }
     private Message createMessage(String date) {
         LocalDate parse = LocalDate.parse(date);

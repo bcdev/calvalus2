@@ -22,28 +22,23 @@ class CopyReportFile {
     private static final String hostName = PropertiesWrapper.get("remote.host.name");
     private static final String userName = PropertiesWrapper.get("remote.user.name");
     private static final Optional<String> passKeyPath = Optional.ofNullable(PropertiesWrapper.get("remote.passphrase"));
+    private Channel channel = null;
+    private Session session = null;
 
     Optional<BufferedReader> readFile(String fileToCopy) throws IOException, JSchException {
         Optional<BufferedReader> bufferedReader = Optional.empty();
-        Channel channel = null;
-        Session session = null;
-        try {
-            session = getRemoteSession();
-            session.connect();
-            String commandToExec = String.format("tail -100f %s/%s", remotePath, fileToCopy);
-            channel = session.openChannel(EXEC);
-            ((ChannelExec) channel).setCommand(commandToExec);
-            channel.setInputStream(null);
-            Optional<InputStream> inputStreamOptional = Optional.ofNullable(channel.getInputStream());
-            channel.connect();
 
-            inputStreamOptional.orElseThrow(() -> new IOException("Check the remote file path"));
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStreamOptional.get(), "utf-8");
-            bufferedReader = Optional.ofNullable(new BufferedReader(inputStreamReader));
-        } finally {
-            session.disconnect();
-            channel.disconnect();
-        }
+        session = getRemoteSession();
+        session.connect();
+        String commandToExec = String.format("tail -100f %scalvalus-wps-%s.report", remotePath, fileToCopy);
+        channel = session.openChannel(EXEC);
+        ((ChannelExec) channel).setCommand(commandToExec);
+        channel.setInputStream(null);
+        Optional<InputStream> inputStreamOptional = Optional.ofNullable(channel.getInputStream());
+        channel.connect();
+        inputStreamOptional.orElseThrow(() -> new IOException("Check the remote file path"));
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStreamOptional.get(), "utf-8");
+        bufferedReader = Optional.ofNullable(new BufferedReader(inputStreamReader));
         return bufferedReader;
     }
 
