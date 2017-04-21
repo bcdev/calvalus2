@@ -71,9 +71,9 @@ class ReportGenerator {
     }
 
     String generateJsonSingleJob(UsageStatistic usageStatistic) {
-        Map<String, String> report = getSingleJobJsonContents(usageStatistic);
+//        Map<String, String> report = getSingleJobJsonContents(usageStatistic);
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        return gson.toJson(report);
+        return gson.toJson(usageStatistic);
     }
 
     String generateJsonUserSingleJob(List<UsageStatistic> usageStatistics) {
