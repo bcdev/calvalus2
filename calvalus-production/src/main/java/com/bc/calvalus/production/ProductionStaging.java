@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 public abstract class ProductionStaging extends Staging {
 
     private final Production production;
-    private Observable productionService = null;
+    private ProductionService productionService = null;
 
     public ProductionStaging(Production production) {
         this.production = production;
@@ -28,14 +28,13 @@ public abstract class ProductionStaging extends Staging {
         return production;
     }
 
-    public void setProductionService(Observable productionService) {
+    public void setProductionService(ProductionService productionService) {
         this.productionService = productionService;
     }
 
     @Override
     public final void run() {
         try {
-            CalvalusLogger.getLogger().info("perform staging ...");
             performStaging();
             notifyRequestObservers();
         } catch (Throwable t) {
@@ -51,10 +50,8 @@ public abstract class ProductionStaging extends Staging {
 
     public void notifyRequestObservers() {
         if (productionService != null) {
-            CalvalusLogger.getLogger().info("notifying observers of " + productionService);
+            productionService.setChanged();
             productionService.notifyObservers(production);
-        } else {
-            CalvalusLogger.getLogger().warning("reporting not done because productionService is not set in ProductionStaging.");
         }
     }
 

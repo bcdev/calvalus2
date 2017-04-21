@@ -383,4 +383,10 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
             logger.log(Level.SEVERE, "Failed to delete output dir " + outputDir, e);
         }
     }
+
+    // TODO: race condition! implement Observable without "changed"
+    @Override
+    public synchronized void setChanged() {
+        super.setChanged();
+    }
 }

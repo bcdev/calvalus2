@@ -3,6 +3,8 @@ package com.bc.calvalus.wps.calvalusfacade;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionService;
+import com.bc.wps.utilities.PropertiesWrapper;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -22,15 +24,19 @@ import java.util.logging.Level;
  */
 public class ReportingHandler implements Observer {
     private static SimpleDateFormat REPORT_FILENAME_FORMAT = new SimpleDateFormat("'calvalus-wps-'yyyy-MM'.report'");
+    private static SimpleDateFormat ISO_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
     private static ReportingHandler reportingHandler;
     private String reportPath;
+    private String reportingStatusUri;
 
     static {
         REPORT_FILENAME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+        ISO_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     private ReportingHandler(ProductionService productionService, String reportPath) {
         this.reportPath = reportPath;
+        reportingStatusUri = PropertiesWrapper.get("wps.reporting.status.uri");
         CalvalusLogger.getLogger().info("reporting handler created to log into " + reportPath);
     }
 
@@ -43,22 +49,32 @@ public class ReportingHandler implements Observer {
 
     @Override
     public void update(Observable o, Object arg) {
-        Production production = (Production) arg;
-        Date stopTime = production.getWorkflow().getStopTime();
-        String fileName = REPORT_FILENAME_FORMAT.format(stopTime);
-        appendToReport(new File(reportPath, fileName), production);
-        CalvalusLogger.getLogger().info("request " + production.getName() + " reported " + production.getProcessingStatus() + " should be logged in " + reportPath);
+        try {
+            Production production = (Production) arg;
+            Date stopTime = production.getWorkflow().getStopTime();
+            String fileName = REPORT_FILENAME_FORMAT.format(stopTime);
+            appendToReport(new File(reportPath, fileName), production);
+            CalvalusLogger.getLogger().info("request " + production.getName() + " reported " + production.getProcessingStatus() + " logged in " + reportPath);
+        } catch (Exception ex) {
+            CalvalusLogger.getLogger().severe(String.format("reporting %s failed: %s", arg, ex.getMessage()));
+        }
     }
 
-
     private synchronized void appendToReport(File fileToLogIn, Production production) {
-        try (FileWriter fileWriter = new FileWriter(fileToLogIn, true);
-             BufferedWriter bufferedWriter = new BufferedWriter(fileWriter)) {
-            bufferedWriter.append(production.getId()).append("#").append(production.getName());
-            bufferedWriter.write(",");
-            bufferedWriter.newLine();
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileToLogIn, true))) {
+            for (Object jobId : production.getJobIds()) {
+                bufferedWriter.
+                        append("UrbanTepPortal").append('\t').
+                        append(String.valueOf(jobId)).append('\t').
+                        append(ISO_TIME_FORMAT.format(production.getWorkflow().getSubmitTime())).append('\t').
+                        append(production.getName()).append('\t').
+                        append(production.getId()).append('\t').
+                        append(String.valueOf(production.getProcessingStatus().getState())).append('\t').
+                        append(reportingStatusUri).append("?Service=WPS&Request=GetStatus&JobId=").append(String.valueOf(jobId));
+                bufferedWriter.newLine();
+            }
         } catch (IOException ex) {
-            CalvalusLogger.getLogger().log(Level.SEVERE, String.format("Appending to report %s failed: %s",fileToLogIn,ex.getMessage() ));
+            CalvalusLogger.getLogger().severe(String.format("Appending to report %s failed: %s", fileToLogIn, ex.getMessage()));
         }
     }
 }

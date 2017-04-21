@@ -72,6 +72,8 @@ public class CalvalusDataInputs {
             }
         } else {
             inputMapFormatted.put("productionType", "L2Plus");
+            // TODO check whether this is safe
+            inputMapFormatted.put("calvalus.system.snap.dataio.bigtiff.support.pushprocessing", "false");
         }
         if (inputMapRaw.containsKey("calvalus.ql.parameters")) {
             inputMapFormatted.put("calvalus.ql.parameters", inputMapRaw.get("calvalus.ql.parameters"));
@@ -164,7 +166,11 @@ public class CalvalusDataInputs {
             } else if (requestParameters != null && requestParameters.trim().length() > 0 && !requestParameters.trim().startsWith("<")) {
                 aggregate = true;
                 spatialResolution = Integer.parseInt(requestParameters.trim());
-            } else if (requestParameters != null && requestParameters.trim().length() > 0) {
+            } else if (requestParameters == null || requestParameters.trim().length() == 0) {
+                if (! aggregate) {
+                    return false;
+                }
+            } else {
                 Document requestDoc = xbuilder.parse(new InputSource(new StringReader(requestParameters)));
                 String value = xpath.evaluate("/spatioTemporalAggregationParameters/aggregate", requestDoc);
                 if (value != null) {

@@ -117,7 +117,6 @@ public class CalvalusProductionService implements ServletContextListener {
         if (reportPath != null) {
             reportingHandler = ReportingHandler.createReportHandler(serviceContainer.getProductionService(), reportPath);
             serviceContainer.getProductionService().addObserver(reportingHandler);
-            CalvalusLogger.getLogger().info("reporting handler added as observer for production events");
         }
         return serviceContainer;
     }

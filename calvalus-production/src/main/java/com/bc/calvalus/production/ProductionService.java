@@ -145,4 +145,5 @@ public interface ProductionService {
      */
     void notifyObservers(Object arg);
 
+    void setChanged();
 }
