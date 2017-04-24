@@ -1,9 +1,7 @@
 package com.bc.calvalus.code.de.sender;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Level;
@@ -32,12 +30,7 @@ public class SendMessage {
 
     public SendMessage(ProcessedMessage... processedMessages) {
         this.processedMessages = processedMessages;
-        try {
-            PropertiesWrapper.loadConfigFile("conf/code-de.properties");
-            initMessageProvider();
-        } catch (IOException e) {
-            logger.log(Level.SEVERE, e.getMessage());
-        }
+        initMessageProvider();
     }
 
     public Boolean send() {
@@ -55,12 +48,12 @@ public class SendMessage {
 
     private void initMessageProvider() {
         try {
-            URI uri = new URI(PropertiesWrapper.get(MESSAGE_CONSUMER_URL));
+            URI uri = new URI(System.getProperty(MESSAGE_CONSUMER_URL));
             ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory(uri);
             connection = activeMQConnectionFactory.createConnection();
             connection.start();
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            String queueName = PropertiesWrapper.get(QUEUE_NAME);
+            String queueName = System.getProperty(QUEUE_NAME);
             Destination destination = session.createQueue(queueName);
             producer = session.createProducer(destination);
             producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);

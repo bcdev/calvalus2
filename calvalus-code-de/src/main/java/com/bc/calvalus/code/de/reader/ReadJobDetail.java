@@ -1,8 +1,7 @@
 package com.bc.calvalus.code.de.reader;
 
-import com.bc.calvalus.code.de.CursorPosition;
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.wps.utilities.PropertiesWrapper;
+import com.bc.calvalus.urban.CursorPosition;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
@@ -23,6 +22,7 @@ import javax.ws.rs.core.Response;
  * @author muhammad.bc.
  */
 public class ReadJobDetail {
+    public static final String CODE_DE_URL = "code.de.url";
     private static final int HTTP_SUCCESSFUL_CODE_START = 200;
     private static final int HTTP_SUCCESSFUL_CODE_END = 300;
     private static final String STATUS_FAILED = "\"Status\": \"Failed\"";
@@ -66,7 +66,7 @@ public class ReadJobDetail {
     }
 
     String createURL(LocalDateTime lastCursorPosition, LocalDateTime now) {
-        String codeDeUrl = PropertiesWrapper.get("code.de.url");
+        String codeDeUrl = System.getProperty(CODE_DE_URL);
         return String.format(codeDeUrl + "%s/%s", lastCursorPosition.toString(), now.toString());
     }
 
@@ -80,10 +80,10 @@ public class ReadJobDetail {
             if (status >= HTTP_SUCCESSFUL_CODE_START && status < HTTP_SUCCESSFUL_CODE_END) {
                 return builder.get(String.class);
             } else {
-              /*  String msg = String.format("Error %s, %s status code %d ",
+                String msg = String.format("Error %s, %s status code %d ",
                                            response.getStatusInfo().getFamily(),
                                            response.getStatusInfo().getReasonPhrase(),
-                                           status);*/
+                                           status);
                 throw new CodeDeException("msg");
             }
         } catch (ProcessingException e) {

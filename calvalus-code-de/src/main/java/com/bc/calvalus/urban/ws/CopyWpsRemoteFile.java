@@ -1,6 +1,5 @@
 package com.bc.calvalus.urban.ws;
 
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.JSch;
@@ -12,23 +11,30 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Optional;
 
+import static com.bc.calvalus.urban.LoadProperties.getInstance;
+
 /**
  * @author muhammad.bc.
  */
-class CopyReportFile {
+public class CopyWpsRemoteFile {
+    public static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
+    public static final String HASH_KNOWN_HOSTS = "HashKnownHosts";
+    public static final String YES = "yes";
+    public static final String NO = "no";
     private static final String EXEC = "exec";
-    private static final String remotePath = PropertiesWrapper.get("remote.file.path");
-    private static final String privateKeyPath = PropertiesWrapper.get("remote.private.key.path");
-    private static final String hostName = PropertiesWrapper.get("remote.host.name");
-    private static final String userName = PropertiesWrapper.get("remote.user.name");
-    private static final Optional<String> passKeyPath = Optional.ofNullable(PropertiesWrapper.get("remote.passphrase"));
+    private static final String privateKeyPath = getInstance().getRemotePrivateKeyPath();
+    private static final String remotePath = getInstance().getRemoteFilePath();
+    private static final String remoteHostName = getInstance().getRemoteHostName();
+    private static final String remoteUserName = getInstance().getRemoteUserName();
+    private static final Optional<String> passKeyPath = Optional.ofNullable(getInstance().getRemotePassphrase());
     private Channel channel = null;
     private Session session = null;
 
-    Optional<BufferedReader> readFile(String fileToCopy) throws IOException, JSchException {
-        Optional<BufferedReader> bufferedReader = Optional.empty();
 
-        session = getRemoteSession();
+    public BufferedReader readFile(String fileToCopy) throws IOException, JSchException {
+        if (session == null) {
+            session = getRemoteSession();
+        }
         session.connect();
         String commandToExec = String.format("tail -100f %scalvalus-wps-%s.report", remotePath, fileToCopy);
         channel = session.openChannel(EXEC);
@@ -38,19 +44,18 @@ class CopyReportFile {
         channel.connect();
         inputStreamOptional.orElseThrow(() -> new IOException("Check the remote file path"));
         InputStreamReader inputStreamReader = new InputStreamReader(inputStreamOptional.get(), "utf-8");
-        bufferedReader = Optional.ofNullable(new BufferedReader(inputStreamReader));
-        return bufferedReader;
+        return new BufferedReader(inputStreamReader);
     }
 
     private Session getRemoteSession() throws JSchException, IOException {
         JSch jsch = new JSch();
-        JSch.setConfig("StrictHostKeyChecking", "no");
-        JSch.setConfig("HashKnownHosts", "yes");
+        JSch.setConfig(STRICT_HOST_KEY_CHECKING, NO);
+        JSch.setConfig(HASH_KNOWN_HOSTS, YES);
         if (passKeyPath.isPresent()) {
             jsch.addIdentity(privateKeyPath, passKeyPath.get());
         } else {
             jsch.addIdentity(privateKeyPath);
         }
-        return jsch.getSession(userName, hostName, 22);
+        return jsch.getSession(remoteUserName, remoteHostName, 22);
     }
 }
