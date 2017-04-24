@@ -1,19 +1,18 @@
 package com.bc.calvalus.urban.ws;
 
-import java.net.URI;
-import java.time.LocalDateTime;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Value;
 
 /**
  * @author muhammad.bc.
  */
-@Data
-@NoArgsConstructor
+@Value
 public class WpsReport {
     private String jobID;
     private String accRef;
     private String compID;
-    private URI uri;
-    private LocalDateTime finishDateTime;
+    private String status;
+    private String hostName;
+    private String uri;
+    private String finishDateTime;
+
 }
