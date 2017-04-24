@@ -4,7 +4,7 @@
           xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
     <!-- copied from jar-with-dependencies (http://maven.apache.org/plugins/maven-assembly-plugin/descriptor-refs.html#jar-with-dependencies) -->
     <!-- added containerDescriptorHandler to merge META-INF/service files -->
-    <id>tool</id>
+    <id>urbanTEP</id>
     <formats>
         <format>jar</format>
     </formats>
@@ -16,7 +16,7 @@
                 <include>**</include>
             </includes>
             <excludes>
-                <exclude>conf/*</exclude>
+                <exclude>/conf/*</exclude>
             </excludes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
