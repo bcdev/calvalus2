@@ -13,12 +13,18 @@
         <fileSet>
             <directory>${project.basedir}/target/classes</directory>
             <includes>
-                <include>**</include>
+                <include>com/*</include>
             </includes>
             <excludes>
-                <exclude>/conf/*</exclude>
+                <exclude>/conf/CoolurbanTEP.properties.template</exclude>
+                <exclude>urbanTEP.properties</exclude>
+                <exclude>urbanTEP.properties.template</exclude>
             </excludes>
             <outputDirectory>/</outputDirectory>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.}</directory>
         </fileSet>
     </fileSets>
 
