@@ -31,7 +31,7 @@ public class CopyWpsRemoteFile {
     private Session session = null;
 
 
-    public BufferedReader readFile(String fileToCopy) throws IOException, JSchException {
+    public BufferedReader readRemoteFile(String fileToCopy) throws IOException, JSchException {
         if (session == null) {
             session = getRemoteSession();
         }

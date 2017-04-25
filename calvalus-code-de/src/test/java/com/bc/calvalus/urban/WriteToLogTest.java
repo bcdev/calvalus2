@@ -9,30 +9,38 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.Date;
+import java.util.Arrays;
+import java.util.List;
+import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+
+import static org.junit.Assert.assertEquals;
 
 
 /**
  * @author muhammad.bc.
  */
+@Ignore
 class WriteToLogTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
+    @After
+    void tearDown() {
+        folder.delete();
+    }
 
     @Test
-    void writeAccoutMessageTemp() throws IOException {
-/*        List<Message> messageList = Arrays.asList(
+    public void writeAccoutMessageTemp() throws IOException {
+        List<Message> messageList = Arrays.asList(
                 createMessage("2017-02-02"),
                 createMessage("2017-03-02"),
                 createMessage("2017-04-05"));
         folder.create();
         File tempRootFile = folder.newFolder("test");
-        SendAccountMessage.WriteToLog writeToLog = new SendAccountMessage.WriteToLog(messageList, tempRootFile.toPath().toString());
+
         System.out.println();
         String[] list = tempRootFile.list();
 
@@ -41,14 +49,11 @@ class WriteToLogTest {
         assertEquals(message.getHostName(),"brockmann");
         assertEquals(message.getStatus(),"PASS");
         assertEquals(message.getCompound().getId(),"02");
-        assertEquals(message.getAccount(),null);*/
+        assertEquals(message.getAccount(),null);
 
     }
 
-    @AfterEach
-    void tearDown() {
-        folder.delete();
-    }
+
 
     private Message getMessage(File file) throws IOException {
         FileReader fileReader = new FileReader(file);
@@ -59,8 +64,9 @@ class WriteToLogTest {
 
     private Message createMessage(String date) {
         LocalDate parse = LocalDate.parse(date);
-        Date dateFrom = Date.from(parse.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
-        Compound compound = new Compound("02", "test", "test-all", "host", dateFrom);
+        Compound compound = new Compound("02", "test", "test-all", "host", parse.toString());
         return new Message("01", null, compound, null, "brockmann", Instant.now().toString(), "PASS");
     }
+
+
 }

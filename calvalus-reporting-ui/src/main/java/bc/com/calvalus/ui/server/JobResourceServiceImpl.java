@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Properties;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.MediaType;
@@ -30,7 +29,6 @@ import javax.ws.rs.core.Response;
  */
 
 public class JobResourceServiceImpl extends RemoteServiceServlet implements JobResourcesService {
-    private static final Client client = ClientBuilder.newClient();
     static final String STATUS_FAILED = "\"Status\": \"Failed\"";
     String calvalusReportingWebServicesUrl;
     static final int HTTP_SUCCESSFUL_CODE_START = 200;
@@ -44,7 +42,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
             Properties properties = new Properties();
             properties.load(resourceAsStream);
             calvalusReportingWebServicesUrl = (String) properties.get("reporting.webservice");
-        }
+    }
     }
 
     @Override
@@ -176,7 +174,7 @@ public class JobResourceServiceImpl extends RemoteServiceServlet implements JobR
     }
 
     private static String clientRequest(String uri, String textPlain) {
-        Invocation.Builder builder = client.target(uri).request();
+        Invocation.Builder builder = ClientBuilder.newClient().target(uri).request();
         Response response = builder.accept(textPlain).get();
         int status = response.getStatus();
         if (status >= HTTP_SUCCESSFUL_CODE_START && status < HTTP_SUCCESSFUL_CODE_END) {

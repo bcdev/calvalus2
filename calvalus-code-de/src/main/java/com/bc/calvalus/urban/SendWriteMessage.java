@@ -60,38 +60,36 @@ public class SendWriteMessage {
         try {
             logger.log(Level.INFO, "Start....");
             LocalDateTime lastCursorPosition = cursorPosition.readLastCursorPosition();
-            String formatDate = formatDate(lastCursorPosition.toString(), "yyyy-MM");
-            BufferedReader bufferedReader = scpCommand.readFile(formatDate);
-            startSendWrite(bufferedReader, lastCursorPosition);
+            String formatDateToStr = formatDate(lastCursorPosition.toString(), "yyyy-MM");
+            BufferedReader bufferedReader = scpCommand.readRemoteFile(formatDateToStr);
+            startSendWriteMessage(bufferedReader, lastCursorPosition);
         } catch (IOException e) {
-            logger.log(Level.WARNING, String.format(e.getMessage()));
+            logger.log(Level.WARNING, e.getMessage());
         } catch (JSchException e) {
             logger.log(Level.WARNING, String.format("Read remote file error %s ", e.getMessage()));
         }
     }
 
 
-    private void startSendWrite(BufferedReader bufferedReader, LocalDateTime lastCursorPosition) throws IOException {
-        String readLine = null;
+    private void startSendWriteMessage(BufferedReader bufferedReader, LocalDateTime lastCursorPosition) throws IOException {
+        String readLine;
         LocalDateTime lastDateTime = null;
-        int i = 1;
         while ((readLine = bufferedReader.readLine()) != null) {
             String[] split = readLine.split("\t");
             WpsReport wpsReport = new WpsReport(
-                    split[1],
-                    split[6],
-                    split[2],
-                    split[3],
-                    split[4],
-                    split[5],
-                    split[2]);
+                    split[1], // jobID
+                    split[3], // ref
+                    split[4], // Compounf ID
+                    split[5], // Status
+                    split[4], // Host name
+                    split[6], // URI
+                    split[2]  // FinishDateTime
+            );
             Instant parse = Instant.parse(split[2]);
             lastDateTime = parse.atZone(ZoneId.systemDefault()).toLocalDateTime();
             if (!lastCursorPosition.isAfter(lastDateTime)) {
                 handleNewWpsReport(wpsReport);
             }
-        }
-        if (lastDateTime != null) {
             cursorPosition.writeLastCursorPosition(lastDateTime);
         }
     }
@@ -127,7 +125,8 @@ public class SendWriteMessage {
         }
         String toJson = gson.toJson(message);
         Response response = clientConnection.target(accountServerUrl).request(MediaType.TEXT_PLAIN_TYPE).post(Entity.json(toJson));
-        int status = response.getStatus();
+        String reasonPhrase = response.getStatusInfo().getReasonPhrase();
+        logger.log(Level.INFO, "Server response " + reasonPhrase);
     }
 
     private Client getClientConnection(LoadProperties instance) {
@@ -144,7 +143,7 @@ public class SendWriteMessage {
         String reformattedStr = null;
         try {
             SimpleDateFormat myFormat = new SimpleDateFormat(pattern);
-            reformattedStr = myFormat.format(myFormat.parse("2017-04-20T08:54:40Z "));
+            reformattedStr = myFormat.format(myFormat.parse(dateString));
         } catch (ParseException e) {
             e.printStackTrace();
         }
@@ -154,9 +153,15 @@ public class SendWriteMessage {
 
     private Message createMessage(CalvalusReport jobSummary, WpsReport wps) {
         Objects.requireNonNull(jobSummary, "Calvalus report does not exist.");
+
         Account account = new Account("", jobSummary.getUser(), wps.getAccRef());
-        Date timestamp = new Date(jobSummary.getFinishTime());
-        Compound compound = new Compound(wps.getCompID(), jobSummary.getJobName(), jobSummary.getProcessType(), wps.getUri().toString(), timestamp);
+        Instant timestamp = new Date(jobSummary.getFinishTime()).toInstant();
+
+        Compound compound = new Compound(wps.getCompID(),
+                                         jobSummary.getJobName(),
+                                         jobSummary.getProcessType(),
+                                         wps.getUri().toString(),
+                                         timestamp.toString());
 
         Map<String, Long> quantity = new HashMap<>();
         quantity.put("CPU_MILLISECONDS", jobSummary.getCpuMilliseconds());

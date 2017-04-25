@@ -1,10 +1,8 @@
 package com.bc.calvalus.code.de.reader;
 
-import com.bc.wps.utilities.PropertiesWrapper;
 import java.time.LocalDateTime;
 import jdk.nashorn.internal.ir.annotations.Ignore;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 
 /**
  * @author muhammad.bc.
@@ -12,10 +10,6 @@ import org.junit.jupiter.api.Test;
 @Ignore
 public class ReadJobDetailTest {
 
-    @BeforeAll
-    public static void testOnceBefereAllTest() throws Exception {
-        PropertiesWrapper.loadConfigFile("code-de.properties");
-    }
 
 /*    @Test
     public void testCursorPosition() throws CodeDeException {
