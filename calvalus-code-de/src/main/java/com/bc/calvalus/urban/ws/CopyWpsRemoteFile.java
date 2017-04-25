@@ -17,17 +17,16 @@ import static com.bc.calvalus.urban.LoadProperties.getInstance;
  * @author muhammad.bc.
  */
 public class CopyWpsRemoteFile {
-    public static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
-    public static final String HASH_KNOWN_HOSTS = "HashKnownHosts";
-    public static final String YES = "yes";
-    public static final String NO = "no";
+    private static final String STRICT_HOST_KEY_CHECKING = "StrictHostKeyChecking";
+    private static final String HASH_KNOWN_HOSTS = "HashKnownHosts";
+    private static final String YES = "yes";
+    private static final String NO = "no";
     private static final String EXEC = "exec";
     private static final String privateKeyPath = getInstance().getRemotePrivateKeyPath();
     private static final String remotePath = getInstance().getRemoteFilePath();
     private static final String remoteHostName = getInstance().getRemoteHostName();
     private static final String remoteUserName = getInstance().getRemoteUserName();
-    private static final Optional<String> passKeyPath = Optional.ofNullable(getInstance().getRemotePassphrase());
-    private Channel channel = null;
+    private static final String passKeyPath = getInstance().getRemotePassphrase();
     private Session session = null;
 
 
@@ -37,7 +36,7 @@ public class CopyWpsRemoteFile {
         }
         session.connect();
         String commandToExec = String.format("tail -100f %scalvalus-wps-%s.report", remotePath, fileToCopy);
-        channel = session.openChannel(EXEC);
+        Channel channel = session.openChannel(EXEC);
         ((ChannelExec) channel).setCommand(commandToExec);
         channel.setInputStream(null);
         Optional<InputStream> inputStreamOptional = Optional.ofNullable(channel.getInputStream());
@@ -47,12 +46,12 @@ public class CopyWpsRemoteFile {
         return new BufferedReader(inputStreamReader);
     }
 
-    private Session getRemoteSession() throws JSchException, IOException {
+    private Session getRemoteSession() throws JSchException {
         JSch jsch = new JSch();
         JSch.setConfig(STRICT_HOST_KEY_CHECKING, NO);
         JSch.setConfig(HASH_KNOWN_HOSTS, YES);
-        if (passKeyPath.isPresent()) {
-            jsch.addIdentity(privateKeyPath, passKeyPath.get());
+        if (passKeyPath.isEmpty()) {
+            jsch.addIdentity(privateKeyPath, passKeyPath);
         } else {
             jsch.addIdentity(privateKeyPath);
         }

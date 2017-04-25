@@ -15,9 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CursorPosition {
-    public static final String CURSOR_FILE = "cursor.txt";
-    private static Logger logger = CalvalusLogger.getLogger();
-    private static LocalDateTime cursorPosition;
+    private static final String CURSOR_FILE = "cursor.txt";
+    private static final Logger logger = CalvalusLogger.getLogger();
 
     private static LocalDateTime getStartDateTime() {
         LocalDateTime localDateTime = null;
@@ -42,7 +41,6 @@ public class CursorPosition {
             }
             return LocalDateTime.now().minusMinutes(5);
         } else {
-            CursorPosition cursorPosition = null;
             try (FileInputStream fileInputStream = new FileInputStream(CURSOR_FILE);
                  BufferedReader bufferedReader = new BufferedReader(new FileReader(CURSOR_FILE))) {
 

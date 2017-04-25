@@ -10,7 +10,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  */
 public class Launcher implements Runnable {
 
-    public static final int DELAY = 3000;
+    private static final int DELAY = 3000;
     private final SendWriteMessage sendWriteMessage;
 
     public Launcher() {

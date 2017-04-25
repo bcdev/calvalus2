@@ -1,6 +1,4 @@
 # Created by .ignore support plugin (hsz.mobi)
 src/main/resources/conf/urbanTEP.properties
-src/main/resources/key
 
 src/test/resources/urbanTEP.properties
-src/test/resources/key

@@ -42,11 +42,11 @@ public class SendWriteMessage {
 
     private final static Gson gson = new Gson();
     private final CopyWpsRemoteFile scpCommand;
-    private Logger logger = CalvalusLogger.getLogger();
-    private ReadCalvalusReport calvalusReport;
-    private CursorPosition cursorPosition;
-    private String logAccountMessagePath = LoadProperties.getInstance().getLogAccountMessagePath();
-    private String hostName = LoadProperties.getInstance().getHostName();
+    private final Logger logger = CalvalusLogger.getLogger();
+    private final ReadCalvalusReport calvalusReport;
+    private final CursorPosition cursorPosition;
+    private final String logAccountMessagePath = LoadProperties.getInstance().getLogAccountMessagePath();
+    private final String hostName = LoadProperties.getInstance().getHostName();
     private Client clientConnection;
 
 
@@ -73,7 +73,7 @@ public class SendWriteMessage {
 
     private void startSendWriteMessage(BufferedReader bufferedReader, LocalDateTime lastCursorPosition) throws IOException {
         String readLine;
-        LocalDateTime lastDateTime = null;
+        LocalDateTime lastDateTime;
         while ((readLine = bufferedReader.readLine()) != null) {
             String[] split = readLine.split("\t");
             WpsReport wpsReport = new WpsReport(
@@ -160,7 +160,7 @@ public class SendWriteMessage {
         Compound compound = new Compound(wps.getCompID(),
                                          jobSummary.getJobName(),
                                          jobSummary.getProcessType(),
-                                         wps.getUri().toString(),
+                                         wps.getUri(),
                                          timestamp.toString());
 
         Map<String, Long> quantity = new HashMap<>();

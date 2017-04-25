@@ -53,7 +53,7 @@ public class LoadProperties {
             hostName = (String) properties.get("www.brockmann-consult.de");
             initStartTime = (String) properties.get("start.date.time.test");
         } catch (IOException e) {
-            CalvalusLogger.getLogger().log(Level.SEVERE, String.format("Exception in load properties settings",
+            CalvalusLogger.getLogger().log(Level.SEVERE, String.format("Exception in load properties settings %s",
                                                                        e.getMessage()));
         }
     }
