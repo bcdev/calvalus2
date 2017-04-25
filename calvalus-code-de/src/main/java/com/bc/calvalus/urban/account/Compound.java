@@ -1,6 +1,5 @@
 package com.bc.calvalus.urban.account;
 
-import java.util.Date;
 import lombok.Value;
 
 /**
@@ -12,5 +11,5 @@ public class Compound {
     private String name;
     private String type;
     private String uri;
-    private Date timestamp;
+    private String timestamp;
 }
