@@ -42,7 +42,9 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         String localJobIdRegex = ".*-((\\d{4}((0[13578]|1[02])(0[1-9]|[12]\\d|3[01])|(0[13456789]|1[012])(0[1-9]|" +
                                  "[12]\\d|30)|02(0[1-9]|1\\d|2[0-8])))|(\\d{2}[02468][048]|\\d{2}[13579][26])0229){0,8}_.*";
         if (jobId.matches(localJobIdRegex)) {
-            return getLocalProcessExecuteResponse(jobId);
+            try {
+                return getLocalProcessExecuteResponse(jobId);
+            } catch (JobNotFoundException _) {}
         }
         return getCalvalusExecuteResponse(jobId);
     }
@@ -55,7 +57,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         try {
             production = calvalusFacade.getProduction(jobId);
             if (production == null) {
-                throw new JobNotFoundException("JobId");
+                throw new JobNotFoundException("JobId " + jobId);
             }
             ProductionRequest productionRequest = production.getProductionRequest();
             ProcessorNameConverter processorConverter = new ProcessorNameConverter(productionRequest.getString(PROCESSOR_BUNDLE_NAME.getIdentifier()),
@@ -76,7 +78,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
                 executeResponse = getExecuteInProgressResponse(processStatus);
             }
         } catch (ProductionException | IOException | WpsResultProductException | ProductMetadataException exception) {
-            throw new JobNotFoundException(exception, "JobId");
+            throw new JobNotFoundException(exception, "JobId " + jobId);
         }
         executeResponse.setProcess(processBriefType);
         return executeResponse;
@@ -88,7 +90,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
         LocalProductionService productionService = GpfProductionService.getProductionServiceSingleton();
         LocalJob job = productionService.getJob(jobId);
         if (job == null) {
-            throw new JobNotFoundException("JobId");
+            throw new JobNotFoundException("JobId " + jobId);
         }
         LocalProductionStatus status = job.getStatus();
         String processId = (String) job.getParameters().get("processId");
