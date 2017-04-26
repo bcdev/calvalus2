@@ -279,6 +279,7 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                                          "calvalus.output.compression : none\n" +
                                                           "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
 //                                                          "productionType : L3\n" +
@@ -295,7 +296,8 @@ public class CalvalusDataInputsTest {
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
                                                           "productionName : dummyProductionName\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n"));
+                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -318,6 +320,7 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                                          "calvalus.output.compression : none\n" +
                                                           "processorBundleLocation : null\n" +
                                                           "calvalus.wps.remote.user : dummyRemoteUser\n" +
                                                           "productionType : L2Plus\n" +
@@ -330,7 +333,8 @@ public class CalvalusDataInputsTest {
                                                           "processorName : null\n" +
                                                           "processorBundleName : null\n" +
                                                           "processorParameters : null\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n"));
+                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
     private Map<String, String> getMockRequestHeader() {

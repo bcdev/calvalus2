@@ -17,6 +17,7 @@ import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
 import com.bc.wps.api.WpsServerContext;
+import com.bc.wps.api.schema.DataInputsType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
 import com.bc.wps.api.schema.ResponseDocumentType;
@@ -75,6 +76,7 @@ public class CalvalusExecuteOperationTest {
         when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
         when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
         when(mockExecuteRequest.getIdentifier()).thenReturn(WpsTypeConverter.str2CodeType("process1"));
+        when(mockExecuteRequest.getDataInputs()).thenReturn(new DataInputsType());
         configureProcessingMock();
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);
@@ -103,6 +105,7 @@ public class CalvalusExecuteOperationTest {
         when(mockResponseForm.getResponseDocument()).thenReturn(mockResponseDocument);
         when(mockExecuteRequest.getResponseForm()).thenReturn(mockResponseForm);
         when(mockExecuteRequest.getIdentifier()).thenReturn(WpsTypeConverter.str2CodeType("process1"));
+        when(mockExecuteRequest.getDataInputs()).thenReturn(new DataInputsType());
         configureProcessingMock();
 
         CalvalusFacade mockCalvalusFacade = mock(CalvalusFacade.class);

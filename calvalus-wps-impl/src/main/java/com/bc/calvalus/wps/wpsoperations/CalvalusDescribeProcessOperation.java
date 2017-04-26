@@ -198,6 +198,21 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
     private ProcessDescriptionType.DataInputs getDataInputs(WpsProcess processor, ProductSet[] productSets) throws IOException {
         ProcessDescriptionType.DataInputs dataInputs = new ProcessDescriptionType.DataInputs();
 
+        ArrayList allowedQuotationFlagValues = new ArrayList();
+        ValueType allowedQuotationFlagTrue = new ValueType();
+        allowedQuotationFlagTrue.setValue("true");
+        ValueType allowedQuotationFlagFalse = new ValueType();
+        allowedQuotationFlagFalse.setValue("false");
+        allowedQuotationFlagValues.add(allowedQuotationFlagTrue);
+        allowedQuotationFlagValues.add(allowedQuotationFlagFalse);
+        InputDescriptionType quotationFlagInput = InputDescriptionTypeBuilder.create().
+                withIdentifier("quotation").
+                withTitle("Job Quotation").
+                withAbstract("A flag to indicate whether this request is a quotation request or the actual processing request. Use \'true\' if this is a quotation request, \'false\' if it is a real processing request").
+                withDataType("string").
+                withAllowedValues(allowedQuotationFlagValues).build();
+        dataInputs.getInput().add(quotationFlagInput);
+
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("productionName")

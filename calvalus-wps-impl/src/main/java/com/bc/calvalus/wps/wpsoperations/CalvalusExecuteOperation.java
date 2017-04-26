@@ -12,9 +12,11 @@ import com.bc.calvalus.wps.localprocess.LocalProductionStatus;
 import com.bc.calvalus.wps.utils.CalvalusExecuteResponseConverter;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
+import com.bc.wps.api.schema.DataInputsType;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.api.schema.ExecuteResponse;
+import com.bc.wps.api.schema.InputType;
 import com.bc.wps.api.schema.ProcessBriefType;
 import com.bc.wps.api.schema.ResponseDocumentType;
 import com.bc.wps.api.schema.ResponseFormType;
@@ -22,6 +24,7 @@ import com.bc.wps.api.utils.WpsTypeConverter;
 import org.esa.snap.core.gpf.GPF;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,6 +51,15 @@ public class CalvalusExecuteOperation {
     public ExecuteResponse execute(Execute executeRequest)
                 throws InvalidProcessorIdException, WpsProductionException,
                        WpsResultProductException, ProductionException, IOException {
+        if(isQuotationRequest(executeRequest.getDataInputs())) {
+            CalvalusExecuteResponseConverter executeResponse = new CalvalusExecuteResponseConverter();
+            ExecuteResponse processBriefType1 = executeResponse.getQuotationResponse((String)this.processFacade.getRequestHeaderMap().get("remoteUser"),
+                                                                                     (String)this.processFacade.getRequestHeaderMap().get("remoteRef"),
+                                                                                     executeRequest.getDataInputs());
+            ProcessBriefType responseFormType1 = getQuotationBriefType(executeRequest);
+            processBriefType1.setProcess(responseFormType1);
+            return processBriefType1;
+        }
         ProcessBriefType processBriefType = getProcessBriefType(executeRequest);
         ResponseFormType responseFormType = executeRequest.getResponseForm();
         ResponseDocumentType responseDocumentType = responseFormType.getResponseDocument();
@@ -89,6 +101,29 @@ public class CalvalusExecuteOperation {
             syncExecuteResponse.setProcess(processBriefType);
             return syncExecuteResponse;
         }
+    }
+
+    private boolean isQuotationRequest(DataInputsType dataInputs) {
+        Iterator var2 = dataInputs.getInput().iterator();
+
+        InputType inputType;
+        do {
+            if(!var2.hasNext()) {
+                return false;
+            }
+
+            inputType = (InputType)var2.next();
+        } while(!"quotation".equalsIgnoreCase(inputType.getIdentifier().getValue()) || inputType.getData().getLiteralData() == null || !"true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue()));
+
+        return true;
+    }
+
+    private ProcessBriefType getQuotationBriefType(Execute executeRequest) {
+        ProcessBriefType processBriefType = new ProcessBriefType();
+        processBriefType.setIdentifier(executeRequest.getIdentifier());
+        processBriefType.setTitle(WpsTypeConverter.str2LanguageStringType(executeRequest.getIdentifier().getValue()));
+        processBriefType.setProcessVersion("1.0");
+        return processBriefType;
     }
 
     private ProcessBriefType getProcessBriefType(Execute executeRequest) throws InvalidProcessorIdException {

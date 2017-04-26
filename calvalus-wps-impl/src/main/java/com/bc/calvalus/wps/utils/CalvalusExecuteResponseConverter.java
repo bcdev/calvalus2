@@ -1,9 +1,17 @@
 package com.bc.calvalus.wps.utils;
 
 
+import com.bc.calvalus.wps.accounting.Account;
+import com.bc.calvalus.wps.accounting.AccountBuilder;
+import com.bc.calvalus.wps.accounting.Compound;
+import com.bc.calvalus.wps.accounting.CompoundBuilder;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2;
+import com.bc.calvalus.wps.accounting.UsageStatisticT2Builder;
 import com.bc.wps.api.WpsServerContext;
 import com.bc.wps.api.exceptions.WpsRuntimeException;
+import com.bc.wps.api.schema.ComplexDataType;
 import com.bc.wps.api.schema.DataInputsType;
+import com.bc.wps.api.schema.DataType;
 import com.bc.wps.api.schema.DocumentOutputDefinitionType;
 import com.bc.wps.api.schema.ExceptionReport;
 import com.bc.wps.api.schema.ExceptionType;
@@ -141,6 +149,56 @@ public class CalvalusExecuteResponseConverter {
         executeResponse.setStatus(statusType);
 
         return executeResponse;
+    }
+
+    public ExecuteResponse getQuotationResponse(String username, String remoteRef, DataInputsType dataInputs) {
+        StatusType statusType = new StatusType();
+        GregorianCalendar stopTimeGregorian = new GregorianCalendar();
+        stopTimeGregorian.setTime(new Date());
+        XMLGregorianCalendar stopTimeXmlGregorian = this.getXmlGregorianCalendar(stopTimeGregorian);
+        statusType.setCreationTime(stopTimeXmlGregorian);
+        statusType.setProcessSucceeded("The request has been quoted successfully.");
+        this.executeResponse.setStatus(statusType);
+        ExecuteResponse.ProcessOutputs quoteJson = this.getQuoteProcessOutputs(username, remoteRef, dataInputs);
+        this.executeResponse.setProcessOutputs(quoteJson);
+        return this.executeResponse;
+    }
+
+    private ExecuteResponse.ProcessOutputs getQuoteProcessOutputs(String username, String remoteRef, DataInputsType dataInputs) {
+        ExecuteResponse.ProcessOutputs processOutputs = new ExecuteResponse.ProcessOutputs();
+        OutputDataType output = new OutputDataType();
+        output.setIdentifier(WpsTypeConverter.str2CodeType("QUOTATION"));
+        output.setTitle(WpsTypeConverter.str2LanguageStringType("Job Quotation"));
+        DataType quoteData = new DataType();
+        ComplexDataType quoteComplexData = new ComplexDataType();
+        quoteComplexData.setMimeType("application/json");
+        String quoteJsonString = this.getQuoteJsonString(username, remoteRef, dataInputs);
+        quoteComplexData.getContent().add(quoteJsonString);
+        quoteData.setComplexData(quoteComplexData);
+        output.setData(quoteData);
+        processOutputs.getOutput().add(output);
+        return processOutputs;
+    }
+
+    private String getQuoteJsonString(String username, String remoteRef, DataInputsType dataInputs) {
+        Account account = AccountBuilder.create().
+                withPlatform("Brockmann Consult GmbH Processing Center").
+                withUsername(username).
+                withRef(remoteRef).build();
+        Compound compound = CompoundBuilder.create().
+                withId("any-id").
+                withName("processName").
+                withType("processType").build();
+        UsageStatisticT2 usageStatistic = UsageStatisticT2Builder.create().
+                withJobId(remoteRef).
+                withAccount(account).
+                withCompound(compound).
+                withCpuMilliSeconds(1L).
+                withMemoryBytes(1L).
+                withInstanceNumber(1L).
+                withVolumeBytes(1L).
+                withStatus("QUOTATION").build();
+        return usageStatistic.getAsJson();
     }
 
     private ExecuteResponse.ProcessOutputs getProcessOutputs(List<String> resultUrls) {

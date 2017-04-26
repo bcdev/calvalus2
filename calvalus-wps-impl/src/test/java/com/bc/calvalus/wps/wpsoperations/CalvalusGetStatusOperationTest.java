@@ -128,7 +128,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
+        thrownException.expectMessage("Parameter 'JobId job-01' has an invalid value.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("job-01");
@@ -141,7 +141,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.whenNew(CalvalusFacade.class).withArguments(any(WpsRequestContext.class)).thenReturn(mockCalvalusFacade);
 
         thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
+        thrownException.expectMessage("Parameter 'JobId job-01' has an invalid value.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("job-01");
@@ -269,7 +269,7 @@ public class CalvalusGetStatusOperationTest {
         PowerMockito.when(GpfProductionService.getProductionServiceSingleton()).thenReturn(mockLocalProductionService);
 
         thrownException.expect(JobNotFoundException.class);
-        thrownException.expectMessage("Parameter 'JobId' has an invalid value.");
+        thrownException.expectMessage("Parameter 'JobId urban1-20160919_160202392' has an invalid value.");
 
         getStatusOperation = new CalvalusGetStatusOperation(mockRequestContext);
         getStatusOperation.getStatus("urban1-20160919_160202392");
