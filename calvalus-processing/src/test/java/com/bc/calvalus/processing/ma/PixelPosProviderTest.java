@@ -16,8 +16,13 @@
 
 package com.bc.calvalus.processing.ma;
 
+import org.esa.snap.core.datamodel.CrsGeoCoding;
+import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 
 import java.text.SimpleDateFormat;
@@ -61,12 +66,16 @@ public class PixelPosProviderTest {
         SimpleDateFormat isoFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
         isoFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        PixelPosProvider pixelPosProvider = new PixelPosProvider(null, null, 12.0, true);
+        Product product = new Product("name", "type", 10, 10);
+        product.setStartTime(ProductData.UTC.create(isoFormat.parse("2017-04-08T12:00:00"), 0));
+        product.setEndTime(ProductData.UTC.create(isoFormat.parse("2017-04-08T12:01:00"), 0));
+        product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 360, 180, -180.0, 90.0, 1, 1, 0.0, 0.0));
+        PixelPosProvider pixelPosProvider = new PixelPosProvider(product, null, 12.0, true);
         Record record = RecordUtils.create(new GeoPos(54, 75), isoFormat.parse("2017-04-08T22:00:00"));
         assertEquals("2017-04-08T10:00:00", isoFormat.format(new Date(pixelPosProvider.getMinReferenceTime(record))));
         assertEquals("2017-04-09T10:00:00", isoFormat.format(new Date(pixelPosProvider.getMaxReferenceTime(record))));
 
-        pixelPosProvider = new PixelPosProvider(null, null, -1.0, true);
+        pixelPosProvider = new PixelPosProvider(product, null, -1.0, true);
         record = RecordUtils.create(new GeoPos(54, 75), isoFormat.parse("2017-04-08T22:00:00"));
         assertEquals("2017-04-08T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMinReferenceTime(record))));
         assertEquals("2017-04-09T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMaxReferenceTime(record))));
@@ -79,7 +88,7 @@ public class PixelPosProviderTest {
         assertEquals("2017-04-07T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMinReferenceTime(record))));
         assertEquals("2017-04-08T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMaxReferenceTime(record))));
 
-        pixelPosProvider = new PixelPosProvider(null, null, -2.0, true);
+        pixelPosProvider = new PixelPosProvider(product, null, -2.0, true);
         record = RecordUtils.create(new GeoPos(54, 75), isoFormat.parse("2017-04-08T22:00:00"));
         assertEquals("2017-04-07T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMinReferenceTime(record))));
         assertEquals("2017-04-10T19:00:00", isoFormat.format(new Date(pixelPosProvider.getMaxReferenceTime(record))));
