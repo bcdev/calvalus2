@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @author hans
@@ -79,17 +81,22 @@ public class LdapHelper {
         }
     }
 
-    private List<String> parseLdapIdResponse(List<String> outputStringList) {
-        List<String> groupList = new ArrayList<>();
-        String ldapGroups = "(?=groups=.*\\()";
-        for (String outputString : outputStringList) {
-            String[] groups = outputString.split(ldapGroups);
-            for (String group : groups) {
-                if (group.contains("groups")) {
-                    groupList.add(group.replaceAll("groups=\\d{1,5}\\(", "").replaceAll("\\)\\s*", ""));
+    List<String> parseLdapIdResponse(List<String> uidGidGroupsLines) {
+        // "uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)"
+        Pattern uidGidGroupsPattern = Pattern.compile(".*groups=(.*)");
+        Pattern groupPattern = Pattern.compile("[0-9]*\\((.*)\\)");
+        List<String> accu = new ArrayList<>();
+        for (String line : uidGidGroupsLines) {
+            Matcher groupMatcher = uidGidGroupsPattern.matcher(line);
+            if (groupMatcher.matches()) {
+                for (String groupIdAndName : groupMatcher.group(1).split(",")) {
+                    Matcher matcher = groupPattern.matcher(groupIdAndName);
+                    if (matcher.matches()) {
+                        accu.add(matcher.group(1));
+                    }
                 }
             }
         }
-        return groupList;
+        return accu;
     }
 }

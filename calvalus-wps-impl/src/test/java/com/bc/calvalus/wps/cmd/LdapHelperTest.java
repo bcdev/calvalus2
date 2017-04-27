@@ -156,4 +156,13 @@ public class LdapHelperTest {
         ldapHelper = new LdapHelper();
         ldapHelper.register(MOCK_REMOTE_USER_NAME);
     }
+
+    @Test
+    public void parseLdapResponseTest() {
+        ArrayList<String> response = new ArrayList<>();
+        response.add("uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)");
+        List<String> groups = new LdapHelper().parseLdapIdResponse(response);
+        assertEquals("calwps", groups.get(0));
+        assertEquals("tep_coreteam", groups.get(1));
+    }
 }
