@@ -4,17 +4,14 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.wps.utilities.PropertiesWrapper;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Observable;
 import java.util.Observer;
 import java.util.TimeZone;
-import java.util.logging.Level;
 
 /**
  * TODO add API doc
@@ -23,14 +20,13 @@ import java.util.logging.Level;
  * @author Muhammad
  */
 public class ReportingHandler implements Observer {
-    private static SimpleDateFormat REPORT_FILENAME_FORMAT = new SimpleDateFormat("'calvalus-wps-'yyyy-MM'.report'");
+    private static final String CALVALUS_WPS_REPORTING = "calvalus-wps-reporting.report";
     private static SimpleDateFormat ISO_TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss'Z'");
     private static ReportingHandler reportingHandler;
     private String reportPath;
     private String reportingStatusUri;
 
     static {
-        REPORT_FILENAME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         ISO_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
@@ -51,9 +47,7 @@ public class ReportingHandler implements Observer {
     public void update(Observable o, Object arg) {
         try {
             Production production = (Production) arg;
-            Date stopTime = production.getWorkflow().getStopTime();
-            String fileName = REPORT_FILENAME_FORMAT.format(stopTime);
-            appendToReport(new File(reportPath, fileName), production);
+            appendToReport(new File(reportPath, CALVALUS_WPS_REPORTING), production);
             CalvalusLogger.getLogger().info("request " + production.getName() + " reported " + production.getProcessingStatus() + " logged in " + reportPath);
         } catch (Exception ex) {
             CalvalusLogger.getLogger().severe(String.format("reporting %s failed: %s", arg, ex.getMessage()));
