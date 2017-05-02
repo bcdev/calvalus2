@@ -179,7 +179,7 @@ class LocalProduction {
                          false,
                          ProgressMonitor.NULL);
 
-        TaskAttemptContextImpl context = new TaskAttemptContextImpl(new Configuration(), TaskAttemptID.forName("local"));
+        TaskAttemptContextImpl context = new TaskAttemptContextImpl(new Configuration(), TaskAttemptID.forName("attempt_1111111111111_11111_m_111111_1"));
         String xml = "            <quicklooks>\n" +
                 "              <configs>\n" +
                 "                <config>\n" +
@@ -226,6 +226,9 @@ class LocalProduction {
         if (job.getParameters().get("productionName") == null || ((String) job.getParameters().get("productionName")).trim().length() == 0) {
             job.getParameters().put("productionName",
                                     "Subset " + job.getParameters().get("inputDataSetName") + " " + job.getParameters().get("regionWKT"));
+        }
+        if (job.getParameters().get("productionType") == null || ((String) job.getParameters().get("productionType")).trim().length() == 0) {
+            job.getParameters().put("productionType", "L2Plus");
         }
     }
 

@@ -62,7 +62,7 @@ class GpfTask implements Callable<Boolean> {
             String outputFormat = (String) parameters.get("outputFormat");
             GPF.writeProduct(subset, new File(targetDir, sourceProduct.getName() + "-subset"), outputFormat,
                              false, ProgressMonitor.NULL);
-            TaskAttemptContextImpl context = new TaskAttemptContextImpl(new Configuration(), TaskAttemptID.forName("local"));
+            TaskAttemptContextImpl context = new TaskAttemptContextImpl(new Configuration(), TaskAttemptID.forName("attempt_1111111111111_11111_m_111111_1"));
             String xml = "            <quicklooks>\n" +
                     "              <configs>\n" +
                     "                <config>\n" +
