@@ -22,28 +22,24 @@ import javax.ws.rs.core.Response;
  * @author muhammad.bc.
  */
 public class ReadJobDetail {
-    public static final String CODE_DE_URL = "code.de.url";
+    private static final String CODE_DE_URL = "code.de.url";
     private static final int HTTP_SUCCESSFUL_CODE_START = 200;
     private static final int HTTP_SUCCESSFUL_CODE_END = 300;
     private static final String STATUS_FAILED = "\"Status\": \"Failed\"";
     private static final int MAX_LENGTH = 2;
-    private static Logger logger = CalvalusLogger.getLogger();
+    private static final Logger logger = CalvalusLogger.getLogger();
     private String jobDetailJson;
     private LocalDateTime cursorPosition;
     private LocalDateTime endDateTime;
 
     public ReadJobDetail() {
-        try {
-            CursorPosition cursorPosition = new CursorPosition();
-            this.cursorPosition = cursorPosition.readLastCursorPosition();
-            endDateTime = LocalDateTime.now();
-            String url = createURL(this.cursorPosition, endDateTime);
-            jobDetailJson = getJobDetailFromWS(url);
-            if (jobDetailJson.length() > MAX_LENGTH && !jobDetailJson.isEmpty()) {
-                cursorPosition.writeLastCursorPosition(endDateTime);
-            }
-        } catch (CodeDeException e) {
-            logger.log(Level.SEVERE, e.getMessage());
+        CursorPosition cursorPosition = new CursorPosition();
+        this.cursorPosition = cursorPosition.readLastCursorPosition();
+        endDateTime = LocalDateTime.now();
+        String url = createURL(this.cursorPosition, endDateTime);
+        jobDetailJson = getJobDetailFromWS(url);
+        if (jobDetailJson.length() > MAX_LENGTH && !jobDetailJson.isEmpty()) {
+            cursorPosition.writeLastCursorPosition(endDateTime);
         }
     }
 
@@ -70,7 +66,7 @@ public class ReadJobDetail {
         return String.format(codeDeUrl + "%s/%s", lastCursorPosition.toString(), now.toString());
     }
 
-    private String getJobDetailFromWS(String url) throws CodeDeException {
+    private String getJobDetailFromWS(String url) {
         try {
             Client client = ClientBuilder.newClient();
             WebTarget target = client.target(url);
@@ -84,12 +80,9 @@ public class ReadJobDetail {
                                            response.getStatusInfo().getFamily(),
                                            response.getStatusInfo().getReasonPhrase(),
                                            status);
-                throw new CodeDeException("msg");
             }
         } catch (ProcessingException e) {
             logger.log(Level.SEVERE, e.getMessage());
-        } catch (CodeDeException e) {
-            logger.log(Level.WARNING, e.getMessage());
         }
         return "";
     }

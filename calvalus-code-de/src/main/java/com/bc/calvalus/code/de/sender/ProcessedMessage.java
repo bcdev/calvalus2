@@ -7,22 +7,22 @@ import java.time.LocalDateTime;
  * @author muhammad.bc.
  */
 public class ProcessedMessage {
-    public static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
-    public static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
-    public static final String VERSION = "1.0";
-    public static final String SERVICE_HOST = "cd-proxy.eoc.dlr.de";
-    private String requestId;
-    private String jobSubmissionTime;
-    private String userName;
-    private String inProductType;
-    private String inProductSize;
-    private String host;
-    private String coreHours;
-    private String processorName;
-    private String processMemory;
-    private String processingWorkflow;
-    private String duration;
-    private String processingStatus;
+    private static final String PRODUCT_PROCESSED_MESSAGE = "ProductProcessedMessage";
+    private static final String CODE_DE_PROCESSING_SERVICE = "code-de-processing-service";
+    private static final String VERSION = "1.0";
+    private static final String SERVICE_HOST = "cd-proxy.eoc.dlr.de";
+    private final String requestId;
+    private final String jobSubmissionTime;
+    private final String userName;
+    private final String inProductType;
+    private final String inProductSize;
+    private final String host;
+    private final String coreHours;
+    private final String processorName;
+    private final String processMemory;
+    private final String processingWorkflow;
+    private final String duration;
+    private final String processingStatus;
     private final String outProductSize;
     private String messageType;
     private String serviceId;
@@ -81,20 +81,6 @@ public class ProcessedMessage {
         this.duration = getCalculateDuration(jobDetail.getStartTime(), jobDetail.getFinishTime());
         this.processingStatus = jobDetail.getState();
         this.outProductSize = jobDetail.getFileBytesWritten();
-    }
-
-    private void defaultProductMessage() {
-        this.messageType = PRODUCT_PROCESSED_MESSAGE;
-        this.serviceId = CODE_DE_PROCESSING_SERVICE;
-        this.serviceHost = SERVICE_HOST;
-        this.messageTime = LocalDateTime.now().toString();
-        this.version = VERSION;
-    }
-
-    private String getCalculateDuration(String startTime, String finishTime) {
-        long startT = Long.parseLong(startTime);
-        long finishT = Long.parseLong(finishTime);
-        return Long.toString(finishT - startT);
     }
 
     public String getMessageType() {
@@ -167,5 +153,19 @@ public class ProcessedMessage {
 
     public String getOutProductSize() {
         return outProductSize;
+    }
+
+    private void defaultProductMessage() {
+        this.messageType = PRODUCT_PROCESSED_MESSAGE;
+        this.serviceId = CODE_DE_PROCESSING_SERVICE;
+        this.serviceHost = SERVICE_HOST;
+        this.messageTime = LocalDateTime.now().toString();
+        this.version = VERSION;
+    }
+
+    private String getCalculateDuration(String startTime, String finishTime) {
+        long startT = Long.parseLong(startTime);
+        long finishT = Long.parseLong(finishTime);
+        return Long.toString(finishT - startT);
     }
 }

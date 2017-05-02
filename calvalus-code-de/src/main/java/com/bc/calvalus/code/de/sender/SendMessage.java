@@ -20,12 +20,12 @@ import org.apache.activemq.ActiveMQConnectionFactory;
  */
 public class SendMessage {
 
-    public static final String MESSAGE_CONSUMER_URL = "message.consumer.url";
-    public static final String QUEUE_NAME = "queue.name";
-    private ProcessedMessage[] processedMessages;
+    private static final String MESSAGE_CONSUMER_URL = "message.consumer.url";
+    private static final String QUEUE_NAME = "queue.name";
+    private static final Logger logger = CalvalusLogger.getLogger();
+    private final ProcessedMessage[] processedMessages;
     private Session session;
     private MessageProducer producer;
-    private static Logger logger = CalvalusLogger.getLogger();
     private Connection connection;
 
     public SendMessage(ProcessedMessage... processedMessages) {
