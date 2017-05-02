@@ -2,17 +2,17 @@
 ###      Calvalus Reporting       ###
 #####################################
 
-reporting.wps.url=http://master00:8080/calvalus-reporting/reporting
+calvalus.reporting.url=http://master00:8080/calvalus-reporting/reporting
 
 #####################################
 ###              Remote           ###
 #####################################
 
-remote.private.key.path=
-remote.file.path=
-remote.host.name=urbanTEP-test
-remote.user.name=muhammad
-remote.passphrase=life200
+remote.private.key.path=C:\\Users\\muhammad.bc\\.ssh\\id_rsa
+remote.file.path      =/opt/tomcat/work/Catalina/localhost/bc-wps/
+remote.host.name      =bc-wps
+remote.user.name      =muhammad
+remote.passphrase     =life200
 
 
 
@@ -23,12 +23,20 @@ remote.passphrase=life200
 
 account.server.url=https://usage.terradue.com/accounting/partners/brockmann/quantity/record
 account.server.username=brockmann
-account.server.password=
-account.log.send.path=/
+account.server.platform=brockmann
+account.server.password=a4bc@T2ir
+account.log.send.path=C:\\Users\\muhammad.bc\\Documents\\code-de
 
 
 #####################################
 ###           HOST INFO           ###
 #####################################
+
 host.name=www.brockmann-consult.de
 
+
+
+start.date.time.test=2017-04-19T08:54:40
+cursor.url=cursor.txt
+
+start.date.time.test=2017-04-19T08:54:40
