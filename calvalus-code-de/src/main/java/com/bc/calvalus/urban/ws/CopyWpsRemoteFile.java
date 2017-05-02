@@ -26,16 +26,17 @@ public class CopyWpsRemoteFile {
     private static final String remotePath = getInstance().getRemoteFilePath();
     private static final String remoteHostName = getInstance().getRemoteHostName();
     private static final String remoteUserName = getInstance().getRemoteUserName();
-    private static final String passKeyPath = getInstance().getRemotePassphrase();
+    private static final Optional<String> passKeyPath = Optional.ofNullable(getInstance().getRemotePassphrase());
+    private Channel channel = null;
     private Session session = null;
 
 
-    public BufferedReader readRemoteFile(String fileToCopy) throws IOException, JSchException {
+    public BufferedReader readRemoteFile() throws IOException, JSchException {
         if (session == null) {
             session = getRemoteSession();
         }
         session.connect();
-        String commandToExec = String.format("tail -100f %scalvalus-wps-%s.report", remotePath, fileToCopy);
+        String commandToExec = String.format("tail -100f %scalvalus-wps-reporting.report", remotePath);
         Channel channel = session.openChannel(EXEC);
         ((ChannelExec) channel).setCommand(commandToExec);
         channel.setInputStream(null);
@@ -50,8 +51,8 @@ public class CopyWpsRemoteFile {
         JSch jsch = new JSch();
         JSch.setConfig(STRICT_HOST_KEY_CHECKING, NO);
         JSch.setConfig(HASH_KNOWN_HOSTS, YES);
-        if (passKeyPath.isEmpty()) {
-            jsch.addIdentity(privateKeyPath, passKeyPath);
+        if (passKeyPath.isPresent()) {
+            jsch.addIdentity(privateKeyPath, passKeyPath.get());
         } else {
             jsch.addIdentity(privateKeyPath);
         }
