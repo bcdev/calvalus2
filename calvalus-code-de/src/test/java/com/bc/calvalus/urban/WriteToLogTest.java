@@ -33,7 +33,7 @@ class WriteToLogTest {
     }
 
     @Test
-    public void writeAccoutMessageTemp() throws IOException {
+    public void writeAccountMessageTemp() throws IOException {
         List<Message> messageList = Arrays.asList(
                 createMessage("2017-02-02"),
                 createMessage("2017-03-02"),
