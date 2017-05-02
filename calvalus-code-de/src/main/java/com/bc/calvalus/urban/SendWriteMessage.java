@@ -51,17 +51,16 @@ public class SendWriteMessage {
 
 
     public SendWriteMessage() {
-        cursorPosition = new CursorPosition();
         calvalusReport = new ReadCalvalusReport();
         scpCommand = new CopyWpsRemoteFile();
+        cursorPosition = new CursorPosition();
     }
 
     public void start() {
         try {
             logger.log(Level.INFO, "Start....");
             LocalDateTime lastCursorPosition = cursorPosition.readLastCursorPosition();
-            String formatDateToStr = formatDate(lastCursorPosition.toString(), "yyyy-MM");
-            BufferedReader bufferedReader = scpCommand.readRemoteFile(formatDateToStr);
+            BufferedReader bufferedReader = scpCommand.readRemoteFile();
             startSendWriteMessage(bufferedReader, lastCursorPosition);
         } catch (IOException e) {
             logger.log(Level.WARNING, e.getMessage());
@@ -85,12 +84,10 @@ public class SendWriteMessage {
                     split[6], // URI
                     split[2]  // FinishDateTime
             );
-            Instant parse = Instant.parse(split[2]);
-            lastDateTime = parse.atZone(ZoneId.systemDefault()).toLocalDateTime();
+            lastDateTime = Instant.parse(split[2]).atZone(ZoneId.systemDefault()).toLocalDateTime();
             if (!lastCursorPosition.isAfter(lastDateTime)) {
                 handleNewWpsReport(wpsReport);
             }
-            cursorPosition.writeLastCursorPosition(lastDateTime);
         }
     }
 
@@ -105,13 +102,19 @@ public class SendWriteMessage {
     }
 
     private void handleNewWpsReport(WpsReport wpsReport) {
-        String filePatternName = formatDate(wpsReport.getFinishDateTime(), "yyyy-MM-dd");
+        String finishDateTime = wpsReport.getFinishDateTime();
+        String filePatternName = formatDate(finishDateTime, "yyyy-MM-dd");
         Optional<CalvalusReport> reportOptional = this.calvalusReport.getReport(wpsReport.getJobID(), filePatternName);
         if (reportOptional.isPresent()) {
             Message message = createMessage(reportOptional.get(), wpsReport);
             writeMessage(message.getJobID(), message);
             sendMessage(message);
+            cursorPosition.writeLastCursorPosition(Instant.parse(finishDateTime).atZone(ZoneId.systemDefault())
+                                                           .toLocalDateTime());
+        } else {
+            logger.log(Level.INFO, "JobID %s is not present in the calvalus reporting.");
         }
+
 
     }
 
