@@ -66,7 +66,7 @@ public class QuicklookGenerator {
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 
-    static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    public static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<>();

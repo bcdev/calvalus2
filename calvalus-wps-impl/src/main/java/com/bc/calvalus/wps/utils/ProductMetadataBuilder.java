@@ -247,7 +247,9 @@ public class ProductMetadataBuilder {
     }
 
     private String parseProductionType(String productionType) {
-        if (productionType.toLowerCase().contains("l1a")) {
+        if (productionType == null) {
+            return "2";
+        } else if (productionType.toLowerCase().contains("l1a")) {
             return "1A";
         } else if (productionType.toLowerCase().contains("l1b")) {
             return "1B";

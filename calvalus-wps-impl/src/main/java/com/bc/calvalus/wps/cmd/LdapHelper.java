@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.cmd;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.wps.exceptions.CommandLineException;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
@@ -45,6 +46,7 @@ public class LdapHelper {
                     return true;
                 }
             }
+            CalvalusLogger.getLogger().warning("remote user " + remoteUserName + " groups " + String.join(",", groupList) + " not member in " + ALLOWABLE_GROUP);
         }
         return false;
     }
@@ -83,11 +85,12 @@ public class LdapHelper {
 
     List<String> parseLdapIdResponse(List<String> uidGidGroupsLines) {
         // "uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)"
+        //  uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)
         Pattern uidGidGroupsPattern = Pattern.compile(".*groups=(.*)");
         Pattern groupPattern = Pattern.compile("[0-9]*\\((.*)\\)");
         List<String> accu = new ArrayList<>();
         for (String line : uidGidGroupsLines) {
-            Matcher groupMatcher = uidGidGroupsPattern.matcher(line);
+            Matcher groupMatcher = uidGidGroupsPattern.matcher(line.trim());
             if (groupMatcher.matches()) {
                 for (String groupIdAndName : groupMatcher.group(1).split(",")) {
                     Matcher matcher = groupPattern.matcher(groupIdAndName);

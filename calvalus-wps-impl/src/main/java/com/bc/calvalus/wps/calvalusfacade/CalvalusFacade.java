@@ -84,6 +84,7 @@ public class CalvalusFacade extends ProcessFacade {
         InventoryService inventoryService = getServices().getInventoryService();
         productSets.addAll(Arrays.asList(inventoryService.getProductSets(remoteUserName, "")));
         productSets.addAll(Arrays.asList(inventoryService.getProductSets(remoteUserName, "user=" + remoteUserName)));
+        productSets.addAll(Arrays.asList(inventoryService.getProductSets(remoteUserName, "user=all")));
         return productSets.toArray(new ProductSet[productSets.size()]);
     }
 

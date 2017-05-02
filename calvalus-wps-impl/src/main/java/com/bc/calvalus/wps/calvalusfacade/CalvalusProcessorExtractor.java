@@ -19,7 +19,7 @@ class CalvalusProcessorExtractor extends ProcessorExtractor {
     protected BundleDescriptor[] getBundleDescriptors(String userName) throws WpsProcessorNotFoundException {
         try {
             ProductionService productionService = CalvalusProductionService.getServiceContainerSingleton().getProductionService();
-            BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER").withTheUser(userName);
+            BundleFilter filter = BundleFilter.fromString("provider=SYSTEM,USER,ALL_USER").withTheUser(userName);
             return productionService.getBundles(userName, filter);
         } catch (IOException | ProductionException exception) {
             throw new WpsProcessorNotFoundException(exception);

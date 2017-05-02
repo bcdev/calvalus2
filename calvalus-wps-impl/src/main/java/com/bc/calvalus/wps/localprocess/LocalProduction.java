@@ -1,6 +1,8 @@
 package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.commons.ProcessState;
+import com.bc.calvalus.processing.analysis.QuicklookGenerator;
+import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.wps.exceptions.InvalidProcessorIdException;
 import com.bc.calvalus.wps.exceptions.ProductMetadataException;
@@ -16,15 +18,24 @@ import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.OperatorException;
 
+import javax.imageio.ImageIO;
+import org.apache.hadoop.conf.Configuration;
 import javax.xml.bind.JAXBException;
+import java.awt.image.RenderedImage;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
@@ -89,6 +100,7 @@ class LocalProduction {
             doProductionSynchronous(processBuilder);
             LocalProductionStatus status = getSuccessfulStatus(processBuilder, localFacade.getProductResultUrls(processBuilder.getJobId()));
             LocalJob job = new LocalJob(processBuilder.getJobId(), processBuilder.getParameters(), status);
+            ensureProductionName(job);
             productionService.addJob(job);
             logInfo("[" + processBuilder.getJobId() + "] Generating product metadata...");
             localFacade.generateProductMetadata(processBuilder.getJobId());
@@ -166,6 +178,30 @@ class LocalProduction {
                          outputFormat,
                          false,
                          ProgressMonitor.NULL);
+
+        TaskAttemptContextImpl context = new TaskAttemptContextImpl(new Configuration(), TaskAttemptID.forName("local"));
+        String xml = "            <quicklooks>\n" +
+                "              <configs>\n" +
+                "                <config>\n" +
+                "                    <subSamplingX>10</subSamplingX>\n" +
+                "                    <subSamplingY>10</subSamplingY>\n" +
+                "                    <RGBAExpressions>if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 1.0 else 0.0</RGBAExpressions>\n" +
+                "                    <backgroundColor>0,0,0,0</backgroundColor>\n" +
+                "                    <imageType>png</imageType>\n" +
+                "                </config>\n" +
+                "              </configs>\n" +
+                "            </quicklooks>\n";
+        Quicklooks.QLConfig config = Quicklooks.fromXml(xml).getConfigs()[0];
+        RenderedImage quicklookImage = QuicklookGenerator.createImage(context, subset, config);
+        if (quicklookImage != null) {
+            OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + "." + config.getImageType())));
+            try {
+                ImageIO.write(quicklookImage, config.getImageType(), outputStream);
+            } finally {
+                outputStream.close();
+            }
+        }
+
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] process finished...");
     }
 
@@ -178,11 +214,19 @@ class LocalProduction {
                                                                  "The request has been queued.",
                                                                  null);
         LocalJob job = new LocalJob(processBuilder.getJobId(), processBuilder.getParameters(), status);
+        ensureProductionName(job);
         productionService.addJob(job);
         GpfTask gpfTask = new GpfTask(localFacade, processBuilder);
         GpfProductionService.getWorker().submit(gpfTask);
         logger.log(Level.INFO, "[" + processBuilder.getJobId() + "] job has been queued...");
         return status;
+    }
+
+    private void ensureProductionName(LocalJob job) {
+        if (job.getParameters().get("productionName") == null || ((String) job.getParameters().get("productionName")).trim().length() == 0) {
+            job.getParameters().put("productionName",
+                                    "Subset " + job.getParameters().get("inputDataSetName") + " " + job.getParameters().get("regionWKT"));
+        }
     }
 
     private Product getSourceProduct(Map<String, String> inputParameters) throws IOException {

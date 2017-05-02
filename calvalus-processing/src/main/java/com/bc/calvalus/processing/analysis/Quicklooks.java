@@ -32,7 +32,7 @@ public class Quicklooks {
         return fromXml(xml).getConfigs();
     }
 
-    static Quicklooks fromXml(String xml) {
+    public static Quicklooks fromXml(String xml) {
         try {
             return new ParameterBlockConverter().convertXmlToObject(xml, new Quicklooks());
         } catch (BindingException e) {

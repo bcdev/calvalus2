@@ -284,24 +284,26 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         }
         dataInputs.getInput().add(inputDataSetName);
 
-// MB, 2017-04-16: needs to be included only if input is time series, may be left empty
-        InputDescriptionType minDate = InputDescriptionTypeBuilder
+        // MB, 2017-04-16: needs to be included only if input is time series, may be left empty
+        if (! "urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
+            InputDescriptionType minDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("minDate")
                     .withTitle("Date from")
                     .withAbstract("Start date of period to be processed (leave empty if input is not a time series)")
                     .withDataType("string")
                     .build();
-        dataInputs.getInput().add(minDate);
+            dataInputs.getInput().add(minDate);
 
-        InputDescriptionType maxDate = InputDescriptionTypeBuilder
+            InputDescriptionType maxDate = InputDescriptionTypeBuilder
                     .create()
                     .withIdentifier("maxDate")
                     .withTitle("Date to")
                     .withAbstract("End date (inclusive) of the period to be processed (leave empty if input is not a time series)")
                     .withDataType("string")
                     .build();
-        dataInputs.getInput().add(maxDate);
+            dataInputs.getInput().add(maxDate);
+        }
 
 // MB, 2017-04-16: should be computed from minDate and maxDate in execute
 //        InputDescriptionType periodLength = InputDescriptionTypeBuilder

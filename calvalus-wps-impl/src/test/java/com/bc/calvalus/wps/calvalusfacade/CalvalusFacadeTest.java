@@ -240,7 +240,7 @@ public class CalvalusFacadeTest {
         calvalusFacade = new CalvalusFacade(mockRequestContext);
         calvalusFacade.getProductSets();
 
-        verify(mockInventoryService, times(2)).getProductSets(arg1.capture(), arg2.capture());
+        verify(mockInventoryService, times(3)).getProductSets(arg1.capture(), arg2.capture());
 
         assertThat((arg1.getAllValues().get(0)), equalTo("mockUserName"));
         assertThat((arg2.getAllValues().get(0)), equalTo(""));

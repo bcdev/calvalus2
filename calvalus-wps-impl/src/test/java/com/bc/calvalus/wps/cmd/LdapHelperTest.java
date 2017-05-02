@@ -160,8 +160,12 @@ public class LdapHelperTest {
     @Test
     public void parseLdapResponseTest() {
         ArrayList<String> response = new ArrayList<>();
-        response.add("uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)");
+        response.add("uid=10230(tep_amarin) gid=10118(calwps) groups=10118(calwps),20009(tep_coreteam)\r");
         List<String> groups = new LdapHelper().parseLdapIdResponse(response);
+        assertEquals("calwps", groups.get(0));
+        assertEquals("tep_coreteam", groups.get(1));
+        response.add("uid=10272(tep_arose) gid=20009(tep_coreteam) groups=10118(calwps),20009(tep_coreteam)");
+        groups = new LdapHelper().parseLdapIdResponse(response);
         assertEquals("calwps", groups.get(0));
         assertEquals("tep_coreteam", groups.get(1));
     }
