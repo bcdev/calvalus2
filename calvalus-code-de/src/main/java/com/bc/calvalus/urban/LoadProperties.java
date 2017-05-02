@@ -26,7 +26,7 @@ public class LoadProperties {
     private String remoteUserName;
     private String remotePassphrase;
     private static LoadProperties loadProperties;
-    private String cursorFilePath;
+    private String cursorFileLocation;
 
 
     private LoadProperties() {
@@ -54,7 +54,7 @@ public class LoadProperties {
 
 
             hostName = (String) properties.get("host.name");
-            cursorFilePath = (String) properties.get("cursor.file.path");
+            cursorFileLocation = (String) properties.get("cursor.url");
             initStartTime = (String) properties.get("start.date.time.test");
         } catch (IOException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, String.format("Exception in load properties settings %s",

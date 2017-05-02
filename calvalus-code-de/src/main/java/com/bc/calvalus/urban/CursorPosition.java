@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CursorPosition {
-    private static final String cursorFilePath = LoadProperties.getInstance().getCursorFilePath();
+    private static final String cursorFilePath = LoadProperties.getInstance().getCursorFileLocation();
     private static final Logger logger = CalvalusLogger.getLogger();
 
     private static LocalDateTime getStartDateTime() {
@@ -31,21 +31,15 @@ public class CursorPosition {
 
     public synchronized LocalDateTime readLastCursorPosition() {
         File file = new File(cursorFilePath);
-        LocalDateTime readLastDate = null;
         if (!file.exists()) {
-            readLastDate = getStartDateTime();
-            if (readLastDate != null) {
-                return readLastDate;
-            }
-            return LocalDateTime.now().minusMinutes(5);
+            return getStartDateTime();
         } else {
             try (BufferedReader bufferedReader = new BufferedReader(new FileReader(cursorFilePath))) {
-
-                readLastDate = LocalDateTime.parse(bufferedReader.readLine());
+                return LocalDateTime.parse(bufferedReader.readLine());
             } catch (IOException e) {
                 logger.log(Level.SEVERE, e.getMessage());
             }
-            return readLastDate;
+            return getStartDateTime();
         }
     }
 
@@ -59,4 +53,5 @@ public class CursorPosition {
             logger.log(Level.SEVERE, e.getMessage());
         }
     }
+
 }
