@@ -15,6 +15,7 @@ public class LoadProperties {
     private String calvalusReportUrl;
     private String accountServerUrl;
     private String userName;
+    private String platForm;
     private String password;
     private String hostName;
     private String initStartTime;
@@ -25,6 +26,7 @@ public class LoadProperties {
     private String remoteUserName;
     private String remotePassphrase;
     private static LoadProperties loadProperties;
+    private String cursorFilePath;
 
 
     private LoadProperties() {
@@ -39,6 +41,7 @@ public class LoadProperties {
             //-- Account info
             accountServerUrl = (String) properties.get("account.server.url");
             userName = (String) properties.get("account.server.username");
+            platForm = (String) properties.get("account.server.platform");
             password = (String) properties.get("account.server.password");
             logAccountMessagePath = (String) properties.get("account.log.send.path");
 
@@ -50,7 +53,8 @@ public class LoadProperties {
             remotePassphrase = (String) properties.get("remote.passphrase");
 
 
-            hostName = (String) properties.get("www.brockmann-consult.de");
+            hostName = (String) properties.get("host.name");
+            cursorFilePath = (String) properties.get("cursor.file.path");
             initStartTime = (String) properties.get("start.date.time.test");
         } catch (IOException e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, String.format("Exception in load properties settings %s",

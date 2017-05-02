@@ -4,8 +4,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class CursorPosition {
-    private static final String CURSOR_FILE = "cursor.txt";
+    private static final String cursorFilePath = LoadProperties.getInstance().getCursorFilePath();
     private static final Logger logger = CalvalusLogger.getLogger();
 
     private static LocalDateTime getStartDateTime() {
@@ -32,7 +30,7 @@ public class CursorPosition {
     }
 
     public synchronized LocalDateTime readLastCursorPosition() {
-        File file = new File(CURSOR_FILE);
+        File file = new File(cursorFilePath);
         LocalDateTime readLastDate = null;
         if (!file.exists()) {
             readLastDate = getStartDateTime();
@@ -41,8 +39,7 @@ public class CursorPosition {
             }
             return LocalDateTime.now().minusMinutes(5);
         } else {
-            try (FileInputStream fileInputStream = new FileInputStream(CURSOR_FILE);
-                 BufferedReader bufferedReader = new BufferedReader(new FileReader(CURSOR_FILE))) {
+            try (BufferedReader bufferedReader = new BufferedReader(new FileReader(cursorFilePath))) {
 
                 readLastDate = LocalDateTime.parse(bufferedReader.readLine());
             } catch (IOException e) {
@@ -56,10 +53,8 @@ public class CursorPosition {
         if (localDateTime == null) {
             throw new NullPointerException("The last date time most not be null");
         }
-        try (FileOutputStream fileOutputStream = new FileOutputStream(CURSOR_FILE);
-             BufferedWriter bufferedReader = new BufferedWriter(new FileWriter(CURSOR_FILE))) {
-
-            bufferedReader.write(localDateTime.toString());
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(cursorFilePath))) {
+            bufferedWriter.write(localDateTime.toString());
         } catch (IOException e) {
             logger.log(Level.SEVERE, e.getMessage());
         }
