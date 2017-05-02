@@ -7,6 +7,7 @@
     <version>2.11-SNAPSHOT</version>
     <packaging>pom</packaging>
 
+
     <name>Calvalus</name>
     <description>Calvalus root module</description>
 
@@ -32,6 +33,7 @@
         <module>calvalus-reporting</module>
         <module>calvalus-reporting-ui</module>
         <module>calvalus-wps-impl</module>
+        <module>calvalus-code-de</module>
     </modules>
 
     <repositories>
