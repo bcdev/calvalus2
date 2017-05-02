@@ -28,7 +28,7 @@ class WriteToLogTest {
     @Rule
     public TemporaryFolder folder = new TemporaryFolder();
     @After
-    void tearDown() {
+    public void tearDown() {
         folder.delete();
     }
 
