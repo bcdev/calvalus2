@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.pixel.s2;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.S2Strategy;
@@ -14,10 +14,10 @@ import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.bc.calvalus.processing.fire.format.pixel.s2.S2FinaliseMapper.TILE_SIZE;
+import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.TILE_SIZE;
 import static org.junit.Assert.assertEquals;
 
-public class S2FinaliseMapperTest {
+public class PixelFinaliseMapperTest {
 
     @Ignore
     @Test
@@ -29,8 +29,8 @@ public class S2FinaliseMapperTest {
 
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\2010.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        String baseFilename = S2FinaliseMapper.createBaseFilename("2016", "02", "fv4.2", new S2Strategy().getArea("AREA_24"));
-        Product product = S2FinaliseMapper.remap(new File("C:\\ssd\\L3_2016-02-01_2016-02-29.nc"), baseFilename, lcProduct, () -> System.out.println("S2FinaliseMapperTest.progress"));
+        String baseFilename = PixelFinaliseMapper.createBaseFilename("2016", "02", "fv4.2", "h37v17;185;90;190;95");
+        Product product = PixelFinaliseMapper.remap(new File("C:\\ssd\\L3_2016-02-01_2016-02-29.nc"), baseFilename, "6", lcProduct, () -> System.out.println("PixelFinaliseMapperTest.progress"));
 
         ProductIO.writeProduct(product, "C:\\ssd\\" + baseFilename + "_test256.tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
     }
@@ -41,7 +41,7 @@ public class S2FinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[56] = 20; // right next to the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
         assertEquals(20, neighbourValue);
     }
 
@@ -52,7 +52,7 @@ public class S2FinaliseMapperTest {
         sourceJdArray[44] = 10; // upper left of the source value
         sourceJdArray[56] = 20; // right next to the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -65,7 +65,7 @@ public class S2FinaliseMapperTest {
         sourceJdArray[54] = 30; // center left of the source value
         sourceJdArray[56] = 40; // center right of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -75,7 +75,7 @@ public class S2FinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[1] = 10; // center right of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 0, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 0, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -87,7 +87,7 @@ public class S2FinaliseMapperTest {
         sourceJdArray[89] = 20; // upper center of the source value
         sourceJdArray[98] = 30; // center left of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 99, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 99, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -97,7 +97,7 @@ public class S2FinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[55] = 23;
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) S2FinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width).neighbourValue;
         assertEquals(23, neighbourValue);
     }
 
@@ -105,8 +105,8 @@ public class S2FinaliseMapperTest {
     public void testCreateMetadata() throws Exception {
         for (PixelProductArea area : new S2Strategy().getAllAreas()) {
             for (MonthYear monthYear : monthYears()) {
-                String baseFilename = S2FinaliseMapper.createBaseFilename(monthYear.year, monthYear.month, S2FinaliseMapper.VERSION, area);
-                String metadata = S2FinaliseMapper.createMetadata(monthYear.year, monthYear.month, S2FinaliseMapper.VERSION, area);
+                String baseFilename = PixelFinaliseMapper.createBaseFilename(monthYear.year, monthYear.month, "v1", "h37v17;185;90;190;95");
+                String metadata = PixelFinaliseMapper.createMetadata(monthYear.year, monthYear.month, "v1", "h37v17;185;90;190;95");
                 try (FileWriter fw = new FileWriter("d:\\workspace\\fire-cci\\temp\\s2-pixel-metadata\\" + baseFilename + ".xml")) {
                     fw.write(metadata);
                 }

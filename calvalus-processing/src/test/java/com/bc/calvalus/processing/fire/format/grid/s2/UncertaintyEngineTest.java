@@ -28,16 +28,4 @@ public class UncertaintyEngineTest {
         double[] result = UncertaintyEngine.poisson_binomial(new double[]{0.8, 0.3, 0.2, 0.9});
         assertArrayEquals(new double[]{0.12503483, 0.14455178, 0.38402028, 0.2241911}, result, 1E-6);
     }
-
-    @Test
-    public void testPerformance() throws Exception {
-        double[] input = new double[1000];
-//        double[] input = new double[1381 * 1381];
-        for (int i = 0; i < input.length; i++) {
-            input[i] = Math.random();
-        }
-        System.out.println("Starting computation....");
-        UncertaintyEngine.poisson_binomial(input);
-        System.out.println("...done.");
-    }
 }

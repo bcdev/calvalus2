@@ -1,10 +1,8 @@
-package com.bc.calvalus.processing.fire.format.pixel.s2;
+package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
-import com.bc.calvalus.processing.fire.format.PixelProductArea;
-import com.bc.calvalus.processing.fire.format.S2Strategy;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
@@ -37,6 +35,7 @@ import javax.media.jai.PlanarImage;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.image.DataBuffer;
+import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -52,11 +51,16 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-public class S2FinaliseMapper extends Mapper {
+public class PixelFinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     static final int TILE_SIZE = 256;
-    public static final String VERSION = "fv1.0";
+
+    public static final String KEY_LC_PATH = "LC_PATH";
+    public static final String KEY_VERSION = "VERSION";
+    public static final String KEY_AREA_STRING = "AREA_STRING";
+    public static final String KEY_SENSOR_ID = "SENSOR_ID";
+
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -65,25 +69,29 @@ public class S2FinaliseMapper extends Mapper {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
+        String lcPath = context.getConfiguration().get(KEY_LC_PATH);
+        String version = context.getConfiguration().get(KEY_VERSION);
+        String areaString = context.getConfiguration().get(KEY_AREA_STRING); // <nicename>;<left>;<top>;<right>;<bottom>
+        String sensorId = context.getConfiguration().get(KEY_SENSOR_ID);
+
         ProductSplit inputSplit = (ProductSplit) context.getInputSplit();
 
         Path inputSplitLocation = inputSplit.getPath();
         LOG.info("Finalising file '" + inputSplitLocation + "'");
 
         File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
-        File localLC = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2010.nc"), context.getConfiguration());
+        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
 
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
-        PixelProductArea area = new S2Strategy().getArea(context.getConfiguration().get("calvalus.area"));
 
-        String baseFilename = createBaseFilename(year, month, VERSION, area);
+        String baseFilename = createBaseFilename(year, month, version, areaString);
 
         Product lcProduct = ProductIO.readProduct(localLC);
-        Product result = remap(localL3, baseFilename, lcProduct, context);
+        Product result = remap(localL3, baseFilename, sensorId, lcProduct, context);
 
         LOG.info("Creating metadata...");
-        String metadata = createMetadata(year, month, VERSION, area);
+        String metadata = createMetadata(year, month, version, areaString);
         try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
             fw.write(metadata);
         }
@@ -103,11 +111,9 @@ public class S2FinaliseMapper extends Mapper {
         CalvalusLogger.getLogger().info("...done.");
     }
 
-    static Product remap(File localL3, String baseFilename, Product lcProduct, Progressable context) throws IOException {
+    static Product remap(File localL3, String baseFilename, String sensorId, Product lcProduct, Progressable context) throws IOException {
         Product source = ProductIO.readProduct(localL3);
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-//        source.addBand("JD_remapped", "(JD < 900) ? JD : ((abs(JD - 999) < 0.01) or (abs(JD - 998) < 0.01) ? -1 : -2)", ProductData.TYPE_INT32);
-//        source.addBand("CL_remapped", "(JD > 0 and JD < 900) ? (CL * 100) : 0", ProductData.TYPE_INT8);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
         target.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
@@ -120,33 +126,40 @@ public class S2FinaliseMapper extends Mapper {
         Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
         Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
         Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
-        target.addBand("sensor", "6", ProductData.TYPE_INT8);
+        Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
 
         jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask));
         clBand.setSourceImage(new ClImage(source.getBand("CL"), jdBand));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
+        sensorBand.setSourceImage(new SensorImage(source.getBand("JD"), sensorId));
 
         return target;
     }
 
-    static String createBaseFilename(String year, String month, String version, PixelProductArea area) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, area.nicename, version);
+    static String createBaseFilename(String year, String month, String version, String areaString) {
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, areaString.split(";")[0], version);
     }
 
-    static String createMetadata(String year, String month, String version, PixelProductArea area) throws IOException {
+    static String createMetadata(String year, String month, String version, String areaString) throws IOException {
+        String nicename = areaString.split(";")[0];
+        String left = areaString.split(";")[1];
+        String top = areaString.split(";")[2];
+        String right = areaString.split(";")[3];
+        String bottom = areaString.split(";")[4];
+
 
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", area.nicename);
-        velocityContext.put("zoneName", area.nicename);
+        velocityContext.put("zoneId", nicename);
+        velocityContext.put("zoneName", nicename);
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
-        velocityContext.put("westLon", area.left - 180);
-        velocityContext.put("eastLon", area.right - 180);
-        velocityContext.put("northLat", 90 - area.top);
-        velocityContext.put("southLat", 90 - area.bottom);
+        velocityContext.put("westLon", Integer.parseInt(left) - 180);
+        velocityContext.put("eastLon", Integer.parseInt(right) - 180);
+        velocityContext.put("northLat", 90 - Integer.parseInt(top));
+        velocityContext.put("southLat", 90 - Integer.parseInt(bottom));
         velocityContext.put("begin", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(1).atTime(0, 0, 0)));
         velocityContext.put("end", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneId.systemDefault()).format(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).atDay(Year.of(Integer.parseInt(year)).atMonth(Integer.parseInt(month)).lengthOfMonth()).atTime(23, 59, 59)));
 
@@ -171,7 +184,7 @@ public class S2FinaliseMapper extends Mapper {
         private final Band watermask;
 
         JdImage(Band sourceJdBand, Band watermask) {
-            super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceJdBand = sourceJdBand;
             this.watermask = watermask;
         }
@@ -202,7 +215,7 @@ public class S2FinaliseMapper extends Mapper {
 
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (Float.isNaN(sourceJd)) {
-                        sourceJd = S2FinaliseMapper.findNeighbourValue(sourceJdArray, pixelIndex, destRect.width).neighbourValue;
+                        sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, pixelIndex, destRect.width).neighbourValue;
                     }
 
                     int targetJd;
@@ -227,7 +240,7 @@ public class S2FinaliseMapper extends Mapper {
         private final Band sourceJdBand;
 
         private ClImage(Band sourceClBand, Band sourceJdBand) {
-            super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceClBand = sourceClBand;
             this.sourceJdBand = sourceJdBand;
         }
@@ -279,7 +292,7 @@ public class S2FinaliseMapper extends Mapper {
         private final Progressable context;
 
         private LcImage(Product target, Product lcProduct, Band jdBand, Progressable context) {
-            super(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(S2FinaliseMapper.TILE_SIZE, S2FinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            super(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.target = target;
             this.lcProduct = lcProduct;
             this.jdBand = jdBand;
@@ -321,6 +334,35 @@ public class S2FinaliseMapper extends Mapper {
                         lcData[0] = 0;
                     }
                     dest.setSample(x, y, 0, lcData[0]);
+                }
+            }
+        }
+    }
+
+    private static class SensorImage extends SingleBandedOpImage implements RenderedImage {
+        private final Band jd;
+        private final int sensorId;
+
+        public SensorImage(Band jd, String sensorId) {
+            super(DataBuffer.TYPE_BYTE, jd.getRasterWidth(), jd.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            this.jd = jd;
+            this.sensorId = Integer.parseInt(sensorId);
+        }
+
+        @Override
+        protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            ProductData.Int rasterData = new ProductData.Int(destRect.width);
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                try {
+                    jd.readRasterData(0, y, destRect.width, 1, rasterData);
+                } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                }
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    int jdValue = rasterData.getElemIntAt(x);
+                    if (jdValue > 0 && jdValue < 900) {
+                        dest.setSample(x, y, 0, sensorId);
+                    }
                 }
             }
         }
@@ -795,6 +837,6 @@ public class S2FinaliseMapper extends Mapper {
 
         int newPixelIndex;
         float neighbourValue;
-    }
 
+    }
 }

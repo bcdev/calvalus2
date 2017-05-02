@@ -28,21 +28,21 @@ public class MerisDataSource extends AbstractFireGridDataSource {
     private final Product lcProduct;
     private final List<File> srProducts;
     private final boolean computeBA;
-    private final int targetWidth;
-    private final int targetHeight;
+    private final int sourceWidth;
+    private final int sourceHeight;
     private GeoCoding geoCoding;
 
     MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts) {
         this(sourceProduct, lcProduct, srProducts, 90, 90);
     }
 
-    MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts, int targetWidth, int targetHeight) {
+    MerisDataSource(Product sourceProduct, Product lcProduct, List<File> srProducts, int sourceWidth, int sourceHeight) {
         this.sourceProduct = sourceProduct;
         this.lcProduct = lcProduct;
         this.srProducts = srProducts;
         this.computeBA = sourceProduct != null;
-        this.targetWidth = targetWidth;
-        this.targetHeight = targetHeight;
+        this.sourceWidth = sourceWidth;
+        this.sourceHeight = sourceHeight;
 
         if (computeBA) {
             geoCoding = sourceProduct.getSceneGeoCoding();
@@ -57,8 +57,8 @@ public class MerisDataSource extends AbstractFireGridDataSource {
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        SourceData data = new SourceData(targetWidth, targetHeight);
-        Rectangle sourceRect = new Rectangle(x * targetWidth, y * targetHeight, targetWidth, targetHeight);
+        SourceData data = new SourceData(sourceWidth, sourceHeight);
+        Rectangle sourceRect = new Rectangle(x * sourceWidth, y * sourceHeight, sourceWidth, sourceHeight);
         if (computeBA) {
             Band baBand = sourceProduct.getBand("band_1");
             baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
@@ -67,7 +67,7 @@ public class MerisDataSource extends AbstractFireGridDataSource {
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }
-        getAreas(geoCoding, targetWidth, targetHeight, data.areas);
+        getAreas(geoCoding, sourceWidth, sourceHeight, data.areas);
 
         byte[] statusPixelsFirstHalf = new byte[sourceRect.width * sourceRect.height];
         byte[] statusPixelsSecondHalf = new byte[sourceRect.width * sourceRect.height];

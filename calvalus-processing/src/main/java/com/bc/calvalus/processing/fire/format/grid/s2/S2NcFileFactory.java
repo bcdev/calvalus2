@@ -23,7 +23,7 @@ public class S2NcFileFactory extends NcFileFactory {
 
     @Override
     protected String getDoi() {
-        return "FILL_IN";
+        return "TBD";
     }
 
     @Override

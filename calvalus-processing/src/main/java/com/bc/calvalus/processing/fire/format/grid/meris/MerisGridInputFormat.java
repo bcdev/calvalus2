@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
+import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -114,7 +115,7 @@ public class MerisGridInputFormat extends InputFormat {
     static String getLcInputPath(String baInputPath) {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
-        String lcYear = lcYear(year);
+        String lcYear = GridFormatUtils.lcYear(year);
         int tileIndex = baInputPath.indexOf("/BA_PIX_MER_") + "/BA_PIX_MER_".length();
         String tile = baInputPath.substring(tileIndex, tileIndex + 6);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
@@ -130,27 +131,6 @@ public class MerisGridInputFormat extends InputFormat {
         String basePath = baInputPath.substring(0, baInputPath.indexOf("meris-ba") - 1);
 //        return String.format("%s/sr-fr-default-nc-classic/%s/%s/%s/%s-%02d-*/CCI-Fire-*.nc", basePath, year, tile, year, year, month);
         return String.format("%s/sr-fr-default/%s/l3-%s-%02d-*-fire-nc/CCI-Fire-*%s-%02d-*-%s*.nc", basePath, year, year, month, year, month, tile);
-    }
-
-    private static String lcYear(int year) {
-        // 2002 - 2007 -> 2000
-        // 2008 - 2012 -> 2005
-        switch (year) {
-            case 2002:
-            case 2003:
-            case 2004:
-            case 2005:
-            case 2006:
-            case 2007:
-                return "2000";
-            case 2008:
-            case 2009:
-            case 2010:
-            case 2011:
-            case 2012:
-                return "2005";
-        }
-        throw new IllegalArgumentException("Illegal year: " + year);
     }
 
     private FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,

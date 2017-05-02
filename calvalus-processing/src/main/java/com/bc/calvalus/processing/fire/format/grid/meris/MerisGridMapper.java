@@ -56,7 +56,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     @Override
     public void run(Context context) throws IOException, InterruptedException {
 
-        System.setProperty("snap.dataio.netcdf.metadataElementLimit", "100");
+        System.setProperty("snap.dataio.netcdf.metadataElementLimit", "0");
 
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
@@ -115,7 +115,7 @@ public class MerisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(float[] ba, double[] probabilityOfBurn) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn) {
         // getting pixels for areas instead, see MerisGridMapper#predict
         return Float.NaN;
     }

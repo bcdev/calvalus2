@@ -1,4 +1,4 @@
-package com.bc.calvalus.processing.fire.format.grid.s2;
+package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
@@ -7,11 +7,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,19 +15,16 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.zip.ZipFile;
-
-import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource.STEP;
 
 /**
- * Runs the fire S2 formatting grid mapper.
+ * Runs the fire MODIS formatting grid mapper.
  *
  * @author thomas
  */
-public class S2GridMapper extends AbstractGridMapper {
+public class ModisGridMapper extends AbstractGridMapper {
 
-    S2GridMapper() {
-        super(STEP * 4, STEP * 4);
+    ModisGridMapper() {
+        super(40, 40);
     }
 
     @Override
@@ -46,34 +39,23 @@ public class S2GridMapper extends AbstractGridMapper {
             return;
         }
         LOG.info("paths=" + Arrays.toString(paths));
-
-        List<ZipFile> geoLookupTables = new ArrayList<>();
-        String fiveDegTile = paths[paths.length - 1].getName();
+        String targetTile = paths[paths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
-        for (int i = 0; i < paths.length - 2; i++) {
-            String utmTile = paths[i].getName().substring(4, 9);
-            String localGeoLookupFileName = fiveDegTile + "-" + utmTile + ".zip";
-            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/" + localGeoLookupFileName);
-            if (!new File(localGeoLookupFileName).exists()) {
-                File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
-                geoLookupTables.add(new ZipFile(localGeoLookup));
-            }
+        List<Product> lcProducts = new ArrayList<>();
+        for (int i = 0; i < paths.length; i += 2) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+            File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
             sourceProducts.add(ProductIO.readProduct(sourceProductFile));
-            LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 2)));
+            lcProducts.add(ProductIO.readProduct(lcProductFile));
         }
-
-        File file = CalvalusProductIO.copyFileToLocal(paths[paths.length - 2], context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(file);
-        setGcToLcProduct(lcProduct);
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProduct, geoLookupTables);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(targetTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]));
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -82,7 +64,7 @@ public class S2GridMapper extends AbstractGridMapper {
         setDataSource(dataSource);
         GridCell gridCell = computeGridCell(year, month);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, fiveDegTile)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, targetTile)), gridCell);
     }
 
     @Override
@@ -103,24 +85,6 @@ public class S2GridMapper extends AbstractGridMapper {
         if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
             throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
         }
-    }
-
-    public static void setGcToLcProduct(Product lcProduct) throws IOException {
-        String tile = lcProduct.getName().substring(8, 14);
-        int tileX = Integer.parseInt(tile.substring(4, 6));
-        int tileY = Integer.parseInt(tile.substring(1, 3));
-        int easting = 10 * tileX - 180;
-        int northing = 90 - 10 * tileY;
-        int height = lcProduct.getSceneRasterHeight();
-        int width = lcProduct.getSceneRasterWidth();
-        double pixelSize = 1 / 360.0;
-        CrsGeoCoding sceneGeoCoding;
-        try {
-            sceneGeoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, width, height, easting, northing, pixelSize, pixelSize);
-        } catch (FactoryException | TransformException e) {
-            throw new IllegalStateException("Cannot construct geo-coding for LC tile.", e);
-        }
-        lcProduct.setSceneGeoCoding(sceneGeoCoding);
     }
 
     @Override
