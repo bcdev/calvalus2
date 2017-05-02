@@ -2,11 +2,11 @@
 ###              Remote           ###
 #####################################
 
-remote.private.key.path=/home/cvop/.ssh/id_rsa
-remote.file.path      =/opt/tomcat/work/Catalina/localhost/bc-wps/
-remote.host.name      =bc-wps
-remote.user.name      =cvop
-remote.passphrase     =
+remote.private.key.path=
+remote.file.path       =
+remote.host.name       =
+remote.user.name       =
+remote.passphrase      =
 
 start.date.time.test=2017-04-19T08:54:40
 
@@ -20,12 +20,12 @@ calvalus.reporting.url=http://master00:8080/calvalus-reporting/reporting
 ###        Account Server         ###
 #####################################
 
-account.server.url=https://usage.terradue.com/accounting/partners/brockmann/quantity/record
-account.server.username=brockmann
-account.server.platform=Brockmann Consult Processing Center
-account.server.password=a4bc@T2ir
-account.log.send.path=/home/cvop/reporting-inst/data/urbantep
-host.name=www.brockmann-consult.de
+account.server.url     =
+account.server.username=
+account.server.platform=
+account.server.password=
+account.log.send.path  =
+host.name              =
 
 
-cursor.url=/home/cvop/reporting-inst/data/urbantep/cursor.txt
+cursor.url             =
