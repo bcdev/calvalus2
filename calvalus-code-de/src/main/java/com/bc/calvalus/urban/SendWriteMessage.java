@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -71,25 +72,42 @@ public class SendWriteMessage {
     }
 
 
-    private void startSendWriteMessage(BufferedReader bufferedReader, LocalDateTime lastCursorPosition) throws IOException {
+    private void startSendWriteMessage(BufferedReader bufferedReader, LocalDateTime lastCursorPosition) throws IOException, DateTimeParseException {
         String readLine;
         LocalDateTime lastDateTime;
         while ((readLine = bufferedReader.readLine()) != null) {
             String[] split = readLine.split("\t");
+            String jobID = split[1];
+            String accRef = split[3];
+            String compID = split[4];
+            String status = split[5];
+            String uri = split[6];
+            String finishDateTime = split[2];
             WpsReport wpsReport = new WpsReport(
-                    split[1], // jobID
-                    split[3], // ref
-                    split[4], // Compounf ID
-                    split[5], // Status
-                    split[4], // Host name
-                    split[6], // URI
-                    split[2]  // FinishDateTime
+                    jobID, // jobID
+                    accRef, // ref
+                    compID, // Compounf ID
+                    status, // Status
+                    compID, // Host name
+                    uri, // URI
+                    finishDateTime  // FinishDateTime
             );
-            lastDateTime = Instant.parse(split[2]).atZone(ZoneId.systemDefault()).toLocalDateTime();
-            if (!lastCursorPosition.isAfter(lastDateTime)) {
+            lastDateTime = parseLocalDateTime(finishDateTime, jobID);
+            if (Objects.nonNull(lastDateTime) && !lastCursorPosition.isAfter(lastDateTime)) {
                 handleNewWpsReport(wpsReport);
             }
         }
+    }
+
+    private LocalDateTime parseLocalDateTime(String strDate, String jobID) {
+        try {
+            return Instant.parse(strDate).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        } catch (DateTimeParseException e) {
+            String msg = String.format(String.format("Date is not properly formatted, Check the remote file, where jobID" +
+                                                             " %s,%s", jobID, e.getMessage()));
+            logger.log(Level.WARNING, msg);
+        }
+        return null;
     }
 
     private void writeMessage(String jobId, String message) {
