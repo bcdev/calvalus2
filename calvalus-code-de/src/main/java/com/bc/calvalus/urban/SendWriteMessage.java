@@ -42,6 +42,7 @@ import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 public class SendWriteMessage {
 
     public static final String REMOVE_TEP_PREFIX = "tep_";
+    public static final String COM_BC_CALVALUS_URBAN_SEND = "com.bc.calvalus.urban.send";
     private final CopyWpsRemoteFile scpCommand;
     private final Logger logger = CalvalusLogger.getLogger();
     private final ReadCalvalusReport calvalusReport;
@@ -127,7 +128,7 @@ public class SendWriteMessage {
         if (reportOptional.isPresent()) {
             Message message = createMessage(reportOptional.get(), wpsReport);
             writeMessage(message.getJobID(), message.toJson());
-            boolean isDeveloper = Boolean.getBoolean("com.bc.calvalus.urban.send");
+            boolean isDeveloper = Boolean.getBoolean(COM_BC_CALVALUS_URBAN_SEND);
             if (!isDeveloper) {
                 sendMessage(message.toJson());
             }

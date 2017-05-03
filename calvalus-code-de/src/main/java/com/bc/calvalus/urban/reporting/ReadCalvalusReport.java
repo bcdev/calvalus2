@@ -44,6 +44,10 @@ public class ReadCalvalusReport {
         }
         Gson gson = new Gson();
         CalvalusReport usageStatistics = gson.fromJson(jsonUser, CalvalusReport.class);
+        boolean notFound = usageStatistics.getJobId().equalsIgnoreCase("not-found");
+        if (notFound) {
+            return Optional.empty();
+        }
         return Optional.ofNullable(usageStatistics);
     }
 }
