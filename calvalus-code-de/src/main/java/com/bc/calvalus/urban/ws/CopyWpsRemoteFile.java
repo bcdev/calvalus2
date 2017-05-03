@@ -30,13 +30,12 @@ public class CopyWpsRemoteFile {
     private Channel channel = null;
     private Session session = null;
 
-
     public BufferedReader readRemoteFile() throws IOException, JSchException {
         if (session == null) {
             session = getRemoteSession();
         }
         session.connect();
-        String commandToExec = String.format("tail -100f %scalvalus-wps-reporting.report", remotePath);
+        String commandToExec = String.format("tail -110f %scalvalus-wps-reporting.report", remotePath);
         Channel channel = session.openChannel(EXEC);
         ((ChannelExec) channel).setCommand(commandToExec);
         channel.setInputStream(null);

@@ -1,6 +1,7 @@
 package com.bc.calvalus.urban.account;
 
-import java.util.Map;
+import com.google.gson.Gson;
+import java.util.List;
 import lombok.Value;
 
 /**
@@ -11,8 +12,12 @@ public class Message {
     private String jobID;
     private Account account;
     private Compound compound;
-    private Map<String, Long> quantity;
+    private List<Quantity> quantity;
     private String hostName;
     private String timeStamp;
     private String status;
+
+    public String toJson() {
+        return new Gson().toJson(this);
+    }
 }
