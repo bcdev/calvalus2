@@ -185,7 +185,7 @@ class LocalProduction {
                 "                <config>\n" +
                 "                    <subSamplingX>10</subSamplingX>\n" +
                 "                    <subSamplingY>10</subSamplingY>\n" +
-                "                    <RGBAExpressions>if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 1.0 else 0.0</RGBAExpressions>\n" +
+                "                    <RGBAExpressions>if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 1.0 else 0.0</RGBAExpressions>\n" +
                 "                    <backgroundColor>0,0,0,0</backgroundColor>\n" +
                 "                    <imageType>png</imageType>\n" +
                 "                </config>\n" +

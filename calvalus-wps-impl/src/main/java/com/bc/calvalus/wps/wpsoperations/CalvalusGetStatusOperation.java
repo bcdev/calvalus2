@@ -4,6 +4,7 @@ import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUN
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_BUNDLE_VERSION;
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.PROCESSOR_NAME;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -107,6 +108,7 @@ public class CalvalusGetStatusOperation extends WpsOperation {
             executeResponse = getExecuteInProgressResponse(status);
         }
         executeResponse.setProcess(processBriefType);
+        CalvalusLogger.getLogger().info("status inquiry for job " + jobId + " returns " + status.getState());
         return executeResponse;
     }
 

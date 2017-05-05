@@ -68,7 +68,7 @@ class GpfTask implements Callable<Boolean> {
                     "                <config>\n" +
                     "                    <subSamplingX>10</subSamplingX>\n" +
                     "                    <subSamplingY>10</subSamplingY>\n" +
-                    "                    <RGBAExpressions>if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 0.0 else NaN,if band_1==255 then 1.0 else 0.0</RGBAExpressions>\n" +
+                    "                    <RGBAExpressions>if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 0.0 else NaN,if band_1 &gt; 0 then 1.0 else 0.0</RGBAExpressions>\n" +
                     "                    <backgroundColor>0,0,0,0</backgroundColor>\n" +
                     "                    <imageType>png</imageType>\n" +
                     "                </config>\n" +
@@ -84,7 +84,7 @@ class GpfTask implements Callable<Boolean> {
                     outputStream.close();
                 }
             }
-            logger.log(Level.INFO, "[" + jobId + "] subsetting operation completed...");
+            logger.log(Level.INFO, "[" + jobId + "] subset generated ...");
 
             List<String> resultUrls = localFacade.getProductResultUrls(jobId);
             localFacade.generateProductMetadata(jobId);
@@ -94,6 +94,7 @@ class GpfTask implements Callable<Boolean> {
             status.setStopDate(new Date());
             job.updateStatus(status);
             localProductionService.updateJob(job);
+            logger.info("status of job " + jobId + " set to " + status.getState());
             return true;
         } catch (OperatorException exception) {
             logAndCreateErrorStatus(localProductionService, job, status, "GPF process failed", exception);
@@ -107,8 +108,9 @@ class GpfTask implements Callable<Boolean> {
         } finally {
             try {
                 localProductionService.updateStatuses();
+                logger.log(Level.INFO, "[" + jobId + "] subsetting operation terminated");
             } catch (SqlStoreException exception) {
-                logger.log(Level.SEVERE, "[" + jobId + "] Unable to persist the job information to DB...", exception);
+                logger.log(Level.SEVERE, "[" + jobId + "] Unable to persist the job information to DB", exception);
             }
         }
     }
