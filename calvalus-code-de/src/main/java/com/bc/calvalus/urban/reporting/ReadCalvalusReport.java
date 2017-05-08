@@ -29,12 +29,15 @@ public class ReadCalvalusReport {
     }
 
     private String clientRequest(String uri) {
+        CalvalusLogger.getLogger().info("retrieving report " + uri + " ...");
         Invocation.Builder builder = ClientBuilder.newClient().target(uri).request();
         Response response = builder.accept(MediaType.APPLICATION_JSON_TYPE).get();
         int status = response.getStatus();
         if (status >= HTTP_SUCCESSFUL_CODE_START && status < HTTP_SUCCESSFUL_CODE_END) {
+            CalvalusLogger.getLogger().info("retrieving report " + uri + " ... done");
             return builder.get(String.class);
         }
+        CalvalusLogger.getLogger().info("retrieving report " + uri + " ... fails with HTTP " + status);
         return null;
     }
 

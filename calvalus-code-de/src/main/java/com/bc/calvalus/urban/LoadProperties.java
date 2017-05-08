@@ -5,12 +5,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.logging.Level;
-import lombok.Getter;
 
 /**
  * @author muhammad.bc.
  */
-@Getter
 public class LoadProperties {
     private String calvalusReportUrl;
     private String accountServerUrl;
@@ -69,5 +67,64 @@ public class LoadProperties {
         return loadProperties;
     }
 
+    public String getCalvalusReportUrl() {
+        return calvalusReportUrl;
+    }
+
+    public String getAccountServerUrl() {
+        return accountServerUrl;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public String getPlatForm() {
+        return platForm;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public String getHostName() {
+        return hostName;
+    }
+
+    public String getInitStartTime() {
+        return initStartTime;
+    }
+
+    public String getLogAccountMessagePath() {
+        return logAccountMessagePath;
+    }
+
+    public String getRemotePrivateKeyPath() {
+        return remotePrivateKeyPath;
+    }
+
+    public String getRemoteFilePath() {
+        return remoteFilePath;
+    }
+
+    public String getRemoteHostName() {
+        return remoteHostName;
+    }
+
+    public String getRemoteUserName() {
+        return remoteUserName;
+    }
+
+    public String getRemotePassphrase() {
+        return remotePassphrase;
+    }
+
+    public static LoadProperties getLoadProperties() {
+        return loadProperties;
+    }
+
+    public String getCursorFileLocation() {
+        return cursorFileLocation;
+    }
 }
 

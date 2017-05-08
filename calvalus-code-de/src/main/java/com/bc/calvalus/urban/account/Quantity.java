@@ -1,9 +1,19 @@
 package com.bc.calvalus.urban.account;
 
-import lombok.Value;
-
-@Value
 public class Quantity {
     private String id;
     private Long value;
+
+    public Quantity(String id, long value) {
+        this.id = id;
+        this.value = value;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public Long getValue() {
+        return value;
+    }
 }

@@ -1,15 +1,34 @@
 package com.bc.calvalus.urban.account;
 
-import lombok.Value;
-
 /**
  * @author muhammad.bc.
  */
-@Value
 public class Compound {
     private String id;
     private String name;
     private String type;
-    private String uri;
-    private String timestamp;
+    private Any any;
+
+    public Compound(String id, String name, String type, Any any) {
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.any = any;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public Any getAny() {
+        return any;
+    }
 }

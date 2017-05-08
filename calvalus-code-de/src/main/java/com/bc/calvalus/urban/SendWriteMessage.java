@@ -2,6 +2,7 @@ package com.bc.calvalus.urban;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.urban.account.Account;
+import com.bc.calvalus.urban.account.Any;
 import com.bc.calvalus.urban.account.Compound;
 import com.bc.calvalus.urban.account.Message;
 import com.bc.calvalus.urban.account.Quantity;
@@ -69,6 +70,9 @@ public class SendWriteMessage {
             logger.log(Level.WARNING, e.getMessage());
         } catch (JSchException e) {
             logger.log(Level.WARNING, String.format("Read remote file error %s ", e.getMessage()));
+        } catch (RuntimeException e) {
+            logger.log(Level.SEVERE, e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -104,8 +108,8 @@ public class SendWriteMessage {
         try {
             return Instant.parse(strDate).atZone(ZoneId.systemDefault()).toLocalDateTime();
         } catch (DateTimeParseException e) {
-            String msg = String.format(String.format("Date is not properly formatted, Check the remote file, where jobID" +
-                                                             " %s,%s", jobID, e.getMessage()));
+            String msg = String.format("Date is not properly formatted, Check the remote file, where jobID" +
+                                                             " %s,%s", jobID, e.getMessage());
             logger.log(Level.WARNING, msg);
         }
         return null;
@@ -127,18 +131,17 @@ public class SendWriteMessage {
         Optional<CalvalusReport> reportOptional = this.calvalusReport.getReport(wpsReport.getJobID(), filePatternName);
         if (reportOptional.isPresent()) {
             Message message = createMessage(reportOptional.get(), wpsReport);
-            writeMessage(message.getJobID(), message.toJson());
+            writeMessage(message.getId(), message.toJson());
             boolean isDeveloper = Boolean.getBoolean(COM_BC_CALVALUS_URBAN_SEND);
             if (!isDeveloper) {
                 sendMessage(message.toJson());
+            } else {
+                CalvalusLogger.getLogger().warning("skip sending message " + wpsReport.getJobID());
             }
-            cursorPosition.writeLastCursorPosition(Instant.parse(finishDateTime).atZone(ZoneId.systemDefault())
-                                                           .toLocalDateTime());
+            cursorPosition.writeLastCursorPosition(Instant.parse(finishDateTime).atZone(ZoneId.systemDefault()).toLocalDateTime());
         } else {
-            logger.log(Level.INFO, "JobID %s is not present in the calvalus reporting.");
+            logger.log(Level.INFO, String.format("JobID %s is not present in the calvalus reporting.", wpsReport.getJobID()));
         }
-
-
     }
 
 
@@ -179,31 +182,31 @@ public class SendWriteMessage {
     private List<Quantity> createQuantities(CalvalusReport jobSummary) {
         return Arrays.asList(
                 new Quantity("CPU_MILLISECONDS", jobSummary.getCpuMilliseconds()),
-                new Quantity("PHYSICAL_MEMORY_BYTES", jobSummary.getCpuMilliseconds()),
-                new Quantity("BYTE_WRITTEN", jobSummary.getFileBytesWritten()),
-                new Quantity("PROC_INSTANCE", (long) jobSummary.getMapsCompleted()),
-                new Quantity("NUM_REQ", (long) jobSummary.getReducesCompleted()));
+                new Quantity("PHYSICAL_MEMORY_BYTES", jobSummary.getCpuMilliseconds() == 0 ? (jobSummary.getMbMillisMapTotal() + jobSummary.getMbMillisReduceTotal()) * 1024 * 1024 : (jobSummary.getMbMillisMapTotal() + jobSummary.getMbMillisReduceTotal()) / jobSummary.getCpuMilliseconds() * 1024 * 1024),
+                new Quantity("BYTE_READ", jobSummary.getHdfsBytesRead()),
+                new Quantity("BYTE_WRITTEN", jobSummary.getHdfsBytesWritten()),
+                new Quantity("PROC_INSTANCE", (long) jobSummary.getMapsCompleted() + jobSummary.getReducesCompleted()),
+                new Quantity("NUM_REQ", 1));
     }
 
     private Message createMessage(CalvalusReport jobSummary, WpsReport wps) {
         Objects.requireNonNull(jobSummary, "Calvalus report does not exist.");
 
         String userName = jobSummary.getUser().replace(REMOVE_TEP_PREFIX, "");
-        Account account = new Account(platform, userName, wps.getAccRef());
+        Account account = new Account(platform, userName, jobSummary.getRemoteRef());
         Instant timestamp = new Date(jobSummary.getFinishTime()).toInstant();
 
         Compound compound = new Compound(wps.getCompID(),
                                          jobSummary.getJobName(),
                                          jobSummary.getProcessType(),
-                                         wps.getUri(),
-                                         timestamp.toString());
+                                         new Any(wps.getUri()));
         List<Quantity> quantityList = createQuantities(jobSummary);
         return new Message(jobSummary.getJobId(),
                            account,
                            compound,
                            quantityList,
                            hostName,
-                           Instant.now().toString(),
-                           jobSummary.getState());
+                           timestamp.toString(),
+                           "SUCCEEDED".equals(jobSummary.getState()) ? "NOMINAL" : "DEGRADED");
     }
 }
