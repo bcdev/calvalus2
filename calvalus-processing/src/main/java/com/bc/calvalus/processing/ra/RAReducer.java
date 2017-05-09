@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.ra;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.ra.stat.PixelArchiver;
@@ -38,6 +39,7 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * The reducer for the region analysis workflow
@@ -46,6 +48,8 @@ import java.util.Date;
  */
 public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritable> {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
+    
     private RAConfig raConfig;
     private RegionAnalysis regionAnalysis;
 
@@ -78,7 +82,7 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         final int regionId = key.getRegionId(); // TODO is this needed
         final String regionName = key.getRegionName();
-        System.out.println("regionName: " + regionName);
+        LOG.info("regionName: " + regionName);
 
         PixelArchiver pixelArchiver = null;
         if (raConfig.isWritePixelValues()) {
@@ -87,25 +91,30 @@ public class RAReducer extends Reducer<RAKey, RAValue, NullWritable, NullWritabl
 
         regionAnalysis.startRegion(regionName);
 
+        long lastTime = -1;
         for (RAValue extract : values) {
             long time = extract.getTime();
             int numObs = extract.getNumObs();
             float[][] samples = extract.getSamples();
-            int numSamples = extract.getSamples()[0].length;
+            int numSamples = samples[0].length;
             String productName = extract.getProductName();
 
             String timeFormatted = RADateRanges.dateFormat.format(new Date(time));
-            System.out.printf("    data time = %s numObs = %15d  numSamples = %15d%n", timeFormatted, numObs, numSamples);
+            LOG.info(String.format("    time: %s numObs: %8d  numSamples: %8d   %s", timeFormatted, numObs, numSamples, productName));
 
             regionAnalysis.addData(time, numObs, samples);
             if (pixelArchiver != null) {
+                if (time != lastTime && lastTime != -1) {
+                    pixelArchiver.writeTempNetcdf();
+                }
                 pixelArchiver.addProductPixels(time, numObs, samples, productName);
+                lastTime = time;
             }
         }
         regionAnalysis.endRegion();
 
         if (pixelArchiver != null) {
-            System.out.println();
+            pixelArchiver.writeTempNetcdf();   
             File[] netcdfFiles = pixelArchiver.createMergedNetcdf();
             Path workOutputPath = FileOutputFormat.getWorkOutputPath(context);
             for (File file : netcdfFiles) {

@@ -43,8 +43,8 @@ public class RAKey implements WritableComparable<RAKey> {
         time = new LongWritable();
     }
 
-    public RAKey(int regionIndxe, String regionName, long time) {
-        this.regionId = new IntWritable(regionIndxe);
+    public RAKey(int regionId, String regionName, long time) {
+        this.regionId = new IntWritable(regionId);
         this.regionName = new Text(regionName);
         this.time = new LongWritable(time);
     }

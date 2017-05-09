@@ -101,7 +101,7 @@ class Statistics {
             }
         }
         if (accu != null) {
-            accu.accumulate(samples);
+            accu.accumulateNoNaN(samples);
         }
     }
 

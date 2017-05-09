@@ -83,6 +83,33 @@ public class RegionAnalysisTest {
         assertEquals("RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
                              "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t0\t0\t0\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\tNaN\n", actual);
     }
+    
+    @Test
+    public void test_oneRange_multiple_tiles() throws Exception {
+        RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10");
+        RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
+        ra.startRegion("r1");
+        ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
+        ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 5, new float[][]{{11, 12, 13}});
+        ra.addData(dateFormat.parse("2010-01-01 10:00:00").getTime(), 3, new float[][]{{}});
+        ra.endRegion();
+        ra.close();
+
+        Set<String> keySet = writer.writerMap.keySet();
+        assertEquals(2, keySet.size());
+        assertTrue(keySet.contains("region-statistics.csv"));
+        assertTrue(keySet.contains("region-histogram-b1.csv"));
+
+        String expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_numValid\tb1_min\tb1_max\tb1_arithMean\tb1_sigma\tb1_geomMean\tb1_p05\tb1_p25\tb1_p50\tb1_p75\tb1_p95\n" +
+                "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t1\t15\t6\t1.0\t13.0\t7.0\t5.066228051190222\t4.664209927467377\t1.0\t1.75\t7.0\t12.25\t13.0\n";
+        String actual = writer.writerMap.get("region-statistics.csv").toString();
+        assertEquals(expected, actual);
+
+        expected = "RegionId\tTimeWindow_start\tTimeWindow_end\tnumPasses\tnumObs\tb1_belowHistogram\tb1_aboveHistogram\tb1_numBins\tb1_lowValue\tb1_highValue\tb1_bin_0\tb1_bin_1\tb1_bin_2\tb1_bin_3\tb1_bin_4\n" +
+                "r1\t2010-01-01 00:00:00\t2010-01-10 23:59:59\t1\t15\t0\t3\t5\t0.0\t10.0\t1\t2\t0\t0\t0\n";
+        actual = writer.writerMap.get("region-histogram-b1.csv").toString();
+        assertEquals(expected, actual);
+    }
 
     @Test
     public void test_oneRange_data() throws Exception {

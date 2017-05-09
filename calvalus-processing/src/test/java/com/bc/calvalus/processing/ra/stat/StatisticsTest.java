@@ -82,7 +82,7 @@ public class StatisticsTest {
         testStat(new Statistics(4, 0.0, 10.0), stat, histo, samples);
 
         float[] samples2 = {-1f, Float.NaN, 1f, 2f, 3f, 4f, Float.NaN, 5f, 6f, 7f, 11f};
-        String[] stat2 = {"9", "-1.0", "11.0", "4.222222222222222", "3.3591592128513272", "3.9172194543068826", "-1.0", "0.0", "3.0", "6.0", "11.0"};
+        String[] stat2 = {"9", "-1.0", "11.0", "4.222222222222222", "3.3591592128513272", "3.9172194543068826", "-1.0", "1.5", "4.0", "6.5", "11.0"};
         String[] histo2 = {"1", "1", "4", "0.0", "10.0", "2", "2", "3", "0"};
         testStat(new Statistics(4, 0.0, 10.0), stat2, histo2, samples2);
     }

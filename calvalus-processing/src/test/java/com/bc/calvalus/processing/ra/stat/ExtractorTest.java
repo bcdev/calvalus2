@@ -14,22 +14,24 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package com.bc.calvalus.processing.ra;
+package com.bc.calvalus.processing.ra.stat;
 
-import com.bc.calvalus.processing.utils.GeometryUtils;
+import com.bc.calvalus.processing.ra.RAConfig;
 import com.bc.ceres.core.ProgressMonitor;
-import com.vividsolutions.jts.geom.Geometry;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.geotools.index.CloseableIterator;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class ExtractorTest {
 
@@ -53,16 +55,52 @@ public class ExtractorTest {
         RAConfig.BandConfig l = new RAConfig.BandConfig("l");
         RAConfig.BandConfig c = new RAConfig.BandConfig("c");
         config.setBandConfigs(x, l, c);
-        config.setValidExpressions("LAT > 50");
+        config.setValidExpression("LAT > 50");
+        config.setRegions(new RAConfig.Region("northsea", NORTH_SEA_WKT));
 
-        RAMapper.Extractor extractor = new RAMapper.Extractor(product, config);
-        Geometry northSea = GeometryUtils.createGeometry(NORTH_SEA_WKT);
-        RAMapper.Extract extract = extractor.performExtraction("r1", northSea, ProgressMonitor.NULL);
-        assertNotNull(extract);
-        assertEquals(574, extract.numObs);
-        assertEquals(3, extract.samples.length);
-        assertEquals(373, extract.samples[0].length);
-        ProductData.UTC actualUTC = ProductData.UTC.create(new Date(extract.time), 0);
+        List<Result> results = new ArrayList<>();
+        CloseableIterator<RAConfig.NamedGeometry> namedRegions = config.createNamedRegionIterator(null);
+        Extractor extractor = new Extractor(product, config.getValidExpression(), config.getBandNames(), namedRegions) {
+            @Override
+            public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {
+                results.add(new Result(regionIndex, regionName, time, numObs, samples));
+            }
+        };
+        extractor.extract(ProgressMonitor.NULL);
+
+        assertEquals(5, results.size());
+        testResultRecord(results.get(0), 65, 65);
+        testResultRecord(results.get(1), 200, 200);
+        testResultRecord(results.get(2), 108, 108);
+        testResultRecord(results.get(3), 200, 0);
+        testResultRecord(results.get(4), 1, 0);
+    }
+
+    public void testResultRecord(Result result, int numObs, int numValid) {
+        ProductData.UTC actualUTC;
+        assertEquals(0, result.regionIndex);
+        assertEquals("northsea", result.regionName);
+        actualUTC = ProductData.UTC.create(new Date(result.time), 0);
         assertEquals("01-JAN-2011 10:37:35.000000", actualUTC.format());
+        assertEquals(numObs, result.numObs);
+        assertEquals(3, result.samples.length);
+        assertEquals(numValid, result.samples[0].length);
+    }
+
+    private static class Result {
+
+        private final int regionIndex;
+        private final String regionName;
+        private final long time;
+        private final int numObs;
+        private final float[][] samples;
+
+        private Result(int regionIndex, String regionName, long time, int numObs, float[][] samples) {
+            this.regionIndex = regionIndex;
+            this.regionName = regionName;
+            this.time = time;
+            this.numObs = numObs;
+            this.samples = samples;
+        }
     }
 }

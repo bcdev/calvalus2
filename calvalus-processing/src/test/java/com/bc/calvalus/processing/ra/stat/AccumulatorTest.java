@@ -23,16 +23,32 @@ import static org.junit.Assert.*;
 public class AccumulatorTest {
 
     @Test
-    public void test() throws Exception {
+    public void testInitialize() throws Exception {
         Accumulator acc = new Accumulator();
         assertArrayEquals(new float[0], acc.getValues(), 1E-5f);
 
         acc.accumulate();
         assertArrayEquals(new float[0], acc.getValues(), 1E-5f);
+    }
+
+    @Test
+    public void testAccumulate() throws Exception {
+        Accumulator acc = new Accumulator();
 
         acc.accumulate(1, 2, 3);
         assertArrayEquals(new float[]{1, 2, 3}, acc.getValues(), 1E-5f);
         acc.accumulate(4, 5);
         assertArrayEquals(new float[]{1, 2, 3, 4, 5}, acc.getValues(), 1E-5f);
+    }
+    
+    @Test
+    public void testAccumulateNoNaN() throws Exception {
+        Accumulator acc = new Accumulator();
+
+        acc.accumulateNoNaN(Float.NaN, Float.NaN);
+        assertArrayEquals(new float[0], acc.getValues(), 1E-5f);
+        
+        acc.accumulateNoNaN(1, Float.NaN, 2, 3);
+        assertArrayEquals(new float[]{1, 2, 3}, acc.getValues(), 1E-5f);
     }
 }

@@ -1,16 +1,20 @@
 package com.bc.calvalus.processing.ra.stat;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.ra.RAConfig;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * calculates statistics for multiple bands
  */
 public class RegionAnalysis {
+
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final RADateRanges dateRanges;
     private final HandleAll dataRangeHandler;
@@ -20,6 +24,7 @@ public class RegionAnalysis {
     private final List<String> regionNameList;
 
     private String currentRegionName;
+    private long currentTime;
     private int numPasses;
     private int numObs;
 
@@ -43,14 +48,14 @@ public class RegionAnalysis {
         int newDateRange = dateRanges.findIndex(time);
         if (newDateRange == -1) {
             String out_ouf_range_date = dateRanges.format(time);
-            System.out.println("out_ouf_range_date = " + out_ouf_range_date + " --> ignoring extract data");
+            LOG.warning("out_ouf_range_date = " + out_ouf_range_date + " --> ignoring extract data");
         } else {
             if (newDateRange != dataRangeHandler.current()) {
                 writeCurrentRecord();
                 resetRecord();
                 writeEmptyRecords(regionHandler.current(), dataRangeHandler.next(newDateRange));
             }
-            accumulate(numObs, samples);
+            accumulate(time, numObs, samples);
         }
     }
 
@@ -80,8 +85,11 @@ public class RegionAnalysis {
 
     /////////////////////////////////
 
-    private void accumulate(int numObs, float[][] samples) {
-        this.numPasses++;
+    private void accumulate(long time, int numObs, float[][] samples) {
+        if (time != currentTime) {
+            currentTime = time;
+            numPasses++;
+        }
         this.numObs += numObs;
         if (samples.length != stats.length) {
             throw new IllegalArgumentException(String.format("samples.length(%d) does not match num bands(%d)", samples.length, stats.length));
@@ -92,6 +100,7 @@ public class RegionAnalysis {
     }
 
     private void resetRecord() {
+        currentTime = -1;
         numObs = 0;
         numPasses = 0;
         for (Statistics stat : stats) {

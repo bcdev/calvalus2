@@ -11,7 +11,7 @@ class Accumulator {
         values = new float[0];
     }
 
-    public void accumulate(float... samples) {
+    public void accumulateNoNaN(float... samples) {
         float[] buffer = new float[samples.length];
         int i = 0;
         for (float sample : samples) {
@@ -19,7 +19,13 @@ class Accumulator {
                 buffer[i++] = sample;
             }
         }
-        values = concat(values, buffer);
+        if (i > 0) {
+            values = concat(values, buffer, i);
+        }
+    }
+
+    public void accumulate(float... samples) {
+        values = concat(values, samples, samples.length);
     }
 
     void clear() {
@@ -30,10 +36,10 @@ class Accumulator {
         return values;
     }
 
-    private static float[] concat(float[] a1, float[] a2) {
-        float[] b = new float[a1.length + a2.length];
+    private static float[] concat(float[] a1, float[] a2, int a2Length) {
+        float[] b = new float[a1.length + a2Length];
         System.arraycopy(a1, 0, b, 0, a1.length);
-        System.arraycopy(a2, 0, b, a1.length, a2.length);
+        System.arraycopy(a2, 0, b, a1.length, a2Length);
         return b;
     }
 }
