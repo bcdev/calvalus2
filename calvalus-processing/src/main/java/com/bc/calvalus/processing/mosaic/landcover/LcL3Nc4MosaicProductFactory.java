@@ -11,17 +11,14 @@ import org.esa.snap.core.datamodel.IndexCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 
-import java.awt.Color;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * The factory for creating the final mosaic product for LC-CCI
@@ -65,7 +62,7 @@ public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
         } catch (ParseException e) {
             throw new RuntimeException(e);
         }
-        final Calendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        final Calendar calendar = DateUtils.createCalendar();
         calendar.setTime(maxDate);
         calendar.add(Calendar.DATE, 1);
         final Date endDate = calendar.getTime();

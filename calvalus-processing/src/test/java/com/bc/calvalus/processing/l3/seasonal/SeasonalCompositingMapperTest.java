@@ -27,7 +27,7 @@ public class SeasonalCompositingMapperTest {
         start.setTime(DATE_FORMAT.parse("2012-01-01"));
         Calendar stop = DateUtils.createCalendar();
         stop.setTime(DATE_FORMAT.parse("2012-12-31"));
-        GregorianCalendar c = new GregorianCalendar();
+        GregorianCalendar c = DateUtils.createCalendar();
         c.setTime(d);
         assertEquals(0, c.get(Calendar.MONTH)) ;
         assertEquals(1, c.get(Calendar.DAY_OF_MONTH)) ;

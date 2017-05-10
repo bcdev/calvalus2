@@ -98,8 +98,8 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
         final Date start = getDate(conf, JobConfigNames.CALVALUS_MIN_DATE);
         final Date stop = getDate(conf, JobConfigNames.CALVALUS_MAX_DATE);
-        final Calendar startCalendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
-        final Calendar stopCalendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        final Calendar startCalendar = DateUtils.createCalendar();
+        final Calendar stopCalendar = DateUtils.createCalendar();
         startCalendar.setTime(start);
         stopCalendar.setTime(stop);
         stopCalendar.set(Calendar.YEAR, startCalendar.get(Calendar.YEAR));
@@ -494,7 +494,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     static Date nextWeek(Date week, Calendar start, Calendar stop, int daysPerWeek) {
-        GregorianCalendar c = new GregorianCalendar();
+        GregorianCalendar c = DateUtils.createCalendar();
         c.setTime(week);
         c.add(Calendar.DATE, daysPerWeek == 7 ? lengthOfWeek(c) : daysPerWeek);
         if (c.after(stop)) {
@@ -506,7 +506,7 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
     }
 
     static Date shiftTo(Date week, int year) {
-        GregorianCalendar c = new GregorianCalendar();
+        GregorianCalendar c = DateUtils.createCalendar();
         c.setTime(week);
         c.set(Calendar.YEAR, year);
         return c.getTime();

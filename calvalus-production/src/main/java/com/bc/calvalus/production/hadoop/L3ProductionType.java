@@ -2,6 +2,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.FileSystemService;
@@ -35,7 +36,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
-import java.util.TimeZone;
 
 /**
  * A production type used for generating one or more Level-3 products.
@@ -241,7 +241,7 @@ public class L3ProductionType extends HadoopProductionType {
             int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength",
                     periodLength); // unit=days
 
-            final GregorianCalendar calendar = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+            final GregorianCalendar calendar = DateUtils.createCalendar();
 
             // set end of the interval to beginning of the following day for simpler comparison
             calendar.setTime(maxDate);

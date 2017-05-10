@@ -33,8 +33,8 @@ public class DateUtils {
     public static final TimeZone UTC_TIME_ZONE = TimeZone.getTimeZone("UTC");
     public static final DateFormat ISO_FORMAT = createDateFormat(ISO_FORMAT_STRING);
 
-    public static Calendar createCalendar() {
-        final Calendar calendar = GregorianCalendar.getInstance(UTC_TIME_ZONE, Locale.ENGLISH);
+    public static GregorianCalendar createCalendar() {
+        final GregorianCalendar calendar = new GregorianCalendar(UTC_TIME_ZONE, Locale.ENGLISH);
         calendar.clear();
         return calendar;
     }
