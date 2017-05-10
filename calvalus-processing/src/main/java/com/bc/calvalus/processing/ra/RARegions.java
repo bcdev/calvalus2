@@ -57,8 +57,6 @@ public class RARegions {
 
     public static FeatureCollection<SimpleFeatureType, SimpleFeature> openShapefile(Path path, File tempDir, Configuration conf) throws IOException {
         File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToDir(path, tempDir, conf);
-        System.out.println("unzippedFiles = " + Arrays.toString(unzippedFiles));
-        // find *.dim file
         File shpFile = null;
         File prjFile = null;
         for (File file : unzippedFiles) {

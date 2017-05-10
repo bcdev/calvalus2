@@ -20,33 +20,20 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
+import com.bc.calvalus.processing.ra.stat.Extractor;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.SubProgressMonitor;
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.prep.PreparedGeometry;
-import com.vividsolutions.jts.geom.prep.PreparedGeometryFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.gpf.common.SubsetOp;
-import org.esa.snap.core.image.ImageManager;
-import org.esa.snap.core.util.ProductUtils;
-import org.esa.snap.core.util.StringUtils;
 
-import javax.media.jai.PlanarImage;
-import java.awt.*;
-import java.awt.image.Raster;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 
 /**
@@ -74,22 +61,37 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, numRegions));
             if (product != null) {
-                Extractor extractor = new Extractor(product, raConfig);
+                final AtomicBoolean foundPixel = new AtomicBoolean(false);
+                final AtomicInteger numObsTotal = new AtomicInteger(0);
+                final AtomicInteger numSamplesTotal = new AtomicInteger(0);
+                final Set<Integer> regionIdSet = new HashSet<>();
+                final String productName = product.getName();
                 Iterator<RAConfig.NamedGeometry> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
-                int regionIndex = 0;
-                while (regionIterator.hasNext()) {
-                    RAConfig.NamedGeometry namedRegion = regionIterator.next();
-                    ProgressMonitor subPM = SubProgressMonitor.create(pm, 1);
-                    Extract extract = extractor.performExtraction(namedRegion.name, namedRegion.geometry, subPM);
-                    if (extract != null) {
-                        RAKey key = new RAKey(regionIndex, namedRegion.name, extract.time);
-                        RAValue value = new RAValue(extract.numObs, extract.samples, extract.time, product.getName());
+                Extractor extractor = new Extractor(product, raConfig.getValidExpression(), raConfig.getBandNames(), regionIterator) {
+                    @Override
+                    public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {
+                        RAKey key = new RAKey(regionIndex, regionName, time);
+                        RAValue value = new RAValue(numObs, samples, time, productName);
                         context.write(key, value);
-                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixel").increment(1);
-                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Observations").increment(extract.numObs);
-                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Valid Samples").increment(extract.numValid);
+
+                        int numSamples = samples[0].length;
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Observations").increment(numObs);
+                        context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Valid Samples").increment(numSamples);
+                        
+                        foundPixel.set(true);
+                        numObsTotal.addAndGet(numObs);
+                        numSamplesTotal.addAndGet(numSamples);
+                        regionIdSet.add(regionIndex);
                     }
-                    regionIndex++;
+                };
+                extractor.extract(pm);
+                if (foundPixel.get()) {
+                    context.getCounter(COUNTER_GROUP_NAME_PRODUCTS, "Product with pixel").increment(1);
+                    LOG.info("");
+                    LOG.info(String.format("total numObs     %12d", numObsTotal.get()));
+                    LOG.info(String.format("total numSamples %12d", numSamplesTotal.get()));
+                    LOG.info(String.format("total regions    %12d", regionIdSet.size()));
+                    LOG.info("");
                 }
             } else {
                 LOG.warning("product does not cover region, skipping processing.");
@@ -99,189 +101,5 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
             pm.done();
         }
     }
-
-    static class Extractor {
-
-        private final Product product;
-        private final PlanarImage maskImage;
-        private final PlanarImage[] dataImages;
-        private final boolean equalTileGrids;
-
-        Extractor(Product product, RAConfig raConfig) {
-            this.product = product;
-
-            if (product.getSceneTimeCoding() == null && product.getStartTime() == null && product.getEndTime() == null) {
-                throw new IllegalArgumentException("Product has no time information");
-            }
-
-            String expression = StringUtils.isNotNullAndNotEmpty(raConfig.getValidExpressions()) ? raConfig.getValidExpressions() : "true";
-            Band maskBand = product.addBand("_RA_MASK", expression, ProductData.TYPE_UINT8);
-            maskImage = maskBand.getSourceImage();
-            boolean tEqualTileGrid = true;
-
-            String[] bandNames = raConfig.getBandNames();
-            dataImages = new PlanarImage[bandNames.length];
-            for (int i = 0; i < bandNames.length; i++) {
-                Band band = product.getBand(bandNames[i]);
-                if (band == null) {
-                    throw new IllegalArgumentException("Product does not contain band " + bandNames[i]);
-                }
-                if (band.getRasterHeight() != maskBand.getRasterHeight() ||
-                        band.getRasterWidth() != maskBand.getRasterWidth()) {
-                    // TODO
-                    throw new IllegalArgumentException("Multi-size not supported !!!");
-                }
-                dataImages[i] = ImageManager.createMaskedGeophysicalImage(band, Float.NaN);
-                if (!hasSameTiling(maskImage, dataImages[i])) {
-                    tEqualTileGrid = false;
-                }
-            }
-            this.equalTileGrids = tEqualTileGrid;
-            System.out.println("equalTileGrids = " + equalTileGrids);
-        }
-
-        private boolean hasSameTiling(PlanarImage im1, PlanarImage im2) {
-            return im1.getTileWidth() == im2.getTileWidth() &&
-                    im1.getTileHeight() == im2.getTileHeight() &&
-                    im1.getTileGridXOffset() == im2.getTileGridXOffset() &&
-                    im1.getTileGridYOffset() == im2.getTileGridYOffset();
-        }
-
-        Extract performExtraction(String regionName, Geometry geometry, ProgressMonitor pm) {
-            Rectangle rect = SubsetOp.computePixelRegion(product, geometry, 1);
-            if (rect.isEmpty()) {
-                LOG.info("Nothing to extract for region " + regionName);
-                return null;
-            }
-            PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(geometry);
-            GeometryFilter geometryFilter = new GeometryFilter(product.getSceneGeoCoding(), preparedGeometry);
-
-            int numBands = dataImages.length;
-            int numPixelsMax = rect.width * rect.height;
-            String fmt = "%s bounds: [x=%d,y=%d,width=%d,height=%d]  area: %d pixel";
-            LOG.info(String.format(fmt, regionName, rect.x, rect.y, rect.width, rect.height, numPixelsMax));
-
-            Extract extract = new Extract(numBands, numPixelsMax);
-            Point[] tileIndices = maskImage.getTileIndices(rect);
-            LOG.info(String.format("Extracting data from %d tiles", tileIndices.length));
-            pm.beginTask("extraction", tileIndices.length);
-            for (Point maskTileIndex : tileIndices) {
-                handleSingleTile(maskTileIndex, rect, geometryFilter, extract);
-                pm.worked(1);
-            }
-            LOG.info(String.format("Observations  %20d", extract.numObs));
-            LOG.info(String.format("Valid samples %20d", extract.numValid));
-            pm.done();
-            if (extract.numValid > 0) {
-                // truncate array to used size
-                for (int i = 0; i < extract.samples.length; i++) {
-                    float[] samples = extract.samples[i];
-                    extract.samples[i] = Arrays.copyOf(samples, extract.numValid);
-                }
-                return extract;
-            } else {
-                return null;
-            }
-        }
-
-        private RasterStack getRasters(Point maskTileIndex, Rectangle regionRect) {
-            Rectangle tileRect = maskImage.getTileRect(maskTileIndex.x, maskTileIndex.y);
-            Rectangle rect = tileRect.intersection(regionRect);
-
-            Raster maskTile = maskImage.getTile(maskTileIndex.x, maskTileIndex.y);
-            Raster[] dataTiles = new Raster[dataImages.length];
-
-            if (equalTileGrids) {
-                for (int i = 0; i < dataImages.length; i++) {
-                    dataTiles[i] = dataImages[i].getTile(maskTileIndex.x, maskTileIndex.y);
-                }
-            } else {
-                for (int i = 0; i < dataImages.length; i++) {
-                    dataTiles[i] = dataImages[i].getData(tileRect);
-                }
-            }
-            return new RasterStack(rect, maskTile, dataTiles);
-        }
-
-        private void handleSingleTile(Point maskTileIndex, Rectangle regionRect, GeometryFilter geometryFilter, Extract extract) {
-            final RasterStack rasterStack = getRasters(maskTileIndex, regionRect);
-            final Rectangle rect = rasterStack.rect;
-
-            for (int y = rect.y; y < rect.y + rect.height; y++) {
-                for (int x = rect.x; x < rect.x + rect.width; x++) {
-                    if (geometryFilter.test(x, y)) {
-                        extract.numObs++;
-                        // test valid mask
-                        if (rasterStack.maskTile.getSample(x, y, 0) != 0) {
-                            // extract sample
-                            boolean oneValueValid = false;
-                            for (int i = 0; i < rasterStack.dataTiles.length; i++) {
-                                float sample = rasterStack.dataTiles[i].getSampleFloat(x, y, 0);
-                                extract.samples[i][extract.numValid] = sample;
-                                if (!Float.isNaN(sample)) {
-                                    oneValueValid = true;
-                                }
-                            }
-                            if (oneValueValid) {
-                                extract.numValid++;
-                                if (extract.time == -1 ) {
-                                    ProductData.UTC pixelScanTime = ProductUtils.getPixelScanTime(product, x + 0.5, y + 0.5);
-                                    extract.time = pixelScanTime.getAsDate().getTime();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    static class Extract {
-
-        final float[][] samples;
-        int numObs;
-        int numValid;
-        long time;
-
-        Extract(int numBands, int numPixelsMax) {
-            samples = new float[numBands][numPixelsMax];
-            numObs = 0;
-            numValid = 0;
-            time = -1;
-        }
-    }
-
-    static class RasterStack {
-
-        private final Rectangle rect;
-        private final Raster maskTile;
-        private final Raster[] dataTiles;
-
-        RasterStack(Rectangle rect, Raster maskTile, Raster[] dataTiles) {
-            this.rect = rect;
-            this.maskTile = maskTile;
-            this.dataTiles = dataTiles;
-        }
-    }
-
-    static class GeometryFilter {
-        private final GeoCoding geoCoding;
-        private final PreparedGeometry geometry;
-        private final GeometryFactory geometryFactory;
-
-        GeometryFilter(GeoCoding geoCoding, PreparedGeometry geometry) {
-            this.geoCoding = geoCoding;
-            this.geometry = geometry;
-            this.geometryFactory = new GeometryFactory();
-        }
-
-        boolean test(int x, int y) {
-            final PixelPos pixelPos = new PixelPos(x + 0.5, y + 0.5);
-            final GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-            Coordinate coordinate = new Coordinate(geoPos.lon, geoPos.lat);
-            return geometry.contains(geometryFactory.createPoint(coordinate));
-        }
-    }
-
 
 }

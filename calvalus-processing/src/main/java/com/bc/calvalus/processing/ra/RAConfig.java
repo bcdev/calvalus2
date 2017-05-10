@@ -120,7 +120,7 @@ public class RAConfig implements XmlConvertible {
     private String filterAttributeValues;
 
     @Parameter
-    private String validExpressions;
+    private String validExpression;
 
     @Parameter(defaultValue = "5,25,50,75,95")
     private int[] percentiles;
@@ -163,12 +163,12 @@ public class RAConfig implements XmlConvertible {
         this.internalRegionNames = internalRegionNames;
     }
 
-    public String getValidExpressions() {
-        return validExpressions;
+    public String getValidExpression() {
+        return validExpression;
     }
 
-    public void setValidExpressions(String validExpressions) {
-        this.validExpressions = validExpressions;
+    public void setValidExpression(String validExpression) {
+        this.validExpression = validExpression;
     }
 
     public int[] getPercentiles() {
