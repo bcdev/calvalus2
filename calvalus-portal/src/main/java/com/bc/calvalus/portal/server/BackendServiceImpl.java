@@ -114,6 +114,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public static final String VERSION = String.format("Calvalus version %s (built %s)",
                                                        calvalusVersionProperties.get("version"),
                                                        calvalusVersionProperties.get("timestamp"));
+    public static final String COPYRIGHT_YEAR = "2017";
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 5000;
 

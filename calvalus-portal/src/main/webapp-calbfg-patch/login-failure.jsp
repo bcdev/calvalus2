@@ -36,7 +36,7 @@
                 please try <a href='<%= response.encodeURL("calvalus.jsp") %>'>again</a>.
             </div>
 
-            <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; 2016 Brockmann Consult GmbH &nbsp;-&nbsp;<a
+            <p class="copyright"><%= BackendServiceImpl.VERSION %>, &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %> Brockmann Consult GmbH &nbsp;-&nbsp;<a
                     href="http://www.brockmann-consult.de/bc-web/impressum.html" target="_blank">Impressum</a></p>
 
         </td>

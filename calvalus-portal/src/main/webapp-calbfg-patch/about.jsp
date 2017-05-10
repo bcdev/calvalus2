@@ -59,7 +59,7 @@
   </table>
   <hr>
   <p>This is the <a href="http://www.brockmann-consult.de/calbfg/calvalus.jsp">Calvalus</a> on-demand processing system, developed by <a href="http://www.brockmann-consult.de/" class="href">Brockmann Consult GmbH</a>.</p>
-  <p><%= BackendServiceImpl.VERSION %>, &#169; 2016 Brockmann Consult GmbH</p>
+  <p><%= BackendServiceImpl.VERSION %>, &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %> Brockmann Consult GmbH</p>
 
 </body>
 </html>
