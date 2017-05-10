@@ -102,8 +102,6 @@
         <welcome-file>about.jsp</welcome-file>
     </welcome-file-list>
 
-
-    <!-- Poor men's security and user management. Go edit $CATALINA_HOME/conf/tomcat-users.xml -->
     <security-constraint>
         <display-name>Calvalus Protected</display-name>
         <web-resource-collection>
@@ -131,6 +129,21 @@
         </auth-constraint>
     </security-constraint>
 
+    <security-constraint>
+        <display-name>Calvalus Upload</display-name>
+        <web-resource-collection>
+            <web-resource-name>calvalus-upload</web-resource-name>
+            <!-- Define the context-relative URL(s) to be protected -->
+            <url-pattern>/calvalus.jsp</url-pattern>
+            <url-pattern>/calvalus/upload</url-pattern>
+            <url-pattern>/calvalus/upload/*</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <!-- Anyone with one of the listed roles may access this area -->
+            <role-name>calwps</role-name>
+        </auth-constraint>
+    </security-constraint>
+
     <!-- Default login configuration uses form-based authentication -->
     <login-config>
         <auth-method>FORM</auth-method>
@@ -144,7 +157,12 @@
     <!-- Security roles referenced by this web application -->
     <security-role>
         <role-name>calvalus</role-name>
+    </security-role>
+    <security-role>
         <role-name>coastcolour</role-name>
+    </security-role>
+    <security-role>
+        <role-name>calwps</role-name>
     </security-role>
 
 </web-app>
