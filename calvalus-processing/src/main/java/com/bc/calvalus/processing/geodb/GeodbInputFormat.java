@@ -22,6 +22,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.ma.MAConfig;
+import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.utils.GeometryUtils;
@@ -201,10 +202,20 @@ public class GeodbInputFormat extends InputFormat {
                 if (hasTime) {
                     cb.useOnlyProductStartDate(false);
                 }
-                Double maxTimeDifference = maConfig.getMaxTimeDifference();
+                String maxTimeDifference = maConfig.getMaxTimeDifference();
                 if (maxTimeDifference != null) {
-                    long timeDelta = Math.round(maxTimeDifference * 60 * 60 * 1000); // h to ms
-                    cb.timeDelta(timeDelta);
+                    if (maxTimeDifference.trim().endsWith("d")) {
+                        String trimmed = maxTimeDifference.trim();
+                        String daysAsString = trimmed.substring(0, trimmed.length() - 1);
+                        int days = Integer.parseInt(daysAsString);
+                        cb.timeDelta((days + 2) * 24 * 60 * 60 * 1000L); // TODO teach geoDB to understand 0d,1d,..
+                    } else {
+                        double timeDifferenceHours = Double.parseDouble(maxTimeDifference);
+                        if (timeDifferenceHours > 0) {
+                            long timeDelta = Math.round(timeDifferenceHours * 60 * 60 * 1000); // h to ms
+                            cb.timeDelta(timeDelta);
+                        }
+                    }
                 }
             } catch (Exception e) {
                 throw new IllegalArgumentException("Failed to parse matchups parameters.", e);

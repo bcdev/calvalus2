@@ -182,7 +182,7 @@ public class MAMapperTest {
         maConfig.setMacroPixelSize(macroPixelSize);
         maConfig.setFilteredMeanCoeff(0.0);
         maConfig.setFilterOverlapping(filterOverlapping);
-        maConfig.setMaxTimeDifference(1.0);
+        maConfig.setMaxTimeDifference("1.0");
         maConfig.setOnlyExtractComplete(onlyExtractComplete);
 //        maConfig.setCopyInput(true);
 

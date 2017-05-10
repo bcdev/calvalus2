@@ -51,7 +51,7 @@ public class MAConfigForm extends Composite {
     @UiField
     IntegerBox macroPixelSize;
     @UiField
-    DoubleBox maxTimeDifference;
+    TextBox maxTimeDifference;
     @UiField
     DoubleBox filteredMeanCoeff;
     @UiField
@@ -75,7 +75,7 @@ public class MAConfigForm extends Composite {
         initWidget(uiBinder.createAndBindUi(this));
 
         macroPixelSize.setValue(5);
-        maxTimeDifference.setValue(3.0);
+        maxTimeDifference.setValue("3.0");
         filteredMeanCoeff.setValue(1.5);
         filterOverlapping.setValue(false);
         onlyExtractComplete.setValue(true);
@@ -204,13 +204,35 @@ public class MAConfigForm extends Composite {
             throw new ValidationException(filteredMeanCoeff, "Filtered mean coefficient must be >= 0 (0 disables this criterion)");
         }
 
-        boolean maxTimeDifferenceValid = maxTimeDifference.getValue() != null && maxTimeDifference.getValue() >= 0;
-        if (!maxTimeDifferenceValid) {
-            throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion)");
+        if (!isMaxTimeDifferenceValid(maxTimeDifference.getValue())) {
+            throw new ValidationException(maxTimeDifference, "Max. time difference must be >= 0 hours (0 disables this criterion).<br/>" +
+                    "Alternatively the difference can be given in full days using the 'd' suffix e.g. 0d,1d,...");
         }
 
         if (userManagedContent.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
+        }
+    }
+    
+    private boolean isMaxTimeDifferenceValid(String maxTimeDifference) throws ValidationException {
+        if (maxTimeDifference == null || maxTimeDifference.trim().isEmpty()) {
+            return true;
+        }
+        maxTimeDifference = maxTimeDifference.trim();
+        if (maxTimeDifference.endsWith("d") && maxTimeDifference.length() >= 2) {
+            String daysAsString = maxTimeDifference.substring(0, maxTimeDifference.length() - 1);
+            try {
+                int days = Integer.parseInt(daysAsString);
+                return days >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
+        } else {
+            try {
+                return Double.parseDouble(maxTimeDifference) >= 0;
+            } catch (NumberFormatException nfe) {
+                return false;
+            }
         }
     }
 
@@ -220,7 +242,7 @@ public class MAConfigForm extends Composite {
         parameters.put("goodPixelExpression", goodPixelExpression.getText());
         parameters.put("goodRecordExpression", goodRecordExpression.getText());
         parameters.put("macroPixelSize", macroPixelSize.getValue().toString());
-        parameters.put("maxTimeDifference", maxTimeDifference.getValue().toString());
+        parameters.put("maxTimeDifference", maxTimeDifference.getText());
         parameters.put("filteredMeanCoeff", filteredMeanCoeff.getValue().toString());
         parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
         parameters.put("onlyExtractComplete", onlyExtractComplete.getValue().toString());
@@ -233,7 +255,7 @@ public class MAConfigForm extends Composite {
         goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
         goodRecordExpression.setValue(parameters.getOrDefault("goodRecordExpression", ""));
         macroPixelSize.setText(parameters.getOrDefault("macroPixelSize", "5"));
-        maxTimeDifference.setText(parameters.getOrDefault("maxTimeDifference", "3.0"));
+        maxTimeDifference.setValue(parameters.getOrDefault("maxTimeDifference", "3.0"));
         filteredMeanCoeff.setText(parameters.getOrDefault("filteredMeanCoeff", "1.5"));
         filterOverlapping.setValue(Boolean.valueOf(parameters.getOrDefault("filterOverlapping", "false")));
         onlyExtractComplete.setValue(Boolean.valueOf(parameters.getOrDefault("onlyExtractComplete", "true")));

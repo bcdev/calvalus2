@@ -597,7 +597,7 @@ public class ProductRecordSourceTest {
 
         config = new MAConfig();
         config.setMacroPixelSize(1);
-        config.setMaxTimeDifference(0.25);
+        config.setMaxTimeDifference("0.25");
 
         input = new DefaultRecordSource(new DefaultHeader(true, true, "latitude", "longitude", "time"),
                                         RecordUtils.create(new GeoPos(0.5F, 0.5F), date("07-MAY-2010 11:26:00")), // rejected
