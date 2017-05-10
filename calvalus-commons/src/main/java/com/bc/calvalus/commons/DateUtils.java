@@ -39,7 +39,7 @@ public class DateUtils {
         return calendar;
     }
     
-    public static DateFormat createDateFormat(String pattern) {
+    public static SimpleDateFormat createDateFormat(String pattern) {
         final SimpleDateFormat dateFormat = new SimpleDateFormat(pattern, Locale.ENGLISH);
         dateFormat.setCalendar(createCalendar());
         return dateFormat;

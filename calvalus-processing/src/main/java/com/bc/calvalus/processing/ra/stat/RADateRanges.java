@@ -17,26 +17,15 @@
 package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 
 import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
 
 public class RADateRanges {
 
-    public static final DateFormat dateFormat = createDateFormat("yyyy-MM-dd HH:mm:ss");
-
-    static DateFormat createDateFormat(String format) {
-        final DateFormat dateFormat = new SimpleDateFormat(format, Locale.ENGLISH);
-        final Calendar calendar = GregorianCalendar.getInstance(TimeZone.getTimeZone("UTC"), Locale.ENGLISH);
-        dateFormat.setCalendar(calendar);
-        return dateFormat;
-    }
+    public static final DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
     public static RADateRanges create(String dateRangesString) throws ParseException {
         String[] dateRangesStrings = dateRangesString.split(",");

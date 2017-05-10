@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -226,7 +227,7 @@ public class LcL3ProductionType extends HadoopProductionType {
     static DateRange getDateRange_OLD(ProductionRequest productionRequest) throws ProductionException {
         Date minDate = productionRequest.getDate("minDate");
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTimeInMillis(minDate.getTime());
         calendar.add(Calendar.DAY_OF_MONTH, periodLength - 1);
 
@@ -242,13 +243,13 @@ public class LcL3ProductionType extends HadoopProductionType {
         Date maxDate = productionRequest.getDate("maxDate");
         int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
 
-        Calendar calendarMax = ProductData.UTC.createCalendar();
+        Calendar calendarMax = DateUtils.createCalendar();
         calendarMax.setTime(maxDate);
 
         long time = minDate.getTime();
         while (true) {
-            Calendar calendar1 = ProductData.UTC.createCalendar();
-            Calendar calendar2 = ProductData.UTC.createCalendar();
+            Calendar calendar1 = DateUtils.createCalendar();
+            Calendar calendar2 = DateUtils.createCalendar();
             calendar1.setTimeInMillis(time);
             calendar2.setTimeInMillis(time);
             calendar2.add(Calendar.DAY_OF_MONTH, periodLength - 1);
@@ -257,7 +258,7 @@ public class LcL3ProductionType extends HadoopProductionType {
                 break;
             }
             // check if next period wraps into the next month
-            Calendar calendar3 = ProductData.UTC.createCalendar();
+            Calendar calendar3 = DateUtils.createCalendar();
             calendar3.setTimeInMillis(time);
             calendar3.add(Calendar.DAY_OF_MONTH, periodLength + periodLength - 1);
             if (calendar3.get(Calendar.MONTH) != calendar2.get(Calendar.MONTH)) {
@@ -276,7 +277,7 @@ public class LcL3ProductionType extends HadoopProductionType {
             ProductionException {
         int wings = productionRequest.getInteger("wings", 10);
 
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTime(mainRange.getStartDate());
         calendar.add(Calendar.DAY_OF_MONTH, -wings);
         Date date1 = calendar.getTime();

@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.l3;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
 import com.bc.calvalus.processing.l3.cellstream.CellFileSplit;
@@ -31,7 +32,7 @@ import java.util.logging.Level;
  */
 public class CellL3ProcessorMapper extends Mapper<LongWritable, L3TemporalBin, LongWritable, L3SpatialBin> {
 
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+    private static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     private BinManager binManager;
     private float[] observationFeatures;

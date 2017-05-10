@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
@@ -7,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
-import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,14 +18,14 @@ import static org.junit.Assert.assertEquals;
  */
 public class SeasonalCompositingMapperTest {
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     @Test
     public void testNextWeek() throws Exception {
         Date d = DATE_FORMAT.parse("2012-01-01");
-        GregorianCalendar start = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        Calendar start = DateUtils.createCalendar();
         start.setTime(DATE_FORMAT.parse("2012-01-01"));
-        GregorianCalendar stop = new GregorianCalendar(TimeZone.getTimeZone("UTC"));
+        Calendar stop = DateUtils.createCalendar();
         stop.setTime(DATE_FORMAT.parse("2012-12-31"));
         GregorianCalendar c = new GregorianCalendar();
         c.setTime(d);

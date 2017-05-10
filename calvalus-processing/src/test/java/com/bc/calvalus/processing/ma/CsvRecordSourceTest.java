@@ -1,7 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.InputStreamReader;
@@ -15,8 +15,8 @@ import static org.junit.Assert.*;
 
 public class CsvRecordSourceTest {
 
-    private static final DateFormat SHORT_DATE_FORMAT = ProductData.UTC.createDateFormat("dd.MM.yyyy");
-    private static final DateFormat LONG_DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd HH:mm:ss");
+    private static final DateFormat SHORT_DATE_FORMAT = DateUtils.createDateFormat("dd.MM.yyyy");
+    private static final DateFormat LONG_DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @Test
     public void testSimpleCsv() throws Exception {

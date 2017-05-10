@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
@@ -31,7 +32,6 @@ import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.BinManager;
 import org.esa.snap.binning.BinningContext;
 import org.esa.snap.binning.operator.BinningConfig;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -73,7 +73,7 @@ public class TAReducer extends Reducer<TAKey, L3TemporalBinWithIndex, Text, TAPo
     @Override
     protected void reduce(TAKey taKey, Iterable<L3TemporalBinWithIndex> bins, Context context) throws IOException, InterruptedException {
 
-        final DateFormat dateFormat = ProductData.UTC.createDateFormat(DATE_PATTERN);
+        final DateFormat dateFormat = DateUtils.createDateFormat(DATE_PATTERN);
         LOGGER.info("handling bins for " + taKey + " ...");
 
         // this is for the CSV tables that go into files per feature + numObs

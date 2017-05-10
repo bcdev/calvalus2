@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.core.dataio.EncodeQualification;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -38,7 +39,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.UUID;
 
 public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
@@ -83,11 +83,7 @@ public class LcL3Nc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     private class LCMainPart implements ProfileInitPartWriter {
 
-        private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-
-        LCMainPart() {
-            COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        }
+        private final SimpleDateFormat COMPACT_ISO_FORMAT = DateUtils.createDateFormat("yyyyMMdd'T'HHmmss'Z'");
 
         private LcL3SensorConfig sensorConfig = null;
 

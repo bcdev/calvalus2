@@ -1,5 +1,6 @@
 package com.bc.calvalus.wps.localprocess;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.wps.exceptions.SqlStoreException;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
@@ -8,7 +9,6 @@ import com.bc.wps.utilities.WpsServletContainer;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import java.io.File;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,7 +45,7 @@ public class GpfProductionService implements ServletContextListener {
     }
 
     static String createJobId(String userName) {
-        return userName + "-" + new SimpleDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
+        return userName + "-" + DateUtils.createDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
     }
 
     @Override

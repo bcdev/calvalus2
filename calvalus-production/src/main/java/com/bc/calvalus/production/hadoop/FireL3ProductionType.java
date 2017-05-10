@@ -18,6 +18,7 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
@@ -209,7 +210,7 @@ public class FireL3ProductionType extends HadoopProductionType {
     static DateRange getWingsRange(ProductionRequest productionRequest, DateRange mainRange) throws ProductionException {
         int wings = productionRequest.getInteger("wings", DEFAULT_WINGS_RANGE);
 
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTime(mainRange.getStartDate());
         calendar.add(Calendar.DAY_OF_MONTH, -wings);
         Date date1 = calendar.getTime();
@@ -247,7 +248,7 @@ public class FireL3ProductionType extends HadoopProductionType {
 
         Date minDate = mainRange.getStartDate();
 
-        Calendar testCalendar = ProductData.UTC.createCalendar();
+        Calendar testCalendar = DateUtils.createCalendar();
         testCalendar.setTime(minDate);
 
         long endTime = mainRange.getStopDate().getTime();

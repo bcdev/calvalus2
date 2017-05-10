@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.l2;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
@@ -38,7 +39,7 @@ import org.esa.snap.core.util.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -284,12 +285,11 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
                 newProductName = m.replaceAll(replacement);
                 if (dateElement != null && dateFormat != null) {
                     final String dateString = m.replaceAll(dateElement);
-                    final SimpleDateFormat sdf1 = new SimpleDateFormat(dateFormat);
-                    sdf1.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    final SimpleDateFormat sdf2 = new SimpleDateFormat(newProductName);
-                    sdf2.setTimeZone(TimeZone.getTimeZone("UTC"));
-                    final Date date = sdf1.parse(dateString);
-                    newProductName = sdf2.format(date);
+                    
+                    final DateFormat df1 = DateUtils.createDateFormat(dateFormat);
+                    final DateFormat df2 = DateUtils.createDateFormat(newProductName);
+                    final Date date = df1.parse(dateString);
+                    newProductName = df2.format(date);
                 }
             }
             return newProductName;

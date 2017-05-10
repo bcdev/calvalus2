@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.l3.cellstream;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -9,7 +10,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
-import org.esa.snap.core.datamodel.ProductData;
 import ucar.nc2.NetcdfFile;
 
 import java.io.File;
@@ -24,7 +24,7 @@ import java.util.Date;
  */
 class CellRecordReader extends RecordReader<LongWritable, L3TemporalBin> {
 
-    private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd");
+    private static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     private final AbstractNetcdfCellReader cellReader;
     private final LongWritable key;

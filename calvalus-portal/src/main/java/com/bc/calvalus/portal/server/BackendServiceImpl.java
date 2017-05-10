@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.commons.shared.BundleFilter;
@@ -59,7 +60,6 @@ import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.ProductData;
 import org.jdom.JDOMException;
 
 import javax.servlet.ServletContext;
@@ -73,7 +73,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.security.Principal;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -121,7 +120,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private ServiceContainer serviceContainer;
     private BackendConfig backendConfig;
     private Timer statusObserver;
-    private static final DateFormat CCSDS_FORMAT = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+    private static final DateFormat CCSDS_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     /**
      * Overridden to do nothing. This is because it seems that Firefox 6 is not sending extra request header when set in the XmlHttpRequest object.
@@ -596,8 +595,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     private String createRequestId(String productionType) {
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSSS");
-        return simpleDateFormat.format(new Date()) + "_" + productionType + REQUEST_FILE_EXTENSION;
+        DateFormat dateFormat = DateUtils.createDateFormat("yyyyMMdd_HHmmssSSS");
+        return dateFormat.format(new Date()) + "_" + productionType + REQUEST_FILE_EXTENSION;
     }
 
     private String[] convert(String[] strings) {

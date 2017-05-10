@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ta;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
 import com.bc.calvalus.processing.l3.L3TemporalBin;
 import com.vividsolutions.jts.geom.Coordinate;
@@ -12,7 +13,6 @@ import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.esa.snap.binning.PlanetaryGrid;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -30,7 +30,7 @@ import java.util.logging.Logger;
 public class TAMapper extends Mapper<LongWritable, L3TemporalBin, TAKey, L3TemporalBinWithIndex> implements Configurable {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
+    public static final DateFormat DATE_FORMAT = DateUtils.createDateFormat(DATE_PATTERN);
     public static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 

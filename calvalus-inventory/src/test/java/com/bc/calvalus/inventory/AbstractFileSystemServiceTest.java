@@ -17,16 +17,15 @@
 package com.bc.calvalus.inventory;
 
 import org.apache.hadoop.fs.Path;
-import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 
 /**

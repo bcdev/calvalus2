@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import org.esa.snap.dataio.netcdf.nc.N4FileWriteable;
 import org.esa.snap.dataio.netcdf.nc.NFileWriteable;
 import org.esa.snap.dataio.netcdf.nc.NVariable;
@@ -44,7 +45,7 @@ import java.util.logging.Logger;
 public class PixelArchiver {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    private static final DateFormat DATE_FORMAT = RADateRanges.createDateFormat("yyyy_MM_dd_HH_mm_ss");
+    private static final DateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy_MM_dd_HH_mm_ss");
 
     private final String regionName;
     private final String[] bandNames;

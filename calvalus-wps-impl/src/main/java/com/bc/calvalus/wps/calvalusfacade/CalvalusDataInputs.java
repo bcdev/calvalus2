@@ -2,6 +2,7 @@ package com.bc.calvalus.wps.calvalusfacade;
 
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor.ParameterDescriptor;
 import com.bc.calvalus.wps.utils.ExecuteRequestExtractor;
@@ -26,7 +27,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import static com.bc.calvalus.wps.calvalusfacade.CalvalusParameter.*;
 
@@ -39,10 +39,7 @@ public class CalvalusDataInputs {
 
     public static final long MIN_DATE = 1451606400000L;
     public static final long MAX_DATE = 1483228800000L;
-    public static SimpleDateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-//    static {
-//        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-//    }
+    public static SimpleDateFormat ISO_DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
 
     private final Map<String, String> inputMapRaw;
     private final Map<String, String> inputMapFormatted;

@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.FileSystemService;
@@ -250,7 +251,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
     }
 
     static Date getCenterDate(DateRange dateRange) {
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         long timeDiff = dateRange.getStopDate().getTime() - dateRange.getStartDate().getTime();
         int timeDiffSecondsHalf = (int) timeDiff / 2000;
         calendar.setTime(dateRange.getStartDate());

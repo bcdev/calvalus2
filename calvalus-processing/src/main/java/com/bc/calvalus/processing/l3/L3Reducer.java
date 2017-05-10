@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.l3;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.hadoop.ProcessingMetadata;
@@ -43,7 +44,7 @@ import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TimeZone;
@@ -57,7 +58,7 @@ import java.util.TimeZone;
 public class L3Reducer extends Reducer<LongWritable, L3SpatialBin, LongWritable, L3TemporalBin> {
 
     private static final String DATETIME_OUTPUT_PATTERN = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
-    private static final SimpleDateFormat DATETIME_OUTPUT_FORMAT = new SimpleDateFormat(DATETIME_OUTPUT_PATTERN);
+    private static final DateFormat DATETIME_OUTPUT_FORMAT = DateUtils.createDateFormat(DATETIME_OUTPUT_PATTERN);
 
     static {
         DATETIME_OUTPUT_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));

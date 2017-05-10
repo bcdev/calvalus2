@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.geodb;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.inventory.search.StreamFactory;
 import com.bc.inventory.search.coverage.CoverageInventory;
@@ -24,7 +25,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -43,7 +43,7 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
-        scanFilename = "scans/scan." + ProductData.UTC.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        scanFilename = "scans/scan." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         Path scanResultPath = new Path(geoInventory, scanFilename);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
     }

@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.l2.ProductFormatter;
 import com.bc.calvalus.processing.l3.HadoopBinManager;
@@ -56,8 +57,8 @@ public class SeasonalCompositingReducer extends Reducer<IntWritable, BandTileWri
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
+    private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
 
     public static String[] MERIS_BANDS = {
             "status",

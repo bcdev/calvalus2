@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.mosaic.landcover;
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.mosaic.MosaicProductFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -29,13 +30,8 @@ import java.util.TimeZone;
  */
 public class LcL3Nc4MosaicProductFactory implements MosaicProductFactory {
 
-    static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
-
-    static {
-        DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        COMPACT_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
+    static final SimpleDateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
 
     private final String[] outputFeatures;
     private LcL3SensorConfig sensorConfig = null;

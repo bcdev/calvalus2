@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.glevel.MultiLevelImage;
@@ -20,6 +21,7 @@ import org.esa.snap.core.util.ImageUtils;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -44,9 +46,9 @@ public class SeasonalCompositingMapper extends Mapper<NullWritable, NullWritable
 
     public static final int STATUS_CLOUD_SHADOW = 5;
 
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
-    private static final SimpleDateFormat COMPACT_DATE_FORMAT = new SimpleDateFormat("yyyyMMdd");
-    private static final SimpleDateFormat YEAR_FORMAT = new SimpleDateFormat("yyyy");
+    private static final SimpleDateFormat DATE_FORMAT = DateUtils.createDateFormat("yyyy-MM-dd");
+    private static final DateFormat COMPACT_DATE_FORMAT = DateUtils.createDateFormat("yyyyMMdd");
+    private static final DateFormat YEAR_FORMAT = DateUtils.createDateFormat("yyyy");
     private static final String SR_FILENAME_FORMAT = "ESACCI-LC-L3-SR-%s-P%dD-h%02dv%02d-%s-%s.nc";
     private static final String SR_FILENAME_FORMAT_MSI = "ESACCI-LC-L3-SR-%s-P%dD-h%03dv%03d-%s-%s.nc";
     private static final Pattern SR_FILENAME_PATTERN =

@@ -2,6 +2,7 @@ package com.bc.calvalus.production;
 
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.xml.XmlConvertible;
 import com.bc.ceres.binding.BindingException;
 import com.bc.ceres.binding.ConversionException;
@@ -9,7 +10,6 @@ import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.io.WKTReader;
-import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
@@ -33,7 +33,7 @@ import java.util.TreeSet;
 public class ProductionRequest implements XmlConvertible {
 
     public static final String DATE_PATTERN = "yyyy-MM-dd";
-    public static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
+    public static final DateFormat DATE_FORMAT = DateUtils.createDateFormat(DATE_PATTERN);
 
     @Parameter
     private String productionType;

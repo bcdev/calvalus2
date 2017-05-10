@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.executable.PropertiesHandler;
@@ -30,7 +31,6 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataAttribute;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorException;
 import org.esa.snap.core.gpf.annotations.Parameter;
@@ -61,8 +61,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringReader;
+import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -82,13 +82,8 @@ import java.util.zip.ZipOutputStream;
  */
 public class SnapGraphAdapter extends SubsetProcessorAdapter {
 
-    private static final SimpleDateFormat N1_TIME_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss");
-    private static final SimpleDateFormat YMD_DIR_FORMAT = new SimpleDateFormat("yyyy/MM/dd");
-
-    static {
-        N1_TIME_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        YMD_DIR_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    private static final DateFormat N1_TIME_FORMAT = DateUtils.createDateFormat("yyyyMMdd_HHmmss");
+    private static final DateFormat YMD_DIR_FORMAT = DateUtils.createDateFormat("yyyy/MM/dd");
 
     private GraphContext graphContext;
     private Product targetProduct;
@@ -534,15 +529,15 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         }
 
         public Calendar getCalendar() {
-            return ProductData.UTC.createCalendar();
+            return DateUtils.createCalendar();
         }
 
         public String formatDate(String format, Date date) {
-            return ProductData.UTC.createDateFormat(format).format(date);
+            return DateUtils.createDateFormat(format).format(date);
         }
 
         public Date parseDate(String format, String source) throws ParseException {
-            return ProductData.UTC.createDateFormat(format).parse(source);
+            return DateUtils.createDateFormat(format).parse(source);
         }
 
         public String xmlEncode(String s) {

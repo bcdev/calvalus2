@@ -17,6 +17,7 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.inventory.FileSystemService;
@@ -182,7 +183,7 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
             return null;
         }
         Date minDate = productionRequest.getDate("minDate");
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTimeInMillis(minDate.getTime());
         calendar.add(Calendar.DAY_OF_MONTH, rrDays - 1);
 
@@ -195,11 +196,11 @@ public class LcL3FrRrProductionType extends HadoopProductionType {
         }
         Date minDate = productionRequest.getDate("minDate");
         int periodLength = productionRequest.getInteger("periodLength", PERIOD_LENGTH_DEFAULT); // unit=days
-        Calendar calendar = ProductData.UTC.createCalendar();
+        Calendar calendar = DateUtils.createCalendar();
         calendar.setTimeInMillis(minDate.getTime());
         calendar.add(Calendar.DAY_OF_MONTH, rrDays);
 
-        Calendar calendar2 = ProductData.UTC.createCalendar();
+        Calendar calendar2 = DateUtils.createCalendar();
         calendar2.setTimeInMillis(minDate.getTime());
         calendar2.add(Calendar.DAY_OF_MONTH, periodLength - 1);
 

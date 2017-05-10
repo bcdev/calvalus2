@@ -1,6 +1,7 @@
 package com.bc.calvalus.production;
 
 
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
@@ -16,7 +17,7 @@ import java.util.Set;
  * @author Norman
  */
 public class Production {
-    public static final SimpleDateFormat yyyyMMddHHmmss = new SimpleDateFormat("yyyyMMddHHmmss");
+    public static final SimpleDateFormat yyyyMMddHHmmss = DateUtils.createDateFormat("yyyyMMddHHmmss");
     private static long uniqueLong = System.nanoTime();
     private final String id;
     private final String name;

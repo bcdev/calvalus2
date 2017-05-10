@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
@@ -76,7 +77,7 @@ public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> 
                     String wkt = poylgon.toString();
                     pm.worked(50);
 
-                    DateFormat dateFormat = ProductData.UTC.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+                    DateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd'T'HH:mm:ss");
                     ProductData.UTC startUTC = product.getStartTime();
                     String startTime = "null";
                     if (startUTC != null) {
