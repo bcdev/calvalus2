@@ -76,7 +76,7 @@ public class L2toL3ProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("L2-to-L3 ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
-        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, null);
         if (dateRanges.size() == 0) {
             throw new ProductionException("No time ranges specified.");
         }

@@ -13,6 +13,70 @@
             </g:HTMLPanel>
 
             <g:HTMLPanel>
+                <table>
+                    <tr style="vertical-align: top;">
+                        <td>
+                            <table cellspacing="2">
+                                <tr>
+                                    <td>
+                                        <g:Label>Stepping period:</g:Label>
+                                    </td>
+                                    <td>
+                                        <g:TextBox ui:field='steppingPeriodLength' visibleLength="8"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <g:Label>Compositing period:</g:Label>
+                                    </td>
+                                    <td>
+                                        <g:TextBox ui:field='compositingPeriodLength' visibleLength="8"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <g:Label addStyleNames="{style.explanatoryLabel}" width="30em">
+                                            By default the stepping and compositing periods are given in full days.
+                                            Additional the periods can be specified in weeks (using "w" as suffix),
+                                            month (using "m" as suffix) or years (using "y" as suffix).
+                                        </g:Label>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <g:Label addStyleNames="{style.explanatoryLabel}" width="30em">
+                                            The weekly option extends 2 weeks of the year to being 8 days long to
+                                            get a continuous stepping over multiple years.
+                                            The week containing the 30 Dec is 8 days long to include the 31 Dec, too.
+                                            In leap years the week containing the 28 Feb is 8 days long
+                                            to include the 29 Feb, too.
+                                            If you dont't want this behaviour you can specify 7 days as period instead.
+                                        </g:Label>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                        <td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+                        <td>
+                            <table cellspacing="2">
+                                <tr>
+                                    <td>
+                                        <g:Label>Periods:</g:Label>
+                                    </td>
+                                    <td>
+                                        <g:IntegerBox ui:field='periodsCount' visibleLength="8"/>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2">
+                                        <g:ListBox ui:field='periodsListBox' visibleItemCount="10" width="14em"/>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+                <hr/>
                 <table cellspacing="2">
                     <tr>
                         <td>
@@ -20,36 +84,6 @@
                         </td>
                         <td colspan="2">
                             <g:TextBox ui:field="maskExpr" width="36em"/>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Stepping period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='steppingPeriodLength' visibleLength="8"/>
-                        </td>
-                        <td align="left">
-                            <g:Label>days</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Compositing period:</g:Label>
-                        </td>
-                        <td>
-                            <g:IntegerBox ui:field='compositingPeriodLength' visibleLength="8"/>
-                        </td>
-                        <td align="left">
-                            <g:Label>days</g:Label>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <g:Label>Number of periods:</g:Label>
-                        </td>
-                        <td colspan="2">
-                            <g:IntegerBox ui:field='periodCount' visibleLength="8"/>
                         </td>
                     </tr>
                     <tr>
@@ -70,7 +104,9 @@
                     </tr>
                     <tr>
                         <td colspan="3">
-                            <g:Label addStyleNames="{style.explanatoryLabel}">A comma separated list of band names. Alternatively to the listbox.</g:Label>
+                            <g:Label addStyleNames="{style.explanatoryLabel}">A comma separated list of band names.
+                                Alternatively to the listbox.
+                            </g:Label>
                         </td>
                     </tr>
                 </table>

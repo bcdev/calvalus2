@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
@@ -57,6 +58,7 @@ import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
 import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
+import com.bc.calvalus.production.util.DateRangeCalculator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
@@ -73,6 +75,8 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.security.Principal;
 import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -289,23 +293,23 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             return dtoDescriptors;
         } else {
             return new DtoProcessorDescriptor[]{
-                        new DtoProcessorDescriptor(null,
-                                                   BundleFilter.DUMMY_PROCESSOR_NAME,
-                                                   "",
-                                                   "",
-                                                   bundleDescriptor.getBundleName(),
-                                                   bundleDescriptor.getBundleVersion(),
-                                                   bundleDescriptor.getBundleLocation(),
-                                                   "",
-                                                   null,
-                                                   null,
-                                                   DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
-                                                   null,
-                                                   null,
-                                                   null,
-                                                   null,
-                                                   null,
-                                                   null)
+                    new DtoProcessorDescriptor(null,
+                                               BundleFilter.DUMMY_PROCESSOR_NAME,
+                                               "",
+                                               "",
+                                               bundleDescriptor.getBundleName(),
+                                               bundleDescriptor.getBundleVersion(),
+                                               bundleDescriptor.getBundleLocation(),
+                                               "",
+                                               null,
+                                               null,
+                                               DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
+                                               null,
+                                               null,
+                                               null,
+                                               null,
+                                               null,
+                                               null)
             };
         }
     }
@@ -364,7 +368,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
-                                                                                         BackendServiceException {
+            BackendServiceException {
         try {
             ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest));
             return convert(productionResponse);
@@ -403,7 +407,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoProductionRequest[] listRequests() throws BackendServiceException {
         String userName = getUserName();
-        String userPath = AbstractFileSystemService.getUserPath(userName, "request/.*"  + REQUEST_FILE_EXTENSION);
+        String userPath = AbstractFileSystemService.getUserPath(userName, "request/.*" + REQUEST_FILE_EXTENSION);
         try {
             FileSystemService fileSystemService = serviceContainer.getFileSystemService();
             String[] requestFilePaths = fileSystemService.globPaths(userName, Collections.singletonList(userPath));
@@ -800,7 +804,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private void initProductionService() throws ServletException {
         try {
             Class<?> productionServiceFactoryClass = Class.forName(
-                        backendConfig.getProductionServiceFactoryClassName());
+                    backendConfig.getProductionServiceFactoryClassName());
             ServiceContainerFactory serviceContainerFactory = (ServiceContainerFactory) productionServiceFactoryClass.newInstance();
             serviceContainer = serviceContainerFactory.create(backendConfig.getConfigMap(),
                                                               backendConfig.getLocalAppDataDir(),
@@ -851,10 +855,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     public boolean isUserInRole(String role) {
         return getThreadLocalRequest().isUserInRole(role) &&
-               // and the portal is either generic or destined to this user role ...
-               (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
-                backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
-                Arrays.asList(backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ")).contains(role));
+                // and the portal is either generic or destined to this user role ...
+                (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
+                        backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
+                        Arrays.asList(backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ")).contains(role));
     }
 
     @Override
@@ -862,7 +866,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         backendConfig.getConfigMap().put("user", getUserName());
         String[] configuredRoles;
         if (backendConfig.getConfigMap().containsKey("calvalus.portal.userRole")
-            && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
+                && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
             configuredRoles = backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ");
         } else {
             configuredRoles = new String[]{"calvalus"};
@@ -875,5 +879,27 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
         backendConfig.getConfigMap().put("roles", accu.toString());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
+    }
+
+    @Override
+    public String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength) {
+        SimpleDateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd");
+        Date start = null;
+        Date end = null;
+        try {
+            start = dateFormat.parse(minDate);
+            end = dateFormat.parse(maxDate);
+        } catch (ParseException e) {
+            log("Failed to parse date.", e);
+            return new String[0][];
+        }
+        List<DateRange> dateRanges = DateRangeCalculator.fromMinMax(start, end, steppingPeriodLength, compositingPeriodLength);
+        String[][] periods = new String[dateRanges.size()][2];
+        for (int i = 0; i < dateRanges.size(); i++) {
+            DateRange dateRange = dateRanges.get(i);
+            periods[i][0] = dateFormat.format(dateRange.getStartDate());
+            periods[i][1] = dateFormat.format(dateRange.getStopDate());
+        }
+        return periods;
     }
 }

@@ -2,7 +2,6 @@ package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
-import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.FileSystemService;
@@ -15,6 +14,7 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
+import com.bc.calvalus.production.util.DateRangeCalculator;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.Property;
@@ -31,10 +31,7 @@ import org.esa.snap.binning.support.SEAGrid;
 
 import java.beans.PropertyChangeListener;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 /**
@@ -70,7 +67,7 @@ public class L3ProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("Level-3 ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
-        List<DateRange> dateRanges = getDateRanges(productionRequest, 10);
+        List<DateRange> dateRanges = getDateRanges(productionRequest, null);
         if (dateRanges.size() == 0) {
             throw new ProductionException("No time ranges specified.");
         }
@@ -115,7 +112,7 @@ public class L3ProductionType extends HadoopProductionType {
                                                         "<planetaryGrid>org.esa.beam.binning.support.")
                                   : l3ConfigXml);
             jobConfig.set(JobConfigNames.CALVALUS_REGION_GEOMETRY,
-                    regionGeometry != null ? regionGeometry.toString() : "");
+                          regionGeometry != null ? regionGeometry.toString() : "");
             String date1Str = ProductionRequest.getDateFormat().format(dateRange.getStartDate());
             String date2Str = ProductionRequest.getDateFormat().format(dateRange.getStopDate());
             jobConfig.set(JobConfigNames.CALVALUS_MIN_DATE, date1Str);
@@ -140,7 +137,7 @@ public class L3ProductionType extends HadoopProductionType {
         }
 
         boolean hasQuicklookParameters = productionRequest.getString(JobConfigNames.CALVALUS_QUICKLOOK_PARAMETERS, null) != null;
-        CalvalusLogger.getLogger().info("singleReducer="+singleReducer+" requiresFormatting="+requiresFormatting+" hasQuicklookParameters="+hasQuicklookParameters);
+        CalvalusLogger.getLogger().info("singleReducer=" + singleReducer + " requiresFormatting=" + requiresFormatting + " hasQuicklookParameters=" + hasQuicklookParameters);
         if (!singleReducer && requiresFormatting) {
             Configuration jobConfig = createJobConfig(productionRequest);
             setDefaultProcessorParameters(processorProductionRequest, jobConfig);
@@ -158,8 +155,8 @@ public class L3ProductionType extends HadoopProductionType {
             jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, outputCompression);
 
             WorkflowItem formatItem = new L3FormatWorkflowItem(getProcessingService(),
-                    productionRequest.getUserName(),
-                    productionName + " Format", jobConfig);
+                                                               productionRequest.getUserName(),
+                                                               productionName + " Format", jobConfig);
             workflow = new Workflow.Sequential(workflow, formatItem);
 
             if (hasQuicklookParameters) {
@@ -173,7 +170,7 @@ public class L3ProductionType extends HadoopProductionType {
                 qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
                 WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                        productionName + " RGB", qlJobConfig);
+                                                         productionName + " RGB", qlJobConfig);
                 workflow.add(qlItem);
             }
         } else if (singleReducer && requiresFormatting && hasQuicklookParameters) {
@@ -191,26 +188,26 @@ public class L3ProductionType extends HadoopProductionType {
             qlJobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
 
             WorkflowItem qlItem = new QLWorkflowItem(getProcessingService(), productionRequest.getUserName(),
-                    productionName + " RGB", qlJobConfig);
+                                                     productionName + " RGB", qlJobConfig);
             workflow = new Workflow.Sequential(workflow, qlItem);
         }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = productionRequest.isAutoStaging();
         return new Production(productionId,
-                productionName,
-                outputDir,
-                stagingDir,
-                autoStaging,
-                productionRequest,
-                workflow);
+                              productionName,
+                              outputDir,
+                              stagingDir,
+                              autoStaging,
+                              productionRequest,
+                              workflow);
     }
 
     @Override
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
         return new CopyStaging(production,
-                getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                getStagingService().getStagingDir());
+                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+                               getStagingService().getStagingDir());
     }
 
     /**
@@ -225,113 +222,26 @@ public class L3ProductionType extends HadoopProductionType {
      * @return list of date ranges
      * @throws ProductionException
      */
-    static List<DateRange> getDateRanges(ProductionRequest productionRequest, int periodLengthDefault) throws
-            ProductionException {
-        List<DateRange> dateRangeList = new ArrayList<DateRange>();
-        Date[] dateList = productionRequest.getDates("dateList", null);
+    static List<DateRange> getDateRanges(ProductionRequest productionRequest, String periodLengthDefault)
+            throws ProductionException {
 
+        Date[] dateList = productionRequest.getDates("dateList", null);
         if (dateList != null) {
-            for (Date date : dateList) {
-                dateRangeList.add(new DateRange(date, date));
-            }
+            return DateRangeCalculator.fromDateList(dateList);
         } else {
             Date minDate = productionRequest.getDate("minDate");
             Date maxDate = productionRequest.getDate("maxDate");
-            int periodLength = productionRequest.getInteger("periodLength", periodLengthDefault); // unit=days
-            int compositingPeriodLength = productionRequest.getInteger("compositingPeriodLength",
-                    periodLength); // unit=days
-
-            final GregorianCalendar calendar = DateUtils.createCalendar();
-
-            // set end of the interval to beginning of the following day for simpler comparison
-            calendar.setTime(maxDate);
-            calendar.add(Calendar.DAY_OF_MONTH, 1);
-            final Date maxDate1 = calendar.getTime();
-
-            // adjust start date in monthly and weekly period
-            calendar.setTime(minDate);
-            maybeAdjustCalendarToPeriodStart(calendar, periodLength);
-
-            while (true) {
-
-                // determine start and end of period
-                final Date date1 = calendar.getTime();
-                forwardCalendarByPeriod(calendar, compositingPeriodLength);
-                calendar.add(Calendar.SECOND, -1);
-                final Date date2 = calendar.getTime();
-
-                // check whether end of period exceeds end of overall interval
-                if (date2.after(maxDate1)) {
-                    break;
-                }
-                // accumulate date range for period
-                dateRangeList.add(new DateRange(date1, date2));
-
-                // proceed by one period length
-                calendar.setTime(date1);
-                forwardCalendarByPeriod(calendar, periodLength);
+            String periodLength;
+            if (periodLengthDefault != null) {
+                periodLength = productionRequest.getString("periodLength", periodLengthDefault);
+            } else {
+                periodLength = productionRequest.getString("periodLength");
             }
-        }
-
-        return dateRangeList;
-    }
-
-    /**
-     * Forwards to start of month in case of monthly
-     * and start of "week" (beginning with 1st of Jan) in case of weekly.
-     *
-     * @param calendar
-     * @param periodLength larger than 0 for days, -30 for monthly, -7 for weekly periods
-     */
-    private static void maybeAdjustCalendarToPeriodStart(GregorianCalendar calendar, int periodLength) {
-        if (periodLength == MONTHLY) {
-            if (calendar.get(Calendar.DAY_OF_MONTH) != 1) {
-                calendar.set(Calendar.DAY_OF_MONTH, 1);
-                calendar.add(Calendar.MONTH, 1);
-            }
-        } else if (periodLength == WEEKLY) {
-            final int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-            calendar.set(Calendar.DAY_OF_YEAR, 1);
-            while (calendar.get(Calendar.DAY_OF_YEAR) < dayOfYear) {
-                forwardByOneWeekOfYear(calendar);
-            }
-        } else if (periodLength <= 0) {
-            throw new IllegalArgumentException("Compositing period " + periodLength + " not supported");
+            String compositingPeriodLength = productionRequest.getString("compositingPeriodLength", periodLength);
+            return DateRangeCalculator.fromMinMax(minDate, maxDate, periodLength, compositingPeriodLength);
         }
     }
 
-    /**
-     * Forwards calendar by period days, or one calendar month, or one "week" (see next method).
-     *
-     * @param calendar
-     * @param period   larger than 0 for days, -30 for monthly, -7 for weekly periods
-     */
-    private static void forwardCalendarByPeriod(GregorianCalendar calendar, int period) {
-        if (period > 0) {
-            calendar.add(Calendar.DATE, period);
-        } else if (period == MONTHLY) {
-            calendar.add(Calendar.MONTH, 1);
-        } else if (period == WEEKLY) {
-            forwardByOneWeekOfYear(calendar);
-        } else {
-            throw new IllegalArgumentException("Compositing period " + period + " not supported");
-        }
-    }
-
-    /**
-     * Proceed calendar by 7 days, and add one additional day for the week containing the
-     * 29th of Feb in leap years and for the last week of the year to contain the 31th of Dec.
-     *
-     * @param calendar
-     */
-    private static void forwardByOneWeekOfYear(GregorianCalendar calendar) {
-        final int dayOfYear = calendar.get(Calendar.DAY_OF_YEAR);
-        if ((dayOfYear == 8 * 7 + 1 && calendar.isLeapYear(calendar.get(Calendar.YEAR))) || dayOfYear >= 51 * 7 + 1) {
-            calendar.add(Calendar.DATE, 8);
-        } else {
-            calendar.add(Calendar.DATE, 7);
-        }
-    }
 
     public static String getL3ConfigXml(ProductionRequest productionRequest) throws ProductionException {
         String l3ConfigXml = productionRequest.getString(JobConfigNames.CALVALUS_L3_PARAMETERS, null);

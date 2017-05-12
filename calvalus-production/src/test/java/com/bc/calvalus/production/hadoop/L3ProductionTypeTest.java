@@ -138,7 +138,7 @@ public class L3ProductionTypeTest {
                                                                     "periodLength", "20",
                                                                     "compositingPeriodLength", "5");
 
-        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(3, dateRangeList.size());
         assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
         assertEquals("2010-06-19", asString(dateRangeList.get(0).getStopDate()));
@@ -158,7 +158,7 @@ public class L3ProductionTypeTest {
                                                                     "periodLength", "20",
                                                                     "compositingPeriodLength", "20");
 
-        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(3, dateRangeList.size());
         assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
         assertEquals("2010-07-04", asString(dateRangeList.get(0).getStopDate()));
@@ -175,7 +175,7 @@ public class L3ProductionTypeTest {
         ProductionRequest productionRequest = new ProductionRequest("L3", "ewa",
                                                                     "dateList", "2010-06-15 2010-07-01 2010-07-19 ");
 
-        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(3, dateRangeList.size());
         assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
         assertEquals("2010-06-15", asString(dateRangeList.get(0).getStopDate()));
@@ -195,10 +195,12 @@ public class L3ProductionTypeTest {
                                                                     "maxDate", "2010-08-15",
                                                                     "periodLength", "-30");
 
-        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
-        assertEquals(1, dateRangeList.size());
-        assertEquals("2010-07-01", asString(dateRangeList.get(0).getStartDate()));
-        assertEquals("2010-07-31", asString(dateRangeList.get(0).getStopDate()));
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
+        assertEquals(2, dateRangeList.size());
+        assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-07-14", asString(dateRangeList.get(0).getStopDate()));
+        assertEquals("2010-07-15", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-08-14", asString(dateRangeList.get(1).getStopDate()));
 
         productionRequest = new ProductionRequest("L3", "ewa",
                                                   "minDate", "2010-06-15",
@@ -206,13 +208,13 @@ public class L3ProductionTypeTest {
                                                   "periodLength", "-30",
                                                   "compositingPeriodLength", "5");
 
-        dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(2, dateRangeList.size());
-        assertEquals("2010-07-01", asString(dateRangeList.get(0).getStartDate()));
-        assertEquals("2010-07-05", asString(dateRangeList.get(0).getStopDate()));
+        assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
+        assertEquals("2010-06-19", asString(dateRangeList.get(0).getStopDate()));
 
-        assertEquals("2010-08-01", asString(dateRangeList.get(1).getStartDate()));
-        assertEquals("2010-08-05", asString(dateRangeList.get(1).getStopDate()));
+        assertEquals("2010-07-15", asString(dateRangeList.get(1).getStartDate()));
+        assertEquals("2010-07-19", asString(dateRangeList.get(1).getStopDate()));
 
         // is this the expected result ???
         productionRequest = new ProductionRequest("L3", "ewa",
@@ -221,7 +223,7 @@ public class L3ProductionTypeTest {
                                                   "periodLength", "100",
                                                   "compositingPeriodLength", "-30");
 
-        dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(4, dateRangeList.size());
         assertEquals("2010-01-01", asString(dateRangeList.get(0).getStartDate()));
         assertEquals("2010-01-31", asString(dateRangeList.get(0).getStopDate()));
@@ -244,7 +246,7 @@ public class L3ProductionTypeTest {
                                                                     "periodLength", "1",
                                                                     "compositingPeriodLength", "5");
 
-        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, 10);
+        List<DateRange> dateRangeList = L3ProductionType.getDateRanges(productionRequest, null);
         assertEquals(4, dateRangeList.size());
         assertEquals("2010-06-15", asString(dateRangeList.get(0).getStartDate()));
         assertEquals("2010-06-19", asString(dateRangeList.get(0).getStopDate()));

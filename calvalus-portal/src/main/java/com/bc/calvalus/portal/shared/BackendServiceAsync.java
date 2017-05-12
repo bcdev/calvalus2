@@ -58,4 +58,6 @@ public interface BackendServiceAsync {
     void getCalvalusConfig(AsyncCallback<DtoCalvalusConfig> callback);
 
     void getMasks(AsyncCallback<DtoMaskDescriptor[]> initMasksCallback);
+
+    void calculateL3Periods(String minDate, String maxDate, String periodLength, String compositingPeriodLength, AsyncCallback<String[][]> callback);
 }

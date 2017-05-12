@@ -49,7 +49,7 @@ public class TAProductionType extends HadoopProductionType {
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
 
         // extract request parameters
-        final List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, L3ProductionType.MONTHLY);
+        final List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, "1m");
         if (dateRanges.size() == 0) {
             throw new ProductionException("Time range is zero");
         }

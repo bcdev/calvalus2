@@ -183,4 +183,11 @@ public interface BackendService extends RemoteService {
     boolean isUserInRole(String role);
 
     DtoCalvalusConfig getCalvalusConfig();
+
+    /**
+     * Computes the periods as defined by the given parameters.
+     * The computation on the frontend is difficult, because "java.util.Calendar" is not supported 
+     * in GWT.
+     */
+    String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength);
 }

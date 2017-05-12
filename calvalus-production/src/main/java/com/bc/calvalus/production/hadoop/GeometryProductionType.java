@@ -58,7 +58,7 @@ public class GeometryProductionType extends HadoopProductionType {
         String defaultProductionName = createProductionName("Geometries ", productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
-        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, 1);
+        List<DateRange> dateRanges = L3ProductionType.getDateRanges(productionRequest, "1");
 
         Workflow workflow = new Workflow.Parallel();
         for (int i = 0; i < dateRanges.size(); i++) {

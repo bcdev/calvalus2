@@ -16,11 +16,13 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
@@ -44,20 +46,24 @@ public class RAConfigForm extends Composite {
     private final PortalContext portalContext;
 
     interface TheUiBinder extends UiBinder<Widget, RAConfigForm> {
-
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
+    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
 
     @UiField
     TextBox maskExpr;
+    ///
     @UiField
-    IntegerBox steppingPeriodLength;
+    TextBox steppingPeriodLength;
     @UiField
-    IntegerBox compositingPeriodLength;
+    TextBox compositingPeriodLength;
     @UiField
-    IntegerBox periodCount;
+    IntegerBox periodsCount;
+    @UiField
+    ListBox periodsListBox;
+    ///
     @UiField
     ListBox bandListBox;
     @UiField
@@ -65,27 +71,24 @@ public class RAConfigForm extends Composite {
 
     private Date minDate;
     private Date maxDate;
+    private String[][] computedPeriods = new String[0][];
 
     public RAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
 
         initWidget(uiBinder.createAndBindUi(this));
 
-        ValueChangeHandler<Integer> periodCountUpdater = new ValueChangeHandler<Integer>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Integer> event) {
-                updatePeriodCount();
-            }
-        };
+        ValueChangeHandler<String> periodCountUpdater = event -> updatePeriodCount();
 
-        steppingPeriodLength.setValue(10);
+        steppingPeriodLength.setValue("10");
         steppingPeriodLength.addValueChangeHandler(periodCountUpdater);
 
-        compositingPeriodLength.setValue(10);
+        compositingPeriodLength.setValue("10");
         compositingPeriodLength.addValueChangeHandler(periodCountUpdater);
 
-        periodCount.setValue(0);
-        periodCount.setEnabled(false);
+        periodsCount.setText("");
+        periodsCount.setEnabled(false);
+        periodsListBox.setEnabled(false);
     }
 
     public void updateTemporalParameters(Date minDate, Date maxDate) {
@@ -96,33 +99,41 @@ public class RAConfigForm extends Composite {
 
     private void updatePeriodCount() {
         if (minDate != null && maxDate != null) {
-            periodCount.setValue(L3ConfigUtils.getPeriodCount(minDate,
-                                                maxDate,
-                                                steppingPeriodLength.getValue(),
-                                                compositingPeriodLength.getValue()));
+            BackendServiceAsync bs = portalContext.getBackendService();
+            bs.calculateL3Periods(DATE_FORMAT.format(minDate),
+                                  DATE_FORMAT.format(maxDate),
+                                  steppingPeriodLength.getValue(),
+                                  compositingPeriodLength.getValue(),
+                                  new AsyncCallback<String[][]>() {
+                                      @Override
+                                      public void onFailure(Throwable caught) {
+                                          computedPeriods = new String[0][];
+                                          updatePeriodsList();
+                                      }
+
+                                      @Override
+                                      public void onSuccess(String[][] result) {
+                                          computedPeriods = result;
+                                          updatePeriodsList();
+                                      }
+                                  });
         } else {
-            periodCount.setValue(0);
+            updatePeriodsList();
         }
     }
 
+    private void updatePeriodsList() {
+        periodsListBox.clear();
+        for (String[] dates : computedPeriods) {
+            periodsListBox.addItem(dates[0] + "    " + dates[1]);
+        }
+        periodsCount.setValue(computedPeriods.length);
+    }
+
     public void validateForm() throws ValidationException {
-        boolean periodCountValid = periodCount.getValue() != null && periodCount.getValue() >= 1;
+        boolean periodCountValid = computedPeriods.length >= 1;
         if (!periodCountValid) {
-            throw new ValidationException(periodCount, "Period count must be >= 1");
-        }
-
-        Integer steppingP = steppingPeriodLength.getValue();
-        boolean periodLengthValid = steppingP != null && (steppingP >= 1 || steppingP == -7 || steppingP == -30);
-        if (!periodLengthValid) {
-            throw new ValidationException(steppingPeriodLength, "Period length must be >= 1");
-        }
-
-        Integer compositingP = compositingPeriodLength.getValue();
-        boolean compositingPeriodLengthValid = compositingP != null &&
-                (compositingP >= 1 || compositingP == -7 || compositingP == -30);
-        if (!compositingPeriodLengthValid) {
-            throw new ValidationException(compositingPeriodLength,
-                                          "Compositing period length must be >= 1");
+            throw new ValidationException(periodsCount, "More than 1 period must be defined.");
         }
         if (bandListBox.getSelectedIndex() == -1 && bandNames.getText().trim().isEmpty()) {
             throw new ValidationException(bandListBox, "One or more bands must be selected or entered.");
@@ -130,10 +141,10 @@ public class RAConfigForm extends Composite {
     }
 
     public Map<String, String> getValueMap() {
-        Map<String, String> parameters = new HashMap<String, String>();
+        Map<String, String> parameters = new HashMap<>();
         parameters.put("maskExpr", maskExpr.getText());
-        parameters.put("periodLength", steppingPeriodLength.getValue().toString());
-        parameters.put("compositingPeriodLength", compositingPeriodLength.getValue().toString());
+        parameters.put("periodLength", steppingPeriodLength.getValue());
+        parameters.put("compositingPeriodLength", compositingPeriodLength.getValue());
         parameters.put("bandList", createBandListString());
         return parameters;
     }
@@ -160,11 +171,11 @@ public class RAConfigForm extends Composite {
         maskExpr.setValue(parameters.getOrDefault("maskExpr", ""));
         String periodLengthValue = parameters.get("periodLength");
         if (periodLengthValue != null) {
-            steppingPeriodLength.setValue(Integer.valueOf(periodLengthValue), true);
+            steppingPeriodLength.setValue(periodLengthValue, true);
         }
         String compositingPeriodLengthValue = parameters.get("compositingPeriodLength");
         if (compositingPeriodLengthValue != null) {
-            compositingPeriodLength.setValue(Integer.valueOf(compositingPeriodLengthValue), true);
+            compositingPeriodLength.setValue(compositingPeriodLengthValue, true);
         }
         String bandList = parameters.get("bandList");
         if (bandList != null) {
