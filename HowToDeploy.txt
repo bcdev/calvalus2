@@ -13,16 +13,17 @@ mvn clean package --offline -DskipTests=true
 ===========================================================================
 Building the SNAP bundle
 
-the snap bundle fromthe distribution module is no longer used. It doesn't contain
-all modules that are required for SNAP.
+The snap bundle can either be created from a SNAP installation created with an installer for Linux,
+or from a Maven-built software tree containing snap-engine, s2tbx and s3tbx.
 
-* Instead us a local SNAP installation.
 * Execute the class org.esa.snap.runtime.BundleCreator in the module
-  snap-engine/snap-runtime this ist best done from a checked out version of snap-engine.
-  this first parameter is the directory of a SNAP installation the second the name of a zip file
-  for the bundle, e.g.
+  snap-engine/snap-runtime . The first parameter is the zip file, the second one the directory of
+  a SNAP installation or built project for the bundle, e.g.
 
-  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/modules/ext/org.esa.snap.snap-engine-utilities/org-esa-snap/snap-runtime.jar org.esa.snap.runtime.BundleCreator /opt/viewer/snap-5.0 ~/tmp/snap-5.0.zip
+for installed SNAP:
+  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/modules/ext/org.esa.snap.snap-engine-utilities/org-esa-snap/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-5.0-bundle.zip /opt/viewer/snap-5.0
+for Maven-built software project:
+  /opt/java/jdk1.8.0_102/bin/java -cp ./snap/snap-engine/snap-runtime/target/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-6.0-SNAPSHOT-bundle.zip .
 
 ===========================================================================
 Software archive
