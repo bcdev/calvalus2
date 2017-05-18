@@ -128,7 +128,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.addRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
             }
         });
 
@@ -136,7 +136,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.removeSelectedRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0);
+                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
             }
         });
         removeVariableButton.setEnabled(false);
@@ -145,7 +145,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.addRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
+                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
             }
         });
 
@@ -153,9 +153,10 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.removeSelectedRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0);
+                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
             }
         });
+        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
 
         variableTable.addValueChangeHandler(new ValueChangeHandler<L3VariableTable.ConfiguredVariable>() {
             @Override

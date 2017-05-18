@@ -25,7 +25,9 @@ import com.google.gwt.user.client.ui.HTMLPanel;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasVerticalAlignment;
 import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.MultiWordSuggestOracle;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.SuggestBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -64,13 +66,16 @@ public class ParametersEditorGenerator {
         }
     }
 
+    public Widget getWidget(DtoParameterDescriptor parameterDescriptor) {
+        return editorMap.get(parameterDescriptor).getWidget();
+    }
+
     public void showDialog(String width, String height, String description, final OnOkHandler onOkHandler) {
         ScrollPanel scrollPanel = createParameterPanel(width, height);
         VerticalPanel verticalPanel = new VerticalPanel();
         verticalPanel.add(scrollPanel);
         verticalPanel.add(new HTMLPanel(description));
         showDialog(onOkHandler, verticalPanel);
-
     }
 
     public void showDialog(String width, String height, final OnOkHandler onOkHandler) {
@@ -104,9 +109,8 @@ public class ParametersEditorGenerator {
         for (DtoParameterDescriptor parameterDescriptor : parameterDescriptors) {
             if (parameterDescriptor.getType().startsWith("variable")) {
                 ParameterEditor parameterEditor = editorMap.get(parameterDescriptor);
-                if (parameterEditor instanceof SelectParameterEditor) {
-                    SelectParameterEditor selectParameterEditor = (SelectParameterEditor) parameterEditor;
-                    selectParameterEditor.updateValueSet(variableNameArray);
+                if (parameterEditor instanceof CanUpdateValueSet) {
+                    ((CanUpdateValueSet) parameterEditor).updateValueSet(variableNameArray);
                 }
             }
         }
@@ -256,7 +260,7 @@ public class ParametersEditorGenerator {
             DtoValueRange valueRange = parameterDescriptor.getValueRange();
             editor = new IntParameterEditor(paramName, defaultValue, valueRange);
         } else if (type.equalsIgnoreCase("variable")) {
-            editor = new SelectParameterEditor(defaultValue, new String[0], false);
+            editor = new SuggestParameterEditor(defaultValue, new String[0]);
         } else if (type.equalsIgnoreCase("variableArray")) {
             editor = new SelectParameterEditor(defaultValue, new String[0], true);
         }
@@ -273,6 +277,10 @@ public class ParametersEditorGenerator {
         void setValue(String value);
 
         Widget getWidget();
+    }
+    
+    interface CanUpdateValueSet {
+        void updateValueSet(String[] valueSet);
     }
 
     private static class BooleanParameterEditor implements ParameterEditor {
@@ -386,7 +394,7 @@ public class ParametersEditorGenerator {
         }
     }
 
-    private static class SelectParameterEditor implements ParameterEditor {
+    private static class SelectParameterEditor implements ParameterEditor,CanUpdateValueSet {
 
         private final ListBox listBox;
 
@@ -460,6 +468,49 @@ public class ParametersEditorGenerator {
                 }
             }
             return selected;
+        }
+    }
+
+    private static class SuggestParameterEditor implements ParameterEditor,CanUpdateValueSet {
+
+        private final List<String> suggestItems;
+        private final MultiWordSuggestOracle suggestOracle;
+        private final SuggestBox suggestBox;
+
+        public SuggestParameterEditor(String defaultValue, String[] valueSet) {
+            suggestItems = new ArrayList<>();
+            suggestItems.addAll(Arrays.asList(valueSet));
+            suggestOracle = new MultiWordSuggestOracle();
+            suggestOracle.addAll(suggestItems);
+            suggestOracle.setDefaultSuggestionsFromText(suggestItems);
+            suggestBox = new SuggestBox(suggestOracle);
+            suggestBox.getValueBox().addFocusHandler(event -> suggestBox.showSuggestionList());
+            if (!defaultValue.isEmpty()) {
+                suggestBox.setValue(defaultValue);
+            }
+        }
+
+        @Override
+        public String getValue() throws ValidationException {
+            return suggestBox.getValue();
+        }
+
+        @Override
+        public void setValue(String value) {
+            suggestBox.setValue(value, true);
+        }
+
+        @Override
+        public Widget getWidget() {
+            return suggestBox;
+        }
+
+        public void updateValueSet(String[] valueSet) {
+            suggestItems.clear();
+            suggestItems.addAll(Arrays.asList(valueSet));
+            suggestOracle.clear();
+            suggestOracle.addAll(suggestItems);
+            suggestOracle.setDefaultSuggestionsFromText(suggestItems);
         }
     }
 }

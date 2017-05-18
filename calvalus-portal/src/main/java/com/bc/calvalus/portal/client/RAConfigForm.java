@@ -17,20 +17,29 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProcessorVariable;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -43,15 +52,20 @@ import java.util.Map;
  */
 public class RAConfigForm extends Composite {
 
+    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
+
     private final PortalContext portalContext;
+    private final RABandTable bandTable;
+    
 
     interface TheUiBinder extends UiBinder<Widget, RAConfigForm> {
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
-    private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
-
+    @UiField
+    CalvalusStyle style;
+    
     @UiField
     TextBox maskExpr;
     ///
@@ -65,17 +79,34 @@ public class RAConfigForm extends Composite {
     ListBox periodsListBox;
     ///
     @UiField
-    ListBox bandListBox;
+    TextBox percentiles;
     @UiField
-    TextBox bandNames;
+    CheckBox filePerRegion;
+    @UiField
+    CheckBox histoSeparate;
+    @UiField
+    CheckBox pixelValues;
+    ///
+    @UiField(provided = true)
+    CellTable<RABandTable.ConfiguredBand> bandCellTable;
+    @UiField
+    Button addBandButton;
+    @UiField
+    Button removeBandButton;
+    
 
     private Date minDate;
     private Date maxDate;
     private String[][] computedPeriods = new String[0][];
+    private List<String> inputVarNames;
 
     public RAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
+        this.inputVarNames = new ArrayList<String>();
 
+        bandTable = new RABandTable();
+        bandCellTable = bandTable.getCellTable();
+        
         initWidget(uiBinder.createAndBindUi(this));
 
         ValueChangeHandler<String> periodCountUpdater = event -> updatePeriodCount();
@@ -89,6 +120,31 @@ public class RAConfigForm extends Composite {
         periodsCount.setText("");
         periodsCount.setEnabled(false);
         periodsListBox.setEnabled(false);
+
+        bandTable.initStyle(style);
+        addBandButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                bandTable.addRow();
+                removeBandButton.setEnabled(bandTable.getBandList().size() > 0 && bandTable.hasSelection());
+            }
+        });
+
+        removeBandButton.addClickHandler(new ClickHandler() {
+            @Override
+            public void onClick(ClickEvent event) {
+                bandTable.removeSelectedRow();
+                removeBandButton.setEnabled(bandTable.getBandList().size() > 0 && bandTable.hasSelection());
+            }
+        });
+
+        bandTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                removeBandButton.setEnabled(bandTable.getBandList().size() > 0 && bandTable.hasSelection());
+            }
+        });
+        removeBandButton.setEnabled(bandTable.getBandList().size() > 0 && bandTable.hasSelection());
     }
 
     public void updateTemporalParameters(Date minDate, Date maxDate) {
@@ -129,15 +185,29 @@ public class RAConfigForm extends Composite {
         }
         periodsCount.setValue(computedPeriods.length);
     }
+    
+    public void setProcessorDescriptor(DtoProcessorDescriptor processor, DtoProductSet productSet) {
+        inputVarNames.clear();
+
+        if (processor != null) {
+            for (DtoProcessorVariable variable : processor.getProcessorVariables()) {
+                inputVarNames.add(variable.getName());
+            }
+        } else {
+            String[] bandNames = productSet.getBandNames();
+            Collections.addAll(inputVarNames, bandNames);
+        }
+        bandTable.setAvailableVariables(inputVarNames);
+    }
 
     public void validateForm() throws ValidationException {
         boolean periodCountValid = computedPeriods.length >= 1;
         if (!periodCountValid) {
             throw new ValidationException(periodsCount, "More than 1 period must be defined.");
         }
-        if (bandListBox.getSelectedIndex() == -1 && bandNames.getText().trim().isEmpty()) {
-            throw new ValidationException(bandListBox, "One or more bands must be selected or entered.");
-        }
+//        if (bandListBox.getSelectedIndex() == -1 && bandNames.getText().trim().isEmpty()) {
+//            throw new ValidationException(bandListBox, "One or more bands must be selected or entered.");
+//        }
     }
 
     public Map<String, String> getValueMap() {
@@ -145,27 +215,27 @@ public class RAConfigForm extends Composite {
         parameters.put("maskExpr", maskExpr.getText());
         parameters.put("periodLength", steppingPeriodLength.getValue());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue());
-        parameters.put("bandList", createBandListString());
+//        parameters.put("bandList", createBandListString());
         return parameters;
     }
 
-    private String createBandListString() {
-        if (bandListBox.getSelectedIndex() != -1) {
-            StringBuilder sb = new StringBuilder();
-            int itemCount = bandListBox.getItemCount();
-            for (int i = 0; i < itemCount; i++) {
-                if (bandListBox.isItemSelected(i)) {
-                    if (sb.length() != 0) {
-                        sb.append(",");
-                    }
-                    sb.append(bandListBox.getItemText(i));
-                }
-            }
-            return sb.toString();
-        } else {
-            return bandNames.getText().trim();
-        }
-    }
+//    private String createBandListString() {
+//        if (bandListBox.getSelectedIndex() != -1) {
+//            StringBuilder sb = new StringBuilder();
+//            int itemCount = bandListBox.getItemCount();
+//            for (int i = 0; i < itemCount; i++) {
+//                if (bandListBox.isItemSelected(i)) {
+//                    if (sb.length() != 0) {
+//                        sb.append(",");
+//                    }
+//                    sb.append(bandListBox.getItemText(i));
+//                }
+//            }
+//            return sb.toString();
+//        } else {
+//            return bandNames.getText().trim();
+//        }
+//    }
 
     public void setValues(Map<String, String> parameters) {
         maskExpr.setValue(parameters.getOrDefault("maskExpr", ""));
@@ -177,29 +247,29 @@ public class RAConfigForm extends Composite {
         if (compositingPeriodLengthValue != null) {
             compositingPeriodLength.setValue(compositingPeriodLengthValue, true);
         }
-        String bandList = parameters.get("bandList");
-        if (bandList != null) {
-            List<String> bandNameList = new ArrayList<>();
-            bandNameList.addAll(Arrays.asList(bandList.split(",")));
-            for (int i = 0; i < bandListBox.getItemCount(); i++) {
-                String bandname = bandListBox.getItemText(i);
-                boolean isSelected = bandNameList.contains(bandname);
-                if (isSelected) {
-                    bandListBox.setItemSelected(i, true);
-                    bandNameList.remove(bandname);
-                } else {
-                    bandListBox.setItemSelected(i, false);
-                }
-            }
-            if (!bandNameList.isEmpty()) {
-                // not all given bandnames are in the listbox
-                for (int i = 0; i < bandListBox.getItemCount(); i++) {
-                    bandListBox.setItemSelected(i, false);
-                }
-                bandNames.setText(bandList);
-            } else {
-                bandNames.setText("");
-            }
-        }
+//        String bandList = parameters.get("bandList");
+//        if (bandList != null) {
+//            List<String> bandNameList = new ArrayList<>();
+//            bandNameList.addAll(Arrays.asList(bandList.split(",")));
+//            for (int i = 0; i < bandListBox.getItemCount(); i++) {
+//                String bandname = bandListBox.getItemText(i);
+//                boolean isSelected = bandNameList.contains(bandname);
+//                if (isSelected) {
+//                    bandListBox.setItemSelected(i, true);
+//                    bandNameList.remove(bandname);
+//                } else {
+//                    bandListBox.setItemSelected(i, false);
+//                }
+//            }
+//            if (!bandNameList.isEmpty()) {
+//                // not all given bandnames are in the listbox
+//                for (int i = 0; i < bandListBox.getItemCount(); i++) {
+//                    bandListBox.setItemSelected(i, false);
+//                }
+//                bandNames.setText(bandList);
+//            } else {
+//                bandNames.setText("");
+//            }
+//        }
     }
 }

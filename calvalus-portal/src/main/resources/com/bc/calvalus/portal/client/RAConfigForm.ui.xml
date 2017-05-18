@@ -1,8 +1,9 @@
 <!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
 <ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
-             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'
+             xmlns:cell='urn:import:com.google.gwt.user.cellview.client'>
 
-    <ui:style src="style.css"/>
+    <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
 
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
@@ -77,39 +78,51 @@
                     </tr>
                 </table>
                 <hr/>
+                Shapefile stuff here
+                <hr/>
                 <table cellspacing="2">
                     <tr>
                         <td>
                             <g:Label>Good-pixel expression:</g:Label>
                         </td>
-                        <td colspan="2">
+                        <td>
                             <g:TextBox ui:field="maskExpr" width="36em"/>
                         </td>
                     </tr>
                     <tr>
                         <td>
-                            <g:Label>Band selection:</g:Label>
+                            <g:Label>Percentiles:</g:Label>
                         </td>
-                        <td colspan="2">
-                            <g:ListBox ui:field="bandListBox" multipleSelect="true" visibleItemCount="10"/>
-                        </td>
-                    </tr>
-                    <tr>
                         <td>
-                            <g:Label>Band names:</g:Label>
-                        </td>
-                        <td colspan="2">
-                            <g:TextBox ui:field="bandNames" width="36em"/>
+                            <g:TextBox ui:field="percentiles" width="36em"/>
                         </td>
                     </tr>
                     <tr>
-                        <td colspan="3">
-                            <g:Label addStyleNames="{style.explanatoryLabel}">A comma separated list of band names.
-                                Alternatively to the listbox.
-                            </g:Label>
+                        <td colspan="2">
+                            <g:CheckBox ui:field="filePerRegion" text="Write CSV file per region" checked="true"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <g:CheckBox ui:field="histoSeparate" text="Write histogram to separate file(s)" checked="true"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <g:CheckBox ui:field="pixelValues" text="Write CSV file per region" checked="true"/>
                         </td>
                     </tr>
                 </table>
+                
+                <hr/>
+                
+                <cell:CellTable ui:field='bandCellTable' width="45em"/>
+    
+                <g:HorizontalPanel spacing="2">
+                    <g:Button ui:field='addBandButton' text="Add"/>
+                    <g:Button ui:field='removeBandButton' text="Remove"/>
+                </g:HorizontalPanel>
+                
             </g:HTMLPanel>
         </g:VerticalPanel>
     </g:HorizontalPanel>

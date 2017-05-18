@@ -39,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The table for edditing the binning aggregators
+ * The table for editing the binning aggregators
  *
  * @author marcoz
  */
@@ -150,6 +150,10 @@ public class L3AggregatorTable {
     public void setStyle(CalvalusStyle style) {
         this.style = style;
     }
+    
+    public boolean hasSelection() {
+        return selectionModel.getSelectedObject() != null;
+    }
 
     public void setAvailableVariables(List<String> availableVariables) {
         this.availableVariables = availableVariables;
@@ -218,7 +222,7 @@ public class L3AggregatorTable {
             list.remove(selectedAggregator);
             int remainingSize = list.size();
             if (remainingSize > 0) {
-                selectionModel.setSelected(list.get(remainingSize), true);
+                selectionModel.setSelected(list.get(remainingSize - 1), true);
             }
             dataProvider.refresh();
         }

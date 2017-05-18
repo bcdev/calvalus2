@@ -56,9 +56,7 @@ public class OrderRAProductionView extends OrderProductionView {
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
                 l2ConfigForm.setProductSet(productSet);
-                if (l2ConfigForm.getSelectedProcessorDescriptor() == null) {
-                    updateBandList(productSet);
-                }
+                raConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
             }
         });
 
@@ -85,18 +83,14 @@ public class OrderRAProductionView extends OrderProductionView {
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                DtoProcessorDescriptor processor = l2ConfigForm.getSelectedProcessorDescriptor();
-                if (processor != null) {
-                    updateBandList(processor);
-                } else {
-                    updateBandList(productSetSelectionForm.getSelectedProductSet());
-                }
+                raConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
             }
         });
 
 
         raConfigForm = new RAConfigForm(portalContext);
-
+        raConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+        
         outputParametersForm = new OutputParametersForm(portalContext);
         outputParametersForm.showFormatSelectionPanel(false);
         outputParametersForm.setAvailableOutputFormats("Report");
@@ -202,30 +196,30 @@ public class OrderRAProductionView extends OrderProductionView {
         raConfigForm.updateTemporalParameters(minDate, maxDate);
     }
 
-    private void updateBandList(DtoProcessorDescriptor processorDescriptor) {
-        ListBox bandList = raConfigForm.bandListBox;
-        bandList.clear();
-        if (processorDescriptor != null) {
-            int index = 0;
-            for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
-                bandList.addItem(variable.getName());
-                bandList.setItemSelected(index, true);
-                index++;
-            }
-        }
-    }
-
-    private void updateBandList(DtoProductSet productSet) {
-        ListBox bandList = raConfigForm.bandListBox;
-        bandList.clear();
-        if (productSet != null) {
-            int index = 0;
-            for (String variable : productSet.getBandNames()) {
-                bandList.addItem(variable);
-                bandList.setItemSelected(index, true);
-                index++;
-            }
-        }
-    }
+//    private void updateBandList(DtoProcessorDescriptor processorDescriptor) {
+//        ListBox bandList = raConfigForm.bandListBox;
+//        bandList.clear();
+//        if (processorDescriptor != null) {
+//            int index = 0;
+//            for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
+//                bandList.addItem(variable.getName());
+//                bandList.setItemSelected(index, true);
+//                index++;
+//            }
+//        }
+//    }
+//
+//    private void updateBandList(DtoProductSet productSet) {
+//        ListBox bandList = raConfigForm.bandListBox;
+//        bandList.clear();
+//        if (productSet != null) {
+//            int index = 0;
+//            for (String variable : productSet.getBandNames()) {
+//                bandList.addItem(variable);
+//                bandList.setItemSelected(index, true);
+//                index++;
+//            }
+//        }
+//    }
 
 }
