@@ -51,7 +51,7 @@ public class ExecuteRequestExtractorTest {
 
         requestExtractor = new ExecuteRequestExtractor(execute);
 
-        assertThat(requestExtractor.getValue("regionWKT"), equalTo("POLYGON((100.00000 -10.00000,100.00000 0.00000,110.00000 0.00000,110.00000 -10.00000,100.00000 -10.00000))"));
+        assertThat(requestExtractor.getValue("regionWKT"), equalTo("POLYGON((106.70700 -6.78200,106.70700 -6.44400,107.13000 -6.44400,107.13000 -6.78200,106.70700 -6.78200))"));
     }
 
     @Test
@@ -535,16 +535,12 @@ public class ExecuteRequestExtractorTest {
                "\t<ows:Identifier>urbantep-subsetting~1.0~Subset</ows:Identifier>\n" +
                "\n" +
                "\t<wps:DataInputs>\n" +
-               "      \t<wps:Input>\n" +
-               "\t\t\t<ows:Identifier>regionWKT</ows:Identifier>\n" +
-               "\t\t\t<wps:Data>\n" +
-               "\t\t\t\t<wps:BoundingBoxData>\n" +
-               "                  <ows:LowerCorner>100 -10</ows:LowerCorner>\n" +
-               "                  <ows:UpperCorner>110 0</ows:UpperCorner>\n" +
-               "                  <crs>urn:ogc:def:crs:EPSG:6:6:4326</crs>\n" +
-               "                </wps:BoundingBoxData>\n" +
-               "\t\t\t</wps:Data>\n" +
-               "\t\t</wps:Input>\n" +
+               "        <wps:Input>\n" +
+               "            <ows:Identifier>regionWKT</ows:Identifier>\n" +
+               "            <wps:Data>\n" +
+               "                <wps:LiteralData>106.707,-6.782,107.13,-6.444</wps:LiteralData>\n" +
+               "            </wps:Data>\n" +
+               "        </wps:Input>\n" +
                "\t\t\n" +
                "\t</wps:DataInputs>\n" +
                "\t<wps:ResponseForm>\n" +
