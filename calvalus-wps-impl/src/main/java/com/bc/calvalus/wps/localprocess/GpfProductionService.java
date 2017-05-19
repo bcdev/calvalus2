@@ -2,7 +2,6 @@ package com.bc.calvalus.wps.localprocess;
 
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.wps.exceptions.SqlStoreException;
-import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
 import com.bc.wps.utilities.WpsServletContainer;
 
@@ -19,10 +18,6 @@ import java.util.logging.Logger;
  * @author hans
  */
 public class GpfProductionService implements ServletContextListener {
-
-    private static final String STAGING_DIRECTORY = PropertiesWrapper.get("staging.directory");
-    private static final String CATALINA_BASE = System.getProperty("catalina.base");
-    private static final String CALWPS_ROOT = CATALINA_BASE + PropertiesWrapper.get("wps.application.path");
 
     private static ExecutorService worker;
     private static LocalProductionService productionService;
