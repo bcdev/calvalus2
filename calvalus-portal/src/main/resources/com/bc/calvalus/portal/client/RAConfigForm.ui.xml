@@ -78,7 +78,37 @@
                     </tr>
                 </table>
                 <hr/>
-                Shapefile stuff here
+                <g:VerticalPanel spacing="2">
+                    <g:Label>Shapefiles:</g:Label>
+
+                    <g:ListBox ui:field='shapefileList' multipleSelect="false" visibleItemCount="8" width="40em"/>
+                    <g:HorizontalPanel spacing="2">
+                        <g:Button ui:field='addShapefiles' text="Add"/>
+                        <g:Button ui:field='removeShapefiles' text="Remove"/>
+                    </g:HorizontalPanel>
+                </g:VerticalPanel>
+                <table cellspacing="2">
+                    <tr>
+                        <td>Attribute Names:</td>
+                        <td>
+                            <g:ListBox ui:field='shapefileAttributeNameList' multipleSelect="false" visibleItemCount="1"
+                                       width="30em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Attribute Filter Regex:</td>
+                        <td>
+                            <g:TextBox ui:field='shapefileAttributeFilter' width="30em"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Selection:</td>
+                        <td>
+                            <g:TextArea ui:field='shapefileSelectedAttributeValues' width="30em" visibleLines="4"/>
+                        </td>
+                    </tr>
+                </table>
+
                 <hr/>
                 <table cellspacing="2">
                     <tr>

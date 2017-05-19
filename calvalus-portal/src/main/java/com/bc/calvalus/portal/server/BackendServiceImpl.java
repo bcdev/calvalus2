@@ -39,6 +39,7 @@ import com.bc.calvalus.portal.shared.DtoProduction;
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
 import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.DtoShapefileDetails;
 import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
@@ -901,5 +902,19 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             periods[i][1] = dateFormat.format(dateRange.getStopDate());
         }
         return periods;
+    }
+
+    @Override
+    public DtoShapefileDetails loadShapefileDetails(String filePath) throws BackendServiceException {
+        try {
+            String userName = getUserName();
+            String url = serviceContainer.getFileSystemService().getQualifiedPath(userName, filePath);
+            String[][] data = serviceContainer.getProductionService().loadShapefileDetails(userName, url);
+            String[][] values = Arrays.copyOfRange(data, 1, data.length - 1);
+            String[] header = data[0];
+            return new DtoShapefileDetails(header, values);
+        } catch (IOException e) {
+            throw convert(e);
+        }
     }
 }

@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Observer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -388,5 +387,10 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     @Override
     public synchronized void setChanged() {
         super.setChanged();
+    }
+
+    @Override
+    public String[][] loadShapefileDetails(String username, String url) throws IOException {
+        return processingService.loadShapefileDetails(username, url);
     }
 }

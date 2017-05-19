@@ -245,6 +245,38 @@ public class RARegions {
             // nothing here.
         }
     }
+    
+    public static String[][] loadStringAttributes(String shapeFilePath, Configuration conf) throws IOException {
+        File tempDir = VirtualDir.createUniqueTempDir();
+        try {
+            return loadStringAttributes(RARegions.openShapefile(new Path(shapeFilePath), tempDir, conf));
+        } finally {
+            FileUtils.deleteTree(tempDir);
+        }
+    }
+
+    private static String[][] loadStringAttributes(FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection) {
+        SimpleFeatureType schema = featureCollection.getSchema();
+        List<String> attributeNames = new ArrayList<>();
+        for (AttributeDescriptor attributeDescriptor : schema.getAttributeDescriptors()) {
+            Class<?> binding = attributeDescriptor.getType().getBinding();
+            if (binding.equals(String.class)) {
+                attributeNames.add(attributeDescriptor.getLocalName());
+            }
+        }
+        List<String[]> entries = new ArrayList<>();
+        entries.add(attributeNames.toArray(new String[0]));
+        FeatureIterator<SimpleFeature> features = featureCollection.features();
+        while (features.hasNext()) {
+            List<String> attributeValues = new ArrayList<>();
+            SimpleFeature feature = features.next();
+            for (String name : attributeNames) {
+                attributeValues.add((String) feature.getAttribute(name));
+            }
+            entries.add(attributeValues.toArray(new String[0]));
+        }
+        return entries.toArray(new String[0][]);
+    }
 
     public static void main(String[] args) throws IOException, SchemaException, FactoryException, TransformException {
         File shpFile = new File(args[0]);
@@ -252,25 +284,52 @@ public class RARegions {
         mayFixPrjFile(prjFile);
         
         FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection = FeatureUtils.loadFeatureCollectionFromShapefile(shpFile);
-        FeatureCollection<SimpleFeatureType, SimpleFeature> reprojected = new ReprojectFeatureResults(featureCollection, DefaultGeographicCRS.WGS84);
-
-        int size = reprojected.size();
+//        FeatureCollection<SimpleFeatureType, SimpleFeature> reprojected = new ReprojectFeatureResults(featureCollection, DefaultGeographicCRS.WGS84);
+        String[][] strings = loadStringAttributes(featureCollection);
+        int size = 0;
+        for (String[] string : strings) {
+            for (String s : string) {
+                size += s.length();
+            }
+        }
         System.out.println("size = " + size);
-        SimpleFeatureType schema = reprojected.getSchema();
+        System.exit(4);
+
+        SimpleFeatureType schema = featureCollection.getSchema();
         System.out.println("schema = " + schema);
         System.out.println("schema.crs = " + schema.getCoordinateReferenceSystem());
         System.out.println();
 
         List<AttributeDescriptor> attributeDescriptors = schema.getAttributeDescriptors();
+        List<String> stringAttrDesc = new ArrayList<>();
         for (AttributeDescriptor attributeDescriptor : attributeDescriptors) {
-            System.out.println(" " + attributeDescriptor);
+            Class<?> binding = attributeDescriptor.getType().getBinding();
+            if (binding.equals(String.class)) {
+                stringAttrDesc.add(attributeDescriptor.getLocalName());
+            }
         }
         System.out.println();
-
-        FeatureIterator<SimpleFeature> features = reprojected.features();
+        
+        FeatureIterator<SimpleFeature> features = featureCollection.features();
+        int counter = 0;
         while (features.hasNext()) {
             SimpleFeature feature = features.next();
-            System.out.println("feature = " + feature);
+            StringBuilder sb = new StringBuilder();
+            for (String name : stringAttrDesc) {
+                Object attribute = feature.getAttribute(name);
+                sb.append((String) attribute).append(", ");
+            }
+//            for (Object attribute : feature.getAttributes()) {
+//                if (attribute instanceof String) {
+//                    sb.append((String) attribute).append(", ");
+//                }else if (attribute instanceof Number) {
+//                    sb.append((Number) attribute).append(", ");
+//                }
+//            }
+            System.out.println(sb);
+//            System.out.println("feature = " + feature);
+            counter++;
         }
+        System.out.println("#features = " + counter);
     }
 }

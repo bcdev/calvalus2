@@ -27,6 +27,7 @@ import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.binding.BindingException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -81,6 +82,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final List<BundleQueryCacheEntry> bundleQueryCache;
     private final Timer bundlesQueryCleaner;
     private final Map<String, BundleCacheEntry> bundleCache;
+    private final Map<String, ShapefileCacheEntry> shapeAttributeCache;
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
@@ -115,6 +117,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         };
         this.bundlesQueryCleaner.scheduleAtFixedRate(bundlesQueryCleanTask, CACHE_RETENTION, CACHE_RETENTION);
         this.bundleCache = new HashMap<>();
+        this.shapeAttributeCache = new HashMap<>();
         this.logger = Logger.getLogger("com.bc.calvalus");
     }
 
@@ -452,6 +455,23 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         bundlesQueryCleaner.cancel();
         executorService.shutdown();
     }
+    
+    @Override
+    public String[][] loadShapefileDetails(String username, String url) throws IOException {
+        Path path = new Path(url);
+        Configuration conf = createJobConfig(username);
+        FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        if (fileStatus != null) {
+            ShapefileCacheEntry cacheEntry = shapeAttributeCache.get(path.toString());
+            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime()) {
+                String[][] data = RARegions.loadStringAttributes(url, conf);
+                cacheEntry = new ShapefileCacheEntry(fileStatus.getModificationTime(), data);
+                shapeAttributeCache.put(path.toString(), cacheEntry);
+            }
+            return cacheEntry.data;
+        }
+        throw new FileNotFoundException(url);
+    }
 
     /**
      * Updates the status. This method is called periodically after a fixed delay period.
@@ -599,7 +619,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
-    private class BundleCacheEntry {
+    private static class BundleCacheEntry {
         private final BundleDescriptor bundleDescriptor;
         private final long modificationTime;
 
@@ -608,4 +628,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             this.modificationTime = modificationTime;
         }
     }
+    
+    private static class ShapefileCacheEntry {
+        private final String[][] data;
+        private final long modificationTime;
+
+        public ShapefileCacheEntry(long modificationTime, String[][] data) {
+            this.data = data;
+            this.modificationTime = modificationTime;
+        }
+    }
+    
 }

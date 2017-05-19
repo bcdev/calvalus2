@@ -153,4 +153,9 @@ class LocalProcessingService implements ProcessingService<String> {
         }
 
     }
+    
+    @Override
+    public String[][] loadShapefileDetails(String username, String url) throws IOException {
+        return new String[0][];
+    }
 }

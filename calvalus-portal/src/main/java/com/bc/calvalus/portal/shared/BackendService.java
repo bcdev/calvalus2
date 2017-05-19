@@ -190,4 +190,9 @@ public interface BackendService extends RemoteService {
      * in GWT.
      */
     String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength);
+
+    /**
+     * Load details about the shapefile.
+     */
+    DtoShapefileDetails loadShapefileDetails(String filePath) throws BackendServiceException;
 }

@@ -4,7 +4,7 @@ import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 
-import java.util.Observable;
+import java.io.IOException;
 import java.util.Observer;
 
 /**
@@ -146,4 +146,10 @@ public interface ProductionService {
     void notifyObservers(Object arg);
 
     void setChanged();
+
+    /**
+     * Load details about the shapefile.
+     */
+    public String[][] loadShapefileDetails(String username, String url) throws IOException;
+    
 }
