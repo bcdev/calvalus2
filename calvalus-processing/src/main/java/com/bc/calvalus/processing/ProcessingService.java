@@ -76,7 +76,7 @@ public interface ProcessingService<JobId> {
     void close() throws Exception;
 
     /**
-     * Load details about the shapefile.
+     * Load details about the region data.
      */
-    public String[][] loadShapefileDetails(String username, String url) throws IOException;
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException;
 }

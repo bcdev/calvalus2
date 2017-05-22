@@ -192,7 +192,7 @@ public interface BackendService extends RemoteService {
     String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength);
 
     /**
-     * Load details about the shapefile.
+     * Load details about the region data.
      */
-    DtoShapefileDetails loadShapefileDetails(String filePath) throws BackendServiceException;
+    DtoRegionDataInfo loadRegionDataInfo(String filePath) throws BackendServiceException;
 }

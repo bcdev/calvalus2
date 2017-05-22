@@ -20,7 +20,7 @@ import com.bc.calvalus.portal.shared.BackendServiceAsync;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoShapefileDetails;
+import com.bc.calvalus.portal.shared.DtoRegionDataInfo;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Document;
@@ -65,7 +65,7 @@ import java.util.Map;
  */
 public class RAConfigForm extends Composite {
     
-    private static final String SHAPE_FILE_DIR = "shapefiles";
+    private static final String SHAPE_FILE_DIR = "point_data";
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     private final PortalContext portalContext;
@@ -126,7 +126,7 @@ public class RAConfigForm extends Composite {
     private Date maxDate;
     private String[][] computedPeriods = new String[0][];
     private List<String> inputVarNames;
-    private DtoShapefileDetails shapefileDetails;
+    private DtoRegionDataInfo regionDataInfo;
 
     public RAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
@@ -216,19 +216,19 @@ public class RAConfigForm extends Composite {
         String selectedFilePath = userManagedContent.getSelectedFilePath();
         if (!selectedFilePath.isEmpty()) {
             enableShapfileDetails(false);
-            portalContext.getBackendService().loadShapefileDetails(selectedFilePath, new AsyncCallback<DtoShapefileDetails>() {
+            portalContext.getBackendService().loadRegionDataInfo(selectedFilePath, new AsyncCallback<DtoRegionDataInfo>() {
                 @Override
                 public void onFailure(Throwable caught) {
-                    shapefileDetails = null;
+                    regionDataInfo = null;
                     shapefileSelectedAttributeValues.setValue(caught.getMessage());
                     enableShapfileDetails(true);
                 }
 
                 @Override
-                public void onSuccess(DtoShapefileDetails result) {
+                public void onSuccess(DtoRegionDataInfo newregionDataInfo) {
                     enableShapfileDetails(true);
-                    shapefileDetails = result;
-                    String[] headers = result.getHeader();
+                    regionDataInfo = newregionDataInfo;
+                    String[] headers = newregionDataInfo.getHeader();
                     shapefileAttributeNameList.clear();
                     for (String header : headers) {
                         shapefileAttributeNameList.addItem(header);
@@ -248,7 +248,7 @@ public class RAConfigForm extends Composite {
     private void updateShapefileFilter() {
         int selectedIndex = shapefileAttributeNameList.getSelectedIndex();
         if (selectedIndex != -1) {
-            String[] values = shapefileDetails.getValues(selectedIndex);
+            String[] values = regionDataInfo.getValues(selectedIndex);
             String filter = shapefileAttributeFilter.getValue();
             String[] filters = filter.split(",");
             RegExp[] regExps = new RegExp[filters.length];

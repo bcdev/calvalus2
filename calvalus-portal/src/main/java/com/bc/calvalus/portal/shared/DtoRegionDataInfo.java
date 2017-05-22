@@ -23,16 +23,16 @@ import com.google.gwt.user.client.rpc.IsSerializable;
  * 
  * @author marcoz 
  */
-public class DtoShapefileDetails implements IsSerializable {
+public class DtoRegionDataInfo implements IsSerializable {
 
     private String[] header;
     private String[][] values;
 
     // required for the framework
-    public DtoShapefileDetails() {
+    public DtoRegionDataInfo() {
     }
 
-    public DtoShapefileDetails(String[] header, String[][] values) {
+    public DtoRegionDataInfo(String[] header, String[][] values) {
         this.header = header;
         this.values = values;
     }

@@ -390,7 +390,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     }
 
     @Override
-    public String[][] loadShapefileDetails(String username, String url) throws IOException {
-        return processingService.loadShapefileDetails(username, url);
+    public String[][] loadRegionDataInfo(String username, String url) throws IOException {
+        return processingService.loadRegionDataInfo(username, url);
     }
 }
