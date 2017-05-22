@@ -91,7 +91,7 @@
                     <tr>
                         <td>Attributes:</td>
                         <td>
-                            <g:ListBox ui:field='shapefileAttributeNameList' multipleSelect="false" visibleItemCount="1"
+                            <g:ListBox ui:field='regionSourceAttributeNames' multipleSelect="false" visibleItemCount="1"
                                        width="30em"/>
                         </td>
                     </tr>
@@ -107,7 +107,7 @@
                     <tr>
                         <td>Attribute filter regex:</td>
                         <td>
-                            <g:TextBox ui:field='shapefileAttributeFilter' width="30em"/>
+                            <g:TextBox ui:field='regionSourceAttributeFilter' width="30em"/>
                         </td>
                     </tr>
                     <tr>
@@ -121,7 +121,7 @@
                     <tr>
                         <td>Selected regions:</td>
                         <td>
-                            <g:TextArea ui:field='shapefileSelectedAttributeValues' width="30em" visibleLines="4"/>
+                            <g:TextArea ui:field='selecteRegionSourceAttributes' width="30em" visibleLines="4"/>
                         </td>
                     </tr>
                 </table>
@@ -133,7 +133,7 @@
                             <g:Label>Good-pixel expression:</g:Label>
                         </td>
                         <td>
-                            <g:TextBox ui:field="maskExpr" width="36em"/>
+                            <g:TextBox ui:field="goodPixelExpression" width="36em"/>
                         </td>
                     </tr>
                     <tr>
@@ -146,17 +146,17 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:CheckBox ui:field="filePerRegion" text="Write CSV file per region" checked="true"/>
+                            <g:CheckBox ui:field="writePerRegion" text="Write CSV file per region" checked="true"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:CheckBox ui:field="histoSeparate" text="Write histogram to separate file(s)" checked="true"/>
+                            <g:CheckBox ui:field="writeSeparateHistogram" text="Write histogram to separate file(s)" checked="true"/>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:CheckBox ui:field="pixelValues" text="Write CSV file per region" checked="true"/>
+                            <g:CheckBox ui:field="writePixelValue" text="Write CSV file per region" checked="true"/>
                         </td>
                     </tr>
                 </table>

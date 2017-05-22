@@ -97,22 +97,22 @@ public class RAConfigForm extends Composite {
     @UiField
     Button removeRegionSource;
     @UiField
-    ListBox shapefileAttributeNameList;   
+    ListBox regionSourceAttributeNames;   
     @UiField
-    TextBox shapefileAttributeFilter;
+    TextBox regionSourceAttributeFilter;
     @UiField
-    TextArea shapefileSelectedAttributeValues;
+    TextArea selecteRegionSourceAttributes;
     ///
     @UiField
-    TextBox maskExpr;
+    TextBox goodPixelExpression;
     @UiField
     TextBox percentiles;
     @UiField
-    CheckBox filePerRegion;
+    CheckBox writePerRegion;
     @UiField
-    CheckBox histoSeparate;
+    CheckBox writeSeparateHistogram;
     @UiField
-    CheckBox pixelValues;
+    CheckBox writePixelValue;
     ///
     @UiField(provided = true)
     CellTable<RABandTable.ConfiguredBand> bandCellTable;
@@ -174,9 +174,9 @@ public class RAConfigForm extends Composite {
 
         regionSourcesList.addChangeHandler(event -> loadShapefileDetails());
         ChangeHandler shapeRegexHandler = event -> updateShapefileFilter();
-        shapefileAttributeNameList.addChangeHandler(shapeRegexHandler);
-        shapefileAttributeFilter.addChangeHandler(shapeRegexHandler);
-        shapefileAttributeFilter.addKeyUpHandler(new KeyUpHandler() {
+        regionSourceAttributeNames.addChangeHandler(shapeRegexHandler);
+        regionSourceAttributeFilter.addChangeHandler(shapeRegexHandler);
+        regionSourceAttributeFilter.addKeyUpHandler(new KeyUpHandler() {
             @Override
             public void onKeyUp(KeyUpEvent event) {
                 updateShapefileFilter();   
@@ -220,7 +220,7 @@ public class RAConfigForm extends Composite {
                 @Override
                 public void onFailure(Throwable caught) {
                     regionDataInfo = null;
-                    shapefileSelectedAttributeValues.setValue(caught.getMessage());
+                    selecteRegionSourceAttributes.setValue(caught.getMessage());
                     enableShapfileDetails(true);
                 }
 
@@ -229,9 +229,9 @@ public class RAConfigForm extends Composite {
                     enableShapfileDetails(true);
                     regionDataInfo = newregionDataInfo;
                     String[] headers = newregionDataInfo.getHeader();
-                    shapefileAttributeNameList.clear();
+                    regionSourceAttributeNames.clear();
                     for (String header : headers) {
-                        shapefileAttributeNameList.addItem(header);
+                        regionSourceAttributeNames.addItem(header);
                     }
                     updateShapefileFilter();
                 }
@@ -240,16 +240,16 @@ public class RAConfigForm extends Composite {
     }
 
     private void enableShapfileDetails(boolean enabled) {
-        shapefileAttributeNameList.setEnabled(enabled);
-        shapefileAttributeFilter.setEnabled(enabled);
-        shapefileSelectedAttributeValues.setEnabled(enabled);
+        regionSourceAttributeNames.setEnabled(enabled);
+        regionSourceAttributeFilter.setEnabled(enabled);
+        selecteRegionSourceAttributes.setEnabled(enabled);
     }
 
     private void updateShapefileFilter() {
-        int selectedIndex = shapefileAttributeNameList.getSelectedIndex();
+        int selectedIndex = regionSourceAttributeNames.getSelectedIndex();
         if (selectedIndex != -1) {
             String[] values = regionDataInfo.getValues(selectedIndex);
-            String filter = shapefileAttributeFilter.getValue();
+            String filter = regionSourceAttributeFilter.getValue();
             String[] filters = filter.split(",");
             RegExp[] regExps = new RegExp[filters.length];
             for (int i = 0; i < filters.length; i++) {
@@ -268,9 +268,9 @@ public class RAConfigForm extends Composite {
                     }
                 }
             }
-            shapefileSelectedAttributeValues.setValue(sb.toString());
+            selecteRegionSourceAttributes.setValue(sb.toString());
         } else {
-            shapefileSelectedAttributeValues.setValue("");
+            selecteRegionSourceAttributes.setValue("");
         }
     }
 
@@ -332,40 +332,72 @@ public class RAConfigForm extends Composite {
         if (!periodCountValid) {
             throw new ValidationException(periodsCount, "More than 1 period must be defined.");
         }
-//        if (bandListBox.getSelectedIndex() == -1 && bandNames.getText().trim().isEmpty()) {
-//            throw new ValidationException(bandListBox, "One or more bands must be selected or entered.");
-//        }
+        String[] singlePercentiles = percentiles.getValue().split(",");
+        for (String singlePercentile : singlePercentiles) {
+            if (singlePercentile.trim().isEmpty()) {
+                continue;
+            }
+            int p;
+            try {
+                p = Integer.parseInt(singlePercentile);
+            } catch (NumberFormatException nfe) {
+                throw new ValidationException(percentiles, "Percentiles must be integer values: "+ singlePercentile);
+            }
+            if (p <= 0) {
+                throw new ValidationException(percentiles, "Percentiles must be bigger than 0: "+ singlePercentile);
+            }
+            if (p >= 100) {
+                throw new ValidationException(percentiles, "Percentiles must be less than 100: "+ singlePercentile);
+            }
+        }
+        boolean regionSourceSelected = regionSourcesList.getSelectedIndex() != -1;
+        if (!regionSourceSelected) {
+            throw new ValidationException(periodsCount, "A region source must be selected.");
+        }
+        List<RABandTable.ConfiguredBand> bandList = bandTable.getBandList();
+        for (int i = 0; i < bandList.size(); i++) {
+            if (bandList.get(i).getName().trim().isEmpty()) {
+                throw new ValidationException(bandCellTable, "Statistics band number " + (i + 1) + ": Name must not be emtpy.");
+            }
+        }
+        if (bandList.size() == 0) {
+            throw new ValidationException(bandCellTable, "At least one statistics band must be defined.");
+        }
     }
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("maskExpr", maskExpr.getText());
+        
         parameters.put("periodLength", steppingPeriodLength.getValue());
         parameters.put("compositingPeriodLength", compositingPeriodLength.getValue());
-//        parameters.put("bandList", createBandListString());
+
+        parameters.put("regionSource", regionSourcesList.getSelectedValue());
+        parameters.put("regionSourceAttributeName", regionSourceAttributeNames.getSelectedValue());
+        parameters.put("regionSourceAttributeFilter", regionSourceAttributeFilter.getValue());
+        
+        parameters.put("goodPixelExpression", goodPixelExpression.getText());
+        parameters.put("percentiles", percentiles.getText());
+        parameters.put("writePerRegion", writePerRegion.getValue().toString());
+        parameters.put("writeSeparateHistogram", writeSeparateHistogram.getValue().toString());
+        parameters.put("writePixelValue", writePixelValue.getValue().toString());
+
+        List<RABandTable.ConfiguredBand> bandList = bandTable.getBandList();
+        for (int i = 0; i < bandList.size(); i++) {
+            RABandTable.ConfiguredBand configuredBand = bandList.get(i);
+            parameters.put("statband." + i + ".name", configuredBand.getName());
+            if (configuredBand.hasHistogram()) {
+                parameters.put("statband." + i + ".numbins", configuredBand.getNumBins());    
+                parameters.put("statband." + i + ".min", configuredBand.getMin());    
+                parameters.put("statband." + i + ".max", configuredBand.getMax());    
+            }
+        }
+        parameters.put("statband.count", ""+bandList.size());
+
         return parameters;
     }
 
-//    private String createBandListString() {
-//        if (bandListBox.getSelectedIndex() != -1) {
-//            StringBuilder sb = new StringBuilder();
-//            int itemCount = bandListBox.getItemCount();
-//            for (int i = 0; i < itemCount; i++) {
-//                if (bandListBox.isItemSelected(i)) {
-//                    if (sb.length() != 0) {
-//                        sb.append(",");
-//                    }
-//                    sb.append(bandListBox.getItemText(i));
-//                }
-//            }
-//            return sb.toString();
-//        } else {
-//            return bandNames.getText().trim();
-//        }
-//    }
-
     public void setValues(Map<String, String> parameters) {
-        maskExpr.setValue(parameters.getOrDefault("maskExpr", ""));
+        goodPixelExpression.setValue(parameters.getOrDefault("maskExpr", ""));
         String periodLengthValue = parameters.get("periodLength");
         if (periodLengthValue != null) {
             steppingPeriodLength.setValue(periodLengthValue, true);

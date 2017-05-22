@@ -16,14 +16,11 @@
 
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProcessorVariable;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.HTML;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -61,12 +58,13 @@ public class OrderRAProductionView extends OrderProductionView {
         });
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
-        productSetFilterForm.temporalFilterByDateRange.setValue(false);
-        productSetFilterForm.temporalFilterOff.setValue(true, true);
+        productSetFilterForm.temporalFilterOff.setEnabled(false);
         productSetFilterForm.temporalFilterByDateList.setEnabled(false);
 
-        productSetFilterForm.spatialFilterByRegion.setValue(true, true);
+        productSetFilterForm.spatialFilterOff.setValue(true);
+        productSetFilterForm.spatialFilterByRegion.setValue(false);
         productSetFilterForm.spatialFilterOff.setEnabled(false);
+        productSetFilterForm.spatialFilterByRegion.setEnabled(false);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         productSetFilterForm.addChangeHandler(new ProductSetFilterForm.ChangeHandler() {
             @Override
@@ -86,7 +84,6 @@ public class OrderRAProductionView extends OrderProductionView {
                 raConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
             }
         });
-
 
         raConfigForm = new RAConfigForm(portalContext);
         raConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
