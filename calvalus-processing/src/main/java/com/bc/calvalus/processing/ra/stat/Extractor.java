@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.ra.RAConfig;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -40,7 +41,6 @@ import java.awt.image.Raster;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -58,7 +58,7 @@ public abstract class Extractor {
     private final List<GeometryFilter> regionFilters;
     private long time;
 
-    public Extractor(Product product, String validExpression, String[] bandNames, Iterator<RAConfig.NamedGeometry> regionIterator) {
+    public Extractor(Product product, String validExpression, String[] bandNames, RARegions.RegionIterator regionIterator) {
         this.product = product;
 
         if (product.getSceneTimeCoding() == null && product.getStartTime() == null && product.getEndTime() == null) {
@@ -97,10 +97,10 @@ public abstract class Extractor {
         int regionIndex = 0;
         regionFilters = new ArrayList<>();
         while (regionIterator.hasNext()) {
-            RAConfig.NamedGeometry namedRegion = regionIterator.next();
-            Rectangle pixelRect = SubsetOp.computePixelRegion(product, namedRegion.geometry, 1);
+            RAConfig.NamedRegion namedRegion = regionIterator.next();
+            Rectangle pixelRect = SubsetOp.computePixelRegion(product, namedRegion.region, 1);
             if (!pixelRect.isEmpty()) {
-                PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(namedRegion.geometry);
+                PreparedGeometry preparedGeometry = PreparedGeometryFactory.prepare(namedRegion.region);
                 regionFilters.add(new Extractor.GeometryFilter(regionIndex,
                                                                namedRegion.name,
                                                                pixelRect,

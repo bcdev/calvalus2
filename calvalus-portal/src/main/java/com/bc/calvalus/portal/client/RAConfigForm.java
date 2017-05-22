@@ -65,7 +65,7 @@ import java.util.Map;
  */
 public class RAConfigForm extends Composite {
     
-    private static final String SHAPE_FILE_DIR = "point_data";
+    private static final String REGION_DATA_DIR = "region_data";
     private static final DateTimeFormat DATE_FORMAT = DateTimeFormat.getFormat("yyyy-MM-dd");
 
     private final PortalContext portalContext;
@@ -91,11 +91,11 @@ public class RAConfigForm extends Composite {
     ListBox periodsListBox;
     ///
     @UiField(provided = true)
-    ListBox shapefileList;
+    ListBox regionSourcesList;
     @UiField
-    Button addShapefiles;
+    Button addRegionSource;
     @UiField
-    Button removeShapefiles;
+    Button removeRegionSource;
     @UiField
     ListBox shapefileAttributeNameList;   
     @UiField
@@ -137,7 +137,7 @@ public class RAConfigForm extends Composite {
 
         // http://stackoverflow.com/questions/22629632/gwt-listbox-onchangehandler
         // fire selection event even when set programmatically
-        shapefileList = new ListBox() {
+        regionSourcesList = new ListBox() {
             @Override
             public void setSelectedIndex(int index) {
                 super.setSelectedIndex(index);
@@ -164,15 +164,15 @@ public class RAConfigForm extends Composite {
         
         
         userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  shapefileList,
-                                                  SHAPE_FILE_DIR,
+                                                  regionSourcesList,
+                                                  REGION_DATA_DIR,
                                                   "ESRI shapefiles",
                                                   description1);
-        addShapefiles.addClickHandler(userManagedContent.getAddAction());
-        removeShapefiles.addClickHandler(userManagedContent.getRemoveAction());
+        addRegionSource.addClickHandler(userManagedContent.getAddAction());
+        removeRegionSource.addClickHandler(userManagedContent.getRemoveAction());
         userManagedContent.updateList();
 
-        shapefileList.addChangeHandler(event -> loadShapefileDetails());
+        regionSourcesList.addChangeHandler(event -> loadShapefileDetails());
         ChangeHandler shapeRegexHandler = event -> updateShapefileFilter();
         shapefileAttributeNameList.addChangeHandler(shapeRegexHandler);
         shapefileAttributeFilter.addChangeHandler(shapeRegexHandler);

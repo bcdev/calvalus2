@@ -29,13 +29,10 @@ import org.geotools.data.crs.ReprojectFeatureResults;
 import org.geotools.feature.FeatureCollection;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.SchemaException;
-import org.geotools.index.CloseableIterator;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.filter.Filter;
-import org.opengis.filter.FilterVisitor;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 
@@ -45,15 +42,17 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.NoSuchElementException;
+import java.util.regex.Pattern;
 
 /**
  * Converting an ESRI shapefile into a stream of regions.
  */
 public class RARegions {
+
+    private static final String REGION_INDEX = "region_index";
 
     public static FeatureCollection<SimpleFeatureType, SimpleFeature> openShapefile(Path path, File tempDir, Configuration conf) throws IOException {
         File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToDir(path, tempDir, conf);
@@ -97,50 +96,12 @@ public class RARegions {
         return originalWKT.replaceAll(",\\s*METADATA\\s*\\[[^\\]]+\\]", "");
     }
 
-    public static FeatureCollection<SimpleFeatureType, SimpleFeature> filterCollection(
-            FeatureCollection<SimpleFeatureType, SimpleFeature> featureCollection,
-            String attributeName,
-            String[] attributeValues) {
-
-
-        Filter filter = Filter.INCLUDE;
-        if (attributeName != null && !attributeName.isEmpty() &&
-                attributeValues != null && attributeValues.length > 0) {
-
-            filter = new Filter() {
-                final Set<String> allowedValues = new HashSet<>(Arrays.asList(attributeValues));
-
-                @Override
-                public boolean evaluate(Object object) {
-                    if (!(object instanceof SimpleFeature)) {
-                        return false;
-                    }
-                    SimpleFeature feature = (SimpleFeature) object;
-                    Object attribute = feature.getAttribute(attributeName);
-                    return attribute instanceof String && allowedValues.contains(attribute);
-                }
-
-                @Override
-                public Object accept(FilterVisitor visitor, Object extraData) {
-                    return extraData;
-                }
-            };
-        }
-        return featureCollection.subCollection(filter);
-    }
-
-    static NameProvider createNameProvider(SimpleFeatureType schema, String attributeName) {
-        if (attributeName != null) {
-            // try to use given attribute
+    private static NameProvider createNameProvider(SimpleFeatureType schema, String attributeName) {
+        if (attributeName != null && !attributeName.equals(REGION_INDEX)) {
+            // use given attribute name
             AttributeDescriptor descriptor = schema.getDescriptor(attributeName);
             if (descriptor != null) {
                 if (descriptor.getType().getBinding() == String.class) {
-                    return new AttributeNameProvider(attributeName);
-                }
-            }
-            // try to use first "String" attribute
-            for (AttributeDescriptor attributeDescriptor : schema.getAttributeDescriptors()) {
-                if (attributeDescriptor.getType().getBinding() == String.class) {
                     return new AttributeNameProvider(attributeName);
                 }
             }
@@ -149,7 +110,7 @@ public class RARegions {
         return new OrdinalNameProvider();
     }
 
-    static interface NameProvider {
+    interface NameProvider {
         String getName(SimpleFeature simpleFeature);
     }
 
@@ -176,24 +137,92 @@ public class RARegions {
             return (String) simpleFeature.getAttribute(attributeName);
         }
     }
+    
+    public interface RegionIterator extends Iterator<RAConfig.NamedRegion>, AutoCloseable {
 
-    static class RegionIteratorFromShapefile implements CloseableIterator<RAConfig.NamedGeometry> {
+        boolean hasNext();
+
+        RAConfig.NamedRegion next();
+
+        void close() throws Exception;
+    }
+
+    public static class FilterRegionIterator implements RegionIterator {
+
+        private final RegionIterator delegate;
+        private final Pattern[] patterns;
+        private RAConfig.NamedRegion nextElement;
+        private boolean hasNext;
+
+        public FilterRegionIterator(RegionIterator regionIterator, String filter) {
+            this.delegate = regionIterator;
+            nextMatch();
+            if (filter != null && !filter.isEmpty()) {
+                String[] filters = filter.split(",");
+                patterns = new Pattern[filters.length];
+                for (int i = 0; i < filters.length; i++) {
+                    patterns[i] = Pattern.compile(filters[i].trim());
+                }
+            } else {
+                patterns = null;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        @Override
+        public RAConfig.NamedRegion next() {
+            if (!hasNext) {
+                throw new NoSuchElementException();
+            }
+            return nextMatch();        
+        }
+
+        private RAConfig.NamedRegion nextMatch() {
+            RAConfig.NamedRegion oldMatch = nextElement;
+    
+            while (delegate.hasNext()) {
+                RAConfig.NamedRegion nextCandidate = delegate.next();
+                if (accept(nextCandidate)) {
+                    hasNext = true;
+                    nextElement = nextCandidate;
+                    return oldMatch;
+                }
+            }
+            hasNext = false;
+            return oldMatch;
+        }
+
+        private boolean accept(RAConfig.NamedRegion nextCandidate) {
+            String regionName = nextCandidate.name;
+            if (patterns == null) {
+                return true;
+            }
+            for (Pattern pattern : patterns) {
+                if (pattern.matcher(regionName).matches()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public void close() throws Exception {
+            delegate.close();   
+        }
+    }
+    
+    static class RegionIteratorFromShapefile implements RegionIterator {
         private final FeatureIterator<SimpleFeature> featureIterator;
         private final NameProvider nameProvider;
         private final File tempDir;
 
-        RegionIteratorFromShapefile(String shapeFilePath, String filterAttributeName, String filterAttributeValues, Configuration conf) throws IOException {
+        RegionIteratorFromShapefile(String shapeFilePath, String filterAttributeName, Configuration conf) throws IOException {
             tempDir = VirtualDir.createUniqueTempDir();
             FeatureCollection<SimpleFeatureType, SimpleFeature> collection = RARegions.openShapefile(new Path(shapeFilePath), tempDir, conf);
-            String[] attributeValues = new String[0];
-            if (filterAttributeValues != null) {
-                String[] split = filterAttributeValues.split(",");
-                attributeValues = new String[split.length];
-                for (int i = 0; i < split.length; i++) {
-                    attributeValues[i] = split[i].trim();
-                }
-            }
-            collection = filterCollection(collection, filterAttributeName, attributeValues);
             this.featureIterator = collection.features();
             this.nameProvider = createNameProvider(collection.getSchema(), filterAttributeName);
         }
@@ -204,11 +233,11 @@ public class RARegions {
         }
 
         @Override
-        public RAConfig.NamedGeometry next() {
+        public RAConfig.NamedRegion next() {
             SimpleFeature simpleFeature = featureIterator.next();
             Geometry defaultGeometry = (Geometry) simpleFeature.getDefaultGeometry();
             String name = nameProvider.getName(simpleFeature);
-            return new RAConfig.NamedGeometry(name, defaultGeometry);
+            return new RAConfig.NamedRegion(name, defaultGeometry);
         }
 
         @Override
@@ -219,7 +248,7 @@ public class RARegions {
         }
     }
 
-    static class RegionIteratorFromWKT implements CloseableIterator<RAConfig.NamedGeometry> {
+    static class RegionIteratorFromWKT implements RegionIterator {
 
         private final Iterator<RAConfig.Region> iterator;
 
@@ -233,11 +262,11 @@ public class RARegions {
         }
 
         @Override
-        public RAConfig.NamedGeometry next() {
+        public RAConfig.NamedRegion next() {
             RAConfig.Region region = iterator.next();
             String name = region.getName();
             Geometry geometry = GeometryUtils.createGeometry(region.getWkt());
-            return new RAConfig.NamedGeometry(name, geometry);
+            return new RAConfig.NamedRegion(name, geometry);
         }
 
         @Override
@@ -265,15 +294,26 @@ public class RARegions {
             }
         }
         List<String[]> entries = new ArrayList<>();
-        entries.add(attributeNames.toArray(new String[0]));
-        FeatureIterator<SimpleFeature> features = featureCollection.features();
-        while (features.hasNext()) {
-            List<String> attributeValues = new ArrayList<>();
-            SimpleFeature feature = features.next();
-            for (String name : attributeNames) {
-                attributeValues.add((String) feature.getAttribute(name));
+        if (attributeNames.isEmpty()) {
+            entries.add(new String[]{REGION_INDEX});
+            FeatureIterator<SimpleFeature> features = featureCollection.features();
+            int index = 0;
+            while (features.hasNext()) {
+                SimpleFeature feature = features.next();
+                entries.add(new String[]{Integer.toString(index)});
+                index++;
+            }            
+        } else {
+            entries.add(attributeNames.toArray(new String[0]));
+            FeatureIterator<SimpleFeature> features = featureCollection.features();
+            while (features.hasNext()) {
+                List<String> attributeValues = new ArrayList<>();
+                SimpleFeature feature = features.next();
+                for (String name : attributeNames) {
+                    attributeValues.add((String) feature.getAttribute(name));
+                }
+                entries.add(attributeValues.toArray(new String[0]));
             }
-            entries.add(attributeValues.toArray(new String[0]));
         }
         return entries.toArray(new String[0][]);
     }
@@ -293,7 +333,6 @@ public class RARegions {
             }
         }
         System.out.println("size = " + size);
-        System.exit(4);
 
         SimpleFeatureType schema = featureCollection.getSchema();
         System.out.println("schema = " + schema);
@@ -303,6 +342,7 @@ public class RARegions {
         List<AttributeDescriptor> attributeDescriptors = schema.getAttributeDescriptors();
         List<String> stringAttrDesc = new ArrayList<>();
         for (AttributeDescriptor attributeDescriptor : attributeDescriptors) {
+            System.out.println("attributeDescriptor = " + attributeDescriptor);
             Class<?> binding = attributeDescriptor.getType().getBinding();
             if (binding.equals(String.class)) {
                 stringAttrDesc.add(attributeDescriptor.getLocalName());
@@ -314,6 +354,7 @@ public class RARegions {
         int counter = 0;
         while (features.hasNext()) {
             SimpleFeature feature = features.next();
+            System.out.println("feature = " + feature);
             StringBuilder sb = new StringBuilder();
             for (String name : stringAttrDesc) {
                 Object attribute = feature.getAttribute(name);

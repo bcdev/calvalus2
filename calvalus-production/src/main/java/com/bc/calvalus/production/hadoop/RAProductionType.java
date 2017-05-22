@@ -22,6 +22,7 @@ import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.ra.RAConfig;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.calvalus.processing.ra.RAWorkflowItem;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -33,7 +34,6 @@ import com.bc.ceres.binding.BindingException;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.util.StringUtils;
-import org.geotools.index.CloseableIterator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -118,7 +118,7 @@ public class RAProductionType extends HadoopProductionType {
 //            raParametersXml = raConfig.toXml();
         } else {
             // Check MA XML before sending it to Hadoop
-            CloseableIterator<RAConfig.NamedGeometry> regionsIterator = null;
+            RARegions.RegionIterator regionsIterator = null;
             try {
                 RAConfig raConfig = RAConfig.fromXml(raParametersXml);
                 Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
@@ -126,13 +126,13 @@ public class RAProductionType extends HadoopProductionType {
                 List<String> regionNames = new ArrayList<>();
                 Geometry union = null;
                 while (regionsIterator.hasNext()) {
-                    RAConfig.NamedGeometry namedGeometry = regionsIterator.next();
+                    RAConfig.NamedRegion namedRegion = regionsIterator.next();
                     if (union == null) {
-                        union = namedGeometry.geometry;
+                        union = namedRegion.region;
                     } else {
-                        union = union.union(namedGeometry.geometry);
+                        union = union.union(namedRegion.region);
                     }
-                    regionNames.add(namedGeometry.name);
+                    regionNames.add(namedRegion.name);
                 }
                 if (regionNames.isEmpty()) {
                     throw new ProductionException("No region defined");
@@ -149,7 +149,7 @@ public class RAProductionType extends HadoopProductionType {
                 if (regionsIterator != null) {
                     try {
                         regionsIterator.close();
-                    } catch (IOException e) {
+                    } catch (Exception e) {
                         throw new ProductionException("Failed to remove temp file: " + e.getMessage(), e);
                     }
                 }

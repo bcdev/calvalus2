@@ -30,7 +30,6 @@ import org.esa.snap.core.datamodel.Product;
 
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -66,7 +65,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                 final AtomicInteger numSamplesTotal = new AtomicInteger(0);
                 final Set<Integer> regionIdSet = new HashSet<>();
                 final String productName = product.getName();
-                Iterator<RAConfig.NamedGeometry> regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
+                RARegions.RegionIterator regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
                 Extractor extractor = new Extractor(product, raConfig.getValidExpression(), raConfig.getBandNames(), regionIterator) {
                     @Override
                     public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {

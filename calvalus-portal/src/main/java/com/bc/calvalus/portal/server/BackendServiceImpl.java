@@ -910,7 +910,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             String userName = getUserName();
             String url = serviceContainer.getFileSystemService().getQualifiedPath(userName, filePath);
             String[][] data = serviceContainer.getProductionService().loadRegionDataInfo(userName, url);
-            String[][] values = Arrays.copyOfRange(data, 1, data.length - 1);
+            String[][] values = Arrays.copyOfRange(data, 1, data.length);
             String[] header = data[0];
             return new DtoRegionDataInfo(header, values);
         } catch (IOException e) {

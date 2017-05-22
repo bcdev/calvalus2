@@ -17,12 +17,12 @@
 package com.bc.calvalus.processing.ra.stat;
 
 import com.bc.calvalus.processing.ra.RAConfig;
+import com.bc.calvalus.processing.ra.RARegions;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.geotools.index.CloseableIterator;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.junit.Test;
 
@@ -59,7 +59,7 @@ public class ExtractorTest {
         config.setRegions(new RAConfig.Region("northsea", NORTH_SEA_WKT));
 
         List<Result> results = new ArrayList<>();
-        CloseableIterator<RAConfig.NamedGeometry> namedRegions = config.createNamedRegionIterator(null);
+        RARegions.RegionIterator namedRegions = config.createNamedRegionIterator(null);
         Extractor extractor = new Extractor(product, config.getValidExpression(), config.getBandNames(), namedRegions) {
             @Override
             public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {

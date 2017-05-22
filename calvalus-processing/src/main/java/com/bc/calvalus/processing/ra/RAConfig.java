@@ -24,7 +24,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
-import org.geotools.index.CloseableIterator;
 
 import java.io.IOException;
 
@@ -254,20 +253,21 @@ public class RAConfig implements XmlConvertible {
         return bandNames;
     }
 
-    public static class NamedGeometry {
+    public static class NamedRegion {
 
         public final String name;
-        public final Geometry geometry;
+        public final Geometry region;
 
-        NamedGeometry(String name, Geometry geometry) {
+        NamedRegion(String name, Geometry region) {
             this.name = name;
-            this.geometry = geometry;
+            this.region = region;
         }
     }
 
-    public CloseableIterator<NamedGeometry> createNamedRegionIterator(Configuration conf) throws IOException {
+    public RARegions.RegionIterator createNamedRegionIterator(Configuration conf) throws IOException {
         if (shapeFilePath != null && !shapeFilePath.isEmpty()) {
-            return new RARegions.RegionIteratorFromShapefile(shapeFilePath, filterAttributeName, filterAttributeValues, conf);
+            RARegions.RegionIterator regionIterator = new RARegions.RegionIteratorFromShapefile(shapeFilePath, filterAttributeName, conf);
+            return new RARegions.FilterRegionIterator(regionIterator, filterAttributeValues);
         } else if (regions != null) {
             return new RARegions.RegionIteratorFromWKT(regions);
         } else {

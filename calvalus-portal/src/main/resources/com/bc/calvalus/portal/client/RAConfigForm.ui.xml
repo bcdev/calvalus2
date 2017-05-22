@@ -79,30 +79,47 @@
                 </table>
                 <hr/>
                 <g:VerticalPanel spacing="2">
-                    <g:Label>Shapefiles:</g:Label>
+                    <g:Label>Regions sources:</g:Label>
 
-                    <g:ListBox ui:field='shapefileList' multipleSelect="false" visibleItemCount="8" width="40em"/>
+                    <g:ListBox ui:field='regionSourcesList' multipleSelect="false" visibleItemCount="8" width="40em"/>
                     <g:HorizontalPanel spacing="2">
-                        <g:Button ui:field='addShapefiles' text="Add"/>
-                        <g:Button ui:field='removeShapefiles' text="Remove"/>
+                        <g:Button ui:field='addRegionSource' text="Add"/>
+                        <g:Button ui:field='removeRegionSource' text="Remove"/>
                     </g:HorizontalPanel>
                 </g:VerticalPanel>
                 <table cellspacing="2">
                     <tr>
-                        <td>Attribute Names:</td>
+                        <td>Attributes:</td>
                         <td>
                             <g:ListBox ui:field='shapefileAttributeNameList' multipleSelect="false" visibleItemCount="1"
                                        width="30em"/>
                         </td>
                     </tr>
                     <tr>
-                        <td>Attribute Filter Regex:</td>
+                        <td colspan="2">
+                            <g:Label addStyleNames="{style.explanatoryLabel}" width="40em">
+                                The selected attribute is used to filter the regions that are available inside 
+                                the shapefile. If the shapefile does not have an textual attribute (of type String) 
+                                an attribute named "region_index" is created. 
+                            </g:Label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Attribute filter regex:</td>
                         <td>
                             <g:TextBox ui:field='shapefileAttributeFilter' width="30em"/>
                         </td>
                     </tr>
                     <tr>
-                        <td>Selection:</td>
+                        <td colspan="2">
+                            <g:Label addStyleNames="{style.explanatoryLabel}" width="40em"  >
+                                Specify one or more regular expressions (separated by comma) to filter the regions
+                                inside the selected shpefile. If no filter is given all regions will be used.
+                            </g:Label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Selected regions:</td>
                         <td>
                             <g:TextArea ui:field='shapefileSelectedAttributeValues' width="30em" visibleLines="4"/>
                         </td>

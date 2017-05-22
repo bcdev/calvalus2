@@ -123,7 +123,7 @@ public class OrderRAProductionView extends OrderProductionView {
 
     @Override
     public String getTitle() {
-        return "Region Analysis";
+        return "Regional Statistics";
     }
 
     @Override
