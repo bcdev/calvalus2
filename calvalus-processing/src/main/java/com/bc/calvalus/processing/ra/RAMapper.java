@@ -66,7 +66,7 @@ public class RAMapper extends Mapper<NullWritable, NullWritable, RAKey, RAValue>
                 final Set<Integer> regionIdSet = new HashSet<>();
                 final String productName = product.getName();
                 RARegions.RegionIterator regionIterator = raConfig.createNamedRegionIterator(context.getConfiguration());
-                Extractor extractor = new Extractor(product, raConfig.getValidExpression(), raConfig.getBandNames(), regionIterator) {
+                Extractor extractor = new Extractor(product, raConfig.getGoodPixelExpression(), raConfig.getBandNames(), regionIterator) {
                     @Override
                     public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {
                         RAKey key = new RAKey(regionIndex, regionName, time);

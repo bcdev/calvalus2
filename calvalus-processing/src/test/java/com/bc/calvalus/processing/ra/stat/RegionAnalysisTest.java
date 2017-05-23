@@ -33,8 +33,8 @@ public class RegionAnalysisTest {
         rac1.setPercentiles(5, 25, 50, 75, 95);
         rac1.setBandConfigs(b1);
         rac1.setInternalRegionNames("r1");
-        rac1.setWriteStatisticsFilePerRegion(false);
-        rac1.setWriteSeparateHistogramFile(true);
+        rac1.setWritePerRegion(false);
+        rac1.setWriteSeparateHistogram(true);
 
         rac3 = new RAConfig();
         rac3.setPercentiles(50, 98);
@@ -259,7 +259,7 @@ public class RegionAnalysisTest {
     public void test_many_many_histoInside() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
         rac1.setInternalRegionNames("r1", "r2", "r3");
-        rac1.setWriteSeparateHistogramFile(false);
+        rac1.setWriteSeparateHistogram(false);
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
         ra.startRegion("r1");
         ra.addData(dateFormat.parse("2010-01-15 10:00:00").getTime(), 7, new float[][]{{1, 2, 3}});
@@ -298,7 +298,7 @@ public class RegionAnalysisTest {
     public void test_many_many_perRegion() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-01:2010-01-10,2010-01-11:2010-01-20,2010-01-21:2010-01-31,2010-02-01:2010-02-11");
         rac1.setInternalRegionNames("r1", "r2", "r3");
-        rac1.setWriteStatisticsFilePerRegion(true);
+        rac1.setWritePerRegion(true);
 
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac1, writer);
         ra.startRegion("r1");
@@ -374,8 +374,8 @@ public class RegionAnalysisTest {
     @Test
     public void test_multipleBands_ff() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-11:2010-01-20");
-        rac3.setWriteStatisticsFilePerRegion(false);
-        rac3.setWriteSeparateHistogramFile(false);
+        rac3.setWritePerRegion(false);
+        rac3.setWriteSeparateHistogram(false);
 
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
         ra.startRegion("r1");
@@ -398,8 +398,8 @@ public class RegionAnalysisTest {
     public void test_multipleBands_tf() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-11:2010-01-20");
         //////////////////////
-        rac3.setWriteStatisticsFilePerRegion(true);
-        rac3.setWriteSeparateHistogramFile(false);
+        rac3.setWritePerRegion(true);
+        rac3.setWriteSeparateHistogram(false);
 
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
         ra.startRegion("r1");
@@ -428,8 +428,8 @@ public class RegionAnalysisTest {
     public void test_multipleBands_ft() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-11:2010-01-20");
         //////////////////////
-        rac3.setWriteStatisticsFilePerRegion(false);
-        rac3.setWriteSeparateHistogramFile(true);
+        rac3.setWritePerRegion(false);
+        rac3.setWriteSeparateHistogram(true);
 
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
         ra.startRegion("r1");
@@ -466,8 +466,8 @@ public class RegionAnalysisTest {
     public void test_multipleBands_tt() throws Exception {
         RADateRanges dateRanges = RADateRanges.create("2010-01-11:2010-01-20");
         //////////////////////
-        rac3.setWriteStatisticsFilePerRegion(true);
-        rac3.setWriteSeparateHistogramFile(true);
+        rac3.setWritePerRegion(true);
+        rac3.setWriteSeparateHistogram(true);
 
         RegionAnalysis ra = new RegionAnalysis(dateRanges, rac3, writer);
         ra.startRegion("r1");

@@ -112,62 +112,78 @@ public class RAProductionType extends HadoopProductionType {
 
     private String[] getRAConfigXmlAndRegion(ProductionRequest productionRequest) throws ProductionException {
         String raParametersXml = productionRequest.getString("calvalus.ra.parameters", null);
+        RAConfig raConfig;
         if (raParametersXml == null) {
-            throw new ProductionException("missing parameter 'calvalus.ra.parameters'");
-//            RAConfig raConfig = getRAConfig(productionRequest);
-//            raParametersXml = raConfig.toXml();
+            raConfig = getRaConfigFromRequest(productionRequest);
         } else {
-            // Check MA XML before sending it to Hadoop
-            RARegions.RegionIterator regionsIterator = null;
             try {
-                RAConfig raConfig = RAConfig.fromXml(raParametersXml);
-                Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
-                regionsIterator = raConfig.createNamedRegionIterator(conf);
-                List<String> regionNames = new ArrayList<>();
-                Geometry union = null;
-                while (regionsIterator.hasNext()) {
-                    RAConfig.NamedRegion namedRegion = regionsIterator.next();
-                    if (union == null) {
-                        union = namedRegion.region;
-                    } else {
-                        union = union.union(namedRegion.region);
-                    }
-                    regionNames.add(namedRegion.name);
-                }
-                if (regionNames.isEmpty()) {
-                    throw new ProductionException("No region defined");
-                }
-                if (union == null) {
-                    throw new ProductionException("Can not build union from given regions");
-                }
-                union = union.convexHull();
-                raConfig.setInternalRegionNames(regionNames.toArray(new String[0]));
-                return new String[]{raConfig.toXml(), union.toString()};
-            } catch (BindingException | IOException e) {
+                raConfig = RAConfig.fromXml(raParametersXml);
+            } catch (BindingException e) {
                 throw new ProductionException("Illegal Region-analysis configuration: " + e.getMessage(), e);
-            } finally {
-                if (regionsIterator != null) {
-                    try {
-                        regionsIterator.close();
-                    } catch (Exception e) {
-                        throw new ProductionException("Failed to remove temp file: " + e.getMessage(), e);
-                    }
+            }
+        }
+        // Check MA XML before sending it to Hadoop
+        RARegions.RegionIterator regionsIterator = null;
+        try {
+            Configuration conf = getProcessingService().createJobConfig(productionRequest.getUserName());
+            regionsIterator = raConfig.createNamedRegionIterator(conf);
+            List<String> regionNames = new ArrayList<>();
+            Geometry union = null;
+            while (regionsIterator.hasNext()) {
+                RAConfig.NamedRegion namedRegion = regionsIterator.next();
+                if (union == null) {
+                    union = namedRegion.region;
+                } else {
+                    union = union.union(namedRegion.region);
+                }
+                regionNames.add(namedRegion.name);
+            }
+            if (regionNames.isEmpty()) {
+                throw new ProductionException("No region defined");
+            }
+            if (union == null) {
+                throw new ProductionException("Can not build union from given regions");
+            }
+            union = union.convexHull();
+            raConfig.setInternalRegionNames(regionNames.toArray(new String[0]));
+            return new String[]{raConfig.toXml(), union.toString()};
+        } catch (IOException e) {
+            throw new ProductionException("Illegal Region-analysis configuration: " + e.getMessage(), e);
+        } finally {
+            if (regionsIterator != null) {
+                try {
+                    regionsIterator.close();
+                } catch (Exception e) {
+                    throw new ProductionException("Failed to remove temp file: " + e.getMessage(), e);
                 }
             }
         }
     }
 
-    static RAConfig getRAConfig(ProductionRequest productionRequest) throws ProductionException {
-        RAConfig raConfig = new RAConfig();
+    private RAConfig getRaConfigFromRequest(ProductionRequest productionRequest) throws ProductionException {
+        RAConfig raConfig;
+        raConfig = new RAConfig();
 
-//        String wkt = productionRequest.getString("regionWKT");
-//        String name = productionRequest.getString("regionName", "region");
-//        raConfig.setRegions(new RAConfig.Region(name, wkt));
-//
-//        String bandList = productionRequest.getParameter("bandList", true);
-//        raConfig.setBandNames(bandList.split(","));
-//        raConfig.setValidExpressions(productionRequest.getString("maskExpr", "true"));
+        raConfig.setRegionSource(productionRequest.getString("regionSource"));
+        raConfig.setRegionSourceAttributeName(productionRequest.getString("regionSourceAttributeName", null));
+        raConfig.setRegionSourceAttributeFilter(productionRequest.getString("regionSourceAttributeFilter", null));
+
+        raConfig.setGoodPixelExpression(productionRequest.getString("goodPixelExpression", null));
+        raConfig.setPercentiles(productionRequest.getString("percentiles", ""));
+        raConfig.setWritePerRegion(productionRequest.getBoolean("writePerRegion", Boolean.TRUE));
+        raConfig.setWriteSeparateHistogram(productionRequest.getBoolean("writeSeparateHistogram", Boolean.TRUE));
+        raConfig.setWritePixelValues(productionRequest.getBoolean("writePixelValues", Boolean.FALSE));
+
+        int bandCount = productionRequest.getInteger("statband.count");
+        RAConfig.BandConfig[] bandConfigs = new RAConfig.BandConfig[bandCount];
+        for (int i = 0; i < bandConfigs.length; i++) {
+            String bandName = productionRequest.getString("statband." + i + ".name");
+            Integer numbins = productionRequest.getInteger("statband." + i + ".numBins", 0);
+            Double min = productionRequest.getDouble("statband." + i + ".min", 0.0);
+            Double max = productionRequest.getDouble("statband." + i + ".max", 0.0);
+            bandConfigs[i] = new RAConfig.BandConfig(bandName, numbins, min, max);
+        }
+        raConfig.setBandConfigs(bandConfigs);
         return raConfig;
     }
-
 }

@@ -35,8 +35,8 @@ class StatisticsWriter {
     private final Writer[][] writer;
 
     StatisticsWriter(RAConfig raConfig, Statistics[] stats, WriterFactory writerFactory) throws IOException {
-        this.statisticsPerRegion = raConfig.isWriteStatisticsFilePerRegion();
-        this.separateHistogram = raConfig.isWriteSeparateHistogramFile();
+        this.statisticsPerRegion = raConfig.isWritePerRegion();
+        this.separateHistogram = raConfig.isWriteSeparateHistogram();
         this.stats = stats;
         String[] bandNames = raConfig.getBandNames();
         int numWriter = 1;

@@ -66,9 +66,9 @@ public class RAConfig implements XmlConvertible {
         @Parameter
         private Integer numBins;
         @Parameter
-        private Double lowValue;
+        private Double min;
         @Parameter
-        private Double highValue;
+        private Double max;
 
         // empty constructor for XML serialization
         @SuppressWarnings("unused")
@@ -79,11 +79,11 @@ public class RAConfig implements XmlConvertible {
             this(name, null, null, null);
         }
 
-        public BandConfig(String name, Integer numBins, Double lowValue, Double highValue) {
+        public BandConfig(String name, Integer numBins, Double min, Double max) {
             this.name = name;
             this.numBins = numBins;
-            this.lowValue = lowValue;
-            this.highValue = highValue;
+            this.min = min;
+            this.max = max;
         }
 
         public String getName() {
@@ -91,15 +91,15 @@ public class RAConfig implements XmlConvertible {
         }
 
         public int getNumBins() {
-            return numBins != null && lowValue != null && highValue != null ? numBins : 0;
+            return numBins != null && min != null && max != null ? numBins : 0;
         }
 
-        public double getLowValue() {
-            return lowValue != null ? lowValue : Double.NaN;
+        public double getMin() {
+            return min != null ? min : Double.NaN;
         }
 
-        public double getHighValue() {
-            return highValue != null ? highValue : Double.NaN;
+        public double getMax() {
+            return max != null ? max : Double.NaN;
         }
     }
 
@@ -108,18 +108,18 @@ public class RAConfig implements XmlConvertible {
     private Region[] regions;
 
     @Parameter
-    private String shapeFilePath;
+    private String regionSource;
 
     // the filter* parameter are used to specify the shapefile attributes and the allowed values
     // if not given all geometries from the shapefile will be used
     @Parameter
-    private String filterAttributeName;
+    private String regionSourceAttributeName;
 
     @Parameter
-    private String filterAttributeValues;
+    private String regionSourceAttributeFilter;
 
     @Parameter
-    private String validExpression;
+    private String goodPixelExpression;
 
     @Parameter(defaultValue = "5,25,50,75,95")
     private int[] percentiles;
@@ -129,10 +129,10 @@ public class RAConfig implements XmlConvertible {
     private BandConfig[] bands;
 
     @Parameter(defaultValue = "true")
-    private boolean writeStatisticsFilePerRegion = true;
+    private boolean writePerRegion = true;
 
     @Parameter(defaultValue = "true")
-    private boolean writeSeparateHistogramFile = true;
+    private boolean writeSeparateHistogram = true;
 
     // TODO
 //    @Parameter(defaultValue = "false")
@@ -162,12 +162,24 @@ public class RAConfig implements XmlConvertible {
         this.internalRegionNames = internalRegionNames;
     }
 
-    public String getValidExpression() {
-        return validExpression;
+    public void setRegionSource(String regionSource) {
+        this.regionSource = regionSource;
     }
 
-    public void setValidExpression(String validExpression) {
-        this.validExpression = validExpression;
+    public void setRegionSourceAttributeName(String regionSourceAttributeName) {
+        this.regionSourceAttributeName = regionSourceAttributeName;
+    }
+
+    public void setRegionSourceAttributeFilter(String regionSourceAttributeFilter) {
+        this.regionSourceAttributeFilter = regionSourceAttributeFilter;
+    }
+
+    public String getGoodPixelExpression() {
+        return goodPixelExpression;
+    }
+
+    public void setGoodPixelExpression(String goodPixelExpression) {
+        this.goodPixelExpression = goodPixelExpression;
     }
 
     public int[] getPercentiles() {
@@ -176,6 +188,14 @@ public class RAConfig implements XmlConvertible {
 
     public void setPercentiles(int... percentiles) {
         this.percentiles = percentiles;
+    }
+    
+    public void setPercentiles(String percentilesText) {
+        String[] split = percentilesText.split(",");
+        this.percentiles = new int[split.length];
+        for (int i = 0; i < split.length; i++) {
+            this.percentiles[i] = Integer.parseInt(split[i]);
+        }
     }
 
     public BandConfig[] getBandConfigs() {
@@ -186,20 +206,20 @@ public class RAConfig implements XmlConvertible {
         this.bands = bandConfigs;
     }
 
-    public boolean isWriteStatisticsFilePerRegion() {
-        return writeStatisticsFilePerRegion;
+    public boolean isWritePerRegion() {
+        return writePerRegion;
     }
 
-    public void setWriteStatisticsFilePerRegion(boolean writeStatisticsFilePerRegion) {
-        this.writeStatisticsFilePerRegion = writeStatisticsFilePerRegion;
+    public void setWritePerRegion(boolean writePerRegion) {
+        this.writePerRegion = writePerRegion;
     }
 
-    public boolean isWriteSeparateHistogramFile() {
-        return writeSeparateHistogramFile;
+    public boolean isWriteSeparateHistogram() {
+        return writeSeparateHistogram;
     }
 
-    public void setWriteSeparateHistogramFile(boolean writeSeparateHistogramFile) {
-        this.writeSeparateHistogramFile = writeSeparateHistogramFile;
+    public void setWriteSeparateHistogram(boolean writeSeparateHistogram) {
+        this.writeSeparateHistogram = writeSeparateHistogram;
     }
 
 //    public boolean isWriteProductStatistics() {
@@ -265,13 +285,13 @@ public class RAConfig implements XmlConvertible {
     }
 
     public RARegions.RegionIterator createNamedRegionIterator(Configuration conf) throws IOException {
-        if (shapeFilePath != null && !shapeFilePath.isEmpty()) {
-            RARegions.RegionIterator regionIterator = new RARegions.RegionIteratorFromShapefile(shapeFilePath, filterAttributeName, conf);
-            return new RARegions.FilterRegionIterator(regionIterator, filterAttributeValues);
+        if (regionSource != null && !regionSource.isEmpty()) {
+            RARegions.RegionIterator regionIterator = new RARegions.RegionIteratorFromShapefile(regionSource, regionSourceAttributeName, conf);
+            return new RARegions.FilterRegionIterator(regionIterator, regionSourceAttributeFilter);
         } else if (regions != null) {
             return new RARegions.RegionIteratorFromWKT(regions);
         } else {
-            throw new IllegalArgumentException("Neither regions nor a shapefile is given");
+            throw new IllegalArgumentException("Neither regions nor a regionSource is given");
         }
     }
 }

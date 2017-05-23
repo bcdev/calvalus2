@@ -39,7 +39,7 @@ public class RegionAnalysis {
         stats = new Statistics[bandConfigs.length];
         for (int i = 0; i < bandConfigs.length; i++) {
             RAConfig.BandConfig bConfig = bandConfigs[i];
-            stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getLowValue(), bConfig.getHighValue(), raConfig.getPercentiles());
+            stats[i] = new Statistics(bConfig.getNumBins(), bConfig.getMin(), bConfig.getMax(), raConfig.getPercentiles());
         }
         statisticsWriter = new StatisticsWriter(raConfig, stats, writerFactor);
     }

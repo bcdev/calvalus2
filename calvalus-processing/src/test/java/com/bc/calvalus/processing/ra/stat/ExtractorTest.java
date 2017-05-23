@@ -55,12 +55,12 @@ public class ExtractorTest {
         RAConfig.BandConfig l = new RAConfig.BandConfig("l");
         RAConfig.BandConfig c = new RAConfig.BandConfig("c");
         config.setBandConfigs(x, l, c);
-        config.setValidExpression("LAT > 50");
+        config.setGoodPixelExpression("LAT > 50");
         config.setRegions(new RAConfig.Region("northsea", NORTH_SEA_WKT));
 
         List<Result> results = new ArrayList<>();
         RARegions.RegionIterator namedRegions = config.createNamedRegionIterator(null);
-        Extractor extractor = new Extractor(product, config.getValidExpression(), config.getBandNames(), namedRegions) {
+        Extractor extractor = new Extractor(product, config.getGoodPixelExpression(), config.getBandNames(), namedRegions) {
             @Override
             public void extractedData(int regionIndex, String regionName, long time, int numObs, float[][] samples) throws IOException, InterruptedException {
                 results.add(new Result(regionIndex, regionName, time, numObs, samples));

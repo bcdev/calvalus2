@@ -113,7 +113,7 @@ public class RAConfigForm extends Composite {
     @UiField
     CheckBox writeSeparateHistogram;
     @UiField
-    CheckBox writePixelValue;
+    CheckBox writePixelValues;
     ///
     @UiField(provided = true)
     CellTable<RABandTable.ConfiguredBand> bandCellTable;
@@ -388,14 +388,14 @@ public class RAConfigForm extends Composite {
         parameters.put("percentiles", percentiles.getText());
         parameters.put("writePerRegion", writePerRegion.getValue().toString());
         parameters.put("writeSeparateHistogram", writeSeparateHistogram.getValue().toString());
-        parameters.put("writePixelValue", writePixelValue.getValue().toString());
+        parameters.put("writePixelValues", writePixelValues.getValue().toString());
 
         List<RABandTable.ConfiguredBand> bandList = bandTable.getBandList();
         for (int i = 0; i < bandList.size(); i++) {
             RABandTable.ConfiguredBand configuredBand = bandList.get(i);
             parameters.put("statband." + i + ".name", configuredBand.getName());
             if (configuredBand.hasHistogram()) {
-                parameters.put("statband." + i + ".numbins", configuredBand.getNumBins());    
+                parameters.put("statband." + i + ".numBins", configuredBand.getNumBins());    
                 parameters.put("statband." + i + ".min", configuredBand.getMin());    
                 parameters.put("statband." + i + ".max", configuredBand.getMax());    
             }
@@ -424,14 +424,14 @@ public class RAConfigForm extends Composite {
         percentiles.setValue(parameters.getOrDefault("percentiles", ""));
         writePerRegion.setValue(Boolean.valueOf(parameters.getOrDefault("writePerRegion", "true")));
         writeSeparateHistogram.setValue(Boolean.valueOf(parameters.getOrDefault("writeSeparateHistogram", "true")));
-        writePixelValue.setValue(Boolean.valueOf(parameters.getOrDefault("writePixelValue", "false")));
+        writePixelValues.setValue(Boolean.valueOf(parameters.getOrDefault("writePixelValues", "false")));
 
         int bandCount = Integer.parseInt(parameters.getOrDefault("statband.count", "0"));
         List<RABandTable.ConfiguredBand> bandList = bandTable.getBandList();
         bandList.clear();
         for (int i = 0; i < bandCount; i++) {
             String bandName = parameters.get("statband." + i + ".name");
-            String numBins = parameters.get("statband." + i + ".numbins");
+            String numBins = parameters.get("statband." + i + ".numBins");
             String min = parameters.get("statband." + i + ".min");
             String max = parameters.get("statband." + i + ".max");
             RABandTable.ConfiguredBand configuredBand;
