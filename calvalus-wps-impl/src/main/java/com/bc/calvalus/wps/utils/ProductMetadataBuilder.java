@@ -19,6 +19,8 @@ import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -201,9 +203,9 @@ public class ProductMetadataBuilder {
             ProductionRequest productionRequest = this.production.getProductionRequest();
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(this.production.getWorkflow().getStopTime()).toString();
             this.productOutputDir = productionRequest.getStagingDirectory(this.production.getId());
-            this.productionName = this.production.getName();
             this.collectionUrl = getBaseStagingUrl() + "/" + this.production.getStagingPath();
             try {
+                this.productionName = encodeSpecialCharacters(this.production.getName());
                 this.processName = productionRequest.getString(PROCESSOR_NAME.getIdentifier());
                 this.inputDatasetName = productionRequest.getString("inputDataSetName");
                 String regionWktRaw = productionRequest.getString(("regionWKT"));
@@ -215,12 +217,16 @@ public class ProductMetadataBuilder {
                 this.processorId = getProcessorId(productionRequest);
                 this.productionType = parseProductionType(productionRequest.getString("productionType"));
                 this.outputFormat = productionRequest.getString("outputFormat");
-            } catch (ProductionException exception) {
+            } catch (ProductionException | UnsupportedEncodingException exception) {
                 throw new ProductMetadataException("Unable to create product metadata", exception);
             }
         } else {
+            try {
+                this.productionName = encodeSpecialCharacters((String) processParameters.get("productionName"));
+            } catch (UnsupportedEncodingException exception) {
+                throw new ProductMetadataException("Unable to create product metadata", exception);
+            }
             this.jobFinishTime = getDateInXmlGregorianCalendarFormat(new Date()).toString();
-            this.productionName = (String) processParameters.get("productionName");
             this.collectionUrl = getBaseStagingUrl() + "/" + productOutputDir + "/";
             this.processName = processor.getIdentifier().split("~")[2];
             this.inputDatasetName = (String) processParameters.get("sourceProduct");
@@ -237,6 +243,10 @@ public class ProductMetadataBuilder {
         this.productList = createProductList();
         this.quickLookProductUrlList = createQuickLookProductUrlList();
         return new ProductMetadata(this);
+    }
+
+    private String encodeSpecialCharacters(String name) throws UnsupportedEncodingException {
+        return URLEncoder.encode(name, "UTF-8");
     }
 
     private String getProcessorId(ProductionRequest productionRequest) throws ProductionException {

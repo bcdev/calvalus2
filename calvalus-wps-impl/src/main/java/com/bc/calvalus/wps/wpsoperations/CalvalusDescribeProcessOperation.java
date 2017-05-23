@@ -14,14 +14,12 @@ import com.bc.calvalus.wps.exceptions.ProductSetsNotAvailableException;
 import com.bc.calvalus.wps.exceptions.WpsProcessorNotFoundException;
 import com.bc.calvalus.wps.utils.ProcessorNameConverter;
 import com.bc.wps.api.WpsRequestContext;
-import com.bc.wps.api.schema.CRSsType;
 import com.bc.wps.api.schema.ComplexDataCombinationType;
 import com.bc.wps.api.schema.ComplexDataCombinationsType;
 import com.bc.wps.api.schema.ComplexDataDescriptionType;
 import com.bc.wps.api.schema.InputDescriptionType;
 import com.bc.wps.api.schema.OutputDescriptionType;
 import com.bc.wps.api.schema.ProcessDescriptionType;
-import com.bc.wps.api.schema.SupportedCRSsType;
 import com.bc.wps.api.schema.SupportedComplexDataInputType;
 import com.bc.wps.api.schema.SupportedComplexDataType;
 import com.bc.wps.api.schema.ValueType;
@@ -112,28 +110,6 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         return localProcessors;
     }
 
-    private InputDescriptionType getBoundingBoxInputType() {
-        InputDescriptionType regionBoundingBox = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("regionWKT")
-                    .withTitle("Region with bounding box")
-                    .withAbstract("The spatial range in the format of bounding box. Use LowerCorner and UpperCorner (a pair of double values) " +
-                                  "to specify the box. Example: <LowerCorner>100.74453 -10.0000</LowerCorner><UpperCorner>110.25000 0.12443</UpperCorner>")
-                    .withDataType("string")
-                    .build();
-
-        SupportedCRSsType boundingBox = new SupportedCRSsType();
-        SupportedCRSsType.Default defaultBoundingBox = new SupportedCRSsType.Default();
-        defaultBoundingBox.setCRS("urn:ogc:def:crs:EPSG:6:6:4326");
-        boundingBox.setDefault(defaultBoundingBox);
-        CRSsType supportedBoundingBox = new CRSsType();
-        supportedBoundingBox.getCRS().add("urn:ogc:def:crs:EPSG:6:6:4326");
-        boundingBox.setSupported(supportedBoundingBox);
-        regionBoundingBox.setBoundingBoxData(boundingBox);
-        regionBoundingBox.setLiteralData(null);
-        return regionBoundingBox;
-    }
-
     private List<ProcessDescriptionType> getMultipleProcessType(List<WpsProcess> processes)
                 throws ProductSetsNotAvailableException, IOException {
         List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
@@ -206,11 +182,11 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         allowedQuotationFlagValues.add(allowedQuotationFlagTrue);
         allowedQuotationFlagValues.add(allowedQuotationFlagFalse);
         InputDescriptionType quotationFlagInput = InputDescriptionTypeBuilder.create().
-                withIdentifier("quotation").
-                withTitle("Job Quotation").
-                withAbstract("A flag to indicate whether this request is a quotation request or the actual processing request. Use \'true\' if this is a quotation request, \'false\' if it is a real processing request").
-                withDataType("string").
-                withAllowedValues(allowedQuotationFlagValues).build();
+                    withIdentifier("quotation").
+                    withTitle("Job Quotation").
+                    withAbstract("A flag to indicate whether this request is a quotation request or the actual processing request. Use \'true\' if this is a quotation request, \'false\' if it is a real processing request").
+                    withDataType("string").
+                    withAllowedValues(allowedQuotationFlagValues).build();
         dataInputs.getInput().add(quotationFlagInput);
 
         InputDescriptionType productionNameInput = InputDescriptionTypeBuilder
@@ -285,23 +261,23 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         dataInputs.getInput().add(inputDataSetName);
 
         // MB, 2017-04-16: needs to be included only if input is time series, may be left empty
-        if (! "urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
+        if (!"urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
             InputDescriptionType minDate = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("minDate")
-                    .withTitle("Date from")
-                    .withAbstract("Start date of period to be processed (leave empty if input is not a time series)")
-                    .withDataType("string")
-                    .build();
+                        .create()
+                        .withIdentifier("minDate")
+                        .withTitle("Date from")
+                        .withAbstract("Start date of period to be processed (leave empty if input is not a time series)")
+                        .withDataType("string")
+                        .build();
             dataInputs.getInput().add(minDate);
 
             InputDescriptionType maxDate = InputDescriptionTypeBuilder
-                    .create()
-                    .withIdentifier("maxDate")
-                    .withTitle("Date to")
-                    .withAbstract("End date (inclusive) of the period to be processed (leave empty if input is not a time series)")
-                    .withDataType("string")
-                    .build();
+                        .create()
+                        .withIdentifier("maxDate")
+                        .withTitle("Date to")
+                        .withAbstract("End date (inclusive) of the period to be processed (leave empty if input is not a time series)")
+                        .withDataType("string")
+                        .build();
             dataInputs.getInput().add(maxDate);
         }
 
@@ -324,9 +300,6 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     .withDataType("string")
                     .build();
         dataInputs.getInput().add(regionWkt);
-
-        InputDescriptionType regionBoundingBox = getBoundingBoxInputType();
-        dataInputs.getInput().add(regionBoundingBox);
 
         ProcessorDescriptor.ParameterDescriptor[] parameterDescriptors = processor.getParameterDescriptors();
         if (parameterDescriptors != null) {
@@ -354,20 +327,20 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
         }
 
 // MB, 2017-04-16: introduces new parameter spatioTemporalAggregation with default structure from processor descriptor property
-        if (! "urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
+        if (!"urbantep-local~1.0~Subset".equals(processor.getIdentifier())) {
 //            InputDescriptionType l3ParametersComplexType = getL3ParametersComplexTypeWithSchema((CalvalusProcessor) processor,
 //                    PropertiesWrapper.get("wps.l3.parameters.schema.location"));
 //            dataInputs.getInput().add(l3ParametersComplexType);
             String parameters = processor.getJobConfiguration().get("calvalus.wps.spatioTemporalAggregation");
             if (parameters != null) {
                 InputDescriptionType aggregationParameters = InputDescriptionTypeBuilder
-                        .create()
-                        .withIdentifier("spatioTemporalAggregationParameters")
-                        .withTitle("Parameters for spatio-temporal aggregation")
-                        .withAbstract("Parameters for spatio-temporal aggregation, optional, with defaults")
-                        .withDefaultValue(parameters)
-                        .withDataType("string")
-                        .build();
+                            .create()
+                            .withIdentifier("spatioTemporalAggregationParameters")
+                            .withTitle("Parameters for spatio-temporal aggregation")
+                            .withAbstract("Parameters for spatio-temporal aggregation, optional, with defaults")
+                            .withDefaultValue(parameters)
+                            .withDataType("string")
+                            .build();
                 dataInputs.getInput().add(aggregationParameters);
             }
         }
@@ -393,8 +366,8 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
                     .withDataType("string");
         if (!allowedValues.isEmpty()) {
             calvalusOutputFormatBuilder = calvalusOutputFormatBuilder
-                    .withAllowedValues(allowedValues)
-                    .withDefaultValue(((ValueType) allowedValues.get(0)).getValue());
+                        .withAllowedValues(allowedValues)
+                        .withDefaultValue(((ValueType) allowedValues.get(0)).getValue());
         }
         InputDescriptionType calvalusOutputFormat = calvalusOutputFormatBuilder.build();
         dataInputs.getInput().add(calvalusOutputFormat);

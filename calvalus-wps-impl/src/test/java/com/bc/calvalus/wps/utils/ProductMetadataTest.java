@@ -34,7 +34,6 @@ public class ProductMetadataTest {
     @Before
     public void setUp() throws Exception {
         PropertiesWrapper.loadConfigFile("calvalus-wps-test.properties");
-        configureMockProduction();
         configureMockServerContext();
     }
 
@@ -52,6 +51,7 @@ public class ProductMetadataTest {
 
     @Test
     public void canCreateProductMetadata() throws Exception {
+        configureMockProduction("TEP Subset test");
         List<File> mockProductionFileList = new ArrayList<>();
         File mockFile1 = getMockFile("result1.nc", 1000000000L);
         mockProductionFileList.add(mockFile1);
@@ -73,7 +73,7 @@ public class ProductMetadataTest {
         Map<String, Object> contextMap = productMetadata.getContextMap();
         assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
         assertThat(contextMap.get("productOutputDir"), equalTo("user/20160317_10000000"));
-        assertThat(contextMap.get("productionName"), equalTo("TEP Subset test"));
+        assertThat(contextMap.get("productionName"), equalTo("TEP+Subset+test"));
         assertThat(contextMap.get("processName"), equalTo("Subset"));
         assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
         assertThat(contextMap.get("regionWkt"), equalTo("-10 100 0 100 0 110 -10 110 -10 100"));
@@ -109,6 +109,35 @@ public class ProductMetadataTest {
         assertThat(quickLookUrlList.get(0), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000/quicklook.png"));
     }
 
+    @Test
+    public void canEncodeProductionNameWithSpecialChars() throws Exception {
+        configureMockProduction("http://catalog.terradue.com/urban-bc/search?format=json&uid=tep inverted timescan Dakar/tep_user/20170427185240_L3_130ec6a9dc24be");
+        List<File> mockProductionFileList = new ArrayList<>();
+
+        ProductMetadata productMetadata = ProductMetadataBuilder.create()
+                    .withProduction(mockProduction)
+                    .withProductionResults(mockProductionFileList)
+                    .withServerContext(mockServerContext)
+                    .build();
+
+        Map<String, Object> contextMap = productMetadata.getContextMap();
+        assertThat(contextMap.get("jobFinishTime"), equalTo("2016-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("productOutputDir"), equalTo("user/20160317_10000000"));
+        assertThat(contextMap.get("productionName"), equalTo("http%3A%2F%2Fcatalog.terradue.com%2Furban-bc%2Fsearch%3Fformat%3Djson%26uid%3Dtep+inverted+timescan+Dakar%2Ftep_user%2F20170427185240_L3_130ec6a9dc24be"));
+        assertThat(contextMap.get("processName"), equalTo("Subset"));
+        assertThat(contextMap.get("inputDatasetName"), equalTo("Urban Footprint Global (Urban TEP)"));
+        assertThat(contextMap.get("regionWkt"), equalTo("-10 100 0 100 0 110 -10 110 -10 100"));
+        assertThat(contextMap.get("startDate"), equalTo("2000-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("stopDate"), equalTo("2020-01-01T01:00:00.000+01:00"));
+        assertThat(contextMap.get("collectionUrl"), equalTo("http://www.brockmann-consult.de:80/bc-wps/staging/user/20160317_10000000"));
+        assertThat(contextMap.get("processorVersion"), equalTo("1.0"));
+        assertThat(contextMap.get("productionType"), equalTo("2"));
+        assertThat(contextMap.get("outputFormat"), equalTo("NetCDF4"));
+
+        List productionList = (List) contextMap.get("productList");
+        assertThat(productionList.size(), equalTo(0));
+    }
+
     private File getMockFile(String name, long size) {
         File mockFile1 = mock(File.class);
         when(mockFile1.getName()).thenReturn(name);
@@ -116,7 +145,7 @@ public class ProductMetadataTest {
         return mockFile1;
     }
 
-    private void configureMockProduction() throws ProductionException {
+    private void configureMockProduction(String productionName) throws ProductionException {
         mockProduction = mock(Production.class);
 
         ProductionRequest mockProductionRequest = mock(ProductionRequest.class);
@@ -133,7 +162,7 @@ public class ProductMetadataTest {
         when(mockProductionRequest.createFromMinMax()).thenReturn(mockDateRange);
         when(mockProduction.getProductionRequest()).thenReturn(mockProductionRequest);
 
-        when(mockProduction.getName()).thenReturn("TEP Subset test");
+        when(mockProduction.getName()).thenReturn(productionName);
         when(mockProduction.getId()).thenReturn("20160429140605_L2Plus_16bd8f26b258fc");
         when(mockProduction.getStagingPath()).thenReturn("user/20160317_10000000");
 

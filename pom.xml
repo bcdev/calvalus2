@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.11-SNAPSHOT</version>
+    <version>2.12-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,7 +12,7 @@
 
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
-        <calvalus.version>2.11-SNAPSHOT</calvalus.version>
+        <calvalus.version>2.12-SNAPSHOT</calvalus.version>
         <snap.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
         <ceres.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
