@@ -1,10 +1,29 @@
+/*
+ * Copyright (C) 2017 Brockmann Consult GmbH (info@brockmann-consult.de) 
+ *
+ * This program is free software; you can redistribute it and/or modify it 
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or 
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for 
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along 
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.Element;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.FileUpload;
 import com.google.gwt.user.client.ui.FormPanel;
 import com.google.gwt.user.client.ui.HTML;
@@ -13,34 +32,33 @@ import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Manages a list of files that can be uploaded and remove by the user.
  */
-class UserManagedFiles {
+class ManagedFiles {
 
     private final BackendServiceAsync backendService;
-    private final Map<String,String> items;
+    private final List<Entry> userEntries;
+    private final List<Entry> systemEntries;
     private final ListBox contentListbox;
-    private final String baseDir;
+    private final String userBaseDir;
     private final String what;
     private final FileUpload fileUpload;
     private final FormPanel uploadForm;
-    private final RemoveAction removeAction;
-    private final RemoveAllAction removeAllAction;
     private final AddAction addAction;
     private final Widget[] uploadDescriptions;
+    
+    private Button removeButton;
+    private Button removeAllButton;
 
-    UserManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String baseDir, String what, Widget... uploadDescriptions) {
+    ManagedFiles(BackendServiceAsync backendService, ListBox contentListbox, String userBaseDir, String what, Widget... uploadDescriptions) {
         this.backendService = backendService;
         this.contentListbox = contentListbox;
-        this.items = new HashMap<>();
-        this.baseDir = baseDir;
+        this.userEntries = new ArrayList<>();
+        this.systemEntries = new ArrayList<>();
+        this.userBaseDir = userBaseDir;
         this.what = what;
         this.uploadDescriptions = uploadDescriptions;
 
@@ -50,21 +68,56 @@ class UserManagedFiles {
         uploadForm.setWidget(fileUpload);
 
         addAction = new AddAction();
-        removeAction = new RemoveAction();
-        removeAllAction = new RemoveAllAction();
-
         FileUploadManager.configureForm(uploadForm,
-                                        "dir=" + baseDir,
+                                        "dir=" + userBaseDir,
                                         addAction,
                                         addAction);
+        contentListbox.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                removeButton.setEnabled(userEntries.size() > 0 && contentListbox.getSelectedIndex() != -1);    
+            }
+        });
+    }
+    
+    public void setAddButton(Button button) {
+        button.addClickHandler(addAction);
     }
 
-
-    public void updateList() {
-        backendService.listUserFiles(baseDir, new AsyncCallback<String[]>() {
+    public void setRemoveButton(Button button) {
+        button.setEnabled(false);
+        button.addClickHandler(new RemoveAction());
+        this.removeButton = button;
+    }
+    
+    public void setRemoveAllButton(Button button) {
+        button.setEnabled(false);
+        button.addClickHandler(new RemoveAllAction());
+        this.removeAllButton = button;
+    }
+    
+    public void updateUserFiles(boolean selectedAnEntry) {
+        backendService.listUserFiles(userBaseDir, new AsyncCallback<String[]>() {
             @Override
             public void onSuccess(String[] filePaths) {
-                setItems(filePaths);
+                updateFileList(userBaseDir, true, filePaths);
+                if (selectedAnEntry && contentListbox.getSelectedIndex() == -1 && contentListbox.getItemCount() > 0) {
+                    contentListbox.setSelectedIndex(0);
+                }
+            }
+
+            @Override
+            public void onFailure(Throwable caught) {
+                Dialog.error("Error", "Failed to get list of " + what + " files from server.");
+            }
+        });
+    }
+
+    public void loadSystemFiles(String systemBaseDir, String what) {
+        backendService.listSystemFiles(systemBaseDir, new AsyncCallback<String[]>() {
+            @Override
+            public void onSuccess(String[] filePaths) {
+                updateFileList(systemBaseDir, false, filePaths);
             }
 
             @Override
@@ -75,10 +128,10 @@ class UserManagedFiles {
     }
 
     private void removeRecordSource(final String fileToRemove) {
-        backendService.removeUserFile(baseDir + "/" + fileToRemove, new AsyncCallback<Boolean>() {
+        backendService.removeUserFile(userBaseDir + "/" + fileToRemove, new AsyncCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean removed) {
-                updateList();
+                updateUserFiles(true);
             }
 
             @Override
@@ -91,12 +144,12 @@ class UserManagedFiles {
     private void removeRecordSources(final String...filesToRemove) {
         String[] pathsToRemove = new String[filesToRemove.length];
         for (int i = 0; i < pathsToRemove.length; i++) {
-            pathsToRemove[i] = baseDir + "/" + filesToRemove[i];
+            pathsToRemove[i] = userBaseDir + "/" + filesToRemove[i];
         }
         backendService.removeUserFiles(pathsToRemove, new AsyncCallback<Boolean>() {
             @Override
             public void onSuccess(Boolean removed) {
-                updateList();
+                updateUserFiles(false);
             }
 
             @Override
@@ -107,38 +160,69 @@ class UserManagedFiles {
     }
 
     // javascript to add tool tips to listbox entries
-    private static native void addItemWithTitle(Element element, String name, String value)/*-{
+    private static native void addItemWithTitle(Element element, String displayText, String value)/*-{
         var opt = $doc.createElement("OPTION");
         opt.title = value;
-        opt.text = name;
+        opt.text = displayText;
         opt.value = value;
         element.options.add(opt);
 
     }-*/;
 
-    private void setItems(String[] filePaths) {
-        for (String path : items.keySet()) {
-            contentListbox.removeItem(getIndexOf(path));
+    private void updateFileList(String baseDir, boolean isUserFile, String[] filePaths) {
+        String oldSelectedValue = contentListbox.getSelectedValue();
+        // remove old entries
+        if (isUserFile) {
+            addFileEntries(userEntries, baseDir, false, filePaths);
+        } else {
+            addFileEntries(systemEntries, baseDir, true, filePaths);
         }
-        items.clear();
-        for (String filePath : filePaths) {
-            String fileName = filePath.substring(filePath.lastIndexOf("/") + 1);
-            items.put(filePath, fileName);
-            //contentListbox.addItem(fileName, filePath);
-            addItemWithTitle(contentListbox.getElement(), fileName, filePath);
+        contentListbox.clear();
+        int selectedIndex = -1;
+        int index = 0;
+        for (Entry entry : userEntries) {
+            addItemWithTitle(contentListbox.getElement(), entry.displayText, entry.path);
+            if (oldSelectedValue != null && oldSelectedValue.equals(entry.path)) {
+                selectedIndex = index;
+            }
+            index++;
         }
-        if (contentListbox.getItemCount() > 0) {
-            contentListbox.setSelectedIndex(0);
+        for (Entry entry : systemEntries) {
+            addItemWithTitle(contentListbox.getElement(), entry.displayText, entry.path);
+            if (oldSelectedValue != null && oldSelectedValue.equals(entry.path)) {
+                selectedIndex = index;
+            }
+            index++;
+        }
+        if (selectedIndex != -1) {
+            contentListbox.setSelectedIndex(selectedIndex);
+        }
+        if (removeButton != null) {
+            removeButton.setEnabled(userEntries.size() > 0 && selectedIndex != -1);
+        }
+        if (removeAllButton != null) {
+            removeAllButton.setEnabled(userEntries.size() > 0);
         }
     }
 
-    private int getIndexOf(String path) {
-        for (int i=0; i<contentListbox.getItemCount(); ++i) {
-            if (path.equals(contentListbox.getValue(i))) {
-                return i;
+    private static void addFileEntries(List<Entry> entries, String baseDir, boolean isSystem, String[] pathes) {
+        entries.clear();
+        for (String path : pathes) {
+
+            int baseDirPos = path.lastIndexOf("/" + baseDir + "/");
+            String filename;
+            if (baseDirPos >= 0) {
+                filename = path.substring(baseDirPos + baseDir.length() + 2);
+            } else {
+                filename = path.substring(path.lastIndexOf("/") + 1);
             }
+            String displayText = filename;
+            if (isSystem) {
+                displayText = "(system) " + filename;
+            }
+            entries.add(new Entry(path, filename, displayText, isSystem));
         }
-        throw new IllegalArgumentException("cannot find path " + path + " in list box");
+        entries.sort(Comparator.comparing(e -> e.displayText));
     }
 
     public String getSelectedFilePath() {
@@ -146,23 +230,15 @@ class UserManagedFiles {
         return selectedIndex >= 0 ? contentListbox.getValue(selectedIndex) : "";
     }
 
-    ClickHandler getRemoveAction() {
-        return removeAction;
-    }
-
-    ClickHandler getRemoveAllAction() {
-        return removeAllAction;
-    }
-
-    ClickHandler getAddAction() {
-        return addAction;
-    }
-
-
-    public String getSelectedFilename() {
+    public String getSelectedUserFilename() {
         int selectedIndex = contentListbox.getSelectedIndex();
         if (selectedIndex >= 0) {
-            return contentListbox.getItemText(selectedIndex);
+            String path = contentListbox.getValue(selectedIndex);
+            for (Entry entry : userEntries) {
+                if (entry.path.equals(path)) {
+                    return entry.filename;
+                }
+            }
         }
         return null;
     }
@@ -175,6 +251,20 @@ class UserManagedFiles {
             }
         }
         // TODO handle failure
+    }
+
+    private static class Entry {
+        final String path;
+        final String filename;
+        final String displayText;
+        final boolean isSystemFile;
+
+        public Entry(String path, String filename, String displayText, boolean isSystemFile) {
+            this.path = path;
+            this.filename = filename;
+            this.displayText = displayText;
+            this.isSystemFile = isSystemFile;
+        }
     }
 
     private class AddAction implements ClickHandler, FormPanel.SubmitHandler, FormPanel.SubmitCompleteHandler {
@@ -230,7 +320,7 @@ class UserManagedFiles {
         @Override
         public void onSubmitComplete(FormPanel.SubmitCompleteEvent event) {
             closeDialogs();
-            updateList();
+            updateUserFiles(true);
             Dialog.info("File Upload", "File successfully uploaded.");
         }
 
@@ -245,10 +335,10 @@ class UserManagedFiles {
 
         @Override
         public void onClick(ClickEvent event) {
-            final String recordSource = getSelectedFilename();
-            if (! items.containsKey(getSelectedFilePath())) {
+            final String recordSource = getSelectedUserFilename();
+            if (recordSource == null) {
                 Dialog.error("Remove File", "Cannot remove non-user entry.");
-            } else if (recordSource != null) {
+            } else {
                 Dialog.ask("Remove File",
                            new HTML("The file '" + recordSource + "' will be permanently deleted.<br/>" +
                                     "Do you really want to continue?"),
@@ -258,9 +348,6 @@ class UserManagedFiles {
                                    removeRecordSource(recordSource);
                                }
                            });
-            } else {
-                Dialog.error("Remove File",
-                             "No file selected.");
             }
         }
     }
@@ -269,8 +356,11 @@ class UserManagedFiles {
 
         @Override
         public void onClick(ClickEvent event) {
-            if (!items.isEmpty()) {
-                String[] filePaths = items.values().toArray(new String[0]);
+            if (!userEntries.isEmpty()) {
+                String[] filePaths = new String[userEntries.size()];
+                for (int i = 0; i < userEntries.size(); i++) {
+                    filePaths[i] = userEntries.get(i).path;
+                }
                 Dialog.ask("Remove all Files",
                            new HTML("All files will be permanently deleted.<br/>" +
                                     "Do you really want to continue?"),

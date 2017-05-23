@@ -1,8 +1,12 @@
 package com.bc.calvalus.portal.client;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Document;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.maps.client.MapOptions;
 import com.google.gwt.maps.client.MapWidget;
 import com.google.gwt.maps.client.base.LatLng;
@@ -29,7 +33,7 @@ public class MAConfigForm extends Composite {
     public static final String SYSTEM_POINTDATA_DIR = "pointdata";
 
     private final PortalContext portalContext;
-    private final UserManagedFiles userManagedContent;
+    private final ManagedFiles managedFiles;
 
     interface TheUiBinder extends UiBinder<Widget, MAConfigForm> {
 
@@ -37,7 +41,7 @@ public class MAConfigForm extends Composite {
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
-    @UiField
+    @UiField(provided = true)
     ListBox recordSources;
     @UiField
     Button addRecordSourceButton;
@@ -72,6 +76,15 @@ public class MAConfigForm extends Composite {
     public MAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
 
+        // http://stackoverflow.com/questions/22629632/gwt-listbox-onchangehandler
+        // fire selection event even when set programmatically
+        recordSources = new ListBox() {
+            @Override
+            public void setSelectedIndex(int index) {
+                super.setSelectedIndex(index);
+                DomEvent.fireNativeEvent(Document.get().createChangeEvent(), this);
+            }
+        };
         initWidget(uiBinder.createAndBindUi(this));
 
         macroPixelSize.setValue(5);
@@ -104,23 +117,28 @@ public class MAConfigForm extends Composite {
                 "<li><b>dateFormat</b> The <a href=\"http://docs.oracle.com/javase/6/docs/api/java/text/SimpleDateFormat.html\">dateformat</a> for parsing the time.</li>" +
                 "</ol>");
 
-        userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  recordSources,
-                                                  POINT_DATA_DIR,
-                                                  "in-situ or point data",
-                                                  description1,
-                                                  description2);
-        final SystemManagedFiles systemManagedFiles = new SystemManagedFiles(portalContext.getBackendService(),
-                                                                             recordSources,
-                                                                             SYSTEM_POINTDATA_DIR,
-                                                                             "system point data");
-        systemManagedFiles.updateList();
-
-        addRecordSourceButton.addClickHandler(userManagedContent.getAddAction());
-        removeRecordSourceButton.addClickHandler(userManagedContent.getRemoveAction());
+        managedFiles = new ManagedFiles(portalContext.getBackendService(),
+                                        recordSources,
+                                        POINT_DATA_DIR,
+                                        "in-situ or point data",
+                                        description1,
+                                        description2);
+        managedFiles.setAddButton(addRecordSourceButton);
+        managedFiles.setRemoveButton(removeRecordSourceButton);
+        recordSources.addChangeHandler(new ChangeHandler() {
+            @Override
+            public void onChange(ChangeEvent event) {
+                boolean hasSelection = recordSources.getSelectedIndex() != -1;
+                checkRecordSourceButton.setEnabled(hasSelection);
+                viewRecordSourceButton.setEnabled(hasSelection);
+            }
+        });
         checkRecordSourceButton.addClickHandler(new CheckRecordSourceAction());
+        checkRecordSourceButton.setEnabled(false);
         viewRecordSourceButton.addClickHandler(new ViewRecordSourceAction());
-        userManagedContent.updateList();
+        viewRecordSourceButton.setEnabled(false);
+        managedFiles.loadSystemFiles(SYSTEM_POINTDATA_DIR,"system point data");
+        managedFiles.updateUserFiles(true);
     }
 
     private void checkRecordSource(final String recordSource) {
@@ -209,7 +227,7 @@ public class MAConfigForm extends Composite {
                     "Alternatively the difference can be given in full days using the 'd' suffix e.g. 0d,1d,...");
         }
 
-        if (userManagedContent.getSelectedFilePath().isEmpty()) {
+        if (managedFiles.getSelectedFilePath().isEmpty()) {
             throw new ValidationException(maxTimeDifference, "In-situ record source must be given.");
         }
     }
@@ -247,7 +265,7 @@ public class MAConfigForm extends Composite {
         parameters.put("filterOverlapping", filterOverlapping.getValue().toString());
         parameters.put("onlyExtractComplete", onlyExtractComplete.getValue().toString());
         parameters.put("outputGroupName", outputGroupName.getText());
-        parameters.put("recordSourceUrl", userManagedContent.getSelectedFilePath());
+        parameters.put("recordSourceUrl", managedFiles.getSelectedFilePath());
         return parameters;
     }
 
@@ -262,7 +280,7 @@ public class MAConfigForm extends Composite {
         outputGroupName.setValue(parameters.getOrDefault("outputGroupName", ""));
         String recordSourceUrl = parameters.get("recordSourceUrl");
         if (recordSourceUrl != null) {
-            userManagedContent.setSelectedFilePath(recordSourceUrl);
+            managedFiles.setSelectedFilePath(recordSourceUrl);
         }
     }
 
@@ -272,7 +290,13 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            checkRecordSource(userManagedContent.getSelectedFilePath());
+            String selectedFilePath = managedFiles.getSelectedFilePath();
+            if (selectedFilePath.isEmpty()) {
+                Dialog.error("Check record source",
+                                             "No file selected.");
+            } else {
+                checkRecordSource(selectedFilePath);
+            }
         }
     }
 
@@ -281,7 +305,13 @@ public class MAConfigForm extends Composite {
         @Override
         public void onClick(ClickEvent event) {
             // should be made async!
-            viewRecordSource(userManagedContent.getSelectedFilePath());
+            String selectedFilePath = managedFiles.getSelectedFilePath();
+            if (selectedFilePath.isEmpty()) {
+                Dialog.error("View record source",
+                                             "No file selected.");
+            } else {
+                viewRecordSource(selectedFilePath);
+            }
         }
     }
 

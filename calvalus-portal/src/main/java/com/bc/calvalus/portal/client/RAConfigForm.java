@@ -70,7 +70,7 @@ public class RAConfigForm extends Composite {
 
     private final PortalContext portalContext;
     private final RABandTable bandTable;
-    private final UserManagedFiles userManagedContent;
+    private final ManagedFiles managedFiles;
 
     interface TheUiBinder extends UiBinder<Widget, RAConfigForm> {
     }
@@ -163,14 +163,14 @@ public class RAConfigForm extends Composite {
                                              "and SNAP placemark files (<b>*.placemark</b>).");
         
         
-        userManagedContent = new UserManagedFiles(portalContext.getBackendService(),
-                                                  regionSourcesList,
-                                                  REGION_DATA_DIR,
-                                                  "ESRI shapefiles",
-                                                  description1);
-        addRegionSource.addClickHandler(userManagedContent.getAddAction());
-        removeRegionSource.addClickHandler(userManagedContent.getRemoveAction());
-        userManagedContent.updateList();
+        managedFiles = new ManagedFiles(portalContext.getBackendService(),
+                                        regionSourcesList,
+                                        REGION_DATA_DIR,
+                                        "ESRI shapefiles",
+                                        description1);
+        managedFiles.setAddButton(addRegionSource);
+        managedFiles.setRemoveButton(removeRegionSource);
+        managedFiles.updateUserFiles(false);
 
         regionSourcesList.addChangeHandler(event -> loadShapefileDetails());
         ChangeHandler shapeRegexHandler = event -> updateShapefileFilter();
@@ -182,6 +182,7 @@ public class RAConfigForm extends Composite {
                 updateShapefileFilter();   
             }
         });
+        enableShapfileDetails(false);
 
         bandTable.initStyle(style);
         addBandButton.addClickHandler(new ClickHandler() {
@@ -213,9 +214,9 @@ public class RAConfigForm extends Composite {
 
     private void loadShapefileDetails() {
         // load attribute names + values
-        String selectedFilePath = userManagedContent.getSelectedFilePath();
+        enableShapfileDetails(false);
+        String selectedFilePath = managedFiles.getSelectedFilePath();
         if (!selectedFilePath.isEmpty()) {
-            enableShapfileDetails(false);
             portalContext.getBackendService().loadRegionDataInfo(selectedFilePath, new AsyncCallback<DtoRegionDataInfo>() {
                 @Override
                 public void onFailure(Throwable caught) {
@@ -432,7 +433,7 @@ public class RAConfigForm extends Composite {
 //        }
     }
     
-    // fires chage event after each key press
+    // fires change event after each key press
     // http://stackoverflow.com/questions/3184648/instant-value-change-handler-on-a-gwt-textbox
     private static class InstantTextBox extends TextBox {
     
