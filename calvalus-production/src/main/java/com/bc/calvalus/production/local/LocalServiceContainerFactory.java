@@ -24,9 +24,9 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
+import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.ServiceContainerFactory;
-import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
 import com.bc.calvalus.staging.SimpleStagingService;
@@ -133,7 +133,8 @@ public class LocalServiceContainerFactory implements ServiceContainerFactory {
                                                                     "org.hsqldb.jdbcDriver",
                                                                     "jdbc:hsqldb:file:" + databaseFile.getPath(), "SA", "",
                                                                     !databaseLogFile.exists());
-        ProductionServiceImpl productionService = new ProductionServiceImpl(fileSystemService,
+        ProductionServiceImpl productionService = new ProductionServiceImpl(false,
+                                                                            fileSystemService,
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,

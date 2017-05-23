@@ -12,8 +12,8 @@ import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
-import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -214,7 +214,8 @@ public class ProductionTool {
             ProductionException,
             InterruptedException {
         say("Ordering production...");
-        ProductionResponse productionResponse = productionService.orderProduction(request);
+        // todo - get encrypted SAML token
+        ProductionResponse productionResponse = productionService.orderProduction(request, "");
         Production production = productionResponse.getProduction();
         say("Production successfully ordered. The production ID is: " + production.getId());
         observeProduction(productionService, production);

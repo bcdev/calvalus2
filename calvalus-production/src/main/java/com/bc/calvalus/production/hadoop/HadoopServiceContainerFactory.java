@@ -1,18 +1,18 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
@@ -37,14 +37,14 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
 
     @Override
     public ServiceContainer create(Map<String, String> serviceConfiguration,
-                                    File appDataDir,
-                                    File stagingDir) throws ProductionException {
+                                   File appDataDir,
+                                   File stagingDir) throws ProductionException {
 
         // Prevent Windows from using ';' as path separator
         System.setProperty("path.separator", ":");
         String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
         String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
-                                                               HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
+                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
@@ -60,14 +60,16 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                 String databaseUrl = "jdbc:hsqldb:file:" + new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME).getPath();
                 boolean databaseExists = new File(appDataDir, DEFAULT_PRODUCTIONS_DB_NAME + ".properties").exists();
                 productionStore = SqlProductionStore.create(processingService,
-                                                            "org.hsqldb.jdbcDriver",
-                                                            databaseUrl,
-                                                            "SA", "",
-                                                            !databaseExists);
+                        "org.hsqldb.jdbcDriver",
+                        databaseUrl,
+                        "SA", "",
+                        !databaseExists);
             }
+            boolean isSamlAuthentication = Boolean.parseBoolean(serviceConfiguration.getOrDefault("calvalus.saml.authentication", "true"));
             StagingService stagingService = new SimpleStagingService(stagingDir, 3);
             ProductionType[] productionTypes = getProductionTypes(hdfsFileSystemService, processingService, stagingService);
-            ProductionService productionService = new ProductionServiceImpl(hdfsFileSystemService,
+            ProductionService productionService = new ProductionServiceImpl(isSamlAuthentication,
+                                                                            hdfsFileSystemService,
                                                                             processingService,
                                                                             stagingService,
                                                                             productionStore,
@@ -80,8 +82,8 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
     }
 
     private static ProductionType[] getProductionTypes(FileSystemService fileSystemServiceService,
-                                  HadoopProcessingService processingService,
-                                  StagingService stagingService) {
+                                                       HadoopProcessingService processingService,
+                                                       StagingService stagingService) {
         ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
         ServiceLoader<ProductionTypeSpi> productionTypes = ServiceLoader.load(ProductionTypeSpi.class, contextClassLoader);
         ArrayList<ProductionType> list = new ArrayList<>();

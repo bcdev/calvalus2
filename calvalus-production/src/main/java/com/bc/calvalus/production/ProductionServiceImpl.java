@@ -14,17 +14,27 @@ import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.commons.codec.binary.Hex;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Observer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -39,12 +49,15 @@ import java.util.regex.Pattern;
  */
 public class ProductionServiceImpl extends Observable implements ProductionService {
 
+    public static final String SEPARATOR = "<bc-encryption-separator>";
+
     public static enum Action {
         CANCEL,
         DELETE,
         RESTART,// todo - implement restart (nf)
     }
 
+    private final boolean isSamlAuthentication;
     private final FileSystemService fileSystemService;
     private final ProcessingService processingService;
     private final StagingService stagingService;
@@ -56,18 +69,20 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
 
-    public ProductionServiceImpl(FileSystemService fileSystemService,
+    public ProductionServiceImpl(boolean isSamlAuthentication,
+                                 FileSystemService fileSystemService,
                                  ProcessingService processingService,
                                  StagingService stagingService,
                                  ProductionStore productionStore,
                                  ProductionType... productionTypes) throws ProductionException {
+        this.isSamlAuthentication = isSamlAuthentication;
         this.fileSystemService = fileSystemService;
         this.productionStore = productionStore;
         this.processingService = processingService;
         this.stagingService = stagingService;
         this.productionTypes = productionTypes;
-        this.productionActionMap = new HashMap<String, Action>();
-        this.productionStagingsMap = new HashMap<String, Staging>();
+        this.productionActionMap = new HashMap<>();
+        this.productionStagingsMap = new HashMap<>();
         this.logger = CalvalusLogger.getLogger();
     }
 
@@ -100,7 +115,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     }
 
     @Override
-    public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
+    public ProductionResponse orderProduction(ProductionRequest productionRequest, String encryptedSamlToken) throws ProductionException {
         String user = productionRequest.getUserName();
         String type = productionRequest.getProductionType();
         logger.info("orderProduction: " + type + " (for " + user + ")");
@@ -109,6 +124,29 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
         Collections.sort(parametersKeys);
         for (String key : parametersKeys) {
             logger.info(key + " = " + parameters.get(key));
+        }
+
+        if (isSamlAuthentication) {
+            if (encryptedSamlToken == null) {
+                throw new ProductionException("SAML authentication necessary but no SAML token received.");
+            }
+
+            String authToken = new StringBuilder()
+                    .append(encryptedSamlToken)
+                    .append(SEPARATOR)
+                    .append(productionRequest.getUserName())
+                    .append(SEPARATOR)
+                    .append(productionRequest.getRegionName())
+                    .append(SEPARATOR)
+                    .append(productionRequest.getProductionType())
+                    .toString();
+            String encryptedAuthToken;
+            try {
+                encryptedAuthToken = encrypt(authToken);
+            } catch (Exception e) {
+                throw new ProductionException(e);
+            }
+            productionRequest.setAuthToken(encryptedAuthToken);
         }
 
         synchronized (this) {
@@ -121,9 +159,15 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
                 logger.log(Level.SEVERE, t.getMessage(), t);
                 throw new ProductionException(String.format("Failed to submit production: %s", t.getMessage()), t);
             }
+            production.getProductionRequest().removeAuthToken();
             productionStore.addProduction(production);
             return new ProductionResponse(production);
         }
+    }
+
+    //    @Override
+    public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
+        return orderProduction(productionRequest, null);
     }
 
     @Override
@@ -134,17 +178,16 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
             if (production != null) {
                 try {
                     if (production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                        && ((production.getStagingStatus().getState() == ProcessState.UNKNOWN
-                             && productionStagingsMap.get(production.getId()) == null))
+                            && ((production.getStagingStatus().getState() == ProcessState.UNKNOWN
+                            && productionStagingsMap.get(production.getId()) == null))
                             || production.getStagingStatus().getState() == ProcessState.ERROR
-                            || production.getStagingStatus().getState() == ProcessState.CANCELLED)
-                    {
+                            || production.getStagingStatus().getState() == ProcessState.CANCELLED) {
                         stageProductionResults(production);
                     }
                     count++;
                 } catch (ProductionException e) {
                     logger.log(Level.SEVERE, String.format("Failed to stage production '%s': %s",
-                                                           production.getId(), e.getMessage()), e);
+                            production.getId(), e.getMessage()), e);
                 }
             }
         }
@@ -252,7 +295,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
                         production.getWorkflow().kill();
                     } catch (WorkflowException e) {
                         logger.log(Level.SEVERE, String.format("Failed to kill production '%s': %s",
-                                                               production.getId(), e.getMessage()), e);
+                                production.getId(), e.getMessage()), e);
                     }
                 }
 
@@ -264,7 +307,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
         if (count < productionIds.length) {
             throw new ProductionException(
                     String.format("Only %d of %d production(s) have been killed. See server log for details.",
-                                  count, productionIds.length));
+                            count, productionIds.length));
         }
     }
 
@@ -302,9 +345,9 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
         // Copy result to staging area
         for (Production production : productions) {
             if (production.isAutoStaging()
-                && production.getProcessingStatus().getState() == ProcessState.COMPLETED
-                && production.getStagingStatus().getState() == ProcessState.UNKNOWN
-                && productionStagingsMap.get(production.getId()) == null) {
+                    && production.getProcessingStatus().getState() == ProcessState.COMPLETED
+                    && production.getStagingStatus().getState() == ProcessState.UNKNOWN
+                    && productionStagingsMap.get(production.getId()) == null) {
                 try {
                     stageProductionResults(production);
                 } catch (ProductionException e) {
@@ -352,7 +395,7 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
             }
         }
         throw new ProductionException(String.format("Unhandled production request of type '%s'",
-                                                    productionRequest.getProductionType()));
+                productionRequest.getProductionType()));
     }
 
     private synchronized void removeProduction(Production production) {
@@ -369,12 +412,12 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
             stagingService.deleteTree(production.getStagingPath());
         } catch (IOException e) {
             logger.log(Level.SEVERE, String.format("Failed to delete staging directory '%s' of production '%s': %s",
-                                                   production.getStagingPath(), production.getId(), e.getMessage()), e);
+                    production.getStagingPath(), production.getId(), e.getMessage()), e);
         }
     }
 
     private void deleteOutput(String outputDir, String userName) {
-        if (outputDir == null  || outputDir.isEmpty()) {
+        if (outputDir == null || outputDir.isEmpty()) {
             return;
         }
         try {
@@ -389,4 +432,79 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     public synchronized void setChanged() {
         super.setChanged();
     }
+
+
+    private static PublicKey getPublicKey() throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+        // todo - read public key correctly
+        byte[] keyBytes = Files.readAllBytes(Paths.get("d:\\workspace\\code\\testkey\\public_key.der"));
+
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
+
+        KeyFactory kf = KeyFactory.getInstance("RSA");
+        return kf.generatePublic(spec);
+    }
+
+    public static String encrypt(String plaintext) throws Exception {
+        Cipher encrypt = Cipher.getInstance("RSA");
+        encrypt.init(Cipher.ENCRYPT_MODE, getPublicKey());
+        byte[] bytes = plaintext.getBytes("UTF-8");
+
+        byte[] encrypted = blockCipher(encrypt, bytes, Cipher.ENCRYPT_MODE);
+
+        char[] encryptedTranspherable = Hex.encodeHex(encrypted);
+        return new String(encryptedTranspherable);
+    }
+
+    private static byte[] blockCipher(Cipher cipher, byte[] bytes, int mode) throws IllegalBlockSizeException, BadPaddingException {
+        // string initialize 2 buffers.
+        // scrambled will hold intermediate results
+        byte[] scrambled;
+
+        // toReturn will hold the total result
+        byte[] toReturn = new byte[0];
+        // if we encrypt we use 100 byte long blocks. Decryption requires 128 byte long blocks (because of RSA)
+        int length = (mode == Cipher.ENCRYPT_MODE) ? 100 : 128;
+
+        // another buffer. this one will hold the bytes that have to be modified in this step
+        byte[] buffer = new byte[length];
+
+        for (int i = 0; i < bytes.length; i++) {
+
+            // if we filled our buffer array we have our block ready for de- or encryption
+            if ((i > 0) && (i % length == 0)) {
+                //execute the operation
+                scrambled = cipher.doFinal(buffer);
+                // add the result to our total result.
+                toReturn = append(toReturn, scrambled);
+                // here we calculate the length of the next buffer required
+                int newlength = length;
+
+                // if newlength would be longer than remaining bytes in the bytes array we shorten it.
+                if (i + length > bytes.length) {
+                    newlength = bytes.length - i;
+                }
+                // clean the buffer array
+                buffer = new byte[newlength];
+            }
+            // copy byte into our buffer.
+            buffer[i % length] = bytes[i];
+        }
+
+        // this step is needed if we had a trailing buffer. should only happen when encrypting.
+        // example: we encrypt 110 bytes. 100 bytes per run means we "forgot" the last 10 bytes. they are in the buffer array
+        scrambled = cipher.doFinal(buffer);
+
+        // final step before we can return the modified data.
+        toReturn = append(toReturn, scrambled);
+
+        return toReturn;
+    }
+
+    private static byte[] append(byte[] prefix, byte[] suffix) {
+        byte[] toReturn = new byte[prefix.length + suffix.length];
+        System.arraycopy(prefix, 0, toReturn, 0, prefix.length);
+        System.arraycopy(suffix, 0, toReturn, prefix.length, suffix.length);
+        return toReturn;
+    }
+
 }

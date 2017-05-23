@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 
-import java.util.Observable;
 import java.util.Observer;
 
 /**
@@ -62,12 +61,14 @@ public interface ProductionService {
      * Orders a new productions.
      *
      * @param request The request.
+
+     * @param encryptedSamlToken The SAML token proving that user is authenticated to order the production.
      *
      * @return The response.
      *
      * @throws ProductionException If a service error occurred.
      */
-    ProductionResponse orderProduction(ProductionRequest request) throws ProductionException;
+    ProductionResponse orderProduction(ProductionRequest request, String encryptedSamlToken) throws ProductionException;
 
     /**
      * Requests cancellation of productions with given IDs.

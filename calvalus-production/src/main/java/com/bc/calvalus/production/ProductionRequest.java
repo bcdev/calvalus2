@@ -89,6 +89,14 @@ public class ProductionRequest implements XmlConvertible {
         return Collections.unmodifiableMap(productionParameters);
     }
 
+    public void setAuthToken(String authToken) {
+        productionParameters.put("authToken", authToken);
+    }
+
+    public void removeAuthToken() {
+        productionParameters.remove("authToken");
+    }
+
     public String getParameter(String name, boolean mandatory) throws ProductionException {
         String value = productionParameters.get(name);
         if (value == null && mandatory) {

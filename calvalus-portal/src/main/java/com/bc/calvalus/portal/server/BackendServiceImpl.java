@@ -366,11 +366,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
                                                                                          BackendServiceException {
         try {
-            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest));
+//            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest), retrieveSamlToken());
+            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest), "");
             return convert(productionResponse);
         } catch (ProductionException e) {
             throw convert(e);
         }
+    }
+
+    private void retrieveSamlToken() {
+        // todo
+
     }
 
     @Override
