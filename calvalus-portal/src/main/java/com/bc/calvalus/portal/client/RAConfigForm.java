@@ -159,14 +159,12 @@ public class RAConfigForm extends Composite {
         periodsCount.setEnabled(false);
         periodsListBox.setEnabled(false);
         
-        HTML description1 = new HTML("The supported file types are TAB-separated CSV (<b>*.txt</b>, <b>*.csv</b>)<br/>" +
-                                             "and SNAP placemark files (<b>*.placemark</b>).");
-        
+        HTML description1 = new HTML("The supported file types are ESRI shapefiles inside a zip.");
         
         managedFiles = new ManagedFiles(portalContext.getBackendService(),
                                         regionSourcesList,
                                         REGION_DATA_DIR,
-                                        "ESRI shapefiles",
+                                        "Region sources",
                                         description1);
         managedFiles.setAddButton(addRegionSource);
         managedFiles.setRemoveButton(removeRegionSource);

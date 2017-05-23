@@ -79,7 +79,7 @@
                 </table>
                 <hr/>
                 <g:VerticalPanel spacing="2">
-                    <g:Label>Regions sources:</g:Label>
+                    <g:Label>Region sources:</g:Label>
 
                     <g:ListBox ui:field='regionSourcesList' multipleSelect="false" visibleItemCount="8" width="40em"/>
                     <g:HorizontalPanel spacing="2">
