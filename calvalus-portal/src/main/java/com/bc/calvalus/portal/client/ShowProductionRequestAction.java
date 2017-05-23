@@ -39,7 +39,10 @@ public class ShowProductionRequestAction {
         int i = 2;
         for (String name : names) {
             flexTable.setHTML(i, 0, name + ":");
-            String value = productionParameters.get(name).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            String value = productionParameters.get(name);
+            if (value != null && !value.isEmpty()) {
+                value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+            }
             flexTable.setHTML(i, 1, "<pre>" + value + "</pre>");
             i++;
         }
