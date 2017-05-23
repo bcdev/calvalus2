@@ -46,6 +46,7 @@ import org.jfree.ui.RectangleInsets;
 import javax.imageio.ImageIO;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -53,6 +54,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -430,8 +432,8 @@ public class TAGraph {
         } else {
             inputStream = TAGraph.class.getResourceAsStream("oc_cci.South_Pacific_Gyre.csv");
         }
-        InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-        CsvReader csvReader = new CsvReader(inputStreamReader, new char[]{'\t'});
+        Reader reader = new BufferedReader(new InputStreamReader(inputStream));
+        CsvReader csvReader = new CsvReader(reader, new char[]{'\t'});
         List<String[]> stringRecords = csvReader.readStringRecords();
         TAResult taResult = new TAResult();
         String[] header = stringRecords.get(0);

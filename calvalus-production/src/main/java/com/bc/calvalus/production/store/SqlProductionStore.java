@@ -8,8 +8,10 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -359,14 +361,14 @@ public class SqlProductionStore implements ProductionStore {
     }
 
     private void init() throws SQLException, IOException {
-        InputStreamReader streamReader = new InputStreamReader(
-                SqlProductionStore.class.getResourceAsStream("calvalus-store.sql"));
+        Reader reader = new BufferedReader(new InputStreamReader(
+                SqlProductionStore.class.getResourceAsStream("calvalus-store.sql")));
         try {
-            SqlReader sqlReader = new SqlReader(streamReader);
+            SqlReader sqlReader = new SqlReader(reader);
             sqlReader.executeAll(connection);
             connection.commit();
         } finally {
-            streamReader.close();
+            reader.close();
         }
     }
 

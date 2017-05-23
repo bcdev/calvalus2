@@ -7,6 +7,7 @@ import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PinDescriptor;
 import org.esa.snap.core.datamodel.Placemark;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -76,8 +77,8 @@ public class PlacemarkRecordSource implements RecordSource {
             } else {
                 inputStream = new URL(url).openStream();
             }
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            return new PlacemarkRecordSource(inputStreamReader);
+            Reader reader = new BufferedReader(new InputStreamReader(inputStream));
+            return new PlacemarkRecordSource(reader);
         }
 
         @Override

@@ -52,6 +52,7 @@ import org.jdom2.output.XMLOutputter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -355,7 +356,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
         String graphPathAsString = conf.get(ProcessorFactory.CALVALUS_L2_PROCESSOR_FILES);
         Path graphPath = new Path(graphPathAsString);
         InputStream inputStream = graphPath.getFileSystem(conf).open(graphPath);
-        Reader inputReader = new InputStreamReader(inputStream);
+        Reader inputReader = new BufferedReader(new InputStreamReader(inputStream));
         Resource processedGraph = resourceEngine.processResource(new ReaderResource(graphPathAsString, inputReader));
         String graphAsText = processedGraph.getContent();
         System.out.println("graphAsText = \n" + graphAsText);
