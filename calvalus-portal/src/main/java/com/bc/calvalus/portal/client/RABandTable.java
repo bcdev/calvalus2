@@ -49,7 +49,7 @@ public class RABandTable {
     private ParametersEditorGenerator parametersEditor;
 
 
-    class ConfiguredBand {
+    static class ConfiguredBand {
         private final Integer id = ++lastId;
         private String name;
         private boolean histo;
@@ -58,9 +58,12 @@ public class RABandTable {
         private String max;
 
         public ConfiguredBand() {
-            this(null, false, "100", "0.0", "1.0");
+            this(null);
         }
 
+        public ConfiguredBand(String name) {
+            this(name, false, "100", "0.0", "1.0");
+        }
         public ConfiguredBand(String name, boolean histo, String numBins, String min, String max) {
             this.name = name;
             this.histo = histo;
@@ -149,13 +152,6 @@ public class RABandTable {
         });
     }
 
-//    public void addRow(String name, String expr) {
-//        getBandList().add(new ConfiguredBand(name, expr));
-//        dataProvider.refresh();
-//        VariableListChangeEvent.fire(RABandTable.this);
-//    }
-
-
     public void removeSelectedRow() {
         ConfiguredBand selectedVariable = selectionModel.getSelectedObject();
         if (selectedVariable != null) {
@@ -167,6 +163,10 @@ public class RABandTable {
             }
             dataProvider.refresh();
         }
+    }
+    
+    public void refresh() {
+        dataProvider.refresh();  
     }
 
     public boolean hasSelection() {

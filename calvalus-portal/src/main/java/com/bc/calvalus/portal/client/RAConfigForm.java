@@ -52,6 +52,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -127,6 +128,7 @@ public class RAConfigForm extends Composite {
     private String[][] computedPeriods = new String[0][];
     private List<String> inputVarNames;
     private DtoRegionDataInfo regionDataInfo;
+    private String restoredRegionSourceAttributeName;
 
     public RAConfigForm(final PortalContext portalContext) {
         this.portalContext = portalContext;
@@ -170,7 +172,7 @@ public class RAConfigForm extends Composite {
         managedFiles.setRemoveButton(removeRegionSource);
         managedFiles.updateUserFiles(false);
 
-        regionSourcesList.addChangeHandler(event -> loadShapefileDetails());
+        regionSourcesList.addChangeHandler(event -> loadRegionDataInfo());
         ChangeHandler shapeRegexHandler = event -> updateShapefileFilter();
         regionSourceAttributeNames.addChangeHandler(shapeRegexHandler);
         regionSourceAttributeFilter.addChangeHandler(shapeRegexHandler);
@@ -210,7 +212,7 @@ public class RAConfigForm extends Composite {
 
 
 
-    private void loadShapefileDetails() {
+    private void loadRegionDataInfo() {
         // load attribute names + values
         enableShapfileDetails(false);
         String selectedFilePath = managedFiles.getSelectedFilePath();
@@ -218,9 +220,10 @@ public class RAConfigForm extends Composite {
             portalContext.getBackendService().loadRegionDataInfo(selectedFilePath, new AsyncCallback<DtoRegionDataInfo>() {
                 @Override
                 public void onFailure(Throwable caught) {
-                    regionDataInfo = null;
-                    selecteRegionSourceAttributes.setValue(caught.getMessage());
                     enableShapfileDetails(true);
+                    regionDataInfo = null;
+                    restoredRegionSourceAttributeName = null;
+                    Dialog.error("Failed", "Failed to load region source information " + selectedFilePath + ": " + caught.getMessage());
                 }
 
                 @Override
@@ -231,6 +234,13 @@ public class RAConfigForm extends Composite {
                     regionSourceAttributeNames.clear();
                     for (String header : headers) {
                         regionSourceAttributeNames.addItem(header);
+                    }
+                    if (restoredRegionSourceAttributeName != null) {
+                        int index = Arrays.asList(headers).indexOf(restoredRegionSourceAttributeName);
+                        if (index >= 0) {
+                            regionSourceAttributeNames.setSelectedIndex(index);
+                        }
+                        restoredRegionSourceAttributeName = null;
                     }
                     updateShapefileFilter();
                 }
@@ -396,39 +406,43 @@ public class RAConfigForm extends Composite {
     }
 
     public void setValues(Map<String, String> parameters) {
-        goodPixelExpression.setValue(parameters.getOrDefault("maskExpr", ""));
-        String periodLengthValue = parameters.get("periodLength");
-        if (periodLengthValue != null) {
-            steppingPeriodLength.setValue(periodLengthValue, true);
+        steppingPeriodLength.setValue(parameters.getOrDefault("periodLength", "10"), true);
+        compositingPeriodLength.setValue(parameters.getOrDefault("compositingPeriodLength", "10"), true);
+
+        String regionSource = parameters.get("regionSource");
+        if (regionSource != null && !regionSource.isEmpty()) {
+            for (int i = 0; i < regionSourcesList.getItemCount(); i++) {
+                if (regionSourcesList.getValue(i).equals(regionSource)) {
+                    restoredRegionSourceAttributeName = parameters.get("regionSourceAttributeName");
+                    regionSourceAttributeFilter.setValue(parameters.getOrDefault("regionSourceAttributeFilter", ""));
+                    regionSourcesList.setSelectedIndex(i);
+                }
+            }
         }
-        String compositingPeriodLengthValue = parameters.get("compositingPeriodLength");
-        if (compositingPeriodLengthValue != null) {
-            compositingPeriodLength.setValue(compositingPeriodLengthValue, true);
+        
+        goodPixelExpression.setValue(parameters.getOrDefault("goodPixelExpression", ""));
+        percentiles.setValue(parameters.getOrDefault("percentiles", ""));
+        writePerRegion.setValue(Boolean.valueOf(parameters.getOrDefault("writePerRegion", "true")));
+        writeSeparateHistogram.setValue(Boolean.valueOf(parameters.getOrDefault("writeSeparateHistogram", "true")));
+        writePixelValue.setValue(Boolean.valueOf(parameters.getOrDefault("writePixelValue", "false")));
+
+        int bandCount = Integer.parseInt(parameters.getOrDefault("statband.count", "0"));
+        List<RABandTable.ConfiguredBand> bandList = bandTable.getBandList();
+        bandList.clear();
+        for (int i = 0; i < bandCount; i++) {
+            String bandName = parameters.get("statband." + i + ".name");
+            String numBins = parameters.get("statband." + i + ".numbins");
+            String min = parameters.get("statband." + i + ".min");
+            String max = parameters.get("statband." + i + ".max");
+            RABandTable.ConfiguredBand configuredBand;
+            if (numBins != null && min != null && max != null) {
+                configuredBand = new RABandTable.ConfiguredBand(bandName, true, numBins, min, max);
+            } else {
+                configuredBand = new RABandTable.ConfiguredBand(bandName);
+            }
+            bandList.add(configuredBand);
         }
-//        String bandList = parameters.get("bandList");
-//        if (bandList != null) {
-//            List<String> bandNameList = new ArrayList<>();
-//            bandNameList.addAll(Arrays.asList(bandList.split(",")));
-//            for (int i = 0; i < bandListBox.getItemCount(); i++) {
-//                String bandname = bandListBox.getItemText(i);
-//                boolean isSelected = bandNameList.contains(bandname);
-//                if (isSelected) {
-//                    bandListBox.setItemSelected(i, true);
-//                    bandNameList.remove(bandname);
-//                } else {
-//                    bandListBox.setItemSelected(i, false);
-//                }
-//            }
-//            if (!bandNameList.isEmpty()) {
-//                // not all given bandnames are in the listbox
-//                for (int i = 0; i < bandListBox.getItemCount(); i++) {
-//                    bandListBox.setItemSelected(i, false);
-//                }
-//                bandNames.setText(bandList);
-//            } else {
-//                bandNames.setText("");
-//            }
-//        }
+        bandTable.refresh();
     }
     
     // fires change event after each key press

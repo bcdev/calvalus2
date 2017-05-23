@@ -192,31 +192,4 @@ public class OrderRAProductionView extends OrderProductionView {
         }
         raConfigForm.updateTemporalParameters(minDate, maxDate);
     }
-
-//    private void updateBandList(DtoProcessorDescriptor processorDescriptor) {
-//        ListBox bandList = raConfigForm.bandListBox;
-//        bandList.clear();
-//        if (processorDescriptor != null) {
-//            int index = 0;
-//            for (DtoProcessorVariable variable : processorDescriptor.getProcessorVariables()) {
-//                bandList.addItem(variable.getName());
-//                bandList.setItemSelected(index, true);
-//                index++;
-//            }
-//        }
-//    }
-//
-//    private void updateBandList(DtoProductSet productSet) {
-//        ListBox bandList = raConfigForm.bandListBox;
-//        bandList.clear();
-//        if (productSet != null) {
-//            int index = 0;
-//            for (String variable : productSet.getBandNames()) {
-//                bandList.addItem(variable);
-//                bandList.setItemSelected(index, true);
-//                index++;
-//            }
-//        }
-//    }
-
 }
