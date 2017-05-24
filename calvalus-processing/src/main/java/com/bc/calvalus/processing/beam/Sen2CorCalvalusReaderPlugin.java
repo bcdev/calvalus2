@@ -46,8 +46,6 @@ import java.util.regex.Pattern;
  */
 public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
 
-    private static final String FORMAT_60M = "CALVALUS-SENTINEL-2-MSI-60M";
-
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
         if (input instanceof PathConfiguration) {
@@ -123,10 +121,8 @@ public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
                 }
                 CalvalusLogger.getLogger().info("productXML file = " + productXML);
 
-                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
-                CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
-                product = readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
+                product = Sentinel2CalvalusReaderPlugin.readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, productXML.getName());
                 }
@@ -137,7 +133,7 @@ public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
         }
 
         static void setTimeFromFilename(Product product, String filename) {
-            Matcher matcher = ("_MSIL1C_".equals(filename.substring(3, 11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
+            Matcher matcher = ("_MSIL2A_".equals(filename.substring(3, 11)) ? NAME_TIME_PATTERN2 : NAME_TIME_PATTERN1).matcher(filename);
             if (matcher.matches()) {
                 try {
                     ProductData.UTC start = ProductData.UTC.parse(matcher.group(1), DATE_FORMAT_PATTERN);
@@ -149,31 +145,6 @@ public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
                     e.printStackTrace();
                 }
             }
-        }
-
-        private Product readProduct(File xmlFile, String formatPrefix) throws IOException {
-            ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatPrefix);
-            return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
-        }
-
-        private ProductReaderPlugIn findProductReaderPlugin(File xmlFile, String formatPrefix) throws IOException {
-            ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
-            Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
-            while (allReaderPlugIns.hasNext()) {
-                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
-                String[] formatNames = readerPlugIn.getFormatNames();
-                for (String formatName : formatNames) {
-                    if (formatName.startsWith(formatPrefix)) {
-                        DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
-                        if (decodeQualification == DecodeQualification.INTENDED) {
-                            CalvalusLogger.getLogger().info("formatName = " + formatName);
-                            return readerPlugIn;
-                        }
-                    }
-                }
-            }
-            String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
-            throw new IllegalFileFormatException(msg);
         }
 
         @Override

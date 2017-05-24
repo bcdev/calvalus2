@@ -172,35 +172,36 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             }
         }
 
-        private Product readProduct(File xmlFile, String formatPrefix) throws IOException {
-            ProductReaderPlugIn productReaderPlugin = findProductReaderPlugin(xmlFile, formatPrefix);
-            return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
-        }
-
-        private ProductReaderPlugIn findProductReaderPlugin(File xmlFile, String formatPrefix) throws IOException {
-            ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
-            Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
-            while (allReaderPlugIns.hasNext()) {
-                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
-                String[] formatNames = readerPlugIn.getFormatNames();
-                for (String formatName : formatNames) {
-                    if (formatName.startsWith(formatPrefix)) {
-                        DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
-                        if (decodeQualification == DecodeQualification.INTENDED) {
-                            CalvalusLogger.getLogger().info("formatName = " + formatName);
-                            return readerPlugIn;
-                        }
-                    }
-                }
-            }
-            String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
-            throw new IllegalFileFormatException(msg);
-        }
 
         @Override
         protected void readBandRasterDataImpl(int i, int i2, int i3, int i4, int i5, int i6, Band band, int i7, int i8, int i9, int i10, ProductData productData, ProgressMonitor progressMonitor) throws IOException {
             throw new IllegalStateException("Should not be called");
         }
+    }
+    
+    static Product readProduct(File xmlFile, String formatPrefix) throws IOException {
+        ProductReaderPlugIn productReaderPlugin = findWithFormatPrefix(xmlFile, formatPrefix);
+        return productReaderPlugin.createReaderInstance().readProductNodes(xmlFile, null);
+    }
+
+    static ProductReaderPlugIn findWithFormatPrefix(File xmlFile, String formatPrefix) throws IOException {
+        ProductIOPlugInManager registry = ProductIOPlugInManager.getInstance();
+        Iterator<ProductReaderPlugIn> allReaderPlugIns = registry.getAllReaderPlugIns();
+        while (allReaderPlugIns.hasNext()) {
+            ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
+            String[] formatNames = readerPlugIn.getFormatNames();
+            for (String formatName : formatNames) {
+                if (formatName.startsWith(formatPrefix)) {
+                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(xmlFile);
+                    if (decodeQualification == DecodeQualification.INTENDED) {
+                        CalvalusLogger.getLogger().info("formatName = " + formatName);
+                        return readerPlugIn;
+                    }
+                }
+            }
+        }
+        String msg = String.format("No reader found with format prefix: '%s'", formatPrefix);
+        throw new IllegalFileFormatException(msg);
     }
 }
 
