@@ -31,6 +31,8 @@ public class YamlProductionRequestConverter {
                 Object value = entry.getValue();
                 if (value instanceof String) {
                     parameterMap.put(key, ((String) value).trim());
+                } else if (value instanceof Number) {
+                    parameterMap.put(key, ((Number) value).toString());
                 } else if (value instanceof String[]) {
                     parameterMap.put(key, arrayToString((String[]) value));
                 } else if (value instanceof List) {
@@ -39,8 +41,7 @@ public class YamlProductionRequestConverter {
                 } else if (value == null) {
                     parameterMap.put(key, "");
                 } else {
-                    System.out.println("value = " + value);
-                    System.out.println("value.class = " + value.getClass());
+                    System.out.println("unsupported key = '" + key+ "' value = '" + value+"'");
                 }
             }
         }

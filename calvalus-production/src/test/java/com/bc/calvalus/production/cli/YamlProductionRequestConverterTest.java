@@ -27,6 +27,8 @@ public class YamlProductionRequestConverterTest {
 
         assertTrue(parameters.containsKey("calvalus.processor.package"));
         assertEquals("beam-meris-radiometry", parameters.get("calvalus.processor.package"));
+        assertTrue(parameters.containsKey("calvalus.processor.version"));
+        assertEquals("1.0", parameters.get("calvalus.processor.version"));
 
         assertTrue(parameters.containsKey("calvalus.input"));
 
