@@ -180,7 +180,13 @@ public class ProductionTool {
             ProductionRequest request;
             try {
                 say(String.format("Loading production request '%s'...", requestPath));
-                request = new WpsProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
+                if (requestPath.endsWith(".yaml")||requestPath.endsWith(".yml")) {
+                    say("Production request  format is 'YAML'");
+                    request = new YamlProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
+                } else {
+                    say("Production request  format is 'WPS-XML'");
+                    request = new WpsProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
+                }
                 say(String.format("Production request loaded, type is '%s'.", request.getProductionType()));
             } finally {
                 requestReader.close();
