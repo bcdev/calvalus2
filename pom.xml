@@ -173,6 +173,13 @@
                 <version>${calvalus.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>com.bc.calvalus</groupId>
+                <artifactId>calvalus-portal</artifactId>
+                <version>${calvalus.version}</version>
+                <classifier>classes</classifier>
+            </dependency>
+
             <!--  Ceres -->
             <!-- This dependency is solely used to get the dependencies commons-collections:commons-collections and
             commons-lang:commons-lang of org.apache.velocity:velocity into the SNAP assembly -->

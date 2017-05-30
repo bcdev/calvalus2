@@ -36,6 +36,11 @@
             <groupId>com.bc.calvalus</groupId>
             <artifactId>calvalus-production</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-portal</artifactId>
+            <classifier>classes</classifier>
+        </dependency>
 
         <!-- SNAP dependencies -->
         <dependency>
