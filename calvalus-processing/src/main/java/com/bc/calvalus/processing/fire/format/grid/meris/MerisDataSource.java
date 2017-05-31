@@ -61,9 +61,9 @@ public class MerisDataSource extends AbstractFireGridDataSource {
         Rectangle sourceRect = new Rectangle(x * sourceWidth, y * sourceHeight, sourceWidth, sourceHeight);
         if (computeBA) {
             Band baBand = sourceProduct.getBand("band_1");
-            baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.pixels);
-            data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels), true);
-            data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels), false);
+            baBand.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.burnedPixels);
+            data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), true);
+            data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels), false);
             Band lcClassification = lcProduct.getBand("lcclass");
             lcClassification.readPixels(sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, data.lcClasses);
         }

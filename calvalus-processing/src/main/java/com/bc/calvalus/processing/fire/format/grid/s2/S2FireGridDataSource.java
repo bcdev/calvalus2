@@ -114,9 +114,9 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int sourceJD = (int) jdData.getElemFloatAt(0);
                 float sourceCL = clData.getElemFloatAt(0);
                 int pixelIndex = targetY * width + targetX;
-                int oldValue = data.pixels[pixelIndex];
+                int oldValue = data.burnedPixels[pixelIndex];
                 if (sourceJD > oldValue && sourceJD < 900) {
-                    data.pixels[pixelIndex] = sourceJD;
+                    data.burnedPixels[pixelIndex] = sourceJD;
                 }
                 if (sourceJD < 999) {
                     int productJD = getProductJD(product);
@@ -139,7 +139,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 if (lcProduct.containsPixel(lcPixelPos)) {
                     int sourceLC = lcData[(int) lcPixelPos.y * lcProduct.getSceneRasterWidth() + (int) lcPixelPos.x];
                     data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                    int jdValue = data.pixels[pixelIndex];
+                    int jdValue = data.burnedPixels[pixelIndex];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, jdValue)
                             || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, jdValue)) {
                         data.lcClasses[pixelIndex] = sourceLC;
@@ -150,8 +150,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
 
         getAreas(gc, width, height, data.areas);
 
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels, width, height), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.pixels, width, height), false);
+        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, height), true);
+        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, height), false);
 
         return data;
     }

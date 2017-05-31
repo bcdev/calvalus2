@@ -10,7 +10,7 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DAT
  */
 public class SourceData {
 
-    public final int[] pixels;
+    public final int[] burnedPixels;
     public final double[] areas;
     public final int[] lcClasses;
     public final boolean[] burnable;
@@ -22,7 +22,7 @@ public class SourceData {
     public double[] probabilityOfBurnSecondHalf;
 
     public SourceData(int width, int height) {
-        pixels = new int[width * height];
+        burnedPixels = new int[width * height];
         areas = new double[width * height];
         statusPixelsFirstHalf = new int[width * height];
         statusPixelsSecondHalf = new int[width * height];
@@ -33,7 +33,7 @@ public class SourceData {
     }
 
     public void reset() {
-        Arrays.fill(pixels, NO_DATA);
+        Arrays.fill(burnedPixels, NO_DATA);
         Arrays.fill(lcClasses, 0);
         Arrays.fill(areas, NO_AREA);
         Arrays.fill(statusPixelsFirstHalf, 0);

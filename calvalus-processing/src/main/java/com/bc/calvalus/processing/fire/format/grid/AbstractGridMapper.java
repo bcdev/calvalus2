@@ -79,8 +79,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 float coverageValueSecondHalf = 0.0F;
                 double burnableFractionValue = 0;
 
-                for (int i = 0; i < data.pixels.length; i++) {
-                    int doy = data.pixels[i];
+                for (int i = 0; i < data.burnedPixels.length; i++) {
+                    int doy = data.burnedPixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
                         baValueFirstHalf += data.areas[i];
                         boolean hasLcClass = false;

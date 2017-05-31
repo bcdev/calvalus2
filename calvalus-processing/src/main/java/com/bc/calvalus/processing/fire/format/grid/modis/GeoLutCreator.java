@@ -22,7 +22,7 @@ import java.util.Set;
 
 public class GeoLutCreator {
 
-    private static final Map<String, GeoCoding> tiles = new HashMap<>();
+    private static final Map<String, Product> PRODUCTS = new HashMap<>();
 
     public static void main2(String[] args) throws IOException {
 
@@ -39,7 +39,7 @@ public class GeoLutCreator {
         GeoPos gp = new GeoPos();
         PixelPos pp = new PixelPos();
 
-        Result result = new Result();
+        TileLut tileLut = new TileLut();
 
         int c = 0;
         for (int x = 0; x < 1440; x++) {
@@ -49,7 +49,6 @@ public class GeoLutCreator {
                     System.out.println((c * 100.0) / (1440 * 720) + "%");
                 }
 
-                HashMap<String, Set<String>> map = new HashMap<>();
                 ul.setLocation(90 - y * 0.25, -180 + x * 0.25);
                 ur.setLocation(90 - y * 0.25, -180 + (x + 1) * 0.25);
                 lr.setLocation(90 - (y + 1) * 0.25, -180 + (x + 1) * 0.25);
@@ -78,18 +77,22 @@ public class GeoLutCreator {
                 }
 
                 if (!inputTiles.isEmpty()) {
-                    result.put("" + x + "," + y, inputTiles);
+                    tileLut.put("" + x + "," + y, inputTiles);
                 }
             }
         }
         Gson gson = new Gson();
         try (FileWriter fw = new FileWriter(String.format("c:\\ssd\\modis-geo-luts\\modis-tiles-lut.txt"))) {
-            gson.toJson(result, fw);
+            gson.toJson(tileLut, fw);
         }
     }
 
-    public static class Result extends HashMap<String, Set<String>> {
+    public static class TileLut extends HashMap<String, Set<String>> {
+        // only needed for GSON to serialise
+    }
 
+    public static class GeoLut extends HashMap<String, Set<String>> {
+        // only needed for GSON to serialise
     }
 
     static boolean exists(String tile) throws IOException {
@@ -112,24 +115,25 @@ public class GeoLutCreator {
         GeoPos gp = new GeoPos();
         PixelPos pp = new PixelPos();
 
-
+        Set<String> missingRefProducts = new HashSet<>();
         int c = 0;
         for (int x = 0; x < 1440; x++) {
             for (int y = 0; y < 720; y++) {
                 c++;
                 String fileName = String.format("c:\\ssd\\modis-geo-luts\\modis-geo-lut-%02d-%02d.json", x, y);
-                if (Files.exists(Paths.get(fileName))) {
-                    continue;
-                }
                 if (c % 10000 == 0) {
                     System.out.println(String.format("%.3f%%", (c * 100.0) / (1440 * 720)));
                 }
 
-                HashMap<String, Set<String>> map = new HashMap<>();
+                if (Files.exists(Paths.get(fileName))) {
+                    continue;
+                }
+
+                GeoLut map = new GeoLut();
                 ul.setLocation(90 - y * 0.25, -180 + x * 0.25);
                 ur.setLocation(90 - y * 0.25, -180 + (x + 1) * 0.25);
+                ll.setLocation(90 - (y + 1) * 0.25, -180 + x * 0.25);
                 lr.setLocation(90 - (y + 1) * 0.25, -180 + (x + 1) * 0.25);
-                ll.setLocation(90 - y * 0.25, -180 + (x + 1) * 0.25);
 
                 Set<String> inputTiles = new HashSet<>();
                 geoCoding.getPixelPos(ul, pp);
@@ -142,61 +146,33 @@ public class GeoLutCreator {
                 inputTiles.add(String.format("h%1$02dv%2$02d", (int) pp.x / 40, (int) pp.y / 40));
 
                 for (String tile : inputTiles) {
-                    GeoCoding refGeoCoding = getRefGeoCoding(tile);
-
-                    if (refGeoCoding == null) {
+                    Product refProduct = getRefProduct(tile);
+                    if (refProduct == null) {
+                        missingRefProducts.add(tile);
                         continue;
                     }
+                    GeoCoding refGeoCoding = refProduct.getSceneGeoCoding();
 
                     double lon = -180 + x * 0.25;
                     double lat = 90 - y * 0.25;
 
-                    gp.setLocation(lat, lon);
-                    refGeoCoding.getPixelPos(gp, pp);
-                    pp.x = (int) pp.x;
-                    pp.y = (int) pp.y;
-                    refGeoCoding.getGeoPos(pp, gp);
-                    double refLat = gp.lat;
-                    double refLon = gp.lon;
-
-                    pp.x = pp.x + 1;
-                    double pixelSizeX;
-                    double pixelSizeY;
-                    if (refProductSinusoidal.containsPixel(pp)) {
-                        refGeoCoding.getGeoPos(pp, gp);
-                        pixelSizeX = Math.abs(gp.lon - refLon);
-                        pp.x = pp.x - 1;
-                        pp.y = pp.y + 1;
-                        if (!refProductSinusoidal.containsPixel(pp)) {
-                            pp.y = pp.y - 2;
-                        }
-                        refGeoCoding.getGeoPos(pp, gp);
-                        pixelSizeY = Math.abs(gp.lat - refLat);
-                    } else {
-                        pp.x = pp.x - 2;
-                        refGeoCoding.getGeoPos(pp, gp);
-                        pixelSizeX = Math.abs(gp.lon - refLon);
-
-                        pp.x = pp.x + 2;
-                        pp.y = pp.y + 1;
-                        if (!refProductSinusoidal.containsPixel(pp)) {
-                            pp.y = pp.y - 2;
-                        }
-                        refGeoCoding.getGeoPos(pp, gp);
-                        pixelSizeY = Math.abs(gp.lat - refLat);
-                    }
-
                     List<String> pixelPoses = new ArrayList<>();
 
-                    for (double currentLon = lon; currentLon < lon + 0.25; currentLon += pixelSizeX) {
-                        for (double currentLat = lat; currentLat > lat - 0.25; currentLat -= pixelSizeY) {
-                            gp.setLocation(currentLat, currentLon);
-                            refGeoCoding.getPixelPos(gp, pp);
-                            if (refProductSinusoidal.containsPixel(pp)) {
+                    gp.lat = lat;
+                    gp.lon = lon;
+
+                    for (pp.x = 0; pp.x < refProduct.getSceneRasterWidth(); pp.x++) {
+                        for (pp.y = 0; pp.y < refProduct.getSceneRasterHeight(); pp.y++) {
+                            refGeoCoding.getGeoPos(pp, gp);
+                            boolean isInLatRange = gp.lat <= 90 - y * 0.25 && gp.lat >= 90 - (y + 1) * 0.25;
+                            boolean isInLonRange = gp.lon >= -180 + x * 0.25 && gp.lon <= -180 + (x + 1) * 0.25;
+
+                            if (isInLatRange && isInLonRange) {
                                 pixelPoses.add(String.format("%s,%s", (int) pp.x, (int) pp.y));
                             }
                         }
                     }
+
                     map.put(tile, new HashSet<>(pixelPoses));
                 }
                 boolean empty = true;
@@ -211,20 +187,22 @@ public class GeoLutCreator {
                 }
             }
         }
+        System.out.println("The following tiles have no ref product:");
+        System.out.println(missingRefProducts);
     }
 
-    private static GeoCoding getRefGeoCoding(String tile) throws IOException {
-        if (tiles.containsKey(tile)) {
-            return tiles.get(tile);
+    private static Product getRefProduct(String tile) throws IOException {
+        if (PRODUCTS.containsKey(tile)) {
+            return PRODUCTS.get(tile);
         }
         Optional<Path> pathOptional = Files.list(Paths.get("D:\\workspace\\fire-cci\\modis-for-lc")).filter(path -> path.toString().contains(tile)).findFirst();
         if (!pathOptional.isPresent()) {
             return null;
         }
         Path first = pathOptional.get();
-        GeoCoding geoCoding = ProductIO.readProduct(first.toFile()).getSceneGeoCoding();
-        tiles.put(tile, geoCoding);
-        return geoCoding;
+        Product product = ProductIO.readProduct(first.toFile());
+        PRODUCTS.put(tile, product);
+        return product;
     }
 
 }

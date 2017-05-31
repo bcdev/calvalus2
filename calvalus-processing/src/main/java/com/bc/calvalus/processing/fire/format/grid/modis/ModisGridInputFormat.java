@@ -51,7 +51,7 @@ public class ModisGridInputFormat extends InputFormat {
         String month = conf.get("calvalus.month");
         File modisTilesFile = new File("modis-tiles-lut.txt");
         CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/modis-tiles/modis-tiles-lut.txt"), modisTilesFile, conf);
-        GeoLutCreator.Result tilesLut = getTilesLut(modisTilesFile);
+        GeoLutCreator.TileLut tilesLut = getTilesLut(modisTilesFile);
         List<InputSplit> splits = new ArrayList<>(tilesLut.size());
 
         for (String targetTile : tilesLut.keySet()) {
@@ -92,15 +92,15 @@ public class ModisGridInputFormat extends InputFormat {
         splits.add(combineFileSplit);
     }
 
-    static GeoLutCreator.Result getTilesLut(File modisTilesFile) {
+    static GeoLutCreator.TileLut getTilesLut(File modisTilesFile) {
         Gson gson = new Gson();
-        GeoLutCreator.Result result;
+        GeoLutCreator.TileLut tileLut;
         try (FileReader fileReader = new FileReader(modisTilesFile)) {
-            result = gson.fromJson(fileReader, GeoLutCreator.Result.class);
+            tileLut = gson.fromJson(fileReader, GeoLutCreator.TileLut.class);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        return result;
+        return tileLut;
 
     }
 

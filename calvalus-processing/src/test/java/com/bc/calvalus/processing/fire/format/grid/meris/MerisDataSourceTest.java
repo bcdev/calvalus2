@@ -44,7 +44,7 @@ public class MerisDataSourceTest {
         int[] expected = {
                 5000, 5001, 5004, 5005,
         };
-        assertArrayEquals(expected, data.pixels);
+        assertArrayEquals(expected, data.burnedPixels);
     }
 
     @Test
@@ -56,7 +56,7 @@ public class MerisDataSourceTest {
         dataSource.setDoyLastOfMonth(31);
 
         // center larger
-        int[] pixels = dataSource.readPixels(0, 0).pixels;
+        int[] pixels = dataSource.readPixels(0, 0).burnedPixels;
         int[] expected = new int[]{
                 5000, 5001, 5002, 5004, 5005, 5006, 5008, 5009, 5010
         };

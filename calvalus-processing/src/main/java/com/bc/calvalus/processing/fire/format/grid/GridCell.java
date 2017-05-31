@@ -12,6 +12,8 @@ import java.util.List;
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.LC_CLASSES_COUNT;
 
 /**
+ * Represents a cell which contains an arbitrary number of values; each value is written into the final grid product.
+ *
  * @author thomas
  */
 public class GridCell implements Writable {

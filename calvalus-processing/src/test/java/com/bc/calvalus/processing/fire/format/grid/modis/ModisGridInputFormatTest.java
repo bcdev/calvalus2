@@ -12,7 +12,7 @@ public class ModisGridInputFormatTest {
 
     @Test
     public void testGetTilesLut() throws Exception {
-        GeoLutCreator.Result tilesLut = ModisGridInputFormat.getTilesLut(new File("C:\\ssd\\modis-geo-luts\\modis-tiles-lut.txt"));
+        GeoLutCreator.TileLut tilesLut = ModisGridInputFormat.getTilesLut(new File("C:\\ssd\\modis-geo-luts\\modis-tiles-lut.txt"));
         assertNotNull(tilesLut);
         for (String key : tilesLut.keySet()) {
             SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(key));

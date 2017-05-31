@@ -15,6 +15,7 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 /**
  * Runs the fire MODIS formatting grid mapper.
@@ -55,7 +56,12 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(targetTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]));
+
+        Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/modis-geo-luts.zip");
+        File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
+        ZipFile geoLookupTable = new ZipFile(localGeoLookup);
+
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTable);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);

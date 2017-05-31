@@ -78,5 +78,4 @@ public class AbstractFireGridDataSourceTest {
         }
         dataSource.getPatchNumbers(make2Dims(pixels), true);
     }
-
 }
