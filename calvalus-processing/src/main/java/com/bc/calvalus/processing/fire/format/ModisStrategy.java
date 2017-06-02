@@ -4,6 +4,9 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.Workflow;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridInputFormat;
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
 import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
@@ -117,17 +120,17 @@ public class ModisStrategy implements SensorStrategy {
 
     @Override
     public Class<? extends InputFormat> getGridInputFormat() {
-        return null;
+        return ModisGridInputFormat.class;
     }
 
     @Override
     public Class<? extends Mapper> getGridMapperClass() {
-        return null;
+        return ModisGridMapper.class;
     }
 
     @Override
     public Class<? extends Reducer> getGridReducerClass() {
-        return null;
+        return ModisGridReducer.class;
     }
 
     private static class PixelFinaliseWorkflowItem extends HadoopWorkflowItem {

@@ -20,10 +20,17 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product},
                 new Product[]{lcProduct},
-                new ZipFile("C:\\ssd\\modis-geo-luts\\modis-geo-luts.zip"));
+                new ZipFile("C:\\ssd\\modis-geo-luts\\modis-geo-luts.zip"), "765,348");
+
+        dataSource.setDoyFirstHalf(7);
+        dataSource.setDoySecondHalf(22);
+        dataSource.setDoyFirstOfMonth(1);
+        dataSource.setDoyLastOfMonth(31);
 
         SourceData sourceData = dataSource.readPixels(765, 348);
     }
+
+
 
     @Test
     public void testGetUpperLat() throws Exception {

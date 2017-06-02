@@ -25,7 +25,7 @@ import java.util.zip.ZipFile;
 public class ModisGridMapper extends AbstractGridMapper {
 
     ModisGridMapper() {
-        super(40, 40);
+        super(1, 1);
     }
 
     @Override
@@ -41,10 +41,11 @@ public class ModisGridMapper extends AbstractGridMapper {
         }
         LOG.info("paths=" + Arrays.toString(paths));
         String targetTile = paths[paths.length - 1].getName();
+        LOG.info("targetTile=" + targetTile);
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
-        for (int i = 0; i < paths.length; i += 2) {
+        for (int i = 0; i < paths.length - 1; i += 2) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
             sourceProducts.add(ProductIO.readProduct(sourceProductFile));
@@ -56,12 +57,11 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-
         Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/modis-geo-luts.zip");
         File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
         ZipFile geoLookupTable = new ZipFile(localGeoLookup);
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTable);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTable, targetTile);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);

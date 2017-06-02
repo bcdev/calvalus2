@@ -21,6 +21,8 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,26 +50,36 @@ public class ModisGridInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
         String year = conf.get("calvalus.year");
-        String month = conf.get("calvalus.month");
+        String month = Integer.toString(Integer.parseInt(conf.get("calvalus.month"))); // stripping possible leading 0's
+        GeoLutCreator.TileLut tilesLut;
         File modisTilesFile = new File("modis-tiles-lut.txt");
-        CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/modis-tiles/modis-tiles-lut.txt"), modisTilesFile, conf);
-        GeoLutCreator.TileLut tilesLut = getTilesLut(modisTilesFile);
+        try {
+            CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/modis-tiles/modis-tiles-lut.txt"), modisTilesFile, conf);
+            tilesLut = getTilesLut(modisTilesFile);
+        } finally {
+            Files.delete(Paths.get(modisTilesFile.toURI()));
+        }
         List<InputSplit> splits = new ArrayList<>(tilesLut.size());
 
-        for (String targetTile : tilesLut.keySet()) {
+        for (String targetCell : tilesLut.keySet()) {
             List<FileStatus> fileStatuses = new ArrayList<>();
-            SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(targetTile));
+            SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(targetCell));
             for (String inputTile : inputTiles) {
-                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + inputTile + "/BA-.*" + year + month + ".*nc";
+                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + inputTile + "/burned_" + year + "_" + month + "_" + inputTile + ".nc";
                 Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
             }
-            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetTile, inputTiles);
+            // todo - disable second check as soon as archive is complete
+            if (!fileStatuses.isEmpty() && fileStatuses.size() == inputTiles.size()) {
+                addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetCell, inputTiles);
+            }
         }
+
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
     private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetTile, SortedSet<String> inputTileSet) throws IOException {
+        // make sure that for each tile of the split, exactly one input product is found
         if (fileStatuses.length != inputTileSet.size()) {
             throw new IllegalStateException("fileStatuses.length != inputTileSet.size()");
         }

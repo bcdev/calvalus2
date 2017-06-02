@@ -1,21 +1,20 @@
-package com.bc.calvalus.processing.fire.format.grid.s2;
+package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridReducer;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
-import com.bc.calvalus.processing.fire.format.grid.NcFileFactory;
 import org.apache.hadoop.io.Text;
 import ucar.ma2.InvalidRangeException;
 import ucar.nc2.NetcdfFileWriter;
 
 import java.io.IOException;
 
-public class S2GridReducer extends AbstractGridReducer {
+public class ModisGridReducer extends AbstractGridReducer {
 
-    private static final int S2_CHUNK_SIZE = 8;
-    private final NcFileFactory s2NcFileFactory;
+    private static final int MODIS_CHUNK_SIZE = 1;
+    private ModisNcFileFactory modisNcFileFactory;
 
-    public S2GridReducer() {
-        this.s2NcFileFactory = new S2NcFileFactory();
+    public ModisGridReducer() {
+        this.modisNcFileFactory = new ModisNcFileFactory();
     }
 
     @Override
@@ -37,16 +36,28 @@ public class S2GridReducer extends AbstractGridReducer {
 
     @Override
     protected String getFilename(String year, String month, String version, boolean firstHalf) {
-        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MSI-f%s.nc", year, month, firstHalf ? "07" : "22", version);
+        return String.format("%s%s%s-ESACCI-L4_FIRE-BA-MODIS-f%s.nc", year, month, firstHalf ? "07" : "22", version);
     }
 
     @Override
     protected NetcdfFileWriter createNcFile(String filename, String version, String timeCoverageStart, String timeCoverageEnd, int numberOfDays) throws IOException {
-        return s2NcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays);
+        return modisNcFileFactory.createNcFile(filename, version, timeCoverageStart, timeCoverageEnd, numberOfDays);
     }
 
     @Override
     protected int getTargetSize() {
-        return S2_CHUNK_SIZE;
+        return MODIS_CHUNK_SIZE;
+    }
+
+    @Override
+    protected int getX(String key) {
+        // key == "2001-02-735,346"
+        return Integer.parseInt(key.split("-")[2].split(",")[0]);
+    }
+
+    @Override
+    protected int getY(String key) {
+        // key == "2001-02-735,46"
+        return Integer.parseInt(key.split("-")[2].split(",")[1]);
     }
 }

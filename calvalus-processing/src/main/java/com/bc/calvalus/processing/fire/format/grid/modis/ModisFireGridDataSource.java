@@ -27,11 +27,13 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] products;
     private final Product[] lcProducts;
     private final ZipFile geoLookupTables;
+    private final String targetTile; // "801,312"
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, ZipFile geoLookupTables) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, ZipFile geoLookupTables, String targetTile) {
         this.products = products;
         this.lcProducts = lcProducts;
         this.geoLookupTables = geoLookupTables;
+        this.targetTile = targetTile;
     }
 
     @Override
@@ -40,6 +42,9 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         int width = 4800;
         int height = 4800;
+
+        x += Integer.parseInt(targetTile.split(",")[0]);
+        y += Integer.parseInt(targetTile.split(",")[1]);
 
         SourceData data = new SourceData(width, height);
         data.reset();
@@ -67,13 +72,15 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 throw new IllegalStateException("Non-existing entry for tile '" + tile + "' and target pixel " + x + " " + y);
             }
 
-            Band jd = product.getBand("doy");
+            Band jd = product.getBand("classification");
             Band cl = product.getBand("uncertainty");
-            Band status = product.getBand("classification");
+            Band numbObsFirstHalf = product.getBand("numObs1");
+            Band numbObsSecondHalf = product.getBand("numObs2");
             Band lc = lcProduct.getBand("lccs_class");
             ProductData jdData = ProductData.createInstance(jd.getDataType(), 1);
             ProductData clData = ProductData.createInstance(cl.getDataType(), 1);
-            ProductData statusData = ProductData.createInstance(status.getDataType(), 1);
+            ProductData status1Data = ProductData.createInstance(numbObsFirstHalf.getDataType(), 1);
+            ProductData status2Data = ProductData.createInstance(numbObsSecondHalf.getDataType(), 1);
             ProductData lcData = ProductData.createInstance(lc.getDataType(), 1);
 
             Set<String> sourcePixelPoses = geoLookupTable.get(tile);
@@ -84,20 +91,22 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int pixelIndex = sourceY * width + sourceX;
                 jd.readRasterData(sourceX, sourceY, 1, 1, jdData);
                 cl.readRasterData(sourceX, sourceY, 1, 1, clData);
-                status.readRasterData(sourceX, sourceY, 1, 1, statusData);
+                numbObsFirstHalf.readRasterData(sourceX, sourceY, 1, 1, status1Data);
+                numbObsSecondHalf.readRasterData(sourceX, sourceY, 1, 1, status2Data);
                 int sourceJD = (int) jdData.getElemFloatAt(0);
                 float sourceCL = clData.getElemFloatAt(0);
                 byte sourceLC = (byte) lcData.getElemIntAt(0);
-                int sourceStatus = statusData.getElemIntAt(0);
+                int sourceStatusFirstHalf = status1Data.getElemIntAt(0);
+                int sourceStatusSecondHalf = status1Data.getElemIntAt(0);
+                data.statusPixelsFirstHalf[pixelIndex] = sourceStatusFirstHalf;
+                data.statusPixelsSecondHalf[pixelIndex] = sourceStatusSecondHalf;
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
-                    data.statusPixelsFirstHalf[pixelIndex] = sourceStatus;
                     data.burnedPixels[pixelIndex] = sourceJD;
                     data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     data.lcClasses[pixelIndex] = (int) sourceLC;
                 } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
-                    data.statusPixelsSecondHalf[pixelIndex] = sourceStatus;
                     data.burnedPixels[pixelIndex] = sourceJD;
                     data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     data.lcClasses[pixelIndex] = (int) sourceLC;
