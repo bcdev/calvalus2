@@ -1,5 +1,6 @@
 package com.bc.calvalus.urban;
 
+import com.bc.calvalus.urban.account.Any;
 import com.bc.calvalus.urban.account.Compound;
 import com.bc.calvalus.urban.account.Message;
 import com.google.gson.Gson;
@@ -64,7 +65,7 @@ class WriteToLogTest {
 
     private Message createMessage(String date) {
         LocalDate parse = LocalDate.parse(date);
-        Compound compound = new Compound("02", "test", "test-all", "host", parse.toString());
+        Compound compound = new Compound("02", "test", "test-all", new Any(parse.toString()));
         return new Message("01", null, compound, null, "brockmann", Instant.now().toString(), "PASS");
     }
 

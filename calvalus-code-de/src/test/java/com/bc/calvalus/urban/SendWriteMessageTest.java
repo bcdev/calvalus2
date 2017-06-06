@@ -1,6 +1,7 @@
 package com.bc.calvalus.urban;
 
 import com.bc.calvalus.urban.account.Account;
+import com.bc.calvalus.urban.account.Any;
 import com.bc.calvalus.urban.account.Compound;
 import com.bc.calvalus.urban.account.Message;
 import com.bc.calvalus.urban.account.Quantity;
@@ -36,7 +37,7 @@ public class SendWriteMessageTest {
     private Message createmessage() {
         Account account = new Account("bla", "wooo", "what");
         String timestamp = "2017-05-03";
-        Compound compound = new Compound("1234", "sometime", "lost", "woo:bla", timestamp);
+        Compound compound = new Compound("1234", "sometime", "lost", new Any(timestamp));
 
         List<Quantity> quantityList = Arrays.asList(
                 new Quantity("BYTE_WRITTEN", 285998l),

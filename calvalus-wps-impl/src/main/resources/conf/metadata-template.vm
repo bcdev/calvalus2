@@ -5,7 +5,7 @@
     <generator>Urban TEP BC Processing Center</generator>
     <entry>
         <id>$productionName/$productOutputDir</id>
-        <title type="text">$processName of $inputDatasetName</title>
+        <title type="text">$productionName</title>
         <author>
             <name>Brockmann Consult GmbH</name>
         </author>
