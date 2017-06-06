@@ -99,7 +99,7 @@ public class SendWriteMessage {
             );
             lastDateTime = parseLocalDateTime(finishDateTime, jobID);
             if (Objects.nonNull(lastDateTime) && !lastCursorPosition.isAfter(lastDateTime)) {
-                logger.log(Level.INFO, String.format("JobID %s processing ..."));
+                logger.log(Level.INFO, String.format("JobID %s processing ...", wpsReport.getJobID()));
                 handleNewWpsReport(wpsReport);
             } else {
                 logger.log(Level.INFO, String.format("JobID %s before %s skipped.", wpsReport.getJobID(), String.valueOf(lastCursorPosition)));
