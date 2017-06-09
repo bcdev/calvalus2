@@ -1,6 +1,10 @@
 package com.bc.calvalus.wps.accounting;
 
+/**
+ * @author hans
+ */
 public class Quantity {
+
     private String id;
     private long value;
 
@@ -10,10 +14,10 @@ public class Quantity {
     }
 
     public String getId() {
-        return this.id;
+        return id;
     }
 
     public long getValue() {
-        return this.value;
+        return value;
     }
 }

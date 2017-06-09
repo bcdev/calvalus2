@@ -2,7 +2,11 @@ package com.bc.calvalus.wps.accounting;
 
 import com.bc.calvalus.wps.accounting.Compound;
 
+/**
+ * @author hans
+ */
 public class CompoundBuilder {
+
     private String id;
     private String name;
     private String type;
@@ -46,22 +50,22 @@ public class CompoundBuilder {
     }
 
     public String getId() {
-        return this.id;
+        return id;
     }
 
     public String getName() {
-        return this.name;
+        return name;
     }
 
     public String getType() {
-        return this.type;
+        return type;
     }
 
     public String getUri() {
-        return this.uri;
+        return uri;
     }
 
     public String getTimestamp() {
-        return this.timestamp;
+        return timestamp;
     }
 }

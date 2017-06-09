@@ -11,7 +11,6 @@ sudo -u $RUN_AS cp calvalus-wps.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp log4j.properties $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp metadata-template.vm $CATALINA_HOME/conf/calvalus
 sudo -u $RUN_AS cp -r local-process-descriptor $CATALINA_HOME/conf/calvalus
-sudo -u $RUN_AS mkdir -p $CATALINA_HOME/webapps/bc-wps/staging
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging/static-content/software $CATALINA_HOME/webapps/bc-wps
 sudo -u $RUN_AS ln -sf /tank/calvalus/wps/staging/static-content/eodata $CATALINA_HOME/webapps/bc-wps

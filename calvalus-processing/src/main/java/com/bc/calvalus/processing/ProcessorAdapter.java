@@ -400,10 +400,7 @@ public abstract class ProcessorAdapter {
         if (startTime == null || endTime == null) {
             return true;
         }
-        if (endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0) {
-            return true;
-        }
-        return false;
+        return endTime.getMJD() == 0.0 || startTime.getMJD() == 0.0;
     }
 
     public static void copySceneRasterStartAndStopTime(Product sourceProduct, Product targetProduct,

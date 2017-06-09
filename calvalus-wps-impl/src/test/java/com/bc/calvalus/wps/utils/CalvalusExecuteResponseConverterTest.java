@@ -185,6 +185,62 @@ public class CalvalusExecuteResponseConverterTest {
 
     }
 
+    @Test
+    public void canGetQuotationResponse() throws Exception {
+        DataInputsType dataInputs = getDataInputsType();
+
+        ExecuteResponse executeResponse = calvalusExecuteResponse.getQuotationResponse("tepUser", "ref-1", dataInputs);
+
+        assertThat(executeResponse.getStatus().getProcessSucceeded(), equalTo("The request has been quoted successfully."));
+        assertThat(executeResponse.getProcessOutputs().getOutput().size(), equalTo(1));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getIdentifier().getValue(), equalTo("QUOTATION"));
+        assertThat(executeResponse.getProcessOutputs().getOutput().get(0).getTitle().getValue(), equalTo("Job Quotation"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("{\n" +
+                                  "  \"id\": \"ref-1\",\n" +
+                                  "  \"account\": {\n" +
+                                  "    \"platform\": \"Brockmann Consult GmbH Processing Center\",\n" +
+                                  "    \"username\": \"tepUser\",\n" +
+                                  "    \"ref\": \"ref-1\"\n" +
+                                  "  },\n" +
+                                  "  \"compound\": {\n" +
+                                  "    \"id\": \"any-id\",\n" +
+                                  "    \"name\": \"processName\",\n" +
+                                  "    \"type\": \"processType\"\n" +
+                                  "  },\n" +
+                                  "  \"quantity\": [\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"CPU_MILLISECONDS\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PHYSICAL_MEMORY_BYTES\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_VOLUME_BYTES\",\n" +
+                                  "      \"value\": 2\n" +
+                                  "    },\n" +
+                                  "    {\n" +
+                                  "      \"id\": \"PROC_INSTANCE\",\n" +
+                                  "      \"value\": 1\n" +
+                                  "    }\n" +
+                                  "  ],\n" +
+                                  "  \"hostName\": \"www.brockmann-consult.de\",\n"));
+        assertThat((String) executeResponse.getProcessOutputs().getOutput().get(0).getData().getComplexData().getContent().get(0),
+                   containsString("  \"status\": \"QUOTATION\"\n" +
+                                  "}"));
+    }
+
+    private DataInputsType getDataInputsType() {
+        DataInputsType dataInputs = new DataInputsType();
+        InputType input1 = getInputType("inputDataSetName", "MERIS FSG v2013 L1b 2002-2012");
+        dataInputs.getInput().add(input1);
+        InputType input2 = getInputType("maxDate", "2009-06-03");
+        dataInputs.getInput().add(input2);
+        return dataInputs;
+    }
+
     private DocumentOutputDefinitionType getOutputType() {
         DocumentOutputDefinitionType outputType = new DocumentOutputDefinitionType();
         CodeType outputId = new CodeType();

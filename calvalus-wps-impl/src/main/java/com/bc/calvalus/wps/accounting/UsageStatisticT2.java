@@ -15,7 +15,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+/**
+ * @author hans
+ */
 public class UsageStatisticT2 {
+
     private String id;
     private Account account;
     private Compound compound;
@@ -38,9 +42,9 @@ public class UsageStatisticT2 {
         this.id = builder.getJobId();
         this.account = builder.getAccount();
         this.compound = builder.getCompound();
-        this.quantity = this.getQuoteQuantity(builder);
+        this.quantity = getQuoteQuantity(builder);
         this.hostName = "www.brockmann-consult.de";
-        this.timeStamp = this.getFormattedTime(builder.getCreationDate());
+        this.timeStamp = getFormattedTime(builder.getCreationDate());
         this.status = builder.getStatus();
     }
 
@@ -49,27 +53,27 @@ public class UsageStatisticT2 {
     }
 
     public Account getAccount() {
-        return this.account;
+        return account;
     }
 
     public Compound getCompound() {
-        return this.compound;
+        return compound;
     }
 
     public List<Quantity> getQuantity() {
-        return this.quantity;
+        return quantity;
     }
 
     public String getHostName() {
-        return this.hostName;
+        return hostName;
     }
 
     public String getTimeStamp() {
-        return this.timeStamp;
+        return timeStamp;
     }
 
     public String getStatus() {
-        return this.status;
+        return status;
     }
 
     public String getAsJson() {
@@ -99,7 +103,7 @@ public class UsageStatisticT2 {
     }
 
     private List<Quantity> getQuoteQuantity(UsageStatisticT2Builder builder) {
-        ArrayList quantityList = new ArrayList();
+        List<Quantity> quantityList = new ArrayList<>();
         quantityList.add(new Quantity("CPU_MILLISECONDS", builder.getCpuMilliSeconds()));
         quantityList.add(new Quantity("PHYSICAL_MEMORY_BYTES", builder.getMemoryBytes()));
         quantityList.add(new Quantity("PROC_VOLUME_BYTES", builder.getVolumeBytes()));

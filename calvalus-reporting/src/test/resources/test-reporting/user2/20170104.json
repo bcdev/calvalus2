@@ -1,0 +1,38 @@
+[
+  {
+    "jobId": "job_1481485063251_9981",
+    "finishTime": 1483521635191,
+    "reducesCompleted": 0,
+    "startTime": 1483520055827,
+    "state": "SUCCEEDED",
+    "mapsCompleted": 106,
+    "user": "user2",
+    "queue": "nrt",
+    "inputPath": "/calvalus/eodata/VIIRS_L1/v2/${yyyy}/${MM}/${dd}/V${yyyy}[0-9]{3}(0[5-9]|1[0-5]).*L1A_SNPP.nc$",
+    "fileBytesRead": 0,
+    "fileBytesWritten": 28180925,
+    "hdfsBytesRead": 30222039070,
+    "hdfsBytesWritten": 285294076,
+    "vCoresMillisTotal": 25062948,
+    "mbMillisTotal": 38496688128,
+    "cpuMilliseconds": 7987300
+  },
+  {
+    "jobId": "job_1481485063251_9846",
+    "finishTime": 1483515281451,
+    "reducesCompleted": 0,
+    "startTime": 1483513912221,
+    "state": "SUCCEEDED",
+    "mapsCompleted": 110,
+    "user": "user2",
+    "queue": "nrt",
+    "inputPath": "/calvalus/eodata/VIIRS_L1/v2/${yyyy}/${MM}/${dd}/V${yyyy}[0-9]{3}(0[5-9]|1[0-5]).*L1A_SNPP.nc$",
+    "fileBytesRead": 0,
+    "fileBytesWritten": 29249386,
+    "hdfsBytesRead": 32773004226,
+    "hdfsBytesWritten": 16357122,
+    "vCoresMillisTotal": 19999926,
+    "mbMillisTotal": 30719886336,
+    "cpuMilliseconds": 7042350
+  }
+]

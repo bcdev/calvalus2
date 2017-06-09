@@ -1,14 +1,14 @@
 package com.bc.calvalus.wps.utils;
 
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
-
 import org.apache.velocity.app.VelocityEngine;
-import org.junit.*;
+import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author hans

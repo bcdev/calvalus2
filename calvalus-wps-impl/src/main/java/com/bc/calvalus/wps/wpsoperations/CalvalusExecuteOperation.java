@@ -104,18 +104,26 @@ public class CalvalusExecuteOperation {
     }
 
     private boolean isQuotationRequest(DataInputsType dataInputs) {
-        Iterator var2 = dataInputs.getInput().iterator();
-
-        InputType inputType;
-        do {
-            if(!var2.hasNext()) {
-                return false;
+//        Iterator var2 = dataInputs.getInput().iterator();
+//
+//        InputType inputType;
+//        do {
+//            if(!var2.hasNext()) {
+//                return false;
+//            }
+//
+//            inputType = (InputType)var2.next();
+//        } while(!"quotation".equalsIgnoreCase(inputType.getIdentifier().getValue()) || inputType.getData().getLiteralData() == null || !"true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue()));
+//
+//        return true;
+        for (InputType inputType : dataInputs.getInput()) {
+            if ("quotation".equalsIgnoreCase(inputType.getIdentifier().getValue())) {
+                if (inputType.getData().getLiteralData() != null && "true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue())) {
+                    return true;
+                }
             }
-
-            inputType = (InputType)var2.next();
-        } while(!"quotation".equalsIgnoreCase(inputType.getIdentifier().getValue()) || inputType.getData().getLiteralData() == null || !"true".equalsIgnoreCase(inputType.getData().getLiteralData().getValue()));
-
-        return true;
+        }
+        return false;
     }
 
     private ProcessBriefType getQuotationBriefType(Execute executeRequest) {

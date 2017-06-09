@@ -30,6 +30,7 @@
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
         <module>calvalus-wps-impl</module>
+        <module>calvalus-reporting</module>
     </modules>
 
     <repositories>

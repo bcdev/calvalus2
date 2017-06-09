@@ -1,0 +1,38 @@
+[
+  {
+    "jobId": "job_1481485063251_6300",
+    "finishTime": 1482865367146,
+    "reducesCompleted": 0,
+    "startTime": 1482816542693,
+    "state": "SUCCEEDED",
+    "mapsCompleted": 695,
+    "user": "user1",
+    "queue": "lc",
+    "inputPath": "/calvalus/eodata/S2_L1C/v2/2016/12/18/S2A_MSIL1C_20161218T170722_N0204_R069_T15TXN_20161218T170716.zip",
+    "fileBytesRead": 0,
+    "fileBytesWritten": 263527,
+    "hdfsBytesRead": 440320189,
+    "hdfsBytesWritten": 539300,
+    "vCoresMillisTotal": 387395,
+    "mbMillisTotal": 991731200,
+    "cpuMilliseconds": 318500
+  },
+  {
+    "jobId": "job_1481485063251_8803",
+    "finishTime": 1483466569000,
+    "reducesCompleted": 0,
+    "startTime": 1483466452893,
+    "state": "SUCCEEDED",
+    "mapsCompleted": 9,
+    "user": "user1",
+    "queue": "test",
+    "inputPath": "hdfs://calvalus/calvalus/projects/lc/sr-s2/2016-04-20-P10D-sudan-reprocessing/l3-MSI-2016-04-20-10d-lc-sr",
+    "fileBytesRead": 0,
+    "fileBytesWritten": 263527,
+    "hdfsBytesRead": 440320189,
+    "hdfsBytesWritten": 539300,
+    "vCoresMillisTotal": 387395,
+    "mbMillisTotal": 991731200,
+    "cpuMilliseconds": 318500
+  }
+]

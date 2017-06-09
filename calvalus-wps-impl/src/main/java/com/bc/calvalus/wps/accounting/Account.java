@@ -2,6 +2,9 @@ package com.bc.calvalus.wps.accounting;
 
 import com.bc.calvalus.wps.accounting.AccountBuilder;
 
+/**
+ * @author hans
+ */
 public class Account {
     private String platform;
     private String username;
@@ -14,14 +17,14 @@ public class Account {
     }
 
     public String getPlatform() {
-        return this.platform;
+        return platform;
     }
 
     public String getUsername() {
-        return this.username;
+        return username;
     }
 
     public String getRef() {
-        return this.ref;
+        return ref;
     }
 }

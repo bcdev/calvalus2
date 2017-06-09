@@ -5,12 +5,16 @@ import com.bc.calvalus.wps.accounting.Compound;
 import com.bc.calvalus.wps.accounting.UsageStatisticT2;
 import java.util.Date;
 
+/**
+ * @author hans
+ */
 public class UsageStatisticT2Builder {
+
     private String jobId;
     private String remoteRef;
     private Account account;
     private Compound compound;
-    private Date creationDate = new Date();
+    private Date creationDate;
     private String status;
     private long cpuMilliSeconds;
     private long memoryBytes;
@@ -18,6 +22,7 @@ public class UsageStatisticT2Builder {
     private long instanceNumber;
 
     private UsageStatisticT2Builder() {
+        this.creationDate = new Date();
     }
 
     public static UsageStatisticT2Builder create() {
@@ -74,42 +79,42 @@ public class UsageStatisticT2Builder {
     }
 
     public String getJobId() {
-        return this.jobId;
+        return jobId;
     }
 
     public Account getAccount() {
-        return this.account;
+        return account;
     }
 
     public Compound getCompound() {
-        return this.compound;
+        return compound;
     }
 
     public String getRemoteRef() {
-        return this.remoteRef;
+        return remoteRef;
     }
 
     public Date getCreationDate() {
-        return this.creationDate;
+        return creationDate;
     }
 
     public String getStatus() {
-        return this.status;
+        return status;
     }
 
     public long getCpuMilliSeconds() {
-        return this.cpuMilliSeconds;
+        return cpuMilliSeconds;
     }
 
     public long getMemoryBytes() {
-        return this.memoryBytes;
+        return memoryBytes;
     }
 
     public long getVolumeBytes() {
-        return this.volumeBytes;
+        return volumeBytes;
     }
 
     public long getInstanceNumber() {
-        return this.instanceNumber;
+        return instanceNumber;
     }
 }

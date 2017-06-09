@@ -172,7 +172,7 @@ public class CalvalusExecuteResponseConverter {
         DataType quoteData = new DataType();
         ComplexDataType quoteComplexData = new ComplexDataType();
         quoteComplexData.setMimeType("application/json");
-        String quoteJsonString = this.getQuoteJsonString(username, remoteRef, dataInputs);
+        String quoteJsonString = getQuoteJsonString(username, remoteRef, dataInputs);
         quoteComplexData.getContent().add(quoteJsonString);
         quoteData.setComplexData(quoteComplexData);
         output.setData(quoteData);
@@ -209,7 +209,7 @@ public class CalvalusExecuteResponseConverter {
             String title = "Production result";
             String abstractText = "This is the URL link to the production result";
             String mimeType = "application/octet-stream";
-            if(productionResultUrl.endsWith("-metadata")){
+            if (productionResultUrl.endsWith("-metadata")) {
                 identifier = "result_metadata";
                 title = "Metadata OWS context XML";
                 abstractText = "The URL to the result metadata file";
