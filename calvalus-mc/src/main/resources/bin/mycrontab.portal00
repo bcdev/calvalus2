@@ -1,3 +1,0 @@
-# m h dom mon dow command
-# back up the tomcat user configuration of the Calvalus portal
-0 1,7,12,20 * * * ( cd /opt; tar czf ~/backup/calvalus-portal.tgz apache-tomcat-7*/conf/tomcat-users.xml; mkdir -p ~/backup/archive; ~/backup/rotate.bash ~/backup/calvalus-portal.tgz ~/backup/archive 30 ) >> ~/backup/backup-calvalus-portal.log 2>&1
