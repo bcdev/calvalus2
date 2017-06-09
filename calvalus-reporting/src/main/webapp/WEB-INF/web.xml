@@ -5,6 +5,21 @@
                         http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
          version="3.0">
 
+    <!-- from calvalus-reporting -->
     <display-name>Calvalus Reporting</display-name>
     <description>Calvalus Reporting Web Service</description>
+
+    <!-- from calvalus-reporting-ui -->
+    <servlet>
+        <servlet-name>bc.com.calvalus.ui.ReportUI JobResourcesService</servlet-name>
+        <servlet-class>com.bc.calvalus.reporting.ui.server.JobResourceServiceImpl</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>bc.com.calvalus.ui.ReportUI JobResourcesService</servlet-name>
+        <url-pattern>/ReportUI/JobResourcesService</url-pattern>
+    </servlet-mapping>
+    <!-- Default page to serve -->
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
 </web-app>

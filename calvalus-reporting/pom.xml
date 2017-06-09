@@ -17,9 +17,22 @@
     <description>Usage statistic and accounting report.</description>
 
     <properties>
+        <gwtVersion>2.8.0-rc3</gwtVersion>
         <bc-wps-api.version>1.0</bc-wps-api.version>
         <powermockito.version>1.5.6</powermockito.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.gwt</groupId>
+                <artifactId>gwt</artifactId>
+                <version>${gwtVersion}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- required as part of using Servlet 3 spec without any additional configs in web.xml -->
@@ -28,6 +41,45 @@
             <groupId>org.glassfish.jersey.bundles</groupId>
             <artifactId>jaxrs-ri</artifactId>
             <version>2.25</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.53</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-all</artifactId>
+            <version>5.9.1</version>
+        </dependency>
+
+        <!-- RestFul-->
+        <dependency>
+            <groupId>org.glassfish.jersey.containers</groupId>
+            <artifactId>jersey-container-servlet-core</artifactId>
+            <version>2.25</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-servlet</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-user</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.gwt</groupId>
+            <artifactId>gwt-dev</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.gwt-charts</groupId>
+            <artifactId>gwt-charts</artifactId>
+            <version>0.9.10</version>
         </dependency>
 
         <!-- SNAP Dependencies -->
@@ -49,7 +101,6 @@
             <artifactId>commons-io</artifactId>
             <version>1.3.2</version>
         </dependency>
-
 
         <!-- JSON utility tool -->
         <dependency>
@@ -114,11 +165,13 @@
             <scope>compile</scope>
             <version>15.0</version>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>RELEASE</version>
         </dependency>
+        -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -136,6 +189,33 @@
         </resources>
         <plugins>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>gwt-maven-plugin</artifactId>
+                <version>2.8.0</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <runTarget>index.html</runTarget>
+                    <modules>
+                        <module>com.bc.calvalus.reporting.ui.ReportUI</module>
+                    </modules>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <attachClasses>true</attachClasses>
+                </configuration>
+            </plugin>
+<!--
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
                 <version>2.6</version>
@@ -152,7 +232,7 @@
                             </descriptors>
                             <archive>
                                 <manifest>
-                                    <mainClass>com.bc.calvalus.extractor.ExtractCalvalusReport</mainClass>
+                                    <mainClass>com.bc.calvalus.reporting.extractor.ExtractCalvalusReport</mainClass>
                                 </manifest>
                             </archive>
                             <finalName>calvalus-extractor</finalName>
@@ -223,6 +303,7 @@
                     </execution>
                 </executions>
             </plugin>
+-->
         </plugins>
     </build>
 
