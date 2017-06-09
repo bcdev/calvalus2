@@ -193,10 +193,10 @@ public class CalvalusExecuteResponseConverter {
                 withJobId(remoteRef).
                 withAccount(account).
                 withCompound(compound).
-                withCpuMilliSeconds(1L).
-                withMemoryBytes(1L).
-                withInstanceNumber(1L).
-                withVolumeBytes(1L).
+                withCpuMilliSeconds(PropertiesWrapper.getLong("wps.reporting.initial.CPU_MILLISECONDS", 1L)).
+                withMemoryBytes(PropertiesWrapper.getLong("wps.reporting.initial.PHYSICAL_MEMORY_BYTES", 1L)).
+                withInstanceNumber(PropertiesWrapper.getLong("wps.reporting.initial.PROC_INSTANCE", 1L)).
+                withVolumeBytes(PropertiesWrapper.getLong("wps.reporting.initial.BYTE_READ", 1L) + PropertiesWrapper.getLong("wps.reporting.initial.BYTE_WRITTEN", 1L)).
                 withStatus("QUOTATION").build();
         return usageStatistic.getAsJson();
     }
