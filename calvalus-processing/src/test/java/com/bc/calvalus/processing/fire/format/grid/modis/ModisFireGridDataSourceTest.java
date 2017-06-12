@@ -27,7 +27,7 @@ public class ModisFireGridDataSourceTest {
         dataSource.setDoyFirstOfMonth(1);
         dataSource.setDoyLastOfMonth(31);
 
-        SourceData sourceData = dataSource.readPixels(765, 348);
+        SourceData sourceData = dataSource.readPixels(0, 0);
     }
 
 

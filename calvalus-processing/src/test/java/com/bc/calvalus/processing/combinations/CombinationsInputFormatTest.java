@@ -7,7 +7,10 @@ import org.junit.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
 public class CombinationsInputFormatTest {
 
@@ -24,6 +27,24 @@ public class CombinationsInputFormatTest {
         b1 = new CombinationsConfig.Variable("b", "job", "B1");
         c1 = new CombinationsConfig.Variable("c", "job", "C1");
         t3 = new CombinationsConfig.Variable("t", "task", "T1", "T2", "T3");
+    }
+
+
+    @Test
+    public void name() throws Exception {
+        String[] xValues = new String[702];
+        for (int x = 739; x <= 1440; x++) {
+            xValues[x - 739] = x + "";
+        }
+        String[] yValues = new String[770];
+        for (int y = 0; y < 770; y++) {
+            yValues[y] = y + "";
+        }
+        CombinationsConfig.Variable x = new CombinationsConfig.Variable("x", "job", xValues);
+        CombinationsConfig.Variable y = new CombinationsConfig.Variable("y", "job", yValues);
+
+        List<InputSplit> inputSplits = getInputSplits(x, y);
+        System.out.println();
     }
 
     @Test

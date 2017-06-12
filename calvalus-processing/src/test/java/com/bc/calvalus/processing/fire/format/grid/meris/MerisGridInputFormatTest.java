@@ -20,13 +20,13 @@ public class MerisGridInputFormatTest {
 
     @Test
     public void getSrInputPath() throws Exception {
-        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2006/v04h01/2006/2006-06-*/CCI-Fire-*.nc",
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default/2006/l3-2006-06-*-fire-nc/CCI-Fire-*2006-06-*-v04h01*.nc",
                 MerisGridInputFormat.getSrInputPathPattern("hdfs://calvalus/calvalus/projects/fire/meris-ba/2006/BA_PIX_MER_v04h01_200606_v4.0.tif"));
 
-        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2005/v12h11/2005/2005-06-*/CCI-Fire-*.nc",
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default/2005/l3-2005-06-*-fire-nc/CCI-Fire-*2005-06-*-v12h11*.nc",
                 MerisGridInputFormat.getSrInputPathPattern("hdfs://calvalus/calvalus/projects/fire/meris-ba/2005/BA_PIX_MER_v12h11_200506_v4.0.tif"));
 
-        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default-nc-classic/2008/v12h11/2008/2008-03-*/CCI-Fire-*.nc",
+        assertEquals("hdfs://calvalus/calvalus/projects/fire/sr-fr-default/2008/l3-2008-03-*-fire-nc/CCI-Fire-*2008-03-*-v12h11*.nc",
                 MerisGridInputFormat.getSrInputPathPattern("hdfs://calvalus/calvalus/projects/fire/meris-ba/2008/BA_PIX_MER_v12h11_200803_v4.0.tif"));
     }
 }

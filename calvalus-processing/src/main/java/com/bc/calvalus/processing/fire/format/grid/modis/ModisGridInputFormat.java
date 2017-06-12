@@ -25,7 +25,9 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -51,7 +53,7 @@ public class ModisGridInputFormat extends InputFormat {
         Configuration conf = context.getConfiguration();
         String year = conf.get("calvalus.year");
         String month = Integer.toString(Integer.parseInt(conf.get("calvalus.month"))); // stripping possible leading 0's
-        GeoLutCreator.TileLut tilesLut;
+        TileLut tilesLut;
         File modisTilesFile = new File("modis-tiles-lut.txt");
         try {
             CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/modis-tiles/modis-tiles-lut.txt"), modisTilesFile, conf);
@@ -104,11 +106,11 @@ public class ModisGridInputFormat extends InputFormat {
         splits.add(combineFileSplit);
     }
 
-    static GeoLutCreator.TileLut getTilesLut(File modisTilesFile) {
+    static TileLut getTilesLut(File modisTilesFile) {
         Gson gson = new Gson();
-        GeoLutCreator.TileLut tileLut;
+        TileLut tileLut;
         try (FileReader fileReader = new FileReader(modisTilesFile)) {
-            tileLut = gson.fromJson(fileReader, GeoLutCreator.TileLut.class);
+            tileLut = gson.fromJson(fileReader, TileLut.class);
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
@@ -127,5 +129,9 @@ public class ModisGridInputFormat extends InputFormat {
 
     public RecordReader createRecordReader(InputSplit split, TaskAttemptContext context) throws IOException, InterruptedException {
         return new NoRecordReader();
+    }
+
+    public static class TileLut extends HashMap<String, Set<String>> {
+        // only needed for GSON to serialise
     }
 }

@@ -53,6 +53,10 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         String lutName = String.format("modis-geo-lut-%s-%s.json", x, y);
         ZipEntry entry = geoLookupTables.getEntry(lutName);
+        if (entry == null) {
+            // todo - only for testing; in later stages, throw an ISE here.
+            return data;
+        }
         Gson gson = new Gson();
         HashMap<String, Set<String>> geoLookupTable;
         try (InputStream lutStream = geoLookupTables.getInputStream(entry)) {
