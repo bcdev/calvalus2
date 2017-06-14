@@ -246,7 +246,7 @@ public class ProductMetadataBuilder {
     }
 
     private String encodeSpecialCharacters(String name) throws UnsupportedEncodingException {
-        return URLEncoder.encode(name, "UTF-8");
+        return URLEncoder.encode(name.replaceAll(" ", "_"), "UTF-8");
     }
 
     private String getProcessorId(ProductionRequest productionRequest) throws ProductionException {
