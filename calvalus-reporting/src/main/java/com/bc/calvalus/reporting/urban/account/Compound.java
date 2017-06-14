@@ -9,6 +9,8 @@ public class Compound {
     private String type;
     private Any any;
 
+    public Compound() {}
+
     public Compound(String id, String name, String type, Any any) {
         this.id = id;
         this.name = name;

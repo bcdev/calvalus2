@@ -2,6 +2,8 @@ package com.bc.calvalus.reporting.urban;
 
 import com.bc.calvalus.reporting.code.reader.CodeDeException;
 import java.time.LocalDateTime;
+
+import com.bc.calvalus.reporting.code.reader.CursorPosition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;

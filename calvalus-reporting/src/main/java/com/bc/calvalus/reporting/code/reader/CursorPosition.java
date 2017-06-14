@@ -1,4 +1,4 @@
-package com.bc.calvalus.reporting.urban;
+package com.bc.calvalus.reporting.code.reader;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import java.io.BufferedReader;

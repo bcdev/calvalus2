@@ -8,6 +8,8 @@ public class Account {
     private String userName;
     private String ref;
 
+    public Account() {}
+
     public Account(String platform, String userName, String ref) {
         this.platform = platform;
         this.userName = userName;

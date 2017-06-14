@@ -15,6 +15,8 @@ public class Message {
     private String timeStamp;
     private String status;
 
+    public Message() {}
+
     public Message(String id, Account account, Compound compound, List<Quantity> quantity, String hostName, String timeStamp, String status) {
         this.id = id;
         this.account = account;

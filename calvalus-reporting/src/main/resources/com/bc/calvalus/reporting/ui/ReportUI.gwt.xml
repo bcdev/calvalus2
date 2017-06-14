@@ -10,7 +10,7 @@
     <!-- <inherits name='com.google.gwt.user.theme.chrome.Chrome'/> -->
     <!-- <inherits name='com.google.gwt.user.theme.dark.Dark'/>     -->
     <inherits name="com.google.gwt.http.HTTP"/>
-    <inherits name="com.googlecode.gwt.charts.Charts"/>
+    <!-- <inherits name="com.googlecode.gwt.charts.Charts"/>        -->
 
     <!-- Other module inherits                                      -->
 

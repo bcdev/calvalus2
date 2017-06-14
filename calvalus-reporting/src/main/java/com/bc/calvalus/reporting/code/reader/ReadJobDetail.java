@@ -1,7 +1,6 @@
 package com.bc.calvalus.reporting.code.reader;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.reporting.urban.CursorPosition;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;

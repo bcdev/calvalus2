@@ -22,17 +22,23 @@
         </fileSet>
     </fileSets>
 
+    <!--
     <containerDescriptorHandlers>
         <containerDescriptorHandler>
             <handlerName>metaInf-services</handlerName>
         </containerDescriptorHandler>
     </containerDescriptorHandlers>
+    -->
     <dependencySets>
         <dependencySet>
             <outputDirectory>/</outputDirectory>
-            <useProjectArtifact>true</useProjectArtifact>
+            <useProjectArtifact>false</useProjectArtifact>
             <unpack>true</unpack>
             <scope>runtime</scope>
+            <excludes>
+                <exclude>com.google.gwt:*</exclude>
+            </excludes>
         </dependencySet>
     </dependencySets>
 </assembly>
+

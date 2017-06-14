@@ -6,6 +6,8 @@ package com.bc.calvalus.reporting.urban.account;
 public class Any {
     private String uri;
 
+    public Any() {}
+
     public Any(String uri) {
         this.uri = uri;
     }

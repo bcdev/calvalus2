@@ -9,6 +9,14 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.Test;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -31,7 +39,17 @@ public class SendWriteMessageTest {
         String toJson = message.toJson();
         assertNotNull(toJson);
         assertEquals(EXPECTED_MESSAGE, toJson);
+    }
 
+    //@Test
+    public void testSend() throws Exception {
+        Message message = createmessage();
+        Client client = ClientBuilder.newClient();
+        // TODO start `nc -k -l localhost 8079` before the test
+        WebTarget target = client.target("http://localhost:8079/test");
+        Entity<String> jsonEntity = Entity.json(message.toJson());
+        Invocation.Builder request = target.request(MediaType.TEXT_PLAIN_TYPE);
+        Response response = request.post(jsonEntity);
     }
 
     private Message createmessage() {
