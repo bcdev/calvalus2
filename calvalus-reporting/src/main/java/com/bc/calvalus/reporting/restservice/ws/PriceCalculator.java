@@ -1,18 +1,16 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
-import java.text.DecimalFormat;
-
 /**
  * @author hans
  */
 class PriceCalculator {
 
-    private final static float CPU_PER_THREAD_PER_HOUR_EURO = 0.001322f;
+    private final static double CPU_PER_THREAD_PER_HOUR_EURO = 0.001322;
 
-    private final static float MEMORY_PER_GB_PER_HOUR_EURO = 0.000223f;
+    private final static double MEMORY_PER_GB_PER_HOUR_EURO = 0.000223;
 
-    private final static float DISK_PER_GB_PER_YEAR_EURO = 0.0112f;
-    private final static float DISK_PER_GB_PER_HOUR_EURO = 0.00000128f;
+    private final static double DISK_PER_GB_PER_YEAR_EURO = 0.0112;
+    private final static double DISK_PER_GB_PER_HOUR_EURO = 0.00000128;
 
     static double getCpuPrice(long totalVCoresUsedSeconds) {
         double totalVCoresUsedHours = totalVCoresUsedSeconds / 3600;
@@ -31,7 +29,7 @@ class PriceCalculator {
     }
 
     private static double monetize(double rawDoubleValue) {
-        DecimalFormat df = new DecimalFormat("#.00");
-        return Double.parseDouble(df.format(rawDoubleValue));
+        long money = (long) (rawDoubleValue * 100);
+        return money / 100.0;
     }
 }
