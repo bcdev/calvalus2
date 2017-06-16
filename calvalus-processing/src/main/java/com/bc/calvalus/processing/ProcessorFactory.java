@@ -116,7 +116,7 @@ public class ProcessorFactory {
                         logger.warning("reading bundle descriptor of " + bundlePath + " failed: " + ex);
                     }
                 } else {
-                    throw new IllegalArgumentException("Processor bundle does not exist.");
+                    throw new IllegalArgumentException("Processor bundle " + bundleSpec + " does not exist.");
                 }
             }
             if (processorFiles.size() > 0) {
