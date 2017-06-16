@@ -1,9 +1,8 @@
 package com.bc.calvalus.reporting.restservice.ws;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import org.junit.Test;
 
-import org.junit.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author hans
@@ -12,16 +11,16 @@ public class PriceCalculatorTest {
 
     @Test
     public void canGetCpuPrice() throws Exception {
-        assertThat(PriceCalculator.getCpuPrice(3600000L), equalTo(1.32));
+        assertEquals(1.32, PriceCalculator.getCpuPrice(3600000L), 1.0e-2);
     }
 
     @Test
     public void canGetMemoryPrice() throws Exception {
-        assertThat(PriceCalculator.getMemoryPrice(36864000000L), equalTo(2.23));
+        assertEquals(2.23, PriceCalculator.getMemoryPrice(36864000000L), 1.0e-2);
     }
 
     @Test
     public void canGetDiskPrice() throws Exception {
-        assertThat(PriceCalculator.getDiskPrice(1024000L), equalTo(11.2));
+        assertEquals(11.2, PriceCalculator.getDiskPrice(1024000L), 1.0e-2);
     }
 }
