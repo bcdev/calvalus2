@@ -13,6 +13,7 @@
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
         <calvalus.version>2.13-SNAPSHOT</calvalus.version>
+        <bc-wps.version>1.1</bc-wps.version>
         <snap.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
         <ceres.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
@@ -179,6 +180,30 @@
                 <artifactId>calvalus-portal</artifactId>
                 <version>${calvalus.version}</version>
                 <classifier>classes</classifier>
+            </dependency>
+
+            <!-- BC WPS dependencies -->
+            <dependency>
+                <groupId>com.bc.wps</groupId>
+                <artifactId>bc-wps-commons</artifactId>
+                <version>${bc-wps.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.bc.wps</groupId>
+                <artifactId>bc-wps-api</artifactId>
+                <version>${bc-wps.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>xerces</groupId>
+                        <artifactId>xercesImpl</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <!--  Ceres -->

@@ -12,7 +12,6 @@
     <artifactId>calvalus-wps-impl</artifactId>
 
     <properties>
-        <bc-wps-api.version>1.1-SNAPSHOT</bc-wps-api.version>
         <powermockito.version>1.5.6</powermockito.version>
     </properties>
 
@@ -22,13 +21,11 @@
             <groupId>com.bc.wps</groupId>
             <artifactId>bc-wps-api</artifactId>
             <scope>provided</scope>
-            <version>${bc-wps-api.version}</version>
         </dependency>
         <dependency>
             <groupId>com.bc.wps</groupId>
             <artifactId>bc-wps-commons</artifactId>
             <scope>provided</scope>
-            <version>${bc-wps-api.version}</version>
         </dependency>
 
         <!-- Calvalus dependencies -->
