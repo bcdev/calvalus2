@@ -78,8 +78,12 @@ abstract class ProcessingRectangleCalculator {
     Rectangle getGeometryAsRectangle(Geometry regionGeometry) {
         if (!(regionGeometry == null || regionGeometry.isEmpty() || GeometryUtils.isGlobalCoverageGeometry(regionGeometry))) {
             try {
-                LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
-                return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
+                if (getProduct().getSceneGeoCoding() != null) {
+                    LOG.info("getGeometryAsRectangle:..SubsetOp.computePixelRegion");
+                    return SubsetOp.computePixelRegion(getProduct(), regionGeometry, 1);
+                } else {
+                    return EosRectangleCalculator.computePixelRegion(getProduct(), regionGeometry, 1);
+                }
             } catch (Exception e) {
                 String msg = "Exception from SubsetOp.computePixelRegion: " + e.getMessage();
                 LogRecord lr = new LogRecord(Level.WARNING, msg);
