@@ -24,7 +24,7 @@ import java.util.zip.ZipFile;
  */
 public class ModisGridMapper extends AbstractGridMapper {
 
-    ModisGridMapper() {
+    public ModisGridMapper() {
         super(1, 1);
     }
 
@@ -57,7 +57,8 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/modis-geo-luts.zip");
+        String xCoord = getXCoord(targetTile);
+        Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + xCoord + ".zip");
         File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
         ZipFile geoLookupTable = new ZipFile(localGeoLookup);
 
@@ -71,6 +72,20 @@ public class ModisGridMapper extends AbstractGridMapper {
         GridCell gridCell = computeGridCell(year, month);
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetTile)), gridCell);
+    }
+
+    static String getXCoord(String targetTile) {
+        String x = targetTile.split(",")[0];
+        if (x.length() == 4) {
+            return x.substring(0, 3) + "x";
+        } else  if (x.length() == 3) {
+            return "0" + x.substring(0, 2) + "x";
+        } else if (x.length() == 2) {
+            return "00" + x.substring(0, 1) + "x";
+        } else if (x.length() == 1) {
+            return "000x";
+        }
+        throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
     }
 
     @Override
@@ -142,4 +157,7 @@ public class ModisGridMapper extends AbstractGridMapper {
     protected void predict(float[] ba, double[] areas, float[] originalErrors) {
         // just keep the original errors
     }
+
+
+
 }

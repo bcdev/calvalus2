@@ -1,5 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
+import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import org.esa.snap.core.dataio.ProductIO;
@@ -180,6 +182,56 @@ public class AbstractGridMapperTest {
             builder.append("\n");
             return builder.toString();
         }
+    }
+
+    @Ignore
+    @Test
+    public void acceptanceTestModisGridFormat() throws Exception {
+        List<Product> products = new ArrayList<>();
+        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc"));
+
+        AbstractGridMapper mapper = new ModisGridMapper();
+        File lcFile = new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h19v08-2000.nc");
+        Product lcProduct = ProductIO.readProduct(lcFile);
+
+        Product[] products1 = products.toArray(new Product[0]);
+        Product[] lcProducts = {lcProduct};
+        ZipFile geoLookupTables = new ZipFile("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-076x.zip");
+        String targetTile = "765,325";
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, geoLookupTables, targetTile);
+        mapper.setDataSource(dataSource);
+
+        GridCell gridCell = mapper.computeGridCell(2001, 1);
+        Product product = new Product("test", "test", 1, 1);
+        Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
+        ba1.setData(new ProductData.Float(gridCell.baFirstHalf));
+        Band pa1 = product.addBand("pa1", ProductData.TYPE_FLOAT32);
+        pa1.setData(new ProductData.Float(gridCell.patchNumberFirstHalf));
+        Band co1 = product.addBand("co1", ProductData.TYPE_FLOAT32);
+        co1.setData(new ProductData.Float(gridCell.coverageFirstHalf));
+        Band er1 = product.addBand("er1", ProductData.TYPE_FLOAT32);
+        er1.setData(new ProductData.Float(gridCell.errorsFirstHalf));
+        Band ba2 = product.addBand("ba2", ProductData.TYPE_FLOAT32);
+        ba2.setData(new ProductData.Float(gridCell.baSecondHalf));
+        Band pa2 = product.addBand("pa2", ProductData.TYPE_FLOAT32);
+        pa2.setData(new ProductData.Float(gridCell.patchNumberSecondHalf));
+        Band co2 = product.addBand("co2", ProductData.TYPE_FLOAT32);
+        co2.setData(new ProductData.Float(gridCell.coverageSecondHalf));
+        Band er2 = product.addBand("er2", ProductData.TYPE_FLOAT32);
+        er2.setData(new ProductData.Float(gridCell.errorsSecondHalf));
+        List<float[]> baInLcFirstHalf = gridCell.baInLcFirstHalf;
+        for (int i = 0; i < baInLcFirstHalf.size(); i++) {
+            float[] floats = baInLcFirstHalf.get(i);
+            Band lcBand = product.addBand("lc" + i, ProductData.TYPE_FLOAT32);
+            lcBand.setData(new ProductData.Float(floats));
+        }
+
+        Band buf = product.addBand("buf", ProductData.TYPE_FLOAT32);
+        buf.setData(new ProductData.Float(gridCell.burnableFraction));
+
+        product.setSceneGeoCoding(new CrsGeoCoding(DefaultGeographicCRS.WGS84, 8, 8, -14, 14, 0.25, 0.25, 0.0, 0.0));
+
+        ProductIO.writeProduct(product, "c:\\ssd\\modis-grid-format.nc", "NetCDF-CF");
     }
 
 }

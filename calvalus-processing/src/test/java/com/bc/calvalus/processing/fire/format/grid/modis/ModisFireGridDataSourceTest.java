@@ -15,12 +15,14 @@ public class ModisFireGridDataSourceTest {
 
     @Test
     public void readPixels() throws Exception {
-        Product product = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\burned_2001_1_h19v08.nc");
-        Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\h19v08-2000.nc");
+        Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\burned_2001_1_h19v08.nc");
+        Product lcProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\h19v08-2000.nc");
+        Product product2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\burned_2001_1_h20v08.nc");
+        Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\h20v08-2000.nc");
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
-                new Product[]{product},
-                new Product[]{lcProduct},
-                new ZipFile("C:\\ssd\\modis-geo-luts\\modis-geo-luts.zip"), "765,348");
+                new Product[]{product1},
+                new Product[]{lcProduct1},
+                new ZipFile("D:\\workspace\\fire-cci\\modis-grid-input\\modis-geo-luts.zip"), "765,340");
 
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
@@ -30,7 +32,30 @@ public class ModisFireGridDataSourceTest {
         SourceData sourceData = dataSource.readPixels(0, 0);
     }
 
+    @Test
+    public void testGetXCoord() throws Exception {
+        String targetTile = "1486,359";
+        assertEquals("148x", ModisGridMapper.getXCoord(targetTile));
 
+        targetTile = "800,359";
+        assertEquals("080x", ModisGridMapper.getXCoord(targetTile));
+
+        targetTile = "810,359";
+        assertEquals("081x", ModisGridMapper.getXCoord(targetTile));
+
+        targetTile = "70,359";
+        assertEquals("007x", ModisGridMapper.getXCoord(targetTile));
+
+        targetTile = "5,359";
+        assertEquals("000x", ModisGridMapper.getXCoord(targetTile));
+
+        try {
+            ModisGridMapper.getXCoord("15000,346");
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+    }
 
     @Test
     public void testGetUpperLat() throws Exception {

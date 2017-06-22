@@ -17,7 +17,10 @@ import org.opengis.referencing.operation.TransformException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -40,28 +43,24 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     public SourceData readPixels(int x, int y) throws IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        int width = 4800;
-        int height = 4800;
-
         x += Integer.parseInt(targetTile.split(",")[0]);
         y += Integer.parseInt(targetTile.split(",")[1]);
 
-        SourceData data = new SourceData(width, height);
-        data.reset();
-
-        CrsGeoCoding gc = getCrsGeoCoding(width, height, getUpperLat(y), getLeftLon(x));
+        CrsGeoCoding gc = getCrsGeoCoding(4800, 4800, getUpperLat(y), getLeftLon(x));
 
         String lutName = String.format("modis-geo-lut-%s-%s.json", x, y);
         ZipEntry entry = geoLookupTables.getEntry(lutName);
         if (entry == null) {
-            // todo - only for testing; in later stages, throw an ISE here.
-            return data;
+            throw new IllegalStateException("No geo lookup table available for target pixel " + lutName);
         }
         Gson gson = new Gson();
         HashMap<String, Set<String>> geoLookupTable;
         try (InputStream lutStream = geoLookupTables.getInputStream(entry)) {
             geoLookupTable = gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
         }
+
+        Set<String> allSourcePixelPoses = new HashSet<>();
+        List<SourceData> allSourceData = new ArrayList<>();
 
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
@@ -88,47 +87,59 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             ProductData lcData = ProductData.createInstance(lc.getDataType(), 1);
 
             Set<String> sourcePixelPoses = geoLookupTable.get(tile);
+            allSourcePixelPoses.addAll(sourcePixelPoses);
 
+            int pixelIndex = 0;
             for (String sourcePixelPos : sourcePixelPoses) {
+                SourceData data = new SourceData(1, 1);
                 int sourceX = Integer.parseInt(sourcePixelPos.split(",")[0]);
                 int sourceY = Integer.parseInt(sourcePixelPos.split(",")[1]);
-                int pixelIndex = sourceY * width + sourceX;
                 jd.readRasterData(sourceX, sourceY, 1, 1, jdData);
                 cl.readRasterData(sourceX, sourceY, 1, 1, clData);
                 numbObsFirstHalf.readRasterData(sourceX, sourceY, 1, 1, status1Data);
                 numbObsSecondHalf.readRasterData(sourceX, sourceY, 1, 1, status2Data);
+                lc.readRasterData(sourceX, sourceY, 1, 1, lcData);
                 int sourceJD = (int) jdData.getElemFloatAt(0);
                 float sourceCL = clData.getElemFloatAt(0);
                 byte sourceLC = (byte) lcData.getElemIntAt(0);
                 int sourceStatusFirstHalf = status1Data.getElemIntAt(0);
                 int sourceStatusSecondHalf = status1Data.getElemIntAt(0);
-                data.statusPixelsFirstHalf[pixelIndex] = sourceStatusFirstHalf;
-                data.statusPixelsSecondHalf[pixelIndex] = sourceStatusSecondHalf;
+                data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf);
+                data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf);
+                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                data.lcClasses[pixelIndex] = (int) sourceLC;
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
-                    data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                    data.lcClasses[pixelIndex] = (int) sourceLC;
                 } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
-                    data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                    data.lcClasses[pixelIndex] = (int) sourceLC;
                 }
+                allSourceData.add(data);
+//                pixelIndex++;
             }
         }
 
-        getAreas(gc, width, height, data.areas);
 
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, height), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, height), false);
+        SourceData data = SourceData.merge(allSourceData);
+        int width = (int) Math.sqrt(data.width);
+
+        getAreas(gc, width, width, data.areas);
+
+        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, width), true);
+        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, width), false);
 
         return data;
-}
+    }
+
+    private int remap(int status) {
+        // 0 = Observed, 3=Not-observed and 4=Unburnable
+        return status == 3 ? -1 : 1;
+    }
 
     private static CrsGeoCoding getCrsGeoCoding(int width, int height, double upperLat, double leftLon) {
         try {
-            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, width, height, leftLon, upperLat, 10.0/4800.0, 10.0/4800.0);
+            return new CrsGeoCoding(DefaultGeographicCRS.WGS84, width, height, leftLon, upperLat, 10.0 / 4800.0, 10.0 / 4800.0);
         } catch (FactoryException | TransformException e) {
             throw new IllegalStateException("Unable to create temporary geo-coding", e);
         }
