@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.utils;
 
 import org.apache.commons.codec.binary.Hex;
 import org.joda.time.DateTime;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.xml.ConfigurationException;
@@ -25,6 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 import java.util.HashMap;
@@ -329,7 +331,8 @@ public class SamlUtilTest
         return response;
     }
 
-    //@Test
+    @Ignore
+    @Test
     public void testSignedSamlToken() throws Exception {
         Response response = createSignedSamlToken();
         String formattedAssertion = util.pp(response);
@@ -351,7 +354,8 @@ public class SamlUtilTest
         return response;
     }
 
-    //@Test
+    @Ignore
+    @Test
     public void testHashAndSignedSamlToken() throws Exception {
         String hashAndSaml = createHashAndSignedSamlToken();
         int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
@@ -373,11 +377,16 @@ public class SamlUtilTest
         return hashAndSaml;
     }
 
-    //@Test
+    @Ignore
+    @Test
     public void testEncryptedCalvalusToken() throws Exception {
         String calvalusToken = createCalvalusToken();
 
         assertTrue("key+hash+saml", calvalusToken.contains(" "));
+
+        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/calvalus_token.dat")) {
+            out.write(calvalusToken.getBytes());
+        }
     }
 
     private String createCalvalusToken() throws Exception {
@@ -386,7 +395,7 @@ public class SamlUtilTest
         File keyFile = new File("/home/boe/tmp/code/calvalus_pub.der");
         byte[] keySequence = new byte[(int) keyFile.length()];
         try (FileInputStream in = new FileInputStream(keyFile)) {
-            in.read(keySequence);
+            System.out.println(keyFile.length() + " ?= " + in.read(keySequence));
         }
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keySequence);
@@ -395,7 +404,8 @@ public class SamlUtilTest
         return util.encryptRsaAes(hashAndSaml, rsaKey);
     }
 
-    //@Test
+    @Ignore
+    @Test
     public void testDecryptedCalvalusToken() throws Exception {
         String hashAndSaml = decryptCalvalusToken();
         int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
@@ -420,7 +430,7 @@ public class SamlUtilTest
         return util.decryptCalvalusToken(calvalusToken, rsaKey);
     }
 
-    //@Test
+    @Test
     public void encryptDecryptTest() throws Exception {
         Base64.Encoder encoder = Base64.getEncoder();
         Base64.Decoder decoder = Base64.getDecoder();
@@ -446,13 +456,13 @@ public class SamlUtilTest
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
-        byte[] privateKeyBytes = new byte[(int) new File("/home/boe/tmp/code/test_priv.der").length()];
-        try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/test_priv.der")) {
-            in.read(privateKeyBytes);
+        byte[] privateKeyBytes = new byte[(int) new File("/home/boe/tmp/code/calvalus_priv.der").length()];
+        try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/calvalus_priv.der")) {
+            System.out.println(new File("/home/boe/tmp/code/calvalus_priv.der").length() + " ?= " + in.read(privateKeyBytes));
         }
-        byte[] publicKeyBytes = new byte[(int) new File("/home/boe/tmp/code/test_priv.der").length()];
-        try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/test_priv.der")) {
-            in.read(publicKeyBytes);
+        byte[] publicKeyBytes = new byte[(int) new File("/home/boe/tmp/code/calvalus_pub.der").length()];
+        try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/calvalus_pub.der")) {
+            System.out.println(new File("/home/boe/tmp/code/calvalus_pub.der").length() + " ?= " + in.read(publicKeyBytes));
         }
 
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);

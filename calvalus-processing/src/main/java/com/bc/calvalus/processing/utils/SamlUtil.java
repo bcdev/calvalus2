@@ -254,7 +254,7 @@ public class SamlUtil
         System.out.println(aesKeyPart);
 
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
+        rsa.init(Cipher.DECRYPT_MODE, rsaKey);
         byte[] aesKeyCode = rsa.doFinal(base64.decode(aesKeyPart.getBytes()));
         SecretKey aesKey = new SecretKeySpec(aesKeyCode, "AES");
 
