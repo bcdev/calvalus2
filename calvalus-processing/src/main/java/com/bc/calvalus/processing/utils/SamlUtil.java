@@ -18,7 +18,6 @@ import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.NameID;
 import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.Subject;
-import org.opensaml.saml2.core.impl.AssertionMarshaller;
 import org.opensaml.saml2.core.impl.ResponseMarshaller;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
@@ -32,20 +31,30 @@ import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureException;
 import org.opensaml.xml.signature.Signer;
+import org.opensaml.xml.signature.impl.SignatureBuilder;
 import org.opensaml.xml.util.XMLHelper;
 import org.w3c.dom.Element;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import javax.xml.namespace.QName;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.Key;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -79,12 +88,19 @@ import java.util.Map;
 public class SamlUtil
 {
     XMLObjectBuilderFactory factory;
-    SamlUtil() throws ConfigurationException {
+    MessageDigest SHA256;
+
+    SamlUtil() throws ConfigurationException, NoSuchAlgorithmException {
         DefaultBootstrap.bootstrap();
         factory = Configuration.getBuilderFactory();
+        SHA256 = MessageDigest.getInstance("SHA-256");
     }
     private SAMLObject build(QName name) {
         return ((SAMLObjectBuilder) factory.getBuilder(name)).buildObject();
+    }
+
+    private Signature buildSignature(QName name) {
+        return ((SignatureBuilder) factory.getBuilder(name)).buildObject();
     }
 
     private XSString buildString(QName name) {
@@ -107,7 +123,7 @@ public class SamlUtil
 
             String certificateAliasName = "cas_certificate";
             String password = "secret";
-            String keyStoreFileName = "caskeystore.keys";
+            String keyStoreFileName = "/home/boe/tmp/code/caskeystore3.keys";
             Credential credentials = readCredentials(password, keyStoreFileName, certificateAliasName);
 
             Response response2 = util.sign(response, credentials);
@@ -120,7 +136,7 @@ public class SamlUtil
  
 	}
 
-    private static Credential readCredentials(String passwordValue, String keyStoreFileName, String certificateAliasName) throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, UnrecoverableEntryException {
+    public static Credential readCredentials(String passwordValue, String keyStoreFileName, String certificateAliasName) throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, UnrecoverableEntryException {
         char[] password = passwordValue.toCharArray();
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         try (FileInputStream fis = new FileInputStream(keyStoreFileName)) {
@@ -139,6 +155,11 @@ public class SamlUtil
     public String pp(Response response) throws MarshallingException {
         Element element = new ResponseMarshaller().marshall(response);
         return XMLHelper.prettyPrintXML(element);
+    }
+
+    public String toString(Response response) throws MarshallingException {
+        Element element = new ResponseMarshaller().marshall(response);
+        return XMLHelper.nodeToString(element);
     }
 
     public Response build(String issuerValue, String subjectValue, Map<String, String> attributesValue, DateTime timestamp, int timeoutValue) throws ConfigurationException {
@@ -186,14 +207,59 @@ public class SamlUtil
     }
 
     public Response sign(Response response, Credential credentials) throws SecurityException, MarshallingException, SignatureException {
-        Signature signature = (Signature) build(Signature.DEFAULT_ELEMENT_NAME);
+        Signature signature = (Signature) buildSignature(Signature.DEFAULT_ELEMENT_NAME);
         signature.setSigningCredential(credentials);
         SecurityConfiguration secConfig = Configuration.getGlobalSecurityConfiguration();
-        String keyInfoGeneratorProfile = "XMLSignature";
-        SecurityHelper.prepareSignatureParams(signature, credentials, secConfig, keyInfoGeneratorProfile);
-        response.setSignature(signature);
+        //String keyInfoGeneratorProfile = "XMLSignature";
+        SecurityHelper.prepareSignatureParams(signature, credentials, secConfig, null /*keyInfoGeneratorProfile*/);
+        Assertion assertion = response.getAssertions().get(0);
+        assertion.setSignature(signature);
         Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
         Signer.signObject(signature);
         return response;
+    }
+
+    public byte[] sha256(String request) throws UnsupportedEncodingException {
+        return SHA256.digest(request.getBytes("UTF-8"));
+    }
+
+
+    public String encryptRsaAes(String message, PublicKey rsaKey) throws Exception {
+        KeyGenerator keygen = KeyGenerator.getInstance("AES");
+        keygen.init(128);
+        Key key = keygen.generateKey();
+
+        Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
+        byte[] encryptedAesKey = rsa.doFinal(key.getEncoded());
+        Base64.Encoder base64 = Base64.getEncoder();
+        String encodedAesKey = base64.encodeToString(encryptedAesKey);
+
+        Cipher aes = Cipher.getInstance("AES");
+        aes.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encryptedHashAndSaml = aes.doFinal(message.getBytes("UTF-8"));
+        String encodedHashAndSaml = base64.encodeToString(encryptedHashAndSaml);
+
+        return encodedAesKey + ' ' + encodedHashAndSaml;
+    }
+
+    public String decryptCalvalusToken(String calvalusToken, PrivateKey rsaKey) throws Exception {
+        Base64.Decoder base64 = Base64.getDecoder();
+
+        int p1 = calvalusToken.indexOf(" ");
+        String aesKeyPart = calvalusToken.substring(0, p1);
+        String hashAndSamlPart = calvalusToken.substring(p1 + 1);
+
+        System.out.println(base64.decode(aesKeyPart).length);
+        System.out.println(aesKeyPart);
+
+        Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
+        byte[] aesKeyCode = rsa.doFinal(base64.decode(aesKeyPart.getBytes()));
+        SecretKey aesKey = new SecretKeySpec(aesKeyCode, "AES");
+
+        Cipher aes = Cipher.getInstance("AES");
+        aes.init(Cipher.DECRYPT_MODE, aesKey);
+        return new String(aes.doFinal(base64.decode(hashAndSamlPart.getBytes())), "UTF-8");
     }
 }
