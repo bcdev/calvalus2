@@ -39,6 +39,7 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.namespace.QName;
 import java.io.FileInputStream;
@@ -57,6 +58,7 @@ import java.security.cert.X509Certificate;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * <?xml version="1.0" encoding="UTF-8"?>
@@ -107,35 +109,35 @@ public class SamlUtil
         return (XSString) factory.getBuilder(XSString.TYPE_NAME).buildObject(name, XSString.TYPE_NAME);
     }
  
-	public static void main(String[] args) {
-    	try {
-			String issuer = "cas";
-			String subject = "cd_calvalus";
-			Map<String,String> attributes = new HashMap<>();
-			attributes.put("groups", "calvalus,testproject");
-			attributes.put("email", "calvalustest@code.de");
-			int timeoutSeconds = 60*60*24;
+//	public static void main(String[] args) {
+//    	try {
+//			String issuer = "cas";
+//			String subject = "cd_calvalus";
+//			Map<String,String> attributes = new HashMap<>();
+//			attributes.put("groups", "calvalus,testproject");
+//			attributes.put("email", "calvalustest@code.de");
+//			int timeoutSeconds = 60*60*24;
+//
+//            SamlUtil util = new SamlUtil();
+//            Response response = util.build(issuer, subject, attributes, new DateTime(), timeoutSeconds);
+//			String samlAssertion = util.pp(response);
+//			System.out.println("Assertion: " + samlAssertion);
+//
+//            String certificateAliasName = "cas_certificate";
+//            String password = "secret";
+//            String keyStoreFileName = "/home/boe/tmp/code/caskeystore3.keys";
+//            Credential credentials = readCredentials(password, keyStoreFileName, certificateAliasName);
+//
+//            Response response2 = util.sign(response, credentials);
+//            String samlResponse = util.pp(response2);
+//            System.out.println("Signed response:" + samlResponse);
+//
+//		} catch (Exception e) {
+//			e.printStackTrace();
+//		}
+//	}
 
-            SamlUtil util = new SamlUtil();
-            Response response = util.build(issuer, subject, attributes, new DateTime(), timeoutSeconds);
-			String samlAssertion = util.pp(response);
-			System.out.println("Assertion: " + samlAssertion);
-
-            String certificateAliasName = "cas_certificate";
-            String password = "secret";
-            String keyStoreFileName = "/home/boe/tmp/code/caskeystore3.keys";
-            Credential credentials = readCredentials(password, keyStoreFileName, certificateAliasName);
-
-            Response response2 = util.sign(response, credentials);
-            String samlResponse = util.pp(response2);
-            System.out.println("Signed response:" + samlResponse);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
- 
-	}
-
+    // TBD to construct this from private cas key instead of keystore
     public static Credential readCredentials(String passwordValue, String keyStoreFileName, String certificateAliasName) throws CertificateException, NoSuchAlgorithmException, IOException, KeyStoreException, UnrecoverableEntryException {
         char[] password = passwordValue.toCharArray();
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -148,7 +150,6 @@ public class SamlUtil
         BasicX509Credential credential = new BasicX509Credential();
         credential.setEntityCertificate(certificate);
         credential.setPrivateKey(pk);
-        System.out.println("Private Key" + pk.toString());
         return credential;
     }
 
@@ -162,6 +163,16 @@ public class SamlUtil
         return XMLHelper.nodeToString(element);
     }
 
+    /**
+     * Builds SAML response
+     * @param issuerValue
+     * @param subjectValue
+     * @param attributesValue
+     * @param timestamp
+     * @param timeoutValue
+     * @return SAML response with unsigned assertion
+     * @throws ConfigurationException
+     */
     public Response build(String issuerValue, String subjectValue, Map<String, String> attributesValue, DateTime timestamp, int timeoutValue) throws ConfigurationException {
 
         Assertion assertion = (Assertion) build(Assertion.DEFAULT_ELEMENT_NAME);
@@ -206,6 +217,15 @@ public class SamlUtil
         return response;
     }
 
+    /**
+     * Signs SAML assertion
+     * @param response
+     * @param credentials
+     * @return SAML response with signed assertion
+     * @throws SecurityException
+     * @throws MarshallingException
+     * @throws SignatureException
+     */
     public Response sign(Response response, Credential credentials) throws SecurityException, MarshallingException, SignatureException {
         Signature signature = (Signature) buildSignature(Signature.DEFAULT_ELEMENT_NAME);
         signature.setSigningCredential(credentials);
@@ -219,47 +239,70 @@ public class SamlUtil
         return response;
     }
 
+    /**
+     * Hashes request string
+     * @param request
+     * @return SHA256 digest of request string
+     * @throws UnsupportedEncodingException
+     */
     public byte[] sha256(String request) throws UnsupportedEncodingException {
         return SHA256.digest(request.getBytes("UTF-8"));
     }
 
-
+    /**
+     * Encrypts hash+SAML with generated AES key and AES key with provided RSA key
+     * @param message
+     * @param rsaKey
+     * @return triple of base64-encoded IV, encrypted AES key, encrypted hash+SAML, separated by space
+     * @throws Exception
+     */
     public String encryptRsaAes(String message, PublicKey rsaKey) throws Exception {
+        Base64.Encoder base64 = Base64.getEncoder();
+
         KeyGenerator keygen = KeyGenerator.getInstance("AES");
         keygen.init(128);
         Key key = keygen.generateKey();
 
+        byte[] iv = new byte[16];
+        new Random().nextBytes(iv);
+        String encodedIV = base64.encodeToString(iv);
+
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
         byte[] encryptedAesKey = rsa.doFinal(key.getEncoded());
-        Base64.Encoder base64 = Base64.getEncoder();
         String encodedAesKey = base64.encodeToString(encryptedAesKey);
 
-        Cipher aes = Cipher.getInstance("AES");
-        aes.init(Cipher.ENCRYPT_MODE, key);
+        Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        aes.init(Cipher.ENCRYPT_MODE, key, new IvParameterSpec(iv));
         byte[] encryptedHashAndSaml = aes.doFinal(message.getBytes("UTF-8"));
         String encodedHashAndSaml = base64.encodeToString(encryptedHashAndSaml);
 
-        return encodedAesKey + ' ' + encodedHashAndSaml;
+        return encodedIV + ' ' + encodedAesKey + ' ' + encodedHashAndSaml;
     }
 
+    /**
+     * Decrypts encrypted hash+SAML using provided RSA key and encrypted AES key
+     * @param calvalusToken triple of base64-encoded IV, encrypted AES key, encrypted hash+SAML, separated by space
+     * @param rsaKey
+     * @return pair of base64-encoded hash and SAML
+     * @throws Exception
+     */
     public String decryptCalvalusToken(String calvalusToken, PrivateKey rsaKey) throws Exception {
         Base64.Decoder base64 = Base64.getDecoder();
 
         int p1 = calvalusToken.indexOf(" ");
-        String aesKeyPart = calvalusToken.substring(0, p1);
-        String hashAndSamlPart = calvalusToken.substring(p1 + 1);
-
-        System.out.println(base64.decode(aesKeyPart).length);
-        System.out.println(aesKeyPart);
+        int p2 = calvalusToken.indexOf(" ", p1+1);
+        String ivPart = calvalusToken.substring(0, p1);
+        String aesKeyPart = calvalusToken.substring(p1+1, p2);
+        String hashAndSamlPart = calvalusToken.substring(p2 + 1);
 
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsa.init(Cipher.DECRYPT_MODE, rsaKey);
         byte[] aesKeyCode = rsa.doFinal(base64.decode(aesKeyPart.getBytes()));
         SecretKey aesKey = new SecretKeySpec(aesKeyCode, "AES");
 
-        Cipher aes = Cipher.getInstance("AES");
-        aes.init(Cipher.DECRYPT_MODE, aesKey);
+        Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
+        aes.init(Cipher.DECRYPT_MODE, aesKey, new IvParameterSpec(base64.decode(ivPart)));
         return new String(aes.doFinal(base64.decode(hashAndSamlPart.getBytes())), "UTF-8");
     }
 }
