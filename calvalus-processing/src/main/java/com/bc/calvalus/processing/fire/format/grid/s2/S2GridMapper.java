@@ -125,21 +125,38 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn) {
-//        np.sqrt(((1-a)*a).sum())
-        double sum = 0.0;
+        /*
+            p is array of burned_probability in cell c
+            var(C) = (p (1-p)).sum()
+            standard_error(c) = sqrt(var(c) *(n/(n-1))
+            sum(C) = p.sum()
+        */
+
+        double var_c = 0.0;
+        double sum_c = 0.0;
+        int count = 0;
         for (double p : probabilityOfBurn) {
-            if (Double.isNaN(p)) {
+            if (Double.isNaN(p) || p == 0) {
                 continue;
             }
             if (p > 1) {
+                // no-data/cloud/water
                 continue;
             }
             if (p < 0) {
                 throw new IllegalStateException("p < 0");
             }
-            sum += (1 - p) * p;
+            var_c += p * (1.0 - p);
+            sum_c += p;
+            count++;
         }
-        return (float) Math.sqrt(sum);
+        if (count == 0) {
+            return 0;
+        }
+        if (count == 1) {
+            return 1;
+        }
+        return (float) Math.sqrt(var_c * count / (count - 1.0));
 
         /*
 
@@ -170,6 +187,5 @@ public class S2GridMapper extends AbstractGridMapper {
 
     @Override
     protected void predict(float[] ba, double[] areas, float[] originalErrors) {
-        // just keep the original errors
     }
 }

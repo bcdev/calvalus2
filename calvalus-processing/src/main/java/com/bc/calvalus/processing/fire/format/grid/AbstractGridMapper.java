@@ -132,8 +132,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
-                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf);
-                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf);
+                errorsFirstHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnFirstHalf) * data.areas[targetPixelIndex]);
+                errorsSecondHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnSecondHalf) * data.areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }
@@ -196,11 +196,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     private static void validate(float[] errors, float[] ba) {
         for (int i = 0; i < errors.length; i++) {
             float error = errors[i];
+            // todo - check!
             if (error > 0 && !(ba[i] > 0)) {
-                throw new IllegalStateException("error > 0 && !(ba[i] > 0)");
+                LOG.warning("error > 0 && !(ba[i] > 0)");
+//                throw new IllegalStateException("error > 0 && !(ba[i] > 0)");
             }
             if (Float.isNaN(error)) {
-                throw new IllegalStateException("error is NaN");
+                LOG.warning("error is NaN");
+//                throw new IllegalStateException("error is NaN");
             }
         }
     }
