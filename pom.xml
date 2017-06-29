@@ -4,7 +4,7 @@
 
     <groupId>com.bc.calvalus</groupId>
     <artifactId>calvalus</artifactId>
-    <version>2.13-SNAPSHOT</version>
+    <version>2.13</version>
     <packaging>pom</packaging>
 
     <name>Calvalus</name>
@@ -12,10 +12,10 @@
 
     <properties>
         <hadoop.version>2.7.1</hadoop.version>
-        <calvalus.version>2.13-SNAPSHOT</calvalus.version>
-        <bc-wps.version>1.1</bc-wps.version>
-        <snap.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</snap.version>
-        <ceres.version>[4.0.3-SNAPSHOT,5.0.0-SNAPSHOT)</ceres.version>
+        <calvalus.version>2.13</calvalus.version>
+        <bc-wps.version>1.2</bc-wps.version>
+        <snap.version>[5.0,6.0.0-SNAPSHOT)</snap.version>
+        <ceres.version>[5.0,6.0.0-SNAPSHOT)</ceres.version>
         <geotools.version>2.7.4</geotools.version>
         <slf4j.version>1.7.21</slf4j.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
