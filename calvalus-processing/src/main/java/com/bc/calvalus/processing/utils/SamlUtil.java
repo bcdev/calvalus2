@@ -43,6 +43,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.namespace.QName;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Key;
@@ -267,9 +268,16 @@ public class SamlUtil
         new Random().nextBytes(iv);
         String encodedIV = base64.encodeToString(iv);
 
+        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/aeskey.dat")) {
+            out.write(key.getEncoded());
+        }
+
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
         byte[] encryptedAesKey = rsa.doFinal(key.getEncoded());
+        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/rsaencryptedaeskey.dat")) {
+            out.write(encryptedAesKey);
+        }
         String encodedAesKey = base64.encodeToString(encryptedAesKey);
 
         Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");

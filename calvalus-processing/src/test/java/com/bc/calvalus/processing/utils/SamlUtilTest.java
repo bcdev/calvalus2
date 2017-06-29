@@ -167,6 +167,9 @@ public class SamlUtilTest
     @Test
     public void testSignedSamlToken() throws Exception {
         Response response = createSignedSamlToken();
+
+        System.out.println(util.pp(response));
+
         String formattedAssertion = util.pp(response);
         int p0 = formattedAssertion.indexOf("<ds:SignatureValue>");
         int p1 = formattedAssertion.indexOf("</ds:SignatureValue>");
