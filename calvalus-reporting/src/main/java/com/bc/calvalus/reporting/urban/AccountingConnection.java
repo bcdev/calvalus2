@@ -7,6 +7,7 @@ import com.bc.calvalus.reporting.urban.account.Compound;
 import com.bc.calvalus.reporting.urban.account.Message;
 import com.bc.calvalus.reporting.urban.account.Quantity;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -46,27 +47,7 @@ public class AccountingConnection {
     }
 
     void send(Report report) {
-        Account account = new Account(reporter.getConfig().getProperty("reporting.urbantep.subsystem"),
-                                      report.usageStatistics.getUser().replace("tep_", ""),
-                                      report.usageStatistics.getRemoteRef());
-        Compound compound = new Compound(report.requestId,
-                                         report.usageStatistics.getJobName(),
-                                         report.usageStatistics.getProcessType(),
-                                         new Any(report.uri));
-        List<Quantity> quantityList = Arrays.asList(
-                new Quantity("CPU_MILLISECONDS", report.usageStatistics.getCpuMilliseconds()),
-                new Quantity("PHYSICAL_MEMORY_BYTES", report.usageStatistics.getCpuMilliseconds() == 0 ? (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) * 1024 * 1024 : (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) / report.usageStatistics.getCpuMilliseconds() * 1024 * 1024),
-                new Quantity("BYTE_READ", report.usageStatistics.getHdfsBytesRead()),
-                new Quantity("BYTE_WRITTEN", report.usageStatistics.getHdfsBytesWritten()),
-                new Quantity("PROC_INSTANCE", (long) report.usageStatistics.getMapsCompleted() + report.usageStatistics.getReducesCompleted()),
-                new Quantity("NUM_REQ", 1));
-        Message message = new Message(report.usageStatistics.getJobId(),
-                                      account,
-                                      compound,
-                                      quantityList,
-                                      reporter.getConfig().getProperty("reporting.urbantep.origin"),
-                                      TIME_FORMAT.format(new Date(report.usageStatistics.getFinishTime())),
-                                      "SUCCEEDED".equals(report.usageStatistics.getState()) ? "NOMINAL" : "DEGRADED");
+        Message message = createMessage(report);
         String messageJson = message.toJson();
         File file = new File(reporter.getConfig().getProperty("reporting.urbantep.reportsdir"), String.format("account-message-%s.json", report.job));
         try (FileWriter fileWriter = new FileWriter(file)) {
@@ -87,16 +68,9 @@ public class AccountingConnection {
         }
         try {
             if (urbantepWebClient == null) {
-                urbantepWebClient = ClientBuilder.newClient();
-                urbantepWebClient.register(HttpAuthenticationFeature.basicBuilder()
-                                                   .nonPreemptive().credentials(reporter.getConfig().getProperty("reporting.urbantep.user"),
-                                                                                reporter.getConfig().getProperty("reporting.urbantep.password")).build());
+                createWebClient();
             }
-            WebTarget target = urbantepWebClient.target(reporter.getConfig().getProperty("reporting.urbantep.url"));
-            Entity<String> jsonEntity = Entity.json(messageJson);
-            Invocation.Builder request = target.request(MediaType.TEXT_PLAIN_TYPE);
-            Response response = request.post(jsonEntity);
-            String reasonPhrase = response.getStatusInfo().getReasonPhrase();
+            String reasonPhrase = sendMessage(messageJson);
             LOGGER.info("report " + report.job + " sent to Urban TEP accounting: " + reasonPhrase);
             report.state = State.ACCOUNTED;
             reporter.getStatusHandler().setHandled(report.job, report.creationTime);
@@ -107,5 +81,45 @@ public class AccountingConnection {
             reporter.getStatusHandler().setFailed(report.job, report.creationTime);
             reporter.getTimer().schedule(report, 60, TimeUnit.SECONDS);
         }
+    }
+
+    private void createWebClient() {
+        urbantepWebClient = ClientBuilder.newClient();
+        urbantepWebClient.register(HttpAuthenticationFeature.basicBuilder()
+                                           .nonPreemptive().credentials(reporter.getConfig().getProperty("reporting.urbantep.user"),
+                                                                        reporter.getConfig().getProperty("reporting.urbantep.password")).build());
+    }
+
+    private String sendMessage(String messageJson) {
+        WebTarget target = urbantepWebClient.target(reporter.getConfig().getProperty("reporting.urbantep.url"));
+        Entity<String> jsonEntity = Entity.json(messageJson);
+        Invocation.Builder request = target.request(MediaType.TEXT_PLAIN_TYPE);
+        Response response = request.post(jsonEntity);
+        return response.getStatusInfo().getReasonPhrase();
+    }
+
+    @NotNull
+    private Message createMessage(Report report) {
+        Account account = new Account(reporter.getConfig().getProperty("reporting.urbantep.subsystem"),
+                                      report.usageStatistics.getUser().replace("tep_", ""),
+                                      report.usageStatistics.getRemoteRef());
+        Compound compound = new Compound(report.requestId,
+                                         report.usageStatistics.getJobName(),
+                                         report.usageStatistics.getProcessType(),
+                                         new Any(report.uri));
+        List<Quantity> quantityList = Arrays.asList(
+                new Quantity("CPU_MILLISECONDS", report.usageStatistics.getCpuMilliseconds()),
+                new Quantity("PHYSICAL_MEMORY_BYTES", report.usageStatistics.getCpuMilliseconds() == 0 ? (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) * 1024 * 1024 : (report.usageStatistics.getMbMillisMapTotal() + report.usageStatistics.getMbMillisReduceTotal()) / report.usageStatistics.getCpuMilliseconds() * 1024 * 1024),
+                new Quantity("BYTE_READ", report.usageStatistics.getHdfsBytesRead()),
+                new Quantity("BYTE_WRITTEN", report.usageStatistics.getHdfsBytesWritten()),
+                new Quantity("PROC_INSTANCE", (long) report.usageStatistics.getMapsCompleted() + report.usageStatistics.getReducesCompleted()),
+                new Quantity("NUM_REQ", 1));
+        return new Message(report.usageStatistics.getJobId(),
+                                      account,
+                                      compound,
+                                      quantityList,
+                                      reporter.getConfig().getProperty("reporting.urbantep.origin"),
+                                      TIME_FORMAT.format(new Date(report.usageStatistics.getFinishTime())),
+                                      "SUCCEEDED".equals(report.usageStatistics.getState()) ? "NOMINAL" : "DEGRADED");
     }
 }

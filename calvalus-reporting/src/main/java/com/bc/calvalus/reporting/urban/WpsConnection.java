@@ -33,6 +33,9 @@ public class WpsConnection {
         JSch.setConfig("HashKnownHosts", "yes");
     }
 
+    /**
+     * Runs forever in main thread of application after initialisation
+     */
     void run() {
         cursor = reporter.getConfig().getProperty("reporting.wps.cursor");
         while (true) {
@@ -41,12 +44,14 @@ public class WpsConnection {
                 connect();
                 LOGGER.info("listening for new records from WPS ...");
                 while (true) {
+                    // wait for and read next record from WPS finished jobs report
                     String line = in.readLine();
                     handleLine(line);
                 }
             } catch (Exception e) {
                 LOGGER.warning("connection to WPS reports at " + reporter.getConfig().getProperty("reporting.wps.host") + " failed: " + e.getMessage() + " - sleeping ...");
                 disconnect();
+                // sleeps for one minute before retrying after failure
                 try {
                     Thread.currentThread().wait(60 * 1000);
                 } catch (InterruptedException _) {}

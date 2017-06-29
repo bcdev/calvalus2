@@ -59,6 +59,10 @@ public class UrbanTepReporting {
         }
     }
 
+    /**
+     * Called by Report runnable that is queued in scheduled worker
+     * @param report
+     */
     public void process(Report report) {
         switch (report.state) {
             case NOT_YET_RETRIEVED:
