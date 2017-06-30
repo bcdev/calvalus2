@@ -19,7 +19,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.zip.ZipEntry;
@@ -46,8 +45,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         x += Integer.parseInt(targetTile.split(",")[0]);
         y += Integer.parseInt(targetTile.split(",")[1]);
 
-        CrsGeoCoding gc = getCrsGeoCoding(4800, 4800, getUpperLat(y), getLeftLon(x));
-
         String lutName = String.format("modis-geo-lut-%s-%s.json", x, y);
         ZipEntry entry = geoLookupTables.getEntry(lutName);
         if (entry == null) {
@@ -59,7 +56,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             geoLookupTable = gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
         }
 
-        Set<String> allSourcePixelPoses = new HashSet<>();
         List<SourceData> allSourceData = new ArrayList<>();
 
         for (int i = 0; i < products.length; i++) {
@@ -87,7 +83,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             ProductData lcData = ProductData.createInstance(lc.getDataType(), 1);
 
             Set<String> sourcePixelPoses = geoLookupTable.get(tile);
-            allSourcePixelPoses.addAll(sourcePixelPoses);
 
             int pixelIndex = 0;
             for (String sourcePixelPos : sourcePixelPoses) {
@@ -116,7 +111,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
                 allSourceData.add(data);
-//                pixelIndex++;
             }
         }
 
@@ -124,6 +118,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         SourceData data = SourceData.merge(allSourceData);
         int width = (int) Math.sqrt(data.width);
 
+        CrsGeoCoding gc = getCrsGeoCoding(4800, 4800, getUpperLat(y), getLeftLon(x));
         getAreas(gc, width, width, data.areas);
 
         data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, width), true);
@@ -153,17 +148,4 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return pixel > doyFirstHalf + 8 && pixel <= doyLastOfMonth;
     }
 
-    static double getUpperLat(int y) {
-        if (y < 0 || y > 719) {
-            throw new IllegalArgumentException("invalid value of y: " + y + "; y has to be between 0 and 719.");
-        }
-        return 90 - 0.25 * y;
-    }
-
-    static double getLeftLon(int x) {
-        if (x < 0 || x > 1439) {
-            throw new IllegalArgumentException("invalid value of x: " + x + "; x has to be between 0 and 1439.");
-        }
-        return -180 + 0.25 * x;
-    }
 }

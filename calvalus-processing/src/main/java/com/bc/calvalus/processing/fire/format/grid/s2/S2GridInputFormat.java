@@ -6,7 +6,6 @@ import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.InputSplit;
@@ -60,14 +59,6 @@ public class S2GridInputFormat extends InputFormat {
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());
         }
-        // lcTiles are in 10deg steps, so divide number of two deg file by five
-        String lcTile = String.format("v%02dh%02d", Integer.parseInt(twoDegreeTile.substring(1, 3)) / 5, Integer.parseInt(twoDegreeTile.substring(4)) / 5);
-        String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/lc/" + String.format("lc-%s-%s.nc", "2005", lcTile);
-        FileStatus lcPath = FileSystem.get(conf).getFileStatus(new Path(lcInputPath));
-        filePaths.add(lcPath.getPath());
-        fileLengths.add(lcPath.getLen());
-        filePaths.add(new Path(twoDegreeTile));
-        fileLengths.add(0L);
         CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
         splits.add(combineFileSplit);

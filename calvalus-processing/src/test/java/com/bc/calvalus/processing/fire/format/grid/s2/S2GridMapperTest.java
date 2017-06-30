@@ -51,15 +51,32 @@ public class S2GridMapperTest {
         probs[2] = 0.2;
         probs[3] = 0.534;
         probs[4] = 0.51;
-        assertEquals(1.1007536649, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
-        probs[0] = Double.NaN;
-        assertEquals(1.1007536649, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        probs = new double[6];
+        probs[0] = 0;
+        probs[1] = 0.5;
+        probs[2] = 0.2;
+        probs[3] = 0.534;
+        probs[4] = 0.51;
+        probs[5] = Float.NaN;
+        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+    }
+
+    @Test
+    public void testGetErrorPerPixelZero() throws Exception {
+        double[] probs = new double[5];
+        probs[0] = 0;
+        probs[1] = 0.5;
+        probs[2] = 0.2;
+        probs[3] = 0.534;
+        probs[4] = 0.51;
+        assertEquals(1.0658, new S2GridMapper().getErrorPerPixel(probs), 1E-5);
     }
 
     @Test
     public void testGetErrorPerPixelInf() throws Exception {
         double[] probs = new double[1];
         probs[0] = 0.3;
-        assertEquals(Double.POSITIVE_INFINITY, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
     }
 }

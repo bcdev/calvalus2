@@ -1,8 +1,15 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
+
+import java.util.List;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
+import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
 
 public abstract class AbstractFireGridDataSource implements FireGridDataSource {
 
@@ -78,6 +85,35 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             }
         }
         return areas;
+    }
+
+    protected static double[] getAreas(List<int[]> indices, double[] areas) {
+        int pixelIndex = 0;
+        for (int[] index : indices) {
+            CrsGeoCoding gc;
+            try {
+                gc = new CrsGeoCoding(DefaultGeographicCRS.WGS84, 1, 1, getLeftLon(index[0]), getUpperLat(index[1]), S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE);
+            } catch (FactoryException | TransformException e) {
+                throw new IllegalStateException("Unable to create temporary geo-coding", e);
+            }
+            AreaCalculator areaCalculator = new AreaCalculator(gc);
+            areas[pixelIndex++] = areaCalculator.calculatePixelSize(index[0], index[1]);
+        }
+        return areas;
+    }
+
+    public static double getUpperLat(int y) {
+        if (y < 0 || y > 719) {
+            throw new IllegalArgumentException("invalid value of y: " + y + "; y has to be between 0 and 719.");
+        }
+        return 90 - 0.25 * y;
+    }
+
+    public static double getLeftLon(int x) {
+        if (x < 0 || x > 1439) {
+            throw new IllegalArgumentException("invalid value of x: " + x + "; x has to be between 0 and 1439.");
+        }
+        return -180 + 0.25 * x;
     }
 
 }

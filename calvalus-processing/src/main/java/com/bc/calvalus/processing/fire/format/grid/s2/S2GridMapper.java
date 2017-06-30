@@ -7,11 +7,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.Product;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,6 +47,7 @@ public class S2GridMapper extends AbstractGridMapper {
         String fiveDegTile = paths[paths.length - 1].getName();
 
         List<Product> sourceProducts = new ArrayList<>();
+        List<Product> lcProducts = new ArrayList<>();
         for (int i = 0; i < paths.length - 2; i++) {
             String utmTile = paths[i].getName().substring(4, 9);
             String localGeoLookupFileName = fiveDegTile + "-" + utmTile + ".zip";
@@ -61,19 +58,19 @@ public class S2GridMapper extends AbstractGridMapper {
             }
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             sourceProducts.add(ProductIO.readProduct(sourceProductFile));
+            File file = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2/lc-2010-" + utmTile + ".nc"), context.getConfiguration());
+            Product lcProduct = ProductIO.readProduct(file);
+            lcProducts.add(lcProduct);
             LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 2)));
         }
 
-        File file = CalvalusProductIO.copyFileToLocal(paths[paths.length - 2], context.getConfiguration());
-        Product lcProduct = ProductIO.readProduct(file);
-        setGcToLcProduct(lcProduct);
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
         int doyLastOfMonth = Year.of(year).atMonth(month).atDay(Year.of(year).atMonth(month).lengthOfMonth()).getDayOfYear();
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProduct, geoLookupTables);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource(fiveDegTile, sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -105,24 +102,6 @@ public class S2GridMapper extends AbstractGridMapper {
         }
     }
 
-    public static void setGcToLcProduct(Product lcProduct) throws IOException {
-        String tile = lcProduct.getName().substring(8, 14);
-        int tileX = Integer.parseInt(tile.substring(4, 6));
-        int tileY = Integer.parseInt(tile.substring(1, 3));
-        int easting = 10 * tileX - 180;
-        int northing = 90 - 10 * tileY;
-        int height = lcProduct.getSceneRasterHeight();
-        int width = lcProduct.getSceneRasterWidth();
-        double pixelSize = 1 / 360.0;
-        CrsGeoCoding sceneGeoCoding;
-        try {
-            sceneGeoCoding = new CrsGeoCoding(DefaultGeographicCRS.WGS84, width, height, easting, northing, pixelSize, pixelSize);
-        } catch (FactoryException | TransformException e) {
-            throw new IllegalStateException("Cannot construct geo-coding for LC tile.", e);
-        }
-        lcProduct.setSceneGeoCoding(sceneGeoCoding);
-    }
-
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn) {
         /*
@@ -136,7 +115,7 @@ public class S2GridMapper extends AbstractGridMapper {
         double sum_c = 0.0;
         int count = 0;
         for (double p : probabilityOfBurn) {
-            if (Double.isNaN(p) || p == 0) {
+            if (Double.isNaN(p)) {
                 continue;
             }
             if (p > 1) {

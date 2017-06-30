@@ -2,8 +2,6 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
-import com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource;
-import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
@@ -120,7 +118,6 @@ public class AbstractGridMapperTest {
         };
         File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-v07h16.nc");
         Product lcProduct = ProductIO.readProduct(file);
-        S2GridMapper.setGcToLcProduct(lcProduct);
 
         List<ZipFile> geoLookupTables = new ArrayList<>();
         Files.list(Paths.get("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting"))
@@ -132,8 +129,8 @@ public class AbstractGridMapperTest {
             }
         });
 
-        S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables);
-        mapper.setDataSource(dataSource);
+//        S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables);
+//        mapper.setDataSource(dataSource);
 
         GridCell gridCell = mapper.computeGridCell(2016, 1);
         Product product = new Product("test", "test", 8, 8);
