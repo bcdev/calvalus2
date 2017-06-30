@@ -144,13 +144,6 @@ public class SamlUtilTest
         util = new SamlUtil();
     }
 
-    @Test
-    public void testSamlToken() throws Exception {
-        Response response = createSamlToken();
-        String formattedAssertion = util.pp(response);
-        assertEquals("SAML token differs", SIMPLE_SAML_RESPONSE, formattedAssertion);
-    }
-
     public Response createSamlToken() throws Exception {
         String issuer = "cas";
         String subject = "cd_calvalus";
@@ -161,20 +154,6 @@ public class SamlUtilTest
 
         Response response = util.build(issuer, subject, attributes, new DateTime("2017-06-23T10:27:05.354Z"), timeoutSeconds);
         return response;
-    }
-
-    @Ignore
-    @Test
-    public void testSignedSamlToken() throws Exception {
-        Response response = createSignedSamlToken();
-
-        System.out.println(util.pp(response));
-
-        String formattedAssertion = util.pp(response);
-        int p0 = formattedAssertion.indexOf("<ds:SignatureValue>");
-        int p1 = formattedAssertion.indexOf("</ds:SignatureValue>");
-        String comparableAssertion = formattedAssertion.substring(0, p0) + SIGNED_SAML_RESPONSE.substring(p0, p1) + formattedAssertion.substring(p1);
-        assertEquals("SAML token differs", SIGNED_SAML_RESPONSE, comparableAssertion);
     }
 
     public Response createSignedSamlToken() throws Exception {
@@ -189,17 +168,6 @@ public class SamlUtilTest
         return response;
     }
 
-    @Ignore
-    @Test
-    public void testHashAndSignedSamlToken() throws Exception {
-        String hashAndSaml = createHashAndSignedSamlToken();
-        int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
-        int p1 = hashAndSaml.indexOf("</ds:SignatureValue>");
-        String comparableHashAndSaml =
-                hashAndSaml.substring(0, p0) + HASH_AND_SAML_RESPONSE.substring(p0, p1) + hashAndSaml.substring(p1);
-        assertEquals("request digest and saml token", HASH_AND_SAML_RESPONSE, comparableHashAndSaml);
-    }
-
     public String createHashAndSignedSamlToken() throws Exception {
         Response response = createSignedSamlToken();
         String responseString = util.toString(response);
@@ -210,18 +178,6 @@ public class SamlUtilTest
 
         String hashAndSaml = digestString + ' ' + responseString;
         return hashAndSaml;
-    }
-
-    @Ignore
-    @Test
-    public void testEncryptedCalvalusToken() throws Exception {
-        String calvalusToken = createCalvalusToken();
-
-        assertTrue("key+hash+saml", calvalusToken.contains(" "));
-
-        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/calvalus_token.dat")) {
-            out.write(calvalusToken.getBytes());
-        }
     }
 
     private String createCalvalusToken() throws Exception {
@@ -237,17 +193,6 @@ public class SamlUtilTest
         PublicKey rsaKey = keyFactory.generatePublic(publicKeySpec);
 
         return util.encryptRsaAes(hashAndSaml, rsaKey);
-    }
-
-    @Ignore
-    @Test
-    public void testDecryptedCalvalusToken() throws Exception {
-        String hashAndSaml = decryptCalvalusToken();
-        int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
-        int p1 = hashAndSaml.indexOf("</ds:SignatureValue>");
-        String comparableHashAndSaml =
-                hashAndSaml.substring(0, p0) + HASH_AND_SAML_RESPONSE.substring(p0, p1) + hashAndSaml.substring(p1);
-        assertEquals("request digest and saml token", HASH_AND_SAML_RESPONSE, comparableHashAndSaml);
     }
 
     String decryptCalvalusToken() throws Exception {
@@ -267,38 +212,75 @@ public class SamlUtilTest
     }
 
     @Test
+    public void testSamlToken() throws Exception {
+        Response response = createSamlToken();
+        String formattedAssertion = util.pp(response);
+        assertEquals("SAML token differs", SIMPLE_SAML_RESPONSE, formattedAssertion);
+    }
+
+    @Ignore
+    @Test
+    public void testSignedSamlToken() throws Exception {
+        Response response = createSignedSamlToken();
+
+        System.out.println(util.pp(response));
+
+        String formattedAssertion = util.pp(response);
+        int p0 = formattedAssertion.indexOf("<ds:SignatureValue>");
+        int p1 = formattedAssertion.indexOf("</ds:SignatureValue>");
+        String comparableAssertion = formattedAssertion.substring(0, p0) + SIGNED_SAML_RESPONSE.substring(p0, p1) + formattedAssertion.substring(p1);
+        assertEquals("SAML token differs", SIGNED_SAML_RESPONSE, comparableAssertion);
+    }
+
+    @Ignore
+    @Test
+    public void testHashAndSignedSamlToken() throws Exception {
+        String hashAndSaml = createHashAndSignedSamlToken();
+        int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
+        int p1 = hashAndSaml.indexOf("</ds:SignatureValue>");
+        String comparableHashAndSaml =
+                hashAndSaml.substring(0, p0) + HASH_AND_SAML_RESPONSE.substring(p0, p1) + hashAndSaml.substring(p1);
+        assertEquals("request digest and saml token", HASH_AND_SAML_RESPONSE, comparableHashAndSaml);
+    }
+
+    @Ignore
+    @Test
+    public void testEncryptedCalvalusToken() throws Exception {
+        String calvalusToken = createCalvalusToken();
+
+        assertTrue("key+hash+saml", calvalusToken.contains(" "));
+
+        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/calvalus_token.dat")) {
+            out.write(calvalusToken.getBytes());
+        }
+    }
+
+    @Ignore
+    @Test
+    public void testDecryptedCalvalusToken() throws Exception {
+        String hashAndSaml = decryptCalvalusToken();
+        int p0 = hashAndSaml.indexOf("<ds:SignatureValue>");
+        int p1 = hashAndSaml.indexOf("</ds:SignatureValue>");
+        String comparableHashAndSaml =
+                hashAndSaml.substring(0, p0) + HASH_AND_SAML_RESPONSE.substring(p0, p1) + hashAndSaml.substring(p1);
+        assertEquals("request digest and saml token", HASH_AND_SAML_RESPONSE, comparableHashAndSaml);
+    }
+
+    @Ignore
+    @Test
     public void encryptDecryptTest() throws Exception {
-        Base64.Encoder encoder = Base64.getEncoder();
-        Base64.Decoder decoder = Base64.getDecoder();
 
-        KeyGenerator keygen1 = KeyGenerator.getInstance("AES");
-        keygen1.init(128);
-        Key key = keygen1.generateKey();
-        byte[] aesKeyBytes = key.getEncoded();
-        System.out.println(new String(encoder.encode(aesKeyBytes)));
-
-//        KeyPairGenerator keygen = KeyPairGenerator.getInstance("RSA");
-//        keygen.initialize(2048);
-//        KeyPair rsaKeys = keygen.genKeyPair();
-//        PrivateKey privateKey = rsaKeys.getPrivate();
-//        PublicKey publicKey = rsaKeys.getPublic();
-//
-//        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/test_priv.der")) {
-//            out.write(privateKey.getEncoded());
-//        }
-//        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/test_pub.der")) {
-//            out.write(publicKey.getEncoded());
-//        }
+        String clear = "messagefromc____";
+        System.out.println(clear);
 
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
         byte[] privateKeyBytes = new byte[(int) new File("/home/boe/tmp/code/calvalus_priv.der").length()];
         try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/calvalus_priv.der")) {
-            System.out.println(new File("/home/boe/tmp/code/calvalus_priv.der").length() + " ?= " + in.read(privateKeyBytes));
+            in.read(privateKeyBytes);
         }
         byte[] publicKeyBytes = new byte[(int) new File("/home/boe/tmp/code/calvalus_pub.der").length()];
         try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/calvalus_pub.der")) {
-            System.out.println(new File("/home/boe/tmp/code/calvalus_pub.der").length() + " ?= " + in.read(publicKeyBytes));
+            in.read(publicKeyBytes);
         }
 
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
@@ -306,17 +288,31 @@ public class SamlUtilTest
         X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKeyBytes);
         PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
 
-        Cipher cipher = Cipher.getInstance("RSA");
+        Cipher cipher = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encrypted = cipher.doFinal(aesKeyBytes);
+        byte[] encj = cipher.doFinal(clear.getBytes("UTF-8"));
 
-        String encodedEncryptedAesKey = new String(encoder.encode(encrypted));
-        System.out.println(encrypted.length + " " + encodedEncryptedAesKey);
+        try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/encj.dat")) {
+            out.write(encj);
+        }
 
-        Cipher cipher2 = Cipher.getInstance("RSA");
+        Cipher cipher2 = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         cipher2.init(Cipher.DECRYPT_MODE, privateKey);
-        byte[] decrypted = cipher2.doFinal(decoder.decode(encodedEncryptedAesKey.getBytes()));
+        byte[] decj = cipher2.doFinal(encj);
 
-        System.out.println(new String(encoder.encode(decrypted)));
+        System.out.println(new String(decj, "UTF-8"));
+
+        byte[] encc = new byte[(int) new File("/home/boe/tmp/code/encc.dat").length()];
+        int encclen;
+        try (FileInputStream in = new FileInputStream("/home/boe/tmp/code/encc.dat")) {
+            encclen = in.read(encc);
+        }
+
+        Cipher cipher3 = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
+        cipher3.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] decc = cipher3.doFinal(encc);
+
+        System.out.println(new String(decc, "UTF-8"));
+
     }
 }

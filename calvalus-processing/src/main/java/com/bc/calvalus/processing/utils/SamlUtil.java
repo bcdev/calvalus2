@@ -272,7 +272,7 @@ public class SamlUtil
             out.write(key.getEncoded());
         }
 
-        Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        Cipher rsa = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         rsa.init(Cipher.ENCRYPT_MODE, rsaKey);
         byte[] encryptedAesKey = rsa.doFinal(key.getEncoded());
         try (FileOutputStream out = new FileOutputStream("/home/boe/tmp/code/rsaencryptedaeskey.dat")) {
@@ -304,7 +304,7 @@ public class SamlUtil
         String aesKeyPart = calvalusToken.substring(p1+1, p2);
         String hashAndSamlPart = calvalusToken.substring(p2 + 1);
 
-        Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        Cipher rsa = Cipher.getInstance("RSA/ECB/OAEPWithSHA-1AndMGF1Padding");
         rsa.init(Cipher.DECRYPT_MODE, rsaKey);
         byte[] aesKeyCode = rsa.doFinal(base64.decode(aesKeyPart.getBytes()));
         SecretKey aesKey = new SecretKeySpec(aesKeyCode, "AES");
