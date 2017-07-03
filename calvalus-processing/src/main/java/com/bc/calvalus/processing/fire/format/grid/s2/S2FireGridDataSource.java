@@ -86,7 +86,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             Band lc = lcProduct.getBand("lccs_class");
             ProductData jdData = ProductData.createInstance(jd.getDataType(), 1);
             ProductData clData = ProductData.createInstance(cl.getDataType(), 1);
-            ProductData lcData = ProductData.createInstance(cl.getDataType(), 1);
+            ProductData lcData = ProductData.createInstance(lc.getDataType(), 1);
             PixelPos pixelPos = new PixelPos();
             while ((line = br.readLine()) != null) {
                 SourceData data = new SourceData(1, 1);

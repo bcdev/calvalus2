@@ -48,7 +48,7 @@ public class S2GridMapper extends AbstractGridMapper {
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
-        for (int i = 0; i < paths.length - 2; i++) {
+        for (int i = 0; i < paths.length - 1; i++) {
             String utmTile = paths[i].getName().substring(4, 9);
             String localGeoLookupFileName = fiveDegTile + "-" + utmTile + ".zip";
             Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup/" + localGeoLookupFileName);
@@ -58,10 +58,14 @@ public class S2GridMapper extends AbstractGridMapper {
             }
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             sourceProducts.add(ProductIO.readProduct(sourceProductFile));
-            File file = CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2/lc-2010-" + utmTile + ".nc"), context.getConfiguration());
-            Product lcProduct = ProductIO.readProduct(file);
+            Path lcPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/lc4s2/lc-2010-T" + utmTile + ".nc");
+            File lcFile = new File(".", lcPath.getName());
+            if (!lcFile.exists()) {
+                CalvalusProductIO.copyFileToLocal(lcPath, lcFile, context.getConfiguration());
+            }
+            Product lcProduct = ProductIO.readProduct(lcFile);
             lcProducts.add(lcProduct);
-            LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 2)));
+            LOG.info(String.format("Loaded %02.2f%% of input products", (i + 1) * 100 / (float) (paths.length - 1)));
         }
 
 

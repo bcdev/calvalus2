@@ -45,13 +45,13 @@ public class S2GridInputFormat extends InputFormat {
             if (fileStatuses.size() == 0) {
                 continue;
             }
-            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, entry.getKey().toString());
+            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, entry.getKey().toString());
         }
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String twoDegreeTile) throws IOException {
+    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, String twoDegreeTile) throws IOException {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
         for (FileStatus fileStatus : fileStatuses) {
@@ -59,6 +59,8 @@ public class S2GridInputFormat extends InputFormat {
             filePaths.add(path);
             fileLengths.add(fileStatus.getLen());
         }
+        filePaths.add(new Path(twoDegreeTile));
+        fileLengths.add(0L);
         CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
         splits.add(combineFileSplit);
