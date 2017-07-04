@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.utils;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.opensaml.Configuration;
 import org.opensaml.DefaultBootstrap;
 import org.opensaml.common.SAMLObject;
@@ -16,12 +17,15 @@ import org.opensaml.saml2.core.AuthnStatement;
 import org.opensaml.saml2.core.Conditions;
 import org.opensaml.saml2.core.Issuer;
 import org.opensaml.saml2.core.NameID;
-import org.opensaml.saml2.core.Response;
 import org.opensaml.saml2.core.Subject;
-import org.opensaml.saml2.core.impl.ResponseMarshaller;
+import org.opensaml.saml2.core.impl.AssertionMarshaller;
+import org.opensaml.security.SAMLSignatureProfileValidator;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.XMLObjectBuilderFactory;
 import org.opensaml.xml.io.MarshallingException;
+import org.opensaml.xml.io.UnmarshallingException;
+import org.opensaml.xml.parse.BasicParserPool;
+import org.opensaml.xml.parse.XMLParserException;
 import org.opensaml.xml.schema.XSString;
 import org.opensaml.xml.security.SecurityConfiguration;
 import org.opensaml.xml.security.SecurityException;
@@ -30,23 +34,30 @@ import org.opensaml.xml.security.credential.Credential;
 import org.opensaml.xml.security.x509.BasicX509Credential;
 import org.opensaml.xml.signature.Signature;
 import org.opensaml.xml.signature.SignatureException;
+import org.opensaml.xml.signature.SignatureValidator;
 import org.opensaml.xml.signature.Signer;
 import org.opensaml.xml.signature.impl.SignatureBuilder;
 import org.opensaml.xml.util.XMLHelper;
+import org.opensaml.xml.validation.ValidationException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.namespace.QName;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.MessageDigest;
@@ -55,9 +66,13 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
@@ -154,13 +169,34 @@ public class SamlUtil
         return credential;
     }
 
-    public String pp(Response response) throws MarshallingException {
-        Element element = new ResponseMarshaller().marshall(response);
+    public static Credential readCredentials2(String privFileName, String certFileName) throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, CertificateException {
+        byte[] privateKeyBytes = new byte[(int) new File(privFileName).length()];
+        try (FileInputStream in = new FileInputStream(privFileName)) {
+            in.read(privateKeyBytes);
+        }
+        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(privateKeyBytes);
+        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+        PrivateKey privateKey = keyFactory.generatePrivate(keySpec);
+
+        CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+        X509Certificate certificate;
+        try (FileInputStream in = new FileInputStream(certFileName)) {
+            certificate = (X509Certificate) certFactory.generateCertificate(in);
+        }
+        BasicX509Credential credential = new BasicX509Credential();
+        credential.setEntityCertificate(certificate);
+        credential.setPrivateKey(privateKey);
+        return credential;
+
+    }
+
+    public String pp(Assertion assertion) throws MarshallingException {
+        Element element = new AssertionMarshaller().marshall(assertion);
         return XMLHelper.prettyPrintXML(element);
     }
 
-    public String toString(Response response) throws MarshallingException {
-        Element element = new ResponseMarshaller().marshall(response);
+    public String toString(Assertion assertion) throws MarshallingException {
+        Element element = new AssertionMarshaller().marshall(assertion);
         return XMLHelper.nodeToString(element);
     }
 
@@ -174,7 +210,7 @@ public class SamlUtil
      * @return SAML response with unsigned assertion
      * @throws ConfigurationException
      */
-    public Response build(String issuerValue, String subjectValue, Map<String, String> attributesValue, DateTime timestamp, int timeoutValue) throws ConfigurationException {
+    public Assertion build(String issuerValue, String subjectValue, Map<String, String> attributesValue, DateTime timestamp, int timeoutValue) throws ConfigurationException {
 
         Assertion assertion = (Assertion) build(Assertion.DEFAULT_ELEMENT_NAME);
         assertion.setVersion(SAMLVersion.VERSION_20);
@@ -213,32 +249,85 @@ public class SamlUtil
         }
         assertion.getAttributeStatements().add(attrStatement);
 
-        Response response = (Response) build(Response.DEFAULT_ELEMENT_NAME);
-        response.getAssertions().add(assertion);
-        return response;
+        //Response response = (Response) build(Response.DEFAULT_ELEMENT_NAME);
+        //response.getAssertions().add(assertion);
+        return assertion;
     }
 
     /**
      * Signs SAML assertion
-     * @param response
+     * @param assertion
      * @param credentials
      * @return SAML response with signed assertion
      * @throws SecurityException
      * @throws MarshallingException
      * @throws SignatureException
      */
-    public Response sign(Response response, Credential credentials) throws SecurityException, MarshallingException, SignatureException {
+    public Assertion sign(Assertion assertion, Credential credentials) throws SecurityException, MarshallingException, SignatureException {
         Signature signature = (Signature) buildSignature(Signature.DEFAULT_ELEMENT_NAME);
         signature.setSigningCredential(credentials);
         SecurityConfiguration secConfig = Configuration.getGlobalSecurityConfiguration();
         //String keyInfoGeneratorProfile = "XMLSignature";
         SecurityHelper.prepareSignatureParams(signature, credentials, secConfig, null /*keyInfoGeneratorProfile*/);
-        Assertion assertion = response.getAssertions().get(0);
+        //Assertion assertion = response.getAssertions().get(0);
         assertion.setSignature(signature);
-        Configuration.getMarshallerFactory().getMarshaller(response).marshall(response);
+        Configuration.getMarshallerFactory().getMarshaller(assertion).marshall(assertion);
         Signer.signObject(signature);
-        return response;
+        return assertion;
     }
+
+    public boolean validate(String xmlString, Credential credential) {
+        try {
+            Document doc;
+            try (InputStream inputStream = new ByteArrayInputStream(xmlString.getBytes())) {
+                doc = new BasicParserPool().parse(inputStream);
+            }
+            Element element = doc.getDocumentElement();
+            Assertion assertion = (Assertion) Configuration.getUnmarshallerFactory().getUnmarshaller(element).unmarshall(element);
+            //Assertion assertion = response.getAssertions().get(0);
+            assertion.validate(true);
+            if (false) {
+                long now = System.currentTimeMillis();
+                int maxClockSkew = 1000;
+                Conditions conditions = assertion.getConditions();
+                if ((conditions == null) || conditions.getNotBefore().isAfter(now + maxClockSkew)
+                        || conditions.getNotOnOrAfter().isBefore(now - maxClockSkew)) {
+                    String msg = "SAML Assertion failed validity time check "
+                            + ((conditions == null) ? "(Condition is missing)" : conditions.getNotBefore().isAfter(now)
+                            ? " - token is for the future (Condition " + conditions.getNotBefore() + " is after " + new DateTime(now, DateTimeZone.UTC) + ")"
+                            : " - token is expired (Condition " + conditions.getNotOnOrAfter() + " is before " + new DateTime(now, DateTimeZone.UTC) + ")");
+
+                    throw new ValidationException(msg);
+                }
+            }
+            //
+            Signature signature = assertion.getSignature();
+            SAMLSignatureProfileValidator pv = new SAMLSignatureProfileValidator();
+            pv.validate(signature);
+            // determine signing entity and use its trusted public certificate
+/*
+            String issuer = null;
+            X509Certificate certificate;
+            try {
+                issuer = samlAssertion.getIssuer();
+                certificate = KeyUtil.getTrustedCertificate(issuer);
+            } catch (Exception e) {
+                String msg = "Failed to retreive trusted public key for " + issuer;
+                throw new ValidationException(msg);
+            }
+            // check signature validity
+            BasicX509Credential credential = new BasicX509Credential();
+            credential.setEntityCertificate(certificate);
+*/
+            SignatureValidator sigValidator = new SignatureValidator(credential);
+            sigValidator.validate(signature);
+            return true;
+        } catch (ValidationException|IOException|XMLParserException|UnmarshallingException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
     /**
      * Hashes request string

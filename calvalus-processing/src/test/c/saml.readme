@@ -1,0 +1,85 @@
+Install packages locally
+========================
+
+git clone https://github.com/DaveGamble/cJSON.git
+cd cJSON
+make
+cd ..
+
+sudo apt-get install libboost-dev
+
+cd openssl-1.1.0f
+...
+
+mkdir local
+
+cd cpp-xmltooling
+#edit xmltooling/util/ReloadableXMLFile.cpp , insert ; at end of line 300
+libtoolize
+aclocal
+autoreconf
+autoconf
+automake
+./configure CFLAGS='-g -O0' --prefix=/home/boe/tmp/code/local
+make -j 4
+cd ..
+
+cd cpp-opensaml
+libtoolize
+aclocal
+autoreconf
+autoconf
+automake
+./configure CFLAGS='-g -O0' --prefix=/home/boe/tmp/code/local --with-xmltooling=/home/boe/tmp/code/local
+make -j 4
+make install
+
+Generate and convert keys and certificates
+==========================================
+
+# See: https://stackoverflow.com/questions/24338108/java-encrypt-string-with-existing-public-key-file
+
+# keypair.pem: Key source of calvalus private and public key
+# caskeypair.pem: Key source of cas private and public key (test)
+
+openssl genrsa -out keypair.pem 2048
+openssl rsa -in keypair.pem -outform DER -pubout -out calvalus_pub.der
+openssl rsa -in keypair.pem -outform PEM -pubout -out calvalus_pub.pem
+openssl pkcs8 -topk8 -nocrypt -in keypair.pem -outform DER -out calvalus_priv.der
+openssl pkcs8 -topk8 -nocrypt -in keypair.pem -outform PEM -out calvalus_priv.pem
+
+openssl genrsa -out keypair.pem 2048
+openssl pkcs8 -topk8 -nocrypt -in caskeypair.pem -outform DER -out cas_priv.der
+openssl pkcs8 -topk8 -nocrypt -in caskeypair.pem -outform PEM -out cas_priv.pem
+openssl req -new -x509 -nodes -days 365 -sha256 -key caskeypair.pem -outform DER -out cas_cert.der
+openssl x509 -in cas_cert.der -inform DER -out cas_cert.pem
+
+echo -n thisissomepayload > payload.txt
+openssl rsautl -encrypt -in payload.txt -out payload.encrypted -pubin -inkey calvalus_pub.pem
+openssl rsautl -decrypt -in payload.encrypted -out payload.decrypted -inkey calvalus_priv.pem
+#openssl pkeyutl -encrypt -in payload.txt -out encryptedpayload.txt -inkey calvalus_pub.der -keyform DER 
+ls -l payload*
+
+openssl x509 -in werum_marcus_certificate.pem -inform PEM -text
+
+/opt/java/jdk1.8.0_102/bin/keytool -exportcert -keystore caskeystore3.keys -alias cas_certificate -file cascert3.der
+openssl x509 -in cascert3.der -inform DER -text
+#certificate:
+/opt/java/jdk1.8.0_102/bin/keytool -export -keystore caskeystore3.keys -alias cas_certificate -file cascert3.der
+openssl x509 -in cascert3.der -inform DER -outform PEM -out cascert3.pem
+#private key:
+/opt/java/jdk1.8.0_102/bin/keytool -v -importkeystore -srckeystore caskeystore3.keys -srcalias cas_certificate -destkeystore caspriv3.p12 -deststoretype PKCS12
+openssl pkcs12 -in caspriv3.p12 -nocerts -nodes -out caspriv3.pem
+
+Compile and run tests
+=====================
+
+export LD_LIBRARY_PATH=cJSON:openssl-1.1.0f
+gcc -ggdb -Iopenssl-1.1.0f/include -IcJSON test5.c -Lopenssl-1.1.0f -lcrypto -LcJSON -lcjson -o test5
+./test5
+
+# with main:
+gcc -ggdb -IcJSON test6.c -lcrypto -LcJSON -lcjson -laprutil-1 -o test6
+# without main:
+gcc -c -ggdb decryptor.c
+g++ -ggdb -I/home/boe/tmp/code/local/include signatureverifier.cpp decryptor.o -L/home/boe/tmp/code/local/lib -laprutil-1 -lxerces-c -lsaml -lxmltooling -lcrypto -o signatureverifier
