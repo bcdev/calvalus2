@@ -1,18 +1,19 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.reporting.collector.exception.ReportingCollectorException;
 import com.bc.calvalus.reporting.collector.jobs.JobDetailType;
 import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-;
 
 /**
  * @author hans
@@ -23,9 +24,13 @@ public class JobReports {
 
     private HashSet<String> knownJobIdSet = new HashSet<>();
 
-    public void init(String reportPath) {
+    public void init(String reportPath) throws ReportingCollectorException {
         try {
-            Stream<String> stream = Files.lines(Paths.get(reportPath));
+            Path path = Paths.get(reportPath);
+            if (!Files.exists(path)) {
+                Files.createFile(path);
+            }
+            Stream<String> stream = Files.lines(path);
             Gson gson = new Gson();
             stream.forEach((line) -> {
                 String formattedEntry = formatToJson(line);
@@ -34,6 +39,7 @@ public class JobReports {
             });
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Unable to open job reports file '" + reportPath + "'", exception);
+            throw new ReportingCollectorException("Unable to open job reports file '" + reportPath + "'", exception);
         }
     }
 
@@ -43,6 +49,10 @@ public class JobReports {
 
     public void add(String jobId, String jobDetailJson) {
 
+    }
+
+    public HashSet<String> getKnownJobIdSet() {
+        return knownJobIdSet;
     }
 
     private String formatToJson(String line) {
