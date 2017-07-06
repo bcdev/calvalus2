@@ -16,9 +16,6 @@
 
     <properties>
         <gwtVersion>2.8.0</gwtVersion>
-<!--
-        <powermockito.version>1.5.6</powermockito.version>
--->
     </properties>
 
     <dependencyManagement>
@@ -34,6 +31,30 @@
     </dependencyManagement>
 
     <dependencies>
+        <!-- Calvalus dependencies-->
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-commons</artifactId>
+        </dependency>
+
+        <!-- SNAP Dependencies -->
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
+        </dependency>
+
+        <!-- BC WPS dependencies-->
+        <dependency>
+            <groupId>com.bc.wps</groupId>
+            <artifactId>bc-wps-commons</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.sun.jersey</groupId>
+                    <artifactId>jersey-servlet</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
         <!-- required as part of using Servlet 3 spec without any additional configs in web.xml -->
         <!-- ref: http://stackoverflow.com/a/26721737/2676893 -->
         <dependency>
@@ -60,14 +81,7 @@
             <version>2.25</version>
         </dependency>
 
-        <!--
-        <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
-            <version>2.4.1</version>
-        </dependency>
-        -->
-
+        <!-- GWT -->
         <dependency>
             <groupId>com.google.gwt</groupId>
             <artifactId>gwt-servlet</artifactId>
@@ -83,19 +97,6 @@
             <artifactId>gwt-dev</artifactId>
             <scope>provided</scope>
         </dependency>
-<!--
-        <dependency>
-            <groupId>com.googlecode.gwt-charts</groupId>
-            <artifactId>gwt-charts</artifactId>
-            <version>0.9.10</version>
-        </dependency>
--->
-
-        <!-- SNAP Dependencies -->
-        <dependency>
-            <groupId>org.esa.snap</groupId>
-            <artifactId>snap-core</artifactId>
-        </dependency>
 
         <!-- Apache PDFBox -->
         <dependency>
@@ -104,11 +105,16 @@
             <version>2.0.0</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-io -->
+        <!-- Apache commons libraries -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-io</artifactId>
             <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-cli</groupId>
+            <artifactId>commons-cli</artifactId>
+            <version>1.3.1</version>
         </dependency>
 
         <!-- JSON utility tool -->
@@ -119,8 +125,10 @@
         </dependency>
 
         <dependency>
-            <groupId>com.bc.wps</groupId>
-            <artifactId>bc-wps-commons</artifactId>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <scope>compile</scope>
+            <version>15.0</version>
         </dependency>
 
         <!-- Test Framework -->
@@ -129,60 +137,6 @@
             <groupId>junit</groupId>
             <scope>test</scope>
         </dependency>
-<!--
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>${powermockito.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>${powermockito.version}</version>
-            <scope>test</scope>
-        </dependency>
--->
-
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
-            <version>9.2.14.v20151106</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-cli</groupId>
-            <artifactId>commons-cli</artifactId>
-            <version>1.3.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.bc.calvalus</groupId>
-            <artifactId>calvalus-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains</groupId>
-            <artifactId>annotations</artifactId>
-            <scope>compile</scope>
-            <version>15.0</version>
-        </dependency>
-        <!--
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>RELEASE</version>
-        </dependency>
-        -->
-<!--
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>compile</scope>
-        </dependency>
--->
     </dependencies>
 
     <build>
@@ -213,22 +167,6 @@
                     </modules>
                 </configuration>
             </plugin>
-<!--
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>3.1.0</version>
-                <configuration>
-                    <attachClasses>true</attachClasses>
-                </configuration>
-            </plugin>
--->
-<!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <version>2.6</version>
-            </plugin>
--->
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
@@ -253,69 +191,8 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
-<!--
-                    <execution>
-                        <id>reporting-cli-bundle</id>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/cli-bundle.xml</descriptor>
-                            </descriptors>
-                            <finalName>reporting-cli</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <attach>false</attach>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>calvalus-reporting-bundle</id>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/calvalus-reporting.xml</descriptor>
-                            </descriptors>
-                            <finalName>calvalus-reporting-bundle</finalName>
-                            <appendAssemblyId>false</appendAssemblyId>
-                            <attach>false</attach>
-                        </configuration>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
--->
-                </executions>
-
-
-            </plugin>
-<!--
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>buildnumber-maven-plugin</artifactId>
-                <version>1.4</version>
-                <configuration>
-                    <format>Build: ({0})</format>
-                    <items>
-                        <item implementation="java.lang.Integer">1</item>
-                        <item>timestamp</item>
-                    </items>
-                    <doCheck>false</doCheck>
-                    <doUpdate>false</doUpdate>
-                    <providerImplementations>
-                        <svn>javasvn</svn>
-                    </providerImplementations>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>create-timestamp</goal>
-                        </goals>
-                    </execution>
                 </executions>
             </plugin>
--->
         </plugins>
     </build>
 
