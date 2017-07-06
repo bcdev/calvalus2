@@ -3,7 +3,7 @@ package com.bc.calvalus.reporting.collector;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-import com.bc.calvalus.reporting.collector.exception.ReportingCollectorException;
+import com.bc.calvalus.reporting.collector.exception.JobReportsException;
 import org.junit.*;
 import org.junit.rules.*;
 
@@ -71,6 +71,7 @@ public class JobReportsTest {
         assertThat(jobReports.contains("1"), equalTo(true));
         assertThat(jobReports.contains("2"), equalTo(true));
 
+        jobReports.flushBufferedWriter();
         jobReports.closeBufferedWriter();
 
         cleanUp();
@@ -78,7 +79,7 @@ public class JobReportsTest {
 
     @Test
     public void canCatchIOException() throws Exception {
-        thrownException.expect(ReportingCollectorException.class);
+        thrownException.expect(JobReportsException.class);
         thrownException.expectMessage("Unable to open job reports file 'imaginary/unknown'");
 
         jobReports.init("imaginary/unknown");

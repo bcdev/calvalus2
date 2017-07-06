@@ -1,7 +1,5 @@
-package com.bc.calvalus.reporting.collector.jobs;
+package com.bc.calvalus.reporting.collector.types;
 
-import com.bc.calvalus.reporting.extractor.configuration.Conf;
-import com.bc.calvalus.reporting.extractor.counter.CountersType;
 
 import java.time.Instant;
 import java.util.List;
@@ -151,7 +149,7 @@ public class JobDetailType implements Comparable<String> {
         this.finishTime = finishTime;
     }
 
-    void setJobInfo(com.bc.calvalus.reporting.extractor.jobs.JobType jobType) {
+    public void setJobInfo(JobType jobType) {
         this.jobId = jobType.getId();
         this.user = jobType.getUser();
         this.queue = jobType.getQueue();
@@ -163,7 +161,7 @@ public class JobDetailType implements Comparable<String> {
         this.reducesCompleted = jobType.getReducesCompleted();
     }
 
-    void setConfInfo(Conf conf) {
+    public void setConfInfo(ConfType conf) {
         this.inputPath = conf.getPath();
         this.jobName = conf.getJobName();
         this.wpsJobId = conf.getWpsJobId();
@@ -175,14 +173,14 @@ public class JobDetailType implements Comparable<String> {
         this.dataProcessorUsed = conf.getDataProcessorUsed();
     }
 
-    void setCounterInfo(CountersType countersType) {
-        List<com.bc.calvalus.reporting.extractor.counter.CounterType> counter = countersType.getCounterGroup().getCounter();
-        for (com.bc.calvalus.reporting.extractor.counter.CounterType counterType : counter) {
+    public void setCounterInfo(CountersType countersType) {
+        List<CounterType> counter = countersType.getCounterGroup().getCounter();
+        for (CounterType counterType : counter) {
             addCounterInfo(counterType);
         }
     }
 
-    private void addCounterInfo(com.bc.calvalus.reporting.extractor.counter.CounterType counterType) {
+    private void addCounterInfo(CounterType counterType) {
         String counterTypeName = counterType.getName();
 
         if (counterTypeName.equalsIgnoreCase("FILE_BYTES_READ")) {

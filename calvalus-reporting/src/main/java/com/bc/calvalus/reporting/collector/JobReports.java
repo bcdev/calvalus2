@@ -1,8 +1,8 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.reporting.collector.exception.ReportingCollectorException;
-import com.bc.calvalus.reporting.collector.jobs.JobDetailType;
+import com.bc.calvalus.reporting.collector.exception.JobReportsException;
+import com.bc.calvalus.reporting.collector.types.JobDetailType;
 import com.google.gson.Gson;
 
 import java.io.BufferedWriter;
@@ -27,7 +27,7 @@ public class JobReports {
     private HashSet<String> knownJobIdSet = new HashSet<>();
     private BufferedWriter writer;
 
-    public void init(String reportPath) throws ReportingCollectorException {
+    public void init(String reportPath) throws JobReportsException {
         try {
             Path path = Paths.get(reportPath);
             if (!Files.exists(path)) {
@@ -45,7 +45,7 @@ public class JobReports {
             this.writer = new BufferedWriter(fileWriter);
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Unable to open job reports file '" + reportPath + "'", exception);
-            throw new ReportingCollectorException("Unable to open job reports file '" + reportPath + "'", exception);
+            throw new JobReportsException("Unable to open job reports file '" + reportPath + "'", exception);
         }
     }
 
@@ -61,6 +61,14 @@ public class JobReports {
 
     public HashSet<String> getKnownJobIdSet() {
         return this.knownJobIdSet;
+    }
+
+    public void flushBufferedWriter(){
+        try {
+            this.writer.flush();
+        } catch (IOException exception) {
+            LOGGER.log(Level.SEVERE, "Unable to flush the writer", exception);
+        }
     }
 
     public void closeBufferedWriter() {

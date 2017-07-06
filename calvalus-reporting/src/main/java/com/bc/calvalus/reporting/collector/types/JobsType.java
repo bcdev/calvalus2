@@ -1,5 +1,5 @@
 
-package com.bc.calvalus.reporting.collector.jobs;
+package com.bc.calvalus.reporting.collector.types;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
