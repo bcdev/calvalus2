@@ -44,17 +44,19 @@ public class ReportingCollector<T> {
     private static final String RETRIEVE_ALL_JOBS_URL = PropertiesWrapper.get("retrieve.all.jobs.url");
     private static final String RETRIEVE_CONF_URL = PropertiesWrapper.get("retrieve.configuration.url");
     private static final String RETRIEVE_COUNTERS_URL = PropertiesWrapper.get("retrieve.counters.url");
+    private static final String REPORTING_COLLECTOR_PROPERTIES = "reporting-collector.properties";
+    private static final String CONF_XSL = "conf.xsl";
+    private static final String COUNTER_XSL = "counter.xsl";
+    private static final JobReports jobReports = new JobReports();
 
-    private JobReports jobReports;
     private Transformer confTransformer;
     private Transformer counterTransformer;
 
-    public ReportingCollector() throws IOException, TransformerConfigurationException {
-        PropertiesWrapper.loadConfigFile("calvalus-reporting.properties");
-        this.jobReports = new JobReports();
+    private ReportingCollector() throws IOException, TransformerConfigurationException {
+        PropertiesWrapper.loadConfigFile(REPORTING_COLLECTOR_PROPERTIES);
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
-        this.confTransformer = getTransformer(transformerFactory, "conf.xsl");
-        this.counterTransformer = getTransformer(transformerFactory, "counter.xsl");
+        this.confTransformer = getTransformer(transformerFactory, CONF_XSL);
+        this.counterTransformer = getTransformer(transformerFactory, COUNTER_XSL);
     }
 
     public static void main(String[] args) {
@@ -72,16 +74,18 @@ public class ReportingCollector<T> {
         } catch (TransformerConfigurationException exception) {
             LOGGER.log(Level.SEVERE, "Problem when creating a transformer.", exception);
             System.exit(1);
+        } finally {
+            jobReports.closeBufferedWriter();
         }
     }
 
     private void run() throws JobReportsException, ServerConnectionException {
-        init();
+        jobReports.init(REPORT_FILE_PATH);
         while (true) {
             try {
                 JobsType jobs = retrieveAllJobs(RETRIEVE_ALL_JOBS_URL);
                 for (JobType job : jobs.getJobs()) {
-                    if (this.jobReports.contains(job.getId())) {
+                    if (jobReports.contains(job.getId())) {
                         InputStream confStream = getContentInputStream(String.format(RETRIEVE_CONF_URL, job.getId()));
                         StringReader confReader = applyXslt(this.confTransformer, confStream);
                         ConfType conf = (ConfType) unmarshal(confReader, ConfType.class);
@@ -91,8 +95,10 @@ public class ReportingCollector<T> {
                         JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
                         Gson gson = new Gson();
                         String jobJsonString = gson.toJson(jobDetailType);
+                        jobReports.add(job.getId(), jobJsonString);
                     }
                 }
+                jobReports.flushBufferedWriter();
             } catch (IOException exception) {
                 LOGGER.log(Level.SEVERE, "HTTP request failed.", exception);
                 throw new ServerConnectionException(exception);
@@ -132,16 +138,16 @@ public class ReportingCollector<T> {
         return transformerFactory.newTransformer(xsltSource);
     }
 
-    @SuppressWarnings("unchecked")
-    private T unmarshal(StringReader reader, Class clazz) throws JAXBException {
-        JAXBContext jc = JAXBContext.newInstance(ConfType.class);
-        return (T) jc.createUnmarshaller().unmarshal(reader);
-    }
-
     private JobsType retrieveAllJobs(String url) throws IOException, JAXBException {
         InputStream contentStream = getContentInputStream(url);
         JAXBContext jc = JAXBContext.newInstance(JobsType.class);
         return (JobsType) jc.createUnmarshaller().unmarshal(contentStream);
+    }
+
+    @SuppressWarnings("unchecked")
+    private T unmarshal(StringReader reader, Class clazz) throws JAXBException {
+        JAXBContext jc = JAXBContext.newInstance(clazz);
+        return (T) jc.createUnmarshaller().unmarshal(reader);
     }
 
     private InputStream getContentInputStream(String url) throws IOException {
@@ -149,9 +155,5 @@ public class ReportingCollector<T> {
         HttpGet httpGet = new HttpGet(url);
         CloseableHttpResponse response = httpclient.execute(httpGet);
         return response.getEntity().getContent();
-    }
-
-    private void init() throws JobReportsException {
-        jobReports.init(REPORT_FILE_PATH);
     }
 }
