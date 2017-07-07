@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author muhammad.bc.
  */
-public class JobDetailType implements Comparable<String> {
+public class JobDetailType {
 
     private String user;
     private String queue;
@@ -200,24 +200,6 @@ public class JobDetailType implements Comparable<String> {
         } else if (counterTypeName.equalsIgnoreCase("CPU_MILLISECONDS")) {
             cpuMilliseconds = counterType.getTotalCounterValue().toString();
         }
-    }
-
-    @Override
-    public int compareTo(String oType) {
-        Instant dateTimeInstance = getDateTimeInstance(oType);
-        if (this.getDateTimeInstance(this.getFinishTime()).isAfter(dateTimeInstance)) {
-            return 1;
-        }
-        if (this.getDateTimeInstance(this.getFinishTime()).isBefore(dateTimeInstance)) {
-            return -1;
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        JobDetailType jobDetailType = (JobDetailType) obj;
-        return jobDetailType.getJobId() == jobId;
     }
 
     private Instant getDateTimeInstance(String finishTime) {

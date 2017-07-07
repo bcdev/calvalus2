@@ -27,7 +27,7 @@ import javax.xml.bind.annotation.XmlType;
 })
 
 
-@XmlRootElement(name = "confType")
+@XmlRootElement(name = "conf")
 public class ConfType {
 
     @XmlElement(required = true)

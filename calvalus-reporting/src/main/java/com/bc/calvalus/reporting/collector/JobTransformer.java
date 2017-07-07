@@ -1,5 +1,6 @@
 package com.bc.calvalus.reporting.collector;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.reporting.collector.exception.JobTransformerException;
 import com.bc.wps.utilities.PropertiesWrapper;
 
@@ -16,6 +17,7 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 /**
  * @author hans
@@ -24,6 +26,8 @@ class JobTransformer {
 
     private static final String CONF_XSL = PropertiesWrapper.get("conf.xsl.path");
     private static final String COUNTER_XSL = PropertiesWrapper.get("counters.xsl.path");
+
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
 
     private Transformer confTransformer;
     private Transformer counterTransformer;
@@ -39,6 +43,7 @@ class JobTransformer {
     }
 
     StringReader applyConfXslt(InputStream stream) throws JobTransformerException {
+        LOGGER.info("Apply XSLT with '" + CONF_XSL + "'.");
         StringWriter stringWriter = new StringWriter();
         try {
             this.confTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));
@@ -49,6 +54,7 @@ class JobTransformer {
     }
 
     StringReader applyCountersXslt(InputStream stream) throws JobTransformerException {
+        LOGGER.info("Apply XSLT with '" + COUNTER_XSL + "'.");
         StringWriter stringWriter = new StringWriter();
         try {
             this.counterTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));

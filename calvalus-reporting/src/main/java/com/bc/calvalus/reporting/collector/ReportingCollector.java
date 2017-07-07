@@ -26,23 +26,21 @@ import java.util.logging.Logger;
 public class ReportingCollector<T> {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
-    private static final int HISTORY_SERVER_POLL_INTERVAL = PropertiesWrapper.getInteger("history.server.poll.interval");
-    private static final String REPORT_FILE_PATH = PropertiesWrapper.get("report.file.path");
     private static final String REPORTING_COLLECTOR_PROPERTIES = "reporting-collector.properties";
     private static final JobReports jobReports = new JobReports();
 
     private final HistoryServerClient historyServerClient;
     private final JobTransformer jobTransformer;
 
-    private ReportingCollector() throws IOException, JobTransformerException {
-        PropertiesWrapper.loadConfigFile(REPORTING_COLLECTOR_PROPERTIES);
+    private ReportingCollector(String propertiesName) throws IOException, JobTransformerException {
+        PropertiesWrapper.loadConfigFile(propertiesName);
         this.historyServerClient = new HistoryServerClient();
         this.jobTransformer = new JobTransformer();
     }
 
     public static void main(String[] args) {
         try {
-            new ReportingCollector().run();
+            new ReportingCollector(args.length > 0 ? args[0] : REPORTING_COLLECTOR_PROPERTIES).run();
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Problem when loading the configuration file.", exception);
             System.exit(1);
@@ -64,23 +62,31 @@ public class ReportingCollector<T> {
     }
 
     private void run() throws JobReportsException, ServerConnectionException, JAXBException, JobTransformerException {
-        jobReports.init(REPORT_FILE_PATH);
+        jobReports.init(PropertiesWrapper.get("report.file.path"));
         while (true) {
             JobsType jobs = retrieveAllJobs();
             Gson gson = new Gson();
-            for (JobType job : jobs.getJobs()) {
-                if (jobReports.contains(job.getId())) {
+            int counter = 0;
+            for (JobType job : jobs.getJob()) {
+                if (!jobReports.contains(job.getId())) {
                     ConfType conf = getConf(job);
                     CountersType counters = getCounters(job);
                     JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
                     String jobJsonString = gson.toJson(jobDetailType);
                     jobReports.add(job.getId(), jobJsonString);
+                    counter++;
                 }
             }
             jobReports.flushBufferedWriter();
-
+            if (counter > 0) {
+                LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
+            } else {
+                LOGGER.info("No new jobs on the history server.");
+            }
+            int pollInterval = PropertiesWrapper.getInteger("history.server.poll.interval");
+            LOGGER.info("waiting for " + pollInterval / 1000 + " seconds for the next run...");
             try {
-                Thread.sleep(HISTORY_SERVER_POLL_INTERVAL);
+                Thread.sleep(pollInterval);
             } catch (InterruptedException ignored) {
             }
         }
@@ -99,6 +105,7 @@ public class ReportingCollector<T> {
     }
 
     private JobDetailType createJobDetailType(ConfType conf, CountersType counters, JobType job) {
+        LOGGER.info("Combining all the information for job '" + job.getId() + "'.");
         JobDetailType jobDetailType = new JobDetailType();
         jobDetailType.setJobInfo(job);
         jobDetailType.setConfInfo(conf);

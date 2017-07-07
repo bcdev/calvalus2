@@ -27,7 +27,20 @@ public class JobReports {
     private HashSet<String> knownJobIdSet = new HashSet<>();
     private BufferedWriter writer;
 
-    public void init(String reportPath) throws JobReportsException {
+    public void add(String jobId, String jobDetailJson) throws JobReportsException {
+        LOGGER.info("Add job '" + jobId + "' to the job reports file.");
+        this.knownJobIdSet.add(jobId);
+        try {
+            this.writer.write(jobDetailJson);
+            this.writer.write("\n");
+        } catch (IOException exception) {
+            LOGGER.log(Level.SEVERE, "Unable to write job '" + jobId + "' to job reports file.", exception);
+            throw new JobReportsException("Unable to write job '" + jobId + "' to job reports file.", exception);
+        }
+    }
+
+    void init(String reportPath) throws JobReportsException {
+        LOGGER.info("Initializing job reports file '" + reportPath + "'.");
         try {
             Path path = Paths.get(reportPath);
             if (!Files.exists(path)) {
@@ -49,26 +62,16 @@ public class JobReports {
         }
     }
 
-    public boolean contains(String jobId) {
+    boolean contains(String jobId) {
         return this.knownJobIdSet.contains(jobId);
     }
 
-    public void add(String jobId, String jobDetailJson) throws JobReportsException {
-        this.knownJobIdSet.add(jobId);
-        try {
-            this.writer.write(jobDetailJson);
-            this.writer.write("\n");
-        } catch (IOException exception) {
-            LOGGER.log(Level.SEVERE, "Unable to write job '" + jobId + "' to job reports file.", exception);
-            throw new JobReportsException("Unable to write job '" + jobId + "' to job reports file.", exception);
-        }
-    }
-
-    public HashSet<String> getKnownJobIdSet() {
+    HashSet<String> getKnownJobIdSet() {
         return this.knownJobIdSet;
     }
 
-    public void flushBufferedWriter() {
+    void flushBufferedWriter() {
+        LOGGER.info("Flushing the buffer to the job reports file.");
         try {
             this.writer.flush();
         } catch (IOException exception) {
@@ -76,7 +79,8 @@ public class JobReports {
         }
     }
 
-    public void closeBufferedWriter() {
+    void closeBufferedWriter() {
+        LOGGER.info("Close the writer.");
         try {
             this.writer.close();
         } catch (IOException exception) {

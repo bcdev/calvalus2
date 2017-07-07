@@ -32,6 +32,7 @@ public class JobTransformerTest {
         assertThat(transformedString, equalTo("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                                               "<conf>" +
                                                 "<path>hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/06/29/000000/job_1498650116199_0092_conf.xml</path>" +
+                                                "<workflowType>L2</workflowType>" +
                                               "</conf>"));
         reader.close();
     }
@@ -240,6 +241,13 @@ public class JobTransformerTest {
                             "           <source>mapred-default.xml</source>" +
                             "           <source>job.xml</source>" +
                             "           <source>hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/06/29/000000/job_1498650116199_0092_conf.xml</source>" +
+                            "       </property>" +
+                            "       <property>" +
+                            "           <name>calvalus.productionType</name>" +
+                            "           <value>L2</value>" +
+                            "           <source>programatically</source>" +
+                            "           <source>job.xml</source>" +
+                            "           <source>hdfs://calvalus:8020/tmp/hadoop-yarn/staging/history/done/2017/07/01/000000/job_1498650116199_0708_conf.xml</source>" +
                             "       </property>" +
                             "   </conf>";
         return new ByteArrayInputStream(sampleConf.getBytes());
