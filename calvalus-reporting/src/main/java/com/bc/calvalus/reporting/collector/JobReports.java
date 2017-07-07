@@ -53,17 +53,22 @@ public class JobReports {
         return this.knownJobIdSet.contains(jobId);
     }
 
-    public void add(String jobId, String jobDetailJson) throws IOException {
+    public void add(String jobId, String jobDetailJson) throws JobReportsException {
         this.knownJobIdSet.add(jobId);
-        this.writer.write(jobDetailJson);
-        this.writer.write("\n");
+        try {
+            this.writer.write(jobDetailJson);
+            this.writer.write("\n");
+        } catch (IOException exception) {
+            LOGGER.log(Level.SEVERE, "Unable to write job '" + jobId + "' to job reports file.", exception);
+            throw new JobReportsException("Unable to write job '" + jobId + "' to job reports file.", exception);
+        }
     }
 
     public HashSet<String> getKnownJobIdSet() {
         return this.knownJobIdSet;
     }
 
-    public void flushBufferedWriter(){
+    public void flushBufferedWriter() {
         try {
             this.writer.flush();
         } catch (IOException exception) {
