@@ -1,6 +1,7 @@
 package com.bc.calvalus.reporting.collector;
 
 import com.bc.calvalus.reporting.collector.exception.JobTransformerException;
+import com.bc.wps.utilities.PropertiesWrapper;
 
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
@@ -19,15 +20,15 @@ import java.nio.file.Paths;
 /**
  * @author hans
  */
-public class JobTransformer {
+class JobTransformer {
 
-    private static final String CONF_XSL = "conf.xsl";
-    private static final String COUNTER_XSL = "counter.xsl";
+    private static final String CONF_XSL = PropertiesWrapper.get("conf.xsl.path");
+    private static final String COUNTER_XSL = PropertiesWrapper.get("counters.xsl.path");
 
     private Transformer confTransformer;
     private Transformer counterTransformer;
 
-    public JobTransformer() throws JobTransformerException {
+    JobTransformer() throws JobTransformerException {
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         try {
             this.confTransformer = getTransformer(transformerFactory, CONF_XSL);
@@ -37,7 +38,7 @@ public class JobTransformer {
         }
     }
 
-    public StringReader applyConfXslt(InputStream stream) throws JobTransformerException {
+    StringReader applyConfXslt(InputStream stream) throws JobTransformerException {
         StringWriter stringWriter = new StringWriter();
         try {
             this.confTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));
@@ -47,7 +48,7 @@ public class JobTransformer {
         return new StringReader(stringWriter.toString());
     }
 
-    public StringReader applyCountersXslt(InputStream stream) throws JobTransformerException {
+    StringReader applyCountersXslt(InputStream stream) throws JobTransformerException {
         StringWriter stringWriter = new StringWriter();
         try {
             this.counterTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));
