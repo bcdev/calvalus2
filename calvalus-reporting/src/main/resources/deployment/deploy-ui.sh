@@ -7,5 +7,7 @@ RUN_AS=tomcat
 
 sudo -u $RUN_AS mkdir -p $CATALINA_HOME/conf/calvalus-reporting
 sudo -u $RUN_AS cp calvalus-reporting.properties $CATALINA_HOME/conf/calvalus-reporting
+sudo service $SERVICE_NAME stop
 sudo -u $RUN_AS rm -rf $CATALINA_HOME/webapps/calvalus-reporting*
 sudo -u $RUN_AS cp calvalus-reporting.war $CATALINA_HOME/webapps
+sudo service $SERVICE_NAME start

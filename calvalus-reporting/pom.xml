@@ -197,6 +197,21 @@
                             <goal>single</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>reporting-collector-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/reporting-collector.xml</descriptor>
+                            </descriptors>
+                            <finalName>reporting-collector-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

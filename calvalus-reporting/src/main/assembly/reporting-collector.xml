@@ -2,46 +2,41 @@
         xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
-    <id>calvalus-reporting-bundle</id>
+    <id>reporting-collector</id>
     <formats>
         <format>dir</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
         <fileSet>
-            <directory>${project.basedir}/src/main/resources/conf</directory>
+            <directory>${project.basedir}/src/main/resources</directory>
             <includes>
-                <include>calvalus-reporting.properties</include>
+                <include>collector.sh</include>
             </includes>
-            <excludes>
-                <exclude>readme.txt</exclude>
-            </excludes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/resources/deployment</directory>
             <includes>
-                <include>**</include>
+                <include>deploy-reporting-collector.sh</include>
             </includes>
-            <excludes>
-                <exclude>readme.txt</exclude>
-            </excludes>
+            <outputDirectory>/</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/resources/conf</directory>
+            <includes>
+                <include>reporting-collector.properties</include>
+                <include>conf.xsl</include>
+                <include>counters.xsl</include>
+            </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/target</directory>
             <includes>
-                <include>calvalus-reporting.war</include>
-                <include>reporting-cli</include>
+                <include>calvalus-reporting.jar</include>
             </includes>
             <outputDirectory>/</outputDirectory>
-        </fileSet>
-        <fileSet>
-            <directory>${project.basedir}/target/reporting-cli</directory>
-            <includes>
-                <include>**</include>
-            </includes>
-            <outputDirectory>/reporting-cli</outputDirectory>
         </fileSet>
     </fileSets>
 </assembly>
