@@ -27,7 +27,7 @@ public class ReportingCollector<T> {
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
     private static final String REPORTING_COLLECTOR_PROPERTIES = "reporting-collector.properties";
-    private static final JobReports jobReports = new JobReports();
+    private static JobReports jobReports;
 
     private final HistoryServerClient historyServerClient;
     private final JobTransformer jobTransformer;
@@ -36,6 +36,7 @@ public class ReportingCollector<T> {
         PropertiesWrapper.loadConfigFile(propertiesName);
         this.historyServerClient = new HistoryServerClient();
         this.jobTransformer = new JobTransformer();
+        jobReports = new JobReports();
     }
 
     public static void main(String[] args) {
@@ -57,12 +58,12 @@ public class ReportingCollector<T> {
             LOGGER.log(Level.SEVERE, "Problem when dealing with XSL transformation.", exception);
             System.exit(1);
         } finally {
-            jobReports.closeBufferedWriter();
+            jobReports.closeBufferedWriters();
         }
     }
 
     private void run() throws JobReportsException, ServerConnectionException, JAXBException, JobTransformerException {
-        jobReports.init(PropertiesWrapper.get("report.file.path"));
+        jobReports.init(PropertiesWrapper.get("reporting.folder.path"));
         while (true) {
             JobsType jobs = retrieveAllJobs();
             Gson gson = new Gson();
@@ -73,11 +74,12 @@ public class ReportingCollector<T> {
                     CountersType counters = getCounters(job);
                     JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
                     String jobJsonString = gson.toJson(jobDetailType);
-                    jobReports.add(job.getId(), jobJsonString);
+                    long finishTime = Long.parseLong(job.getFinishTime());
+                    jobReports.add(job.getId(), finishTime, jobJsonString);
                     counter++;
                 }
             }
-            jobReports.flushBufferedWriter();
+            jobReports.flushBufferedWriters();
             if (counter > 0) {
                 LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
             } else {
