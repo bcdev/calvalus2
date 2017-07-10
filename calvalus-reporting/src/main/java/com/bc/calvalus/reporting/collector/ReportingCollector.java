@@ -105,7 +105,6 @@ public class ReportingCollector<T> {
     }
 
     private JobDetailType createJobDetailType(ConfType conf, CountersType counters, JobType job) {
-        LOGGER.info("Combining all the information for job '" + job.getId() + "'.");
         JobDetailType jobDetailType = new JobDetailType();
         jobDetailType.setJobInfo(job);
         jobDetailType.setConfInfo(conf);

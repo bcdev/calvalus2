@@ -43,7 +43,6 @@ class JobTransformer {
     }
 
     StringReader applyConfXslt(InputStream stream) throws JobTransformerException {
-        LOGGER.info("Apply XSLT with '" + CONF_XSL + "'.");
         StringWriter stringWriter = new StringWriter();
         try {
             this.confTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));
@@ -54,7 +53,6 @@ class JobTransformer {
     }
 
     StringReader applyCountersXslt(InputStream stream) throws JobTransformerException {
-        LOGGER.info("Apply XSLT with '" + COUNTER_XSL + "'.");
         StringWriter stringWriter = new StringWriter();
         try {
             this.counterTransformer.transform(new StreamSource(stream), new StreamResult(stringWriter));
