@@ -123,32 +123,42 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     @Override
     public BundleDescriptor[] getBundles(final String username, final BundleFilter filter) throws IOException {
-        String bundleFilterString = filter.toString();
-        synchronized (bundleQueryCache) {
-            for (BundleQueryCacheEntry entry : bundleQueryCache) {
-                if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
-                    try {
-                        return entry.bundles.get();
-                    } catch (InterruptedException | ExecutionException e) {
-                        logger.warning(e.getMessage());
+        logger.info("HadoopProcessingService.getBundles.start username = [" + username + "], filter = [" + filter + "]");
+        long t1 = System.currentTimeMillis();
+        try {
+            String bundleFilterString = filter.toString();
+            synchronized (bundleQueryCache) {
+                for (BundleQueryCacheEntry entry : bundleQueryCache) {
+                    if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
+                        try {
+                            logger.info("HadoopProcessingService.getBundles cacheHIT");
+                            return entry.bundles.get();
+                        } catch (InterruptedException | ExecutionException e) {
+                            logger.warning(e.getMessage());
+                        }
                     }
                 }
-            }
-            Future<BundleDescriptor[]> future = executorService.submit(new Callable<BundleDescriptor[]>() {
-                @Override
-                public BundleDescriptor[] call() throws Exception {
-                    return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
+                Future<BundleDescriptor[]> future = executorService.submit(new Callable<BundleDescriptor[]>() {
+                    @Override
+                    public BundleDescriptor[] call() throws Exception {
+                        return HadoopProcessingService.this.getBundleDescriptorsImpl(username, filter);
+                    }
+                });
+                bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, future));
+                try {
+                    logger.info("HadoopProcessingService.getBundles cacheMISS");
+                    return future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    logger.warning(e.getMessage());
                 }
-            });
-            bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, future));
-            try {
-                return future.get();
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-                logger.warning(e.getMessage());
             }
+            throw new IOException("Failed to load BundleDescriptor");
+        } finally {
+            long t2 = System.currentTimeMillis();
+            long delta = t2 - t1;
+            logger.info("HadoopProcessingService.getBundles.end username = [" + username + "], filter = [" + filter + "] ==> " + delta + "ms");
         }
-        throw new IOException("Failed to load BundleDescriptor");
     }
 
     @Override
