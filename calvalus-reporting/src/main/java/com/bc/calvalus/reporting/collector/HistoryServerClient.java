@@ -18,8 +18,8 @@ import java.util.logging.Logger;
 class HistoryServerClient {
 
     private static final String RETRIEVE_ALL_JOBS_URL = PropertiesWrapper.get("retrieve.all.jobs.url");
-    private static final String RETRIEVE_CONF_URL = PropertiesWrapper.get("retrieve.configuration.url");
-    private static final String RETRIEVE_COUNTERS_URL = PropertiesWrapper.get("retrieve.counters.url");
+    private static final String RETRIEVE_CONF_URL_TEMPLATE = PropertiesWrapper.get("retrieve.configuration.url");
+    private static final String RETRIEVE_COUNTERS_URL_TEMPLATE = PropertiesWrapper.get("retrieve.counters.url");
 
     private static final Logger LOGGER = CalvalusLogger.getLogger();
 
@@ -34,8 +34,9 @@ class HistoryServerClient {
 
     InputStream getConf(String jobId) throws ServerConnectionException {
         try {
-            LOGGER.info("Retrieving configuration of job '" + jobId + "' from '" + RETRIEVE_CONF_URL + "'");
-            return getContentInputStream(String.format(RETRIEVE_CONF_URL, jobId));
+            String confUrl = String.format(RETRIEVE_CONF_URL_TEMPLATE, jobId);
+            LOGGER.info("Retrieving configuration of job '" + jobId + "' from '" + confUrl + "'");
+            return getContentInputStream(confUrl);
         } catch (IOException exception) {
             throw new ServerConnectionException(exception);
         }
@@ -43,8 +44,9 @@ class HistoryServerClient {
 
     InputStream getCounters(String jobId) throws ServerConnectionException {
         try {
-            LOGGER.info("Retrieving counters of job '" + jobId + "' from '" + RETRIEVE_COUNTERS_URL + "'");
-            return getContentInputStream(String.format(RETRIEVE_COUNTERS_URL, jobId));
+            String countersUrl = String.format(RETRIEVE_COUNTERS_URL_TEMPLATE, jobId);
+            LOGGER.info("Retrieving counters of job '" + jobId + "' from '" + countersUrl + "'");
+            return getContentInputStream(countersUrl);
         } catch (IOException exception) {
             throw new ServerConnectionException(exception);
         }
