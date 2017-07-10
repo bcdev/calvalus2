@@ -32,7 +32,7 @@ public class JobReports {
         this.knownJobIdSet.add(jobId);
         try {
             this.writer.write(jobDetailJson);
-            this.writer.write("\n");
+            this.writer.write("," + "\n");
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Unable to write job '" + jobId + "' to job reports file.", exception);
             throw new JobReportsException("Unable to write job '" + jobId + "' to job reports file.", exception);
