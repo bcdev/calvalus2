@@ -42,7 +42,7 @@ public class JobReports {
         LOGGER.info("Add job '" + jobId + "' to the job reports file.");
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(finishTime);
-        String writerKey = String.format(REPORT_KEY_PATTERN, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH));
+        String writerKey = String.format(REPORT_KEY_PATTERN, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH) + 1);
         this.knownJobIdSet.add(jobId);
         try {
             if (!this.writers.containsKey(writerKey)) {
