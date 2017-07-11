@@ -97,6 +97,10 @@ public class ProductionRequest implements XmlConvertible {
         return value;
     }
 
+    public void setParameter(String key, String value) {
+        productionParameters.put(key, value);
+    }
+
     public void ensureParameterSet(String name) throws ProductionException {
         getString(name);
     }
