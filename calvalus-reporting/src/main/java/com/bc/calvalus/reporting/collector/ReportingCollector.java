@@ -4,11 +4,11 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.reporting.collector.exception.JobReportsException;
 import com.bc.calvalus.reporting.collector.exception.JobTransformerException;
 import com.bc.calvalus.reporting.collector.exception.ServerConnectionException;
-import com.bc.calvalus.reporting.collector.types.ConfType;
-import com.bc.calvalus.reporting.collector.types.CountersType;
+import com.bc.calvalus.reporting.collector.types.Job;
+import com.bc.calvalus.reporting.collector.types.JobConf;
+import com.bc.calvalus.reporting.collector.types.JobCounters;
 import com.bc.calvalus.reporting.collector.types.JobDetailType;
-import com.bc.calvalus.reporting.collector.types.JobType;
-import com.bc.calvalus.reporting.collector.types.JobsType;
+import com.bc.calvalus.reporting.collector.types.Jobs;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 
@@ -65,13 +65,13 @@ public class ReportingCollector<T> {
     private void run() throws JobReportsException, ServerConnectionException, JAXBException, JobTransformerException {
         jobReports.init(PropertiesWrapper.get("reporting.folder.path"));
         while (true) {
-            JobsType jobs = retrieveAllJobs();
+            Jobs jobs = retrieveAllJobs();
             Gson gson = new Gson();
             int counter = 0;
-            for (JobType job : jobs.getJob()) {
+            for (Job job : jobs.getJob()) {
                 if (!jobReports.contains(job.getId())) {
-                    ConfType conf = getConf(job);
-                    CountersType counters = getCounters(job);
+                    JobConf conf = getConf(job);
+                    JobCounters counters = getCounters(job);
                     JobDetailType jobDetailType = createJobDetailType(conf, counters, job);
                     String jobJsonString = gson.toJson(jobDetailType);
                     long finishTime = Long.parseLong(job.getFinishTime());
@@ -79,7 +79,6 @@ public class ReportingCollector<T> {
                     counter++;
                 }
             }
-            jobReports.flushBufferedWriters();
             if (counter > 0) {
                 LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
             } else {
@@ -94,19 +93,19 @@ public class ReportingCollector<T> {
         }
     }
 
-    private CountersType getCounters(JobType job) throws JAXBException, ServerConnectionException, JobTransformerException {
+    private JobCounters getCounters(Job job) throws JAXBException, ServerConnectionException, JobTransformerException {
         InputStream countersStream = this.historyServerClient.getCounters(job.getId());
         StringReader countersReader = this.jobTransformer.applyCountersXslt(countersStream);
-        return (CountersType) unmarshal(countersReader, CountersType.class);
+        return (JobCounters) unmarshal(countersReader, JobCounters.class);
     }
 
-    private ConfType getConf(JobType job) throws JAXBException, ServerConnectionException, JobTransformerException {
+    private JobConf getConf(Job job) throws JAXBException, ServerConnectionException, JobTransformerException {
         InputStream confStream = this.historyServerClient.getConf(job.getId());
         StringReader confReader = this.jobTransformer.applyConfXslt(confStream);
-        return (ConfType) unmarshal(confReader, ConfType.class);
+        return (JobConf) unmarshal(confReader, JobConf.class);
     }
 
-    private JobDetailType createJobDetailType(ConfType conf, CountersType counters, JobType job) {
+    private JobDetailType createJobDetailType(JobConf conf, JobCounters counters, Job job) {
         JobDetailType jobDetailType = new JobDetailType();
         jobDetailType.setJobInfo(job);
         jobDetailType.setConfInfo(conf);
@@ -114,10 +113,10 @@ public class ReportingCollector<T> {
         return jobDetailType;
     }
 
-    private JobsType retrieveAllJobs() throws JAXBException, ServerConnectionException {
+    private Jobs retrieveAllJobs() throws JAXBException, ServerConnectionException {
         InputStream contentStream = this.historyServerClient.getAllJobs();
-        JAXBContext jc = JAXBContext.newInstance(JobsType.class);
-        return (JobsType) jc.createUnmarshaller().unmarshal(contentStream);
+        JAXBContext jc = JAXBContext.newInstance(Jobs.class);
+        return (Jobs) jc.createUnmarshaller().unmarshal(contentStream);
     }
 
     @SuppressWarnings("unchecked")

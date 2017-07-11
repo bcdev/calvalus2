@@ -149,19 +149,19 @@ public class JobDetailType {
         this.finishTime = finishTime;
     }
 
-    public void setJobInfo(JobType jobType) {
-        this.jobId = jobType.getId();
-        this.user = jobType.getUser();
-        this.queue = jobType.getQueue();
-        this.state = jobType.getState();
-        this.totalMaps = jobType.getMapsTotal();
-        this.startTime = jobType.getStartTime();
-        this.finishTime = jobType.getFinishTime();
-        this.mapsCompleted = jobType.getMapsCompleted();
-        this.reducesCompleted = jobType.getReducesCompleted();
+    public void setJobInfo(Job job) {
+        this.jobId = job.getId();
+        this.user = job.getUser();
+        this.queue = job.getQueue();
+        this.state = job.getState();
+        this.totalMaps = job.getMapsTotal();
+        this.startTime = job.getStartTime();
+        this.finishTime = job.getFinishTime();
+        this.mapsCompleted = job.getMapsCompleted();
+        this.reducesCompleted = job.getReducesCompleted();
     }
 
-    public void setConfInfo(ConfType conf) {
+    public void setConfInfo(JobConf conf) {
         this.inputPath = conf.getPath();
         this.jobName = conf.getJobName();
         this.wpsJobId = conf.getWpsJobId();
@@ -173,32 +173,32 @@ public class JobDetailType {
         this.dataProcessorUsed = conf.getDataProcessorUsed();
     }
 
-    public void setCounterInfo(CountersType countersType) {
-        List<CounterType> counter = countersType.getCounterGroup().getCounter();
-        for (CounterType counterType : counter) {
-            addCounterInfo(counterType);
+    public void setCounterInfo(JobCounters jobCounters) {
+        List<JobCounter> counter = jobCounters.getCounterGroup().getCounter();
+        for (JobCounter jobCounter : counter) {
+            addCounterInfo(jobCounter);
         }
     }
 
-    private void addCounterInfo(CounterType counterType) {
-        String counterTypeName = counterType.getName();
+    private void addCounterInfo(JobCounter jobCounter) {
+        String counterTypeName = jobCounter.getName();
 
         if (counterTypeName.equalsIgnoreCase("FILE_BYTES_READ")) {
-            fileBytesRead = counterType.getTotalCounterValue().toString();
+            fileBytesRead = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("FILE_BYTES_WRITTEN")) {
-            fileBytesWritten = counterType.getTotalCounterValue().toString();
+            fileBytesWritten = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("HDFS_BYTES_READ")) {
-            hdfsBytesRead = counterType.getTotalCounterValue().toString();
+            hdfsBytesRead = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("HDFS_BYTES_WRITTEN")) {
-            hdfsBytesWritten = counterType.getTotalCounterValue().toString();
+            hdfsBytesWritten = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("VCORES_MILLIS_MAPS")) {
-            vCoresMillisTotal = counterType.getTotalCounterValue().toString();
+            vCoresMillisTotal = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("MB_MILLIS_MAPS")) {
-            mbMillisMapTotal = counterType.getTotalCounterValue().toString();
+            mbMillisMapTotal = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("MB_MILLIS_REDUCES")) {
-            mbMillisReduceTotal = counterType.getTotalCounterValue().toString();
+            mbMillisReduceTotal = jobCounter.getTotalCounterValue().toString();
         } else if (counterTypeName.equalsIgnoreCase("CPU_MILLISECONDS")) {
-            cpuMilliseconds = counterType.getTotalCounterValue().toString();
+            cpuMilliseconds = jobCounter.getTotalCounterValue().toString();
         }
     }
 

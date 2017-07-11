@@ -22,13 +22,9 @@ import javax.xml.bind.annotation.XmlType;
         "workflowType",
         "dataProcessorUsed",
         "inProductType"
-
-
 })
-
-
 @XmlRootElement(name = "conf")
-public class ConfType {
+public class JobConf {
 
     @XmlElement(required = true)
     private String path;

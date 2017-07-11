@@ -19,11 +19,11 @@ import java.util.List;
     "counterGroupName",
     "counter"
 })
-public class CounterGroupType {
+public class JobCounterGroup {
 
     @XmlElement(required = true)
     private String counterGroupName;
-    private List<CounterType> counter;
+    private List<JobCounter> counter;
 
 
     public String getCounterGroupName() {
@@ -34,7 +34,7 @@ public class CounterGroupType {
         this.counterGroupName = value;
     }
 
-    public List<CounterType> getCounter() {
+    public List<JobCounter> getCounter() {
         if (counter == null) {
             counter = new ArrayList<>();
         }

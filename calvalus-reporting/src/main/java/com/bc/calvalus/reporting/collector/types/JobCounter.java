@@ -20,7 +20,7 @@ import java.math.BigInteger;
         "mapCounterValue",
         "reduceCounterValue"
 })
-public class CounterType {
+public class JobCounter {
 
     @XmlElement(required = true)
     private String name;

@@ -13,7 +13,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  */
 
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlRootElement(name = "job.xml")
+@XmlRootElement(name = "job")
 @XmlType(name = "jobType", propOrder = {
         "submitTime",
         "startTime",
@@ -28,7 +28,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
         "reducesTotal",
         "reducesCompleted"
 })
-public class JobType {
+public class Job {
 
     @XmlElement(required = true)
     private String submitTime;

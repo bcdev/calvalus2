@@ -15,11 +15,11 @@ import java.util.List;
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlRootElement(name = "jobs")
 @XmlType(name = "jobsType", propOrder = {"job"})
-public class JobsType {
+public class Jobs {
 
-    private List<JobType> job;
+    private List<Job> job;
 
-    public List<JobType> getJob() {
+    public List<Job> getJob() {
         if (job == null) {
             job = new ArrayList<>();
         }

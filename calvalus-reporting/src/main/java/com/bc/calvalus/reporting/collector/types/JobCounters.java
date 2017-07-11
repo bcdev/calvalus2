@@ -17,12 +17,12 @@ import javax.xml.bind.annotation.XmlType;
         "id",
         "counterGroup"
 })
-public class CountersType {
+public class JobCounters {
 
     @XmlElement(required = true)
     private String id;
     @XmlElement(required = true)
-    private CounterGroupType counterGroup;
+    private JobCounterGroup counterGroup;
 
     /**
      * Gets the value of the id property.
@@ -48,9 +48,9 @@ public class CountersType {
      * Gets the value of the counterGroup property.
      *
      * @return possible object is
-     * {@link CounterGroupType }
+     * {@link JobCounterGroup }
      */
-    public CounterGroupType getCounterGroup() {
+    public JobCounterGroup getCounterGroup() {
         return counterGroup;
     }
 
@@ -58,9 +58,9 @@ public class CountersType {
      * Sets the value of the counterGroup property.
      *
      * @param value allowed object is
-     *              {@link CounterGroupType }
+     *              {@link JobCounterGroup }
      */
-    public void setCounterGroup(CounterGroupType value) {
+    public void setCounterGroup(JobCounterGroup value) {
         this.counterGroup = value;
     }
 

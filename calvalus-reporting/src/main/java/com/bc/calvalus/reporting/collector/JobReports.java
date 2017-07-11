@@ -49,12 +49,16 @@ public class JobReports {
                 String dateInfo = generateDateInfoString(calendar);
                 String reportName = REPORT_FILE_PREFIX + dateInfo + REPORT_FILE_EXTENSION;
                 Path reportPath = Paths.get(this.reportingDirectory, reportName);
-                Files.createFile(reportPath);
+                if (!Files.exists(reportPath)) {
+                    Files.createFile(reportPath);
+                }
                 FileWriter fileWriter = new FileWriter(reportPath.toFile(), true);
                 this.writers.put(writerKey, new BufferedWriter(fileWriter));
             }
-            this.writers.get(writerKey).write(jobDetailJson);
-            this.writers.get(writerKey).write("," + "\n");
+            BufferedWriter currentWriter = this.writers.get(writerKey);
+            currentWriter.write(jobDetailJson);
+            currentWriter.write("," + "\n");
+            currentWriter.flush();
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Unable to write job '" + jobId + "' to job reports file.", exception);
             throw new JobReportsException("Unable to write job '" + jobId + "' to job reports file.", exception);
@@ -92,8 +96,6 @@ public class JobReports {
                     this.knownJobIdSet.add(jobDetail.getJobId());
                 });
                 stream.close();
-                FileWriter fileWriter = new FileWriter(Paths.get(this.reportingDirectory, reportFileName).toFile(), true);
-                this.writers.put(reportKey, new BufferedWriter(fileWriter));
             }
         } catch (IOException exception) {
             LOGGER.log(Level.SEVERE, "Unable to initiate job reports file inside '" + this.reportingDirectory + "'", exception);
@@ -107,17 +109,6 @@ public class JobReports {
 
     HashSet<String> getKnownJobIdSet() {
         return this.knownJobIdSet;
-    }
-
-    void flushBufferedWriters() {
-        LOGGER.info("Flushing the buffer(s) to the job reports file.");
-        for (String reportKey : this.writers.keySet()) {
-            try {
-                this.writers.get(reportKey).flush();
-            } catch (IOException exception) {
-                LOGGER.log(Level.SEVERE, "Unable to flush writer for reportKey '" + reportKey + "'.", exception);
-            }
-        }
     }
 
     void closeBufferedWriters() {

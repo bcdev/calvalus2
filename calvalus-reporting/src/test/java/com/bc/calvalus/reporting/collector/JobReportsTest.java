@@ -76,7 +76,6 @@ public class JobReportsTest {
         assertThat(jobReports.contains("1"), equalTo(true));
         assertThat(jobReports.contains("2"), equalTo(true));
 
-        jobReports.flushBufferedWriters();
         jobReports.closeBufferedWriters();
 
         cleanUp();
