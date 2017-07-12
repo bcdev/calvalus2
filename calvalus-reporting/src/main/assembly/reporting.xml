@@ -19,7 +19,7 @@
         <fileSet>
             <directory>${project.basedir}/src/main/resources/deployment</directory>
             <includes>
-                <include>deploy-reporting-collector.sh</include>
+                <include>deploy-reporting-services.sh</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
