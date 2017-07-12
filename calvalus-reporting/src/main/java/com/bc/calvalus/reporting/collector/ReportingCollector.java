@@ -31,11 +31,13 @@ public class ReportingCollector<T> {
 
     private final HistoryServerClient historyServerClient;
     private final JobTransformer jobTransformer;
+    private final StatusHandler statusHandler;
 
     private ReportingCollector(String propertiesName) throws IOException, JobTransformerException {
         PropertiesWrapper.loadConfigFile(propertiesName);
         this.historyServerClient = new HistoryServerClient();
         this.jobTransformer = new JobTransformer();
+        this.statusHandler = new StatusHandler();
         jobReports = new JobReports();
     }
 
@@ -64,6 +66,7 @@ public class ReportingCollector<T> {
 
     private void run() throws JobReportsException, ServerConnectionException, JAXBException, JobTransformerException {
         jobReports.init(PropertiesWrapper.get("reporting.folder.path"));
+        this.statusHandler.initReport(jobReports.getKnownJobIdSet().size());
         while (true) {
             Jobs jobs = retrieveAllJobs();
             Gson gson = new Gson();
@@ -81,6 +84,7 @@ public class ReportingCollector<T> {
             }
             if (counter > 0) {
                 LOGGER.info("Successfully added " + counter + " new job(s) to the reports file.");
+                this.statusHandler.updateNewJobNumber(jobReports.getKnownJobIdSet().size());
             } else {
                 LOGGER.info("No new jobs on the history server.");
             }
