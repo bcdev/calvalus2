@@ -12,6 +12,7 @@
             <directory>${project.basedir}/src/main/resources</directory>
             <includes>
                 <include>collector.sh</include>
+                <include>urbantep.sh</include>
             </includes>
             <outputDirectory>/</outputDirectory>
         </fileSet>
@@ -26,6 +27,7 @@
             <directory>${project.basedir}/src/main/resources/conf</directory>
             <includes>
                 <include>reporting-collector.properties</include>
+                <include>urbantep.properties</include>
                 <include>conf.xsl</include>
                 <include>counters.xsl</include>
             </includes>
