@@ -1,15 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
-import org.esa.snap.core.datamodel.CrsGeoCoding;
 import org.esa.snap.core.datamodel.GeoCoding;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
-
-import java.util.List;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DATA;
-import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.S2_GRID_PIXELSIZE;
 
 public abstract class AbstractFireGridDataSource implements FireGridDataSource {
 
@@ -83,21 +76,6 @@ public abstract class AbstractFireGridDataSource implements FireGridDataSource {
             for (int x = 0; x < width; x++) {
                 areas[pixelIndex++] = areaCalculator.calculatePixelSize(x, y);
             }
-        }
-        return areas;
-    }
-
-    protected static double[] getAreas(List<int[]> indices, double[] areas) {
-        int pixelIndex = 0;
-        for (int[] index : indices) {
-            CrsGeoCoding gc;
-            try {
-                gc = new CrsGeoCoding(DefaultGeographicCRS.WGS84, 1, 1, getLeftLon(index[0]), getUpperLat(index[1]), S2_GRID_PIXELSIZE, S2_GRID_PIXELSIZE);
-            } catch (FactoryException | TransformException e) {
-                throw new IllegalStateException("Unable to create temporary geo-coding", e);
-            }
-            AreaCalculator areaCalculator = new AreaCalculator(gc);
-            areas[pixelIndex++] = areaCalculator.calculatePixelSize(index[0], index[1]);
         }
         return areas;
     }

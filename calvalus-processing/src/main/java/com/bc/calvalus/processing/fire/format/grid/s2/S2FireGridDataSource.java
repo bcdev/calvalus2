@@ -1,11 +1,12 @@
 package com.bc.calvalus.processing.fire.format.grid.s2;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
+import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
@@ -16,9 +17,9 @@ import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -31,6 +32,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
     private final Product[] lcProducts;
     public static final int STEP = 2;
     private List<ZipFile> geoLookupTables;
+
+    protected static final Logger LOG = CalvalusLogger.getLogger();
 
     public S2FireGridDataSource(String tile, Product sourceProducts[], Product[] lcProducts, List<ZipFile> geoLookupTables) {
         this.tile = tile;
@@ -48,8 +51,8 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             return null;
         }
 
-        List<SourceData> allSourceData = new ArrayList<>();
-        List<int[]> indices = new ArrayList<>();
+        SourceData data = new SourceData(1381, 1381);
+        data.reset();
 
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
@@ -81,58 +84,66 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             BufferedReader br = new BufferedReader(new InputStreamReader(geoLookupTable.getInputStream(currentEntry), "UTF-8"));
 
             String line;
+            AreaCalculator areaCalculator = new AreaCalculator(product.getSceneGeoCoding());
             Band jd = product.getBand("JD");
             Band cl = product.getBand("CL");
             Band lc = lcProduct.getBand("lccs_class");
-            ProductData jdData = ProductData.createInstance(jd.getDataType(), 1);
-            ProductData clData = ProductData.createInstance(cl.getDataType(), 1);
-            ProductData lcData = ProductData.createInstance(lc.getDataType(), 1);
-            PixelPos pixelPos = new PixelPos();
+
+            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
+            ProductData clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
+            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
+
+            jd.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), jdData);
+            cl.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), clData);
+            lc.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), lcData);
+
+            int linecounter = 0;
+
             while ((line = br.readLine()) != null) {
-                SourceData data = new SourceData(1, 1);
+                linecounter++;
                 String[] splitLine = line.split(" ");
+                int targetX = Integer.parseInt(splitLine[0]);
+                int targetY = Integer.parseInt(splitLine[1]);
                 int sourceX = Integer.parseInt(splitLine[2]);
                 int sourceY = Integer.parseInt(splitLine[3]);
-                jd.readRasterData(sourceX, sourceY, 1, 1, jdData);
-                cl.readRasterData(sourceX, sourceY, 1, 1, clData);
-                lc.readRasterData(sourceX, sourceY, 1, 1, lcData);
-                int sourceJD = (int) jdData.getElemFloatAt(0);
-                float sourceCL = clData.getElemFloatAt(0);
-                int oldValue = data.burnedPixels[0];
-                if (sourceJD > oldValue && sourceJD < 900) {
-                    data.burnedPixels[0] = sourceJD;
-                }
-                if (sourceJD < 998) { // neither no-data nor cloud -> observed pixel
-                    // put observed pixel into first or second half of month
-                    int productJD = getProductJD(product);
-                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
-                        data.probabilityOfBurnFirstHalf[0] = sourceCL;
-                        data.statusPixelsFirstHalf[0] = 1;
-                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
-                        data.probabilityOfBurnSecondHalf[0] = sourceCL;
-                        data.statusPixelsSecondHalf[0] = 1;
+                int targetPixelIndex = targetY * 1381 + targetX;
+
+                int sourcePixelIndex = sourceY * product.getSceneRasterWidth() + sourceX;
+
+                int sourceJD = (int) jdData.getElemFloatAt(sourcePixelIndex);
+                float sourceCL = clData.getElemFloatAt(sourcePixelIndex);
+                int oldValue = data.burnedPixels[targetPixelIndex];
+                int productJD = getProductJD(product);
+                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
+                    if (sourceJD > oldValue && sourceJD < 900) {
+                        data.burnedPixels[targetPixelIndex] = sourceJD;
+                        if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
+                            data.probabilityOfBurnFirstHalf[targetPixelIndex] = sourceCL;
+                        } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
+                            data.probabilityOfBurnSecondHalf[targetPixelIndex] = sourceCL;
+                        }
                     }
+                    if (sourceJD < 998) { // neither no-data nor cloud -> observed pixel
+                        // put observed pixel into first or second half of month
+                        if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
+                            data.statusPixelsFirstHalf[targetPixelIndex] = 1;
+                        } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
+                            data.statusPixelsSecondHalf[targetPixelIndex] = 1;
+                        }
+                    }
+
+                    int sourceLC = lcData.getElemIntAt(sourcePixelIndex);
+                    data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                    data.lcClasses[targetPixelIndex] = sourceLC;
                 }
-                pixelPos.x = sourceX;
-                pixelPos.y = sourceY;
-                int sourceLC = lcData.getElemIntAt(0);
-                data.burnable[0] = LcRemapping.isInBurnableLcClass(sourceLC);
-                int jdValue = data.burnedPixels[0];
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, jdValue)
-                        || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, jdValue)) {
-                    data.lcClasses[0] = sourceLC;
+                if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
+                    data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
                 }
-                allSourceData.add(data);
             }
         }
 
-        SourceData data = SourceData.merge(allSourceData);
-
-        int width = (int) Math.sqrt(data.width);
-        getAreas(indices, data.areas);
-
-        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, width), true);
-        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, width, width), false);
+        data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 1381, 1381), true);
+        data.patchCountSecondHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 1381, 1381), false);
 
         return data;
     }

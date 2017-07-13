@@ -13,7 +13,7 @@ public class GridFormatUtils {
 
     public static final int LC_CLASSES_COUNT = 18;
     static final int NO_DATA = -1;
-    static final int NO_AREA = 0;
+    public static final int NO_AREA = 0;
     public static double S2_GRID_PIXELSIZE = 0.0001810432608;
 
     public static int[][] make2Dims(int[] pixels) {

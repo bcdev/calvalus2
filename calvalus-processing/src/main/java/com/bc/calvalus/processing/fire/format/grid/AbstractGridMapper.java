@@ -68,11 +68,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         for (int y = 0; y < targetRasterHeight; y++) {
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, targetRasterHeight));
             for (int x = 0; x < targetRasterWidth; x++) {
+                LOG.info(String.format("    Processing pixel %d/%d of line %d.", x + 1, targetRasterWidth, y + 1));
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     continue;
                 }
-
                 float baValueFirstHalf = 0.0F;
                 float baValueSecondHalf = 0.0F;
                 float coverageValueFirstHalf = 0.0F;
@@ -132,8 +132,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
-                errorsFirstHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnFirstHalf) * data.areas[targetPixelIndex]);
-                errorsSecondHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnSecondHalf) * data.areas[targetPixelIndex]);
+                errorsFirstHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnFirstHalf) * areas[targetPixelIndex]);
+                errorsSecondHalf[targetPixelIndex] = (float) (getErrorPerPixel(data.probabilityOfBurnSecondHalf) * areas[targetPixelIndex]);
 
                 targetPixelIndex++;
             }

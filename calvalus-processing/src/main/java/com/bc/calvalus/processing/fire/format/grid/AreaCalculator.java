@@ -48,13 +48,26 @@ public class AreaCalculator {
     /**
      * Calculates the size of the pixel specified by the given x,y coordinates. The unit of the size is always {@code meter}.
      *
+     * @param x    the x location of the pixel
+     * @param y    the y location of the pixel
+     * @param maxX the max x value of the scene
+     * @param maxY the max y value of the scene
+     * @return the size in square meters
+     */
+    public double calculatePixelSize(int x, int y, int maxX, int maxY) {
+        Rectangle2D geoRectangleForPixel = createGeoRectangleForPixel(x, y, maxX, maxY);
+        return calculateRectangleSize(geoRectangleForPixel);
+    }
+
+    /**
+     * Calculates the size of the pixel specified by the given x,y coordinates. The unit of the size is always {@code meter}.
+     *
      * @param x the x location of the pixel
      * @param y the y location of the pixel
      * @return the size in square meters
      */
     public double calculatePixelSize(int x, int y) {
-        Rectangle2D geoRectangleForPixel = createGeoRectangleForPixel(x, y);
-        return calculateRectangleSize(geoRectangleForPixel);
+        return calculatePixelSize(x, y, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     /**
@@ -80,13 +93,29 @@ public class AreaCalculator {
      *
      * @param x the x location of the pixel
      * @param y the y location of the pixel
+     * @param maxX the max x value of the scene
+     * @param maxY the max y value of the scene
      */
-    Rectangle2D createGeoRectangleForPixel(int x, int y) {
+    Rectangle2D createGeoRectangleForPixel(int x, int y, int maxX, int maxY) {
         Rectangle2D.Double rect = new Rectangle2D.Double();
-        GeoPos geoPosUL = gc.getGeoPos(new PixelPos(x, y), null);
-        GeoPos geoPosLR = gc.getGeoPos(new PixelPos(x + 1, y + 1), null);
-        rect.setFrameFromDiagonal(geoPosUL.getLon(), geoPosUL.getLat(),
-                geoPosLR.getLon(), geoPosLR.getLat());
+        GeoPos geoPos1 = gc.getGeoPos(new PixelPos(x, y), null);
+        PixelPos pixelPos;
+        if (x < maxX && y < maxY) {
+            pixelPos = new PixelPos(x + 1, y + 1);
+        } else if (x == maxX && y < maxY) {
+            pixelPos = new PixelPos(x - 1, y + 1);
+        } else if (x == maxX && y == maxY) {
+            pixelPos = new PixelPos(x - 1, y - 1);
+        } else if (x < maxX && y == maxY) {
+            pixelPos = new PixelPos(x + 1, y - 1);
+        } else {
+            throw new IllegalStateException("Implementation error: cannot come here.");
+        }
+        GeoPos geoPos2 = gc.getGeoPos(pixelPos, null);
+        rect.setFrameFromDiagonal(
+                geoPos1.getLon(), geoPos1.getLat(),
+                geoPos2.getLon(), geoPos2.getLat());
+
         return rect;
     }
 

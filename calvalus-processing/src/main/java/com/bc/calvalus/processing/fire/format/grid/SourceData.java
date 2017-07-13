@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire.format.grid;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_AREA;
@@ -11,12 +13,12 @@ import static com.bc.calvalus.processing.fire.format.grid.GridFormatUtils.NO_DAT
  */
 public class SourceData {
 
-    public final int width;
-    public final int height;
-    public final int[] burnedPixels;
-    public final double[] areas;
-    public final int[] lcClasses;
-    public final boolean[] burnable;
+    public int width;
+    public int height;
+    public int[] burnedPixels;
+    public double[] areas;
+    public int[] lcClasses;
+    public boolean[] burnable;
     public int patchCountFirstHalf;
     public int patchCountSecondHalf;
     public int[] statusPixelsFirstHalf;
@@ -38,20 +40,45 @@ public class SourceData {
     }
 
     public static SourceData merge(List<SourceData> allSourceData) {
-        int width = allSourceData.size();
-        SourceData result = new SourceData(width, 1);
-        int offset = 0;
-        for (SourceData sourceData : allSourceData) {
-            System.arraycopy(sourceData.burnedPixels, 0, result.burnedPixels, offset, 1);
-            System.arraycopy(sourceData.lcClasses, 0, result.lcClasses, offset, 1);
-            System.arraycopy(sourceData.statusPixelsFirstHalf, 0, result.statusPixelsFirstHalf, offset, 1);
-            System.arraycopy(sourceData.statusPixelsSecondHalf, 0, result.statusPixelsSecondHalf, offset, 1);
-            System.arraycopy(sourceData.statusPixelsSecondHalf, 0, result.statusPixelsSecondHalf, offset, 1);
-            System.arraycopy(sourceData.burnable, 0, result.burnable, offset, 1);
-            System.arraycopy(sourceData.probabilityOfBurnFirstHalf, 0, result.probabilityOfBurnFirstHalf, offset, 1);
-            System.arraycopy(sourceData.probabilityOfBurnSecondHalf, 0, result.probabilityOfBurnSecondHalf, offset, 1);
-            offset++;
+
+        List<Integer> localBurned = new ArrayList<>();
+        List<Double> localAreas = new ArrayList<>();
+        List<Integer> localLcClasses = new ArrayList<>();
+        List<Boolean> localBurnable = new ArrayList<>();
+        List<Integer> localStatusPixelsFirstHalf = new ArrayList<>();
+        List<Integer> localStatusPixelsSecondHalf = new ArrayList<>();
+        List<Double> localProbabilityOfBurnFirstHalf = new ArrayList<>();
+        List<Double> localProbabilityOfBurnSecondHalf = new ArrayList<>();
+        for (Iterator<SourceData> sourceDataIter = allSourceData.iterator(); sourceDataIter.hasNext(); ) {
+            SourceData sourceData = sourceDataIter.next();
+            localBurned.add(sourceData.burnedPixels[0]);
+            localAreas.add(sourceData.areas[0]);
+            localLcClasses.add(sourceData.lcClasses[0]);
+            localBurnable.add(sourceData.burnable[0]);
+            localStatusPixelsFirstHalf.add(sourceData.statusPixelsFirstHalf[0]);
+            localStatusPixelsSecondHalf.add(sourceData.statusPixelsSecondHalf[0]);
+            localProbabilityOfBurnFirstHalf.add(sourceData.probabilityOfBurnFirstHalf[0]);
+            localProbabilityOfBurnSecondHalf.add(sourceData.probabilityOfBurnSecondHalf[0]);
+            sourceDataIter.remove();
+            System.gc();
         }
+
+        if (!allSourceData.isEmpty()) {
+            throw new IllegalStateException("Implementation error, list not empty.");
+        }
+
+        SourceData result = new SourceData(localBurned.size(), 1);
+        for (int i = 0; i < localBurned.size(); i++) {
+            result.burnedPixels[i] = localBurned.get(i);
+            result.areas[i] = localAreas.get(i);
+            result.lcClasses[i] = localLcClasses.get(i);
+            result.burnable[i] = localBurnable.get(i);
+            result.statusPixelsFirstHalf[i] = localStatusPixelsFirstHalf.get(i);
+            result.statusPixelsSecondHalf[i] = localStatusPixelsSecondHalf.get(i);
+            result.probabilityOfBurnFirstHalf[i] = localProbabilityOfBurnFirstHalf.get(i);
+            result.probabilityOfBurnSecondHalf[i] = localProbabilityOfBurnSecondHalf.get(i);
+        }
+
         return result;
     }
 

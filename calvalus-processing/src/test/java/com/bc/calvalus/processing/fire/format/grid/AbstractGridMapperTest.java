@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
+import com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
@@ -82,11 +83,9 @@ public class AbstractGridMapperTest {
     @Ignore
     @Test
     public void acceptanceTestS2GridFormat() throws Exception {
-        ErrorPredictor errorPredictor = new ErrorPredictor();
         List<Product> products = new ArrayList<>();
         Files.list(Paths.get("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting"))
-                .filter(path -> path.getFileName().toString().startsWith("BA-"))
-//                .limit(1)
+                .filter(path -> path.getFileName().toString().startsWith("BA-T33PXM"))
                 .forEach(path -> {
                     try {
                         products.add(ProductIO.readProduct(path.toFile()));
@@ -116,8 +115,13 @@ public class AbstractGridMapperTest {
 
             }
         };
-        File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-v07h16.nc");
+        File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-T33PXM.nc");
         Product lcProduct = ProductIO.readProduct(file);
+
+        List<Product> lcProducts = new ArrayList<>();
+        for (int i = 0; i < products.size(); i++) {
+            lcProducts.add(lcProduct);
+        }
 
         List<ZipFile> geoLookupTables = new ArrayList<>();
         Files.list(Paths.get("D:\\workspace\\fire-cci\\testdata\\for-grid-formatting"))
@@ -129,8 +133,8 @@ public class AbstractGridMapperTest {
             }
         });
 
-//        S2FireGridDataSource dataSource = new S2FireGridDataSource("v38h83", products.toArray(new Product[0]), lcProduct, geoLookupTables);
-//        mapper.setDataSource(dataSource);
+        S2FireGridDataSource dataSource = new S2FireGridDataSource("v40h98", products.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables);
+        mapper.setDataSource(dataSource);
 
         GridCell gridCell = mapper.computeGridCell(2016, 1);
         Product product = new Product("test", "test", 8, 8);
