@@ -85,6 +85,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Map<String, ShapefileCacheEntry> shapeAttributeCache;
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
+    private final List<HadoopJobHook> jobHooks = new ArrayList<>();
 
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
         this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
@@ -648,5 +649,16 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
             this.modificationTime = modificationTime;
         }
     }
-    
+
+    @Override
+    public void registerJobHook(HadoopJobHook hook) {
+        jobHooks.add(hook);
+    }
+
+    @Override
+    public void runHooksBeforeSubmission(Job job) {
+        for (HadoopJobHook hook : jobHooks) {
+            hook.beforeSubmit(job);
+        }
+    }
 }

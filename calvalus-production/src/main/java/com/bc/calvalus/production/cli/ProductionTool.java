@@ -12,8 +12,9 @@ import com.bc.calvalus.production.ProductionResponse;
 import com.bc.calvalus.production.ProductionService;
 import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
-import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
+import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
+import com.bc.calvalus.production.util.DebugTokenGenerator;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -75,6 +76,7 @@ public class ProductionTool {
 
     private static final String DEFAULT_SNAP_BUNDLE = HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
+    private static final String DEFAULT_AUTH_METHOD = "unix";
     private static final String CALVALUS_SOFTWARE_HOME = HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
 
     private static final String BUNDLE_SEPARATOR = "-->";
@@ -129,6 +131,10 @@ public class ProductionTool {
 
         defaultConfig.put("calvalus.calvalus.bundle", commandLine.getOptionValue("calvalus", DEFAULT_CALVALUS_BUNDLE));
         defaultConfig.put("calvalus.snap.bundle", commandLine.getOptionValue("snap", DEFAULT_SNAP_BUNDLE));
+        defaultConfig.put("calvalus.crypt.auth", "unix");
+        defaultConfig.put("calvalus.crypt.calvalus-public-key", "/opt/hadoop/conf/calvalus_pub.der");
+        defaultConfig.put("calvalus.crypt.debug-private-key", "/opt/hadoop/conf/debug_priv.der");
+        defaultConfig.put("calvalus.crypt.debug-certificate", "/opt/hadoop/conf/debug_cert.der");
 
         ServiceContainer serviceContainer = null;
         try {
@@ -190,6 +196,24 @@ public class ProductionTool {
                 say(String.format("Production request loaded, type is '%s'.", request.getProductionType()));
             } finally {
                 requestReader.close();
+            }
+
+            String authPolicy;
+            if (commandLine.hasOption("auth")) {
+                authPolicy = commandLine.getOptionValue("auth");
+            } else {
+                authPolicy = config.getOrDefault("calvalus.crypt.auth", "unix");
+            }
+            switch (authPolicy) {
+                case "unix":
+                    break;
+                case "debug":
+                    serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(config, getUserName()));
+                    break;
+                case "saml":
+                    throw new RuntimeException("external IDP authentication not implemented yet");
+                default:
+                    throw new RuntimeException("unknown auth type " + authPolicy);
             }
 
             Production production = orderProduction(serviceContainer.getProductionService(), request);
@@ -582,6 +606,13 @@ public class ProductionTool {
                                   .withDescription(
                                           "The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
                                   .create("c"));
+        options.addOption(OptionBuilder
+                                  .withLongOpt("auth")
+                                  .hasArg()
+                                  .withArgName("NAME")
+                                  .withDescription(
+                                          "Authentication method. One of unix, saml, debug. Defaults to '" + DEFAULT_AUTH_METHOD + "'.")
+                                  .create("a"));
         options.addOption(OptionBuilder
                                   .withLongOpt("copy")
                                   .hasArgs()

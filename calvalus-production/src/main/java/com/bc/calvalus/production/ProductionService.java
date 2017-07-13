@@ -3,6 +3,7 @@ package com.bc.calvalus.production;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 
 import java.io.IOException;
 import java.util.Observer;
@@ -151,5 +152,11 @@ public interface ProductionService {
      * Load details about the region data.
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
+
+    /**
+     * Registers hooks to be applied before job submission
+     * @param hook
+     */
+    void registerJobHook(HadoopJobHook hook);
     
 }
