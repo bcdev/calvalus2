@@ -14,7 +14,7 @@ import com.bc.calvalus.production.ProductionServiceConfig;
 import com.bc.calvalus.production.ServiceContainer;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.hadoop.HadoopServiceContainerFactory;
-import com.bc.calvalus.production.util.SamlUtil;
+import com.bc.calvalus.production.util.DebugTokenGenerator;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -31,30 +31,13 @@ import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.jdom.JDOMException;
-import org.joda.time.DateTime;
-import org.opensaml.saml2.core.Assertion;
-import org.opensaml.xml.ConfigurationException;
-import org.opensaml.xml.io.MarshallingException;
-import org.opensaml.xml.security.SecurityException;
-import org.opensaml.xml.signature.SignatureException;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedExceptionAction;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * The Calvalus production CLI tool "cpt".
@@ -95,36 +78,6 @@ public class ProductionTool {
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
     private static final String DEFAULT_AUTH_METHOD = "unix";
     private static final String CALVALUS_SOFTWARE_HOME = HadoopProcessingService.CALVALUS_SOFTWARE_PATH;
-
-    private static final String[] CALVALUS_HASHABLE_PARAMETERS = new String[] {
-            "productionType",
-            "productionName",
-            "calvalus.bundles",
-            "processorBundleName",
-            "processorBundleVersion",
-            "processorName",
-            "inputPath",
-            "minDate",
-            "maxDate",
-            "regionWKT",
-            "processorParameters",
-            "calvalus.l3.parameters",
-            "calvalus.ql.parameters",
-            "calvalus.output.dir",
-            "calvalus.hadoop.mapreduce.job.queuename",
-    };
-
-    String[] CALVALUS_OUTPUT_SUFFIXES = {
-            "-L3-[^/]*$",
-            "-TA$",
-            "-ma$",
-            "-output$",
-            "-parts$",
-            "^hdfs://[^/]*"
-    };
-
-    List<String> CALVALUS_PRODUCTION_TYPES_WITH_NON_SPLITTED_PERIOD =
-            Arrays.asList(new String[] {"L2", "L2Plus", "L2F", "L3F"});
 
     private static final String BUNDLE_SEPARATOR = "-->";
 
@@ -255,12 +208,12 @@ public class ProductionTool {
                 case "unix":
                     break;
                 case "debug":
-                    SamlUtil samlUtil = new SamlUtil(config);
-                    request.setParameter("calvalus.token", calvalusTokenOf(request, getUserName(), samlUtil));
+                    serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(config, getUserName()));
                     break;
                 case "saml":
-                default:
                     throw new RuntimeException("external IDP authentication not implemented yet");
+                default:
+                    throw new RuntimeException("unknown auth type " + authPolicy);
             }
 
             Production production = orderProduction(serviceContainer.getProductionService(), request);
@@ -285,93 +238,6 @@ public class ProductionTool {
                 }
             }
         }
-    }
-
-    private String calvalusTokenOf(ProductionRequest request, String userName, SamlUtil samlUtil) {
-        try {
-            StringBuilder accu = new StringBuilder();
-            String bundleNameMemo = null;
-            String minDateMemo = null;
-            for (String key : CALVALUS_HASHABLE_PARAMETERS) {
-                String value = request.getParameters().get(key);
-                if ("productionType".equals(key)) {
-                    key = "calvalus.productionType";
-                    value = request.getProductionType();
-                } else if (! request.getParameters().containsKey(key)) {
-                    continue;
-                } else {
-                    if ("processorBundleName".equals(key)) {
-                        bundleNameMemo = value;
-                        continue;
-                    } else if ("processorBundleVersion".equals(key)) {
-                        key = "calvalus.bundles";
-                        value = bundleNameMemo + "-" + value;
-                    } else if ("minDate".equals(key)) {
-                        minDateMemo = value;
-                        continue;
-                    } else if ("maxDate".equals(key)) {
-                        if (! CALVALUS_PRODUCTION_TYPES_WITH_NON_SPLITTED_PERIOD.contains(request.getProductionType())) {
-                            continue;
-                        }
-                        key = "calvalus.input.dateRanges";
-                        value = "[" + minDateMemo + ":" + value + "]";
-                    } else if ("calvalus.output.dir".equals(key)) {
-                        value = prefixOf(value, CALVALUS_OUTPUT_SUFFIXES);
-                    } else if ("productionName".equals(key)) {
-                        key = "mapreduce.job.name";
-                    } else if ("processorName".equals(key)) {
-                        key = "calvalus.l2.operator";
-                    } else if ("inputPath".equals(key)) {
-                        key = "calvalus.input.pathPatterns";
-                    } else if ("regionWKT".equals(key)) {
-                        key = "calvalus.regionGeometry";
-                        value = value.replaceAll("POLYGON\\(\\(", "POLYGON ((").replaceAll(", ", ",").replaceAll(",", ", ");
-                    } else if ("processorParameters".equals(key)) {
-                        key = "calvalus.l2.parameters";
-                    } else if ("calvalus.hadoop.mapreduce.job.queuename".equals(key)) {
-                        key = "mapreduce.job.queuename";
-                    }
-                }
-                accu.append(key);
-                accu.append('=');
-                accu.append(value);
-                accu.append('\n');
-            }
-            String requestHashable = accu.toString();
-            System.out.println(requestHashable);
-            byte[] requestHash = samlUtil.sha256(requestHashable);
-            String requestHashString = Base64.getEncoder().encodeToString(requestHash);
-            System.out.println("base64(hash(request))=" + requestHashString);
-
-            String issuer = "calvalus";
-            String subject = userName;
-            Map<String, String> attributes = new HashMap<>();
-            attributes.put("groups", "calvalus");
-            int timeoutSeconds = 60 * 60 * 24;
-            Assertion assertion = samlUtil.build(issuer, subject, attributes, new DateTime("2017-06-23T10:27:05.354Z"), timeoutSeconds);
-            assertion = samlUtil.sign(assertion, samlUtil.getDebugCredential());
-            String assertionString = samlUtil.toString(assertion);
-
-            String hashAndSaml = requestHashString + ' ' + assertionString;
-            return samlUtil.encryptRsaAes(hashAndSaml, samlUtil.getCalvalusPublicKey());
-
-        } catch (ConfigurationException|SecurityException|SignatureException|
-                 MarshallingException|NoSuchPaddingException|InvalidAlgorithmParameterException|
-                 NoSuchAlgorithmException|IOException|BadPaddingException|IllegalBlockSizeException|
-                 InvalidKeyException e) {
-            throw new RuntimeException("exception creating calvalus token", e);
-        }
-    }
-
-    private String prefixOf(String output, String[] calvalus_output_suffixes) {
-        for (String suffix : calvalus_output_suffixes) {
-            Pattern pattern = Pattern.compile(suffix);
-            Matcher matcher = pattern.matcher(suffix);
-            if (matcher.matches()) {
-                output = output.substring(0, matcher.start()) + output.substring(matcher.end());
-            }
-        }
-        return output;
     }
 
     private Production orderProduction(ProductionService productionService, ProductionRequest request) throws

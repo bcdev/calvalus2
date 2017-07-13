@@ -109,7 +109,6 @@ public class SamlUtil {
     private CertificateFactory certFactory;
     private MessageDigest SHA256;
     private PublicKey calvalusPublicKey = null;
-    private Credential debugCredential = null;
 
     public SamlUtil() {
         try {
@@ -123,18 +122,13 @@ public class SamlUtil {
         }
     }
 
-    public SamlUtil(Map<String, String> config) throws IOException {
+    public SamlUtil(Map<String, String> config) {
         this();
         try {
-            debugCredential = readCredentials(config.get("calvalus.crypt.debug-private-key"), config.get("calvalus.crypt.debug-certificate"));
             calvalusPublicKey = readPublicKey(config.get("calvalus.crypt.calvalus-public-key"));
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException | CertificateException e) {
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             throw new RuntimeException("exception reading keys and certificates", e);
         }
-    }
-
-    public Credential getDebugCredential() {
-        return debugCredential;
     }
 
     public PublicKey getCalvalusPublicKey() {

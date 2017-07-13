@@ -193,6 +193,8 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             configureJob(job);
             ProcessorFactory.installProcessorBundles(userName, job.getConfiguration());
             validateJob(job);
+            // maybe add calvalus.token parameter
+            getProcessingService().runHooksBeforeSubmission(job);
             JobID jobId = submitJob(job);
 
             CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);

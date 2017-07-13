@@ -10,6 +10,7 @@ import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
@@ -392,5 +393,10 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     @Override
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         return processingService.loadRegionDataInfo(username, url);
+    }
+
+    @Override
+    public void registerJobHook(HadoopJobHook hook) {
+         processingService.registerJobHook(hook);
     }
 }
