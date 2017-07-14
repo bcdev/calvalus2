@@ -45,6 +45,8 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         String archiveRootDir = serviceConfiguration.getOrDefault("calvalus.portal.archiveRootDir", "eodata");
         String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
+        // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
+        serviceConfiguration.put("fs.hdfs.impl.disable.cache", "true");
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
