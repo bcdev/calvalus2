@@ -70,10 +70,11 @@ public class DebugTokenGenerator extends SamlUtil implements HadoopJobHook {
     private String calvalusTokenOf(Configuration jobParameters, String userName) {
         try {
             String characterizingParameters = characterizingParametersOf(jobParameters);
-            System.out.println(characterizingParameters);
+            //System.out.println(characterizingParameters);
             String requestHashString = hashStringOf(characterizingParameters);
-            System.out.println("base64(hash(request))=" + requestHashString);
+            //System.out.println("base64(hash(request))=" + requestHashString);
             String assertionString = signedAssertionStringOf(userName, debugCredential);
+            //System.out.println(assertionString);
             String hashAndSaml = requestHashString + ' ' + assertionString;
             String debugToken = encryptRsaAes(hashAndSaml, getCalvalusPublicKey());
             return debugToken;
@@ -107,9 +108,10 @@ public class DebugTokenGenerator extends SamlUtil implements HadoopJobHook {
 
     private String signedAssertionStringOf(String userName, Credential credential) throws ConfigurationException, org.opensaml.xml.security.SecurityException, MarshallingException, SignatureException {
         Map<String, String> attributes = new HashMap<>();
+        attributes.put("uid", userName);
         attributes.put("groups", "calvalus");
         int timeoutSeconds = 60 * 60 * 24;
-        Assertion assertion = build(CALVALUS_ISSUER, userName, attributes, new DateTime("2017-06-23T10:27:05.354Z"), timeoutSeconds);
+        Assertion assertion = build(CALVALUS_ISSUER, "user uid", attributes, new DateTime("2017-06-23T10:27:05.354Z"), timeoutSeconds);
         assertion = sign(assertion, credential);
         return toString(assertion);
     }

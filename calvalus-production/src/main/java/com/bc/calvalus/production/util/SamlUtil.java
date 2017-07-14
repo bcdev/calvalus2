@@ -80,7 +80,7 @@ import java.util.Random;
  * <saml2:Assertion Version="2.0" xmlns:saml2="urn:oasis:names:tc:SAML:2.0:assertion">
  *     <saml2:Issuer>cas</saml2:Issuer>
  *     <saml2:Subject>
- *         <saml2:NameID>cd_calvalus</saml2:NameID>
+ *         <saml2:NameID>user uid</saml2:NameID>
  *     </saml2:Subject>
  *     <saml2:Conditions NotBefore="2017-06-23T10:27:05.354Z" NotOnOrAfter="2017-06-24T10:27:05.354Z"/>
  *     <saml2:AuthnStatement>
@@ -89,15 +89,14 @@ import java.util.Random;
  *         </saml2:AuthnContext>
  *     </saml2:AuthnStatement>
  *     <saml2:AttributeStatement>
+ *         <saml2:Attribute Name="uid">
+ *             <saml2:AttributeValue xsi:type="xsd:string">cd_calvalus</saml2:AttributeValue>
+ *         </saml2:Attribute>
  *         <saml2:Attribute Name="groups">
- *             <saml2:AttributeValue
- *                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
- *                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">calvalus,testproject</saml2:AttributeValue>
+ *             <saml2:AttributeValue xsi:type="xs:string">calvalus,testproject</saml2:AttributeValue>
  *         </saml2:Attribute>
  *         <saml2:Attribute Name="email">
- *             <saml2:AttributeValue
- *                 xmlns:xs="http://www.w3.org/2001/XMLSchema"
- *                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="xs:string">calvalustest@code.de</saml2:AttributeValue>
+ *             <saml2:AttributeValue xsi:type="xs:string">calvalustest@code.de</saml2:AttributeValue>
  *         </saml2:Attribute>
  *     </saml2:AttributeStatement>
  * </saml2:Assertion>
