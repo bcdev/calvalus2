@@ -16,8 +16,10 @@
 
 package com.bc.calvalus.inventory;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
 
@@ -74,8 +76,12 @@ public class DefaultInventoryService implements InventoryService {
             // check if the datasets are all still available and if the user has access rights
             for (ProductSet productSet : productSets) {
                 try {
-                    if (productSet.getGeoInventory() != null) {
+                    if (productSet.getGeoInventory() != null && productSet.getGeoInventory().startsWith("file:")) {
+                        LocalFileSystem.newInstance(new Configuration()).exists(new Path(productSet.getGeoInventory() + "/" + ProductSetPersistable.INDEX));
+                    } else if (productSet.getGeoInventory() != null) {
                         fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getGeoInventory() + "/" + ProductSetPersistable.INDEX));
+                    } else if (productSet.getPath().startsWith("file:")) {
+                        LocalFileSystem.newInstance(new Configuration()).exists(new Path(productSet.getPath()));
                     } else {
                         fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getPath()));
                     }
