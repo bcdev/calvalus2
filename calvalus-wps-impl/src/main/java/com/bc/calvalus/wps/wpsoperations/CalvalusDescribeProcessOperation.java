@@ -3,6 +3,7 @@ package com.bc.calvalus.wps.wpsoperations;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2CodeType;
 import static com.bc.wps.api.utils.WpsTypeConverter.str2LanguageStringType;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.ProductSet;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.production.ProductionException;
@@ -52,6 +53,7 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
     }
 
     public List<ProcessDescriptionType> getProcesses(String processorId) throws WpsProcessorNotFoundException {
+        CalvalusLogger.getLogger().info("Getting processors " + processorId + " for user " + this.calvalusFacade.getRemoteUserName());
         try {
             String[] processorIdArray = processorId.split(",");
             List<ProcessDescriptionType> processDescriptionTypeList = new ArrayList<>();
