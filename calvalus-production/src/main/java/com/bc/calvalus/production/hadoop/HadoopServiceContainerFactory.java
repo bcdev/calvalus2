@@ -1,18 +1,18 @@
 package com.bc.calvalus.production.hadoop;
 
+import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.inventory.DefaultInventoryService;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.inventory.InventoryService;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
-import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionService;
-import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.ProductionServiceImpl;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.production.ServiceContainer;
+import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.store.MemoryProductionStore;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.production.store.SqlProductionStore;
@@ -46,7 +46,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         String softwareDir = serviceConfiguration.getOrDefault("calvalus.portal.softwareDir",
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
         // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
-        serviceConfiguration.put("fs.hdfs.impl.disable.cache", "true");
+        serviceConfiguration.put("calvalus.hadoop.fs.hdfs.impl.disable.cache", "true");
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {
