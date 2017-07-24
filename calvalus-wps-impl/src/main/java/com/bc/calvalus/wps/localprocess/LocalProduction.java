@@ -236,11 +236,11 @@ class LocalProduction {
         final Product sourceProduct;
         Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
         List<File> files = new ArrayList<>();
-        DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("inputDataSetName"));
-        for (Path entry : stream) {
-            files.add(entry.toFile());
+        try(DirectoryStream<Path> stream = Files.newDirectoryStream(dir, inputParameters.get("inputDataSetName"))) {
+            for (Path entry : stream) {
+                files.add(entry.toFile());
+            }
         }
-
         String sourceProductPath;
         if (files.size() != 0) {
             sourceProductPath = files.get(0).getAbsolutePath();

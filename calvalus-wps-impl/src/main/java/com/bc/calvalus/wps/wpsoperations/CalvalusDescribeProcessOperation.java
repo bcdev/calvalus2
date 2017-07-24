@@ -222,9 +222,10 @@ public class CalvalusDescribeProcessOperation extends WpsOperation {
             List<Object> inputSourceProductList = new ArrayList<>();
             Path dir = Paths.get(CATALINA_BASE + PropertiesWrapper.get("wps.application.path"), PropertiesWrapper.get("utep.input.directory"));
             List<File> files = new ArrayList<>();
-            DirectoryStream<Path> stream = Files.newDirectoryStream(dir, INPUT_PRODUCT_NAME_PATTERN);
-            for (Path entry : stream) {
-                files.add(entry.toFile());
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, INPUT_PRODUCT_NAME_PATTERN)) {
+                for (Path entry : stream) {
+                    files.add(entry.toFile());
+                }
             }
             for (File file : files) {
                 ValueType value = new ValueType();
