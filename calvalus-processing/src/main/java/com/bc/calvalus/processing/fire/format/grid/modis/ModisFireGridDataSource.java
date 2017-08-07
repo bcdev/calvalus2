@@ -42,23 +42,27 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     public SourceData readPixels(int x, int y) throws IOException {
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
-        x += Integer.parseInt(targetTile.split(",")[0]);
-        y += Integer.parseInt(targetTile.split(",")[1]);
+        int startX = x + Integer.parseInt(targetTile.split(",")[0]);
+        int startY = y + Integer.parseInt(targetTile.split(",")[1]);
 
-        String lutName = String.format("modis-geo-lut-%s-%s.json", x, y);
-        ZipEntry entry = null;
-        ZipFile geoLookupTableFile = null;
-        for (ZipFile geoLookupTable0 : geoLookupTables) {
-            entry = geoLookupTable0.getEntry(lutName);
-            geoLookupTableFile = geoLookupTable0;
-        }
-        if (entry == null) {
-            throw new IllegalStateException("No geo lookup table available for target pixel " + lutName);
-        }
         Gson gson = new Gson();
-        HashMap<String, Set<String>> geoLookupTable;
-        try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {
-            geoLookupTable = gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
+        HashMap<String, Set<String>> geoLookupTable = new HashMap<>();
+        for (int xOffset = 0; xOffset < 8; xOffset++) {
+            for (int yOffset = 0; yOffset < 8; yOffset++) {
+                String lutName = String.format("modis-geo-lut-%s-%s.json", startX + xOffset, startY + yOffset);
+                ZipEntry entry = null;
+                ZipFile geoLookupTableFile = null;
+                for (ZipFile geoLookupTable0 : geoLookupTables) {
+                    entry = geoLookupTable0.getEntry(lutName);
+                    geoLookupTableFile = geoLookupTable0;
+                }
+                if (entry == null) {
+                    throw new IllegalStateException("No geo lookup table available for target pixel " + lutName);
+                }
+                try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {
+                    geoLookupTable.putAll(gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class));
+                }
+            }
         }
 
         List<SourceData> allSourceData = new ArrayList<>();
@@ -66,8 +70,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
             Product lcProduct = lcProducts[i];
-            if (geoLookupTable == null) {
-                throw new IllegalStateException("No geo-lookup table for pixel '" + x + " / '" + y);
+            if (geoLookupTable.isEmpty()) {
+                throw new IllegalStateException("No geo-lookup table for pixel '" + startX + " / '" + startY);
             }
 
             String tile = product.getName().split("_")[3].substring(0, 6);
