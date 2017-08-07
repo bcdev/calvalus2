@@ -25,7 +25,7 @@ import java.util.zip.ZipFile;
 public class ModisGridMapper extends AbstractGridMapper {
 
     public ModisGridMapper() {
-        super(1, 1);
+        super(8, 8);
     }
 
     @Override
@@ -57,12 +57,15 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        String xCoord = getXCoord(targetTile);
-        Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + xCoord + ".zip");
-        File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
-        ZipFile geoLookupTable = new ZipFile(localGeoLookup);
+        String[] yCoords = getYCoords(targetTile);
+        List<ZipFile> geoLookupTables = new ArrayList<>();
+        for (String yCoord : yCoords) {
+            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + yCoord + ".zip");
+            File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
+            geoLookupTables.add(new ZipFile(localGeoLookup));
+        }
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTable, targetTile);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables, targetTile);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -74,18 +77,35 @@ public class ModisGridMapper extends AbstractGridMapper {
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetTile)), gridCell);
     }
 
-    static String getXCoord(String targetTile) {
-        String x = targetTile.split(",")[0];
-        if (x.length() == 4) {
-            return x.substring(0, 3) + "x";
-        } else  if (x.length() == 3) {
-            return "0" + x.substring(0, 2) + "x";
-        } else if (x.length() == 2) {
-            return "00" + x.substring(0, 1) + "x";
-        } else if (x.length() == 1) {
-            return "000x";
+    static String[] getYCoords(String targetTile) {
+        String y = targetTile.split(",")[0];
+        List<String> yCoords = new ArrayList<>();
+        int yAsInt = Integer.parseInt(y);
+        if (yAsInt % 8 != 0) {
+            throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
         }
-        throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
+        for (int y0 = yAsInt; y0 < yAsInt + 8; y0++) {
+            String yCoord = Integer.toString(y0);
+            if (yCoord.length() == 4) {
+                maybeAddCoord(yCoords, yCoord.substring(0, 3) + "x");
+            } else if (yCoord.length() == 3) {
+                maybeAddCoord(yCoords, "0" + yCoord.substring(0, 2) + "x");
+            } else if (yCoord.length() == 2) {
+                maybeAddCoord(yCoords, "00" + yCoord.substring(0, 1) + "x");
+            } else if (yCoord.length() == 1) {
+                maybeAddCoord(yCoords, "000x");
+            } else {
+                throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
+            }
+        }
+        return yCoords.toArray(new String[0]);
+
+    }
+
+    private static void maybeAddCoord(List<String> yCoords, String coord) {
+        if (!yCoords.contains(coord)) {
+            yCoords.add(coord);
+        }
     }
 
     @Override

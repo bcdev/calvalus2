@@ -10,7 +10,7 @@ import java.io.IOException;
 
 public class ModisGridReducer extends AbstractGridReducer {
 
-    private static final int MODIS_CHUNK_SIZE = 1;
+    private static final int MODIS_CHUNK_SIZE = 8;
     private ModisNcFileFactory modisNcFileFactory;
 
     public ModisGridReducer() {

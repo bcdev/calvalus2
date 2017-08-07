@@ -6,8 +6,10 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.zip.ZipFile;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -20,10 +22,13 @@ public class ModisFireGridDataSourceTest {
         Product lcProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\h19v08-2000.nc");
         Product product2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\burned_2001_1_h20v08.nc");
         Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\modis-grid-input\\h20v08-2000.nc");
+        ZipFile zipFile = new ZipFile("D:\\workspace\\fire-cci\\modis-grid-input\\modis-geo-luts.zip");
+        ArrayList<ZipFile> geoLookupTables = new ArrayList<>();
+        geoLookupTables.add(zipFile);
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1},
                 new Product[]{lcProduct1},
-                new ZipFile("D:\\workspace\\fire-cci\\modis-grid-input\\modis-geo-luts.zip"), "765,340");
+                geoLookupTables, "765,340");
 
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
@@ -34,24 +39,31 @@ public class ModisFireGridDataSourceTest {
     }
 
     @Test
-    public void testGetXCoord() throws Exception {
-        String targetTile = "1486,359";
-        assertEquals("148x", ModisGridMapper.getXCoord(targetTile));
+    public void testGetXCoords() throws Exception {
+        String targetTile = "1296,320";
+        assertArrayEquals(new String[]{"129x", "130x"}, ModisGridMapper.getYCoords(targetTile));
 
         targetTile = "800,359";
-        assertEquals("080x", ModisGridMapper.getXCoord(targetTile));
+        assertArrayEquals(new String[]{"080x"}, ModisGridMapper.getYCoords(targetTile));
 
-        targetTile = "810,359";
-        assertEquals("081x", ModisGridMapper.getXCoord(targetTile));
+        targetTile = "816,359";
+        assertArrayEquals(new String[]{"081x", "082x"}, ModisGridMapper.getYCoords(targetTile));
 
-        targetTile = "70,359";
-        assertEquals("007x", ModisGridMapper.getXCoord(targetTile));
+        targetTile = "72,359";
+        assertArrayEquals(new String[]{"007x"}, ModisGridMapper.getYCoords(targetTile));
 
-        targetTile = "5,359";
-        assertEquals("000x", ModisGridMapper.getXCoord(targetTile));
+        targetTile = "8,359";
+        assertArrayEquals(new String[]{"000x", "001x"}, ModisGridMapper.getYCoords(targetTile));
 
         try {
-            ModisGridMapper.getXCoord("15000,346");
+            ModisGridMapper.getYCoords("15000,346");
+            fail();
+        } catch (IllegalArgumentException e) {
+            // ok
+        }
+
+        try {
+            ModisGridMapper.getYCoords("1201,320");
             fail();
         } catch (IllegalArgumentException e) {
             // ok

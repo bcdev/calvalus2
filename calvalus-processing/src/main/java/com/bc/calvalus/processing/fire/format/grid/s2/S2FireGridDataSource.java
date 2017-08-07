@@ -97,10 +97,7 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
             cl.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), clData);
             lc.readRasterData(0, 0, jd.getRasterWidth(), jd.getRasterHeight(), lcData);
 
-            int linecounter = 0;
-
             while ((line = br.readLine()) != null) {
-                linecounter++;
                 String[] splitLine = line.split(" ");
                 int targetX = Integer.parseInt(splitLine[0]);
                 int targetY = Integer.parseInt(splitLine[1]);
@@ -113,7 +110,6 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                 int sourceJD = (int) jdData.getElemFloatAt(sourcePixelIndex);
                 float sourceCL = clData.getElemFloatAt(sourcePixelIndex);
                 int oldValue = data.burnedPixels[targetPixelIndex];
-                int productJD = getProductJD(product);
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) || isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
                     if (sourceJD > oldValue && sourceJD < 900) {
                         data.burnedPixels[targetPixelIndex] = sourceJD;
@@ -123,18 +119,19 @@ public class S2FireGridDataSource extends AbstractFireGridDataSource {
                             data.probabilityOfBurnSecondHalf[targetPixelIndex] = sourceCL;
                         }
                     }
-                    if (sourceJD < 998) { // neither no-data nor cloud -> observed pixel
-                        // put observed pixel into first or second half of month
-                        if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
-                            data.statusPixelsFirstHalf[targetPixelIndex] = 1;
-                        } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
-                            data.statusPixelsSecondHalf[targetPixelIndex] = 1;
-                        }
-                    }
 
                     int sourceLC = lcData.getElemIntAt(sourcePixelIndex);
                     data.burnable[targetPixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     data.lcClasses[targetPixelIndex] = sourceLC;
+                }
+                if (sourceJD < 997 && sourceJD != -100) { // neither no-data, nor water, nor cloud -> observed pixel
+                    // put observed pixel into first or second half of month
+                    int productJD = getProductJD(product);
+                    if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, productJD)) {
+                        data.statusPixelsFirstHalf[targetPixelIndex] = 1;
+                    } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, productJD)) {
+                        data.statusPixelsSecondHalf[targetPixelIndex] = 1;
+                    }
                 }
                 if (data.areas[targetPixelIndex] == GridFormatUtils.NO_AREA) {
                     data.areas[targetPixelIndex] = areaCalculator.calculatePixelSize(sourceX, sourceY, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);

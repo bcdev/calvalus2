@@ -8,7 +8,7 @@ import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
-import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
+import com.bc.calvalus.processing.fire.format.pixel.modis.ModisJDAggregator;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -82,8 +82,7 @@ public class ModisStrategy implements SensorStrategy {
         String tiles = getTiles(pixelProductArea);
         String tilesSpec = "(" + tiles + ")";
 
-        String inputDateSpec = String.format("_%s_%s_", Integer.parseInt(month), Integer.parseInt(year));
-        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/modis-ba/.*/.*DATES.*%s-%s.*.nc", tilesSpec, inputDateSpec);
+        String inputPathPattern = String.format("hdfs://calvalus/calvalus/projects/fire/modis-ba/%s/%s/burned_%s_%s_%s.*nc", year, month, year, Integer.parseInt(month), tilesSpec);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, inputPathPattern);
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, area);
         jobConfig.set(JobConfigNames.CALVALUS_OUTPUT_DIR, outputDir);
@@ -177,7 +176,8 @@ public class ModisStrategy implements SensorStrategy {
         binningConfig.setSuperSampling(1);
         binningConfig.setMaskExpr("true");
         binningConfig.setPlanetaryGrid("org.esa.snap.binning.support.PlateCarreeGrid");
-        AggregatorConfig aggConfig = new JDAggregator.Config("JD", "CL", year, month); // TODO
+        AggregatorConfig aggConfig = new ModisJDAggregator.Config("classification", "uncertainty", year, month);
+
         binningConfig.setAggregatorConfigs(aggConfig);
         return binningConfig;
     }

@@ -6,6 +6,7 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridInputFormat;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.meris.MerisGridReducer;
+import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvider;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelCell;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelInputFormat;
 import com.bc.calvalus.processing.fire.format.pixel.meris.MerisPixelMapper;
@@ -28,10 +29,10 @@ import java.io.IOException;
 
 public class MerisStrategy implements SensorStrategy {
 
-    private final MerisPixelProductAreaProvider areaProvider;
+    private final PixelProductAreaProvider areaProvider;
 
     public MerisStrategy() {
-        areaProvider = new MerisPixelProductAreaProvider();
+        areaProvider = new GlobalPixelProductAreaProvider();
     }
 
     @Override
@@ -84,54 +85,6 @@ public class MerisStrategy implements SensorStrategy {
         areaWorkflow.add(mergingWorkflowItem);
         merisFormattingWorkflow.add(areaWorkflow);
         return merisFormattingWorkflow;
-    }
-
-    private static class MerisPixelProductAreaProvider implements PixelProductAreaProvider {
-
-        enum MerisPixelProductArea {
-            NORTH_AMERICA(0, 7, 130, 71, "1", "North America"),
-            SOUTH_AMERICA(75, 71, 146, 147, "2", "South America"),
-            EUROPE(154, 7, 233, 65, "3", "Europe"),
-            ASIA(233, 7, 360, 90, "4", "Asia"),
-            AFRICA(154, 65, 233, 130, "5", "Africa"),
-            AUSTRALIA(275, 90, 360, 143, "6", "Australia");
-
-            final int left;
-            final int top;
-            final int right;
-            final int bottom;
-            final String index;
-            final String nicename;
-
-            MerisPixelProductArea(int left, int top, int right, int bottom, String index, String nicename) {
-                this.left = left;
-                this.top = top;
-                this.right = right;
-                this.bottom = bottom;
-                this.index = index;
-                this.nicename = nicename;
-            }
-        }
-
-        @Override
-        public PixelProductArea getArea(String identifier) {
-            return translate(MerisPixelProductArea.valueOf(identifier));
-        }
-
-        private static PixelProductArea translate(MerisPixelProductArea mppa) {
-            return new PixelProductArea(mppa.left, mppa.top, mppa.right, mppa.bottom, mppa.index, mppa.nicename);
-        }
-
-        @Override
-        public PixelProductArea[] getAllAreas() {
-            PixelProductArea[] result = new PixelProductArea[MerisPixelProductArea.values().length];
-            MerisPixelProductArea[] values = MerisPixelProductArea.values();
-            for (int i = 0; i < values.length; i++) {
-                MerisPixelProductArea merisPixelProductArea = values[i];
-                result[i] = translate(merisPixelProductArea);
-            }
-            return result;
-        }
     }
 
     private static class FirePixelFormatVariableWorkflowItem extends HadoopWorkflowItem {

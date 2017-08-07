@@ -10,6 +10,7 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSourc
  */
 public class S2GridMapper extends AbstractGridMapper {
 
-    S2GridMapper() {
+    protected S2GridMapper() {
         super(STEP * 4, STEP * 4);
     }
 
@@ -139,7 +140,17 @@ public class S2GridMapper extends AbstractGridMapper {
         if (count == 1) {
             return 1;
         }
-        return (float) Math.sqrt(var_c * count / (count - 1.0));
+        try (FileWriter fw = new FileWriter("d:\\workspace\\prob.txt")) {
+            fw.write(Arrays.toString(probabilityOfBurn));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("var_c = " + var_c);
+        System.out.println("count = " + count);
+        System.out.println("sum_c = " + sum_c);
+        System.out.println("error = " + Math.sqrt(var_c * (count / (count - 1.0))));
+
+        return (float) Math.sqrt(var_c * (count / (count - 1.0)));
 
         /*
 

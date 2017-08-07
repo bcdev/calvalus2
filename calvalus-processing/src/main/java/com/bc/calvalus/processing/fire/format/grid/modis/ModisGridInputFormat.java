@@ -52,7 +52,8 @@ public class ModisGridInputFormat extends InputFormat {
     public List<InputSplit> getSplits(JobContext context) throws IOException {
         Configuration conf = context.getConfiguration();
         String year = conf.get("calvalus.year");
-        String month = Integer.toString(Integer.parseInt(conf.get("calvalus.month"))); // stripping possible leading 0's
+        String month = conf.get("calvalus.month");
+        String singleMonth = Integer.toString(Integer.parseInt(conf.get("calvalus.month")));
         TileLut tilesLut;
         File modisTilesFile = new File("modis-tiles-lut.txt");
         try {
@@ -67,7 +68,7 @@ public class ModisGridInputFormat extends InputFormat {
             List<FileStatus> fileStatuses = new ArrayList<>();
             SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(targetCell));
             for (String inputTile : inputTiles) {
-                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + inputTile + "/burned_" + year + "_" + month + "_" + inputTile + ".nc";
+                String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + year + "/" + month + "/burned_" + year + "_" + singleMonth + "_" + inputTile + ".nc";
                 Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
             }
             // todo - disable second check as soon as archive is complete

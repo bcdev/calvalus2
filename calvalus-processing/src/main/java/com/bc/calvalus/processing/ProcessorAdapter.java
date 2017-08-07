@@ -25,6 +25,8 @@ import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.ceres.core.ProgressMonitor;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.MapContext;
@@ -33,6 +35,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.runtime.Engine;
 
 import java.awt.*;
@@ -40,6 +43,7 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * Adapts different processors ( SNAP GPF, Shell executable, ...) to Calvalus Map-Reduce processing.
@@ -314,9 +318,9 @@ public abstract class ProcessorAdapter {
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
             Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
             ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
-                                                                                         roiRectangle,
-                                                                                         inputSplit,
-                                                                                         fullSwath) {
+                    roiRectangle,
+                    inputSplit,
+                    fullSwath) {
                 @Override
                 Product getProduct() throws IOException {
                     return getInputProduct();
@@ -359,6 +363,34 @@ public abstract class ProcessorAdapter {
                 return ProductIO.readProduct(inputFile);
             }
         } else {
+            // fire-cci hack!
+            if (conf.get("calvalus.sensor").equals("MODIS")) {
+                String pathString = getInputPath().toString();
+                String tile = pathString.substring(pathString.indexOf("burned_")).split("_")[3].split("\\.")[0];
+                LOG.info("tile=" + tile);
+                Pattern pattern = Pattern.compile(".*" + tile + ".*");
+
+                Path parentPath = new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup-refs");
+                FileSystem fileSystem = parentPath.getFileSystem(conf);
+                FileStatus[] fileStatuses = fileSystem.listStatus(parentPath);
+                if (fileStatuses == null) {
+                    throw new IllegalStateException("No file statuses in path '" + parentPath.toString() + "'");
+                }
+                for (FileStatus fStat : fileStatuses) {
+                    String filename = fStat.getPath().getName();
+                    if (pattern.matcher(filename).matches()) {
+                        CalvalusProductIO.copyFileToLocal(fStat.getPath(), new File("georef.nc"), getConfiguration());
+                        break;
+                    }
+                }
+                Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
+                Product geoRefProduct = ProductIO.readProduct(new File("georef.nc"));
+                if (geoRefProduct == null) {
+                    throw new IllegalStateException("No geo-ref product for tile " + tile);
+                }
+                ProductUtils.copyGeoCoding(geoRefProduct, product);
+                return product;
+            }
             return CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
         }
     }

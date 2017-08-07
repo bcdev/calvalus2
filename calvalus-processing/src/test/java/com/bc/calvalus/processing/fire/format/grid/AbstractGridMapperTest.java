@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSource;
+import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.CrsGeoCoding;
@@ -94,27 +95,7 @@ public class AbstractGridMapperTest {
                     }
                 });
 
-        AbstractGridMapper mapper = new AbstractGridMapper(8, 8) {
-            @Override
-            protected boolean maskUnmappablePixels() {
-                return false;
-            }
-
-            @Override
-            protected float getErrorPerPixel(double[] probabilityOfBurn) {
-                return 0;
-            }
-
-            @Override
-            protected void predict(float[] ba, double[] areas, float[] originalErrors) {
-
-            }
-
-            @Override
-            protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
-
-            }
-        };
+        AbstractGridMapper mapper = new MyMapper();
         File file = new File("d:\\workspace\\fire-cci\\testdata\\for-grid-formatting\\lc-2010-T33PXM.nc");
         Product lcProduct = ProductIO.readProduct(file);
 
@@ -169,6 +150,16 @@ public class AbstractGridMapperTest {
         ProductIO.writeProduct(product, "c:\\ssd\\grid-format.nc", "NetCDF-CF");
     }
 
+    private static class MyMapper extends S2GridMapper {
+
+        MyMapper() {
+            super();
+        }
+
+    }
+
+    ;
+
     private static class TimestampFormatter extends Formatter {
 
         private static final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
@@ -197,7 +188,9 @@ public class AbstractGridMapperTest {
 
         Product[] products1 = products.toArray(new Product[0]);
         Product[] lcProducts = {lcProduct};
-        ZipFile geoLookupTables = new ZipFile("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-076x.zip");
+        ArrayList<ZipFile> geoLookupTables = new ArrayList<>();
+        ZipFile geoLookupTable = new ZipFile("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-076x.zip");
+        geoLookupTables.add(geoLookupTable);
         String targetTile = "765,325";
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, geoLookupTables, targetTile);
         mapper.setDataSource(dataSource);
