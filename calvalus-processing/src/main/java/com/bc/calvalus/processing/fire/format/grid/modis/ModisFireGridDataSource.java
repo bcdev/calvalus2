@@ -71,13 +71,13 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Product product = products[i];
             Product lcProduct = lcProducts[i];
             if (geoLookupTable.isEmpty()) {
-                throw new IllegalStateException("No geo-lookup table for pixel '" + startX + " / '" + startY);
+                continue;
             }
 
             String tile = product.getName().split("_")[3].substring(0, 6);
 
             if (!geoLookupTable.containsKey(tile)) {
-                throw new IllegalStateException("Non-existing entry for tile '" + tile + "' and target pixel " + x + " " + y);
+                continue;
             }
 
             Band jd = product.getBand("classification");
