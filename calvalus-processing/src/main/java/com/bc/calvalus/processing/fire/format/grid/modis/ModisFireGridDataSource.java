@@ -57,7 +57,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                     geoLookupTableFile = geoLookupTable0;
                 }
                 if (entry == null) {
-                    throw new IllegalStateException("No geo lookup table available for target pixel " + lutName);
+                    continue;
                 }
                 try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {
                     geoLookupTable.putAll(gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class));
