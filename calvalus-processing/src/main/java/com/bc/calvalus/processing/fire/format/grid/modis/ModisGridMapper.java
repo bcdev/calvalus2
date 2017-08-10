@@ -40,8 +40,8 @@ public class ModisGridMapper extends AbstractGridMapper {
             return;
         }
         LOG.info("paths=" + Arrays.toString(paths));
-        String targetTile = paths[paths.length - 1].getName();
-        LOG.info("targetTile=" + targetTile);
+        String targetCell = paths[paths.length - 1].getName();
+        LOG.info("targetCell=" + targetCell);
 
         List<Product> sourceProducts = new ArrayList<>();
         List<Product> lcProducts = new ArrayList<>();
@@ -57,7 +57,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        String[] yCoords = getYCoords(targetTile);
+        String[] yCoords = getYCoords(targetCell);
         List<ZipFile> geoLookupTables = new ArrayList<>();
         for (String yCoord : yCoords) {
             Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + yCoord + ".zip");
@@ -65,7 +65,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             geoLookupTables.add(new ZipFile(localGeoLookup));
         }
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables, targetTile);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables, targetCell, context.getConfiguration());
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -74,7 +74,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         setDataSource(dataSource);
         GridCell gridCell = computeGridCell(year, month);
 
-        context.write(new Text(String.format("%d-%02d-%s", year, month, targetTile)), gridCell);
+        context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCell);
     }
 
     static String[] getYCoords(String targetTile) {

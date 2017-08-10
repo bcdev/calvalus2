@@ -28,7 +28,7 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1},
                 new Product[]{lcProduct1},
-                geoLookupTables, "765,340");
+                geoLookupTables, "765,340", null);
 
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);

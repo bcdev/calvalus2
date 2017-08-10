@@ -71,8 +71,7 @@ public class ModisGridInputFormat extends InputFormat {
                 String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + year + "/" + month + "/burned_" + year + "_" + singleMonth + "_" + inputTile + ".nc";
                 Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
             }
-            // todo - disable second check as soon as archive is complete
-            if (!fileStatuses.isEmpty() && fileStatuses.size() == inputTiles.size()) {
+            if (!fileStatuses.isEmpty()) {
                 addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetCell, inputTiles);
             }
         }
@@ -81,11 +80,7 @@ public class ModisGridInputFormat extends InputFormat {
         return splits;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetTile, SortedSet<String> inputTileSet) throws IOException {
-        // make sure that for each tile of the split, exactly one input product is found
-        if (fileStatuses.length != inputTileSet.size()) {
-            throw new IllegalStateException("fileStatuses.length != inputTileSet.size()");
-        }
+    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetCell, SortedSet<String> inputTileSet) throws IOException {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
         String[] inputTiles = inputTileSet.toArray(new String[0]);
@@ -100,7 +95,7 @@ public class ModisGridInputFormat extends InputFormat {
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());
         }
-        filePaths.add(new Path(targetTile));
+        filePaths.add(new Path(targetCell));
         fileLengths.add(0L);
         CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
