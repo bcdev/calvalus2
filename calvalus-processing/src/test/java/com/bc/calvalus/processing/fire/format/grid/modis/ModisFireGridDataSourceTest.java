@@ -3,6 +3,7 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.junit.Test;
 
@@ -111,5 +112,25 @@ public class ModisFireGridDataSourceTest {
         } catch (IllegalArgumentException e) {
             assertTrue(e.getMessage().contains("invalid value"));
         }
+    }
+
+    @Test
+    public void acceptanceTestCache() throws Exception {
+        Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc");
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(new Product[]{product1}, null, null, "", null);
+
+        Band band = product1.getBand("classification");
+        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
+        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
+        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
+        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
+        assertEquals(0, dataSource.getFloatPixelValue(band, 379 + 4800 * 7), 1E-8);
+        assertEquals(16, dataSource.getFloatPixelValue(band, 629 + 4800 * 495), 1E-8);
+        assertEquals(0, dataSource.getFloatPixelValue(band, 630 + 4800 * 495), 1E-8);
+
+        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
+        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
+
+        assertEquals(29, dataSource.getFloatPixelValue(band, 3573 + 4800 * 2826), 1E-8);
     }
 }

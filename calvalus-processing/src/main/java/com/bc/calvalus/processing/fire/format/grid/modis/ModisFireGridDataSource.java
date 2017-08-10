@@ -134,29 +134,32 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return data;
     }
 
-    private float getFloatPixelValue(Band band, int pixelIndex) throws IOException {
+    float getFloatPixelValue(Band band, int pixelIndex) throws IOException {
         refreshCache(band, pixelIndex);
-        return data.get(band).getElemFloatAt(pixelIndex % 480);
+        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % 480) * 4800;
+        return data.get(band).getElemFloatAt(subPixelIndex);
     }
 
     private int getIntPixelValue(Band band, int pixelIndex) throws IOException {
         refreshCache(band, pixelIndex);
-        return data.get(band).getElemIntAt(pixelIndex % 480);
+        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % 480) * 4800;
+        return data.get(band).getElemIntAt(subPixelIndex);
     }
 
     private void refreshCache(Band band, int pixelIndex) throws IOException {
+        int pixelIndexY = pixelIndex / 4800;
         int currentMinY;
         if (bandToMinY.containsKey(band)) {
             currentMinY = bandToMinY.get(band);
         } else {
-            currentMinY = pixelIndex - pixelIndex % 480;
+            currentMinY = pixelIndexY - pixelIndexY % 480;
         }
 
-        if (pixelIndex < currentMinY || pixelIndex >= currentMinY + 480 || !data.containsKey(band)) {
+        if (pixelIndexY < currentMinY || pixelIndexY >= currentMinY + 480 || !data.containsKey(band)) {
             ProductData productData = ProductData.createInstance(band.getDataType(), band.getRasterWidth() * 480);
-            band.readRasterData(0, pixelIndex - pixelIndex % 480, 4800, 480, productData);
+            band.readRasterData(0, pixelIndexY - pixelIndexY % 480, 4800, 480, productData);
             data.put(band, productData);
-            currentMinY = pixelIndex - pixelIndex % 480;
+            currentMinY = pixelIndexY - pixelIndexY % 480;
             bandToMinY.put(band, currentMinY);
         }
     }
