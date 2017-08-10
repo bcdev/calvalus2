@@ -53,6 +53,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         HashMap<String, Set<String>> geoLookupTable = getGeoLookupTable(targetCellX, targetCellY, geoLookupTables);
 
         SourceData data = new SourceData(4800, 4800);
+        data.reset();
 
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
