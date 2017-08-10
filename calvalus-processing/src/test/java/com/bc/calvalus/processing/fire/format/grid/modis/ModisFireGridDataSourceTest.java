@@ -41,29 +41,29 @@ public class ModisFireGridDataSourceTest {
     @Test
     public void testGetXCoords() throws Exception {
         String targetTile = "1296,320";
-        assertArrayEquals(new String[]{"129x", "130x"}, ModisGridMapper.getYCoords(targetTile));
+        assertArrayEquals(new String[]{"129x", "130x"}, ModisGridMapper.getXCoords(targetTile));
 
         targetTile = "800,359";
-        assertArrayEquals(new String[]{"080x"}, ModisGridMapper.getYCoords(targetTile));
+        assertArrayEquals(new String[]{"080x"}, ModisGridMapper.getXCoords(targetTile));
 
         targetTile = "816,359";
-        assertArrayEquals(new String[]{"081x", "082x"}, ModisGridMapper.getYCoords(targetTile));
+        assertArrayEquals(new String[]{"081x", "082x"}, ModisGridMapper.getXCoords(targetTile));
 
         targetTile = "72,359";
-        assertArrayEquals(new String[]{"007x"}, ModisGridMapper.getYCoords(targetTile));
+        assertArrayEquals(new String[]{"007x"}, ModisGridMapper.getXCoords(targetTile));
 
         targetTile = "8,359";
-        assertArrayEquals(new String[]{"000x", "001x"}, ModisGridMapper.getYCoords(targetTile));
+        assertArrayEquals(new String[]{"000x", "001x"}, ModisGridMapper.getXCoords(targetTile));
 
         try {
-            ModisGridMapper.getYCoords("15000,346");
+            ModisGridMapper.getXCoords("15000,346");
             fail();
         } catch (IllegalArgumentException e) {
             // ok
         }
 
         try {
-            ModisGridMapper.getYCoords("1201,320");
+            ModisGridMapper.getXCoords("1201,320");
             fail();
         } catch (IllegalArgumentException e) {
             // ok

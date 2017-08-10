@@ -57,10 +57,10 @@ public class ModisGridMapper extends AbstractGridMapper {
         int doyFirstHalf = Year.of(year).atMonth(month).atDay(7).getDayOfYear();
         int doySecondHalf = Year.of(year).atMonth(month).atDay(22).getDayOfYear();
 
-        String[] yCoords = getYCoords(targetCell);
+        String[] xCoords = getXCoords(targetCell);
         List<ZipFile> geoLookupTables = new ArrayList<>();
-        for (String yCoord : yCoords) {
-            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + yCoord + ".zip");
+        for (String xCoord : xCoords) {
+            Path geoLookup = new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-geolookup/modis-geo-luts-" + xCoord + ".zip");
             File localGeoLookup = CalvalusProductIO.copyFileToLocal(geoLookup, context.getConfiguration());
             geoLookupTables.add(new ZipFile(localGeoLookup));
         }
@@ -77,28 +77,28 @@ public class ModisGridMapper extends AbstractGridMapper {
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCell);
     }
 
-    static String[] getYCoords(String targetTile) {
-        String y = targetTile.split(",")[0];
-        List<String> yCoords = new ArrayList<>();
-        int yAsInt = Integer.parseInt(y);
-        if (yAsInt % 8 != 0) {
+    static String[] getXCoords(String targetTile) {
+        String x = targetTile.split(",")[0];
+        List<String> xCoords = new ArrayList<>();
+        int xAsInt = Integer.parseInt(x);
+        if (xAsInt % 8 != 0) {
             throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
         }
-        for (int y0 = yAsInt; y0 < yAsInt + 8; y0++) {
-            String yCoord = Integer.toString(y0);
+        for (int x0 = xAsInt; x0 < xAsInt + 8; x0++) {
+            String yCoord = Integer.toString(x0);
             if (yCoord.length() == 4) {
-                maybeAddCoord(yCoords, yCoord.substring(0, 3) + "x");
+                maybeAddCoord(xCoords, yCoord.substring(0, 3) + "x");
             } else if (yCoord.length() == 3) {
-                maybeAddCoord(yCoords, "0" + yCoord.substring(0, 2) + "x");
+                maybeAddCoord(xCoords, "0" + yCoord.substring(0, 2) + "x");
             } else if (yCoord.length() == 2) {
-                maybeAddCoord(yCoords, "00" + yCoord.substring(0, 1) + "x");
+                maybeAddCoord(xCoords, "00" + yCoord.substring(0, 1) + "x");
             } else if (yCoord.length() == 1) {
-                maybeAddCoord(yCoords, "000x");
+                maybeAddCoord(xCoords, "000x");
             } else {
                 throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
             }
         }
-        return yCoords.toArray(new String[0]);
+        return xCoords.toArray(new String[0]);
 
     }
 
