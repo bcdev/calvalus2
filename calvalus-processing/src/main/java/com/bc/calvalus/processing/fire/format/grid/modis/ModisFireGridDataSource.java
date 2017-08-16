@@ -97,32 +97,27 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int pixelIndex = 0;
             for (int x0 = 0; x0 < 4800; x0++) {
                 for (int y0 = 0; y0 < 4800; y0++) {
+                    int sourcePixelIndex = y0 * 4800 + x0;
+                    byte sourceLC = (byte) getIntPixelValue(lc, sourcePixelIndex);
                     if (sourcePixelPoses.contains(x0 + "," + y0)) {
-                        int sourceJD = (int) getFloatPixelValue(jd, pixelIndex);
-                        float sourceCL = getFloatPixelValue(cl, pixelIndex);
-                        byte sourceLC = (byte) getIntPixelValue(lc, pixelIndex);
-                        int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, pixelIndex);
-                        int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, pixelIndex);
-//                        int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
-//                        float sourceCL = clData.getElemFloatAt(pixelIndex);
-//                        byte sourceLC = (byte) lcData.getElemIntAt(pixelIndex);
-//                        int sourceStatusFirstHalf = status1Data.getElemIntAt(pixelIndex);
-//                        int sourceStatusSecondHalf = status1Data.getElemIntAt(pixelIndex);
+                        int sourceJD = (int) getFloatPixelValue(jd, sourcePixelIndex);
+                        int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, sourcePixelIndex);
+                        int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, sourcePixelIndex);
                         data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf);
                         data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf);
-                        data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                         data.lcClasses[pixelIndex] = (int) sourceLC;
                         if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
+                            float sourceCL = getFloatPixelValue(cl, sourcePixelIndex);
                             data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                             data.burnedPixels[pixelIndex] = sourceJD;
                         } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
+                            float sourceCL = getFloatPixelValue(cl, sourcePixelIndex);
                             data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                             data.burnedPixels[pixelIndex] = sourceJD;
                         }
                     }
-                    if (data.areas[pixelIndex] == GridFormatUtils.NO_AREA) {
-                        data.areas[pixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
-                    }
+                    data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                    data.areas[pixelIndex] = areaCalculator.calculatePixelSize(x0, y0, product.getSceneRasterWidth() - 1, product.getSceneRasterHeight() - 1);
                     pixelIndex++;
                 }
             }

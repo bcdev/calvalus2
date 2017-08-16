@@ -3,7 +3,6 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.google.gson.Gson;
@@ -21,8 +20,6 @@ import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,12 +53,7 @@ public class ModisGridInputFormat extends InputFormat {
         String singleMonth = Integer.toString(Integer.parseInt(conf.get("calvalus.month")));
         TileLut tilesLut;
         File modisTilesFile = new File("modis-tiles-lut.txt");
-        try {
-            CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/modis-tiles/modis-tiles-lut.txt"), modisTilesFile, conf);
-            tilesLut = getTilesLut(modisTilesFile);
-        } finally {
-            Files.delete(Paths.get(modisTilesFile.toURI()));
-        }
+        tilesLut = getTilesLut(modisTilesFile);
         List<InputSplit> splits = new ArrayList<>(tilesLut.size());
 
         for (String targetCell : tilesLut.keySet()) {
@@ -111,7 +103,6 @@ public class ModisGridInputFormat extends InputFormat {
             throw new IllegalStateException(e);
         }
         return tileLut;
-
     }
 
     private FileStatus[] getFileStatuses(String inputPathPatterns,

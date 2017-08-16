@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -114,6 +115,7 @@ public class ModisFireGridDataSourceTest {
         }
     }
 
+    @Ignore
     @Test
     public void acceptanceTestCache() throws Exception {
         Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc");

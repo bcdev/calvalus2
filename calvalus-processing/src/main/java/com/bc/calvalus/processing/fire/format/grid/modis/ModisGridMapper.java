@@ -24,6 +24,8 @@ import java.util.zip.ZipFile;
  */
 public class ModisGridMapper extends AbstractGridMapper {
 
+    private static final float MODIS_PIXEL_AREA = 250.0F * 250.0F;
+
     public ModisGridMapper() {
         super(8, 8);
     }
@@ -102,9 +104,9 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     }
 
-    private static void maybeAddCoord(List<String> yCoords, String coord) {
-        if (!yCoords.contains(coord)) {
-            yCoords.add(coord);
+    private static void maybeAddCoord(List<String> xCoords, String coord) {
+        if (!xCoords.contains(coord)) {
+            xCoords.add(coord);
         }
     }
 
@@ -130,54 +132,45 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     protected float getErrorPerPixel(double[] probabilityOfBurn) {
-//        np.sqrt(((1-a)*a).sum())
-        double sum = 0.0;
+        /*
+            p is array of burned_probability in cell c
+            var(C) = (p (1-p)).sum()
+            standard_error(c) = sqrt(var(c) *(n/(n-1))
+            sum(C) = p.sum()
+        */
+
+        double var_c = 0.0;
+        double sum_c = 0.0;
+        int count = 0;
         for (double p : probabilityOfBurn) {
             if (Double.isNaN(p)) {
                 continue;
             }
             if (p > 1) {
+                // no-data/cloud/water
                 continue;
             }
             if (p < 0) {
                 throw new IllegalStateException("p < 0");
             }
-            sum += (1 - p) * p;
+            var_c += p * (1.0 - p);
+            sum_c += p;
+            count++;
         }
-        return (float) Math.sqrt(sum);
+        if (count == 0) {
+            return 0;
+        }
+        if (count == 1) {
+            return 1;
+        }
 
-        /*
-
-        LOG.info(String.format("Starting to compute errors...."));
-        double[] pdf = UncertaintyEngine.poisson_binomial(probabilityOfBurn);
-        LOG.info(String.format("done. Writing result..."));
-        String year = context.getConfiguration().get("calvalus.year");
-        String month = context.getConfiguration().get("calvalus.month");
-        String filename = String.format("pdf-%s-%s-%s-%s.csv", year, month, firstHalf ? "07" : "22", count++);
-        try (FileWriter fw = new FileWriter(filename)) {
-            CsvWriter csvWriter = new CsvWriter(fw, ";");
-            csvWriter.writeRecord(pdf);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        LOG.info(String.format("done. Exporting result..."));
-        try {
-            CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/home/thomas/", filename), new File(filename), context.getConfiguration());
-            new File(filename).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        LOG.info(String.format("done."));
-        firstHalf = false;
-        return 0;
-        */
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * MODIS_PIXEL_AREA;
     }
 
     @Override
     protected void predict(float[] ba, double[] areas, float[] originalErrors) {
         // just keep the original errors
     }
-
 
 
 }

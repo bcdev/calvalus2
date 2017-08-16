@@ -17,7 +17,6 @@ import java.util.stream.IntStream;
 public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, GridCell> {
 
     protected static final Logger LOG = CalvalusLogger.getLogger();
-    public static final float S2_PIXEL_AREA = 400.0f;
     private final int targetRasterWidth;
     private final int targetRasterHeight;
     private FireGridDataSource dataSource;
@@ -134,8 +133,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
-                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf) * S2_PIXEL_AREA;
-                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf) * S2_PIXEL_AREA;
+                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf);
+                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf);
 
                 targetPixelIndex++;
             }
