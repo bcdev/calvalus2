@@ -10,7 +10,6 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Year;
 import java.util.ArrayList;
@@ -26,6 +25,8 @@ import static com.bc.calvalus.processing.fire.format.grid.s2.S2FireGridDataSourc
  * @author thomas
  */
 public class S2GridMapper extends AbstractGridMapper {
+
+    private static final float S2_PIXEL_AREA = 400.0f;
 
     protected S2GridMapper() {
         super(STEP * 4, STEP * 4);
@@ -140,43 +141,8 @@ public class S2GridMapper extends AbstractGridMapper {
         if (count == 1) {
             return 1;
         }
-        try (FileWriter fw = new FileWriter("d:\\workspace\\prob.txt")) {
-            fw.write(Arrays.toString(probabilityOfBurn));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("var_c = " + var_c);
-        System.out.println("count = " + count);
-        System.out.println("sum_c = " + sum_c);
-        System.out.println("error = " + Math.sqrt(var_c * (count / (count - 1.0))));
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0)));
-
-        /*
-
-        LOG.info(String.format("Starting to compute errors...."));
-        double[] pdf = UncertaintyEngine.poisson_binomial(probabilityOfBurn);
-        LOG.info(String.format("done. Writing result..."));
-        String year = context.getConfiguration().get("calvalus.year");
-        String month = context.getConfiguration().get("calvalus.month");
-        String filename = String.format("pdf-%s-%s-%s-%s.csv", year, month, firstHalf ? "07" : "22", count++);
-        try (FileWriter fw = new FileWriter(filename)) {
-            CsvWriter csvWriter = new CsvWriter(fw, ";");
-            csvWriter.writeRecord(pdf);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        LOG.info(String.format("done. Exporting result..."));
-        try {
-            CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/home/thomas/", filename), new File(filename), context.getConfiguration());
-            new File(filename).delete();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        LOG.info(String.format("done."));
-        firstHalf = false;
-        return 0;
-        */
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * S2_PIXEL_AREA;
     }
 
     @Override
