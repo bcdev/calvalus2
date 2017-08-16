@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
 import org.apache.hadoop.fs.Path;
@@ -8,6 +9,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +52,15 @@ public class ModisGridMapper extends AbstractGridMapper {
         for (int i = 0; i < paths.length - 1; i += 2) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
-            sourceProducts.add(ProductIO.readProduct(sourceProductFile));
+            Product p = ProductIO.readProduct(sourceProductFile);
+            if (p.getName().contains("h18")) {
+                Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
+                ProductUtils.copyGeoCoding(p, temp);
+                CommonUtils.fixH18Band(p, temp, "classification");
+                CommonUtils.fixH18Band(p, temp, "uncertainty");
+                p = temp;
+            }
+            sourceProducts.add(p);
             lcProducts.add(ProductIO.readProduct(lcProductFile));
         }
 

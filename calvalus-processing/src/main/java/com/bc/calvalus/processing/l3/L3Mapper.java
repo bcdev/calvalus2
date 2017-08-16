@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorAdapter;
 import com.bc.calvalus.processing.ProcessorFactory;
+import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.hadoop.MetadataSerializer;
 import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import com.bc.calvalus.processing.utils.GeometryUtils;
@@ -94,8 +95,8 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                 if (product.getName().contains("h18v")) {
                     Product temp = new Product(product.getName(), product.getProductType(), width, height);
                     ProductUtils.copyGeoCoding(product, temp);
-                    fixBand(product, temp, "classification");
-                    fixBand(product, temp, "uncertainty");
+                    CommonUtils.fixH18Band(product, temp, "classification");
+                    CommonUtils.fixH18Band(product, temp, "uncertainty");
                     product = temp;
                 }
                 //
@@ -133,23 +134,6 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                                       processorAdapter.getInputPath(),
                                       spatialBinEmitter.numObsTotal,
                                       spatialBinEmitter.numBinsTotal));
-    }
-
-    private static void fixBand(Product product, Product fixedProduct, String bandNameToFix) throws IOException {
-        int width = product.getSceneRasterWidth();
-        int height = product.getSceneRasterHeight();
-        Band bandToFix = product.getBand(bandNameToFix);
-        Band fixedBand = new Band(bandNameToFix, bandToFix.getDataType(), width, product.getSceneRasterHeight());
-        fixedBand.setData(new ProductData.Short(width * height));
-        fixedProduct.addBand(fixedBand);
-        int[] pixels = new int[width];
-        int[] fixedPixels = new int[width];
-        for (int y = 0; y < product.getSceneRasterHeight(); y++) {
-            bandToFix.readPixels(0, y, width, 1, pixels);
-            System.arraycopy(pixels, 0, fixedPixels, pixels.length / 2, pixels.length / 2);
-            System.arraycopy(pixels, pixels.length / 2, fixedPixels, 0, pixels.length / 2);
-            fixedBand.setPixels(0, y, width, 1, fixedPixels);
-        }
     }
 
     static String extractProcessingGraphXml(Product product) {
