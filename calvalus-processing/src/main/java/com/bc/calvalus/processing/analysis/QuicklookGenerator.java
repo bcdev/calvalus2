@@ -31,7 +31,17 @@ import com.bc.ceres.grender.support.BufferedImageRendering;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.Progressable;
-import org.esa.snap.core.datamodel.*;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.ColorPaletteDef;
+import org.esa.snap.core.datamodel.GeoCoding;
+import org.esa.snap.core.datamodel.ImageInfo;
+import org.esa.snap.core.datamodel.ImageLegend;
+import org.esa.snap.core.datamodel.Mask;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductNodeGroup;
+import org.esa.snap.core.datamodel.RGBChannelDef;
+import org.esa.snap.core.datamodel.RGBImageProfile;
+import org.esa.snap.core.datamodel.Stx;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.image.ColoredBandImageMultiLevelSource;
 import org.esa.snap.core.layer.MaskLayerType;
@@ -47,7 +57,11 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
@@ -64,7 +78,7 @@ public class QuicklookGenerator {
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 
-    static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    public static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
 
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<>();

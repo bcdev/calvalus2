@@ -41,6 +41,7 @@ import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
+import org.esa.snap.core.util.ProductUtils;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -82,10 +83,20 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
                 HashMap<Product, List<Band>> addedBands = new HashMap<>();
-                // fire-cci hack!
+                // fire-cci hack -- adding band which is otherwise not there
+                int width = product.getSceneRasterWidth();
+                int height = product.getSceneRasterHeight();
                 if (product.getBand("uncertainty") == null) {
                     Band uncertainty = product.addBand("uncertainty", ProductData.TYPE_INT16);
-                    uncertainty.setData(new ProductData.Short(new short[product.getSceneRasterWidth() * product.getSceneRasterHeight()]));
+                    uncertainty.setData(new ProductData.Short(new short[width * height]));
+                }
+                // fire-cci hack -- correcting for broken products along h18
+                if (product.getName().contains("h18v")) {
+                    Product temp = new Product(product.getName(), product.getProductType(), width, height);
+                    ProductUtils.copyGeoCoding(product, temp);
+                    fixBand(product, temp, "classification");
+                    fixBand(product, temp, "uncertainty");
+                    product = temp;
                 }
                 //
                 long numObs = SpatialProductBinner.processProduct(product,
@@ -122,6 +133,23 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
                                       processorAdapter.getInputPath(),
                                       spatialBinEmitter.numObsTotal,
                                       spatialBinEmitter.numBinsTotal));
+    }
+
+    private static void fixBand(Product product, Product fixedProduct, String bandNameToFix) throws IOException {
+        int width = product.getSceneRasterWidth();
+        int height = product.getSceneRasterHeight();
+        Band bandToFix = product.getBand(bandNameToFix);
+        Band fixedBand = new Band(bandNameToFix, bandToFix.getDataType(), width, product.getSceneRasterHeight());
+        fixedBand.setData(new ProductData.Short(width * height));
+        fixedProduct.addBand(fixedBand);
+        int[] pixels = new int[width];
+        int[] fixedPixels = new int[width];
+        for (int y = 0; y < product.getSceneRasterHeight(); y++) {
+            bandToFix.readPixels(0, y, width, 1, pixels);
+            System.arraycopy(pixels, 0, fixedPixels, pixels.length / 2, pixels.length / 2);
+            System.arraycopy(pixels, pixels.length / 2, fixedPixels, 0, pixels.length / 2);
+            fixedBand.setPixels(0, y, width, 1, fixedPixels);
+        }
     }
 
     static String extractProcessingGraphXml(Product product) {

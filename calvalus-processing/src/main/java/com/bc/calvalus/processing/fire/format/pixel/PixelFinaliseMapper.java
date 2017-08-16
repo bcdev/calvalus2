@@ -1,6 +1,8 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
+import com.bc.calvalus.processing.analysis.QuicklookGenerator;
+import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -29,6 +31,7 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
+import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 import java.awt.*;
 import java.awt.image.DataBuffer;
@@ -101,11 +104,21 @@ public class PixelFinaliseMapper extends Mapper {
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
         Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
+        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
         CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
         FileSystem fs = tifPath.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
-        CalvalusLogger.getLogger().info("...done.");
+        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
+        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
+        qlConfig.setImageType("png");
+        qlConfig.setBandName("JD");
+        qlConfig.setCpdURL("hdfs://calvalus/calvalus/projects/fire/aux/fire-modis-pixel.cpd");
+        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
+        if (image != null) {
+            ImageIO.write(image, "png", new File(baseFilename + ".png"));
+            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
+        }
     }
 
     static Product remap(File localL3, String baseFilename, String sensorId, Product lcProduct, Progressable context) throws IOException {
