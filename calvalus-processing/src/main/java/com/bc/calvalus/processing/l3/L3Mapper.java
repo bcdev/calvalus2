@@ -40,6 +40,7 @@ import org.esa.snap.binning.operator.SpatialProductBinner;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.MetadataElement;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -81,6 +82,12 @@ public class L3Mapper extends Mapper<NullWritable, NullWritable, LongWritable, L
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, progressForProcessing));
             if (product != null) {
                 HashMap<Product, List<Band>> addedBands = new HashMap<>();
+                // fire-cci hack!
+                if (product.getBand("uncertainty") == null) {
+                    Band uncertainty = product.addBand("uncertainty", ProductData.TYPE_INT16);
+                    uncertainty.setData(new ProductData.Short(new short[product.getSceneRasterWidth() * product.getSceneRasterHeight()]));
+                }
+                //
                 long numObs = SpatialProductBinner.processProduct(product,
                                                                   spatialBinner,
                                                                   addedBands,

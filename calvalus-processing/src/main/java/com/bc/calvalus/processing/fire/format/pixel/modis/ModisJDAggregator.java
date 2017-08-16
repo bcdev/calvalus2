@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel.modis;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.binning.AbstractAggregator;
 import org.esa.snap.binning.Aggregator;
 import org.esa.snap.binning.AggregatorConfig;
@@ -13,26 +12,23 @@ import org.esa.snap.binning.WritableVector;
 import org.esa.snap.core.gpf.annotations.Parameter;
 
 import java.time.Year;
-import java.util.logging.Logger;
 
 public class ModisJDAggregator extends AbstractAggregator {
 
-    public static final float UNBURNABLE = -2;
-    public static final float NOT_OBSERVED = -1;
+    public static final int UNBURNABLE = -2;
+    public static final int NOT_OBSERVED = -1;
     private final int minDoy;
     private final int maxDoy;
-    private final Logger logger;
 
     public ModisJDAggregator(String name, String[] spatialFeatureNames, String[] temporalFeatureNames, String[] outputFeatureNames, int[] doyBounds) {
         super(name, spatialFeatureNames, temporalFeatureNames, outputFeatureNames);
         this.minDoy = doyBounds[0];
         this.maxDoy = doyBounds[1];
-        logger = CalvalusLogger.getLogger();
     }
 
     @Override
     public void initSpatial(BinContext ctx, WritableVector vector) {
-        vector.set(0, UNBURNABLE);
+        vector.set(0, NOT_OBSERVED);
         vector.set(1, 0.0f);
     }
 
@@ -63,30 +59,20 @@ public class ModisJDAggregator extends AbstractAggregator {
     private void aggregate(float jd, float cl, WritableVector targetVector) {
         float previousJDValue = targetVector.get(0);
 
-        boolean validJdSet = previousJDValue > 0 && previousJDValue >= minDoy && previousJDValue <= maxDoy;
-
-//        logger.info("#############");
-//        logger.info("" + jd);
-//        logger.info("" + cl);
-//        logger.info("" + previousJDValue);
-//        logger.info("#############");
-
+        boolean validJdSet = previousJDValue >= 0 && previousJDValue >= minDoy && previousJDValue <= maxDoy;
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
-        boolean preferToPreviousValue = (!validJdSet || jd > previousJDValue) && jd > 0 && (inTimeBounds || jd == 0);
+        boolean preferToPreviousValue = (!validJdSet || jd > previousJDValue) && jd >= 0 && (inTimeBounds || jd == 0);
 
         if (preferToPreviousValue) {
 //            logger.info("preferring " + jd + " to previous value " + previousJDValue);
             targetVector.set(0, jd);
             targetVector.set(1, cl);
-        } else {
-            if (jd == NOT_OBSERVED) {
-                targetVector.set(0, NOT_OBSERVED);
-                targetVector.set(1, 0);
-            } else if (jd == UNBURNABLE) {
-                targetVector.set(0, UNBURNABLE);
-                targetVector.set(1, 0);
-            }
+        } else if (jd == UNBURNABLE && previousJDValue == NOT_OBSERVED) {
+            // unburnable beats only not observed
+            targetVector.set(0, UNBURNABLE);
+            targetVector.set(1, 0);
         }
+        // otherwise keep original value
     }
 
     @Override
@@ -96,8 +82,8 @@ public class ModisJDAggregator extends AbstractAggregator {
 
     @Override
     public void computeOutput(Vector temporalVector, WritableVector outputVector) {
-        outputVector.set(0, temporalVector.get(0));
-        outputVector.set(1, temporalVector.get(1));
+        outputVector.set(0, (int) temporalVector.get(0));
+        outputVector.set(1, (int) temporalVector.get(1));
     }
 
     public static class Config extends AggregatorConfig {

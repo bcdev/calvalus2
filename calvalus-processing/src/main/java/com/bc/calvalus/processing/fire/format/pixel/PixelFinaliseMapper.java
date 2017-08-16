@@ -14,8 +14,6 @@ import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.dataio.ProductWriter;
 import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.GeoCoding;
-import org.esa.snap.core.datamodel.GeoPos;
 import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
@@ -32,8 +30,7 @@ import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
 import javax.media.jai.PlanarImage;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.image.DataBuffer;
 import java.awt.image.RenderedImage;
 import java.awt.image.WritableRaster;
@@ -191,6 +188,9 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
+            if (destRect.x % 4096 == 0) {
+                CalvalusLogger.getLogger().info("Currently at destination rectangle " + destRect.toString());
+            }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
             try {
@@ -264,14 +264,14 @@ public class PixelFinaliseMapper extends Mapper {
                     if (Float.isNaN(sourceCl)) {
                         NeighbourResult neighbourResult = findNeighbourValue(sourceClArray, pixelIndex, destRect.width);
                         if (neighbourResult.newPixelIndex != -1 && sourceJdArray[neighbourResult.newPixelIndex] > 0 && sourceJdArray[neighbourResult.newPixelIndex] < 900) {
-                            targetCl = (int) (neighbourResult.neighbourValue * 100);
+                            targetCl = (int) (neighbourResult.neighbourValue);
                         } else {
                             targetCl = 0;
                         }
                     } else {
                         int jdValue = sourceJdArray[pixelIndex];
                         if (jdValue > 0 && jdValue < 900) {
-                            targetCl = (int) (sourceCl * 100);
+                            targetCl = (int) (sourceCl);
                         } else {
                             targetCl = 0;
                         }
@@ -286,14 +286,12 @@ public class PixelFinaliseMapper extends Mapper {
 
     private static class LcImage extends SingleBandedOpImage {
 
-        private final Product target;
         private final Product lcProduct;
         private final Band jdBand;
         private final Progressable context;
 
         private LcImage(Product target, Product lcProduct, Band jdBand, Progressable context) {
             super(DataBuffer.TYPE_BYTE, target.getSceneRasterWidth(), target.getSceneRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
-            this.target = target;
             this.lcProduct = lcProduct;
             this.jdBand = jdBand;
             this.context = context;
@@ -302,40 +300,59 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             context.progress();
-            GeoPos geoPos = new GeoPos();
-            GeoCoding resultGeoCoding = target.getSceneGeoCoding();
-            GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
-            PixelPos pixelPos = new PixelPos();
             int[] jdArray = new int[destRect.width * destRect.height];
             try {
                 jdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(jdArray));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
-            int pixelIndex = 0;
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    pixelPos.x = x;
-                    pixelPos.y = y;
-                    resultGeoCoding.getGeoPos(pixelPos, geoPos);
-                    lcGeoCoding.getPixelPos(geoPos, pixelPos);
-                    int[] lcData = new int[1];
-                    try {
-                        lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
-                    } catch (IOException e) {
-                        throw new IllegalStateException(e);
-                    }
-                    lcData[0] = LcRemapping.remap(lcData[0]);
-                    if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
-                        lcData[0] = 0;
-                    }
-                    int jdValue = jdArray[pixelIndex++];
-                    if (jdValue <= 0 || jdValue >= 997) {
-                        lcData[0] = 0;
-                    }
-                    dest.setSample(x, y, 0, lcData[0]);
-                }
+
+            int[] lcData = new int[destRect.width * destRect.height];
+            try {
+                lcProduct.getBand("lccs_class").readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
             }
+            for (int i = 0; i < lcData.length; i++) {
+                lcData[i] = LcRemapping.remap(lcData[i]);
+                if (lcData[i] == LcRemapping.INVALID_LC_CLASS) {
+                    lcData[i] = 0;
+                }
+                int jdValue = jdArray[i];
+                if (jdValue <= 0 || jdValue >= 997) {
+                    lcData[i] = 0;
+                }
+                dest.setSample(destRect.x + i % destRect.width, destRect.y + i / destRect.width, 0, lcData[i]);
+            }
+
+//            GeoPos geoPos = new GeoPos();
+//            GeoCoding resultGeoCoding = target.getSceneGeoCoding();
+//            GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
+//            PixelPos pixelPos = new PixelPos();
+//            int pixelIndex = 0;
+//            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+//                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+//                    pixelPos.x = x;
+//                    pixelPos.y = y;
+//                    resultGeoCoding.getGeoPos(pixelPos, geoPos);
+//                    lcGeoCoding.getPixelPos(geoPos, pixelPos);
+//                    int[] lcData = new int[1];
+//                    try {
+//                        lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
+//                    } catch (IOException e) {
+//                        throw new IllegalStateException(e);
+//                    }
+//                    lcData[0] = LcRemapping.remap(lcData[0]);
+//                    if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
+//                        lcData[0] = 0;
+//                    }
+//                    int jdValue = jdArray[pixelIndex++];
+//                    if (jdValue <= 0 || jdValue >= 997) {
+//                        lcData[0] = 0;
+//                    }
+//                    dest.setSample(x, y, 0, lcData[0]);
+//                }
+//            }
         }
     }
 
@@ -351,18 +368,17 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            ProductData.Int rasterData = new ProductData.Int(destRect.width);
-            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-                try {
-                    jd.readRasterData(0, y, destRect.width, 1, rasterData);
-                } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                }
-                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-                    int jdValue = rasterData.getElemIntAt(x);
-                    if (jdValue > 0 && jdValue < 900) {
-                        dest.setSample(x, y, 0, sensorId);
-                    }
+            ProductData.Float jdData = new ProductData.Float(destRect.width * destRect.height);
+            try {
+                jd.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, jdData);
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+
+            for (int i = 0; i < jdData.getNumElems(); i++) {
+                int jdValue = jdData.getElemIntAt(i);
+                if (jdValue > 0 && jdValue < 900) {
+                    dest.setSample(destRect.x + i % destRect.width, destRect.y + i / destRect.width, 0, sensorId);
                 }
             }
         }

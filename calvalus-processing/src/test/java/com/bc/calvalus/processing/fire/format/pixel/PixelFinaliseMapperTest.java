@@ -8,7 +8,7 @@ import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -18,6 +18,11 @@ import static com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper.T
 import static org.junit.Assert.assertEquals;
 
 public class PixelFinaliseMapperTest {
+
+    @Test
+    public void name() throws Exception {
+        System.out.println(5 % 256);
+    }
 
     @Ignore
     @Test

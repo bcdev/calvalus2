@@ -72,11 +72,11 @@ public class ModisStrategy implements SensorStrategy {
         String l3ConfigXml = l3Config.toXml();
         GeometryFactory gf = new GeometryFactory();
         Geometry regionGeometry = new Polygon(new LinearRing(new PackedCoordinateSequence.Float(new double[]{
-                pixelProductArea.left - 180, pixelProductArea.top - 90,
-                pixelProductArea.right - 180, pixelProductArea.top - 90,
-                pixelProductArea.right - 180, pixelProductArea.bottom - 90,
-                pixelProductArea.left - 180, pixelProductArea.bottom - 90,
-                pixelProductArea.left - 180, pixelProductArea.top - 90
+                pixelProductArea.left - 180, 90 - pixelProductArea.top,
+                pixelProductArea.right - 180, 90 - pixelProductArea.top,
+                pixelProductArea.right - 180, 90 - pixelProductArea.bottom,
+                pixelProductArea.left - 180, 90 - pixelProductArea.bottom,
+                pixelProductArea.left - 180, 90 - pixelProductArea.top
         }, 2), gf), new LinearRing[0], gf);
 
         String tiles = getTiles(pixelProductArea);
@@ -152,7 +152,7 @@ public class ModisStrategy implements SensorStrategy {
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(PatternBasedInputFormat.class);
             job.setMapperClass(PixelFinaliseMapper.class);
-            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2010.nc"); // todo
+            job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "-2010.nc");
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv1.0"); // todo - clarify
             PixelProductArea area = new ModisStrategy().getArea(job.getConfiguration().get("calvalus.area"));
             String areaString = String.format("%s;%s;%s;%s;%s", area.nicename, area.left, area.top, area.right, area.bottom);
