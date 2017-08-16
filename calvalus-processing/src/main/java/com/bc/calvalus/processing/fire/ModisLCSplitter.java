@@ -1,17 +1,12 @@
 package com.bc.calvalus.processing.fire;
 
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.LinearRing;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.geom.impl.PackedCoordinateSequence;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.GeoPos;
-import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.gpf.common.SubsetOp;
 import org.esa.snap.core.gpf.common.reproject.ReprojectionOp;
 import org.esa.snap.core.gpf.common.resample.ResamplingOp;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystem;
@@ -29,7 +24,16 @@ import java.util.concurrent.Executors;
  */
 public class ModisLCSplitter {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
+        FileSystem fileSystem = FileSystems.getDefault();
+        String[] years = {"2000", "2005", "2010"};
+        for (String year : years) {
+            Path lcInputPath = fileSystem.getPath("D:\\workspace\\fire-cci\\lc-data-to-split", "ESACCI-LC-L4-LCCS-Map-300m-P5Y-" + year + "-v1.6.1.nc");
+
+        }
+    }
+
+    public static void main2(String[] args) throws IOException {
         FileSystem fileSystem = FileSystems.getDefault();
 
         String modisInputPath = "D:\\workspace\\fire-cci\\modis-for-lc";
@@ -55,38 +59,21 @@ public class ModisLCSplitter {
             resamplingOp.setParameterDefaultValues();
             resamplingOp.setSourceProduct(lcProduct);
 
-            Files.list(Paths.get(modisInputPath)).forEach(
+            Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).forEach(
                     path -> tasks.add(() -> {
                         try {
                             Product reference = ProductIO.readProduct(path.toFile());
-                            String tile = reference.getName().split("\\.")[2];
+                            String tile = reference.getName();
+                            int x = Integer.parseInt(tile.substring(1, 3));
+                            int y = Integer.parseInt(tile.substring(4, 6));
                             String outputFilename = outputPath + "\\" + tile + "-" + year + ".nc";
                             if (Files.exists(Paths.get(outputFilename))) {
+                                System.out.println("Already existing tile: " + tile);
                                 return;
                             }
 
-                            PixelPos sceneUpperLeft = new PixelPos(0, 0);
-                            PixelPos sceneUpperRight = new PixelPos(reference.getSceneRasterWidth() - 1, 0);
-                            PixelPos sceneLowerRight = new PixelPos(reference.getSceneRasterWidth() - 1, reference.getSceneRasterHeight() - 1);
-                            PixelPos sceneLowerLeft = new PixelPos(0, reference.getSceneRasterHeight() - 1);
-                            GeoPos ul = new GeoPos();
-                            GeoPos ur = new GeoPos();
-                            GeoPos lr = new GeoPos();
-                            GeoPos ll = new GeoPos();
-                            reference.getSceneGeoCoding().getGeoPos(sceneUpperLeft, ul);
-                            reference.getSceneGeoCoding().getGeoPos(sceneUpperRight, ur);
-                            reference.getSceneGeoCoding().getGeoPos(sceneLowerRight, lr);
-                            reference.getSceneGeoCoding().getGeoPos(sceneLowerLeft, ll);
-
                             SubsetOp subsetOp = new SubsetOp();
-                            GeometryFactory gf = new GeometryFactory();
-                            subsetOp.setGeoRegion(new Polygon(new LinearRing(new PackedCoordinateSequence.Double(new double[]{
-                                    ul.lon, ul.lat,
-                                    ur.lon, ur.lat,
-                                    lr.lon, lr.lat,
-                                    ll.lon, ll.lat,
-                                    ul.lon, ul.lat
-                            }, 2), gf), new LinearRing[0], gf));
+                            subsetOp.setRegion(new Rectangle(x * 4800, y * 4800, 4800, 4800));
                             subsetOp.setSourceProduct(resamplingOp.getTargetProduct());
                             subsetOp.setBandNames(new String[]{"lccs_class"});
                             Product lcSubset = subsetOp.getTargetProduct();

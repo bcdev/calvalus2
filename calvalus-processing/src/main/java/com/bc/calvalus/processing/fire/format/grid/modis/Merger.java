@@ -22,15 +22,19 @@ public class Merger {
         String numObs2ProductPath = args[4];
 
         Product classificationProduct = ProductIO.readProduct(classificationProductPath);
-        Product uncertaintyProduct = ProductIO.readProduct(uncertaintyProductPath);
         Product numObs1Product = ProductIO.readProduct(numObs1ProductPath);
         Product numObs2Product = ProductIO.readProduct(numObs2ProductPath);
 
         Product result = new Product("Merged burned area information", "fire-cci-merged-modis", classificationProduct.getSceneRasterWidth(), classificationProduct.getSceneRasterHeight());
         ProductUtils.copyBand("band_1", classificationProduct, "classification", result, true);
-        ProductUtils.copyBand("band_1", uncertaintyProduct, "uncertainty", result, true);
         ProductUtils.copyBand("band_1", numObs1Product, "numObs1", result, true);
         ProductUtils.copyBand("band_1", numObs2Product, "numObs2", result, true);
+
+        if (!uncertaintyProductPath.equals("dummy")) {
+            Product uncertaintyProduct = ProductIO.readProduct(uncertaintyProductPath);
+            ProductUtils.copyBand("band_1", uncertaintyProduct, "uncertainty", result, true);
+        }
+
         ProductIO.writeProduct(result, output, "NetCDF4-CF");
     }
 
