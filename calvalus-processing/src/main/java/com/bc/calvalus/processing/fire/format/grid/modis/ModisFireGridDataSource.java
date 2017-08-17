@@ -4,7 +4,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
-import com.bc.calvalus.processing.fire.format.grid.AreaCalculator;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import com.google.gson.Gson;
@@ -36,7 +35,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final List<ZipFile> geoLookupTables;
     private final String targetCell; // "800,312"
     private final Configuration configuration;
-    private final HashMap<String, AreaCalculator> areaCalculatorMap;
     private final SortedMap<String, Integer> bandToMinY;
     private final SortedMap<String, ProductData> data;
 
@@ -46,7 +44,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         this.geoLookupTables = geoLookupTables;
         this.targetCell = targetCell;
         this.configuration = configuration;
-        this.areaCalculatorMap = new HashMap<>();
         this.bandToMinY = new TreeMap<>();
         this.data = new TreeMap<>();
     }
@@ -79,7 +76,10 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             String modisTile = product.getName().split("_")[3];
             File areaProductFile = new File(modisTile + ".hdf");
-            CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, configuration);
+            if (!areaProductFile.exists()) {
+                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, configuration);
+            }
+
             Product areaProduct = ProductIO.readProduct(areaProductFile);
 
             Band jd = product.getBand("classification");
