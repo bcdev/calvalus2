@@ -82,18 +82,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, configuration);
             Product areaProduct = ProductIO.readProduct(areaProductFile);
 
-//            AreaCalculator areaCalculator;
-//            String modisTile = product.getName().split("_")[3];
-//            if (areaCalculatorMap.containsKey(modisTile)) {
-//                areaCalculator = areaCalculatorMap.get(modisTile);
-//            } else {
-//                File refProductFile = new File(modisTile + ".hdf");
-//                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/geolookup-refs/" + modisTile + ".hdf"), refProductFile, configuration);
-//                Product refProduct = ProductIO.readProduct(refProductFile);
-//                areaCalculator = new AreaCalculator(refProduct.getSceneGeoCoding());
-//                areaCalculatorMap.put(modisTile, areaCalculator);
-//            }
-
             Band jd = product.getBand("classification");
             Band cl = product.getBand("uncertainty");
             Band numbObsFirstHalf = product.getBand("numObs1");
@@ -103,23 +91,23 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
             TreeSet<String> sourcePixelPoses = new TreeSet<>(geoLookupTable.get(tile));
 
-            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
-            jd.readRasterData(0, 0, 4800, 4800, jdData);
+//            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
+//            jd.readRasterData(0, 0, 4800, 4800, jdData);
 
-            ProductData clData = null;
-            if (cl != null) {
-                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
-                cl.readRasterData(0, 0, 4800, 4800, clData);
-            }
-
-            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
-            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
-
-            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
-            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
-
-            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
-            lc.readRasterData(0, 0, 4800, 4800, lcData);
+//            ProductData clData = null;
+//            if (cl != null) {
+//                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
+//                cl.readRasterData(0, 0, 4800, 4800, clData);
+//            }
+//
+//            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
+//            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
+//
+//            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
+//            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
+//
+//            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
+//            lc.readRasterData(0, 0, 4800, 4800, lcData);
 
             ProductData areasData = ProductData.createInstance(data.areas);
             areas.readRasterData(0, 0, 4800, 4800, areasData);
@@ -128,7 +116,8 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             int pixelIndex = 0;
             for (int x0 = 0; x0 < 4800; x0++) {
                 for (int y0 = 0; y0 < 4800; y0++) {
-                    byte sourceLC = (byte) lcData.getElemIntAt(pixelIndex);
+                    byte sourceLC = (byte) getIntPixelValue(lc, pixelIndex);
+//                    byte sourceLC = (byte) lcData.getElemIntAt(pixelIndex);
                     data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                     pixelIndex++;
                 }
@@ -139,17 +128,22 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
                 pixelIndex = y0 * 4800 + x0;
-                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
-                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
-                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
+//                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
+                int sourceJD = (int) getFloatPixelValue(jd, pixelIndex);
+                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, pixelIndex);
+//                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
+                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, pixelIndex);
+//                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
                 data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf);
                 data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf);
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
-                    float sourceCL = clData.getElemFloatAt(pixelIndex);
+                    float sourceCL = getFloatPixelValue(cl, pixelIndex);
+//                    float sourceCL = clData.getElemFloatAt(pixelIndex);
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
-                    float sourceCL = clData.getElemFloatAt(pixelIndex);
+                    float sourceCL = getFloatPixelValue(cl, pixelIndex);
+//                    float sourceCL = clData.getElemFloatAt(pixelIndex);
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
