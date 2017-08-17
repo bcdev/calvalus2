@@ -57,7 +57,11 @@ public class ModisGridMapper extends AbstractGridMapper {
                 Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
                 ProductUtils.copyGeoCoding(p, temp);
                 CommonUtils.fixH18Band(p, temp, "classification");
-                CommonUtils.fixH18Band(p, temp, "uncertainty");
+                CommonUtils.fixH18BandByte(p, temp, "numObs1");
+                CommonUtils.fixH18BandByte(p, temp, "numObs2");
+                if (p.containsBand("uncertainty")) {
+                    CommonUtils.fixH18Band(p, temp, "uncertainty");
+                }
                 p = temp;
             }
             sourceProducts.add(p);
@@ -136,7 +140,8 @@ public class ModisGridMapper extends AbstractGridMapper {
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
         if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
-            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+//            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+            System.out.println("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
         }
     }
 
