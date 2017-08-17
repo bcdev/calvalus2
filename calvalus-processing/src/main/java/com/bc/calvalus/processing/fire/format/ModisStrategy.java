@@ -189,7 +189,7 @@ public class ModisStrategy implements SensorStrategy {
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        String key = pixelProductArea.nicename;
+        String key = pixelProductArea.nicename.replace(" ", "_");
         return tiles.getProperty(key);
     }
 
