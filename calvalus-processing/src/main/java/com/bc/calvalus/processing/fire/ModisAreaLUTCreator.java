@@ -24,9 +24,10 @@ public class ModisAreaLUTCreator {
 
         Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).forEach(path -> {
             try {
+                System.out.println("Handling product " + path);
                 Product reference = ProductIO.readProduct(path.toFile());
                 String tile = reference.getName();
-                String outputFilename = outputPath + "\\areas-" + tile + ".nc";
+                String outputFilename = outputPath + "/areas-" + tile + ".nc";
                 if (Files.exists(Paths.get(outputFilename))) {
                     System.out.println("Already existing tile: " + tile);
                     return;
