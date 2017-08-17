@@ -100,7 +100,6 @@ public class PixelFinaliseMapper extends Mapper {
         final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
-        result.dispose();
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
         Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
@@ -113,6 +112,8 @@ public class PixelFinaliseMapper extends Mapper {
         Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
         qlConfig.setImageType("png");
         qlConfig.setBandName("JD");
+        qlConfig.setSubSamplingX(100);
+        qlConfig.setSubSamplingY(100);
         qlConfig.setCpdURL("hdfs://calvalus/calvalus/projects/fire/aux/fire-modis-pixel.cpd");
         RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
         if (image != null) {
@@ -201,8 +202,8 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x % 4096 == 0) {
-                CalvalusLogger.getLogger().info("Currently at destination rectangle " + destRect.toString());
+            if (destRect.x == 0) {
+                CalvalusLogger.getLogger().info(destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "%");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];

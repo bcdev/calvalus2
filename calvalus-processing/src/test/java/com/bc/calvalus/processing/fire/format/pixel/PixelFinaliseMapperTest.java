@@ -19,11 +19,6 @@ import static org.junit.Assert.assertEquals;
 
 public class PixelFinaliseMapperTest {
 
-    @Test
-    public void name() throws Exception {
-        System.out.println(5 % 256);
-    }
-
     @Ignore
     @Test
     public void testRemap() throws Exception {

@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.gpf.annotations.Parameter;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * @author Marco Peters
@@ -154,6 +154,14 @@ public class Quicklooks {
 
         public void setOverlayURL(String overlayURL) {
             this.overlayURL = overlayURL;
+        }
+
+        public void setSubSamplingX(int subSamplingX) {
+            this.subSamplingX = subSamplingX;
+        }
+
+        public void setSubSamplingY(int subSamplingY) {
+            this.subSamplingY = subSamplingY;
         }
     }
 }
