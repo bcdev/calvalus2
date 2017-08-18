@@ -9,6 +9,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.ProductUtils;
 
 import java.io.File;
@@ -34,6 +35,7 @@ public class ModisGridMapper extends AbstractGridMapper {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         int year = Integer.parseInt(context.getConfiguration().get("calvalus.year"));
         int month = Integer.parseInt(context.getConfiguration().get("calvalus.month"));
@@ -47,8 +49,12 @@ public class ModisGridMapper extends AbstractGridMapper {
         String targetCell = paths[paths.length - 1].getName();
         LOG.info("targetCell=" + targetCell);
 
-        List<Product> sourceProducts = new ArrayList<>();
-        List<Product> lcProducts = new ArrayList<>();
+        int numProducts = (paths.length - 1) / 2;
+
+        Product[] sourceProducts = new Product[numProducts];
+        Product[] lcProducts = new Product[numProducts];
+        Product[] areaProducts = new Product[numProducts];
+        int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i += 2) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
@@ -64,8 +70,16 @@ public class ModisGridMapper extends AbstractGridMapper {
                 }
                 p = temp;
             }
-            sourceProducts.add(p);
-            lcProducts.add(ProductIO.readProduct(lcProductFile));
+            sourceProducts[productIndex] = p;
+            lcProducts[productIndex] = ProductIO.readProduct(lcProductFile);
+            String modisTile = p.getName().split("_")[3];
+            File areaProductFile = new File(modisTile + ".hdf");
+            if (!areaProductFile.exists()) {
+                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, context.getConfiguration());
+            }
+
+            areaProducts[productIndex] = ProductIO.readProduct(areaProductFile);
+            productIndex++;
         }
 
         int doyFirstOfMonth = Year.of(year).atMonth(month).atDay(1).getDayOfYear();
@@ -81,7 +95,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             geoLookupTables.add(new ZipFile(localGeoLookup));
         }
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts.toArray(new Product[0]), lcProducts.toArray(new Product[0]), geoLookupTables, targetCell, context.getConfiguration());
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, areaProducts, geoLookupTables, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -130,18 +144,22 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected void validate(float burnableFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
+    protected void validate(float burnableAreaFraction, List<float[]> baInLcFirst, List<float[]> baInLcSecond, int targetPixelIndex, double area) {
         double lcAreaSum = 0.0F;
-        for (int i = 0; i < baInLcFirst.size(); i++) {
-            float[] firstBaValues = baInLcFirst.get(i);
-            float[] secondBaValues = baInLcSecond.get(i);
+        for (float[] firstBaValues : baInLcFirst) {
             lcAreaSum += firstBaValues[targetPixelIndex];
-            lcAreaSum += secondBaValues[targetPixelIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (Math.abs(lcAreaSumFraction - burnableFraction) > lcAreaSumFraction * 0.05) {
-//            throw new IllegalStateException("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
-            System.out.println("fraction of burned pixels in LC classes (" + lcAreaSumFraction + ") > burnable fraction (" + burnableFraction + ") at target pixel " + targetPixelIndex + "!");
+        if (lcAreaSumFraction > burnableAreaFraction) {
+            throw new IllegalStateException("lcAreaSumFraction > burnableAreaFraction");
+        }
+        lcAreaSum = 0.0F;
+        for (float[] secondBaValues : baInLcSecond) {
+            lcAreaSum += secondBaValues[targetPixelIndex];
+        }
+        lcAreaSumFraction = getFraction(lcAreaSum, area);
+        if (lcAreaSumFraction > burnableAreaFraction) {
+            throw new IllegalStateException("lcAreaSumFraction > burnableAreaFraction");
         }
     }
 

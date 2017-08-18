@@ -78,7 +78,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 float baValueSecondHalf = 0.0F;
                 float coverageValueFirstHalf = 0.0F;
                 float coverageValueSecondHalf = 0.0F;
-                double burnableFractionValue = 0;
+                double burnableFractionValue = 0.0;
 
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     int doy = data.burnedPixels[i];
@@ -98,8 +98,6 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                                 baValueFirstHalf -= data.areas[i];
                             }
                         }
-                        burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
-
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
                         baValueSecondHalf += data.areas[i];
                         boolean hasLcClass = false;
@@ -116,10 +114,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                                 baValueSecondHalf -= data.areas[i];
                             }
                         }
-                        burnableFractionValue += data.burnable[i] ? data.areas[i] : 0;
                     }
-                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0;
-                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0;
+
+                    burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
+                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0.0F;
+                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0.0F;
                     areas[targetPixelIndex] += data.areas[i];
                     validate(areas[targetPixelIndex], targetPixelIndex);
                 }

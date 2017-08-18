@@ -1,21 +1,15 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import com.google.gson.Gson;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
-import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.datamodel.ProductData;
-import org.esa.snap.core.gpf.GPF;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -32,26 +26,24 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     private final Product[] products;
     private final Product[] lcProducts;
+    private final Product[] areaProducts;
     private final List<ZipFile> geoLookupTables;
     private final String targetCell; // "800,312"
-    private final Configuration configuration;
     private final SortedMap<String, Integer> bandToMinY;
     private final SortedMap<String, ProductData> data;
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, List<ZipFile> geoLookupTables, String targetCell, Configuration configuration) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, Product[] areaProducts, List<ZipFile> geoLookupTables, String targetCell) {
         this.products = products;
         this.lcProducts = lcProducts;
+        this.areaProducts = areaProducts;
         this.geoLookupTables = geoLookupTables;
         this.targetCell = targetCell;
-        this.configuration = configuration;
         this.bandToMinY = new TreeMap<>();
         this.data = new TreeMap<>();
     }
 
     @Override
     public SourceData readPixels(int x, int y) throws IOException {
-        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
-
         int targetCellX = x + Integer.parseInt(targetCell.split(",")[0]);
         int targetCellY = y + Integer.parseInt(targetCell.split(",")[1]);
 
@@ -65,22 +57,14 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         }
 
         for (int i = 0; i < products.length; i++) {
-            CalvalusLogger.getLogger().info("        Handling product " + (i + 1) + "/" + products.length + "...");
             Product product = products[i];
             Product lcProduct = lcProducts[i];
+            Product areaProduct = areaProducts[i];
             String tile = product.getName().split("_")[3].substring(0, 6);
 
             if (!geoLookupTable.containsKey(tile)) {
                 continue;
             }
-
-            String modisTile = product.getName().split("_")[3];
-            File areaProductFile = new File(modisTile + ".hdf");
-            if (!areaProductFile.exists()) {
-                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, configuration);
-            }
-
-            Product areaProduct = ProductIO.readProduct(areaProductFile);
 
             Band jd = product.getBand("classification");
             Band cl = product.getBand("uncertainty");
@@ -89,66 +73,55 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band lc = lcProduct.getBand("lccs_class");
             Band areas = areaProduct.getBand("areas");
 
-            TreeSet<String> sourcePixelPoses = new TreeSet<>(geoLookupTable.get(tile));
+            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
+            jd.readRasterData(0, 0, 4800, 4800, jdData);
 
-//            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
-//            jd.readRasterData(0, 0, 4800, 4800, jdData);
-
-//            ProductData clData = null;
-//            if (cl != null) {
-//                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
-//                cl.readRasterData(0, 0, 4800, 4800, clData);
-//            }
-//
-//            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
-//            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
-//
-//            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
-//            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
-//
-//            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
-//            lc.readRasterData(0, 0, 4800, 4800, lcData);
-
-            ProductData areasData = ProductData.createInstance(data.areas);
-            areas.readRasterData(0, 0, 4800, 4800, areasData);
-
-//            System.arraycopy((double[])areasData.getElems(), 0, data.areas, 0, 4800 * 4800);
-            int pixelIndex = 0;
-            for (int x0 = 0; x0 < 4800; x0++) {
-                for (int y0 = 0; y0 < 4800; y0++) {
-                    byte sourceLC = (byte) getIntPixelValue(lc, pixelIndex);
-//                    byte sourceLC = (byte) lcData.getElemIntAt(pixelIndex);
-                    data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
-                    pixelIndex++;
-                }
+            ProductData clData = null;
+            if (cl != null) {
+                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
+                cl.readRasterData(0, 0, 4800, 4800, clData);
             }
 
+            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
+            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
+
+            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
+            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
+
+            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
+            lc.readRasterData(0, 0, 4800, 4800, lcData);
+
+            ProductData areasData = ProductData.createInstance(areas.getDataType(), areas.getRasterWidth() * areas.getRasterHeight());
+            areas.readRasterData(0, 0, 4800, 4800, areasData);
+
+            int pixelIndex;
+
+            TreeSet<String> sourcePixelPoses = new TreeSet<>(geoLookupTable.get(tile));
             for (String sourcePixelPos : sourcePixelPoses) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
                 pixelIndex = y0 * 4800 + x0;
-//                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
-                int sourceJD = (int) getFloatPixelValue(jd, pixelIndex);
-                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, pixelIndex);
-//                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
-                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, pixelIndex);
-//                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
-                data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf);
-                data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf);
+                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
-                    float sourceCL = getFloatPixelValue(cl, pixelIndex);
-//                    float sourceCL = clData.getElemFloatAt(pixelIndex);
+                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
-                    float sourceCL = getFloatPixelValue(cl, pixelIndex);
-//                    float sourceCL = clData.getElemFloatAt(pixelIndex);
+                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
+
+                int sourceLC = lcData.getElemIntAt(pixelIndex);
+                data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
+                data.lcClasses[pixelIndex] = sourceLC;
+                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
+                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
+                data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixelsFirstHalf[pixelIndex]);
+                data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixelsSecondHalf[pixelIndex]);
+                data.areas[pixelIndex] = areasData.getElemDoubleAt(pixelIndex);
             }
-            CalvalusLogger.getLogger().info("...done.");
         }
 
         data.patchCountFirstHalf = getPatchNumbers(GridFormatUtils.make2Dims(data.burnedPixels, 4800, 4800), true);
@@ -191,7 +164,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY, List<ZipFile> geoLookupTables) throws IOException {
         Gson gson = new Gson();
-        HashMap<String, Set<String>> geoLookupTable = new HashMap<>();
         String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX, targetCellY);
         ZipEntry entry = null;
         ZipFile geoLookupTableFile = null;
@@ -205,17 +177,20 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         if (entry == null) {
             CalvalusLogger.getLogger().warning("No geolookup entry for target cell " + targetCellX + "/" + targetCellY);
             return null;
-//            throw new IllegalStateException("No geolookup entry for target cell " + targetCellX + "/" + targetCellY);
         }
         try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {
-            geoLookupTable.putAll(gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class));
+            return gson.fromJson(new InputStreamReader(lutStream), GeoLutCreator.GeoLut.class);
         }
-        return geoLookupTable;
     }
 
-    private int remap(int status) {
+    private int remap(int status, int oldStatus) {
         // 0 = Observed, 3=Not-observed and 4=Unburnable
-        return status == 3 ? -1 : 1;
+        boolean nothingSetBefore = oldStatus == 0;
+        if (nothingSetBefore) {
+            return status == 3 ? -1 : 1;
+        } else {
+            return oldStatus == -1 ? (status == 3 ? -1 : 1) : 1;
+        }
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {

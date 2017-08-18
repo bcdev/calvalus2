@@ -24,16 +24,7 @@ import java.util.concurrent.Executors;
  */
 public class ModisLCSplitter {
 
-    public static void main(String[] args) {
-        FileSystem fileSystem = FileSystems.getDefault();
-        String[] years = {"2000", "2005", "2010"};
-        for (String year : years) {
-            Path lcInputPath = fileSystem.getPath("D:\\workspace\\fire-cci\\lc-data-to-split", "ESACCI-LC-L4-LCCS-Map-300m-P5Y-" + year + "-v1.6.1.nc");
-
-        }
-    }
-
-    public static void main2(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
         FileSystem fileSystem = FileSystems.getDefault();
 
         String modisInputPath = "D:\\workspace\\fire-cci\\modis-for-lc";

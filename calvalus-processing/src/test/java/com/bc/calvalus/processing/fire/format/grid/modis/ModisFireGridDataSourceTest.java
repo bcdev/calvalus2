@@ -30,7 +30,8 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1},
                 new Product[]{lcProduct1},
-                geoLookupTables, "765,340", null);
+                null,
+                geoLookupTables, "765,340");
 
         dataSource.setDoyFirstHalf(7);
         dataSource.setDoySecondHalf(22);
@@ -119,7 +120,7 @@ public class ModisFireGridDataSourceTest {
     @Test
     public void acceptanceTestCache() throws Exception {
         Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc");
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(new Product[]{product1}, null, null, "", null);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(new Product[]{product1}, null, null, null, null);
 
         Band band = product1.getBand("classification");
         assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
