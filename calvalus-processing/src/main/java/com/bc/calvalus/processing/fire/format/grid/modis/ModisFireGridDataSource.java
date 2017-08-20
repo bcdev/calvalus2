@@ -103,11 +103,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int y0 = Integer.parseInt(sppSplit[1]);
                 pixelIndex = y0 * 4800 + x0;
                 int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
+                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && clData != null) {
                     float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
-                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
+                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && clData != null) {
                     float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
