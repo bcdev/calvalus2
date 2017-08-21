@@ -112,4 +112,33 @@ public class CommonUtils {
             fixedBand.setPixels(0, y, width, 1, fixedPixels);
         }
     }
+
+    public static String lcYear(int year) {
+        // 2002 -> 2000
+        // 2003 - 2007 -> 2005
+        // 2008 - 2012 -> 2010
+        switch (year) {
+            case 2000:
+            case 2001:
+            case 2002:
+                return "2000";
+            case 2003:
+            case 2004:
+            case 2005:
+            case 2006:
+            case 2007:
+                return "2005";
+            case 2008:
+            case 2009:
+            case 2010:
+            case 2011:
+            case 2012:
+            case 2013:
+            case 2014:
+            case 2015:
+            case 2016:
+                return "2010";
+        }
+        throw new IllegalArgumentException("Illegal year: " + year);
+    }
 }

@@ -113,9 +113,9 @@ public class PixelFinaliseMapper extends Mapper {
         Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
         qlConfig.setImageType("png");
         qlConfig.setBandName("JD");
-        qlConfig.setSubSamplingX(100);
-        qlConfig.setSubSamplingY(100);
-        qlConfig.setCpdURL("hdfs://calvalus/calvalus/projects/fire/aux/fire-modis-pixel.cpd");
+        qlConfig.setSubSamplingX(500);
+        qlConfig.setSubSamplingY(500);
+        qlConfig.setCpdURL("/calvalus/projects/fire/aux/fire-modis-pixel.cpd");
         RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
         if (image != null) {
             ImageIO.write(image, "png", new File(baseFilename + ".png"));
@@ -204,7 +204,7 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             if (destRect.x == 0) {
-                CalvalusLogger.getLogger().info((destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "%").substring(0, 4));
+                CalvalusLogger.getLogger().info((destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "").substring(0, 5) + "%");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];

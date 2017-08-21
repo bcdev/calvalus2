@@ -76,7 +76,7 @@ public class MerisPixelInputFormat extends InputFormat {
                 groupsForArea.append(tile);
             }
         }
-        return String.format("hdfs://calvalus/calvalus/projects/fire/aux/lc/lc-%s-(%s).*nc", lcYear(Integer.parseInt(year)), groupsForArea.substring(0, groupsForArea.length() - 1));
+        return String.format("hdfs://calvalus/calvalus/projects/fire/aux/lc/lc-%s-(%s).*nc", CommonUtils.lcYear(Integer.parseInt(year)), groupsForArea.substring(0, groupsForArea.length() - 1));
     }
 
     private void createSplits(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, HdfsInventoryService hdfsInventoryService) throws IOException {
@@ -126,32 +126,9 @@ public class MerisPixelInputFormat extends InputFormat {
     private static String getLcInputPath(String baInputPath) {
         int yearIndex = baInputPath.indexOf("meris-ba/") + "meris-ba/".length();
         int year = Integer.parseInt(baInputPath.substring(yearIndex, yearIndex + 4));
-        String lcYear = lcYear(year);
+        String lcYear = CommonUtils.lcYear(year);
         String tile = getMerisTile(baInputPath);
         return baInputPath.substring(0, baInputPath.indexOf("meris-ba")) + "aux/lc/" + String.format("lc-%s-%s.nc", lcYear, tile);
-    }
-
-    private static String lcYear(int year) {
-        // 2002 -> 2000
-        // 2003 - 2007 -> 2005
-        // 2008 - 2012 -> 2010
-        switch (year) {
-            case 2002:
-                return "2000";
-            case 2003:
-            case 2004:
-            case 2005:
-            case 2006:
-            case 2007:
-                return "2005";
-            case 2008:
-            case 2009:
-            case 2010:
-            case 2011:
-            case 2012:
-                return "2010";
-        }
-        throw new IllegalArgumentException("Illegal year: " + year);
     }
 
     private FileStatus[] getFileStatuses(HdfsInventoryService inventoryService,
