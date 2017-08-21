@@ -43,6 +43,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneId;
@@ -204,7 +205,7 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             if (destRect.x == 0) {
-                CalvalusLogger.getLogger().info((destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "").substring(0, 5) + "%");
+                CalvalusLogger.getLogger().info(NumberFormat.getPercentInstance().format((float) destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0) + "%");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
