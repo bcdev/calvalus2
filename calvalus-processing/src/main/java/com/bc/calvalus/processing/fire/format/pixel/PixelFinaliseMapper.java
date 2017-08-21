@@ -64,6 +64,7 @@ public class PixelFinaliseMapper extends Mapper {
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
+        GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
         System.getProperties().put("snap.dataio.bigtiff.compression.type", "LZW");
         System.getProperties().put("snap.dataio.bigtiff.tiling.width", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
@@ -203,7 +204,7 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             if (destRect.x == 0) {
-                CalvalusLogger.getLogger().info(destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "%");
+                CalvalusLogger.getLogger().info((destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0 + "%").substring(0, 4));
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
