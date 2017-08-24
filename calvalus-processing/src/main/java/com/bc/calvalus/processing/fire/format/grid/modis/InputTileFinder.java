@@ -32,12 +32,12 @@ public class InputTileFinder {
 
         TileLut tileLut = new TileLut();
 
-        for (int y = 0; y < 720; y += 8) {
-            for (int x = 0; x < 1440; x += 8) {
+        for (int y = 0; y < 720; y += ModisGridMapper.WINDOW_SIZE) {
+            for (int x = 0; x < 1440; x += ModisGridMapper.WINDOW_SIZE) {
                 Set<String> inputTiles = new HashSet<>();
 
-                for (int y0 = 0; y0 < 8; y0++) {
-                    for (int x0 = 0; x0 < 8; x0++) {
+                for (int y0 = 0; y0 < ModisGridMapper.WINDOW_SIZE; y0++) {
+                    for (int x0 = 0; x0 < ModisGridMapper.WINDOW_SIZE; x0++) {
                         ul.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0) * 0.25);
                         ur.setLocation(90 - (y + y0) * 0.25, -180 + (x + x0 + 1) * 0.25);
                         ll.setLocation(90 - (y + y0 + 1) * 0.25, -180 + (x + x0) * 0.25);

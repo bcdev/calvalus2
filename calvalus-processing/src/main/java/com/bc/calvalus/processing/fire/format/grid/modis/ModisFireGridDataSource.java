@@ -24,6 +24,7 @@ import java.util.zip.ZipFile;
 
 public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
+    public static final int CACHE_SIZE = 480;
     private final Product[] products;
     private final Product[] lcProducts;
     private final Product[] areaProducts;
@@ -73,26 +74,26 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band lc = lcProduct.getBand("lccs_class");
             Band areas = areaProduct.getBand("areas");
 
-            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
-            jd.readRasterData(0, 0, 4800, 4800, jdData);
-
-            ProductData clData = null;
-            if (cl != null) {
-                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
-                cl.readRasterData(0, 0, 4800, 4800, clData);
-            }
-
-            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
-            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
-
-            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
-            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
-
-            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
-            lc.readRasterData(0, 0, 4800, 4800, lcData);
-
-            ProductData areasData = ProductData.createInstance(areas.getDataType(), areas.getRasterWidth() * areas.getRasterHeight());
-            areas.readRasterData(0, 0, 4800, 4800, areasData);
+//            ProductData jdData = ProductData.createInstance(jd.getDataType(), jd.getRasterWidth() * jd.getRasterHeight());
+//            jd.readRasterData(0, 0, 4800, 4800, jdData);
+//
+//            ProductData clData = null;
+//            if (cl != null) {
+//                clData = ProductData.createInstance(cl.getDataType(), cl.getRasterWidth() * cl.getRasterHeight());
+//                cl.readRasterData(0, 0, 4800, 4800, clData);
+//            }
+//
+//            ProductData numbObsFirstHalfData = ProductData.createInstance(numbObsFirstHalf.getDataType(), numbObsFirstHalf.getRasterWidth() * numbObsFirstHalf.getRasterHeight());
+//            numbObsFirstHalf.readRasterData(0, 0, 4800, 4800, numbObsFirstHalfData);
+//
+//            ProductData numbObsSecondHalfData = ProductData.createInstance(numbObsSecondHalf.getDataType(), numbObsSecondHalf.getRasterWidth() * numbObsSecondHalf.getRasterHeight());
+//            numbObsSecondHalf.readRasterData(0, 0, 4800, 4800, numbObsSecondHalfData);
+//
+//            ProductData lcData = ProductData.createInstance(lc.getDataType(), lc.getRasterWidth() * lc.getRasterHeight());
+//            lc.readRasterData(0, 0, 4800, 4800, lcData);
+//
+//            ProductData areasData = ProductData.createInstance(areas.getDataType(), areas.getRasterWidth() * areas.getRasterHeight());
+//            areas.readRasterData(0, 0, 4800, 4800, areasData);
 
             int pixelIndex;
 
@@ -102,25 +103,34 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
                 pixelIndex = y0 * 4800 + x0;
-                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && clData != null) {
-                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
+//                int sourceJD = (int) jdData.getElemFloatAt(pixelIndex);
+                int sourceJD = (int) getFloatPixelValue(jd, pixelIndex);
+                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && cl != null) {
+//                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && clData != null) {
+//                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
+                    float sourceCL = getFloatPixelValue(cl, pixelIndex) / 100.0F;
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
-                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && clData != null) {
-                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
+                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && cl != null) {
+//                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && clData != null) {
+//                    float sourceCL = clData.getElemFloatAt(pixelIndex) / 100.0F;
+                    float sourceCL = getFloatPixelValue(cl, pixelIndex) / 100.0F;
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
 
-                int sourceLC = lcData.getElemIntAt(pixelIndex);
+//                int sourceLC = lcData.getElemIntAt(pixelIndex);
+                int sourceLC = getIntPixelValue(lc, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
-                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
-                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
+//                int sourceStatusFirstHalf = numbObsFirstHalfData.getElemIntAt(pixelIndex);
+                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, pixelIndex);
+//                int sourceStatusSecondHalf = numbObsSecondHalfData.getElemIntAt(pixelIndex);
+                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, pixelIndex);
                 data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixelsFirstHalf[pixelIndex]);
                 data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixelsSecondHalf[pixelIndex]);
-                data.areas[pixelIndex] = areasData.getElemDoubleAt(pixelIndex);
+//                data.areas[pixelIndex] = areasData.getElemDoubleAt(pixelIndex);
+                data.areas[pixelIndex] = getDoublePixelValue(areas, pixelIndex);
             }
         }
 
@@ -132,13 +142,19 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     float getFloatPixelValue(Band band, int pixelIndex) throws IOException {
         refreshCache(band, pixelIndex);
-        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % 480) * 4800;
+        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
         return data.get(band.getName()).getElemFloatAt(subPixelIndex);
+    }
+
+    double getDoublePixelValue(Band band, int pixelIndex) throws IOException {
+        refreshCache(band, pixelIndex);
+        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
+        return data.get(band.getName()).getElemDoubleAt(subPixelIndex);
     }
 
     private int getIntPixelValue(Band band, int pixelIndex) throws IOException {
         refreshCache(band, pixelIndex);
-        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % 480) * 4800;
+        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
         return data.get(band.getName()).getElemIntAt(subPixelIndex);
     }
 
@@ -149,15 +165,15 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             currentMinY = bandToMinY.get(bandName);
         } else {
             int pixelIndexY = pixelIndex / 4800;
-            currentMinY = pixelIndexY - pixelIndexY % 480;
+            currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
         }
 
         int pixelIndexY = pixelIndex / 4800;
-        if (pixelIndexY < currentMinY || pixelIndexY >= currentMinY + 480 || !data.containsKey(bandName)) {
-            ProductData productData = ProductData.createInstance(band.getDataType(), band.getRasterWidth() * 480);
-            band.readRasterData(0, pixelIndexY - pixelIndexY % 480, 4800, 480, productData);
+        if (pixelIndexY < currentMinY || pixelIndexY >= currentMinY + CACHE_SIZE || !data.containsKey(bandName)) {
+            ProductData productData = ProductData.createInstance(band.getDataType(), band.getRasterWidth() * CACHE_SIZE);
+            band.readRasterData(0, pixelIndexY - pixelIndexY % CACHE_SIZE, 4800, CACHE_SIZE, productData);
             data.put(bandName, productData);
-            currentMinY = pixelIndexY - pixelIndexY % 480;
+            currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
             bandToMinY.put(bandName, currentMinY);
         }
     }

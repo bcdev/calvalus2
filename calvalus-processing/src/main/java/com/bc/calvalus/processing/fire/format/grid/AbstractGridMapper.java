@@ -69,6 +69,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
             LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, targetRasterHeight));
             for (int x = 0; x < targetRasterWidth; x++) {
                 LOG.info(String.format("    Processing pixel %d/%d of line %d.", x + 1, targetRasterWidth, y + 1));
+                System.gc();
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
                     targetPixelIndex++;

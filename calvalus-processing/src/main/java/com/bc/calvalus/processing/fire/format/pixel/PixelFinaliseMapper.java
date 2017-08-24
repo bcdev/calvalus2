@@ -1,8 +1,6 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.analysis.QuicklookGenerator;
-import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -31,7 +29,6 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 import java.awt.*;
 import java.awt.image.DataBuffer;
@@ -81,13 +78,22 @@ public class PixelFinaliseMapper extends Mapper {
         Path inputSplitLocation = inputSplit.getPath();
         LOG.info("Finalising file '" + inputSplitLocation + "'");
 
-        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
-        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
-
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
 
         String baseFilename = createBaseFilename(year, month, version, areaString);
+
+        String outputDir = context.getConfiguration().get("calvalus.output.dir");
+        Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
+        FileSystem fileSystem = FileSystem.get(context.getConfiguration());
+
+        if (fileSystem.exists(tifPath)) {
+            LOG.info("File '" + inputSplitLocation + "' already exists, done.");
+            return;
+        }
+
+        File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
+        File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
 
         Product lcProduct = ProductIO.readProduct(localLC);
         Product result = remap(localL3, baseFilename, sensorId, lcProduct, context);
@@ -102,26 +108,27 @@ public class PixelFinaliseMapper extends Mapper {
         final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
-        String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
-        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
+//        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
         CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
         FileSystem fs = tifPath.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
-        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
-        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
-        qlConfig.setImageType("png");
-        qlConfig.setBandName("JD");
-        qlConfig.setSubSamplingX(500);
-        qlConfig.setSubSamplingY(500);
-        qlConfig.setCpdURL("/calvalus/projects/fire/aux/fire-modis-pixel.cpd");
-        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
-        if (image != null) {
-            ImageIO.write(image, "png", new File(baseFilename + ".png"));
-            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
-        }
+        CalvalusLogger.getLogger().info("...done");
+//        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
+//        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
+//        qlConfig.setImageType("png");
+//        qlConfig.setBandName("JD");
+//        qlConfig.setSubSamplingX(125);
+//        qlConfig.setSubSamplingY(125);
+//        File localCpd = new File("fire-modis-pixel.cpd");
+//        CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/fire-modis-pixel.cpd"), localCpd, context.getConfiguration());
+//        qlConfig.setCpdURL(localCpd.toURI().toURL().toExternalForm());
+//        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
+//        if (image != null) {
+//            ImageIO.write(image, "png", new File(baseFilename + ".png"));
+//            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
+//        }
     }
 
     static Product remap(File localL3, String baseFilename, String sensorId, Product lcProduct, Progressable context) throws IOException {
@@ -150,7 +157,7 @@ public class PixelFinaliseMapper extends Mapper {
     }
 
     static String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, areaString.split(";")[0], version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, areaString.split(";")[0].replace(" ", "_"), version);
     }
 
     static String createMetadata(String year, String month, String version, String areaString) throws IOException {
@@ -205,7 +212,7 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             if (destRect.x == 0) {
-                CalvalusLogger.getLogger().info(NumberFormat.getPercentInstance().format((float) destRect.y / ((float) sourceJdBand.getRasterHeight()) * 100.0) + "%");
+                CalvalusLogger.getLogger().info("Written " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + ".");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];

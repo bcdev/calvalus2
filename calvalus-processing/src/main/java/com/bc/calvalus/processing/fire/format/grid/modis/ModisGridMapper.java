@@ -28,9 +28,10 @@ import java.util.zip.ZipFile;
 public class ModisGridMapper extends AbstractGridMapper {
 
     private static final float MODIS_PIXEL_AREA = 250.0F * 250.0F;
+    public static final int WINDOW_SIZE = 32;
 
     public ModisGridMapper() {
-        super(8, 8);
+        super(WINDOW_SIZE, WINDOW_SIZE);
     }
 
     @Override
@@ -59,6 +60,9 @@ public class ModisGridMapper extends AbstractGridMapper {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
             File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
             Product p = ProductIO.readProduct(sourceProductFile);
+            if (p == null) {
+                throw new IllegalStateException("Cannot read file " + paths[i]);
+            }
             if (p.getName().contains("h18")) {
                 Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
                 ProductUtils.copyGeoCoding(p, temp);
@@ -111,10 +115,10 @@ public class ModisGridMapper extends AbstractGridMapper {
         String x = targetTile.split(",")[0];
         List<String> xCoords = new ArrayList<>();
         int xAsInt = Integer.parseInt(x);
-        if (xAsInt % 8 != 0) {
+        if (xAsInt % WINDOW_SIZE != 0) {
             throw new IllegalArgumentException("Invalid input: '" + targetTile + "'");
         }
-        for (int x0 = xAsInt; x0 < xAsInt + 8; x0++) {
+        for (int x0 = xAsInt; x0 < xAsInt + WINDOW_SIZE; x0++) {
             String yCoord = Integer.toString(x0);
             if (yCoord.length() == 4) {
                 maybeAddCoord(xCoords, yCoord.substring(0, 3) + "x");

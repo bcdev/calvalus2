@@ -71,6 +71,8 @@ public class ModisJDAggregator extends AbstractAggregator {
             // unburnable beats only not observed
             targetVector.set(0, UNBURNABLE);
             targetVector.set(1, 0);
+        } else if (jd != NOT_OBSERVED) {
+            targetVector.set(1, cl);
         }
         // otherwise keep original value
     }
