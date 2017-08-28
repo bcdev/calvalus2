@@ -30,7 +30,8 @@ public class ModisLCSplitter {
         String modisInputPath = "D:\\workspace\\fire-cci\\modis-for-lc";
         String outputPath = "D:\\workspace\\fire-cci\\splitted-lc-data\\modis";
 
-        String[] years = {"2000", "2005", "2010"};
+        String[] years = {"2010"};
+//        String[] years = {"2000", "2005", "2010"};
         List<Runnable> tasks = new ArrayList<>();
 
         for (String year : years) {
@@ -50,7 +51,18 @@ public class ModisLCSplitter {
             resamplingOp.setParameterDefaultValues();
             resamplingOp.setSourceProduct(lcProduct);
 
-            Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).forEach(
+            String[] tiles = new String[]{
+                    "h08v08", "h08v09", "h09v08", "h09v09", "h10v10", "h11v08", "h11v09", "h11v10", "h11v11", "h11v12", "h12v08", "h12v09", "h12v10", "h12v11", "h12v12", "h13v08", "h13v09", "h13v10", "h13v11", "h13v12", "h13v14", "h14v09", "h14v10", "h14v11", "h14v14"
+            };
+
+            Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).filter((Path path) -> {
+                for (String tile : tiles) {
+                    if (path.toString().contains(tile)) {
+                        return true;
+                    }
+                }
+                return false;
+            }).forEach(
                     path -> tasks.add(() -> {
                         try {
                             Product reference = ProductIO.readProduct(path.toFile());

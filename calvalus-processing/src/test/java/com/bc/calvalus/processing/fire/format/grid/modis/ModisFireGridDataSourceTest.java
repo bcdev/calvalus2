@@ -3,12 +3,12 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipFile;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -116,24 +116,54 @@ public class ModisFireGridDataSourceTest {
         }
     }
 
-    @Ignore
     @Test
     public void acceptanceTestCache() throws Exception {
-        Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc");
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(new Product[]{product1}, null, null, null, null);
+        Product product1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2016_12_h31v12.nc");
+        Product product2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2016_12_h32v12.nc");
 
-        Band band = product1.getBand("classification");
-        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
-        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
-        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
-        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
-        assertEquals(0, dataSource.getFloatPixelValue(band, 379 + 4800 * 7), 1E-8);
-        assertEquals(16, dataSource.getFloatPixelValue(band, 629 + 4800 * 495), 1E-8);
-        assertEquals(0, dataSource.getFloatPixelValue(band, 630 + 4800 * 495), 1E-8);
+        Product lcProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h31v12-2010.nc");
+        Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h32v12-2010.nc");
 
-        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
-        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
+        Product areaProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h31v12.nc");
+        Product areaProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h32v12.nc");
 
-        assertEquals(29, dataSource.getFloatPixelValue(band, 3573 + 4800 * 2826), 1E-8);
+        List<ZipFile> geoLookupTables = new ArrayList<>();
+        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-140x.zip")));
+        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-141x.zip")));
+        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-142x.zip")));
+        geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-143x.zip")));
+
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
+                new Product[]{product1, product2},
+                new Product[]{lcProduct1, lcProduct2},
+                new Product[]{areaProduct1, areaProduct2},
+                geoLookupTables,
+                "1408,480");
+
+        dataSource.setDoyFirstOfMonth(335);
+        dataSource.setDoyLastOfMonth(366);
+        dataSource.setDoyFirstHalf(366 + 7);
+        dataSource.setDoySecondHalf(366 + 22);
+
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 32; x++) {
+                dataSource.readPixels(x, y);
+            }
+        }
+
+
+//        Band band = product1.getBand("classification");
+//        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
+//        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
+//        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
+//        assertEquals(-2, dataSource.getFloatPixelValue(band, 380 + 4800 * 7), 1E-8);
+//        assertEquals(0, dataSource.getFloatPixelValue(band, 379 + 4800 * 7), 1E-8);
+//        assertEquals(16, dataSource.getFloatPixelValue(band, 629 + 4800 * 495), 1E-8);
+//        assertEquals(0, dataSource.getFloatPixelValue(band, 630 + 4800 * 495), 1E-8);
+//
+//        assertEquals(0, dataSource.getFloatPixelValue(band, 0), 1E-8);
+//        assertEquals(-2, dataSource.getFloatPixelValue(band, 407), 1E-8);
+//
+//        assertEquals(29, dataSource.getFloatPixelValue(band, 3573 + 4800 * 2826), 1E-8);
     }
 }

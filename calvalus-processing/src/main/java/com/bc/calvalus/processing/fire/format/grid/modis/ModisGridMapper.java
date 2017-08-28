@@ -154,16 +154,16 @@ public class ModisGridMapper extends AbstractGridMapper {
             lcAreaSum += firstBaValues[targetPixelIndex];
         }
         float lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (lcAreaSumFraction > burnableAreaFraction) {
-            throw new IllegalStateException("lcAreaSumFraction > burnableAreaFraction");
+        if (lcAreaSumFraction > burnableAreaFraction * 1.2) {
+            throw new IllegalStateException("lcAreaSumFraction (" + lcAreaSumFraction + ") > burnableAreaFraction * 1.2 (" + burnableAreaFraction * 1.2 + ") in first half");
         }
         lcAreaSum = 0.0F;
         for (float[] secondBaValues : baInLcSecond) {
             lcAreaSum += secondBaValues[targetPixelIndex];
         }
         lcAreaSumFraction = getFraction(lcAreaSum, area);
-        if (lcAreaSumFraction > burnableAreaFraction) {
-            throw new IllegalStateException("lcAreaSumFraction > burnableAreaFraction");
+        if (lcAreaSumFraction > burnableAreaFraction * 1.2) {
+            throw new IllegalStateException("lcAreaSumFraction (" + lcAreaSumFraction + ") > burnableAreaFraction (" + burnableAreaFraction * 1.2 + ") in second half");
         }
     }
 

@@ -108,12 +108,16 @@ public class PixelFinaliseMapper extends Mapper {
         final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
+
+        ProductIO.writeProduct(result, baseFilename + ".nc", "NetCDF4-CF");
+
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
 //        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
         CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
         FileSystem fs = tifPath.getFileSystem(context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
+        FileUtil.copy(new File(baseFilename + ".nc"), fs, xmlPath, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done");
 //        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
 //        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
@@ -286,14 +290,14 @@ public class PixelFinaliseMapper extends Mapper {
                     float sourceCl = sourceClArray[pixelIndex];
                     if (Float.isNaN(sourceCl)) {
                         NeighbourResult neighbourResult = findNeighbourValue(sourceClArray, pixelIndex, destRect.width);
-                        if (neighbourResult.newPixelIndex != -1 && sourceJdArray[neighbourResult.newPixelIndex] > 0 && sourceJdArray[neighbourResult.newPixelIndex] < 900) {
+                        if (neighbourResult.newPixelIndex != -1 && sourceJdArray[neighbourResult.newPixelIndex] >= 0 && sourceJdArray[neighbourResult.newPixelIndex] < 900) {
                             targetCl = (int) (neighbourResult.neighbourValue);
                         } else {
                             targetCl = 0;
                         }
                     } else {
                         int jdValue = sourceJdArray[pixelIndex];
-                        if (jdValue > 0 && jdValue < 900) {
+                        if (jdValue >= 0 && jdValue < 900) {
                             targetCl = (int) (sourceCl);
                         } else {
                             targetCl = 0;
