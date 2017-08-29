@@ -74,35 +74,41 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band lc = lcProduct.getBand("lccs_class");
             Band areas = areaProduct.getBand("areas");
 
-            int pixelIndex;
-
-            TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> Integer.parseInt(o1.split(",")[1]) < Integer.parseInt(o2.split(",")[1]) ? -1 : 1);
+            TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> {
+                int y1 = Integer.parseInt(o1.split(",")[1]);
+                int y2 = Integer.parseInt(o2.split(",")[1]);
+                if (y1 == y) {
+                    return 0;
+                } else if (y1 < y2) {
+                    return -1;
+                } else return 1;
+            });
             sourcePixelPoses.addAll(geoLookupTable.get(tile));
 
             for (String sourcePixelPos : sourcePixelPoses) {
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
-                pixelIndex = y0 * 4800 + x0;
-                int sourceJD = (int) getFloatPixelValue(jd, pixelIndex);
+                int pixelIndex = y0 * 4800 + x0;
+                int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
                 if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && cl != null) {
-                    float sourceCL = getFloatPixelValue(cl, pixelIndex) / 100.0F;
+                    float sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
                     data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && cl != null) {
-                    float sourceCL = getFloatPixelValue(cl, pixelIndex) / 100.0F;
+                    float sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
                     data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
 
-                int sourceLC = getIntPixelValue(lc, pixelIndex);
+                int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
                 data.lcClasses[pixelIndex] = sourceLC;
-                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, pixelIndex);
-                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, pixelIndex);
+                int sourceStatusFirstHalf = getIntPixelValue(numbObsFirstHalf, tile, pixelIndex);
+                int sourceStatusSecondHalf = getIntPixelValue(numbObsSecondHalf, tile, pixelIndex);
                 data.statusPixelsFirstHalf[pixelIndex] = remap(sourceStatusFirstHalf, data.statusPixelsFirstHalf[pixelIndex]);
                 data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixelsSecondHalf[pixelIndex]);
-                data.areas[pixelIndex] = getDoublePixelValue(areas, pixelIndex);
+                data.areas[pixelIndex] = getDoublePixelValue(areas, tile, pixelIndex);
             }
         }
 
@@ -112,29 +118,31 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         return data;
     }
 
-    float getFloatPixelValue(Band band, int pixelIndex) throws IOException {
-        refreshCache(band, pixelIndex);
+    float getFloatPixelValue(Band band, String tile, int pixelIndex) throws IOException {
+        String key = band.getName() + "_" + tile;
+        refreshCache(band, key, pixelIndex);
         int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(band.getName()).getElemFloatAt(subPixelIndex);
+        return data.get(key).getElemFloatAt(subPixelIndex);
     }
 
-    double getDoublePixelValue(Band band, int pixelIndex) throws IOException {
-        refreshCache(band, pixelIndex);
+    double getDoublePixelValue(Band band, String tile, int pixelIndex) throws IOException {
+        String key = band.getName() + "_" + tile;
+        refreshCache(band, key, pixelIndex);
         int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(band.getName()).getElemDoubleAt(subPixelIndex);
+        return data.get(key).getElemDoubleAt(subPixelIndex);
     }
 
-    private int getIntPixelValue(Band band, int pixelIndex) throws IOException {
-        refreshCache(band, pixelIndex);
+    private int getIntPixelValue(Band band, String tile, int pixelIndex) throws IOException {
+        String key = band.getName() + "_" + tile;
+        refreshCache(band, key, pixelIndex);
         int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(band.getName()).getElemIntAt(subPixelIndex);
+        return data.get(key).getElemIntAt(subPixelIndex);
     }
 
-    private void refreshCache(Band band, int pixelIndex) throws IOException {
+    private void refreshCache(Band band, String key, int pixelIndex) throws IOException {
         int currentMinY;
-        String bandName = band.getName();
-        if (bandToMinY.containsKey(bandName)) {
-            currentMinY = bandToMinY.get(bandName);
+        if (bandToMinY.containsKey(key)) {
+            currentMinY = bandToMinY.get(key);
         } else {
             int pixelIndexY = pixelIndex / 4800;
             currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
@@ -142,13 +150,13 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
         int pixelIndexY = pixelIndex / 4800;
         boolean pixelIndexIsInCache = pixelIndexY >= currentMinY && pixelIndexY < currentMinY + CACHE_SIZE;
-        boolean alreadyRead = pixelIndexIsInCache && data.containsKey(bandName);
+        boolean alreadyRead = pixelIndexIsInCache && data.containsKey(key);
         if (!alreadyRead) {
             ProductData productData = ProductData.createInstance(band.getDataType(), band.getRasterWidth() * CACHE_SIZE);
             band.readRasterData(0, pixelIndexY - pixelIndexY % CACHE_SIZE, 4800, CACHE_SIZE, productData);
-            data.put(bandName, productData);
+            data.put(key, productData);
             currentMinY = pixelIndexY - pixelIndexY % CACHE_SIZE;
-            bandToMinY.put(bandName, currentMinY);
+            bandToMinY.put(key, currentMinY);
         }
     }
 
