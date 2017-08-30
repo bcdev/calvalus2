@@ -18,8 +18,8 @@ package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.inventory.search.SafeUpdateInventory;
 import com.bc.inventory.search.StreamFactory;
-import com.bc.inventory.search.coverage.CoverageInventory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -62,14 +62,10 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
         // read scanFile back in and update DB
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
-        CoverageInventory inventory = new CoverageInventory(streamFactory);
-        if (inventory.hasIndex()) {
-            int indexSize = inventory.updateIndex(scanFilename);
-            System.out.println("updated index. New index size = " + indexSize);
-        } else {
-            int indexSize = inventory.createIndex(scanFilename);
-            System.out.println("created index. New index size= " + indexSize);
-        }
+        StreamFactory streamFactory = new HDFSStreamFactory(conf);
+        SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
+        inventory.setVerbose(true);
+        int addedProducts = inventory.updateIndex();
+        System.out.println("updated index. Added products = " + addedProducts);
     }
 }

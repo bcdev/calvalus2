@@ -22,13 +22,12 @@ import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.ma.MAConfig;
-import com.bc.calvalus.processing.ma.PixelPosProvider;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
 import com.bc.calvalus.processing.utils.GeometryUtils;
 import com.bc.inventory.search.Constrain;
+import com.bc.inventory.search.SafeUpdateInventory;
 import com.bc.inventory.search.StreamFactory;
-import com.bc.inventory.search.coverage.CoverageInventory;
 import com.bc.inventory.utils.SimpleRecord;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
@@ -51,7 +50,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -104,29 +102,21 @@ public class GeodbInputFormat extends InputFormat {
     }
 
     public static Set<String> queryGeoInventory(boolean failOnMissingDB, Configuration conf) throws IOException {
-        List<Constrain> constrains = parseConstraint(conf);
+        Constrain[] constrains = parseConstraint(conf);
         Set<String> paths = new HashSet<>();
         String[] geoInventories = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY).split(",");
         for (String geoInventory : geoInventories) {
-            StreamFactory streamFactory = new HDFSStreamFactory(geoInventory, conf);
-            CoverageInventory inventory = new CoverageInventory(streamFactory);
-            if (!inventory.hasIndex()) {
-                if (failOnMissingDB) {
-                    throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
-                } else {
-                    return Collections.EMPTY_SET;
-                }
-            }
-            inventory.loadIndex();
-            for (Constrain constrain : constrains) {
-                LOG.fine("query for constrain: " + constrain.toString());
-                paths.addAll(inventory.query(constrain).getPaths());
-            }
+            StreamFactory streamFactory = new HDFSStreamFactory(conf);
+            SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
+            inventory.setVerbose(true);
+            inventory.setFailOnMissingDB(failOnMissingDB);
+            // throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
+            paths.addAll(inventory.query(constrains));
         }
         return paths;
     }
 
-    private static List<Constrain> parseConstraint(Configuration conf) throws IOException {
+    private static Constrain[] parseConstraint(Configuration conf) throws IOException {
         List<Constrain> constrains = new ArrayList<>();
         String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
@@ -164,7 +154,7 @@ public class GeodbInputFormat extends InputFormat {
 
             constrains.add(cb.build());
         }
-        return constrains;
+        return constrains.toArray(new Constrain[0]);
     }
 
     private static boolean isBiggerThanAHalfSphere(Geometry geometry) {

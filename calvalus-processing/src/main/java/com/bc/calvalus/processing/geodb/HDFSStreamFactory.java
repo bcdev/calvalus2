@@ -16,48 +16,125 @@
 
 package com.bc.calvalus.processing.geodb;
 
+import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.inventory.search.StreamFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IOUtils;
 
+import javax.imageio.stream.ImageInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * An implementation using the Hadoop FileSystem
  */
 class HDFSStreamFactory implements StreamFactory {
 
-    private final Path dbPath;
     private final Configuration conf;
 
-    HDFSStreamFactory(String geoInventory, Configuration conf) throws IOException {
-        Path path = new Path(geoInventory);
-        this.dbPath = path.getFileSystem(conf).makeQualified(path);
+    HDFSStreamFactory(Configuration conf) {
         this.conf = conf;
     }
 
     @Override
-    public InputStream createInputStream(String name) throws IOException {
-        Path path = new Path(dbPath, name);
-        FileSystem fs = path.getFileSystem(conf);
-        return fs.open(path);
+    public ImageInputStream createImageInputStream(String path) throws IOException {
+        Path hdfsPath = new Path(path);
+        FileSystem fs = hdfsPath.getFileSystem(conf);
+        FileStatus status = fs.getFileStatus(hdfsPath);
+        FSDataInputStream in = fs.open(hdfsPath);
+        return new FSImageInputStream(in, status.getLen());
     }
 
     @Override
-    public OutputStream createOutputStream(String name) throws IOException {
-        Path path = new Path(dbPath, name);
-        FileSystem fs = path.getFileSystem(conf);
-        return fs.create(path, true);
+    public OutputStream createOutputStream(String path) throws IOException {
+        Path hdfsPath = new Path(path);
+        FileSystem fs = hdfsPath.getFileSystem(conf);
+        return fs.create(hdfsPath, true);
     }
 
     @Override
-    public boolean exists(String name) throws IOException {
-        Path path = new Path(dbPath, name);
-        FileSystem fs = path.getFileSystem(conf);
-        return fs.exists(path);
+    public boolean exists(String path) throws IOException {
+        Path hdfsPath = new Path(path);
+        FileSystem fs = hdfsPath.getFileSystem(conf);
+        return fs.exists(hdfsPath);
     }
 
+    @Override
+    public String[] listNewestFirst(String... filenames) throws IOException {
+        if (filenames.length == 0) {
+            return new String[0];
+        }
+        List<FileStatus> existingFiles = new ArrayList<>(filenames.length);
+        for (String filename : filenames) {
+            Path path = new Path(filename);
+            try {
+                // filename are always files, never directories
+                FileStatus[] statuses = path.getFileSystem(conf).listStatus(path);
+                if (statuses.length > 1) {
+                    String msg = String.format("list of (%s) results in multiple results: %s",
+                                               path, Arrays.toString(statuses));
+                    throw new IOException(msg);
+                }
+                existingFiles.add(statuses[0]);
+            } catch (IOException ioe) {
+                // this file may no exits,ignore it
+            }
+        }
+        existingFiles.sort(Comparator.comparingLong(FileStatus::getModificationTime));
+        Collections.reverse(existingFiles);
+        String[] result = new String[existingFiles.size()];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = existingFiles.get(i).getPath().toString();
+        }
+        return result;
+    }
+
+    @Override
+    public void rename(String oldName, String newName) throws IOException {
+        Path hdfsPathOld = new Path(oldName);
+        Path hdfsPathNew = new Path(newName);
+        FileSystem fs = hdfsPathOld.getFileSystem(conf);
+        fs.rename(hdfsPathOld, hdfsPathNew);
+    }
+
+    @Override
+    public String[] listWithPrefix(String dir, String prefix) throws IOException {
+        Path hdfsPathDir = new Path(dir);
+        FileSystem fs = hdfsPathDir.getFileSystem(conf);
+        FileStatus[] fileStatuses = fs.listStatus(hdfsPathDir, path -> path.getName().startsWith(prefix));
+
+        String[] result = new String[fileStatuses.length];
+        for (int i = 0; i < result.length; i++) {
+            result[i] = fileStatuses[i].getPath().toString();
+        }
+        return result;
+    }
+
+    @Override
+    public void concat(String[] sourceFilenames, String destFilename) throws IOException {
+        try (OutputStream os = createOutputStream(destFilename)) {
+            for (String sourceFilename : sourceFilenames) {
+                Path path = new Path(sourceFilename);
+                try (FSDataInputStream is = path.getFileSystem(conf).open(path)) {
+                    IOUtils.copyBytes(is, os, conf, false);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void delete(String filename) throws IOException {
+        Path hdfsPath = new Path(filename);
+        FileSystem fs = hdfsPath.getFileSystem(conf);
+        fs.delete(hdfsPath, false);
+    }
 }
