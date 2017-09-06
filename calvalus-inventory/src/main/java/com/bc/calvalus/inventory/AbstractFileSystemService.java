@@ -134,7 +134,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
     }
 
     public FileSystem getFileSystem(String username) throws IOException {
-        return jobClientsMap.getJobClient(username).getFs();
+        return jobClientsMap.getFileSystem(username);
     }
 
     private Pattern createPattern(List<String> inputRegexs, Configuration conf) throws IOException {
@@ -236,5 +236,9 @@ public abstract class AbstractFileSystemService implements FileSystemService {
             path = String.format("home/%s/%s", userName.toLowerCase(), dirPath);
         }
         return path;
+    }
+
+    public JobClientsMap getJobClientsMap() {
+        return jobClientsMap;
     }
 }

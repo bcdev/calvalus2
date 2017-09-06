@@ -41,6 +41,10 @@
             <artifactId>hadoop-client</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-commons</artifactId>
+        </dependency>
     </dependencies>
 
 

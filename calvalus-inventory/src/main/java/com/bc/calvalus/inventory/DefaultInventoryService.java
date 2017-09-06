@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.inventory;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -30,6 +31,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * Default implementation of the {@link InventoryService}.
@@ -40,18 +42,22 @@ import java.util.List;
  */
 public class DefaultInventoryService implements InventoryService {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final String USER_FILTER = "user=";
     private final AbstractFileSystemService fileSystemService;
+    private final boolean withExternalAccessControl;
     private String archiveRootDir = "eodata";
 
     public DefaultInventoryService(AbstractFileSystemService fileSystemService, String archiveRootDir) {
         this.fileSystemService = fileSystemService;
         this.archiveRootDir = archiveRootDir;
+        withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
     }
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws IOException {
         FileSystem fileSystem = fileSystemService.getFileSystem(username);
+        LOG.fine("DefaultInventoryService user " + username + " fs " + fileSystem + " jcm " + fileSystemService.getJobClientsMap());
 
         if (filter != null && filter.startsWith(USER_FILTER)) {
             String filterUserName = filter.substring(USER_FILTER.length());
@@ -75,19 +81,29 @@ public class DefaultInventoryService implements InventoryService {
             List<ProductSet> accu = new ArrayList<>();
             // check if the datasets are all still available and if the user has access rights
             for (ProductSet productSet : productSets) {
+                LOG.fine("loadPredefined " + productSet.getGeoInventory() + " " + productSet.getPath() + " fs " + fileSystem);
                 try {
-                    if (productSet.getGeoInventory() != null && productSet.getGeoInventory().startsWith("file:")) {
-                        LocalFileSystem.newInstance(new Configuration()).exists(new Path(productSet.getGeoInventory() + "/" + ProductSetPersistable.INDEX));
-                    } else if (productSet.getGeoInventory() != null) {
-                        fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getGeoInventory() + "/" + ProductSetPersistable.INDEX));
-                    } else if (productSet.getPath().startsWith("file:")) {
-                        LocalFileSystem.newInstance(new Configuration()).exists(new Path(productSet.getPath()));
-                    } else {
-                        fileSystem.exists(fileSystemService.makeQualified(fileSystem, productSet.getPath()));
+                    if (productSet.getGeoInventory() != null) {
+                        for (String item : productSet.getGeoInventory().split(",")) {
+                            if (item.startsWith("file:") && !withExternalAccessControl) {
+                                LocalFileSystem.newInstance(new Configuration()).exists(new Path(item + "/" + ProductSetPersistable.INDEX));
+                            } else {
+                                fileSystem.exists(fileSystemService.makeQualified(fileSystem, item + "/" + ProductSetPersistable.INDEX));
+                            }
+                        }
+                    }
+                    if (productSet.getPath() != null) {
+                        for (String item : productSet.getPath().split(",")) {
+                            item = item.replaceAll("\\$", "_");
+                            if (item.startsWith("file:") && !withExternalAccessControl) {
+                                LocalFileSystem.newInstance(new Configuration()).exists(new Path(item));
+                            } else {
+                                fileSystem.exists(fileSystemService.makeQualified(fileSystem, item));
+                            }
+                        }
                     }
                     accu.add(productSet);
-                } catch (AccessControlException ignore) {
-                }
+                } catch (AccessControlException ignore) {}
             }
             return accu.toArray(new ProductSet[accu.size()]);
         }
@@ -156,8 +172,6 @@ public class DefaultInventoryService implements InventoryService {
             return productSets;
         }
     }
-
-
 
 
     /* Talk with MarcoZ about the use of this impl.:
