@@ -16,18 +16,76 @@
     left: 10px;
 }
 
+.header {
+    background-color: #373B50;
+    height: 80px;
+    display: flex;
+    flex-direction: row;
+}
+
+.header-logo {
+    flex: 0 0 100px;
+    padding: 7px 15px;
+}
+
+.header-title {
+    width: 100%;
+}
+
+.header-info {
+    display: flex;
+    flex: 0 0 250px;
+    flex-direction: row;
+}
+
+.header-info-user {
+    width: 100%;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 10pt;
+    font-weight: 900;
+    color: #7ac6cf;
+    margin: auto;
+    text-align: center;
+}
+
+.header-user-logout {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 8pt;
+    font-weight: 900;
+    color: #888;
+}
+
+.header-info-help {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+}
+
+.header-info-about {
+    width: 100%;
+    margin: auto;
+    text-align: center;
+}
+
+.header-info-text {
+    text-decoration: none;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12pt;
+    font-weight: 900;
+    color: #7ac6cf;
+}
+
 .title {
-    font-family: Calibri, Verdana, Arial, sans-serif;
-    color: #7b8fae;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #7ac6cf;
     font-size: 32pt;
     font-weight: bold;
-    text-shadow: #ddd 3px 3px 1px;
     margin: 0;
     padding: 0 0 0 4px;
 }
 
 .subTitle {
-    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 16pt;
     color: #888;
     margin: 0;
@@ -35,16 +93,16 @@
 }
 
 .userName {
-    font-family: Calibri, Verdana, Arial, sans-serif;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 10pt;
-    color: #AAA;
+    color: #7ac6cf;
     text-align: right;
     width: 15%;
     vertical-align: top;
 }
 
 .copyright {
-	background-color:#B4C1D7;
+    background-color: #B4C1D7;
     font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 9pt;
     color: #FFF;
@@ -71,7 +129,7 @@
     text-align: center;
     padding-top: 20px;
     width: 300px;
-    margin:0px auto;
+    margin: 0 auto;
 }
 
 .headerPanel {
@@ -83,7 +141,7 @@
     padding: 5px;
 }
 
-p,li {
+p, li {
     font-family: Georgia, Times, serif;
     font-size: 10pt;
 }

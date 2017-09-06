@@ -1,6 +1,6 @@
 <!doctype html>
 
-<%@page language="java" import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
+<%@page import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
 <%@ page import="java.security.Principal" %>
 
 <html>
@@ -26,41 +26,42 @@
     </div>
 </noscript>
 
-<table style="width: 99%; border: 0;" align="center">
-    <tr>
-        <td>
-            <hr/>
-            <table style="width: 100%;">
-                <tr>
-                    <td>
-                        <img src="images/esa-logo.jpg" alt="ESA logo"/>
-                    </td>
-                    <td>
-                        <h1 class="title">Calvalus</h1>
-
-                        <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
-                    </td>
-                    <td class="userName">
-                        <% final Principal userPrincipal = request.getUserPrincipal(); %>
-                        <% if (userPrincipal != null) { %>
-                        User <b><%=userPrincipal.getName()%>
-                    </b>
-                        <br/>
-                        <a href='<%= response.encodeURL("logout.jsp") %>'>Log Out</a>
-                        <% } else { %>
-                        Not logged in.
-                        <% } %>
-                        <br/>
-                        <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp">Help</a>
-                        <br/>
-                        <a href="about.jsp" target="_blank">About</a>
-                    </td>
-                </tr>
-            </table>
-            <hr/>
-        </td>
-    </tr>
-</table>
+<div class="header">
+    <div class="header-logo">
+        <img src="images/esa-logo-white.png" alt="ESA logo"/>
+    </div>
+    <div class="header-title">
+        <h1 class="title">Calvalus</h1>
+        <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+    </div>
+    <div class="header-info">
+        <div class="header-info-help">
+            <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp" style="text-decoration:none;">
+                <span class="header-info-text">HELP</span>
+            </a>
+        </div>
+        <div class="header-info-about">
+            <a href="about.jsp" target="_blank" class="header-info-about" style="text-decoration:none;">
+                <span class="header-info-text">ABOUT</span>
+            </a>
+        </div>
+        <div class="header-info-user">
+            <% final Principal userPrincipal = request.getUserPrincipal(); %>
+            <% if (userPrincipal != null) { %>
+            USER
+            <b>
+                <%=userPrincipal.getName()%>
+            </b>
+            <br/>
+            <a href='<%= response.encodeURL("logout.jsp") %>' style="text-decoration: none">
+                <span class="header-user-logout">LOG OUT</span>
+            </a>
+            <% } else { %>
+            Not logged in.
+            <% } %>
+        </div>
+    </div>
+</div>
 
 <div id="mainPanel"></div>
 
