@@ -11,9 +11,6 @@
 
 #mainPanel {
     display: block;
-    position: relative;
-    top: 10px;
-    left: 10px;
 }
 
 .header {
@@ -21,11 +18,13 @@
     height: 80px;
     display: flex;
     flex-direction: row;
+    padding: 5px;
 }
 
 .header-logo {
-    flex: 0 0 100px;
-    padding: 7px 15px;
+    flex: 0 0 200px;
+    margin: auto;
+    text-align: center;
 }
 
 .header-title {
@@ -144,6 +143,16 @@
 
 .footer-info-text:hover {
     color: #7ac6cf;
+}
+
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeTopItem{
+    color: white;
+}
+
+.main-menu{
+    background-color: #373B50;
+    color: white;
+    flex: 0 0 200px;
 }
 
 .title {

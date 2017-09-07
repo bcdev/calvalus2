@@ -5,35 +5,21 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
-import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
-import com.bc.calvalus.portal.shared.DtoMaskDescriptor;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.*;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.dom.client.Element;
 import com.google.gwt.maps.client.LoadApi;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.DeckLayoutPanel;
-import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.RootPanel;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -309,10 +295,14 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             viewPanel.add(view.asWidget());
         }
 
-        HorizontalPanel mainPanel = new HorizontalPanel();
+        FlowPanel mainPanel = new FlowPanel();
         mainPanel.add(mainMenu.getWidget());
         mainPanel.add(viewPanel);
         mainPanel.ensureDebugId("mainPanel");
+
+        Element mainMenuElement = mainMenu.getWidget().getElement();
+        mainMenuElement.setClassName("main-menu");
+        mainMenuElement.getParentElement().getStyle().setProperty("display", "flex");
 
         SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
         selectionModel.addSelectionChangeHandler(
@@ -327,7 +317,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                             currentView = selected;
                             GWT.log("Now showing: " + selected.getTitle());
                             viewPanel.showWidget(selected.asWidget());
-                            Window.scrollTo (0 , 0);
+                            Window.scrollTo(0, 0);
                             selected.onShowing();
                         }
                     }
@@ -562,7 +552,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                 } else if (key.startsWith("calvalus.queue.")
                         && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
                     for (String queue : config.getConfig().get(key).split(" ")) {
-                        if (! queueList.contains(queue)) {
+                        if (!queueList.contains(queue)) {
                             queueList.add(queue);
                         }
                     }
