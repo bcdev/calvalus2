@@ -18,8 +18,6 @@ package com.bc.calvalus.processing.geodb;
 
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.inventory.search.SafeUpdateInventory;
-import com.bc.inventory.search.StreamFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -33,18 +31,18 @@ import java.util.Date;
 /**
  * A reducer for generating entries for the product-DB
  */
-public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
+public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
 
     private OutputStreamWriter scanResultWriter;
-    private String scanFilename;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
-        scanFilename = "scans/scan." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        String scanFilename = "scans." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         Path scanResultPath = new Path(geoInventory, scanFilename);
+        System.out.println("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
     }
 
@@ -58,14 +56,5 @@ public class GeodbReducer extends Reducer<Text, Text, NullWritable, NullWritable
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         scanResultWriter.close();
-
-        // read scanFile back in and update DB
-        Configuration conf = context.getConfiguration();
-        String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
-        StreamFactory streamFactory = new HDFSStreamFactory(conf);
-        SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
-        inventory.setVerbose(true);
-        int addedProducts = inventory.updateIndex();
-        System.out.println("updated index. Added products = " + addedProducts);
     }
 }

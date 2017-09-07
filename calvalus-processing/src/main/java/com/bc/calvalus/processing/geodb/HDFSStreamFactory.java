@@ -20,12 +20,14 @@ import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import com.bc.inventory.search.StreamFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileContext;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IOUtils;
 
 import javax.imageio.stream.ImageInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -58,7 +60,11 @@ class HDFSStreamFactory implements StreamFactory {
     public OutputStream createOutputStream(String path) throws IOException {
         Path hdfsPath = new Path(path);
         FileSystem fs = hdfsPath.getFileSystem(conf);
-        return fs.create(hdfsPath, true);
+        // for geo db files use replication of 3, so they are safer
+        return fs.create(hdfsPath, true,
+                  conf.getInt("io.file.buffer.size", 4096),
+                  (short) 3,
+                  fs.getDefaultBlockSize(hdfsPath));
     }
 
     @Override
@@ -103,6 +109,9 @@ class HDFSStreamFactory implements StreamFactory {
         Path hdfsPathOld = new Path(oldName);
         Path hdfsPathNew = new Path(newName);
         FileSystem fs = hdfsPathOld.getFileSystem(conf);
+        if (fs.exists(hdfsPathNew)) {
+            fs.delete(hdfsPathNew, false);
+        }
         fs.rename(hdfsPathOld, hdfsPathNew);
     }
 
@@ -110,7 +119,12 @@ class HDFSStreamFactory implements StreamFactory {
     public String[] listWithPrefix(String dir, String prefix) throws IOException {
         Path hdfsPathDir = new Path(dir);
         FileSystem fs = hdfsPathDir.getFileSystem(conf);
-        FileStatus[] fileStatuses = fs.listStatus(hdfsPathDir, path -> path.getName().startsWith(prefix));
+        FileStatus[] fileStatuses;
+        try {
+            fileStatuses = fs.listStatus(hdfsPathDir, path -> path.getName().startsWith(prefix));
+        } catch (FileNotFoundException e) {
+            fileStatuses = new FileStatus[0];
+        }
 
         String[] result = new String[fileStatuses.length];
         for (int i = 0; i < result.length; i++) {

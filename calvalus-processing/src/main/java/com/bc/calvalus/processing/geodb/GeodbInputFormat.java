@@ -110,7 +110,6 @@ public class GeodbInputFormat extends InputFormat {
             SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
             inventory.setVerbose(true);
             inventory.setFailOnMissingDB(failOnMissingDB);
-            // throw new IOException("GeoInventory does not exist: '" + geoInventory + "'");
             paths.addAll(inventory.query(constrains));
         }
         return paths;

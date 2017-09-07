@@ -60,7 +60,7 @@ import java.util.logging.Logger;
 /**
  * A mapper for generating entries for the product-DB
  */
-public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
+public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
 
     public static final Logger LOGGER = CalvalusLogger.getLogger();
 

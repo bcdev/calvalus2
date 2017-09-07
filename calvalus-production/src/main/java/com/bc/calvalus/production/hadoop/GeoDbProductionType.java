@@ -17,9 +17,11 @@
 package com.bc.calvalus.production.hadoop;
 
 import com.bc.calvalus.commons.DateRange;
+import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
-import com.bc.calvalus.processing.geodb.GeodbWorkflowItem;
+import com.bc.calvalus.processing.geodb.GeodbScanWorkflowItem;
+import com.bc.calvalus.processing.geodb.GeodbUpdateWorkflowItem;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -55,23 +57,34 @@ public class GeoDbProductionType extends HadoopProductionType {
     @Override
     public Production createProduction(ProductionRequest productionRequest) throws ProductionException {
         final String productionId = Production.createId(productionRequest.getProductionType());
-        String defaultProductionName = createProductionName("GeoDB ", productionRequest);
+        String action = productionRequest.getString("action");
+        String defaultProductionName = createProductionName("GeoDB " + action, productionRequest);
         final String productionName = productionRequest.getProductionName(defaultProductionName);
 
         Configuration jobConfig = createJobConfig(productionRequest);
         setRequestParameters(productionRequest, jobConfig);
 
-        List<DateRange> dateRanges = productionRequest.getDateRanges();
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
-        jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
-
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
 
-        GeodbWorkflowItem workflowItem = new GeodbWorkflowItem(getProcessingService(),
-                                                               productionRequest.getUserName(),
-                                                               productionName,
-                                                               jobConfig);
+        WorkflowItem workflowItem;
+        if (action.equalsIgnoreCase("scan")) {
+            List<DateRange> dateRanges = productionRequest.getDateRanges();
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
+            jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
+
+            workflowItem = new GeodbScanWorkflowItem(getProcessingService(),
+                                                     productionRequest.getUserName(),
+                                                     productionName,
+                                                     jobConfig);
+        } else if (action.equalsIgnoreCase("update")) {
+            workflowItem = new GeodbUpdateWorkflowItem(getProcessingService(),
+                                                       productionRequest.getUserName(),
+                                                       productionName,
+                                                       jobConfig);
+        } else {
+            throw new ProductionException("unsupported action:" + action);
+        }
 
         String stagingDir = productionRequest.getStagingDirectory(productionId);
         boolean autoStaging = false;
@@ -84,9 +97,9 @@ public class GeoDbProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-    // no staging implemented
+    // no staging required
     @Override
     protected Staging createUnsubmittedStaging(Production production) {
-        throw new UnsupportedOperationException("Staging currently not implemented for product DB generation.");
+        throw new UnsupportedOperationException("Staging not required for geo DB productions.");
     }
 }
