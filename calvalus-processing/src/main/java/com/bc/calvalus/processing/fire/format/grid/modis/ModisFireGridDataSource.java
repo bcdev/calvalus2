@@ -13,6 +13,7 @@ import org.esa.snap.core.datamodel.ProductData;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -32,6 +33,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     private final String targetCell; // "800,312"
     private final SortedMap<String, Integer> bandToMinY;
     private final SortedMap<String, ProductData> data;
+    private final List<String> alreadyVisitedPixelPoses;
 
     public ModisFireGridDataSource(Product[] products, Product[] lcProducts, Product[] areaProducts, List<ZipFile> geoLookupTables, String targetCell) {
         this.products = products;
@@ -41,6 +43,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         this.targetCell = targetCell;
         this.bandToMinY = new TreeMap<>();
         this.data = new TreeMap<>();
+        this.alreadyVisitedPixelPoses = new ArrayList<>();
     }
 
     @Override
@@ -86,6 +89,11 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             sourcePixelPoses.addAll(geoLookupTable.get(tile));
 
             for (String sourcePixelPos : sourcePixelPoses) {
+                String key = tile + sourcePixelPos;
+                if (alreadyVisitedPixelPoses.contains(key)) {
+                    continue;
+                }
+                alreadyVisitedPixelPoses.add(key);
                 String[] sppSplit = sourcePixelPos.split(",");
                 int x0 = Integer.parseInt(sppSplit[0]);
                 int y0 = Integer.parseInt(sppSplit[1]);
