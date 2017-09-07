@@ -145,11 +145,11 @@
     color: #7ac6cf;
 }
 
-.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeTopItem{
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue {
     color: white;
 }
 
-.main-menu{
+.main-menu {
     background-color: #373B50;
     color: white;
     flex: 0 0 200px;
