@@ -7,9 +7,8 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel>
-                <h3>Input File Set</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:InlineLabel styleName="{style.panelTitleText}">Input File Set</g:InlineLabel>
             </g:HTMLPanel>
 
 

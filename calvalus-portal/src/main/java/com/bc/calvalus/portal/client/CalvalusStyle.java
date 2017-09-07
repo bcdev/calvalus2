@@ -34,4 +34,8 @@ interface CalvalusStyle extends CssResource {
     String variableExpression();
 
     String variableName();
+
+    String panelTitle();
+
+    String panelTitleText();
 }

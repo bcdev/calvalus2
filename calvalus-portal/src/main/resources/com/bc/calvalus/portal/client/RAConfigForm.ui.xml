@@ -8,9 +8,8 @@
     <g:HorizontalPanel spacing="16">
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel width="100%">
-                <h3>Region Analysis Parameters</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Region Analysis Parameters</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HTMLPanel>

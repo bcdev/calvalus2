@@ -12,9 +12,8 @@
 
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel width="100%">
-                <h3>Temporal Filter</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Temporal Filter</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HTMLPanel>
@@ -73,9 +72,8 @@
 
         <g:VerticalPanel spacing="2">
 
-            <g:HTMLPanel width="100%">
-                <h3>Spatial Filter</h3>
-                <hr/>
+            <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                <g:InlineLabel styleName="{style.panelTitleText}">Spatial Filter</g:InlineLabel>
             </g:HTMLPanel>
 
             <!-- <g:HorizontalPanel width="100%"> -->

@@ -10,9 +10,8 @@
 
             <g:VerticalPanel spacing="2">
 
-                <g:HTMLPanel width="100%">
-                    <h3><g:Label ui:field="processorListLabel">Level-2 Processor</g:Label></h3>
-                    <hr/>
+                <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                    <g:InlineLabel ui:field="processorListLabel" styleName="{style.panelTitleText}">Level-2 Processor</g:InlineLabel>
                 </g:HTMLPanel>
                 <g:HorizontalPanel>
                     <g:VerticalPanel>
@@ -33,9 +32,8 @@
 
             <g:VerticalPanel spacing="2">
 
-                <g:HTMLPanel width="100%">
-                    <h3><g:Label ui:field="parametersLabel">Level-2 Parameters</g:Label></h3>
-                    <hr/>
+                <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
+                    <g:InlineLabel ui:field="parametersLabel" styleName="{style.panelTitleText}">Level-2 Parameters</g:InlineLabel>
                 </g:HTMLPanel>
 
                 <g:TextArea ui:field="processorParametersArea" characterWidth="72" visibleLines="16"/>
