@@ -4,33 +4,33 @@
 
     <ui:style src="style.css" type='com.bc.calvalus.portal.client.CalvalusStyle'/>
 
-    <g:VerticalPanel spacing="2">
+    <g:FlowPanel styleName="{style.l2Panel}">
 
-        <g:HorizontalPanel spacing="16">
+        <g:FlowPanel styleName="{style.processorParametersPanels}">
 
-            <g:VerticalPanel spacing="2">
+            <g:FlowPanel styleName="{style.l2ProcessorPanel}">
 
                 <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
                     <g:InlineLabel ui:field="processorListLabel" styleName="{style.panelTitleText}">Level-2 Processor</g:InlineLabel>
                 </g:HTMLPanel>
-                <g:HorizontalPanel>
-                    <g:VerticalPanel>
+                <g:FlowPanel styleName="{style.l2ProcessorPrefContainer}">
+                    <g:FlowPanel styleName="{style.l2ProcessorPrefMulti}">
                         <g:CheckBox ui:field="showMyProcessors" text="My processors" value="true"/>
                         <g:CheckBox ui:field="showSystemProcessors" text="System processors" value="true"/>
-                    </g:VerticalPanel>
+                    </g:FlowPanel>
                     <g:CheckBox ui:field="showAllUserProcessors" text="Processors of other users" value="false"/>
-                    <g:VerticalPanel>
+                    <g:FlowPanel styleName="{style.l2ProcessorPrefMulti}">
                         <g:CheckBox ui:field="filterProcessorByVersion" text="Highest version" value="true"/>
                         <g:CheckBox ui:field="filterProcessorByProductType" text="Matching input type" value="true"/>
-                    </g:VerticalPanel>
-                </g:HorizontalPanel>
+                    </g:FlowPanel>
+                </g:FlowPanel>
 
-                <g:ListBox ui:field="processorList" width="28em" visibleItemCount="12"/>
+                <g:ListBox ui:field="processorList" width="100%" visibleItemCount="12"/>
                 <g:HTML ui:field="processorBundleName" addStyleNames="{style.explanatoryLabel}"/>
 
-            </g:VerticalPanel>
+            </g:FlowPanel>
 
-            <g:VerticalPanel spacing="2">
+            <g:FlowPanel styleName="{style.l2ParametersPanel}">
 
                 <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
                     <g:InlineLabel ui:field="parametersLabel" styleName="{style.panelTitleText}">Level-2 Parameters</g:InlineLabel>
@@ -39,23 +39,23 @@
                 <g:TextArea ui:field="processorParametersArea" characterWidth="72" visibleLines="16"/>
 
                 <g:FormPanel ui:field="uploadForm" method="POST">
-                    <g:HorizontalPanel spacing="2">
-                        <g:FileUpload ui:field="fileUpload" name="fileUpload"/>
+                    <g:FlowPanel styleName="{style.l2ParametersButtonGroup}">
+                        <g:FileUpload ui:field="fileUpload" name="fileUpload" styleName="{style.l2ParametersFileUpload}"/>
                         <g:Button ui:field='editParametersButton' text="Edit Parameters"/>
-                    </g:HorizontalPanel>
+                    </g:FlowPanel>
                 </g:FormPanel>
-            </g:VerticalPanel>
+            </g:FlowPanel>
 
-        </g:HorizontalPanel>
+        </g:FlowPanel>
 
-        <g:DisclosurePanel>
+        <g:DisclosurePanel styleName="{style.l2ProcessorDescription}">
             <g:header>Processor description:</g:header>
             <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
         </g:DisclosurePanel>
 
-        <g:Anchor ui:field="showProcessorSelectionHelp" addStyleNames="{style.anchor}">Show Help</g:Anchor>
+        <g:Anchor ui:field="showProcessorSelectionHelp" addStyleNames="{style.l2Help}">Show Help</g:Anchor>
 
-    </g:VerticalPanel>
+    </g:FlowPanel>
 
 
 </ui:UiBinder>

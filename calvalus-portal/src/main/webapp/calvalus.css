@@ -13,7 +13,7 @@
     display: block;
 }
 
-.header {
+.header-panel {
     background-color: #373B50;
     height: 80px;
     display: flex;
@@ -161,13 +161,25 @@
 .gwt-Button {
     padding: 13px 15px !important;
     background: #373B50 none !important;
-    color: #7ac6cf !important;
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    color: #7ac6cf;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px !important;
     font-weight: 700 !important;
 }
 
+.gwt-Button:disabled {
+    background: #e1e2e1 none !important;
+    color: #888;
+}
+
 .gwt-ListBox {
+    background-color: rgba(122, 198, 207, 0.3);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.gwt-TextArea {
     background-color: rgba(122, 198, 207, 0.3);
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;

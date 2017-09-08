@@ -54,4 +54,24 @@ interface CalvalusStyle extends CssResource {
     String dateBox();
 
     String textBox();
+
+    String l2Panel();
+
+    String l2ParametersPanel();
+
+    String processorParametersPanels();
+
+    String l2ProcessorPanel();
+
+    String l2ProcessorPrefMulti();
+
+    String l2ProcessorDescription();
+
+    String l2Help();
+
+    String l2ProcessorPrefContainer();
+
+    String l2ParametersButtonGroup();
+
+    String l2ParametersFileUpload();
 }

@@ -26,7 +26,7 @@
     </div>
 </noscript>
 <div id="container">
-    <div class="header">
+    <div class="header-panel">
         <div class="header-logo">
             <img src="images/esa-logo-white.png" alt="ESA logo"/>
         </div>

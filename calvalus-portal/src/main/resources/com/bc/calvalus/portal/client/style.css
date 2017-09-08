@@ -69,6 +69,59 @@
     margin: 0 15px;
 }
 
+.l2Panel {
+    display: flex;
+    flex-direction: column;
+    margin-top: 50px;
+}
+
+.processorParametersPanels {
+    display: flex;
+}
+
+.l2ProcessorPanel {
+    margin: 0 15px;
+}
+
+.l2ProcessorPrefContainer {
+    display: flex;
+    margin: 10px 0;
+}
+
+.l2ProcessorPrefMulti {
+    display: flex;
+    flex-direction: column;
+}
+
+.l2ParametersPanel {
+    margin: 0 15px;
+}
+
+.l2ParametersButtonGroup {
+    display: flex;
+    margin: 10px 0;
+    justify-content: space-between;
+}
+
+.l2ParametersFileUpload {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    color: #373B50;
+    margin: auto 0;
+}
+
+.l2ProcessorDescription {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 10px 0 0 10px;
+}
+
+.l2Help {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin: 10px 0 0 15px;
+}
+
 .radioButton {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
