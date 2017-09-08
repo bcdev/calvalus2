@@ -55,3 +55,34 @@
     font-size: 20px;
     color: white;
 }
+
+.filterPanel {
+    display: flex;
+    margin-top: 15px;
+}
+
+.temporalFilterPanel {
+    margin: 0 15px;
+}
+
+.spatialFilterPanel {
+    margin: 0 15px;
+}
+
+.radioButton {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.dateBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.textBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
