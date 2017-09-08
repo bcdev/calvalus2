@@ -167,6 +167,17 @@
     font-weight: 700 !important;
 }
 
+.gwt-ListBox {
+    background-color: rgba(122, 198, 207, 0.3);
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+select:focus option:checked {
+    background: #373B50 -webkit-linear-gradient(bottom, #373B50 0%, #373B50 100%);
+}
+
 .main-menu {
     background-color: #373B50;
     color: white;

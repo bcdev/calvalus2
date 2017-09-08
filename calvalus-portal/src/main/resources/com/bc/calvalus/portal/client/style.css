@@ -3,16 +3,26 @@
 }
 
 .explanatoryLabel {
-    font-family: Calibri, Verdana, Arial, sans-serif;
-    font-size: 9pt;
-    color: #777799;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
 }
 
 .explanatoryValue {
-    font-family: Calibri, Verdana, Arial, sans-serif;
-    font-size: 9pt;
-    font-weight: bold;
-    color: #777799;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #373B50;
+}
+
+.inputFileSetPanel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
+}
+
+.checkBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
 }
 
 .variableName input {
@@ -23,12 +33,17 @@
     width: 50em;
 }
 
-    /* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
 .anchor:hover {
     cursor: pointer;
 }
 
-.panelTitle{
+.anchor {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.panelTitle {
     background-color: #373B50;
     margin: 0 0 5px 0;
     padding: 5px;

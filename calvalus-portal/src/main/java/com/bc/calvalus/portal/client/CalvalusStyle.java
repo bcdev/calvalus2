@@ -38,4 +38,8 @@ interface CalvalusStyle extends CssResource {
     String panelTitle();
 
     String panelTitleText();
+
+    String inputFileSetPanel();
+
+    String checkBox();
 }

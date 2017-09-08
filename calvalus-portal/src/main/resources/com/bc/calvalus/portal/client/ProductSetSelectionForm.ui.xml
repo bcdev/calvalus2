@@ -12,11 +12,11 @@
             </g:HTMLPanel>
 
 
-            <g:VerticalPanel spacing="2">
-                <g:CheckBox ui:field="predefinedProductSets" text="Show predefined file sets" checked="true"/>
+            <g:VerticalPanel spacing="2" styleName="{style.inputFileSetPanel}">
+                <g:CheckBox ui:field="predefinedProductSets" text="Show predefined file sets" checked="true" styleName="{style.checkBox}"/>
                 <g:HorizontalPanel spacing="2">
-                    <g:CheckBox ui:field="userProductionProductSets" text="Show my outputs" checked="false"/>
-                    <g:CheckBox ui:field="allProductionProductSets" text="and of other users" checked="false"/>
+                    <g:CheckBox ui:field="userProductionProductSets" text="Show my outputs" checked="false" styleName="{style.checkBox}"/>
+                    <g:CheckBox ui:field="allProductionProductSets" text="and of other users" checked="false" styleName="{style.checkBox}"/>
                 </g:HorizontalPanel>
 
                 <g:HorizontalPanel spacing="0">
