@@ -42,7 +42,7 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
         SimpleDateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd_HH-mm-ss_SSS");
-        String scanFilename = "scan." + dateFormat.format(new Date()) + "_" + context.getJobID().toString() + ".csv";
+        String scanFilename = "scan." + dateFormat.format(new Date()) + "__" + context.getJobID().toString() + ".csv";
         Path scanResultPath = new Path(geoInventory, scanFilename);
         System.out.println("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));

@@ -44,7 +44,7 @@ public class GeodbUpdateMapper extends Mapper<NullWritable, NullWritable, Text, 
         SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
         inventory.setUpdatePrefix("scan.");
         inventory.setAtticPrefix("scan.");
-        inventory.setAtticSuffix("_" + context.getJobID().toString() + ".csv");
+        inventory.setAtticSuffix("__" + context.getJobID().toString() + ".csv");
         inventory.setVerbose(true);
         int addedProducts = inventory.updateIndex();
         System.out.println("updated index. Added products = " + addedProducts);
