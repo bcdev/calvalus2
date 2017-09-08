@@ -67,12 +67,17 @@ public class GeoDbProductionType extends HadoopProductionType {
         jobConfig.set(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, productionRequest.getString("geoInventory"));
 
         WorkflowItem workflowItem;
-        if (action.equalsIgnoreCase("scan")) {
+        if (action.equalsIgnoreCase("scan") ||
+                action.equalsIgnoreCase("scan_and_update")) {
             List<DateRange> dateRanges = productionRequest.getDateRanges();
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS, productionRequest.getString("inputPath"));
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_REGION_NAME, productionRequest.getRegionName());
             jobConfig.set(JobConfigNames.CALVALUS_INPUT_DATE_RANGES, StringUtils.join(dateRanges, ","));
-
+            
+            if (action.equalsIgnoreCase("scan_and_update")) {
+                jobConfig.setBoolean(GeodbScanWorkflowItem.UPDATE_AFTER_SCAN_PROPERTY, true);
+            }
+            
             workflowItem = new GeodbScanWorkflowItem(getProcessingService(),
                                                      productionRequest.getUserName(),
                                                      productionName,

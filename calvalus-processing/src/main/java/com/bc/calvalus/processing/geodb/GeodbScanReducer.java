@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.processing.geodb;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
@@ -27,12 +28,14 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * A reducer for generating entries for the product-DB
  */
 public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
 
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
     private OutputStreamWriter scanResultWriter;
 
     @Override
@@ -40,9 +43,9 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
-        String scanFilename = "scans." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        String scanFilename = "scan." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         Path scanResultPath = new Path(geoInventory, scanFilename);
-        System.out.println("scanResultPath = " + scanResultPath);
+        LOGGER.info("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
     }
 
@@ -56,5 +59,10 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
         scanResultWriter.close();
+
+        Configuration conf = context.getConfiguration();
+        if (conf.getBoolean(GeodbScanWorkflowItem.UPDATE_AFTER_SCAN_PROPERTY, false)) {
+            GeodbUpdateMapper.updateInventory(context, conf);
+        }
     }
 }

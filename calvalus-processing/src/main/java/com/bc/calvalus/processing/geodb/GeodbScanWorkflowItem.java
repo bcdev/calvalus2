@@ -28,6 +28,8 @@ import org.apache.hadoop.mapreduce.lib.output.NullOutputFormat;
 import java.io.IOException;
 
 public class GeodbScanWorkflowItem extends HadoopWorkflowItem {
+    
+    public static final String UPDATE_AFTER_SCAN_PROPERTY = "calvalus.geodb.updateAfterScan";
 
     public GeodbScanWorkflowItem(HadoopProcessingService processingService, String username, String jobName, Configuration jobConfig) {
         super(processingService, username, jobName, jobConfig);
@@ -45,6 +47,7 @@ public class GeodbScanWorkflowItem extends HadoopWorkflowItem {
                 {JobConfigNames.CALVALUS_INPUT_REGION_NAME, null},
                 {JobConfigNames.CALVALUS_INPUT_DATE_RANGES, null},
                 {JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY, NO_DEFAULT},
+                {UPDATE_AFTER_SCAN_PROPERTY, "false"},
         };
     }
 
