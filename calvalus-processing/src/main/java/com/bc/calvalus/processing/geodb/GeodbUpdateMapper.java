@@ -33,9 +33,7 @@ import java.util.logging.Logger;
  * A mapper for updating the product-DB
  */
 public class GeodbUpdateMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
-
-    private static final Logger LOGGER = CalvalusLogger.getLogger();
-
+    
     @Override
     public void run(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
@@ -51,6 +49,6 @@ public class GeodbUpdateMapper extends Mapper<NullWritable, NullWritable, Text, 
         inventory.setAtticSuffix("_" + context.getJobID().toString() + ".csv");
         inventory.setVerbose(true);
         int addedProducts = inventory.updateIndex();
-        LOGGER.info("updated index. Added products = " + addedProducts);
+        System.out.println("updated index. Added products = " + addedProducts);
     }
 }

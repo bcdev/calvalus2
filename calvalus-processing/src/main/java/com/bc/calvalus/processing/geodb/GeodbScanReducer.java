@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.geodb;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.processing.JobConfigNames;
 import org.apache.hadoop.conf.Configuration;
@@ -28,14 +27,12 @@ import org.apache.hadoop.mapreduce.Reducer;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Date;
-import java.util.logging.Logger;
 
 /**
  * A reducer for generating entries for the product-DB
  */
 public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
 
-    private static final Logger LOGGER = CalvalusLogger.getLogger();
     private OutputStreamWriter scanResultWriter;
 
     @Override
@@ -45,7 +42,7 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
 
         String scanFilename = "scan." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
         Path scanResultPath = new Path(geoInventory, scanFilename);
-        LOGGER.info("scanResultPath = " + scanResultPath);
+        System.out.println("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
     }
 
