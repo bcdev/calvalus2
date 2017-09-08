@@ -16,7 +16,6 @@
 
 package com.bc.calvalus.processing.geodb;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.inventory.search.SafeUpdateInventory;
 import com.bc.inventory.search.StreamFactory;
