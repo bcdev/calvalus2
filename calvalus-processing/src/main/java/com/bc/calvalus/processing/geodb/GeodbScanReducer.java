@@ -26,6 +26,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
@@ -40,7 +41,8 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
-        String scanFilename = "scan." + DateUtils.createDateFormat("yyyy-MM-dd-HH-mm-ss").format(new Date());
+        SimpleDateFormat dateFormat = DateUtils.createDateFormat("yyyy-MM-dd_HH-mm-ss_SSS");
+        String scanFilename = "scan." + dateFormat.format(new Date()) + "_" + context.getJobID().toString() + ".csv";
         Path scanResultPath = new Path(geoInventory, scanFilename);
         System.out.println("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
