@@ -74,4 +74,8 @@ interface CalvalusStyle extends CssResource {
     String l2ParametersButtonGroup();
 
     String l2ParametersFileUpload();
+
+    String outputParametersPanel();
+
+    String processingFormatPanel();
 }
