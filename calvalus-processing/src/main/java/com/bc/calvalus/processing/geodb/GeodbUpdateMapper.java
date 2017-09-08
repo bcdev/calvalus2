@@ -26,7 +26,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.TaskInputOutputContext;
 
 import java.io.IOException;
-import java.util.logging.Logger;
 
 /**
  * A mapper for updating the product-DB
