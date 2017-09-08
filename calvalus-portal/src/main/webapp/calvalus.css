@@ -149,6 +149,14 @@
     color: white;
 }
 
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem {
+    background: #7ac6cf none !important;
+}
+
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem .com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue{
+    color: #373B50;
+}
+
 .main-menu {
     background-color: #373B50;
     color: white;
