@@ -29,6 +29,7 @@
 
 .header-title {
     width: 100%;
+    padding-left: 10px;
 }
 
 .header-info {
@@ -153,8 +154,17 @@
     background: #7ac6cf none !important;
 }
 
-.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem .com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue{
+.com-google-gwt-user-cellview-client-CellTree-Style-cellTreeSelectedItem .com-google-gwt-user-cellview-client-CellTree-Style-cellTreeItemValue {
     color: #373B50;
+}
+
+.gwt-Button {
+    padding: 13px 15px !important;
+    background: #373B50 none !important;
+    color: #7ac6cf !important;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
 }
 
 .main-menu {
