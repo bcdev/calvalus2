@@ -16,6 +16,7 @@
 
 package com.bc.calvalus.portal.server;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.DateUtils;
 import com.bc.calvalus.commons.ProcessStatus;
@@ -102,6 +103,7 @@ import java.util.logging.Logger;
  */
 public class BackendServiceImpl extends RemoteServiceServlet implements BackendService {
 
+    private static final Logger LOG = CalvalusLogger.getLogger();
     private static final Properties calvalusVersionProperties;
     private static final String REQUEST_FILE_EXTENSION = ".xml";
 
@@ -186,8 +188,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoRegion[] loadRegions(String filter) throws BackendServiceException {
         RegionPersistence regionPersistence = new RegionPersistence(getUserName(), ProductionServiceConfig.getUserAppDataDir());
         try {
-            return regionPersistence.loadRegions();
+            DtoRegion[] dtoRegions = regionPersistence.loadRegions();
+            LOG.fine("loadRegions returns " + dtoRegions.length);
+            return dtoRegions;
         } catch (IOException e) {
+            log(e.getMessage(), e);
             throw new BackendServiceException("Failed to load regions: " + e.getMessage(), e);
         }
     }
@@ -213,6 +218,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             for (int i = 0; i < productSets.length; i++) {
                 dtoProductSets[i] = convert(productSets[i]);
             }
+            LOG.fine("getProductSets returns " + dtoProductSets.length);
             return dtoProductSets;
         } catch (IOException e) {
             throw convert(e);
@@ -232,6 +238,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 DtoProcessorDescriptor[] dtoDescriptors = getDtoProcessorDescriptors(bundleDescriptor);
                 dtoProcessorDescriptors.addAll(Arrays.asList(dtoDescriptors));
             }
+            LOG.fine("getProcessors returns " + dtoProcessorDescriptors.size());
             return dtoProcessorDescriptors.toArray(new DtoProcessorDescriptor[dtoProcessorDescriptors.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -251,6 +258,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 DtoAggregatorDescriptor[] dtoDescriptors = getDtoAggregatorDescriptors(bundleDescriptor);
                 dtoAggregatorDescriptors.addAll(Arrays.asList(dtoDescriptors));
             }
+            LOG.fine("getAggregators returns " + dtoAggregatorDescriptors.size());
             return dtoAggregatorDescriptors.toArray(new DtoAggregatorDescriptor[dtoAggregatorDescriptors.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -347,6 +355,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     dtoProductions.add(convert(production));
                 }
             }
+            LOG.fine("getProductions returns " + dtoProductions.size());
             return dtoProductions.toArray(new DtoProduction[dtoProductions.size()]);
         } catch (ProductionException e) {
             throw convert(e);
@@ -879,6 +888,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
         }
         backendConfig.getConfigMap().put("roles", accu.toString());
+        LOG.fine("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
     }
 

@@ -155,7 +155,9 @@ public class ProductSetSelectionForm extends Composite {
                 productSetChanged = false;
             }
         }
-        productSetListBox.setSelectedIndex(newSelectionIndex);
+        if (productSetListBox.getItemCount() > 0) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+        }
         if (productSetChanged) {
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
         }

@@ -24,6 +24,7 @@ import com.bc.calvalus.commons.WorkflowException;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.ProcessorFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -191,7 +192,8 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
             CalvalusLogger.getLogger().info("Submitting Job: " + getJobName());
             Job job = getProcessingService().createJob(getJobName(), jobConfig);
             configureJob(job);
-            ProcessorFactory.installProcessorBundles(userName, job.getConfiguration());
+            FileSystem fileSystem = processingService.getFileSystem(userName);
+            ProcessorFactory.installProcessorBundles(userName, job.getConfiguration(), fileSystem);
             validateJob(job);
             // maybe add calvalus.token parameter
             getProcessingService().runHooksBeforeSubmission(job);
