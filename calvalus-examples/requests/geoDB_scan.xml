@@ -19,7 +19,11 @@
         <wps:Input>
             <ows:Identifier>action</ows:Identifier>
             <wps:Data>
+                <!--for scanning only-->
                 <wps:LiteralData>scan</wps:LiteralData>
+                <!--OR -->
+                <!-- for scan in update in a single job, if scan can happen concurrently use dedicated update job-->
+                <!--<wps:LiteralData>scan_and_update</wps:LiteralData>-->
             </wps:Data>
         </wps:Input>        
         
@@ -41,13 +45,13 @@
         <wps:Input>
             <ows:Identifier>minDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-09</wps:LiteralData>
+                <wps:LiteralData>2010-03-01</wps:LiteralData>
             </wps:Data>
         </wps:Input>
         <wps:Input>
             <ows:Identifier>maxDate</ows:Identifier>
             <wps:Data>
-                <wps:LiteralData>2010-03-11</wps:LiteralData>
+                <wps:LiteralData>2010-03-03</wps:LiteralData>
             </wps:Data>
         </wps:Input>
 
