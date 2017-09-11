@@ -108,10 +108,14 @@
 .productionNameText {
     flex: 0 0 130px;
     margin: auto 0;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
 }
 
 .productionNameTextBox {
     width: 100%;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
 }
 
 /******************

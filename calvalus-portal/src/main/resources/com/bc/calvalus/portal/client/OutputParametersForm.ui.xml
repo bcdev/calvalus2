@@ -14,7 +14,7 @@
             <g:Label styleName="{style.productionNameText}">Production name:</g:Label>
             <g:TextBox ui:field="productionName" styleName="{style.productionNameTextBox}"/>
         </g:FlowPanel>
-        <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
+        <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}" width="60em">
             Provide a name for the production to identify it later on. If left empty,
             a name will be generated from the given parameters.
             <p/>
@@ -22,9 +22,16 @@
 
         <g:FlowPanel>
             <g:FlowPanel ui:field="processingFormatPanel" styleName="{style.processingFormatPanel}">
-                <g:RadioButton ui:field="processingFormatCluster" name=""
-                               text="Process to Cluster-Internal-Format"/>
-                <g:RadioButton ui:field="processingFormatUser" name="" text="User product"/>
+                <g:RadioButton ui:field="processingFormatCluster"
+                               name=""
+                               text="Process to Cluster-Internal-Format"
+                               styleName="{style.radioButton}"
+                />
+                <g:RadioButton ui:field="processingFormatUser"
+                               name=""
+                               text="User product"
+                               styleName="{style.radioButton}"
+                />
             </g:FlowPanel>
             <g:FlowPanel ui:field="productRelatedPanel">
                 <g:HorizontalPanel spacing="2" addStyleNames="{style.centeredHorizontalPanel}">
@@ -94,7 +101,7 @@
             <g:CheckBox ui:field="autoStaging"
                         text="Perform staging step after successful production"
                         checked="true"
-                        styleName="{style.checkBox}"
+                        styleName="{style.checkBox} {style.explanatoryLabel}"
             />
             <g:HTML>
                 <br/>
