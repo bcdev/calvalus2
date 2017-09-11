@@ -17,19 +17,12 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -50,21 +43,13 @@ public class OrderL2ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
-            @Override
-            public void onProductSetChanged(DtoProductSet productSet) {
-                productSetFilterForm.setProductSet(productSet);
-                l2ConfigForm.setProductSet(productSet);
-            }
+        productSetSelectionForm.addChangeHandler(productSet -> {
+            productSetFilterForm.setProductSet(productSet);
+            l2ConfigForm.setProductSet(productSet);
         });
 
         l2ConfigForm = new L2ConfigForm(portalContext, true);
-        l2ConfigForm.addChangeHandler(new ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                handleProcessorChanged();
-            }
-        });
+        l2ConfigForm.addChangeHandler(event -> handleProcessorChanged());
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
@@ -80,6 +65,8 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
         Anchor l2Help = new Anchor("Show Help");
+        l2Help.getElement().getStyle().setProperty("textDecoration", "none");
+        l2Help.addStyleName("anchor");
         panel.add(l2Help);
         HelpSystem.addClickHandler(l2Help, "l2Processing");
         //panel.add(new HTML("<br/>"));
@@ -133,12 +120,9 @@ public class OrderL2ProductionView extends OrderProductionView {
     @Override
     public void onShowing() {
         // make sure #triggerResize is called after the new view is shown
-        Scheduler.get().scheduleFinally(new Scheduler.ScheduledCommand() {
-            @Override
-            public void execute() {
-                // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
-                productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
-            }
+        Scheduler.get().scheduleFinally(() -> {
+            // See http://code.google.com/p/gwt-google-apis/issues/detail?id=127
+            productSetFilterForm.getRegionMap().getMapWidget().triggerResize();
         });
     }
 
@@ -149,10 +133,10 @@ public class OrderL2ProductionView extends OrderProductionView {
             productSetFilterForm.validateForm();
             l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
-            if (! getPortal().withPortalFeature("unlimitedJobSize")) {
+            if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numDaysValue = Integer.parseInt(productSetFilterForm.numDays.getValue());
-                    if (numDaysValue > 365+366) {
+                    if (numDaysValue > 365 + 366) {
                         throw new ValidationException(productSetFilterForm.numDays, "time range larger than allowed");
                     }
                 } catch (NumberFormatException e) {
@@ -168,7 +152,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     @Override
     protected HashMap<String, String> getProductionParameters() {
-        HashMap<String, String> parameters = new HashMap<String, String>();
+        HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());

@@ -1,30 +1,3 @@
-.centeredHorizontalPanel {
-    vertical-align: middle;
-}
-
-.explanatoryLabel {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    color: #373B50;
-}
-
-.explanatoryValue {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: #373B50;
-}
-
-.inputFileSetPanel {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    color: #373B50;
-}
-
-.checkBox {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    color: #373B50;
-}
-
 .variableName input {
     width: 20em;
 }
@@ -33,28 +6,18 @@
     width: 50em;
 }
 
-/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
-.anchor:hover {
-    cursor: pointer;
-}
+/*******************************
+* Input File Set Panel styling *
+********************************/
 
-.anchor {
-    color: #888;
+.inputFileSetPanel {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
 }
 
-.panelTitle {
-    background-color: #373B50;
-    margin: 0 0 5px 0;
-    padding: 5px;
-}
-
-.panelTitleText {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-weight: 500;
-    font-size: 20px;
-    color: white;
-}
+/***********************
+* Filter Panel styling *
+************************/
 
 .filterPanel {
     display: flex;
@@ -68,6 +31,10 @@
 .spatialFilterPanel {
     margin: 0 15px;
 }
+
+/*******************
+* L2 Panel styling *
+********************/
 
 .l2Panel {
     display: flex;
@@ -117,9 +84,67 @@
 }
 
 .l2Help {
+    margin: 10px 0 0 15px;
+}
+
+/**********************************
+* Output Parameters Panel styling *
+***********************************/
+
+.outputParametersPanel {
+    margin: 50px 15px;
+    width: 62em;
+}
+
+.outputProductionName {
+    margin: 10px 0;
+}
+
+.processingFormatPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.productionNameText {
+    flex: 0 0 130px;
+    margin: auto 0;
+}
+
+.productionNameTextBox {
+    width: 100%;
+}
+
+/******************
+* General styling *
+*******************/
+
+.panelTitleText {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    color: white;
+}
+
+/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+.anchor:hover {
+    cursor: pointer;
+    color: #373B50;
+}
+
+.anchor {
     color: #888;
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    margin: 10px 0 0 15px;
+}
+
+.panelTitle {
+    background-color: #373B50;
+    margin: 0 0 5px 0;
+    padding: 5px;
+}
+
+.checkBox {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: #373B50;
 }
 
 .radioButton {
@@ -140,11 +165,30 @@
     color: #373B50;
 }
 
-.outputParametersPanel {
-    margin: 50px 15px;
+.flexRow {
+    display: flex;
+    flex-direction: row;
 }
 
-.processingFormatPanel {
-    display: flex;
-    flex-direction: column;
+.centeredHorizontalPanel {
+    vertical-align: middle;
+}
+
+.explanatoryLabel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #373B50;
+}
+
+.noteLabel {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    color: #888;
+}
+
+.explanatoryValue {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #373B50;
 }

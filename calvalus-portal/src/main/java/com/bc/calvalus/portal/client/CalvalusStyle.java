@@ -78,4 +78,14 @@ interface CalvalusStyle extends CssResource {
     String outputParametersPanel();
 
     String processingFormatPanel();
+
+    String productionNameTextBox();
+
+    String productionNameText();
+
+    String outputProductionName();
+
+    String flexRow();
+
+    String noteLabel();
 }

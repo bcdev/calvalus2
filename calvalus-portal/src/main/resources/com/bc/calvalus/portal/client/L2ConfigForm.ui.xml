@@ -53,7 +53,7 @@
             <g:HTML ui:field="processorDescriptionHTML" width="100%"/>
         </g:DisclosurePanel>
 
-        <g:Anchor ui:field="showProcessorSelectionHelp" addStyleNames="{style.l2Help}">Show Help</g:Anchor>
+        <g:Anchor ui:field="showProcessorSelectionHelp" addStyleNames="{style.anchor} {style.l2Help}">Show Help</g:Anchor>
 
     </g:FlowPanel>
 

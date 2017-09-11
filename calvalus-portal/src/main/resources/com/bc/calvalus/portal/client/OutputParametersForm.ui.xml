@@ -6,13 +6,13 @@
 
     <g:FlowPanel styleName="{style.outputParametersPanel}">
 
-        <g:HTMLPanel styleName="{style.panelTitle}" width="62em">
+        <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
             <g:InlineLabel styleName="{style.panelTitleText}">Output Parameters</g:InlineLabel>
         </g:HTMLPanel>
 
-        <g:FlowPanel styleName="{style.centeredHorizontalPanel}">
-            <g:Label>Production name:</g:Label>
-            <g:TextBox ui:field="productionName" visibleLength="48"/>
+        <g:FlowPanel styleName="{style.centeredHorizontalPanel} {style.flexRow} {style.outputProductionName}">
+            <g:Label styleName="{style.productionNameText}">Production name:</g:Label>
+            <g:TextBox ui:field="productionName" styleName="{style.productionNameTextBox}"/>
         </g:FlowPanel>
         <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}" width="60em">
             Provide a name for the production to identify it later on. If left empty,
@@ -31,7 +31,7 @@
                     <g:Label>Product file format:</g:Label>
                     <g:ListBox ui:field="outputFormat" visibleItemCount="1"/>
                 </g:HorizontalPanel>
-                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}">
                     Note that the available product file formats
                     may depend on the selected processor.
                     <p/>
@@ -93,7 +93,9 @@
 
             <g:CheckBox ui:field="autoStaging"
                         text="Perform staging step after successful production"
-                        checked="true"/>
+                        checked="true"
+                        styleName="{style.checkBox}"
+            />
             <g:HTML>
                 <br/>
             </g:HTML>
@@ -116,7 +118,7 @@
                 <g:Label>Request queue:</g:Label>
                 <g:ListBox ui:field="requestQueue" visibleItemCount="1"/>
             </g:HorizontalPanel>
-            <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+            <g:HTML wordWrap="true" addStyleNames="{style.noteLabel}">
                 If you are entitled for several queues select the queue for the project you are processing for.
                 <p/>
             </g:HTML>

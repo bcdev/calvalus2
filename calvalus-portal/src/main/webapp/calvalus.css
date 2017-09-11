@@ -161,7 +161,7 @@
 .gwt-Button {
     padding: 13px 15px !important;
     background: #373B50 none !important;
-    color: #7ac6cf;
+    color: white;
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px !important;
     font-weight: 700 !important;
@@ -172,11 +172,21 @@
     color: #888;
 }
 
+.gwt-Label {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+    color: #373B50 !important;
+}
+
 .gwt-ListBox {
     background-color: rgba(122, 198, 207, 0.3);
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 14px;
     color: #373B50;
+}
+
+.gwt-ListBox:disabled {
+    background-color: #e1e2e1;
+    color: #888;
 }
 
 .gwt-TextArea {
@@ -186,7 +196,9 @@
     color: #373B50;
 }
 
-select:focus option:checked {
+/* not working at the moment. Without "multiple" selector, it affects both listbox and dropdown list,
+which is undesirable */
+select[multiple]:focus option:checked {
     background: #373B50 -webkit-linear-gradient(bottom, #373B50 0%, #373B50 100%);
 }
 
@@ -259,6 +271,17 @@ p, li {
     font-size: 10pt;
 }
 
+/* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
+.anchor:hover {
+    cursor: pointer;
+    color: #373B50;
+}
+
+.anchor {
+    color: #888;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    margin-left: 5px;
+}
 
 
 
