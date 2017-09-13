@@ -52,7 +52,6 @@ public class CalvalusShFileSystem extends FileSystem {
     protected JobClientsMap.CacheEntry cacheEntry;
     protected FileSystem unixFileSystem;
 
-
     public CalvalusShFileSystem(String username, JobClientsMap.CacheEntry cacheEntry) throws IOException {
         super();
         this.username = username;
@@ -70,35 +69,61 @@ public class CalvalusShFileSystem extends FileSystem {
 
     @Override
     public FSDataInputStream open(Path path, int bufferSize) throws IOException {
-        String p = path.toString();
-        if (p.startsWith("file://")) {
-            p = p.substring("file://".length());
-        } else if (p.startsWith("file:")) {
-            p = p.substring("file:".length());
-        }
-        ProcessBuilder pb = new ProcessBuilder(CALVALUS_SH_COMMAND, username, "cat", p);
-        LOG.fine("calling " + CALVALUS_SH_COMMAND + " " + username + " cat " + p);
-        pb.redirectErrorStream(true);
+        String p = getUnixPath(path);
+        Process proc = callUnixCommand("cat", p);
         LOG.fine("file " + p + " externally opened for reading");
-        Process proc = pb.start();
-//        try {
-//            proc.waitFor();
-//        } catch (InterruptedException e) {}
         return new DummyFSDataInputStream(proc.getInputStream());
     }
 
     @Override
     public FileStatus[] listStatus(Path path) throws FileNotFoundException, IOException {
+        String p = getUnixPath(path);
+        Process proc = callUnixCommand("ls", p);
+        List<FileStatus> files = collectPathsOutput(proc);
+        handleReturnCode(proc, files, path);
+        return files.toArray(new FileStatus[files.size()]);
+    }
+
+    @Override
+    public FileStatus getFileStatus(Path path) throws IOException {
+        String p = getUnixPath(path);
+        Process proc = callUnixCommand("stat", p);
+        List<FileStatus> files = collectPathsOutput(proc);
+        handleReturnCode(proc, files, path);
+        if (files.size() < 1) {
+            throw new FileNotFoundException(path.toString());
+        }
+        return files.get(0);
+    }
+
+    @Override
+    public FileStatus[] globStatus(Path path) throws IOException {
+        String p = getUnixPath(path);
+        Process proc = callUnixCommand("glob", p);
+        List<FileStatus> files = collectPathsOutput(proc);
+        handleReturnCode(proc, files, path);
+        return files.toArray(new FileStatus[files.size()]);
+    }
+
+    private String getUnixPath(Path path) {
         String p = path.toString();
         if (p.startsWith("file://")) {
             p = p.substring("file://".length());
         } else if (p.startsWith("file:")) {
             p = p.substring("file:".length());
         }
-        ProcessBuilder pb = new ProcessBuilder(CALVALUS_SH_COMMAND, username, "ls -1p", p);
+        return p;
+    }
+
+    private Process callUnixCommand(String cmd, String path) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder(CALVALUS_SH_COMMAND, username, cmd, path);
         pb.redirectErrorStream(true);
         Process proc = pb.start();
+        LOG.fine("calling " + CALVALUS_SH_COMMAND + " " + username + " " + cmd + " " + path);
+        return proc;
+    }
 
+    private List<FileStatus> collectPathsOutput(Process proc) throws IOException {
         List<FileStatus> files = new ArrayList<FileStatus>();
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
             String line;
@@ -107,74 +132,34 @@ public class CalvalusShFileSystem extends FileSystem {
                 if (isDir) {
                     line = line.substring(0, line.length() - 1);
                 }
-                if (! line.equals(p)) {
-                    line = p + "/" + line;
-                }
                 files.add(new FileStatus(0, isDir, 1, 0, 0, new Path(line)));
             }
         }
-
-        try {
-            int code = proc.waitFor();
-            if (code == 0) {
-                LOG.fine("path " + path.toString() + " externally listed, " + files.size() + " entries");
-                return files.toArray(new FileStatus[files.size()]);
-            } else if (code == 2) {
-                LOG.info("path " + path.toString() + " externally listed, access denied");
-                throw new AccessControlException(p);
-            }
-        } catch (InterruptedException _) {}
-        LOG.fine("path " + path.toString() + " externally listed, not found");
-        return new FileStatus[0];
+        return files;
     }
 
-    @Override
-    public FileStatus getFileStatus(Path f) throws IOException {
-        FileStatus[] files = listStatus(f);
-        if (files.length < 1) {
-            throw new FileNotFoundException(f.toString());
-        }
-        return files[0];
-    }
-
-    @Override
-    public FileStatus[] globStatus(Path path) throws IOException {
-        String p = path.toString();
-        if (p.startsWith("file://")) {
-            p = p.substring("file://".length());
-        } else if (p.startsWith("file:")) {
-            p = p.substring("file:".length());
-        }
-        ProcessBuilder pb = new ProcessBuilder(CALVALUS_SH_COMMAND, username, "stat -L -c %F#%n", p);
-        pb.redirectErrorStream(true);
-        Process proc = pb.start();
-
-        List<FileStatus> files = new ArrayList<FileStatus>();
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                boolean isDir = line.startsWith("directory#");
-                int pos = line.indexOf('#');
-                if (pos == -1) {
-                    continue;
-                }
-                line = line.substring(pos+1);
-                files.add(new FileStatus(0, isDir, 1, 0, 0, new Path(line)));
-            }
-        }
-
+    private void handleReturnCode(Process proc, List<FileStatus> files, Path path) throws AccessControlException {
         try {
             int code = proc.waitFor();
-            if (code == 0) {
-                LOG.fine("path " + path.toString() + " externally listed, " + files.size() + " entries");
-                return files.toArray(new FileStatus[files.size()]);
-            } else if (code == 2) {
-                LOG.fine("path " + path.toString() + " externally listed, access denied");
-                throw new AccessControlException(p);
+            switch (code) {
+                case 0:
+                    LOG.fine("path " + path.toString() + " externally listed, " + files.size() + " entries");
+                    break;
+                case 2:
+                    LOG.fine("path " + path.toString() + " externally listed, access denied");
+                    throw new AccessControlException(path.toString());
+                case 3:
+                    LOG.fine("path " + path.toString() + " externally listed, not found");
+                    files.clear();
+                    break;
+                default:
+                    LOG.warning("path " + path.toString() + " externally listed, listing failed");
+                    files.clear();
             }
-        } catch (InterruptedException _) {}
-        LOG.fine("path " + path.toString() + " externally listed, not found");
-        return new FileStatus[0];
+        } catch (InterruptedException _) {
+            LOG.fine("path " + path.toString() + " externally listed, interrupted");
+            files.clear();
+        }
     }
 
 
