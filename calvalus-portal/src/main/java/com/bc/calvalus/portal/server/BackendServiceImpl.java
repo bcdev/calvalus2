@@ -61,6 +61,7 @@ import com.bc.calvalus.production.ServiceContainerFactory;
 import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
 import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
 import com.bc.calvalus.production.util.DateRangeCalculator;
+import com.bc.calvalus.production.util.DebugTokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
@@ -864,7 +865,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     public boolean isUserInRole(String role) {
-        return getThreadLocalRequest().isUserInRole(role) &&
+        return (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") || getThreadLocalRequest().isUserInRole(role)) &&
                 // and the portal is either generic or destined to this user role ...
                 (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
                         backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
@@ -873,6 +874,9 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public DtoCalvalusConfig getCalvalusConfig() {
+        if ("debug".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
+            serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(backendConfig.getConfigMap(), getUserName()));
+        }
         backendConfig.getConfigMap().put("user", getUserName());
         String[] configuredRoles;
         if (backendConfig.getConfigMap().containsKey("calvalus.portal.userRole")
@@ -883,12 +887,12 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
         List<String> accu = new ArrayList<>();
         for (String role : configuredRoles) {
-            if (getThreadLocalRequest().isUserInRole(role)) {
+            if (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") || getThreadLocalRequest().isUserInRole(role)) {
                 accu.add(role);
             }
         }
         backendConfig.getConfigMap().put("roles", accu.toString());
-        LOG.fine("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
+        LOG.info("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
     }
 
