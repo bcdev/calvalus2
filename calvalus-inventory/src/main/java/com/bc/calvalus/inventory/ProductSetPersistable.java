@@ -33,7 +33,7 @@ public class ProductSetPersistable {
     private static final String DATE_PATTERN = "yyyy-MM-dd";
     private static final DateFormat DATE_FORMAT = ProductData.UTC.createDateFormat(DATE_PATTERN);
     public static final String FILENAME = "product-sets.csv";
-    public static final String INDEX = "index";
+    public static final String INDEX = "geo_index.a";
 
     private ProductSetPersistable() {
     }
