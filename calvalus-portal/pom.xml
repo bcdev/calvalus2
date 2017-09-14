@@ -98,6 +98,14 @@
             <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.jasig.cas.client</groupId>
+            <artifactId>cas-client</artifactId>
+            <version>3.4.1</version>
+            <type>pom</type>
+        </dependency>
+
+
     </dependencies>
 
     <build>

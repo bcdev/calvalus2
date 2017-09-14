@@ -1,5 +1,8 @@
 package com.bc.calvalus.portal.server;
 
+import org.opensaml.saml2.core.Assertion;
+import org.w3c.dom.Element;
+
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -7,10 +10,19 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
 
 public class SAMLTokenFetchFilter implements Filter {
 
@@ -22,7 +34,28 @@ public class SAMLTokenFetchFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         if (servletRequest instanceof HttpServletRequest) {
             HttpServletRequest request = (HttpServletRequest) servletRequest;
-//            Cookie[] cookies = request.getCookies();
+            System.out.println(Arrays.toString(Collections.list(request.getSession().getAttributeNames()).toArray()));
+            Object assertionObj = request.getSession().getAttribute("_const_cas_assertion_");
+            if (assertionObj != null) {
+                try {
+                    Assertion assertion = (Assertion) assertionObj;
+                    Element doc = assertion.getDOM();
+                    Transformer transformer = null;
+                    transformer = TransformerFactory.newInstance().newTransformer();
+                    transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+                    transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
+                    StreamResult result = new StreamResult(new StringWriter());
+                    DOMSource source = new DOMSource(doc);
+                    transformer.transform(source, result);
+                    String xmlString = result.getWriter().toString();
+                    System.out.println(xmlString);
+                } catch (TransformerException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
+            //            Cookie[] cookies = request.getCookies();
 //            if (cookies != null) {
 //                System.out.println("#cookies: " + cookies.length);
 //                for (Cookie cookie : cookies) {
@@ -37,14 +70,14 @@ public class SAMLTokenFetchFilter implements Filter {
 //            System.out.println(Arrays.toString(response.getHeaderNames().toArray()));
 //        }
 
-            if (request.getQueryString() != null && request.getQueryString().contains("ticket")) {
-                String ticket = request.getParameter("ticket");
-                System.out.println(ticket);
-                if (ticket != null) {
-                    String samlToken = fetchSAMLToken(ticket);
-                    System.out.println(samlToken);
-                }
-            }
+//            if (request.getQueryString() != null && request.getQueryString().contains("ticket")) {
+//                String ticket = request.getParameter("ticket");
+//                System.out.println(ticket);
+//                if (ticket != null) {
+//                    String samlToken = fetchSAMLToken(ticket);
+//                    System.out.println(samlToken);
+//                }
+//            }
         }
         filterChain.doFilter(servletRequest, servletResponse);
     }
