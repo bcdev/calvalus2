@@ -20,6 +20,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.hadoop.CalvalusShFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileSystemSetter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -76,8 +77,10 @@ public class JobClientsMap {
                 CacheEntry cacheEntry = new CacheEntry(jobClient);
                 jobClientsCache.put(userName, cacheEntry);
                 if (withExternalAccessControl) {
-                    fileSystemMap.put(userName, new CalvalusShFileSystem(userName, cacheEntry));
-                    LOG.fine("file system with external access control added for user " + userName);
+                    CalvalusShFileSystem fs = new CalvalusShFileSystem(userName, cacheEntry);
+                    fileSystemMap.put(userName, fs);
+                    FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(getConfiguration()), getConfiguration(), fs);
+                    LOG.info("file system with external access control added for user " + userName);
                 }
                 return jobClient;
             } catch (InterruptedException e) {

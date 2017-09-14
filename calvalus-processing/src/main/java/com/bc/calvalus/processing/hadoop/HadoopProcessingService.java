@@ -545,6 +545,10 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         return jobClientsMap.getFileSystem(userName, path);
     }
 
+    public FileSystem getFileSystem(String userName, Configuration conf, Path path) throws IOException {
+        return jobClientsMap.getFileSystem(userName, conf, path);
+    }
+
     void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
         final FileSystem fs = jobClientsMap.getFileSystem(username, conf, bundlePath);
 

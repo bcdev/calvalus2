@@ -103,13 +103,6 @@ public class RAProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
     private String[] getRAConfigXmlAndRegion(ProductionRequest productionRequest) throws ProductionException {
         String raParametersXml = productionRequest.getString("calvalus.ra.parameters", null);
         RAConfig raConfig;

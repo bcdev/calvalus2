@@ -90,11 +90,4 @@ public class L3FProductionType extends HadoopProductionType {
                               productionRequest,
                               workflow);
     }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
 }

@@ -35,6 +35,7 @@ import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.util.StringUtils;
 
 import java.io.IOException;
@@ -152,13 +153,6 @@ public class L2PlusProductionType extends HadoopProductionType {
                               autoStaging,
                               productionRequest,
                               l2WorkflowItem);
-    }
-
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
     }
 
 
