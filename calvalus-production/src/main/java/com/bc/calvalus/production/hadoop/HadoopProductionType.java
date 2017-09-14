@@ -32,6 +32,7 @@ import com.bc.calvalus.production.ProductionTypeSpi;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
 
 import java.io.IOException;
 import java.text.DateFormat;
@@ -132,7 +133,14 @@ public abstract class HadoopProductionType implements ProductionType {
         }
     }
 
-    protected abstract Staging createUnsubmittedStaging(Production production) throws IOException;
+    protected Staging createUnsubmittedStaging(Production production) throws IOException {
+        String userName = production.getProductionRequest().getUserName();
+        Configuration conf = getProcessingService().getJobClient(userName).getConf();
+        return new CopyStaging(production,
+                               conf,
+                               getProcessingService().getFileSystem(userName, conf, new Path(production.getOutputPath())),
+                               getStagingService().getStagingDir());
+    }
 
     protected final Configuration createJobConfig(ProductionRequest productionRequest) throws ProductionException {
         try {

@@ -86,6 +86,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private final List<HadoopJobHook> jobHooks = new ArrayList<>();
+    private boolean withExternalAccessControl;
 
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
         this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
@@ -95,7 +96,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         this.jobClientsMap = jobClientsMap;
         this.softwareDir = softwareDir;
         this.jobStatusMap = new WeakHashMap<>();
-
+        this.withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
         this.bundleQueryCache = new ArrayList<>();
         // TODO there should be one Timer for a process that is used for all timer tasks
         this.bundlesQueryCleaner = new Timer("bundlesQueryCleaner", true);
@@ -124,7 +125,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
 
     @Override
     public BundleDescriptor[] getBundles(final String username, final BundleFilter filter) throws IOException {
-        logger.info("HadoopProcessingService.getBundles.start username = [" + username + "], filter = [" + filter + "]");
+        logger.fine("HadoopProcessingService.getBundles.start username = [" + username + "], filter = [" + filter + "]");
         long t1 = System.currentTimeMillis();
         try {
             String bundleFilterString = filter.toString();
@@ -132,7 +133,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 for (BundleQueryCacheEntry entry : bundleQueryCache) {
                     if (entry.bundleFilter.equals(bundleFilterString) && entry.userName.equals(username)) {
                         try {
-                            logger.info("HadoopProcessingService.getBundles cacheHIT");
+                            logger.fine("HadoopProcessingService.getBundles cacheHIT");
                             return entry.bundles.get();
                         } catch (InterruptedException | ExecutionException e) {
                             logger.warning(e.getMessage());
@@ -147,7 +148,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
                 });
                 bundleQueryCache.add(new BundleQueryCacheEntry(username, bundleFilterString, future));
                 try {
-                    logger.info("HadoopProcessingService.getBundles cacheMISS");
+                    logger.fine("HadoopProcessingService.getBundles cacheMISS");
                     return future.get();
                 } catch (InterruptedException | ExecutionException e) {
                     e.printStackTrace();
@@ -158,7 +159,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         } finally {
             long t2 = System.currentTimeMillis();
             long delta = t2 - t1;
-            logger.info("HadoopProcessingService.getBundles.end username = [" + username + "], filter = [" + filter + "] ==> " + delta + "ms");
+            logger.fine("HadoopProcessingService.getBundles.end username = [" + username + "], filter = [" + filter + "] ==> " + delta + "ms");
         }
     }
 
@@ -247,7 +248,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private List<BundleDescriptor> getBundleDescriptors(FileSystem fileSystem, String bundlePathsGlob, BundleFilter filter) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(bundlePathsGlob));
         final FileStatus[] fileStatuses;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true) && ! withExternalAccessControl) {
             final ArrayList<FileStatus> accu = new ArrayList<>();
             collectAccessibleFiles(fileSystem, bundlePathsGlob, 1, new Path("/"), accu);
             fileStatuses = accu.toArray(new FileStatus[accu.size()]);
@@ -292,7 +293,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private List<MaskDescriptor> getMaskDescriptors(FileSystem fileSystem, String maskLocationPattern) throws IOException {
         final Path qualifiedPath = fileSystem.makeQualified(new Path(maskLocationPattern));
         final FileStatus[] fileStatuses;
-        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true)) {
+        if (jobClientsMap.getConfiguration().getBoolean("calvalus.acl", true) && ! withExternalAccessControl) {
             final List<FileStatus> accu = new ArrayList<>();
             collectAccessibleFiles(fileSystem, maskLocationPattern, 1, new Path("/"), accu);
             fileStatuses = accu.toArray(new FileStatus[accu.size()]);
@@ -471,10 +472,12 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         Path path = new Path(url);
         Configuration conf = createJobConfig(username);
-        FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        //FileStatus fileStatus = path.getFileSystem(conf).getFileStatus(path);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(username);
+        FileStatus fileStatus = fileSystem.getFileStatus(path);
         if (fileStatus != null) {
             ShapefileCacheEntry cacheEntry = shapeAttributeCache.get(path.toString());
-            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime()) {
+            if (cacheEntry == null || cacheEntry.modificationTime != fileStatus.getModificationTime() || fileStatus.getModificationTime() == 0) {
                 String[][] data = RARegions.loadStringAttributes(url, conf);
                 cacheEntry = new ShapefileCacheEntry(fileStatus.getModificationTime(), data);
                 shapeAttributeCache.put(path.toString(), cacheEntry);
@@ -534,21 +537,20 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         }
     }
 
+    public FileSystem getFileSystem(String userName) throws IOException {
+        return jobClientsMap.getFileSystem(userName);
+    }
+
     public FileSystem getFileSystem(String userName, String path) throws IOException {
         return jobClientsMap.getFileSystem(userName, path);
     }
 
-    private static FileSystem getFileSystem(String username, Configuration conf, Path path) throws IOException {
-        try {
-            return FileSystem.get(path.toUri(), conf, username);
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
+    public FileSystem getFileSystem(String userName, Configuration conf, Path path) throws IOException {
+        return jobClientsMap.getFileSystem(userName, conf, path);
     }
 
-
     void addBundleToDistributedCache(Path bundlePath, String username, Configuration conf) throws IOException {
-        final FileSystem fs = getFileSystem(username, conf, bundlePath);
+        final FileSystem fs = jobClientsMap.getFileSystem(username, conf, bundlePath);
 
         addBundleToClassPath(bundlePath, conf);
         addBundleArchives(bundlePath, fs, conf);

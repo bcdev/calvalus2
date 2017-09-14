@@ -16,9 +16,6 @@
 
 package com.bc.calvalus.processing;
 
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
-import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isLib;
-
 import com.bc.calvalus.processing.beam.SnapGraphAdapter;
 import com.bc.calvalus.processing.beam.SnapOperatorAdapter;
 import com.bc.calvalus.processing.beam.SubsetProcessorAdapter;
@@ -35,7 +32,7 @@ import org.apache.hadoop.mapreduce.MapContext;
 import org.apache.hadoop.mapreduce.filecache.DistributedCache;
 import org.esa.snap.core.datamodel.Product;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.net.URI;
@@ -44,6 +41,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
+
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isArchive;
+import static com.bc.calvalus.processing.hadoop.HadoopProcessingService.isLib;
 
 /**
  * Creates a {@code ProcessorAdapter} for the given processor.
@@ -72,21 +72,21 @@ public class ProcessorFactory {
         throw new IllegalArgumentException("Unknown processor type.");
     }
 
-    public static void installProcessorBundles(String username, Configuration conf) throws IOException {
+    public static void installProcessorBundles(String username, Configuration conf, FileSystem fs) throws IOException {
         ProcessorType processorType = ProcessorType.NONE;
         if (conf.get(JobConfigNames.CALVALUS_BUNDLES) != null) {
             final String[] aBundle = conf.get(JobConfigNames.CALVALUS_BUNDLES).split(",");
             List<String> processorFiles = new ArrayList<>();
             for (int i = 0; i < aBundle.length; i++) {
                 final String bundleSpec = aBundle[i];
-                Path bundlePath = getBundlePath(bundleSpec, conf);
+                Path bundlePath = getBundlePath(bundleSpec, conf, fs);
                 if (bundlePath != null) {
-                    FileSystem fs;
-                    try {
-                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
-                    } catch (InterruptedException e) {
-                        throw new IOException(e);
-                    }
+//                    FileSystem fs;
+//                    try {
+//                        fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+//                    } catch (InterruptedException e) {
+//                        throw new IOException(e);
+//                    }
                     HadoopProcessingService.addBundleToClassPathStatic(bundlePath, conf, fs);
                     addBundleArchives(bundlePath, fs, conf);
                     addBundleLibs(bundlePath, fs, conf);
@@ -151,19 +151,19 @@ public class ProcessorFactory {
         return ProcessorType.OPERATOR;
     }
 
-    private static Path getBundlePath(String bundleSpec, Configuration conf) throws IOException {
+    private static Path getBundlePath(String bundleSpec, Configuration conf, FileSystem fs) throws IOException {
         final Path bundlePath;
         if (isAbsolutePath(bundleSpec)) {
             bundlePath = new Path(bundleSpec);
         } else {
             bundlePath = new Path(HadoopProcessingService.CALVALUS_SOFTWARE_PATH, bundleSpec);
         }
-        FileSystem fs;
-        try {
-            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
-        } catch (InterruptedException e) {
-            throw new IOException(e);
-        }
+//        FileSystem fs;
+//        try {
+//            fs = FileSystem.get(bundlePath.toUri(), new JobConf(conf), conf.get(JobConfigNames.CALVALUS_USER));
+//        } catch (InterruptedException e) {
+//            throw new IOException(e);
+//        }
         if (fs.exists(bundlePath)) {
             FileStatus bundleStatus = fs.getFileStatus(bundlePath);
             if (bundleStatus != null && bundleStatus.isDirectory()) {

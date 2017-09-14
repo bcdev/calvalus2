@@ -42,7 +42,7 @@ public class CalvalusLogger {
         Handler handler = new ConsoleHandler();
         handler.setFormatter(new LogFormatter());
         logger.addHandler(handler);
-        logger.setLevel(Level.ALL);
+        logger.setLevel(Level.INFO);
 
         Logger snapLogger = EngineConfig.instance().logger();
         snapLogger.setUseParentHandlers(false);

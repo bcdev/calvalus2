@@ -47,6 +47,11 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                HadoopProcessingService.CALVALUS_SOFTWARE_PATH);
         // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
         serviceConfiguration.put("calvalus.hadoop.fs.hdfs.impl.disable.cache", "true");
+        // transfer configuration from calvalus.properties to system properties
+        if (serviceConfiguration.containsKey("calvalus.system.calvalus.accesscontrol.external")) {
+            System.setProperty("calvalus.accesscontrol.external",
+                               serviceConfiguration.get("calvalus.system.calvalus.accesscontrol.external"));
+        }
 
         JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
         try {

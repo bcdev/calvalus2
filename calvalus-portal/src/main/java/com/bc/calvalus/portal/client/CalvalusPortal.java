@@ -137,7 +137,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         loadLibraries.add(LoadApi.LoadLibrary.DRAWING);
         loadLibraries.add(LoadApi.LoadLibrary.GEOMETRY);
 
-        LoadApi.go(runnable, loadLibraries, false);
+
+        //LoadApi.go(runnable, loadLibraries, false);
+        // Google API key of martin.boettcher@brockmann-consult.de for test purposes
+        LoadApi.go(runnable, loadLibraries, false, "key=AIzaSyDC6oUduMAdfWa48HkKSQyExtEGEWL2A2I");
     }
 
     @Override

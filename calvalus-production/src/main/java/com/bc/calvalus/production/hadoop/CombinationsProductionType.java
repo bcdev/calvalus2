@@ -65,12 +65,4 @@ public class CombinationsProductionType extends HadoopProductionType {
                               workflowItem);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        String userName = production.getProductionRequest().getUserName();
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(userName).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
 }

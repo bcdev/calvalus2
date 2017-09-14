@@ -126,13 +126,6 @@ public class MACompareProductionType extends HadoopProductionType {
                               workflow);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
     static MAConfig getMAConfig(ProductionRequest productionRequest) throws ProductionException {
         String maParametersXml = productionRequest.getString("calvalus.ma.parameters", null);
         if (maParametersXml == null) {

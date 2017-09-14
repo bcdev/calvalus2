@@ -203,13 +203,6 @@ public class L3ProductionType extends HadoopProductionType {
                               workflow);
     }
 
-    @Override
-    protected Staging createUnsubmittedStaging(Production production) throws IOException {
-        return new CopyStaging(production,
-                               getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
-                               getStagingService().getStagingDir());
-    }
-
     /**
      * Generates a list of date ranges from min, may, period, and compositing period.
      * The method supports also monthly with the period -30 and weekly with the period -7.

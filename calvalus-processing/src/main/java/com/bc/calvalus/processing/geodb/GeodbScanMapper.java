@@ -60,9 +60,9 @@ import java.util.logging.Logger;
 /**
  * A mapper for generating entries for the product-DB
  */
-public class GeodbMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
+public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Text> {
 
-    public static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
