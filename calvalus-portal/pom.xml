@@ -114,6 +114,10 @@
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
             </resource>
+            <resource>
+                <directory>src/main/resources-default/WEB-INF/classes</directory>
+                <filtering>true</filtering>
+            </resource>
         </resources>
         <!-- Generate compiled stuff in the folder used for developing mode -->
         <outputDirectory>target/www/WEB-INF/classes</outputDirectory>
@@ -258,6 +262,21 @@
                             </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>code-patch</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/www/code-patch</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp-code-patch</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
 
@@ -266,6 +285,11 @@
                 <version>3.1.0</version>
                 <configuration>
                     <attachClasses>true</attachClasses>
+                    <webResources>
+                        <resource>
+                            <directory>src/main/resources-default</directory>
+                        </resource>
+                    </webResources>
                 </configuration>
             </plugin>
 
@@ -332,4 +356,36 @@
 
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>code</id>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources-code/WEB-INF/classes</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <attachClasses>true</attachClasses>
+                            <webResources>
+                                <resource>
+                                    <directory>src/main/resources-code</directory>
+                                </resource>
+                            </webResources>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

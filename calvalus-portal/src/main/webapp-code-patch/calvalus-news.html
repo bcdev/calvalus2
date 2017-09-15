@@ -1,0 +1,105 @@
+<html>
+<meta charset=utf-8" />
+<head>
+    <title>News and Links</title>
+</head>
+
+<body>
+<h4>Overview</h4>
+<font size="2">
+    <ul>
+        <li><b><a href="http://calvalus-merci:8080/merci" target="merci">http://calvalus-merci:8080/merci</a></b> catalogue of Calvalus inputs
+            (internal)
+        </li>
+        <li><b><a href="http://www.brockmann-consult.de/ganglia/" target="ganglia">http://www.brockmann-consult.de/ganglia/</a></b> cluster resource
+            monitoring
+        </li>
+        <li><b><a href="http://master00:8088/" target="hadoop">http://master00:8088/</a></b> Hadoop job queues (internal)</li>
+        <li><b><a href="http://master00:50070/" target="hdfs">http://master00:50070/</a></b> Hadoop HDFS fill and health (internal)</li>
+    </ul>
+</font>
+<h4>MERIS FR L1B v2013</h4>
+<font size="2">
+    The recently reprocessed dataset of MERIS full resolution (v2013) is available as input.
+    The dataset has been geo-corrected with AMORGOS 4.0 and is used as MERIS FSG for processing.
+    <p/>
+    A further quality check of this dataset has been requested and is currently performed by ESA and the IDEAS team to
+    blacklist files that have obvious issues.
+    The current v2013 dataset still contains products with issues that had been identified and removed in the previous
+    dataset.
+    <p/>
+    2014-04-10</font>
+
+<h4>Help System Introduced</h4>
+<font size="2">
+    <a target="_blank" href="https://bc-jira.atlassian.net/browse/CAVA-53">[CAVA-53] Add SUM / Help pages</a>
+    A Wiki has been setup to store the help pages.
+    <p/>
+    2013-11-04</font>
+
+<h4>Fix in Match-up analysis</h4>
+<font size="2">
+    <a target="_blank" href="https://bc-jira.atlassian.net/browse/CAVA-86">[CAVA-86] Pixel mask is not considered when pixels are aggregated</a>
+
+    <p/>
+    2013-10-21</font>
+
+<h4>SPOT VGT P data available for LC-CCI</h4>
+<font size="2">
+    The complete archive of SPOT VGT P data is on the cluster.
+    We got it from VITO for the LC CCI project. The global dataset
+    spans the period from 1998 to 2013.
+    <p/>
+    2013-09-20</font>
+
+<h4>Point data format check</h4>
+<font size="2">
+    There is a new button "Check" below the point data selection field
+    in the MA workflow tab. This button checks the selected file for
+    syntax and reports what it has recognised. It can be applied
+    without side effects, the data remains unchanged. Files that do
+    not pass the check will usually also fail during processing.
+    <p/>
+    2013-08-09</font>
+
+<h4>Catalogue</h4>
+<font size="2">
+    Calvalus input data is being registered in a new MERCI instance available to internal (!) users at<p/>
+    <b><a href="http://calvalus-merci:8080/merci" target="merci">http://calvalus-merci:8080/merci</a></b>
+
+    <p/>
+    The full mission MERIS FSG, MERIS RRG, and one year (2003) of AATSR have been registered so far.
+    Users can log into MERCI with their Calvalus credentials.<p/>
+    NB. The access to quicklooks and metadata details is currently not very stable because of bugs in the Hadoop fuse implementation.
+    <p/>
+    2013-08-09</font>
+
+<h4>Hardware resource monitoring</h4>
+<font size="2">Ganglia has been configured for the cluster available to users at<p/>
+    <b><a href="http://www.brockmann-consult.de/ganglia/" target="ganglia">http://www.brockmann-consult.de/ganglia/</a></b>
+
+    <p/>
+    Automatically updated graphs show cluster load, CPU and memory usage, network load, and disk I/O rates.
+    <p/>
+    2013-08-09</font>
+
+<h4>Hadoop job tracker</h4>
+<font size="2">The hadoop job tracker web pages are available to internal (!) users at<p/>
+    <b><a href="http://master00:8088/" target="jobtracker">http://master00:50030/</a></b>
+
+    <p/>
+    The pages show the internal job queue of Calvalus.
+    <p/>
+    2013-08-09</font>
+
+<h4>Hadoop archive</h4>
+<font size="2">The hadoop name node web pages are available to internal (!) users at<p/>
+    <b><a href="http://master00:50070/" target="namenode">http://master00:50070/</a></b>
+
+    <p/>
+    The pages show fill and health of the Hadoop Distributed File System HDFS with the Calvalus archive.
+    <p/>
+    2013-08-09</font>
+
+</body>
+</html>
