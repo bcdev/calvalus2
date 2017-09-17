@@ -66,7 +66,7 @@ public class L2ProductionType extends HadoopProductionType {
     protected Staging createUnsubmittedStaging(Production production) throws IOException {
         throw new UnsupportedOperationException("Staging disabled for L2 use L2Plus instead.");
 //        return new L2Staging(production,
-//                             getProcessingService().getJobClient(production.getProductionRequest().getUserName()).getConf(),
+//                             getProcessingService().getJobClient(production.getProductionRequest().getUsername()).getConf(),
 //                             getStagingService().getStagingDir());
     }
 

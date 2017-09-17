@@ -20,7 +20,6 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.inventory.hadoop.CalvalusShFileSystem;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FileSystemSetter;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -71,16 +70,16 @@ public class JobClientsMap {
     public synchronized JobClient getJobClient(String userName) throws IOException {
         if (jobClientsCache.get(userName) == null) {
             System.out.println("CREATING new JobClient for: " + userName);
+            if ("anonymous".equals(userName)) {
+                new Exception("Where is anonymous created=").printStackTrace();
+            }
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
             try {
                 JobClient jobClient = remoteUser.doAs((PrivilegedExceptionAction<JobClient>) () -> new JobClient(new JobConf(jobConfTemplate)));
                 CacheEntry cacheEntry = new CacheEntry(jobClient);
                 jobClientsCache.put(userName, cacheEntry);
                 if (withExternalAccessControl) {
-                    CalvalusShFileSystem fs = new CalvalusShFileSystem(userName, cacheEntry);
-                    fileSystemMap.put(userName, fs);
-                    FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(getConfiguration()), getConfiguration(), fs);
-                    LOG.info("file system with external access control added for user " + userName);
+                    CalvalusShFileSystem.createOrRegister(userName, remoteUser, cacheEntry, fileSystemMap);
                 }
                 return jobClient;
             } catch (InterruptedException e) {
@@ -101,7 +100,7 @@ public class JobClientsMap {
         } else {
             fileSystem = getJobClient(username).getFs();
         }
-        LOG.fine("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 
@@ -121,7 +120,7 @@ public class JobClientsMap {
                 throw new IOException(e);
             }
         }
-        LOG.fine("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 
@@ -140,7 +139,7 @@ public class JobClientsMap {
                 throw new IOException(e);
             }
         }
-        LOG.fine("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 
@@ -182,6 +181,9 @@ public class JobClientsMap {
 
         public JobClient getJobClientInternal() {
             return jobClient;
+        }
+        public void setAccessTime() {
+            accessTime = System.currentTimeMillis();
         }
     }
 }

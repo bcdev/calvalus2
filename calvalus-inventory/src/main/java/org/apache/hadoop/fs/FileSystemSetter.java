@@ -10,7 +10,8 @@ import java.net.URI;
  * @author Martin Boettcher
  */
 public class FileSystemSetter {
-    public static void addFileSystemForTesting(URI uri, Configuration conf, FileSystem fs) throws IOException {
+    public static FileSystem addFileSystemForTesting(URI uri, Configuration conf, FileSystem fs) throws IOException {
         FileSystem.addFileSystemForTesting(uri, conf, fs);
+        return fs;
     }
 }
