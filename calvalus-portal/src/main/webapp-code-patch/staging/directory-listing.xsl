@@ -13,9 +13,10 @@
                 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
                 <style>
                     body {
-                    font-family : Calibri,Verdana,Arial,sans-serif;
+                    font-family : "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
                     color : black;
                     background-color : white;
+                    margin: 0;
                     }
                     b {
                     color : white;
@@ -24,32 +25,114 @@
                     a {
                     color : black;
                     }
+                    .header-panel {
+                    background-color: #373B50;
+                    height: 80px;
+                    display: flex;
+                    flex-direction: row;
+                    }
+
+                    .header-logo {
+                    flex: 0 0 200px;
+                    margin: 15px 0 0 0;
+                    text-align: center;
+                    }
+
+                    .header-title {
+                    width: 100%;
+                    padding-left: 15px;
+                    color: white;
+                    font-size: 32pt;
+                    font-weight: bold;
+                    margin: auto 0;
+                    }
+
+                    .footer {
+                    background-color: #333;
+                    display: flex;
+                    flex-direction: row;
+                    color: white;
+                    height: 40px;
+                    padding: 0 10px;
+                    margin-top: 20px;
+                    }
+
+                    .footer-copyright-legal-privacy {
+                    flex: 0 0 50%;
+                    display: flex;
+                    }
+
+                    .footer-copyright {
+                    margin: auto;
+                    flex: 0 0 230px;
+                    }
+
+                    .footer-legal {
+                    margin: auto;
+                    text-align: center;
+                    flex: 0 0 100px;
+                    }
+
+                    .footer-privacy {
+                    margin: auto;
+                    text-align: center;
+                    flex: 0 0 130px;
+                    }
+
+                    .footer-empty {
+                    width: 100%;
+                    }
+
+                    .copyright-text {
+                    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: white;
+                    }
+
+                    .legal-privacy-text {
+                    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+                    font-size: 14px;
+                    font-weight: 700;
+                    color: white;
+                    }
+
+                    .legal-privacy-text:hover {
+                    color: #7ac6cf;
+                    }
+
+                    .directory-name {
+                    font-weight: 700;
+                    }
+
+                    .staging-area {
+                    margin: 10px;
+                    }
                 </style>
             </head>
             <body>
-                <table class="headerPanel">
-                    <tr>
-                        <td>
-                            <img src="/calvalus/images/code-logo.png" alt="CODE logo"/>
-                        </td>
-                        <td>
-                            <h1 class="title">Calvalus</h1>
+                <div class="header-panel">
+                    <div class="header-logo">
+                        <img src="../../../images/code-logo.png" alt="CODE logo"/>
+                    </div>
+                    <div class="header-title">
+                        Processing Service - staging area
+                    </div>
+                </div>
 
-                            <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
-                        </td>
-                    </tr>
-                </table>
-                <hr/>
-
-                <p>Calvalus staging area
-                    <xsl:value-of select="@directory"/>
+                <p class="staging-area">Staging area
+                    <span class="directory-name">
+                        <xsl:value-of select="@directory"/>
+                    </span>
                 </p>
 
                 <hr/>
                 <table cellspacing="0"
                        width="100%"
                        cellpadding="5"
-                       align="center">
+                       align="center"
+                       padding="6px"
+                >
                     <tr>
                         <th align="left">Filename</th>
                         <th align="center">Size</th>
@@ -58,8 +141,22 @@
                     <xsl:apply-templates select="entries"/>
                 </table>
                 <xsl:apply-templates select="readme"/>
-                <hr/>
-                <p class="copyright">Calvalus, &#169; 2017 Brockmann Consult GmbH</p>
+                <div class="footer">
+                    <div class="footer-copyright">
+                        <span class="copyright-text">Copyright &#169; 2016 - 2017 CODE-DE</span>
+                    </div>
+                    <div class="footer-legal">
+                        <a href="https://code-de.org/en/legal_notice" target="_blank" style="text-decoration:none;">
+                            <span class="legal-privacy-text">Legal Notice</span>
+                        </a>
+                    </div>
+                    <div class="footer-privacy">
+                        <a href="https://code-de.org/en/data_protection" target="_blank" style="text-decoration:none;">
+                            <span class="legal-privacy-text">Privacy Statement</span>
+                        </a>
+                    </div>
+                    <div class="footer-empty"/>
+                </div>
             </body>
         </html>
     </xsl:template>

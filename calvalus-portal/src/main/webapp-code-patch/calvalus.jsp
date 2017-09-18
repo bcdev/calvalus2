@@ -25,16 +25,21 @@
         in order for <b>Calvalus</b> to display correctly.
     </div>
 </noscript>
-<div id="container">
+<div id="container" style="height: 100vh">
     <div class="header-panel">
         <div class="header-logo">
             <img src="images/code-logo.png" alt="CODE logo"/>
         </div>
         <div class="header-title">
-            <h1 class="title">Calvalus</h1>
-            <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
+            Processing Service
         </div>
         <div class="header-info">
+            <div class="header-info-user">
+                <% final Principal userPrincipal = request.getUserPrincipal(); %>
+                <% if (userPrincipal != null) { %>
+                <span class="header-username-text"><%=userPrincipal.getName()%></span>
+                <% } %>
+            </div>
             <div class="header-info-help">
                 <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp"
                    style="text-decoration:none;">
@@ -46,33 +51,40 @@
                     <span class="header-info-text">ABOUT</span>
                 </a>
             </div>
-            <div class="header-info-user">
-                <% final Principal userPrincipal = request.getUserPrincipal(); %>
+            <div class="header-user-logout">
                 <% if (userPrincipal != null) { %>
-                USER
-                <b>
-                    <%=userPrincipal.getName()%>
-                </b>
-                <br/>
                 <a href='<%= response.encodeURL("logout.jsp") %>' style="text-decoration: none">
-                    <span class="header-user-logout">LOG OUT</span>
+                    <span class="header-info-text">LOG OUT</span>
                 </a>
                 <% } else { %>
-                Not logged in.
+                <span class="header-info-text">LOG IN</span>
                 <% } %>
             </div>
         </div>
     </div>
 
-    <div id="mainPanel"></div>
+    <div id="mainPanel" class="main-panel"></div>
 
     <div class="footer">
-        <div class="footer-copyright">
+        <div class="footer-left">
             <div class="footer-calvalus-version">
                 <%= BackendServiceImpl.VERSION %>
             </div>
-            <div class="footer-copyright-text">
-                &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %> Brockmann Consult GmbH
+            <div class="footer-copyright-legal-privacy">
+                <div class="footer-copyright">
+                    <span class="copyright-text">Copyright &#169; 2016 - 2017 CODE-DE</span>
+                </div>
+                <div class="footer-legal">
+                    <a href="https://code-de.org/en/legal_notice" target="_blank" style="text-decoration:none;">
+                        <span class="legal-privacy-text">Legal Notice</span>
+                    </a>
+                </div>
+                <div class="footer-privacy">
+                    <a href="https://code-de.org/en/data_protection" target="_blank" style="text-decoration:none;">
+                        <span class="legal-privacy-text">Privacy Statement</span>
+                    </a>
+                </div>
+                <div class="footer-empty"></div>
             </div>
         </div>
         <div class="footer-info">
@@ -100,5 +112,6 @@
     Loading Calvalus portal, please wait...<br/><br/>
     <img src="images/progress-bar.gif"/>
 </div>
+
 </body>
 </html>

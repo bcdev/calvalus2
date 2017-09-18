@@ -7,10 +7,14 @@
     left: 50%;
     text-align: center;
     margin: -100px;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: black;
 }
 
-#mainPanel {
-    display: block;
+.main-panel {
+    display: flex;
+    height: 220em;
 }
 
 .header-panel {
@@ -18,28 +22,32 @@
     height: 80px;
     display: flex;
     flex-direction: row;
-    padding: 5px;
 }
 
 .header-logo {
     flex: 0 0 200px;
-    margin: auto;
+    margin: 15px 0 0 0;
     text-align: center;
 }
 
 .header-title {
     width: 100%;
-    padding-left: 10px;
+    padding-left: 15px;
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: white;
+    font-size: 32pt;
+    font-weight: bold;
+    margin: auto 0;
 }
 
 .header-info {
     display: flex;
-    flex: 0 0 250px;
+    flex: 0 0 300px;
     flex-direction: row;
+    padding: 0 10px;
 }
 
 .header-info-user {
-    width: 100%;
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-size: 10pt;
     font-weight: 900;
@@ -49,26 +57,25 @@
 }
 
 .header-user-logout {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 8pt;
-    font-weight: 900;
-    color: #888;
-}
-
-.header-user-logout:hover {
-    color: white;
+    margin: auto;
+    text-align: center;
 }
 
 .header-info-help {
-    width: 100%;
     margin: auto;
     text-align: center;
 }
 
 .header-info-about {
-    width: 100%;
     margin: auto;
     text-align: center;
+}
+
+.header-username-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 12pt;
+    font-weight: 900;
+    color: white;
 }
 
 .header-info-text {
@@ -90,7 +97,7 @@
     height: 60px;
 }
 
-.footer-copyright {
+.footer-left {
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -104,11 +111,48 @@
     flex: 0 0 50%;
 }
 
-.footer-copyright-text {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 16px;
-    color: white;
+.footer-copyright-legal-privacy {
     flex: 0 0 50%;
+    display: flex;
+}
+
+.footer-copyright {
+    margin: auto;
+    flex: 0 0 230px;
+}
+
+.footer-legal {
+    margin: auto;
+    text-align: center;
+    flex: 0 0 100px;
+}
+
+.footer-privacy {
+    margin: auto;
+    text-align: center;
+    flex: 0 0 130px;
+}
+
+.footer-empty {
+    width: 100%;
+}
+
+.copyright-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.legal-privacy-text {
+    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+}
+
+.legal-privacy-text:hover {
+    color: #7ac6cf;
 }
 
 .footer-info {
@@ -167,6 +211,10 @@
     font-weight: 700 !important;
 }
 
+.gwt-Button:hover {
+    background: black none !important;
+}
+
 .gwt-Button:disabled {
     background: #e1e2e1 none !important;
     color: #888;
@@ -216,14 +264,6 @@ select[multiple]:focus option:checked {
     font-weight: bold;
     margin: 0;
     padding: 0 0 0 4px;
-}
-
-.subTitle {
-    font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-size: 16pt;
-    color: #888;
-    margin: 0;
-    padding: 0 0 0 4pt;
 }
 
 .userName {
@@ -283,7 +323,3 @@ p, li {
     font-family: "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
     margin-left: 5px;
 }
-
-
-
-
