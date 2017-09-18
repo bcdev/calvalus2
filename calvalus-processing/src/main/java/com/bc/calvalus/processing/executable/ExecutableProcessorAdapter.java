@@ -64,6 +64,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
 
     @Override
     public void prepareProcessing() throws IOException {
+        super.prepareProcessing();
         Configuration conf = getConfiguration();
         String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + parameterSuffix);
         String processorParameters = conf.get(JobConfigNames.CALVALUS_L2_PARAMETERS + parameterSuffix);
