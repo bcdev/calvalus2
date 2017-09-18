@@ -255,6 +255,7 @@ select[multiple]:focus option:checked {
     background-color: #373B50;
     color: white;
     flex: 0 0 200px;
+    font-size: 14px;
 }
 
 .title {
