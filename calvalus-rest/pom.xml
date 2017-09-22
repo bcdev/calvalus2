@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>calvalus</artifactId>
+        <groupId>com.bc.calvalus</groupId>
+        <version>2.14-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>calvalus-rest</artifactId>
+
+    <packaging>war</packaging>
+
+    <dependencies>
+        <!-- required as part of using Servlet 3 spec without any additional configs in web.xml -->
+        <!-- ref: http://stackoverflow.com/a/26721737/2676893 -->
+        <dependency>
+            <groupId>org.glassfish.jersey.bundles</groupId>
+            <artifactId>jaxrs-ri</artifactId>
+            <version>2.25</version>
+        </dependency>
+
+        <!-- Calvalus dependencies -->
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-inventory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.bc.calvalus</groupId>
+            <artifactId>calvalus-production</artifactId>
+        </dependency>
+
+        <!--BC WPS dependencies-->
+        <dependency>
+            <groupId>com.bc.wps</groupId>
+            <artifactId>bc-wps-commons</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <!-- JSON utility tool -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.6.2</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>calvalus-rest</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <id>calvalus-rest-bundle</id>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/calvalus-rest.xml</descriptor>
+                            </descriptors>
+                            <finalName>calvalus-rest-bundle</finalName>
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <attach>false</attach>
+                        </configuration>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+</project>
