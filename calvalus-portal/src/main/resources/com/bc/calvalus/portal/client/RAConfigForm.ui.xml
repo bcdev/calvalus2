@@ -155,7 +155,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <g:CheckBox ui:field="writePixelValues" text="Write CSV file per region" checked="false"/>
+                            <g:CheckBox ui:field="writePixelValues" text="Write pixel values to NetCDF" checked="false"/>
                         </td>
                     </tr>
                 </table>
