@@ -16,7 +16,13 @@
 
 package com.bc.calvalus.processing.ra;
 
+import org.apache.hadoop.conf.Configuration;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -31,5 +37,21 @@ public class RARegionsTest {
         assertEquals(WKT1, RARegions.removeMetadataFromWkt(WKT1));
         assertEquals(WKT2b, RARegions.removeMetadataFromWkt(WKT2a));
 
+    }
+
+    @Test
+    public void test_iterateOverRegions() throws IOException {
+        Configuration conf = new Configuration();
+        RAConfig raConfig = new RAConfig();
+        raConfig.setRegionSource("calvalus-processing/src/test/resources/HELCOM_grid100_LAEA5210.zip");
+        raConfig.setRegionSourceAttributeName("CellCode");
+        raConfig.setRegionSourceAttributeFilter("100kmE52");
+        RARegions.RegionIterator i = raConfig.createNamedRegionIterator(conf);
+        List<String> accu = new ArrayList<String>();
+        while (i.hasNext()) {
+            accu.add(i.next().name);
+        }
+        assertEquals("no of matching regions", 27, accu.size());
+        assertEquals("first matching region", "100kmE52N28", accu.get(0));
     }
 }

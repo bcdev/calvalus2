@@ -156,7 +156,6 @@ public class RARegions {
 
         public FilterRegionIterator(RegionIterator regionIterator, String filter) {
             this.delegate = regionIterator;
-            nextMatch();
             if (filter != null && !filter.isEmpty()) {
                 String[] filters = filter.split(",");
                 patterns = new Pattern[filters.length];
@@ -166,6 +165,7 @@ public class RARegions {
             } else {
                 patterns = null;
             }
+            nextMatch();
         }
 
         @Override
@@ -202,7 +202,7 @@ public class RARegions {
                 return true;
             }
             for (Pattern pattern : patterns) {
-                if (pattern.matcher(regionName).matches()) {
+                if (pattern.matcher(regionName).find()) {
                     return true;
                 }
             }
