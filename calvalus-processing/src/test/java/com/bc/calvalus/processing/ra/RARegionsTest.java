@@ -16,14 +16,16 @@
 
 package com.bc.calvalus.processing.ra;
 
-import static org.junit.Assert.*;
-
 import org.apache.hadoop.conf.Configuration;
-import org.junit.*;
+import org.junit.Ignore;
+import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.Assert.*;
 
 public class RARegionsTest {
     
@@ -42,7 +44,13 @@ public class RARegionsTest {
     public void test_iterateOverRegions() throws IOException {
         Configuration conf = new Configuration();
         RAConfig raConfig = new RAConfig();
-        raConfig.setRegionSource("src/test/resources/HELCOM_grid100_LAEA5210.zip");
+        String input;
+        if (new File("src/test/resources/HELCOM_grid100_LAEA5210.zip").exists()) {
+            input = "src/test/resources/HELCOM_grid100_LAEA5210.zip";  // surefire
+        } else {
+            input = "calvalus-processing/src/test/resources/HELCOM_grid100_LAEA5210.zip";  // idea
+        }
+        raConfig.setRegionSource(input);
         raConfig.setRegionSourceAttributeName("CellCode");
         raConfig.setRegionSourceAttributeFilter("100kmE52");
         RARegions.RegionIterator i = raConfig.createNamedRegionIterator(conf);
