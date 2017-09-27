@@ -19,6 +19,7 @@ public class CalvalusApplication extends Application {
     @Override
     public Set<Class<?>> getClasses() {
         classes.add(CalvalusService.class);
+        classes.add(CORSFilter.class);
         return classes;
     }
 
