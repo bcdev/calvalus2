@@ -27,8 +27,6 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import java.io.IOException;
 
-import static com.jidesoft.swing.AbstractLayoutPersistence.i;
-
 /**
  * A workflow item creating a Hadoop job for n input products processed to a single L3 product.
  */

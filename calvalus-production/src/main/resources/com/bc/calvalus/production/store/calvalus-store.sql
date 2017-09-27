@@ -3,6 +3,7 @@
 #
 # Author: Norman
 
+SET DATABASE SQL SIZE FALSE;
 
 DROP TABLE Production IF EXISTS;
 
