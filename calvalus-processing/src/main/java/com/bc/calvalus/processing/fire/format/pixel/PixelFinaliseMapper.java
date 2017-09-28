@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
+import com.bc.ceres.core.PrintWriterProgressMonitor;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -109,7 +110,7 @@ public class PixelFinaliseMapper extends Mapper {
         geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
         geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, null);
 
-        ProductIO.writeProduct(result, baseFilename + ".nc", "NetCDF4-CF");
+        ProductIO.writeProduct(result, baseFilename + ".nc", "NetCDF4-CF", new PrintWriterProgressMonitor(System.out));
 
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
 //        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
@@ -152,7 +153,7 @@ public class PixelFinaliseMapper extends Mapper {
         Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
         Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
 
-        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask));
+        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, lcProduct));
         clBand.setSourceImage(new ClImage(source.getBand("CL"), jdBand));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
         sensorBand.setSourceImage(new SensorImage(source.getBand("JD"), sensorId));
@@ -206,11 +207,13 @@ public class PixelFinaliseMapper extends Mapper {
 
         private final Band sourceJdBand;
         private final Band watermask;
+        private final Product lcProduct;
 
-        JdImage(Band sourceJdBand, Band watermask) {
+        JdImage(Band sourceJdBand, Band watermask, Product lcProduct) {
             super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceJdBand = sourceJdBand;
             this.watermask = watermask;
+            this.lcProduct = lcProduct;
         }
 
         @Override
@@ -219,8 +222,10 @@ public class PixelFinaliseMapper extends Mapper {
                 CalvalusLogger.getLogger().info("Written " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + ".");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
+            int[] lcData = new int[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
             try {
+                lcProduct.getBand("lccs_class").readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
                 watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
             } catch (IOException e) {
@@ -242,7 +247,8 @@ public class PixelFinaliseMapper extends Mapper {
 
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (Float.isNaN(sourceJd)) {
-                        sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, pixelIndex, destRect.width).neighbourValue;
+                        boolean originalIsBurnable = LcRemapping.isInBurnableLcClass(lcData[pixelIndex]);
+                        sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, true, originalIsBurnable, pixelIndex, destRect.width).neighbourValue;
                     }
 
                     int targetJd;
@@ -289,7 +295,7 @@ public class PixelFinaliseMapper extends Mapper {
                     int targetCl;
                     float sourceCl = sourceClArray[pixelIndex];
                     if (Float.isNaN(sourceCl)) {
-                        NeighbourResult neighbourResult = findNeighbourValue(sourceClArray, pixelIndex, destRect.width);
+                        NeighbourResult neighbourResult = findNeighbourValue(sourceClArray, false, false, pixelIndex, destRect.width);
                         if (neighbourResult.newPixelIndex != -1 && sourceJdArray[neighbourResult.newPixelIndex] >= 0 && sourceJdArray[neighbourResult.newPixelIndex] < 900) {
                             targetCl = (int) (neighbourResult.neighbourValue);
                         } else {
@@ -351,35 +357,6 @@ public class PixelFinaliseMapper extends Mapper {
                 }
                 dest.setSample(destRect.x + i % destRect.width, destRect.y + i / destRect.width, 0, lcData[i]);
             }
-
-//            GeoPos geoPos = new GeoPos();
-//            GeoCoding resultGeoCoding = target.getSceneGeoCoding();
-//            GeoCoding lcGeoCoding = lcProduct.getSceneGeoCoding();
-//            PixelPos pixelPos = new PixelPos();
-//            int pixelIndex = 0;
-//            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
-//                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
-//                    pixelPos.x = x;
-//                    pixelPos.y = y;
-//                    resultGeoCoding.getGeoPos(pixelPos, geoPos);
-//                    lcGeoCoding.getPixelPos(geoPos, pixelPos);
-//                    int[] lcData = new int[1];
-//                    try {
-//                        lcProduct.getBand("lccs_class").readPixels((int) pixelPos.x, (int) pixelPos.y, 1, 1, lcData);
-//                    } catch (IOException e) {
-//                        throw new IllegalStateException(e);
-//                    }
-//                    lcData[0] = LcRemapping.remap(lcData[0]);
-//                    if (lcData[0] == LcRemapping.INVALID_LC_CLASS) {
-//                        lcData[0] = 0;
-//                    }
-//                    int jdValue = jdArray[pixelIndex++];
-//                    if (jdValue <= 0 || jdValue >= 997) {
-//                        lcData[0] = 0;
-//                    }
-//                    dest.setSample(x, y, 0, lcData[0]);
-//                }
-//            }
         }
     }
 
@@ -387,7 +364,7 @@ public class PixelFinaliseMapper extends Mapper {
         private final Band jd;
         private final int sensorId;
 
-        public SensorImage(Band jd, String sensorId) {
+        SensorImage(Band jd, String sensorId) {
             super(DataBuffer.TYPE_BYTE, jd.getRasterWidth(), jd.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.jd = jd;
             this.sensorId = Integer.parseInt(sensorId);
@@ -844,14 +821,9 @@ public class PixelFinaliseMapper extends Mapper {
             "" +
             "</gmi:MI_Metadata>";
 
-    static NeighbourResult findNeighbourValue(float[] sourceData, int pixelIndex, int width) {
+    static NeighbourResult findNeighbourValue(float[] sourceData, boolean checkForBurnable, boolean originalIsBurnable, int pixelIndex, int width) {
         int[] xDirections = new int[]{-1, 0, 1};
         int[] yDirections = new int[]{-1, 0, 1};
-
-        float currentValue = sourceData[pixelIndex];
-        if (!Float.isNaN(currentValue)) {
-            return new NeighbourResult(pixelIndex, currentValue);
-        }
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
@@ -862,7 +834,17 @@ public class PixelFinaliseMapper extends Mapper {
                     }
                     float neighbourValue = sourceData[newPixelIndex];
                     if (!Float.isNaN(neighbourValue)) {
-                        return new NeighbourResult(newPixelIndex, neighbourValue);
+                        if (checkForBurnable) {
+                            // JD case: if neighbour > 0 but original is unburnable: 0
+                            if (neighbourValue > 0 && !originalIsBurnable) {
+                                return new NeighbourResult(newPixelIndex, 0);
+                            } else {
+                                return new NeighbourResult(newPixelIndex, neighbourValue);
+                            }
+                        } else {
+                            // CL case: never mind
+                            return new NeighbourResult(newPixelIndex, neighbourValue);
+                        }
                     }
                 }
             }

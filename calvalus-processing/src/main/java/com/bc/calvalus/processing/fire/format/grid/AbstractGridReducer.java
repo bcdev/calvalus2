@@ -106,8 +106,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         Path path = new Path(outputDir + "/" + firstHalfFile);
         Path path2 = new Path(outputDir + "/" + secondHalfFile);
         FileSystem fs = path.getFileSystem(context.getConfiguration());
-        FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
-        FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
+        if (!fs.exists(path)) {
+            FileUtil.copy(fileLocation, fs, path, false, context.getConfiguration());
+        }
+        if (!fs.exists(path2)) {
+            FileUtil.copy(fileLocation2, fs, path2, false, context.getConfiguration());
+        }
     }
 
     protected abstract int getTargetSize();

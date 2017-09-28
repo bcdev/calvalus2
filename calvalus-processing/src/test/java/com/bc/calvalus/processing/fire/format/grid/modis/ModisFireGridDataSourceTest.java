@@ -220,6 +220,35 @@ public class ModisFireGridDataSourceTest {
                 SourceData sourceData = dataSource.readPixels(x, y);
             }
         }
+    }
 
+    @Test
+    public void acceptanceTest3() throws Exception {
+        Product product = ProductIO.readProduct("c:\\ssd\\burned_2001_12_h10v06.nc");
+        Product lcProduct = ProductIO.readProduct("c:\\ssd\\h10v06-2000.nc");
+        Product areaProduct = ProductIO.readProduct("c:\\ssd\\areas-h10v06.nc");
+
+        List<ZipFile> geoLookupTables = new ArrayList<>();
+        geoLookupTables.add(new ZipFile(new File("c:\\ssd\\modis-geo-luts-039x.zip")));
+
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
+                new Product[]{product},
+                new Product[]{lcProduct},
+                new Product[]{areaProduct},
+                geoLookupTables,
+                "384,256");
+
+        dataSource.setDoyFirstOfMonth(335);
+        dataSource.setDoyLastOfMonth(365);
+        dataSource.setDoyFirstHalf(335 + 7);
+        dataSource.setDoySecondHalf(335 + 22);
+
+        SourceData sourceData = dataSource.readPixels(10, 14);
+    }
+
+    @Test
+    public void testCreateKey() throws Exception {
+        assertEquals(190900261001L, ModisFireGridDataSource.createKey("h19v09", 26, 1001));
+        assertEquals(190926100001L, ModisFireGridDataSource.createKey("h19v09", 2610, 1));
     }
 }

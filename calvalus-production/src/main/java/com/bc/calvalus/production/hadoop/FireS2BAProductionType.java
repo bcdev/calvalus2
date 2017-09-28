@@ -40,7 +40,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import java.io.IOException;
 
 /**
- * The production type used for generating the MERIS BA data.
+ * The production type used for generating the S2 BA data.
  *
  * @author thomas
  */

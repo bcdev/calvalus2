@@ -37,6 +37,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,12 +70,31 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
         ProcessorAdapter processorAdapter = ProcessorFactory.createAdapter(context);
         ProgressMonitor pm = new ProgressSplitProgressMonitor(context);
         pm.beginTask("Image generation", 100);
+        Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
+
+        List<Quicklooks.QLConfig> filteredQlConfigs = new ArrayList<>();
+        String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
+        LOGGER.info("Generating image for " + productName);
+        for (Quicklooks.QLConfig config : configs) {
+            String imageFileName = productName + "_" + config.getBandName();
+            Path path = new Path(FileOutputFormat.getWorkOutputPath(context).toString().split("_temporary")[0], imageFileName + "." + config.getImageType());
+            if (!path.getFileSystem(context.getConfiguration()).exists(path)) {
+                LOGGER.info("Target file does not exist at: " + path.toString() + ".");
+                filteredQlConfigs.add(config);
+            } else {
+                LOGGER.info("Target file already exists at: " + path.toString() + "; skipping.");
+            }
+        }
+
+        if (filteredQlConfigs.isEmpty()) {
+            LOGGER.info("All targets already exist, skipping.");
+            return;
+        }
+
         try {
             Product product = processorAdapter.getProcessedProduct(SubProgressMonitor.create(pm, 5));
             if (product != null) {
-                String productName = FileUtils.getFilenameWithoutExtension(processorAdapter.getInputPath().getName());
-                Quicklooks.QLConfig[] configs = Quicklooks.get(context.getConfiguration());
-                for (Quicklooks.QLConfig config : configs) {
+                for (Quicklooks.QLConfig config : filteredQlConfigs) {
                     String imageFileName = productName + "_" + config.getBandName();
                     createQuicklook(product, imageFileName, context, config);
                 }
@@ -90,6 +111,9 @@ public class QLMapper extends Mapper<NullWritable, NullWritable, NullWritable, N
             RenderedImage quicklookImage = QuicklookGenerator.createImage(context, product, config);
             if (quicklookImage != null) {
                 OutputStream outputStream = createOutputStream(context, imageFileName + "." + config.getImageType());
+                if (outputStream == null) {
+                    return;
+                }
                 OutputStream pmOutputStream = new BytesCountingOutputStream(outputStream, context);
                 try {
                     ImageIO.write(quicklookImage, config.getImageType(), pmOutputStream);

@@ -27,7 +27,6 @@ import java.util.zip.ZipFile;
  */
 public class ModisGridMapper extends AbstractGridMapper {
 
-    private static final float MODIS_PIXEL_AREA = 250.0F * 250.0F;
     public static final int WINDOW_SIZE = 32;
 
     public ModisGridMapper() {
@@ -82,7 +81,7 @@ public class ModisGridMapper extends AbstractGridMapper {
                 CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, context.getConfiguration());
             }
 
-            areaProducts[productIndex] = ProductIO.readProduct(areaProductFile);
+//            areaProducts[productIndex] = ProductIO.readProduct(areaProductFile);
             productIndex++;
         }
 
@@ -176,10 +175,12 @@ public class ModisGridMapper extends AbstractGridMapper {
             sum(C) = p.sum()
         */
 
+        double[] p_b = correct(probabilityOfBurn);
+
         double var_c = 0.0;
         double sum_c = 0.0;
         int count = 0;
-        for (double p : probabilityOfBurn) {
+        for (double p : p_b) {
             if (Double.isNaN(p)) {
                 continue;
             }
@@ -201,7 +202,39 @@ public class ModisGridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * MODIS_PIXEL_AREA;
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+    }
+
+    private double[] correct(double[] probabilityOfBurn) {
+        /*
+            Correct standard error:
+            S = numberburn_pixels / sum_pb
+            pb' = pb/S
+            Then use this pb' for the std err calculation.
+        */
+
+        int numberburn_pixels = 0;
+        double sum_pb = 0.0;
+        for (double p : probabilityOfBurn) {
+            if (Double.isNaN(p)) {
+                continue;
+            }
+            if (p > 1) {
+                // no-data/cloud/water
+                continue;
+            }
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
+            numberburn_pixels++;
+            sum_pb += p;
+        }
+        double S = numberburn_pixels / sum_pb;
+        double[] result = new double[probabilityOfBurn.length];
+        for (int i = 0; i < probabilityOfBurn.length; i++) {
+            result[i] = probabilityOfBurn[i] / S;
+        }
+        return result;
     }
 
     @Override

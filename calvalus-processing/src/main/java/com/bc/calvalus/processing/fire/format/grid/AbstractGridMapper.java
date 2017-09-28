@@ -118,8 +118,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                     }
 
                     burnableFractionValue += data.burnable[i] ? data.areas[i] : 0.0;
-                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 ? data.areas[i] : 0.0F;
-                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 ? data.areas[i] : 0.0F;
+                    coverageValueFirstHalf += data.statusPixelsFirstHalf[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
+                    coverageValueSecondHalf += data.statusPixelsSecondHalf[i] == 1 && data.burnable[i] ? data.areas[i] : 0.0F;
                     areas[targetPixelIndex] += data.areas[i];
                     validate(areas[targetPixelIndex], targetPixelIndex);
                 }
@@ -128,8 +128,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 baSecondHalf[targetPixelIndex] = baValueSecondHalf;
                 patchNumberFirstHalf[targetPixelIndex] = data.patchCountFirstHalf;
                 patchNumberSecondHalf[targetPixelIndex] = data.patchCountSecondHalf;
-                coverageFirstHalf[targetPixelIndex] = getFraction(coverageValueFirstHalf, areas[targetPixelIndex]);
-                coverageSecondHalf[targetPixelIndex] = getFraction(coverageValueSecondHalf, areas[targetPixelIndex]);
+                coverageFirstHalf[targetPixelIndex] = getFraction(coverageValueFirstHalf, burnableFractionValue);
+                coverageSecondHalf[targetPixelIndex] = getFraction(coverageValueSecondHalf, burnableFractionValue);
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
@@ -149,6 +149,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         validate(baFirstHalf, baInLcFirstHalf);
         validate(baSecondHalf, baInLcSecondHalf);
 
+        validate(baFirstHalf, areas);
+        validate(baSecondHalf, areas);
+
         GridCell gridCell = new GridCell();
         gridCell.bandSize = targetRasterWidth * targetRasterHeight;
         gridCell.setBaFirstHalf(baFirstHalf);
@@ -164,6 +167,14 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         gridCell.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
         return gridCell;
+    }
+
+    private void validate(float[] ba, double[] areas) {
+        for (int i = 0; i < ba.length; i++) {
+            if (ba[i] > areas[i]) {
+                throw new IllegalStateException("BA (" + ba[i] + ") > area (" + areas[i] + ") at pixel index " + i);
+            }
+        }
     }
 
     protected abstract float getErrorPerPixel(double[] probabilityOfBurn);

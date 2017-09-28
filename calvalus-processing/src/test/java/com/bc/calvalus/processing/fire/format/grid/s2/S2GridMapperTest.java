@@ -32,6 +32,8 @@ public class S2GridMapperTest {
                 0.0306582, 0.77244542, 0.80275072, 0.01832522, 0.30206282,
                 0.93967375, 0.83246437, 0.06709965, 0.37869067, 0.1504346
         };
+        double[] areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(4.0988349088, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
 
     }
@@ -40,6 +42,8 @@ public class S2GridMapperTest {
     public void testGetErrorPerPixelNoProbs() throws Exception {
         double[] probs = new double[1000];
         Arrays.fill(probs, 0);
+        double[] areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(0, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
     }
 
@@ -51,6 +55,8 @@ public class S2GridMapperTest {
         probs[2] = 0.2;
         probs[3] = 0.534;
         probs[4] = 0.51;
+        double[] areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
         probs = new double[6];
         probs[0] = 0;
@@ -59,6 +65,8 @@ public class S2GridMapperTest {
         probs[3] = 0.534;
         probs[4] = 0.51;
         probs[5] = Float.NaN;
+        areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
     }
 
@@ -70,6 +78,8 @@ public class S2GridMapperTest {
         probs[2] = 0.2;
         probs[3] = 0.534;
         probs[4] = 0.51;
+        double[] areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(1.0658, new S2GridMapper().getErrorPerPixel(probs), 1E-5);
     }
 
@@ -77,6 +87,8 @@ public class S2GridMapperTest {
     public void testGetErrorPerPixelInf() throws Exception {
         double[] probs = new double[1];
         probs[0] = 0.3;
+        double[] areas = new double[probs.length];
+        Arrays.fill(areas, 0.5);
         assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
     }
 }
