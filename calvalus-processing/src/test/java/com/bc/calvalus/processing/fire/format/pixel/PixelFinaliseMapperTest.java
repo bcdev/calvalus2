@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
-import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.PixelProductArea;
 import com.bc.calvalus.processing.fire.format.S2Strategy;
 import org.esa.snap.core.dataio.ProductIO;
@@ -42,7 +41,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[56] = 20; // right next to the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
         assertEquals(20, neighbourValue);
     }
 
@@ -53,7 +52,7 @@ public class PixelFinaliseMapperTest {
         sourceJdArray[44] = 10; // upper left of the source value
         sourceJdArray[56] = 20; // right next to the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -66,7 +65,7 @@ public class PixelFinaliseMapperTest {
         sourceJdArray[54] = 30; // center left of the source value
         sourceJdArray[56] = 40; // center right of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -76,7 +75,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[1] = 10; // center right of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 0, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 0, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -88,7 +87,7 @@ public class PixelFinaliseMapperTest {
         sourceJdArray[89] = 20; // upper center of the source value
         sourceJdArray[98] = 30; // center left of the source value
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 99, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 99, destRect.width).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
@@ -98,7 +97,7 @@ public class PixelFinaliseMapperTest {
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[55] = 23;
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, 55, destRect.width, !LcRemapping.isInBurnableLcClass(lcData[destRect.width])).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
         assertEquals(23, neighbourValue);
     }
 
