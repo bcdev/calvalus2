@@ -5,6 +5,7 @@ import com.bc.calvalus.commons.InputPathResolver;
 import com.bc.calvalus.inventory.hadoop.HdfsInventoryService;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
 import com.bc.calvalus.processing.hadoop.NoRecordReader;
+import com.bc.calvalus.processing.hadoop.ProgressSplit;
 import com.google.gson.Gson;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
@@ -89,7 +90,7 @@ public class ModisGridInputFormat extends InputFormat {
         }
         filePaths.add(new Path(targetCell));
         fileLengths.add(0L);
-        CombineFileSplit combineFileSplit = new CombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
+        CombineFileSplit combineFileSplit = new ProgressableCombineFileSplit(filePaths.toArray(new Path[filePaths.size()]),
                 fileLengths.stream().mapToLong(Long::longValue).toArray());
         splits.add(combineFileSplit);
     }
@@ -120,5 +121,30 @@ public class ModisGridInputFormat extends InputFormat {
 
     public static class TileLut extends HashMap<String, Set<String>> {
         // only needed for GSON to serialise
+    }
+
+    public static class ProgressableCombineFileSplit extends CombineFileSplit implements ProgressSplit {
+
+        private float progress;
+
+        /**
+         * For deserialize only
+         */
+        public ProgressableCombineFileSplit() {
+        }
+
+        ProgressableCombineFileSplit(Path[] files, long[] lengths) {
+            super(files, lengths);
+        }
+
+        @Override
+        public void setProgress(float progress) {
+            this.progress = progress;
+        }
+
+        @Override
+        public float getProgress() {
+            return progress;
+        }
     }
 }

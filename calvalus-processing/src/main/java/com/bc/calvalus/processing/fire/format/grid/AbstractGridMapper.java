@@ -2,6 +2,7 @@ package com.bc.calvalus.processing.fire.format.grid;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
+import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
@@ -26,8 +27,9 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         this.targetRasterHeight = targetRasterHeight;
     }
 
-    public GridCell computeGridCell(int year, int month) throws IOException {
+    public final GridCell computeGridCell(int year, int month, ProgressMonitor pm) throws IOException {
         LOG.info("Computing grid cell...");
+        pm.beginTask("Computing grid cell...", targetRasterWidth * targetRasterHeight);
         if (dataSource == null) {
             throw new NullPointerException("dataSource == null");
         }
@@ -137,6 +139,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf);
 
                 targetPixelIndex++;
+                pm.worked(1);
             }
         }
 
@@ -166,7 +169,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         gridCell.setCoverageSecondHalf(coverageSecondHalf);
         gridCell.setBurnableFraction(burnableFraction);
         LOG.info("...done.");
+        pm.done();
         return gridCell;
+    }
+
+    public final GridCell computeGridCell(int year, int month) throws IOException {
+        return computeGridCell(year, month, ProgressMonitor.NULL);
     }
 
     private void validate(float[] ba, double[] areas) {

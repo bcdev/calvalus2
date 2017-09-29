@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.CommonUtils;
 import com.bc.calvalus.processing.fire.format.grid.AbstractGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
+import com.bc.calvalus.processing.hadoop.ProgressSplitProgressMonitor;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
@@ -105,7 +106,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         dataSource.setDoySecondHalf(doySecondHalf);
 
         setDataSource(dataSource);
-        GridCell gridCell = computeGridCell(year, month);
+        GridCell gridCell = computeGridCell(year, month, new ProgressSplitProgressMonitor(context));
 
         context.write(new Text(String.format("%d-%02d-%s", year, month, targetCell)), gridCell);
     }

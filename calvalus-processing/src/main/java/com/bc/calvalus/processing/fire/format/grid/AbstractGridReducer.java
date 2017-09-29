@@ -36,8 +36,8 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     protected NetcdfFileWriter ncFirst;
     protected NetcdfFileWriter ncSecond;
 
-    private String firstHalfFile;
-    private String secondHalfFile;
+    protected String firstHalfFile;
+    protected String secondHalfFile;
     private GridCell currentGridCell;
     private int targetSize;
 
@@ -123,7 +123,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     protected void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
-        String version = context.getConfiguration().get("calvalus.baversion", "v4.1");
+        String version = context.getConfiguration().get("calvalus.baversion", "v5.0");
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
 
