@@ -8,14 +8,14 @@
         <version>2.14-SNAPSHOT</version>
     </parent>
 
-    <artifactId>calvalus-distribution2</artifactId>
+    <artifactId>calvalus-snap</artifactId>
     <packaging>pom</packaging>
 
     <properties>
         <snap.bundle.version>6.0-SNAPSHOT</snap.bundle.version>
     </properties>
 
-    <name>Calvalus Distribution2</name>
+    <name>Calvalus Distribution SNAP</name>
     <description>
         Provides the SNAP artifacts of a Calvalus distribution.
     </description>
@@ -41,11 +41,25 @@
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-arcbingrid-reader</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-bigtiff</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-binning</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-classification</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-classification</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-cluster-analysis</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-collocation</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-csv-dataio</artifactId></dependency>
-        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-dem</artifactId></dependency>
+        <dependency><groupId>org.esa.snap</groupId><artifactId>snap-dem</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xercesImpl</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envi-reader</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-envisat-reader</artifactId></dependency>
         <dependency><groupId>org.esa.snap</groupId><artifactId>snap-getasse30-dem</artifactId></dependency>
@@ -108,7 +122,7 @@
 
         <dependency><groupId>org.xeustechnologies</groupId><artifactId>jtar</artifactId></dependency>
         <dependency><groupId>com.thoughtworks.xstream</groupId><artifactId>xstream</artifactId></dependency>
-
+        <dependency><groupId>xerces</groupId><artifactId>xercesImpl</artifactId></dependency>
 
     </dependencies>
 

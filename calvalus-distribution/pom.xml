@@ -15,7 +15,7 @@
         <snap.bundle.version>5.0.1</snap.bundle.version>
     </properties>
 
-    <name>Calvalus Distribution</name>
+    <name>Calvalus Distribution CPT+Bundle</name>
     <description>
         Provides the various distributions of calvalus artifacts.
     </description>
