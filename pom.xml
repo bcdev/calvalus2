@@ -32,7 +32,7 @@
         <module>calvalus-commons</module>
         <module>calvalus-examples</module>
         <module>calvalus-distribution</module>
-        <module>calvalus-distribution2</module>
+        <module>calvalus-snap</module>
         <module>calvalus-wps-impl</module>
         <module>calvalus-reporting</module>
     </modules>
@@ -708,6 +708,11 @@
                 <version>16.0.1</version>
             </dependency>
 
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>2.9.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

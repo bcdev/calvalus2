@@ -122,6 +122,7 @@
                 <include>org.xeustechnologies:jtar</include>
                 <include>com.thoughtworks.xstream:xstream</include>
                 <include>org.hsqldb:hsqldb</include>
+                <include>xerces:xercesImpl</include>
 
             </includes>
             <useTransitiveDependencies>true</useTransitiveDependencies>

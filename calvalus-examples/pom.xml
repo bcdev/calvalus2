@@ -13,7 +13,7 @@
     <artifactId>calvalus-examples</artifactId>
     <packaging>pom</packaging>
 
-    <name>Calvalus Examples bundles and Requests</name>
+    <name>Calvalus Example bundles and requests</name>
     <description>Contains example bundles for all prodcution types and
         scripts and configuration to integrate shell executables into Calvalus.</description>
 
