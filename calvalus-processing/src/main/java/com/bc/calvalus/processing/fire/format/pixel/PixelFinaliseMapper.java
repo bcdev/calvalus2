@@ -218,10 +218,10 @@ public class PixelFinaliseMapper extends Mapper {
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             float[] sourceJdArray = new float[destRect.width * destRect.height];
-            int[] lcArray = new int[destRect.width * destRect.height];
+            byte[] lcArray = new byte[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
             try {
-                lcBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(lcArray));
+                lcBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(lcArray));
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
                 watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
             } catch (IOException e) {
