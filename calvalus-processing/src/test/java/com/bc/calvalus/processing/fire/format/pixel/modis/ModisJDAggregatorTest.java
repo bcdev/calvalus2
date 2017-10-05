@@ -82,8 +82,8 @@ public class ModisJDAggregatorTest {
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
         aggregator.completeTemporal(temporalCtx, 0, temporalVector);
 
-        assertEquals(20F, temporalVector.get(0), 1E-7);
-        assertEquals(0.8, temporalVector.get(1), 1E-7);
+        assertEquals(10F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5, temporalVector.get(1), 1E-7);
     }
 
     @Test
@@ -110,8 +110,8 @@ public class ModisJDAggregatorTest {
         aggregator.aggregateTemporal(temporalCtx, spatialVector, 0, temporalVector);
         aggregator.completeTemporal(temporalCtx, 0, temporalVector);
 
-        assertEquals(10F, temporalVector.get(0), 1E-7);
-        assertEquals(0.8, temporalVector.get(1), 1E-7);
+        assertEquals(5F, temporalVector.get(0), 1E-7);
+        assertEquals(0.5, temporalVector.get(1), 1E-7);
     }
 
     @Test

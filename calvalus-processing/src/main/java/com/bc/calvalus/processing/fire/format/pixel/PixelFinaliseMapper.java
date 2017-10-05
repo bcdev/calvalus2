@@ -152,7 +152,7 @@ public class PixelFinaliseMapper extends Mapper {
         Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
         Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
 
-        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, lcProduct));
+        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, lcProduct.getBand("lccs_class")));
         clBand.setSourceImage(new ClImage(source.getBand("CL"), jdBand));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
         sensorBand.setSourceImage(new SensorImage(source.getBand("JD"), sensorId));
@@ -206,22 +206,22 @@ public class PixelFinaliseMapper extends Mapper {
 
         private final Band sourceJdBand;
         private final Band watermask;
-        private final Product lcProduct;
+        private final Band lcBand;
 
-        JdImage(Band sourceJdBand, Band watermask, Product lcProduct) {
+        JdImage(Band sourceJdBand, Band watermask, Band lcBand) {
             super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceJdBand = sourceJdBand;
             this.watermask = watermask;
-            this.lcProduct = lcProduct;
+            this.lcBand = lcBand;
         }
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
             float[] sourceJdArray = new float[destRect.width * destRect.height];
-            int[] lcData = new int[destRect.width * destRect.height];
+            int[] lcArray = new int[destRect.width * destRect.height];
             byte[] watermaskArray = new byte[destRect.width * destRect.height];
             try {
-                lcProduct.getBand("lccs_class").readPixels(destRect.x, destRect.y, destRect.width, destRect.height, lcData);
+                lcBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Int(lcArray));
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
                 watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
             } catch (IOException e) {
@@ -243,7 +243,7 @@ public class PixelFinaliseMapper extends Mapper {
 
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (Float.isNaN(sourceJd)) {
-                        boolean originalIsBurnable = LcRemapping.isInBurnableLcClass(lcData[pixelIndex]);
+                        boolean originalIsBurnable = LcRemapping.isInBurnableLcClass(lcArray[pixelIndex]);
                         sourceJd = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, true, originalIsBurnable, pixelIndex, destRect.width).neighbourValue;
                     }
 
@@ -342,6 +342,23 @@ public class PixelFinaliseMapper extends Mapper {
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
+            int pixelIndex = 0;
+            for (int y = destRect.y; y < destRect.y + destRect.height; y++) {
+                for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
+                    lcData[pixelIndex] = LcRemapping.remap(lcData[pixelIndex]);
+                    if (lcData[pixelIndex] == LcRemapping.INVALID_LC_CLASS) {
+                        lcData[pixelIndex] = 0;
+                    }
+                    int jdValue = jdArray[pixelIndex];
+                    if (jdValue <= 0 || jdValue >= 997) {
+                        lcData[pixelIndex] = 0;
+                    }
+                    dest.setSample(x, y, 0, lcData[pixelIndex]);
+                    pixelIndex++;
+                }
+            }
+
+            /*
             for (int i = 0; i < lcData.length; i++) {
                 lcData[i] = LcRemapping.remap(lcData[i]);
                 if (lcData[i] == LcRemapping.INVALID_LC_CLASS) {
@@ -353,6 +370,7 @@ public class PixelFinaliseMapper extends Mapper {
                 }
                 dest.setSample(destRect.x + i % destRect.width, destRect.y + i / destRect.width, 0, lcData[i]);
             }
+             */
         }
     }
 

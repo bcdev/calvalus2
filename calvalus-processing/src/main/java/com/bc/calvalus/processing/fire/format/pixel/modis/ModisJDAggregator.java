@@ -61,7 +61,7 @@ public class ModisJDAggregator extends AbstractAggregator {
 
         boolean validJdSet = previousJDValue >= 0 && previousJDValue >= minDoy && previousJDValue <= maxDoy;
         boolean inTimeBounds = jd >= minDoy && jd <= maxDoy;
-        boolean preferToPreviousValue = (!validJdSet || jd > previousJDValue) && jd >= 0 && (inTimeBounds || jd == 0);
+        boolean preferToPreviousValue = (!validJdSet || jd < previousJDValue && jd > 0) && jd >= 0 && (inTimeBounds || jd == 0);
 
         if (preferToPreviousValue) {
 //            logger.info("preferring " + jd + " to previous value " + previousJDValue);

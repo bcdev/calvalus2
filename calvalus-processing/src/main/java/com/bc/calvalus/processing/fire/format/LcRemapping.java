@@ -96,18 +96,26 @@ public class LcRemapping {
             case 122:
                 return 120;
             case -126:
+            case 130:
                 return 130;
             case -116:
+            case 140:
                 return 140;
             case -106:
             case -104:
             case -103:
+            case 150:
+            case 152:
+            case 153:
                 return 150;
             case -96:
+            case 160:
                 return 160;
             case -86:
+            case 170:
                 return 170;
             case -76:
+            case 180:
                 return 180;
         }
         return INVALID_LC_CLASS;
