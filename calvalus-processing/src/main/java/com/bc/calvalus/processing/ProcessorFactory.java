@@ -88,8 +88,8 @@ public class ProcessorFactory {
 //                        throw new IOException(e);
 //                    }
                     HadoopProcessingService.addBundleToClassPathStatic(bundlePath, conf, fs);
-                    addBundleArchives(bundlePath, fs, conf);
-                    addBundleLibs(bundlePath, fs, conf);
+                    HadoopProcessingService.addBundleArchives(bundlePath, fs, conf);
+                    HadoopProcessingService.addBundleLibs(bundlePath, fs, conf);
 
                     String executable = conf.get(JobConfigNames.CALVALUS_L2_OPERATOR + "");
                     if (executable != null) {
@@ -108,8 +108,8 @@ public class ProcessorFactory {
                             if (bundleDescriptor.getIncludeBundle() != null) {
                                 Path includeBundlePath = new Path(bundlePath.getParent(), bundleDescriptor.getIncludeBundle());
                                 HadoopProcessingService.addBundleToClassPathStatic(includeBundlePath, conf, fs);
-                                addBundleArchives(includeBundlePath, fs, conf);
-                                addBundleLibs(includeBundlePath, fs, conf);
+                                HadoopProcessingService.addBundleArchives(includeBundlePath, fs, conf);
+                                HadoopProcessingService.addBundleLibs(includeBundlePath, fs, conf);
                             }
                         }
                     } catch (Exception ex) {
@@ -177,6 +177,7 @@ public class ProcessorFactory {
         return bundleSpec.charAt(0) == '/';
     }
 
+/*
     private static void addBundleArchives(Path bundlePath, FileSystem fs, Configuration conf) throws IOException {
         final FileStatus[] archives = fs.listStatus(bundlePath, new PathFilter() {
             @Override
@@ -185,7 +186,7 @@ public class ProcessorFactory {
             }
         });
         for (FileStatus archive : archives) {
-            URI uri = convertPathToURI(archive.getPath());
+            URI uri = convertPathToURI(fs.makeQualified(archive.getPath()));
             DistributedCache.addCacheArchive(uri, conf);
         }
     }
@@ -217,10 +218,11 @@ public class ProcessorFactory {
             }
         });
         for (FileStatus lib : libs) {
-            URI uri = lib.getPath().toUri();
+            URI uri = fs.makeQualified(lib.getPath()).toUri();
             DistributedCache.addCacheFile(uri, conf);
         }
     }
+*/
 
     private static String[] getBundleProcessorFiles(final String processorName, Path bundlePath, FileSystem fs) throws IOException {
         final FileStatus[] processorStatuses = fs.listStatus(bundlePath, new PathFilter() {

@@ -53,7 +53,6 @@ public class CalvalusShFileSystem extends FileSystem {
     public static final String CALVALUS_SH_COMMAND = "/usr/libexec/hadoop/calvalus-sh";
 
     protected final String username;
-    protected Path workingDir = null;
     protected JobClientsMap.CacheEntry cacheEntry = null;
     protected FileSystem unixFileSystem;
 
@@ -63,15 +62,12 @@ public class CalvalusShFileSystem extends FileSystem {
         if (!(fs instanceof CalvalusShFileSystem)) {
             final Configuration conf = cacheEntry.getJobClientInternal().getConf();
             final CalvalusShFileSystem cfs = new CalvalusShFileSystem(username, cacheEntry);
-            try {
-                remoteUser.doAs((PrivilegedExceptionAction<FileSystem>) () -> FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs));
-            } catch (InterruptedException ex) {
-                throw new IOException(ex);
-            }
+            FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs);
+            fileSystemMap.put(username, cfs);
         } else {
             ((CalvalusShFileSystem)fs).setCacheEntry(cacheEntry);
+            fileSystemMap.put(username, fs);
         }
-        fileSystemMap.put(username, fs);
         LOG.info("file system with external access control registered and cached for user " + username);
     }
 
@@ -83,11 +79,7 @@ public class CalvalusShFileSystem extends FileSystem {
         }
         UserGroupInformation currentUser = UserGroupInformation.getCurrentUser();
         final CalvalusShFileSystem cfs = new CalvalusShFileSystem(currentUser.getShortUserName(), fs);
-        try {
-            currentUser.doAs((PrivilegedExceptionAction<FileSystem>) () -> FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs));
-        } catch (InterruptedException ex) {
-            throw new IOException(ex);
-        }
+        FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs);
         LOG.info("file system with external access control registered for user " + currentUser.getShortUserName());
         return cfs;
     }
@@ -128,7 +120,7 @@ public class CalvalusShFileSystem extends FileSystem {
     @Override
     public FSDataInputStream open(Path path, int bufferSize) throws IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         Process proc = callUnixCommand("cat", p);
         LOG.info("file " + p + " externally opened for reading");
         return new DummyFSDataInputStream(proc.getInputStream());
@@ -137,7 +129,7 @@ public class CalvalusShFileSystem extends FileSystem {
     @Override
     public FileStatus[] listStatus(Path path) throws FileNotFoundException, IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         Process proc = callUnixCommand("ls -l", p);
         List<FileStatus> files = collectPathsOutput(proc);
         handleReturnCode(proc, files, path);
@@ -148,35 +140,35 @@ public class CalvalusShFileSystem extends FileSystem {
     @Override
     public FileStatus getFileStatus(Path path) throws IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         if ("/".equals(p)) {
-            LOG.info("file " + path + " externally listed, return default");
+            LOG.info("file " + p + " externally listed, return default");
             return new FileStatus(1, true, 1, 1, 0, 0, FsPermission.createImmutable(Short.parseShort("0755", 8)), "cvop", "cvop", path);
         }
-        //Process proc = callUnixCommand("stat -l", p);
         Process proc = callUnixCommand("stat -l", p);
         //List<FileStatus> files = collectPathsOutput(proc);
-        List<FileStatus> files = collectPathsOutput(proc, p);
+        List<FileStatus> files = collectPathsOutput(proc, new Path("file://" + p));
         handleReturnCode(proc, files, path);
         if (files.size() < 1) {
-            LOG.info("file " + path + " externally listed, not found");
-            throw new FileNotFoundException(path.toString());
+            LOG.info("file " + p + " externally listed, not found");
+            throw new FileNotFoundException(p);
         }
-        LOG.info("file " + path + " externally listed, return entry");
+        LOG.info("file " + p + " externally listed, return entry");
         return files.get(0);
     }
 
     @Override
     public FileStatus[] globStatus(Path path) throws IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         Process proc = callUnixCommand("glob -l", p);
         List<FileStatus> files = collectPathsOutput(proc);
         handleReturnCode(proc, files, path);
-        LOG.info("paths " + path + " externally listed, " + files.size() + " entries");
+        LOG.info("paths " + p + " externally listed, " + files.size() + " entries");
+        // repair broken glob implementation in calvalus-sh
         for (int i=0; i<files.size(); ++i) {
-            proc = callUnixCommand("stat -l", files.get(i).getPath().toString());
-            List<FileStatus> files2 = collectPathsOutput(proc, files.get(i).getPath().toString());
+            proc = callUnixCommand("stat -l", files.get(i).getPath().toUri().getPath());
+            List<FileStatus> files2 = collectPathsOutput(proc, files.get(i).getPath());
             handleReturnCode(proc, files2, files.get(i).getPath());
             if (files2.size() > 0) {
                 files.set(i, files2.get(0));
@@ -188,20 +180,10 @@ public class CalvalusShFileSystem extends FileSystem {
     @Override
     public boolean mkdirs(Path path, FsPermission permission) throws IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         Process proc = callUnixCommand("mkdirs", p, String.format("%o", permission.toShort()));
         LOG.info("dirs " + p + " externally created");
         return waitForReturnCode(proc, path) == 0;
-    }
-
-    private String getUnixPath(Path path) {
-        String p = path.toUri().getPath();
-        if (p.startsWith("file://")) {
-            p = p.substring("file://".length());
-        } else if (p.startsWith("file:")) {
-            p = p.substring("file:".length());
-        }
-        return p;
     }
 
     private Process callUnixCommand(String cmd, String... path) throws IOException {
@@ -210,32 +192,36 @@ public class CalvalusShFileSystem extends FileSystem {
                 : new ProcessBuilder(CALVALUS_SH_COMMAND, username, cmd, path[0], path[1]);
         pb.redirectErrorStream(true);
         Process proc = pb.start();
-        LOG.fine("calling " + CALVALUS_SH_COMMAND + " " + username + " " + cmd + " " + path[0]);
+        if (path.length == 1) {
+            LOG.info("calling " + CALVALUS_SH_COMMAND + " " + username + " " + cmd + " " + path[0]);
+        } else {
+            LOG.info("calling " + CALVALUS_SH_COMMAND + " " + username + " " + cmd + " " + path[0] + " " + path[1]);
+        }
         return proc;
     }
 
     private List<FileStatus> collectPathsOutput(Process proc) throws IOException {
-        List<FileStatus> files = new ArrayList<FileStatus>();
+        List<FileStatus> files = new ArrayList<>();
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 String[] token = line.split("\t");
                 boolean isDir = token[0].endsWith("/");
-                String path = isDir ? token[0].substring(0, token[0].length() - 1) : token[0];
+                Path path = new Path("file://" + (isDir ? token[0].substring(0, token[0].length() - 1) : token[0]));
                 if (token.length >= 3) {
                     long length = Long.parseLong(token[1]);
                     long mtime = Long.parseLong(token[2]);
-                    files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, FsPermission.createImmutable(Short.parseShort("0777", 8)), "cvop", "cvop", new Path(path)));
+                    files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, FsPermission.createImmutable(Short.parseShort("0777", 8)), "cvop", "cvop", path));
                 } else {
-                    files.add(new FileStatus(1, isDir, 1, 1, 0, new Path(path)));
+                    files.add(new FileStatus(1, isDir, 1, 1, 0, path));
                 }
             }
         }
         return files;
     }
 
-    private List<FileStatus> collectPathsOutput(Process proc, String path) throws IOException {
-        List<FileStatus> files = new ArrayList<FileStatus>();
+    private List<FileStatus> collectPathsOutput(Process proc, Path path) throws IOException {
+        List<FileStatus> files = new ArrayList<>();
         try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -244,9 +230,9 @@ public class CalvalusShFileSystem extends FileSystem {
                 if (token.length >= 3) {
                     long length = Long.parseLong(token[1]);
                     long mtime = Long.parseLong(token[2]);
-                    files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, FsPermission.createImmutable(Short.parseShort("0777", 8)), "cvop", "cvop", new Path(path)));
+                    files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, FsPermission.createImmutable(Short.parseShort("0777", 8)), "cvop", "cvop", path));
                 } else {
-                    files.add(new FileStatus(1, isDir, 1, 1, 0, new Path(path)));
+                    files.add(new FileStatus(1, isDir, 1, 1, 0, path));
                 }
             }
         }
@@ -271,7 +257,7 @@ public class CalvalusShFileSystem extends FileSystem {
                     LOG.warning("path " + path.toString() + " externally listed, listing failed");
                     files.clear();
             }
-        } catch (InterruptedException _) {
+        } catch (InterruptedException _e) {
             LOG.fine("path " + path.toString() + " externally listed, interrupted");
             files.clear();
         }
@@ -287,7 +273,7 @@ public class CalvalusShFileSystem extends FileSystem {
                 default:
                     return code;
             }
-        } catch (InterruptedException _) {
+        } catch (InterruptedException _e) {
             LOG.fine("path " + path.toString() + " interrupted");
             return 1;
         }
@@ -312,14 +298,16 @@ public class CalvalusShFileSystem extends FileSystem {
 
     @Override
     public Path makeQualified(Path path) {
-        return unixFileSystem.makeQualified(path);
+        Path p = unixFileSystem.makeQualified(path);
+        LOG.fine("makeQualified of " + path + " is " + p.toUri() + " scheme " + p.toUri().getScheme());
+        return p;
     }
 
 
     @Override
     public FSDataOutputStream create(Path path, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
         setAccessTime();
-        String p = getUnixPath(path);
+        String p = path.toUri().getPath();
         Process proc = callUnixCommand("create", p, String.format("%o", permission.toShort()));
         LOG.info("file " + p + " externally opened for writing");
         return new FSDataOutputStream(proc.getOutputStream(), null);

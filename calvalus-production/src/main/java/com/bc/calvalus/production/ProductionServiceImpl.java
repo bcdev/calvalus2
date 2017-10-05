@@ -15,10 +15,12 @@ import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -115,7 +117,10 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
             Production production;
             try {
                 ProductionType productionType = findProductionType(productionRequest);
-                production = productionType.createProduction(productionRequest);
+                UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(user);
+                production = remoteUser.doAs((PrivilegedExceptionAction<Production>) () ->
+                    productionType.createProduction(productionRequest)
+                );
                 production.getWorkflow().submit();
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, t.getMessage(), t);

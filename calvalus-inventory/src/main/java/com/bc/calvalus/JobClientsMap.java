@@ -74,17 +74,13 @@ public class JobClientsMap {
                 new Exception("Where is anonymous created=").printStackTrace();
             }
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
-            try {
-                JobClient jobClient = remoteUser.doAs((PrivilegedExceptionAction<JobClient>) () -> new JobClient(new JobConf(jobConfTemplate)));
-                CacheEntry cacheEntry = new CacheEntry(jobClient);
-                jobClientsCache.put(userName, cacheEntry);
-                if (withExternalAccessControl) {
-                    CalvalusShFileSystem.createOrRegister(userName, remoteUser, cacheEntry, fileSystemMap);
-                }
-                return jobClient;
-            } catch (InterruptedException e) {
-                throw new IOException(e);
+            JobClient jobClient = new JobClient(new JobConf(jobConfTemplate));
+            CacheEntry cacheEntry = new CacheEntry(jobClient);
+            jobClientsCache.put(userName, cacheEntry);
+            if (withExternalAccessControl) {
+                CalvalusShFileSystem.createOrRegister(userName, remoteUser, cacheEntry, fileSystemMap);
             }
+            return jobClient;
         }
         return jobClientsCache.get(userName).getJobClient();
     }

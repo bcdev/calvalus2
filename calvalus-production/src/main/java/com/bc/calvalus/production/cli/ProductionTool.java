@@ -463,22 +463,22 @@ public class ProductionTool {
     }
 
     private FileSystem getHDFS(String username, final Map<String, String> config) throws IOException {
-        if (config.containsKey("calvalus.hadoop.systemuser")) {
-            username = config.get("calvalus.hadoop.systemuser");
-        }
-        UserGroupInformation hadoop = UserGroupInformation.createRemoteUser(username);
-        try {
-            return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {
-                @Override
-                public FileSystem run() throws Exception {
+//        if (config.containsKey("calvalus.hadoop.systemuser")) {
+//            username = config.get("calvalus.hadoop.systemuser");
+//        }
+//        UserGroupInformation hadoop = UserGroupInformation.createRemoteUser(username);
+//        try {
+//            return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {
+//                @Override
+//                public FileSystem run() throws Exception {
                     Configuration hadoopConfig = getHadoopConf(config);
                     // this get the faulf FS, which is HDFS
                     return FileSystem.get(hadoopConfig);
-                }
-            });
-        } catch (InterruptedException e) {
-            throw new IOException("Interrupted:", e);
-        }
+//                }
+//            });
+//        } catch (InterruptedException e) {
+//            throw new IOException("Interrupted:", e);
+//        }
     }
 
     private void copyToHDFS(Path[] sourcePaths, Path destinationPath, Map<String, String> config) throws IOException {

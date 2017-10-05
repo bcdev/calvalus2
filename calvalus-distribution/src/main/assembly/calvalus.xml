@@ -20,7 +20,6 @@
                 <include>com.bc.calvalus:calvalus-processing</include>
                 <include>jfree:jfreechart</include>
                 <include>jfree:jcommon</include>
-                <include>com.google.guava:guava</include>
             </includes>
             <scope>runtime</scope>
             <useTransitiveDependencies>false</useTransitiveDependencies>

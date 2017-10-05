@@ -23,12 +23,14 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
@@ -56,18 +58,25 @@ public class DefaultInventoryService implements InventoryService {
 
     @Override
     public ProductSet[] getProductSets(String username, String filter) throws IOException {
-        FileSystem fileSystem = fileSystemService.getFileSystem(username);
-        LOG.fine("DefaultInventoryService user " + username + " fs " + fileSystem + " jcm " + fileSystemService.getJobClientsMap());
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(username);
+        try {
+            return remoteUser.doAs((PrivilegedExceptionAction<ProductSet[]>) () -> {
+                FileSystem fileSystem = fileSystemService.getFileSystem(username);
+                LOG.fine("DefaultInventoryService user " + username + " fs " + fileSystem + " jcm " + fileSystemService.getJobClientsMap());
 
-        if (filter != null && filter.startsWith(USER_FILTER)) {
-            String filterUserName = filter.substring(USER_FILTER.length());
-            if (filterUserName.equals("all")) {
-                return loadProcessed(fileSystem, "*");
-            } else {
-                return loadProcessed(fileSystem, filterUserName);
-            }
-        } else {
-            return loadPredefined(fileSystem);
+                if (filter != null && filter.startsWith(USER_FILTER)) {
+                    String filterUserName = filter.substring(USER_FILTER.length());
+                    if (filterUserName.equals("all")) {
+                        return loadProcessed(fileSystem, "*");
+                    } else {
+                        return loadProcessed(fileSystem, filterUserName);
+                    }
+                } else {
+                    return loadPredefined(fileSystem);
+                }
+            });
+        } catch (InterruptedException e) {
+            throw new IOException("failed to retrieve product sets for user " + username, e);
         }
     }
 

@@ -33,8 +33,10 @@ import org.apache.hadoop.mapred.TaskCompletionEvent;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.JobID;
+import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -189,34 +191,38 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     @Override
     public void submit() throws WorkflowException {
         try {
-            CalvalusLogger.getLogger().info("Submitting Job: " + getJobName());
-            Job job = getProcessingService().createJob(getJobName(), jobConfig);
-            configureJob(job);
-            FileSystem fileSystem = processingService.getFileSystem(userName);
-            ProcessorFactory.installProcessorBundles(userName, job.getConfiguration(), fileSystem);
-            validateJob(job);
-            // maybe add calvalus.token parameter
-            getProcessingService().runHooksBeforeSubmission(job);
-            JobID jobId = submitJob(job);
+            UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
+            remoteUser.doAs((PrivilegedExceptionAction<Job>) () -> {
+                CalvalusLogger.getLogger().info("Submitting Job: " + getJobName());
+                Job job = getProcessingService().createJob(getJobName(), jobConfig);
+                configureJob(job);
+                FileSystem fileSystem = processingService.getFileSystem(userName);
+                ProcessorFactory.installProcessorBundles(userName, job.getConfiguration(), fileSystem);
+                validateJob(job);
+                // maybe add calvalus.token parameter
+                getProcessingService().runHooksBeforeSubmission(job);
+                JobID jobId = submitJob(job);
 
-            CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
-            HashMap<String, String> calvalusConfMap = new HashMap<>();
-            for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
-                if (keyValue.getKey().startsWith("calvalus")) {
-                    calvalusConfMap.put(keyValue.getKey(), keyValue.getValue());
+                CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
+                HashMap<String, String> calvalusConfMap = new HashMap<>();
+                for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
+                    if (keyValue.getKey().startsWith("calvalus")) {
+                        calvalusConfMap.put(keyValue.getKey(), keyValue.getValue());
+                    }
                 }
-            }
-            calvalusConfMap.entrySet().
-                    stream().
-                    sorted(Map.Entry.<String, String>comparingByKey()).
-                    forEach(new Consumer<Map.Entry<String, String>>() {
-                        @Override
-                        public void accept(Map.Entry<String, String> keyValue) {
-                            CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue());
-                        }
-                    });
+                calvalusConfMap.entrySet().
+                        stream().
+                        sorted(Map.Entry.<String, String>comparingByKey()).
+                        forEach(new Consumer<Map.Entry<String, String>>() {
+                            @Override
+                            public void accept(Map.Entry<String, String> keyValue) {
+                                CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue());
+                            }
+                        });
 
-            setJobId(jobId);
+                setJobId(jobId);
+                return job;
+            });
         } catch (Throwable e) {
             CalvalusLogger.getLogger().log(Level.SEVERE, e.getMessage(), e);
             throw new WorkflowException("Failed to submit Hadoop job: " + e.getMessage(), e);
@@ -252,6 +258,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         // Add SNAP modules to classpath of Hadoop jobs
         final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
         processingService.addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
+        System.out.println("trace mapreduce.job.cache.files=" + configuration.get("mapreduce.job.cache.files"));
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;

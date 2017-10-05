@@ -145,7 +145,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         for (String regex : inputRegexs) {
             FileSystem fileSystem = new Path(regex).getFileSystem(conf);
             Path qualifiedPath = makeQualified(fileSystem, regex);
-            hugePattern.append(qualifiedPath.toString());
+            hugePattern.append(qualifiedPath.toUri().getPath().toString());
             hugePattern.append("|");
         }
         hugePattern.setLength(hugePattern.length() - 1);
@@ -177,7 +177,7 @@ public abstract class AbstractFileSystemService implements FileSystemService {
                     if (fStat.isDirectory()) {
                         collectFileStatuses(fileSystem, fStat.getPath(), pattern, result);
                     } else {
-                        String fPath = fStat.getPath().toString();
+                        String fPath = fStat.getPath().toUri().getPath();
                         if (matcher != null) {
                             matcher.reset(fPath);
                             if (matcher.matches()) {

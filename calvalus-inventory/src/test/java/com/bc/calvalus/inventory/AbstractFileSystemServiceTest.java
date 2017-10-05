@@ -16,11 +16,23 @@
 
 package com.bc.calvalus.inventory;
 
+import com.bc.calvalus.JobClientsMap;
+import com.bc.calvalus.inventory.hadoop.CalvalusShFileSystem;
+import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.mapred.JobClient;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.junit.Ignore;
 import org.junit.Test;
 
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
@@ -157,5 +169,25 @@ public class AbstractFileSystemServiceTest {
         assertTrue("MER.seq".matches(regex));
         assertTrue("MER.seq".matches(regex));
         assertFalse("MER.seq.index".matches(regex));
+    }
+
+    @Ignore
+    @Test
+    public void testCollectFileStatuses() throws Exception {
+        System.setProperty("calvalus.accesscontrol.external", "true");
+        String user = "boe";
+        JobConf jobConf = new JobConf();
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(user);
+        FileStatus[] fileStatuses = remoteUser.doAs((PrivilegedExceptionAction<FileStatus[]>) () -> {
+            jobConf.set("calvalus.accesscontrol.external", "true");
+            JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
+            jobClientsMap.getJobClient(user);
+            FileSystem fileSystem = jobClientsMap.getFileSystem(user);
+            HdfsFileSystemService fsService = new HdfsFileSystemService(jobClientsMap);
+            List<String> patterns = new ArrayList<>();
+            patterns.add("/calvalus/testdir/t.*");
+            return fsService.globFileStatuses(patterns, jobConf);
+        });
+        assertEquals("number of entries", 2, fileStatuses.length);
     }
 }

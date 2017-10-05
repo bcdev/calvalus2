@@ -92,7 +92,7 @@ public class CalvalusProductIO {
             product = readProductImpl(imageInputStream, ImageInputStream.class, inputFormat);
             if (product == null) {
                 File localFile;
-                if (path.getFileSystem(configuration).getScheme().equals("file")) {
+                if (path.getFileSystem(configuration).getScheme().equals("file")) {    // TODO: bad criterion for whether file is "local"
                     localFile = new File(path.toUri());
                 } else {
                     localFile = copyFileToLocal(path, configuration);
