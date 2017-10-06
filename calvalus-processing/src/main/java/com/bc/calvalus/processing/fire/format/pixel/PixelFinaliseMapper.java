@@ -149,7 +149,7 @@ public class PixelFinaliseMapper extends Mapper {
 
         Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
         Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
-        Band lcBand = target.addBand("LC", ProductData.TYPE_INT8);
+        Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
         Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
 
         jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, lcProduct.getBand("lccs_class")));
@@ -357,20 +357,6 @@ public class PixelFinaliseMapper extends Mapper {
                     pixelIndex++;
                 }
             }
-
-            /*
-            for (int i = 0; i < lcData.length; i++) {
-                lcData[i] = LcRemapping.remap(lcData[i]);
-                if (lcData[i] == LcRemapping.INVALID_LC_CLASS) {
-                    lcData[i] = 0;
-                }
-                int jdValue = jdArray[i];
-                if (jdValue <= 0 || jdValue >= 997) {
-                    lcData[i] = 0;
-                }
-                dest.setSample(destRect.x + i % destRect.width, destRect.y + i / destRect.width, 0, lcData[i]);
-            }
-             */
         }
     }
 
