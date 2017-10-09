@@ -78,7 +78,7 @@ public class JobClientsMap {
             CacheEntry cacheEntry = new CacheEntry(jobClient);
             jobClientsCache.put(userName, cacheEntry);
             if (withExternalAccessControl) {
-                CalvalusShFileSystem.createOrRegister(userName, remoteUser, cacheEntry, fileSystemMap);
+                CalvalusShFileSystem.createOrRegister(userName, cacheEntry, fileSystemMap);
             }
             return jobClient;
         }
@@ -156,7 +156,8 @@ public class JobClientsMap {
         long now = System.currentTimeMillis();
         long clearIfOlder = now - CACHE_RETENTION;
         if (withExternalAccessControl) {
-            fileSystemMap.values().removeIf(fileSystem -> ((CalvalusShFileSystem) fileSystem).getCacheEntry().accessTime < clearIfOlder);
+            fileSystemMap.values().removeIf(fileSystem -> ((fileSystem instanceof CalvalusShFileSystem)
+                    && ((CalvalusShFileSystem) fileSystem).getCacheEntry().accessTime < clearIfOlder));
         }
         jobClientsCache.values().removeIf(cacheEntry -> cacheEntry.accessTime < clearIfOlder);
     }
