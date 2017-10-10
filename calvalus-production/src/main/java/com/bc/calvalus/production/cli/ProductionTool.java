@@ -30,14 +30,33 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.JobID;
 import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.io.pem.PemObject;
+import org.bouncycastle.util.io.pem.PemReader;
 import org.jdom.JDOMException;
 
+import javax.crypto.Cipher;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.GeneralSecurityException;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
 import java.security.PrivilegedExceptionAction;
+import java.security.Security;
+import java.security.spec.KeySpec;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * The Calvalus production CLI tool "cpt".
@@ -87,6 +106,10 @@ public class ProductionTool {
 
     private boolean errors;
     private boolean quiet;
+
+    static {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 
     public static void main(String[] args) {
         new ProductionTool().run(args);
@@ -182,11 +205,10 @@ public class ProductionTool {
 
             // todo - put WPS XML filename into ProductionRequest using parameter "calvalus.request.file" (nf)
             // todo - put WPS XML content into ProductionRequest using parameter "calvalus.request.xml" (nf)
-            FileReader requestReader = new FileReader(requestPath);
             ProductionRequest request;
-            try {
+            try (FileReader requestReader = new FileReader(requestPath)) {
                 say(String.format("Loading production request '%s'...", requestPath));
-                if (requestPath.endsWith(".yaml")||requestPath.endsWith(".yml")) {
+                if (requestPath.endsWith(".yaml") || requestPath.endsWith(".yml")) {
                     say("Production request  format is 'YAML'");
                     request = new YamlProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
                 } else {
@@ -194,8 +216,6 @@ public class ProductionTool {
                     request = new WpsProductionRequestConverter(requestReader).loadProductionRequest(getUserName());
                 }
                 say(String.format("Production request loaded, type is '%s'.", request.getProductionType()));
-            } finally {
-                requestReader.close();
             }
 
             String authPolicy;
@@ -211,7 +231,13 @@ public class ProductionTool {
                     serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(config, getUserName()));
                     break;
                 case "saml":
-                    throw new RuntimeException("external IDP authentication not implemented yet");
+                    String casUrl = config.getOrDefault("calvalus.cas.url", "https://tsedos.eoc.dlr.de/cas-codede");
+                    String portalUrl = config.getOrDefault("calvalus.portal.url", "http://cd-cvportal:8080/calvalus-portal/calvalus.jsp");
+                    say(String.format("Fetching SAML token from %s and adding to request.", casUrl));
+                    String tgt = fetchTgt(casUrl);
+                    String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
+                    request.setParameter("calvalus.saml.token", samlToken);
+                    break;
                 default:
                     throw new RuntimeException("unknown auth type " + authPolicy);
             }
@@ -229,6 +255,8 @@ public class ProductionTool {
             exit("Error", 5, e);
         } catch (InterruptedException e) {
             exit("Warning: Workflow monitoring cancelled! Job may be still alive!", 0);
+        } catch (GeneralSecurityException e) {
+            exit("Error fetching SAML token.", 6, e);
         } finally {
             if (serviceContainer != null && serviceContainer.getProductionService() != null) {
                 try {
@@ -237,6 +265,75 @@ public class ProductionTool {
                     exit("Warning: Failed to close production service! Job may be still alive!", 0);
                 }
             }
+        }
+    }
+
+    private String fetchSamlToken(String tgt, final String casUrl, String portalUrl) throws IOException {
+        String urlString = casUrl + "/samlCreate2?serviceUrl=" + portalUrl;
+        URL url = new URL(urlString);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("charset", "utf-8");
+        conn.setRequestProperty("Cookie", "CASTGC=" + tgt);
+        conn.setUseCaches(false);
+        StringBuilder saml = new StringBuilder();
+        try (InputStream in = conn.getInputStream()) {
+            int c;
+            while ((c = in.read()) > 0) {
+                saml.append((char) c);
+            }
+        }
+
+        return saml.toString();
+    }
+
+    private String fetchTgt(String casUrl) throws IOException, GeneralSecurityException {
+        byte[] encryptedSecret = createEncryptedSecret(getUserName());
+        String urlParameters = "client_name=PKEY&userid=" + getUserName() + "&secret=" + new String(encryptedSecret);
+        byte[] postData = urlParameters.getBytes(StandardCharsets.UTF_8);
+        int postDataLength = postData.length;
+        URL url = new URL(casUrl + "/login");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setInstanceFollowRedirects(false);
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        conn.setRequestProperty("charset", "utf-8");
+        conn.setRequestProperty("Content-Length", Integer.toString(postDataLength));
+        conn.setUseCaches(false);
+        try (DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+            wr.write(postData);
+        }
+        Map<String, List<String>> headerFields = conn.getHeaderFields();
+        if (headerFields == null) {
+            throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
+        }
+        List<String> setCookieFields = headerFields.get("Set-Cookie");
+        String setCookie = setCookieFields.get(1);
+        String tgtPart1 = setCookie.split(";")[0];
+
+        return tgtPart1.split("=")[1];
+    }
+
+    private byte[] createEncryptedSecret(String userId) throws IOException, GeneralSecurityException {
+        try (final PemReader pr = new PemReader(new FileReader("/home/" + userId + "/.ssh/id_rsa"))) {
+            final PemObject po = pr.readPemObject();
+
+            final KeySpec keySpec = new PKCS8EncodedKeySpec(po.getContent());
+            final KeyFactory keyFact = KeyFactory.getInstance("RSA", "BC");
+            final PrivateKey privateKey = keyFact.generatePrivate(keySpec);
+
+            final Cipher cipher = Cipher.getInstance("RSA");
+            cipher.init(Cipher.ENCRYPT_MODE, privateKey);
+            final SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+            df.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            String token = userId + '\n' + df.format(new Date()) + "\n47110815";
+            byte[] bytes = cipher.doFinal(token.getBytes());
+            return Base64.getUrlEncoder().encode(bytes);
         }
     }
 
