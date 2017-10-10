@@ -96,7 +96,7 @@ public class JobClientsMap {
         } else {
             fileSystem = getJobClient(username).getFs();
         }
-        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 
@@ -116,7 +116,7 @@ public class JobClientsMap {
                 throw new IOException(e);
             }
         }
-        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 
@@ -135,7 +135,7 @@ public class JobClientsMap {
                 throw new IOException(e);
             }
         }
-        LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
+        //LOG.info("JobClientsMap user " + username + " fs " + fileSystem + " jcm " + this);
         return fileSystem;
     }
 

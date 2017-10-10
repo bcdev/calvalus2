@@ -24,6 +24,8 @@ for installed SNAP:
   /opt/java/jdk1.8.0_102/bin/java -cp ./snap/modules/ext/org.esa.snap.snap-engine-utilities/org-esa-snap/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-5.0-bundle.zip /opt/viewer/snap-5.0
 for Maven-built software project:
   /opt/java/jdk1.8.0_102/bin/java -cp ./snap/snap-engine/snap-runtime/target/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-6.0-SNAPSHOT-bundle.zip .
+for Calvalus project:
+  Build Calvalus with Maven and look into calvalus-snap/target/snap-bundle/
 
 ===========================================================================
 Software archive
