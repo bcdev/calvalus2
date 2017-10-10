@@ -108,6 +108,7 @@ public class GeodbInputFormat extends InputFormat {
         for (String geoInventory : geoInventories) {
             StreamFactory streamFactory = new HDFSStreamFactory(conf);
             SafeUpdateInventory inventory = new SafeUpdateInventory(streamFactory, geoInventory);
+            inventory.setUpdatePrefix("scan.");
             inventory.setVerbose(true);
             inventory.setFailOnMissingDB(failOnMissingDB);
             paths.addAll(inventory.query(constrains));
