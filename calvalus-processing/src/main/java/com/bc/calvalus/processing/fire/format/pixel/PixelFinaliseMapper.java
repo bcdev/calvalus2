@@ -161,7 +161,7 @@ public class PixelFinaliseMapper extends Mapper {
     }
 
     static String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MSI-AREA_%s-%s", year, month, areaString.split(";")[0].replace(" ", "_"), version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0].replace(" ", "_"), version);
     }
 
     static String createMetadata(String year, String month, String version, String areaString) throws IOException {
@@ -170,7 +170,6 @@ public class PixelFinaliseMapper extends Mapper {
         String top = areaString.split(";")[2];
         String right = areaString.split(";")[3];
         String bottom = areaString.split(";")[4];
-
 
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
