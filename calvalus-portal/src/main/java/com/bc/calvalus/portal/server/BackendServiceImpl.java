@@ -892,7 +892,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
         }
         backendConfig.getConfigMap().put("roles", accu.toString());
-        LOG.info("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
+        //LOG.info("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
     }
 

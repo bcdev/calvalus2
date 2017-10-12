@@ -30,14 +30,12 @@ import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.security.AccessControlException;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -57,30 +55,37 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     protected final String username;
     protected JobClientsMap.CacheEntry cacheEntry = null;
     protected FileSystem unixFileSystem;
+    protected boolean isLoginUser;
 
     public CalvalusShFileSystem() throws IOException {
         this.username = UserGroupInformation.getCurrentUser().getShortUserName();
         this.unixFileSystem = new LocalFileSystem();
-        LOG.info("new CalvalusShFileSystem for " + username);
+        this.isLoginUser = username.equals(UserGroupInformation.getLoginUser().getShortUserName());
+        LOG.info("new CalvalusShFileSystem for " + username + " " + isLoginUser);
+
     }
 
-    public CalvalusShFileSystem(String username, FileSystem fs) {
+    public CalvalusShFileSystem(String username, FileSystem fs) throws IOException {
         this.username = username;
         this.unixFileSystem = fs;
-        LOG.info("new CalvalusShFileSystem for " + username);
+        this.isLoginUser = username.equals(UserGroupInformation.getLoginUser().getShortUserName());
+        LOG.info("new CalvalusShFileSystem for " + username + " " + isLoginUser);
     }
 
     public CalvalusShFileSystem(String username, JobClientsMap.CacheEntry cacheEntry) throws IOException {
         this.username = username;
         this.cacheEntry = cacheEntry;
         unixFileSystem = cacheEntry.getJobClientInternal().getFs();
-        LOG.info("new CalvalusShFileSystem for " + username);
+        this.isLoginUser = username.equals(UserGroupInformation.getLoginUser().getShortUserName());
+        LOG.info("new CalvalusShFileSystem for " + username + " " + isLoginUser);
     }
 
     @Override
     public void initialize(URI name, Configuration conf) throws IOException {
         super.initialize(name, conf);
+        setConf(conf);
         unixFileSystem.initialize(name, conf);
+        unixFileSystem.setConf(conf);
     }
 
     /** Maybe creates CalvalusShFileSystem and replaces user's file system in FileSystem registry, adds it to fileSystemMap */
@@ -98,6 +103,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
         } else {
             final Configuration conf = cacheEntry.getJobClientInternal().getConf();
             final CalvalusShFileSystem cfs = new CalvalusShFileSystem(username, cacheEntry);
+            cfs.initialize(fs.getUri(), conf);
             FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs);
             fileSystemMap.put(username, cfs);
             LOG.info("file system with external access control registered and cached for user " + username);
@@ -114,6 +120,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
             LOG.info("avoid registration of CalvalusShFileSystem for login user " + currentUser.getShortUserName());
         } else {
             final CalvalusShFileSystem cfs = new CalvalusShFileSystem(currentUser.getShortUserName(), fs);
+            cfs.initialize(uri, conf);
             FileSystemSetter.addFileSystemForTesting(FileSystem.getDefaultUri(conf), conf, cfs);
             LOG.info("file system with external access control registered for user " + currentUser.getShortUserName());
             fs = cfs;
@@ -143,6 +150,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public FileStatus[] listStatus(Path path) throws FileNotFoundException, IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.listStatus(path); }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand("ls", p);
         List<FileStatus> files = collectPathsOutput(proc);
@@ -154,6 +162,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public FileStatus getFileStatus(Path path) throws IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.getFileStatus(path); }
         String p = path.toUri().getPath();
         if ("/".equals(p)) {
             LOG.info("file " + p + " externally listed, return default");
@@ -174,6 +183,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public FileStatus[] globStatus(Path path) throws IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.globStatus(path); }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand("glob", p);
         List<FileStatus> files = collectPathsOutput(proc);
@@ -183,40 +193,69 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     }
 
     @Override
-    public FSDataInputStream open(Path f) throws IOException {
-        return open(f, 4096);
+    public FSDataInputStream open(Path path) throws IOException {
+        if (isLoginUser) { return unixFileSystem.open(path); }
+        return open(path, 4096);
     }
 
     @Override
     public FSDataInputStream open(Path path, int bufferSize) throws IOException {
         setAccessTime();
-        String p = path.toUri().getPath();
+        if (isLoginUser) { return unixFileSystem.open(path); }
+        final String p = path.toUri().getPath();
         Process proc = callUnixCommand("cat", p);
         LOG.info("file " + p + " externally opened for reading");
-        return new DummyFSDataInputStream(proc.getInputStream());
+        return new DummyFSDataInputStream(proc.getInputStream()){
+            @Override
+            public void close() throws IOException {
+                super.close();
+                LOG.info("file " + p + " externally closed");
+            }
+        };
     }
 
     @Override
     public FSDataOutputStream create(Path path, FsPermission permission, boolean overwrite, int bufferSize, short replication, long blockSize, Progressable progress) throws IOException {
         setAccessTime();
-        String p = path.toUri().getPath();
+        if (isLoginUser) { return unixFileSystem.create(path, permission, overwrite, bufferSize, replication, blockSize, progress); }
+        final String p = path.toUri().getPath();
+        if (! exists(path.getParent())) {
+            mkdirs(path.getParent(), FsPermission.createImmutable(Short.parseShort("0777", 8)));
+        }
         Process proc = callUnixCommand("create", p, String.format("%o", permission.toShort()));
         LOG.info("file " + p + " externally opened for writing");
-        return new FSDataOutputStream(proc.getOutputStream(), null);
+        return new FSDataOutputStream(proc.getOutputStream(), null) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                LOG.info("file " + p + " externally closed");
+            }
+        };
     }
 
     @Override
     public FSDataOutputStream append(Path path, int bufferSize, Progressable progress) throws IOException {
         setAccessTime();
-        String p = path.toUri().getPath();
+        if (isLoginUser) { return unixFileSystem.append(path, bufferSize, progress); }
+        if (!exists(path)) {
+            throw new FileNotFoundException("File " + path + " not found");
+        }
+        final String p = path.toUri().getPath();
         Process proc = callUnixCommand("append", p);
         LOG.info("file " + p + " externally opened for appending");
-        return new FSDataOutputStream(proc.getOutputStream(), null);
+        return new FSDataOutputStream(proc.getOutputStream(), null){
+            @Override
+            public void close() throws IOException {
+                super.close();
+                LOG.info("file " + p + " externally closed");
+            }
+        };
     }
 
     @Override
     public boolean mkdirs(Path path, FsPermission permission) throws IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.mkdirs(path, permission); }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand("mkdirs", p, String.format("%o", permission.toShort()));
         LOG.info("dirs " + p + " externally created");
@@ -226,6 +265,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public void setPermission(Path path, FsPermission permission) throws IOException {
         setAccessTime();
+        if (isLoginUser) { unixFileSystem.setPermission(path, permission); }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand("chmod", p, String.format("%o", permission.toShort()));
         LOG.info("permission of " + p + " externally set");
@@ -235,6 +275,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public boolean rename(Path src, Path dst) throws IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.rename(src, dst); }
         String p1 = src.toUri().getPath();
         String p2 = dst.toUri().getPath();
         Process proc = callUnixCommand("mv", p1, p2);
@@ -245,6 +286,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public boolean delete(Path path, boolean recursive) throws IOException {
         setAccessTime();
+        if (isLoginUser) { return unixFileSystem.delete(path, recursive); }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand(recursive ? "rm -r" : "rm", p);
         LOG.info("path " + p + " deleted");
@@ -308,7 +350,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
                     long mtime = Long.parseLong(token[2]);
                     FsPermission perm = FsPermission.createImmutable(Short.parseShort(token[3], 8));
                     files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, perm, token[4], token[5], path));
-                } if (token.length >= 3) {
+                } else if (token.length >= 3) {
                     long length = Long.parseLong(token[1]);
                     long mtime = Long.parseLong(token[2]);
                     files.add(new FileStatus(length, isDir, 1, length, mtime, mtime, FsPermission.createImmutable(Short.parseShort("0777", 8)), "cvop", "cvop", path));

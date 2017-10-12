@@ -16,8 +16,6 @@
 
 package com.bc.calvalus.commons;
 
-import org.esa.snap.runtime.EngineConfig;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.MessageFormat;
@@ -40,22 +38,21 @@ public class CalvalusLogger {
         Logger logger = Logger.getLogger("com.bc.calvalus");
         logger.setUseParentHandlers(false);
         Handler handler = new ConsoleHandler();
+//        FileHandler handler = null;
+//        try {
+//            handler = new FileHandler("/tmp/calvalus.log");
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//            throw new RuntimeException(e);
+//        }
         handler.setFormatter(new LogFormatter());
         logger.addHandler(handler);
         logger.setLevel(Level.INFO);
 
-        Logger snapLogger = EngineConfig.instance().logger();
+        Logger snapLogger = Logger.getLogger("org.esa.snap");
         snapLogger.setUseParentHandlers(false);
         snapLogger.addHandler(handler);
         snapLogger.setLevel(Level.INFO);
-
-        // this work but results in a lot of noise
-//        Logger ceresLogger = Logger.getLogger("ceres");
-//        ceresLogger.setUseParentHandlers(false);
-//        ceresLogger.addHandler(handler);
-//        ceresLogger.setLevel(Level.INFO);
-//        System.setProperty("ceres.logLevel", "INFO");
-//        System.setProperty("ceres.consoleLog", "true");
 
         Logger rootLogger = Logger.getLogger("");
         rootLogger.setUseParentHandlers(false);

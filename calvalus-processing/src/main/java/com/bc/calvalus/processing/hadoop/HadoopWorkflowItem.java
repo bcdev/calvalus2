@@ -201,7 +201,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 validateJob(job);
                 // maybe add calvalus.token parameter
                 getProcessingService().runHooksBeforeSubmission(job);
-                JobID jobId = submitJob(job);
+                JobID jobId = submitJob(job);  // TODO: maybe move out of scope of the doAs, the impl of submitJob does a doAs as well
 
                 CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
                 HashMap<String, String> calvalusConfMap = new HashMap<>();

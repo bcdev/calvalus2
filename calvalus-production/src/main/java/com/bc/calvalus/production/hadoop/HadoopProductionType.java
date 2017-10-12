@@ -227,15 +227,12 @@ public abstract class HadoopProductionType implements ProductionType {
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
             String name = entry.getKey();
             if (name.startsWith("calvalus.hadoop.")) {
-                if (!name.startsWith("calvalus.hadoop.fs.AbstractFileSystem")) {
-                    String hadoopName = name.substring("calvalus.hadoop.".length());
-                    jobConfig.set(hadoopName, entry.getValue());
-                }
+                String hadoopName = name.substring("calvalus.hadoop.".length());
+                jobConfig.set(hadoopName, entry.getValue());
             } else if (name.startsWith("calvalus.")
                     && !name.startsWith("calvalus.portal")
                     && !name.startsWith("calvalus.crypt")
-                    && !name.startsWith("calvalus.system")
-                    && !name.startsWith("calvalus.hadoop.fs.AbstractFileSystem")) {
+                    && !name.startsWith("calvalus.system")) {
                 jobConfig.set(name, entry.getValue());
             }
         }

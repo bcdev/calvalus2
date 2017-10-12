@@ -53,6 +53,19 @@ public class CalvalusShFileSystemTest {
 
     @Test
     @Ignore
+    public void testGlob() throws Exception {
+        System.setProperty("calvalus.accesscontrol.external", "true");
+        String user = "dhus";
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
+        JobClient jobClient = jobClientsMap.getJobClient(user);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(user);
+        for (FileStatus fileStatus : fileSystem.globStatus(new Path("/calvalus/testdir/t*"))) {
+            System.out.println(fileStatus.getPath() + " " + fileStatus.isDirectory());
+        }
+    }
+
+    @Test
+    @Ignore
     public void testCat() throws Exception {
         System.setProperty("calvalus.accesscontrol.external", "true");
         String user = "boe";
