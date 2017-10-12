@@ -71,6 +71,17 @@ public class CalvalusDataInputs {
             inputMapFormatted.put("productionType", "L2Plus");
             // TODO check whether this is safe
             inputMapFormatted.put("calvalus.system.snap.dataio.bigtiff.support.pushprocessing", "false");
+            // determine and set period length - dates are expected in the geo index impl, null is not supported
+            String minDate = inputMapRaw.get("minDate");
+            if (minDate == null || minDate.length() == 0) {
+                minDate = inputMapFormatted.get("minDateSource");
+                inputMapFormatted.put("minDate", minDate);
+            }
+            String maxDate = inputMapRaw.get("maxDate");
+            if (maxDate == null || maxDate.length() == 0) {
+                maxDate = inputMapFormatted.get("maxDateSource");
+                inputMapFormatted.put("maxDate", maxDate);
+            }
         }
         if (inputMapRaw.containsKey("calvalus.ql.parameters")) {
             inputMapFormatted.put("calvalus.ql.parameters", inputMapRaw.get("calvalus.ql.parameters"));
