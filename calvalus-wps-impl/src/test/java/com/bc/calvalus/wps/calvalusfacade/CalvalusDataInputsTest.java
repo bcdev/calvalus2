@@ -175,8 +175,8 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSetsMultiPattern, mockRequestHeader);
 
         assertThat(calvalusDataInputs.getValue("inputPath"), equalTo("/calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                                     "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                                     "/calvalus/eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
+                                                                             "/calvalus/eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                                             "/calvalus/eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1"));
         assertThat(calvalusDataInputs.getValue("minDate"), equalTo("2009-06-01"));
         assertThat(calvalusDataInputs.getValue("maxDate"), equalTo("2009-06-30"));
         assertThat(calvalusDataInputs.getValue("periodLength"), equalTo("30"));
@@ -196,10 +196,10 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "<outputNormReflec>true</outputNormReflec>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "<outputNormReflec>true</outputNormReflec>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -213,9 +213,9 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doAtmosphericCorrection>true</doAtmosphericCorrection>\n" +
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -229,8 +229,8 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("<parameters>\n" +
-                                                                               "<doSmileCorrection>false</doSmileCorrection>\n" +
-                                                                               "</parameters>"));
+                                                                                       "<doSmileCorrection>false</doSmileCorrection>\n" +
+                                                                                       "</parameters>"));
     }
 
     @Test
@@ -243,28 +243,28 @@ public class CalvalusDataInputsTest {
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
         assertThat(calvalusDataInputs.getValue("processorParameters"), equalTo("########################\n" +
-                                                                               "# POLYMER COMMAND FILE #\n" +
-                                                                               "########################\n" +
-                                                                               "# NB: paths can be given as relative or absolute\n" +
-                                                                               "# lines starting with character '#' are ignored\n" +
-                                                                               "# INPUT/OUTPUT ######\n" +
-                                                                               "L1_FORMAT MERIS\n" +
-                                                                               "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
-                                                                               "OUTPUT_FORMAT NETCDF\n" +
-                                                                               "# uncomments this to process only a subset of the rows in the L1 file\n" +
-                                                                               "# PROCESS_ROWS 7700 9000\n" +
-                                                                               "# NCEP and TOMS filenames\n" +
-                                                                               "# if commented or missing, MERIS level1 ancillary data will be used\n" +
-                                                                               "# ${ncep_toms}FILE_METEO $file_meteo\n" +
-                                                                               "# ${ncep_toms}FILE_OZONE $file_oz\n" +
-                                                                               "# possible values ERA_INTERIM or NCEP\n" +
-                                                                               "AUXDATA NCEP\n" +
-                                                                               "# BANDS DEFINITION #######\n" +
-                                                                               "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
-                                                                               "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
-                                                                               "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900"));
+                                                                                       "# POLYMER COMMAND FILE #\n" +
+                                                                                       "########################\n" +
+                                                                                       "# NB: paths can be given as relative or absolute\n" +
+                                                                                       "# lines starting with character '#' are ignored\n" +
+                                                                                       "# INPUT/OUTPUT ######\n" +
+                                                                                       "L1_FORMAT MERIS\n" +
+                                                                                       "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
+                                                                                       "OUTPUT_FORMAT NETCDF\n" +
+                                                                                       "# uncomments this to process only a subset of the rows in the L1 file\n" +
+                                                                                       "# PROCESS_ROWS 7700 9000\n" +
+                                                                                       "# NCEP and TOMS filenames\n" +
+                                                                                       "# if commented or missing, MERIS level1 ancillary data will be used\n" +
+                                                                                       "# ${ncep_toms}FILE_METEO $file_meteo\n" +
+                                                                                       "# ${ncep_toms}FILE_OZONE $file_oz\n" +
+                                                                                       "# possible values ERA_INTERIM or NCEP\n" +
+                                                                                       "AUXDATA NCEP\n" +
+                                                                                       "# BANDS DEFINITION #######\n" +
+                                                                                       "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
+                                                                                       "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
+                                                                                       "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900"));
     }
 
     @Test
@@ -278,26 +278,29 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                                          "calvalus.output.compression : none\n" +
-                                                          "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
-                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
+        assertThat(calvalusDataInputs.toString(),
+                   equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
+                                   "calvalus.output.compression : none\n" +
+                                   "processorBundleLocation : hdfs://calvalus/calvalus/software/1.0/beam-buildin-1.0\n" +
+                                   "calvalus.wps.remote.user : dummyRemoteUser\n" +
 //                                                          "productionType : L3\n" +
-                                                          "productionType : L2Plus\n" +
-                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
-                                                          "processorBundleVersion : null\n" +
-                                                          "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
-                                                          "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
-                                                          "quicklooks : true\n" +
-                                                          "autoStaging : true\n" +
-                                                          "calvalus.snap.bundle : snap-3.0.0\n" +
-                                                          "processorName : null\n" +
-                                                          "processorBundleName : null\n" +
-                                                          "processorParameters : null\n" +
-                                                          "productionName : dummyProductionName\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
-                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+                                   "productionType : L2Plus\n" +
+                                   "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
+                                   "processorBundleVersion : null\n" +
+                                   "calvalus.calvalus.bundle : calvalus-2.0b411\n" +
+                                   "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                   "quicklooks : true\n" +
+                                   "autoStaging : true\n" +
+                                   "calvalus.snap.bundle : snap-3.0.0\n" +
+                                   "processorName : null\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
+                                   "processorBundleName : null\n" +
+                                   "processorParameters : null\n" +
+                                   "productionName : dummyProductionName\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                   "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
     @Test(expected = InvalidParameterValueException.class)
@@ -319,22 +322,25 @@ public class CalvalusDataInputsTest {
 
         calvalusDataInputs = new CalvalusDataInputs(mockExecuteRequestExtractor, mockCalvalusProcessor, productSets, mockRequestHeader);
 
-        assertThat(calvalusDataInputs.toString(), equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
-                                                          "calvalus.output.compression : none\n" +
-                                                          "processorBundleLocation : null\n" +
-                                                          "calvalus.wps.remote.user : dummyRemoteUser\n" +
-                                                          "productionType : L2Plus\n" +
-                                                          "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
-                                                          "processorBundleVersion : null\n" +
-                                                          "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
-                                                          "minDateSource : 2016-01-01T01:00:00+01:00\n" +
-                                                          "quicklooks : true\n" +
-                                                          "autoStaging : true\n" +
-                                                          "processorName : null\n" +
-                                                          "processorBundleName : null\n" +
-                                                          "processorParameters : null\n" +
-                                                          "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
-                                                          "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
+        assertThat(calvalusDataInputs.toString(),
+                   equalTo("calvalus.wps.remote.ref : 1738ad7b-534e-4aca-9861-b26fb9c0f983\n" +
+                                   "minDate : 2016-01-01T01:00:00+01:00\n" +
+                                   "calvalus.output.compression : none\n" +
+                                   "processorBundleLocation : null\n" +
+                                   "calvalus.wps.remote.user : dummyRemoteUser\n" +
+                                   "productionType : L2Plus\n" +
+                                   "inputDataSetName : MERIS RR  r03 L1b 2002-2012\n" +
+                                   "processorBundleVersion : null\n" +
+                                   "inputPath : /calvalus/eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1\n" +
+                                   "minDateSource : 2016-01-01T01:00:00+01:00\n" +
+                                   "quicklooks : true\n" +
+                                   "autoStaging : true\n" +
+                                   "processorName : null\n" +
+                                   "maxDate : 2017-01-01T01:00:00+01:00\n" +
+                                   "processorBundleName : null\n" +
+                                   "processorParameters : null\n" +
+                                   "maxDateSource : 2017-01-01T01:00:00+01:00\n" +
+                                   "calvalus.system.snap.dataio.bigtiff.support.pushprocessing : false\n"));
     }
 
     private Map<String, String> getMockRequestHeader() {
@@ -356,8 +362,8 @@ public class CalvalusDataInputsTest {
         ProductSet mockProductSet = mock(ProductSet.class);
         when(mockProductSet.getName()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         when(mockProductSet.getPath()).thenReturn("eodata/MER_RR__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                  "eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
-                                                  "eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
+                                                          "eodata/MER_RRG__1P/r03/${yyyy}/${MM}/${dd}/.*.N1," +
+                                                          "eodata/MER_FRS__1P/r03/${yyyy}/${MM}/${dd}/.*.N1");
         when(mockProductSet.getProductType()).thenReturn("MERIS RR  r03 L1b 2002-2012");
         return new ProductSet[]{mockProductSet};
     }
@@ -383,28 +389,28 @@ public class CalvalusDataInputsTest {
 
     private String getMockDefaultParameters() {
         return "########################\n" +
-               "# POLYMER COMMAND FILE #\n" +
-               "########################\n" +
-               "# NB: paths can be given as relative or absolute\n" +
-               "# lines starting with character '#' are ignored\n" +
-               "# INPUT/OUTPUT ######\n" +
-               "L1_FORMAT MERIS\n" +
-               "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
-               "OUTPUT_FORMAT NETCDF\n" +
-               "# uncomments this to process only a subset of the rows in the L1 file\n" +
-               "# PROCESS_ROWS 7700 9000\n" +
-               "# NCEP and TOMS filenames\n" +
-               "# if commented or missing, MERIS level1 ancillary data will be used\n" +
-               "# ${ncep_toms}FILE_METEO $file_meteo\n" +
-               "# ${ncep_toms}FILE_OZONE $file_oz\n" +
-               "# possible values ERA_INTERIM or NCEP\n" +
-               "AUXDATA NCEP\n" +
-               "# BANDS DEFINITION #######\n" +
-               "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
-               "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
-               "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900";
+                "# POLYMER COMMAND FILE #\n" +
+                "########################\n" +
+                "# NB: paths can be given as relative or absolute\n" +
+                "# lines starting with character '#' are ignored\n" +
+                "# INPUT/OUTPUT ######\n" +
+                "L1_FORMAT MERIS\n" +
+                "# output format: HDF, NETCDF, NETCDF_CLASSIC\n" +
+                "OUTPUT_FORMAT NETCDF\n" +
+                "# uncomments this to process only a subset of the rows in the L1 file\n" +
+                "# PROCESS_ROWS 7700 9000\n" +
+                "# NCEP and TOMS filenames\n" +
+                "# if commented or missing, MERIS level1 ancillary data will be used\n" +
+                "# ${ncep_toms}FILE_METEO $file_meteo\n" +
+                "# ${ncep_toms}FILE_OZONE $file_oz\n" +
+                "# possible values ERA_INTERIM or NCEP\n" +
+                "AUXDATA NCEP\n" +
+                "# BANDS DEFINITION #######\n" +
+                "BANDS_CORR 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_OC 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_RW 412 443 490 510 560 620 665 754 779 865\n" +
+                "BANDS_LUTS 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900\n" +
+                "BANDS_L1 412 443 490 510 560 620 665 681 709 754 760 779 865 885 900";
     }
 
     private ParameterDescriptor[] getMockParameterDescriptorArray() {
