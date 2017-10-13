@@ -5,7 +5,6 @@ import org.apache.hadoop.fs.PositionedReadable;
 import org.apache.hadoop.fs.ReadOption;
 import org.apache.hadoop.fs.Seekable;
 import org.apache.hadoop.io.ByteBufferPool;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileDescriptor;
@@ -30,32 +29,32 @@ public class DummyFSDataInputStream extends FSDataInputStream {
 
         @Override
         public void seek(long pos) throws IOException {
-             throw new NotImplementedException();
+             throw new UnsupportedOperationException();
         }
 
         @Override
         public long getPos() throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public boolean seekToNewSource(long targetPos) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public void readFully(long position, byte[] buffer) throws IOException {
-            throw new NotImplementedException();
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -66,71 +65,71 @@ public class DummyFSDataInputStream extends FSDataInputStream {
 
     @Override
     public void seek(long desired) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public long getPos() throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int read(long position, byte[] buffer, int offset, int length) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void readFully(long position, byte[] buffer, int offset, int length) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void readFully(long position, byte[] buffer) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean seekToNewSource(long targetPos) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public InputStream getWrappedStream() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int read(ByteBuffer buf) throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public FileDescriptor getFileDescriptor() throws IOException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setReadahead(Long readahead) throws IOException, UnsupportedOperationException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void setDropBehind(Boolean dropBehind) throws IOException, UnsupportedOperationException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public ByteBuffer read(ByteBufferPool bufferPool, int maxLength, EnumSet<ReadOption> opts) throws IOException, UnsupportedOperationException {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void releaseBuffer(ByteBuffer buffer) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void unbuffer() {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 }
