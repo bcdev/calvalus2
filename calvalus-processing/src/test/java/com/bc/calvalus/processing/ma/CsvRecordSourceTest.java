@@ -1,6 +1,7 @@
 package com.bc.calvalus.processing.ma;
 
 import com.bc.calvalus.commons.DateUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.junit.Test;
 
@@ -372,7 +373,7 @@ public class CsvRecordSourceTest {
             final String url = this.getClass().getResource("/point-data-bad-time-format.txt").toExternalForm();
             MAConfig maConfig = new MAConfig();
             maConfig.setRecordSourceUrl(url);
-            final RecordSource recordSource = maConfig.createRecordSource();
+            final RecordSource recordSource = maConfig.createRecordSource(new Configuration());
             Iterable<Record> records = recordSource.getRecords();
             for (Record record : records) {
                 record.getTime();
@@ -390,7 +391,7 @@ public class CsvRecordSourceTest {
             final String url = this.getClass().getResource("/point-data-bad-filename-extension.doc").toExternalForm();
             MAConfig maConfig = new MAConfig();
             maConfig.setRecordSourceUrl(url);
-            final RecordSource recordSource = maConfig.createRecordSource();
+            final RecordSource recordSource = maConfig.createRecordSource(new Configuration());
             fail("error not detected");
         } catch (Exception e) {
             String message = e.getMessage();

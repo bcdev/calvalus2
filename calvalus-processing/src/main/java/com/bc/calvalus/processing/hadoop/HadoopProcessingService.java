@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -677,5 +678,19 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         for (HadoopJobHook hook : jobHooks) {
             hook.beforeSubmit(job);
         }
+    }
+
+    /**
+     * Opens an InputStream from a given URL
+     */
+    public static InputStream openUrlAsStream(String url, Configuration conf) throws IOException {
+        InputStream inputStream;
+        if (url.startsWith("hdfs:")) {
+            final Path path = new Path(url);
+            inputStream = path.getFileSystem(conf).open(path);
+        } else {
+            inputStream = new URL(url).openStream();
+        }
+        return inputStream;
     }
 }

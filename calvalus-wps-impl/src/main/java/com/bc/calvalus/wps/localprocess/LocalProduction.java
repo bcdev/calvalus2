@@ -18,7 +18,6 @@ import com.bc.wps.api.exceptions.MissingParameterValueException;
 import com.bc.wps.api.schema.Execute;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.bc.wps.utilities.WpsLogger;
-import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
 import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.esa.snap.core.dataio.ProductIO;
@@ -192,7 +191,7 @@ class LocalProduction {
                 "              </configs>\n" +
                 "            </quicklooks>\n";
         Quicklooks.QLConfig config = Quicklooks.fromXml(xml).getConfigs()[0];
-        RenderedImage quicklookImage = QuicklookGenerator.createImage(context, subset, config);
+        RenderedImage quicklookImage = new QuicklookGenerator(context, subset, config).createImage();
         if (quicklookImage != null) {
             OutputStream outputStream = new BufferedOutputStream(new FileOutputStream(new File(processBuilder.getTargetDirPath().toFile(), processBuilder.getSourceProduct().getName() + "." + config.getImageType())));
             try {

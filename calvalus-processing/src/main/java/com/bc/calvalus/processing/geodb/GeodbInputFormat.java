@@ -172,7 +172,7 @@ public class GeodbInputFormat extends InputFormat {
         if (StringUtils.isNotNullAndNotEmpty(maXML)) {
             try {
                 MAConfig maConfig = MAConfig.fromXml(maXML);
-                RecordSource maRecordSource = maConfig.createRecordSource();
+                RecordSource maRecordSource = maConfig.createRecordSource(conf);
                 List<SimpleRecord> simpleRecords = new ArrayList<>();
                 if (!maRecordSource.getHeader().hasLocation()) {
                     return;

@@ -221,7 +221,7 @@ public class MAConfig implements XmlConvertible {
         }
     }
 
-    public RecordSource createRecordSource() throws Exception {
+    public RecordSource createRecordSource(Configuration conf) throws Exception {
         String className = getRecordSourceSpiClassName();
         RecordSourceSpi service;
         if (className != null) {
@@ -230,7 +230,7 @@ public class MAConfig implements XmlConvertible {
             service = RecordSourceSpi.getForUrl(getRecordSourceUrl());
         }
         if (service != null) {
-            return service.createRecordSource(getRecordSourceUrl());
+            return service.createRecordSource(getRecordSourceUrl(), conf);
         } else {
             if (className != null) {
                 throw new IllegalStateException("record source reader service " + className + " of point data file not found");

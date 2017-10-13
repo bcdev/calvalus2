@@ -45,7 +45,7 @@ public class MACompareReducer extends Reducer<MAKey, IndexedRecordWritable, Null
 
         MAConfig maConfig = MAConfig.get(context.getConfiguration());
         try {
-            RecordSource referenceRecordSource = maConfig.createRecordSource();
+            RecordSource referenceRecordSource = maConfig.createRecordSource(conf);
             referenceHeader = referenceRecordSource.getHeader();
             referenceRecords = referenceRecordSource.getRecords().iterator();
             currentReferenceId = -999;

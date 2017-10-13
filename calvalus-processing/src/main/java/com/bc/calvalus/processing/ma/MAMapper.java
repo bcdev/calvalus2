@@ -66,9 +66,9 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         final long mapperStartTime = now();
 
-        final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.get(jobConfig);
-        final Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final Configuration conf = context.getConfiguration();
+        final MAConfig maConfig = MAConfig.get(conf);
+        final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s (%s MiB)",
@@ -93,7 +93,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                                    context.getTaskAttemptID(), inputProduct.getName(), productOpenTime / 1E3));
 
             t0 = now();
-            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+            RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
             Header referenceRecordHeader = referenceRecordSource.getHeader();
             PixelPosProvider pixelPosProvider = new PixelPosProvider(inputProduct,
                                                                      PixelTimeProvider.create(inputProduct),
@@ -149,7 +149,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     AffineTransform transform = processorAdapter.getInput2OutputTransform();
                     if (transform == null) {
                         transform = new AffineTransform();
-                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+                        referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
                         pixelPosProvider = new PixelPosProvider(processedProduct,
                                                                 PixelTimeProvider.create(processedProduct),
                                                                 maConfig.getMaxTimeDifference(),
@@ -226,10 +226,10 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
     }
 
-    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
+    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry, Configuration conf) {
         final RecordSource referenceRecordSource;
         try {
-            referenceRecordSource = maConfig.createRecordSource();
+            referenceRecordSource = maConfig.createRecordSource(conf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

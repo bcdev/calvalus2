@@ -53,7 +53,8 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                serviceConfiguration.get("calvalus.system.calvalus.accesscontrol.external"));
         }
 
-        JobConf jobConf = new JobConf(createJobConfiguration(serviceConfiguration));
+        Configuration hadoopConfiguration = createHadoopConfiguration(serviceConfiguration);
+        JobConf jobConf = new JobConf(hadoopConfiguration);
         try {
             JobClientsMap jobClientsMap = new JobClientsMap(jobConf);
             final HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
@@ -80,7 +81,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
                                                                             productionStore,
                                                                             productionTypes);
             stagingService.setProductionService((Observable) productionService);
-            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService);
+            return new ServiceContainer(productionService, hdfsFileSystemService, inventoryService, hadoopConfiguration);
         } catch (IOException e) {
             throw new ProductionException("Failed to create Hadoop JobClient." + e.getMessage(), e);
         }
@@ -98,7 +99,7 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         return list.toArray(new ProductionType[list.size()]);
     }
 
-    private static Configuration createJobConfiguration(Map<String, String> serviceConfiguration) {
+    private static Configuration createHadoopConfiguration(Map<String, String> serviceConfiguration) {
         Configuration jobConfiguration = new Configuration();
         HadoopProductionType.setJobConfig(serviceConfiguration, jobConfiguration);
         return jobConfiguration;

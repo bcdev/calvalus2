@@ -18,6 +18,7 @@ package com.bc.calvalus.processing.analysis;
 
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.JobConfigNames;
+import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.ceres.binding.PropertySet;
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.glayer.CollectionLayer;
@@ -50,7 +51,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.List;
@@ -60,14 +60,24 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Genrates Quicklooks from products
+ * Generates Quick look images from products
  */
 public class QuicklookGenerator {
 
-    public static final Logger LOGGER = CalvalusLogger.getLogger();
+    private static final Logger LOGGER = CalvalusLogger.getLogger();
+    
+    private final TaskAttemptContext context;
+    private final Product sourceProduct;
+    private final Quicklooks.QLConfig qlConfig;
 
-    public static RenderedImage createImage(final TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) throws IOException {
+    public QuicklookGenerator(TaskAttemptContext context, Product product, Quicklooks.QLConfig qlConfig) {
+        this.context = context;
+        this.sourceProduct = product;
+        this.qlConfig = qlConfig;
+    }
 
+    public RenderedImage createImage() throws IOException {
+        Product product = sourceProduct;
         if (qlConfig.getSubSamplingX() > 0 || qlConfig.getSubSamplingY() > 0) {
             Map<String, Object> subsetParams = new HashMap<>();
             subsetParams.put("subSamplingX", qlConfig.getSubSamplingX());
@@ -142,7 +152,7 @@ public class QuicklookGenerator {
             masterBand.getImageInfo(wrapPM(context));
             multiLevelSource = ColoredBandImageMultiLevelSource.create(masterBand, wrapPM(context));
 
-            try (InputStream inputStream = new URL(cpdURL).openStream()) {
+            try (InputStream inputStream = HadoopProcessingService.openUrlAsStream(cpdURL, context.getConfiguration())) {
                 ColorPaletteDef colorPaletteDef = loadColorPaletteDef(inputStream);
                 ImageInfo imageInfo = multiLevelSource.getImageInfo();
                 if (masterBand.getIndexCoding() != null) {
@@ -242,7 +252,7 @@ public class QuicklookGenerator {
         return height;
     }
 
-    private static Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {
+    private Layer createShapefileLayer(final Product product, String shapefileUrl) throws IOException {
         final File shapefile = extractShapefile(shapefileUrl);
         final LayerContext layerContext = new LayerContext() {
             @Override
@@ -322,11 +332,11 @@ public class QuicklookGenerator {
 //        return gf.createPolygon(gf.createLinearRing(coordinates), null);
 //    }
 
-    private static File extractShapefile(String shapefileUrl) throws IOException {
+    private File extractShapefile(String shapefileUrl) throws IOException {
         File shapefile = null;
         final String shapeDir = Files.createTempDirectory("shapefile").toFile().getAbsolutePath();
         final byte[] buffer = new byte[2048];
-        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(new URL(shapefileUrl).openStream()))) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(HadoopProcessingService.openUrlAsStream(shapefileUrl, context.getConfiguration())))) {
             ZipEntry entry;
             while ((entry = zipInputStream.getNextEntry()) != null) {
                 FileOutputStream output = null;
@@ -350,10 +360,11 @@ public class QuicklookGenerator {
         return shapefile;
     }
 
-    private static void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
+    private void addFreshmonOverlay(Quicklooks.QLConfig qlConfig, Band masterBand, ImageLayer imageLayer,
                                            boolean canUseAlpha, List<Layer> layerChildren) throws IOException {
         BufferedImage legend = createImageLegend(masterBand, canUseAlpha, ImageLegend.VERTICAL);
-        RenderedImage logo = ImageIO.read(new URL(qlConfig.getOverlayURL()).openStream());
+        Configuration conf = context.getConfiguration();
+        RenderedImage logo = ImageIO.read(HadoopProcessingService.openUrlAsStream(qlConfig.getOverlayURL(), conf));
         float scale = (float) legend.getWidth() / (float) logo.getWidth();
         RenderingHints hints = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
                                                   RenderingHints.VALUE_ANTIALIAS_ON);
@@ -381,9 +392,9 @@ public class QuicklookGenerator {
         layerChildren.add(noDataLayer); // add layer as background
     }
 
-    private static void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
+    private void addOverlay(ImageLayer imageLayer, List<Layer> layerChildren, String overlayURL) throws
                                                                                                         IOException {
-        InputStream inputStream = new URL(overlayURL).openStream();
+        InputStream inputStream = HadoopProcessingService.openUrlAsStream(overlayURL, context.getConfiguration());
         BufferedImage bufferedImage = ImageIO.read(inputStream);
         final ImageLayer overlayLayer = new ImageLayer(bufferedImage, imageLayer.getImageToModelTransform(), 1);
         layerChildren.add(0, overlayLayer);

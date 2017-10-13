@@ -73,8 +73,7 @@ import java.util.logging.Logger;
  */
 public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWritable> {
 
-    public static final Text HEADER_KEY = new Text("#");
-
+    private static final Text HEADER_KEY = new Text("#");
     private static final String COUNTER_GROUP_NAME_PRODUCTS = "Products";
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final AffineTransform IDENTITY = new AffineTransform();
@@ -84,17 +83,17 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
 
         context.progress();
 
-        final Configuration jobConfig = context.getConfiguration();
-        final MAConfig maConfig = MAConfig.get(jobConfig);
+        final Configuration conf = context.getConfiguration();
+        final MAConfig maConfig = MAConfig.get(conf);
         maConfig.setCopyInput(false); // insitu data is merge separately
-        final MAConfig maConfigWithoutExpression = getMaConfigWithoutExpressions(jobConfig);
+        final MAConfig maConfigWithoutExpression = getMaConfigWithoutExpressions(conf);
 
-        final Geometry regionGeometry = GeometryUtils.createGeometry(jobConfig.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
+        final Geometry regionGeometry = GeometryUtils.createGeometry(conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY));
 
         // write initial log entry for runtime measurements
         LOG.info(String.format("%s starts processing of split %s", context.getTaskAttemptID(), context.getInputSplit()));
 
-        RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry);
+        RecordSource referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
         ProcessorAdapter l2ProcessorAdapter = ProcessorFactory.createAdapter(context);
 
         final int progressForFindingMatchingReferences = 5 + 5;
@@ -205,7 +204,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     AffineTransform i2oTransform4L2 = l2ProcessorAdapter.getInput2OutputTransform();
                     if (i2oTransform4L2 == null) {
                         i2oTransform4L2 = new AffineTransform();
-                        referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
+                        referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry, conf);
 
                         try {
                             PixelPosProvider pixelPosProvider = new PixelPosProvider(l2DiffProduct,
@@ -226,7 +225,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                         namedRecordSources.add(l2Matchups);
                     }
 
-                    if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
+                    if (conf.getBoolean("calvalus.vc.outputL2", false)) {
                         // TODO handle operators and graphs
                         l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                     } else {
@@ -248,7 +247,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 AffineTransform i2oTransform4L2 = l2ProcessorAdapter.getInput2OutputTransform();
                 if (i2oTransform4L2 == null) {
                     i2oTransform4L2 = new AffineTransform();
-                    referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry);
+                    referenceRecordSource = getReferenceRecordSource(maConfigWithoutExpression, regionGeometry, conf);
 
                     try {
                         PixelPosProvider pixelPosProvider = new PixelPosProvider(l2Product,
@@ -267,7 +266,7 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                     return;
                 }
 
-                if (jobConfig.getBoolean("calvalus.vc.outputL2", false)) {
+                if (conf.getBoolean("calvalus.vc.outputL2", false)) {
                     // TODO handle operators and graphs
                     l2ProcessorAdapter.saveProcessedProducts(SubProgressMonitor.create(mainLoopPM, 1));
                 } else {
@@ -391,10 +390,10 @@ public class VCMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
         return new NamedRecordSource(prefix, header, records);
     }
 
-    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry) {
+    private RecordSource getReferenceRecordSource(MAConfig maConfig, Geometry regionGeometry, Configuration conf) {
         final RecordSource referenceRecordSource;
         try {
-            referenceRecordSource = maConfig.createRecordSource();
+            referenceRecordSource = maConfig.createRecordSource(conf);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

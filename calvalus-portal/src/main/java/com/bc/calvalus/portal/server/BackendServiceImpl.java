@@ -538,7 +538,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         try {
             String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
             Iterable<Record> records = recordSource.getRecords();
             int numRecords = 0;
             double latMin = +Double.MAX_VALUE;
@@ -588,7 +588,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         try {
             String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
             RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url);
+            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
             Iterable<Record> records = recordSource.getRecords();
             List<GeoPos> geoPoses = new ArrayList<>();
             for (Record record : records) {

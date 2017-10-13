@@ -17,6 +17,7 @@
 package com.bc.calvalus.processing.ma;
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -68,7 +69,7 @@ public class MAConfigTest {
     public void testCreateRecordSource() throws Exception {
         MAConfig maConfig = new MAConfig();
         maConfig.setRecordSourceSpiClassName(TestRecordSourceSpi.class.getName());
-        RecordSource recordSource = maConfig.createRecordSource();
+        RecordSource recordSource = maConfig.createRecordSource(new Configuration());
         assertNotNull(recordSource);
         assertNotNull(recordSource.getRecords());
         Iterator<Record> recordIterator = recordSource.getRecords().iterator();
