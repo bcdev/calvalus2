@@ -3,10 +3,12 @@ package com.bc.calvalus.processing.fire.format.grid.modis;
 import com.bc.calvalus.processing.fire.format.grid.GridCell;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.io.CsvReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,4 +36,18 @@ public class ModisGridMapperTest {
         System.out.println(gridCell);
     }
 
+    @Test
+    public void testStandardError() throws Exception {
+        double[] p = new double[14255];
+        try (CsvReader r = new CsvReader(new FileReader(new File("c:\\Users\\Thomas\\Desktop\\Mappe3.csv")), new char[]{';'})) {
+            List<double[]> doubles = r.readDoubleRecords();
+            for (int i = 0; i < doubles.size(); i++) {
+                double[] aDouble = doubles.get(i);
+                p[i] = aDouble[0] / 100;
+            }
+        }
+
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p);
+
+    }
 }

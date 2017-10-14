@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.File;
@@ -18,6 +19,21 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class ModisFireGridDataSourceTest {
+
+    @Test
+    public void name() throws Exception {
+        System.out.println((byte) 110);
+
+        Product lc = ProductIO.readProduct("C:\\ssd\\h19v09-2000.nc");
+        Band band = lc.getBand("lccs_class");
+        ProductData productData = ProductData.createInstance(band.getDataType(), 100 * 100);
+        band.readRasterData(3553, 1042, 100, 100, productData);
+//        band.readRasterData(0, 0, 4800, 4800, productData);
+        System.out.println(productData.getElemIntAt(0));
+        System.out.println(productData.getElemIntAt(1));
+        System.out.println(productData.getElemIntAt(2));
+//        System.out.println(productData.getElemIntAt(2));
+    }
 
     @Test
     public void readPixels() throws Exception {

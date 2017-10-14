@@ -32,8 +32,8 @@ public class GeoLutCreator {
         GeoLut map = new GeoLut();
 
         for (int i = 2; i < args.length; i++) {
-            String refProductFilename = args[i]; //MOD09GQ.A2008001.h17v06.006.2015169040540.hdf
-            String tile = refProductFilename.split("\\.")[2];
+            String refProductFilename = args[i];
+            String tile = refProductFilename.split("\\.")[0];
 
             Product refProduct = ProductIO.readProduct(refProductFilename);
             GeoCoding refGeoCoding = refProduct.getSceneGeoCoding();

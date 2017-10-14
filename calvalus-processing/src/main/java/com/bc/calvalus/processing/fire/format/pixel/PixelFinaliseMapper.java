@@ -25,7 +25,6 @@ import org.esa.snap.core.image.ResolutionLevel;
 import org.esa.snap.core.image.SingleBandedOpImage;
 import org.esa.snap.core.util.ProductUtils;
 import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
-import org.esa.snap.watermask.operator.WatermaskOp;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -48,7 +47,6 @@ import java.time.Instant;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -144,15 +142,15 @@ public class PixelFinaliseMapper extends Mapper {
 
         ProductUtils.copyGeoCoding(source, target);
 
-        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new WatermaskOp.Spi());
-        Band landWaterMask = GPF.createProduct("LandWaterMask", new HashMap<>(), source).getBandAt(0);
+//        GPF.getDefaultInstance().getOperatorSpiRegistry().addOperatorSpi(new WatermaskOp.Spi());
+//        Band landWaterMask = GPF.createProduct("LandWaterMask", new HashMap<>(), source).getBandAt(0);
 
         Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
         Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
         Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
         Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
 
-        jdBand.setSourceImage(new JdImage(source.getBand("JD"), landWaterMask, lcProduct.getBand("lccs_class")));
+        jdBand.setSourceImage(new JdImage(source.getBand("JD"), null, lcProduct.getBand("lccs_class")));
         clBand.setSourceImage(new ClImage(source.getBand("CL"), jdBand));
         lcBand.setSourceImage(new LcImage(target, lcProduct, jdBand, context));
         sensorBand.setSourceImage(new SensorImage(source.getBand("JD"), sensorId));
@@ -222,7 +220,7 @@ public class PixelFinaliseMapper extends Mapper {
             try {
                 lcBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(lcArray));
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(sourceJdArray));
-                watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
+//                watermask.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Byte(watermaskArray));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
@@ -232,13 +230,13 @@ public class PixelFinaliseMapper extends Mapper {
                 for (int x = destRect.x; x < destRect.x + destRect.width; x++) {
                     pixelPos.x = x;
                     pixelPos.y = y;
-                    byte watermask = watermaskArray[pixelIndex];
+//                    byte watermask = watermaskArray[pixelIndex];
 
-                    if (watermask > 0) {
-                        dest.setSample(x, y, 0, -2);
-                        pixelIndex++;
-                        continue;
-                    }
+//                    if (watermask > 0) {
+//                        dest.setSample(x, y, 0, -2);
+//                        pixelIndex++;
+//                        continue;
+//                    }
 
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (Float.isNaN(sourceJd)) {

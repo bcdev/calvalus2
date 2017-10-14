@@ -44,17 +44,17 @@ public class LcRemapping {
             case 12:
                 return sourceLcClass == 120 || sourceLcClass == 121 || sourceLcClass == 122;
             case 13:
-                return sourceLcClass == -126;
+                return sourceLcClass == -126 || sourceLcClass == 130;
             case 14:
-                return sourceLcClass == -116;
+                return sourceLcClass == -116 || sourceLcClass == 140;
             case 15:
-                return sourceLcClass == -106 || sourceLcClass == -104 || sourceLcClass == -103;
+                return sourceLcClass == -106 || sourceLcClass == -104 || sourceLcClass == -103 || sourceLcClass == 150 || sourceLcClass == 152 || sourceLcClass == 153;
             case 16:
-                return sourceLcClass == -96;
+                return sourceLcClass == -96 || sourceLcClass == 60;
             case 17:
-                return sourceLcClass == -86;
+                return sourceLcClass == -86 || sourceLcClass == 170;
             case 18:
-                return sourceLcClass == -76;
+                return sourceLcClass == -76 || sourceLcClass == 180;
         }
         throw new IllegalArgumentException(String.format("Illegal target class: %d", lcClassNumber));
     }

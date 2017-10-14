@@ -176,7 +176,8 @@ public class ModisGridMapper extends AbstractGridMapper {
             sum(C) = p.sum()
         */
 
-        double[] p_b = correct(probabilityOfBurn);
+//        double[] p_b = correct(probabilityOfBurn);
+        double[] p_b = probabilityOfBurn;
 
         double var_c = 0.0;
         double sum_c = 0.0;
@@ -203,7 +204,8 @@ public class ModisGridMapper extends AbstractGridMapper {
             return 1;
         }
 
-        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+        float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
+        return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
     }
 
     private double[] correct(double[] probabilityOfBurn) {

@@ -26,17 +26,22 @@ class ModisNcFileFactory extends NcFileFactory {
 
     @Override
     protected String getSource() {
-        return "MODIS MCD14ML Collection 5, ESA CCI Land Cover dataset v1.6.1";
+        return "MODIS MOD09GQ Collection 6, MOD MOD09GA Collection 6, MODIS MCD14ML Collection 6, ESA CCI Land Cover dataset v1.6.1";
+    }
+
+    @Override
+    protected String getSummary() {
+        return "The grid product is the result of summing up burned area pixels and their attributes, as extracted from their original sinusoidal projection, within each cell of 0.25 degrees in a regular grid covering the whole Earth in biweekly composites. The attributes stored are sum of burned area, standard error, fraction of burnable area, fraction of observed area, number of patches and the burned area for 18 land cover classes of Land Cover CCI.";
     }
 
     @Override
     protected String getDoi() {
-        return "tbd";
+        return "10.5285/f1c9c7aa210d4564bd61ed1a81d51130";
     }
 
     @Override
-    protected void addSensorVar(NetcdfFileWriter ncFile) {
-        Variable burnableAreaFractionVar = ncFile.addVariable(null, "burnable_area_fraction", DataType.FLOAT, "time lat lon");
+    protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
+        Variable burnableAreaFractionVar = ncFile.addVariable(null, "fraction_of_burnable_area", DataType.FLOAT, "time lat lon");
         burnableAreaFractionVar.addAttribute(new Attribute("units", "1"));
         burnableAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of burnable area"));
         burnableAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of burnable area is the fraction of the cell that corresponds to vegetated land covers that could burn. The land cover classes are those from CCI Land Cover, http://www.esa-landcover-cci.org/"));

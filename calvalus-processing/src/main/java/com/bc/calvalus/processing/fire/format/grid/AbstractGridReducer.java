@@ -22,6 +22,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -123,7 +124,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
     protected void prepareTargetProducts(Context context) throws IOException {
         String year = context.getConfiguration().get("calvalus.year");
         String month = context.getConfiguration().get("calvalus.month");
-        String version = context.getConfiguration().get("calvalus.baversion", "v5.0");
+        String version = "v5.0";
         Assert.notNull(year, "calvalus.year");
         Assert.notNull(month, "calvalus.month");
 
@@ -162,6 +163,12 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
 
             writeVegetationClassNames(ncFirst);
             writeVegetationClassNames(ncSecond);
+
+            prepareFraction("fraction_of_burnable_area", ncFirst);
+            prepareFraction("fraction_of_burnable_area", ncSecond);
+
+            prepareFraction("fraction_of_observed_area", ncFirst);
+            prepareFraction("fraction_of_observed_area", ncSecond);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }
@@ -304,6 +311,16 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         }
         Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_WIDTH}, array);
         ncFile.write(lon, values);
+    }
+
+    private static void prepareFraction(String varName, NetcdfFileWriter ncFile) throws IOException, InvalidRangeException {
+        Variable variable = ncFile.findVariable(varName);
+        float[] array = new float[SCENE_RASTER_WIDTH];
+        Arrays.fill(array, 0.0F);
+        Array values = Array.factory(DataType.FLOAT, new int[]{SCENE_RASTER_WIDTH}, array);
+        for (int y = 0; y < 770; y++) {
+            ncFile.write(variable, new int[]{0, y}, values);
+        }
     }
 
     protected int getX(String key) {

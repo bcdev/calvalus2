@@ -56,10 +56,11 @@ public abstract class NcFileFactory {
         Variable standardErrorVar = ncFile.addVariable(null, "standard_error", DataType.FLOAT, "time lat lon");
         standardErrorVar.addAttribute(new Attribute("units", "m2"));
         standardErrorVar.addAttribute(new Attribute("long_name", "standard error of the estimation of burned area"));
-        Variable observedAreaFractionVar = ncFile.addVariable(null, "observed_area_fraction", DataType.FLOAT, "time lat lon");
+        addBurnableAreaFractionVar(ncFile);
+        Variable observedAreaFractionVar = ncFile.addVariable(null, "fraction_of_observed_area", DataType.FLOAT, "time lat lon");
         observedAreaFractionVar.addAttribute(new Attribute("units", "1"));
         observedAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of observed area"));
-        observedAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of observed area is 1 minus the area fraction of unsuitable/not observable pixels in a given grid. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non existing images for that location and period), cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
+        observedAreaFractionVar.addAttribute(new Attribute("comment", "'The fraction of the total burnable area in the cell (fraction_of_burnable_area variable of this file) that was observed during the time interval, and was not marked as unsuitable/not observable. The latter refers to the area where it was not possible to obtain observational burned area information for the whole time interval because of lack of input data (non existing images for that location and period), cloud cover, haze or pixels that fell below the quality thresholds of the algorithm."));
         Variable numberOfPatchesVar = ncFile.addVariable(null, "number_of_patches", DataType.FLOAT, "time lat lon");
         numberOfPatchesVar.addAttribute(new Attribute("units", "1"));
         numberOfPatchesVar.addAttribute(new Attribute("long_name", "number of burn patches"));
@@ -69,8 +70,6 @@ public abstract class NcFileFactory {
         burnedAreaInVegClassVar.addAttribute(new Attribute("long_name", "burned area in vegetation class"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("cell_methods", "time: sum"));
         burnedAreaInVegClassVar.addAttribute(new Attribute("comment", "Burned area by land cover classes; land cover classes are from CCI Land Cover, http://www.esa-landcover-cci.org/"));
-
-        addSensorVar(ncFile);
 
         addGroupAttributes(filename, version, ncFile, timeCoverageStart, timeCoverageEnd, numberOfDays);
         ncFile.create();
@@ -86,10 +85,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("tracking_id", UUID.randomUUID().toString()));
         ncFile.addGroupAttribute(null, new Attribute("Conventions", "CF-1.6"));
         ncFile.addGroupAttribute(null, new Attribute("product_version", version));
-        ncFile.addGroupAttribute(null, new Attribute("summary", "The grid product is the result of summing up burned " +
-                "area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in biweekly " +
-                "composites. The attributes stored are sum of burned area, standard error, observed area fraction, " +
-                "number of patches and the burned area for 18 land cover classes of CCI_LC."));
+        ncFile.addGroupAttribute(null, new Attribute("summary", getSummary()));
         ncFile.addGroupAttribute(null, new Attribute("keywords", "Burned Area, Fire Disturbance, Climate Change, ESA, GCOS"));
         ncFile.addGroupAttribute(null, new Attribute("id", filename));
         ncFile.addGroupAttribute(null, new Attribute("naming_authority", "org.esa-fire-cci"));
@@ -111,7 +107,7 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_start", timeCoverageStart));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_end", timeCoverageEnd));
         ncFile.addGroupAttribute(null, new Attribute("time_coverage_duration", String.format("P%sD", "" + timeCoverageDuration)));
-        ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", "P01D"));
+        ncFile.addGroupAttribute(null, new Attribute("time_coverage_resolution", String.format("P%sD", "" + timeCoverageDuration)));
         ncFile.addGroupAttribute(null, new Attribute("standard_name_vocabulary", "NetCDF Climate and Forecast (CF) Metadata Convention"));
         ncFile.addGroupAttribute(null, new Attribute("licence", "ESA CCI Data Policy: free and open access"));
         ncFile.addGroupAttribute(null, new Attribute("platform", getPlatformGlobalAttribute()));
@@ -123,11 +119,13 @@ public abstract class NcFileFactory {
         ncFile.addGroupAttribute(null, new Attribute("geospatial_lat_resolution", "0.25"));
     }
 
+    protected abstract String getSummary();
+
     protected abstract String getSource();
 
     protected abstract String getDoi();
 
-    protected abstract void addSensorVar(NetcdfFileWriter ncFile);
+    protected abstract void addBurnableAreaFractionVar(NetcdfFileWriter ncFile);
 
     protected abstract String getPlatformGlobalAttribute();
 

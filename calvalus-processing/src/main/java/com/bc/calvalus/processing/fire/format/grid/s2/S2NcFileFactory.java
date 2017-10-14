@@ -9,8 +9,8 @@ import ucar.nc2.Variable;
 public class S2NcFileFactory extends NcFileFactory {
 
     @Override
-    protected void addSensorVar(NetcdfFileWriter ncFile) {
-        Variable burnableAreaFractionVar = ncFile.addVariable(null, "burnable_area_fraction", DataType.FLOAT, "time lat lon");
+    protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
+        Variable burnableAreaFractionVar = ncFile.addVariable(null, "fraction_of_burnable_area", DataType.FLOAT, "time lat lon");
         burnableAreaFractionVar.addAttribute(new Attribute("units", "1"));
         burnableAreaFractionVar.addAttribute(new Attribute("long_name", "fraction of burnable area"));
         burnableAreaFractionVar.addAttribute(new Attribute("comment", "The fraction of burnable area is the fraction of the cell that corresponds to vegetated land covers that could burn. The land cover classes are those from CCI Land Cover, http://www.esa-landcover-cci.org/"));
@@ -39,5 +39,10 @@ public class S2NcFileFactory extends NcFileFactory {
     @Override
     protected String getTitle() {
         return "Fire_cci Gridded MSI Burned Area product";
+    }
+
+    @Override
+    protected String getSummary() {
+        throw new IllegalStateException("Not yet implemented");
     }
 }

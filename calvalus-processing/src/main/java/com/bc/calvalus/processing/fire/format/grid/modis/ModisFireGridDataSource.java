@@ -100,15 +100,20 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 alreadyVisitedPixelPoses.add(key);
                 int pixelIndex = y0 * 4800 + x0;
                 int sourceJD = (int) getFloatPixelValue(jd, tile, pixelIndex);
-                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD) && cl != null) {
-                    float sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
-                    data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
+                if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, sourceJD)) {
                     data.burnedPixels[pixelIndex] = sourceJD;
-                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD) && cl != null) {
-                    float sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
-                    data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
+                } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, sourceJD)) {
                     data.burnedPixels[pixelIndex] = sourceJD;
                 }
+
+                float sourceCL;
+                if (cl != null) {
+                    sourceCL = getFloatPixelValue(cl, tile, pixelIndex) / 100.0F;
+                } else {
+                    sourceCL = 0.0F;
+                }
+                data.probabilityOfBurnFirstHalf[pixelIndex] = sourceCL;
+                data.probabilityOfBurnSecondHalf[pixelIndex] = sourceCL;
 
                 int sourceLC = getIntPixelValue(lc, tile, pixelIndex);
                 data.burnable[pixelIndex] = LcRemapping.isInBurnableLcClass(sourceLC);
@@ -160,13 +165,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         refreshCache(band, key, pixelIndex);
         int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
         return data.get(key).getElemFloatAt(subPixelIndex);
-    }
-
-    double getDoublePixelValue(Band band, String tile, int pixelIndex) throws IOException {
-        String key = band.getName() + "_" + tile;
-        refreshCache(band, key, pixelIndex);
-        int subPixelIndex = pixelIndex % 4800 + ((pixelIndex / 4800) % CACHE_SIZE) * 4800;
-        return data.get(key).getElemDoubleAt(subPixelIndex);
     }
 
     private int getIntPixelValue(Band band, String tile, int pixelIndex) throws IOException {

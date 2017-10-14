@@ -32,7 +32,15 @@ class MerisNcFileFactory extends NcFileFactory {
     }
 
     @Override
-    protected void addSensorVar(NetcdfFileWriter ncFile) {
+    protected void addBurnableAreaFractionVar(NetcdfFileWriter ncFile) {
         // nothing to do
+    }
+
+    @Override
+    protected String getSummary() {
+        return "The grid product is the result of summing up burned " +
+                "area pixels within each cell of 0.25 degrees in a regular grid covering the whole Earth in biweekly " +
+                "composites. The attributes stored are sum of burned area, standard error, observed area fraction, " +
+                "number of patches and the burned area for 18 land cover classes of CCI_LC.";
     }
 }
