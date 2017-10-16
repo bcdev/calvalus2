@@ -37,70 +37,183 @@ public class PixelFinaliseMapperTest {
 
     @Test
     public void testFindNeighbourValue_1() throws Exception {
+        int pixelIndex = 55;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[56] = 20; // right next to the source value
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
+        PixelFinaliseMapper.NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+
+        int neighbourValue = (int) neighbourResult.neighbourValue;
+        int newPixelIndex = neighbourResult.newPixelIndex;
         assertEquals(20, neighbourValue);
+        assertEquals(56, newPixelIndex);
     }
 
     @Test
     public void testFindNeighbourValue_with_precedence_1() throws Exception {
+        int pixelIndex = 55;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[44] = 10; // upper left of the source value
         sourceJdArray[56] = 20; // right next to the source value
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
     @Test
     public void testFindNeighbourValue_with_precedence_2() throws Exception {
+        int pixelIndex = 55;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[45] = 10; // upper center of the source value
         sourceJdArray[46] = 20; // upper right of the source value
         sourceJdArray[54] = 30; // center left of the source value
         sourceJdArray[56] = 40; // center right of the source value
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
     @Test
     public void testFindNeighbourValue_on_edge() throws Exception {
+        int pixelIndex = 0;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[1] = 10; // center right of the source value
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 0, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
     @Test
     public void testFindNeighbourValue_on_edge2() throws Exception {
+        int pixelIndex = 99;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
         sourceJdArray[88] = 10; // upper left of the source value
         sourceJdArray[89] = 20; // upper center of the source value
         sourceJdArray[98] = 30; // center left of the source value
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 99, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(10, neighbourValue);
     }
 
     @Test
     public void testFindNeighbourValue_exc() throws Exception {
+        int pixelIndex = 55;
+
         float[] sourceJdArray = new float[100];
         Arrays.fill(sourceJdArray, Float.NaN);
-        sourceJdArray[55] = 23;
+        sourceJdArray[pixelIndex] = 23;
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
         final Rectangle destRect = new Rectangle(10, 10);
-        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, false, false, 55, destRect.width).neighbourValue;
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(23, neighbourValue);
     }
 
+    @Test
+    public void testFindNeighbourValue_non_burnable() throws Exception {
+        int pixelIndex = 55;
+
+        float[] sourceJdArray = new float[100];
+        Arrays.fill(sourceJdArray, Float.NaN);
+        sourceJdArray[pixelIndex + 1] = 23;
+        sourceJdArray[pixelIndex + 10] = 24; // below start pixel
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
+        lcArray[pixelIndex + 1] = 25; // not burnable
+        lcArray[pixelIndex + 10] = 180; // burnable
+
+
+        final Rectangle destRect = new Rectangle(10, 10);
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
+        assertEquals(24, neighbourValue);
+    }
+
+    @Test
+    public void testFindNeighbourValue_all_non_burnable() throws Exception {
+        int pixelIndex = 55;
+
+        float[] sourceJdArray = new float[100];
+        Arrays.fill(sourceJdArray, Float.NaN);
+        sourceJdArray[pixelIndex + 1] = 23;
+        sourceJdArray[pixelIndex + 10] = 24; // below start pixel
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
+        lcArray[pixelIndex + 1] = 25; // not burnable
+        lcArray[pixelIndex + 10] = 25; // not burnable
+
+
+        final Rectangle destRect = new Rectangle(10, 10);
+        PixelFinaliseMapper.NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true);
+
+        int neighbourValue = (int) neighbourResult.neighbourValue;
+        int newPixelIndex = neighbourResult.newPixelIndex;
+        assertEquals(-2, neighbourValue);
+        assertEquals(pixelIndex, newPixelIndex);
+    }
+
+    @Test
+    public void testFindNeighbourValue_all_non_burnable_cl() throws Exception {
+        int pixelIndex = 55;
+
+        float[] sourceJdArray = new float[100];
+        Arrays.fill(sourceJdArray, Float.NaN);
+        sourceJdArray[pixelIndex + 1] = 23;
+        sourceJdArray[pixelIndex + 10] = 24; // below start pixel
+
+        int[] lcArray = new int[100];
+        Arrays.fill(lcArray, 180); // all burnable
+
+        lcArray[pixelIndex + 1] = 25; // not burnable
+        lcArray[pixelIndex + 10] = 25; // not burnable
+
+
+        final Rectangle destRect = new Rectangle(10, 10);
+        PixelFinaliseMapper.NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, false);
+
+        int neighbourValue = (int) neighbourResult.neighbourValue;
+        int newPixelIndex = neighbourResult.newPixelIndex;
+        assertEquals(0, neighbourValue);
+        assertEquals(pixelIndex, newPixelIndex);
+    }
+
+
+    @Ignore
     @Test
     public void testCreateMetadata() throws Exception {
         for (PixelProductArea area : new S2Strategy().getAllAreas()) {

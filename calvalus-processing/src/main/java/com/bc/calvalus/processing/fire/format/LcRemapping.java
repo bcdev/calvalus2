@@ -50,7 +50,7 @@ public class LcRemapping {
             case 15:
                 return sourceLcClass == -106 || sourceLcClass == -104 || sourceLcClass == -103 || sourceLcClass == 150 || sourceLcClass == 152 || sourceLcClass == 153;
             case 16:
-                return sourceLcClass == -96 || sourceLcClass == 60;
+                return sourceLcClass == -96 || sourceLcClass == 160;
             case 17:
                 return sourceLcClass == -86 || sourceLcClass == 170;
             case 18:

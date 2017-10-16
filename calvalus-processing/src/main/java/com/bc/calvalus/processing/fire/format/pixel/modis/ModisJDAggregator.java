@@ -64,7 +64,6 @@ public class ModisJDAggregator extends AbstractAggregator {
         boolean preferToPreviousValue = (!validJdSet || jd < previousJDValue && jd > 0) && jd >= 0 && (inTimeBounds || jd == 0);
 
         if (preferToPreviousValue) {
-//            logger.info("preferring " + jd + " to previous value " + previousJDValue);
             targetVector.set(0, jd);
             targetVector.set(1, cl);
         } else if (jd == UNBURNABLE && previousJDValue == NOT_OBSERVED) {

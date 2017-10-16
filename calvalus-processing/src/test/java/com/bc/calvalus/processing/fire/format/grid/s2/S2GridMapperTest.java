@@ -34,7 +34,7 @@ public class S2GridMapperTest {
         };
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(4.0988349088, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(4.0988349088, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-6);
 
     }
 
@@ -44,7 +44,7 @@ public class S2GridMapperTest {
         Arrays.fill(probs, 0);
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(0, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-6);
     }
 
     @Test
@@ -57,7 +57,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-6);
         probs = new double[6];
         probs[0] = 0;
         probs[1] = 0.5;
@@ -67,7 +67,7 @@ public class S2GridMapperTest {
         probs[5] = Float.NaN;
         areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(1.065800189, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-6);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class S2GridMapperTest {
         probs[4] = 0.51;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.0658, new S2GridMapper().getErrorPerPixel(probs), 1E-5);
+        assertEquals(1.0658, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-5);
     }
 
     @Test
@@ -89,6 +89,6 @@ public class S2GridMapperTest {
         probs[0] = 0.3;
         double[] areas = new double[probs.length];
         Arrays.fill(areas, 0.5);
-        assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs), 1E-6);
+        assertEquals(1.0, new S2GridMapper().getErrorPerPixel(probs, 1), 1E-6);
     }
 }

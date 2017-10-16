@@ -109,7 +109,7 @@ public class S2GridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn) {
+    protected float getErrorPerPixel(double[] probabilityOfBurn, int num) {
         /*
             p is array of burned_probability in cell c
             var(C) = (p (1-p)).sum()

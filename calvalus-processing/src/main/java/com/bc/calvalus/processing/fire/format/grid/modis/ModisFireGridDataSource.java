@@ -1,6 +1,5 @@
 package com.bc.calvalus.processing.fire.format.grid.modis;
 
-import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.fire.format.grid.AbstractFireGridDataSource;
 import com.bc.calvalus.processing.fire.format.grid.GridFormatUtils;
@@ -29,17 +28,15 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
     public static final double MODIS_AREA_SIZE = 53664.6683222854702276;
     private final Product[] products;
     private final Product[] lcProducts;
-    private final Product[] areaProducts;
     private final List<ZipFile> geoLookupTables;
     private final String targetCell; // "800,312"
     private final SortedMap<String, Integer> bandToMinY;
     private final SortedMap<String, ProductData> data;
     private final SortedSet<Long> alreadyVisitedPixelPoses;
 
-    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, Product[] areaProducts, List<ZipFile> geoLookupTables, String targetCell) {
+    public ModisFireGridDataSource(Product[] products, Product[] lcProducts, List<ZipFile> geoLookupTables, String targetCell) {
         this.products = products;
         this.lcProducts = lcProducts;
-        this.areaProducts = areaProducts;
         this.geoLookupTables = geoLookupTables;
         this.targetCell = targetCell;
         this.bandToMinY = new TreeMap<>();
@@ -64,7 +61,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
         for (int i = 0; i < products.length; i++) {
             Product product = products[i];
             Product lcProduct = lcProducts[i];
-//            Product areaProduct = areaProducts[i];
             String tile = product.getName().split("_")[3].substring(0, 6);
 
             if (!geoLookupTable.containsKey(tile)) {
@@ -76,7 +72,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             Band numbObsFirstHalf = product.getBand("numObs1");
             Band numbObsSecondHalf = product.getBand("numObs2");
             Band lc = lcProduct.getBand("lccs_class");
-//            Band areas = areaProduct.getBand("areas");
 
             TreeSet<String> sourcePixelPoses = new TreeSet<>((o1, o2) -> {
                 int y1 = Integer.parseInt(o1.split(",")[1]);
@@ -124,7 +119,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
                 data.statusPixelsSecondHalf[pixelIndex] = remap(sourceStatusSecondHalf, data.statusPixelsSecondHalf[pixelIndex]);
 
                 data.areas[pixelIndex] = MODIS_AREA_SIZE;
-//                data.areas[pixelIndex] = getDoublePixelValue(areas, tile, pixelIndex);
             }
         }
 
@@ -208,7 +202,6 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
             }
         }
         if (entry == null) {
-            CalvalusLogger.getLogger().warning("No geolookup entry for target cell " + targetCellX + "/" + targetCellY);
             return null;
         }
         try (InputStream lutStream = geoLookupTableFile.getInputStream(entry)) {

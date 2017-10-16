@@ -36,9 +36,6 @@ public class ModisGridReducer extends AbstractGridReducer {
             int y = getY(key.toString());
             writeFloatChunk(x, y, ncFirst, "fraction_of_burnable_area", currentGridCell.burnableFraction);
             writeFloatChunk(x, y, ncSecond, "fraction_of_burnable_area", currentGridCell.burnableFraction);
-
-            writeFloatChunk(x, y, ncFirst, "fraction_of_observed_area", currentGridCell.coverageFirstHalf);
-            writeFloatChunk(x, y, ncSecond, "fraction_of_observed_area", currentGridCell.coverageSecondHalf);
         } catch (InvalidRangeException e) {
             throw new IOException(e);
         }

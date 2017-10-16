@@ -68,9 +68,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
 
         int targetPixelIndex = 0;
         for (int y = 0; y < targetRasterHeight; y++) {
-            LOG.info(String.format("Processing line %d/%d of target raster.", y + 1, targetRasterHeight));
             for (int x = 0; x < targetRasterWidth; x++) {
-                LOG.info(String.format("    Processing pixel %d/%d of line %d.", x + 1, targetRasterWidth, y + 1));
                 System.gc();
                 SourceData data = dataSource.readPixels(x, y);
                 if (data == null) {
@@ -83,9 +81,12 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 float coverageValueSecondHalf = 0.0F;
                 double burnableFractionValue = 0.0;
 
+                int numberOfBurnedPixels = 0;
+
                 for (int i = 0; i < data.burnedPixels.length; i++) {
                     int doy = data.burnedPixels[i];
                     if (isValidFirstHalfPixel(doyFirstOfMonth, doySecondHalf, doy)) {
+                        numberOfBurnedPixels++;
                         baValueFirstHalf += data.areas[i];
                         boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
@@ -102,6 +103,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                             }
                         }
                     } else if (isValidSecondHalfPixel(doyLastOfMonth, doyFirstHalf, doy)) {
+                        numberOfBurnedPixels++;
                         baValueSecondHalf += data.areas[i];
                         boolean hasLcClass = false;
                         for (int lcClass = 0; lcClass < GridFormatUtils.LC_CLASSES_COUNT; lcClass++) {
@@ -135,8 +137,8 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 burnableFraction[targetPixelIndex] = getFraction(burnableFractionValue, areas[targetPixelIndex]);
                 validate(burnableFraction[targetPixelIndex], baInLcFirstHalf, baInLcSecondHalf, targetPixelIndex, areas[targetPixelIndex]);
 
-                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf);
-                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf);
+                errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf, numberOfBurnedPixels);
+                errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf, numberOfBurnedPixels);
 
                 targetPixelIndex++;
                 pm.worked(1);
@@ -185,7 +187,7 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
         }
     }
 
-    protected abstract float getErrorPerPixel(double[] probabilityOfBurn);
+    protected abstract float getErrorPerPixel(double[] probabilityOfBurn, int numberOfBurnedPixels);
 
     protected abstract void predict(float[] ba, double[] areas, float[] originalErrors);
 
@@ -235,7 +237,11 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
     }
 
     protected static float getFraction(double value, double area) {
-        return (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
+        float fraction = (float) (value / area) >= 1.0F ? 1.0F : (float) (value / area);
+        if (Float.isNaN(fraction)) {
+            fraction = 0.0F;
+        }
+        return fraction;
     }
 
     static boolean isValidFirstHalfPixel(int doyFirstOfMonth, int doySecondHalf, int pixel) {

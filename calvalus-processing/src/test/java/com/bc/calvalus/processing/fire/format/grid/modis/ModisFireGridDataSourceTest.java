@@ -47,7 +47,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1},
                 new Product[]{lcProduct1},
-                null,
                 geoLookupTables, "765,340");
 
         dataSource.setDoyFirstHalf(7);
@@ -132,9 +131,6 @@ public class ModisFireGridDataSourceTest {
         Product lcProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h31v12-2010.nc");
         Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h32v12-2010.nc");
 
-        Product areaProduct1 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h31v12.nc");
-        Product areaProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h32v12.nc");
-
         List<ZipFile> geoLookupTables = new ArrayList<>();
         geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-140x.zip")));
         geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-141x.zip")));
@@ -144,7 +140,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product1, product2},
                 new Product[]{lcProduct1, lcProduct2},
-                new Product[]{areaProduct1, areaProduct2},
                 geoLookupTables,
                 "1408,480");
 
@@ -170,12 +165,10 @@ public class ModisFireGridDataSourceTest {
     public void acceptanceTestCache2() throws Exception {
         Product product3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_5_h19v08.nc");
         Product lcProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h19v08-2005.nc");
-        Product areaProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h19v08.nc");
 
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product3},
                 new Product[]{lcProduct3},
-                new Product[]{areaProduct3},
                 null,
                 null);
 
@@ -209,9 +202,6 @@ public class ModisFireGridDataSourceTest {
         Product lcProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v04-2000.nc");
         Product lcProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h26v05-2000.nc");
         Product lcProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h27v05-2000.nc");
-        Product areaProduct = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h26v04.nc");
-        Product areaProduct2 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h26v05.nc");
-        Product areaProduct3 = ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\areas-h27v05.nc");
 
         List<ZipFile> geoLookupTables = new ArrayList<>();
         geoLookupTables.add(new ZipFile(new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-115x.zip")));
@@ -222,7 +212,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product, product2, product3},
                 new Product[]{lcProduct, lcProduct2, lcProduct3},
-                new Product[]{areaProduct, areaProduct2, areaProduct3},
                 geoLookupTables,
                 "1152,192");
 
@@ -242,7 +231,6 @@ public class ModisFireGridDataSourceTest {
     public void acceptanceTest3() throws Exception {
         Product product = ProductIO.readProduct("c:\\ssd\\burned_2001_12_h10v06.nc");
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\h10v06-2000.nc");
-        Product areaProduct = ProductIO.readProduct("c:\\ssd\\areas-h10v06.nc");
 
         List<ZipFile> geoLookupTables = new ArrayList<>();
         geoLookupTables.add(new ZipFile(new File("c:\\ssd\\modis-geo-luts-039x.zip")));
@@ -250,7 +238,6 @@ public class ModisFireGridDataSourceTest {
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(
                 new Product[]{product},
                 new Product[]{lcProduct},
-                new Product[]{areaProduct},
                 geoLookupTables,
                 "384,256");
 

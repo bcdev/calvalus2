@@ -54,7 +54,6 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         Product[] sourceProducts = new Product[numProducts];
         Product[] lcProducts = new Product[numProducts];
-        Product[] areaProducts = new Product[numProducts];
         int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i += 2) {
             File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
@@ -76,13 +75,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             }
             sourceProducts[productIndex] = p;
             lcProducts[productIndex] = ProductIO.readProduct(lcProductFile);
-            String modisTile = p.getName().split("_")[3];
-            File areaProductFile = new File(modisTile + ".hdf");
-            if (!areaProductFile.exists()) {
-                CalvalusProductIO.copyFileToLocal(new Path("hdfs://calvalus/calvalus/projects/fire/aux/modis-areas-luts/areas-" + modisTile + ".nc"), areaProductFile, context.getConfiguration());
-            }
 
-//            areaProducts[productIndex] = ProductIO.readProduct(areaProductFile);
             productIndex++;
         }
 
@@ -99,7 +92,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             geoLookupTables.add(new ZipFile(localGeoLookup));
         }
 
-        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, areaProducts, geoLookupTables, targetCell);
+        ModisFireGridDataSource dataSource = new ModisFireGridDataSource(sourceProducts, lcProducts, geoLookupTables, targetCell);
         dataSource.setDoyFirstOfMonth(doyFirstOfMonth);
         dataSource.setDoyLastOfMonth(doyLastOfMonth);
         dataSource.setDoyFirstHalf(doyFirstHalf);
@@ -168,18 +161,69 @@ public class ModisGridMapper extends AbstractGridMapper {
     }
 
     @Override
-    protected float getErrorPerPixel(double[] probabilityOfBurn) {
-        /*
-            p is array of burned_probability in cell c
-            var(C) = (p (1-p)).sum()
-            standard_error(c) = sqrt(var(c) *(n/(n-1))
-            sum(C) = p.sum()
-        */
+    protected float getErrorPerPixel(double[] probabilityOfBurn, int numberOfBurnedPixels) {
+        double sum_pb = 0.0;
+        for (double p : probabilityOfBurn) {
+            if (Double.isNaN(p)) {
+                continue;
+            }
+            if (p > 1) {
+                // no-data/cloud/water
+                continue;
+            }
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
+            sum_pb += p;
+        }
 
-//        double[] p_b = correct(probabilityOfBurn);
-        double[] p_b = probabilityOfBurn;
+        double S = numberOfBurnedPixels / sum_pb;
+
+        double[] pb_i_star = new double[probabilityOfBurn.length];
+
+        for (int i = 0; i < probabilityOfBurn.length; i++) {
+            double pb_i = probabilityOfBurn[i] / 100;
+            pb_i_star[i] = pb_i * S;
+        }
+
+        double checksum = 0.0;
+        for (double v : pb_i_star) {
+            checksum += v;
+        }
+
+        if (Math.abs(checksum * 100 - numberOfBurnedPixels) > 0.0001) {
+            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum * 100, numberOfBurnedPixels));
+        }
 
         double var_c = 0.0;
+        int count = 0;
+        for (double p : pb_i_star) {
+            var_c += p * (1 - p);
+            count++;
+            if (Double.isNaN(p)) {
+                continue;
+            }
+            if (p > 1) {
+                // no-data/cloud/water
+                continue;
+            }
+            if (p < 0) {
+                throw new IllegalStateException("p < 0");
+            }
+        }
+
+        if (count == 0) {
+            return 0;
+        }
+        if (count == 1) {
+            return 1;
+        }
+
+        return (float) Math.sqrt(var_c * (count / (count - 1.0))) * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+
+        /*
+        double[] p_b = correct(probabilityOfBurn);
+
         double sum_c = 0.0;
         int count = 0;
         for (double p : p_b) {
@@ -206,6 +250,8 @@ public class ModisGridMapper extends AbstractGridMapper {
 
         float sqrt = (float) Math.sqrt(var_c * (count / (count - 1.0)));
         return sqrt * (float) ModisFireGridDataSource.MODIS_AREA_SIZE;
+
+        */
     }
 
     private double[] correct(double[] probabilityOfBurn) {
