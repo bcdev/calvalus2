@@ -34,10 +34,36 @@ import java.util.Date;
  */
 public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWritable> {
 
-    private OutputStreamWriter scanResultWriter;
+    private OutputStreamWriter scanResultWriter = null;
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
+        createResultWriter(context);
+    }
+
+    @Override
+    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
+        String value = values.iterator().next().toString(); // there is exactly one value
+        String scanRecord = key + "\t" + value + "\n";
+        if (scanResultWriter == null) {
+            createResultWriter(context);
+        }
+        scanResultWriter.write(scanRecord);
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException, InterruptedException {
+        if (scanResultWriter != null) {
+            scanResultWriter.close();
+
+            Configuration conf = context.getConfiguration();
+            if (conf.getBoolean(GeodbScanWorkflowItem.UPDATE_AFTER_SCAN_PROPERTY, false)) {
+                GeodbUpdateMapper.updateInventory(context, conf);
+            }
+        }
+    }
+
+    private void createResultWriter(Context context) throws IOException {
         Configuration conf = context.getConfiguration();
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
@@ -46,22 +72,5 @@ public class GeodbScanReducer extends Reducer<Text, Text, NullWritable, NullWrit
         Path scanResultPath = new Path(geoInventory, scanFilename);
         System.out.println("scanResultPath = " + scanResultPath);
         scanResultWriter = new OutputStreamWriter(scanResultPath.getFileSystem(conf).create(scanResultPath));
-    }
-
-    @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-        String value = values.iterator().next().toString(); // there is exactly one value
-        String scanRecord = key + "\t" + value + "\n";
-        scanResultWriter.write(scanRecord);
-    }
-
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-        scanResultWriter.close();
-
-        Configuration conf = context.getConfiguration();
-        if (conf.getBoolean(GeodbScanWorkflowItem.UPDATE_AFTER_SCAN_PROPERTY, false)) {
-            GeodbUpdateMapper.updateInventory(context, conf);
-        }
     }
 }
