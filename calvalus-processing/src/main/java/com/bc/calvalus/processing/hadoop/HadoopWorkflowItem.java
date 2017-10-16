@@ -258,7 +258,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         // Add SNAP modules to classpath of Hadoop jobs
         final String snapBundle = configuration.get(JobConfigNames.CALVALUS_SNAP_BUNDLE, DEFAULT_SNAP_BUNDLE);
         processingService.addBundleToDistributedCache(new Path(CALVALUS_SOFTWARE_PATH, snapBundle), userName, configuration);
-        System.out.println("trace mapreduce.job.cache.files=" + configuration.get("mapreduce.job.cache.files"));
+        // System.out.println("trace mapreduce.job.cache.files=" + configuration.get("mapreduce.job.cache.files"));
         JobConf jobConf;
         if (configuration instanceof JobConf) {
             jobConf = (JobConf) configuration;
