@@ -318,7 +318,7 @@ public abstract class AbstractGridReducer extends Reducer<Text, GridCell, NullWr
         float[] array = new float[SCENE_RASTER_WIDTH];
         Arrays.fill(array, 0.0F);
         Array values = Array.factory(DataType.FLOAT, new int[]{1, 1, SCENE_RASTER_WIDTH}, array);
-        for (int y = 0; y < 770; y++) {
+        for (int y = 0; y < 720; y++) {
             ncFile.write(variable, new int[]{0, y, 0}, values);
         }
     }
