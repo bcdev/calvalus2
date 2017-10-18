@@ -74,7 +74,6 @@ public class FileSystemPathIterator {
      * @throws IOException see specific implementation
      */
     public RemoteIterator<LocatedFileStatus> listFiles(final Path f, final boolean recursive) throws IOException {
-        System.out.println("FileSystemPathIterator.listFiles = " + f);
         try {
             return new LocatedFileStatusRemoteIterator(f, recursive);
         } catch (FileNotFoundException fnfe) {
