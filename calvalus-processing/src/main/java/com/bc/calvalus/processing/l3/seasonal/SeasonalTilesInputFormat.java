@@ -1,15 +1,13 @@
 package com.bc.calvalus.processing.l3.seasonal;
 
 import com.bc.calvalus.commons.InputPathResolver;
-import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
-import com.bc.calvalus.processing.hadoop.ProductSplit;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
-import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 
@@ -37,38 +35,19 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
 
     @Override
     protected void createSplits(ProductInventory productInventory,
-                                FileStatus[] fileStatuses,
+                                RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
                                 Configuration conf) throws IOException {
-        for (FileStatus file : fileStatuses) {
-            if (tileNameIn(tileNameOf(file.getPath().getName()), splits)) {
+        while (fileStatusIt.hasNext()) {
+            LocatedFileStatus locatedFileStatus = fileStatusIt.next();
+            String fileName = locatedFileStatus.getPath().getName();
+            if (tileNameIn(tileNameOf(fileName), splits)) {
                 continue;
             }
-            LOG.info("tile " + file.getPath().getName() + " represents " + tileNameOf(file.getPath().getName()));
-            long fileLength = file.getLen();
-            FileSystem fs = getFileSystem(file, conf);
-            BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
-            if (blocks != null && blocks.length > 0) {
-                BlockLocation block = blocks[0];
-                // create a split for the input
-                if (productInventory == null) {
-                    // no inventory, process whole product
-                    splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-                } else {
-                    ProductInventoryEntry entry = productInventory.getEntry(file.getPath().getName());
-                    if (entry != null && entry.getProcessLength() > 0) {
-                        // when listed process the given subset
-                        int start = entry.getProcessStartLine();
-                        int length = entry.getProcessLength();
-                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts(), start, length));
-                    } else if (entry == null) {
-                        // when not listed process whole product
-                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-                    }
-                }
-            } else {
-                String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
-                throw new IOException(String.format(msgFormat, file.getPath()));
+            LOG.info("tile " + fileName + " represents " + tileNameOf(fileName));
+            InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
+            if (split != null) {
+                splits.add(split);
             }
         }
     }
@@ -95,17 +74,11 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
     }
 
     // multi-year variant
-    protected FileStatus[] getFileStatuses(HdfsFileSystemService hdfsFileSystemService,
-                                           String inputPathPatterns,
-                                           Date minDate,
-                                           Date maxDate,
-                                           String regionName,
-                                           Configuration conf) throws IOException {
+    protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {
         InputPathResolver inputPathResolver = new InputPathResolver();
         inputPathResolver.setMinDate(minDate);
         inputPathResolver.setMaxDate(maxDate);
         inputPathResolver.setRegionName(regionName);
-        List<String> inputPatterns = inputPathResolver.resolveMultiYear(inputPathPatterns);
-        return hdfsFileSystemService.globFileStatuses(inputPatterns, conf);
+        return inputPathResolver.resolveMultiYear(inputPathPatterns);
     }
 }

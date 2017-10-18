@@ -4,16 +4,19 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import com.bc.calvalus.commons.DateRange;
 import com.bc.calvalus.commons.InputPathResolver;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
 import com.bc.calvalus.inventory.hadoop.HdfsFileSystemService;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.geodb.GeodbInputFormat;
+import com.bc.calvalus.processing.geodb.GeodbScanMapper;
 import com.bc.calvalus.processing.productinventory.ProductInventory;
 import com.bc.calvalus.processing.productinventory.ProductInventoryEntry;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.LocatedFileStatus;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapreduce.InputFormat;
@@ -27,7 +30,6 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -66,101 +68,57 @@ public class PatternBasedInputFormat extends InputFormat {
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
 
+        List<InputSplit> splits;
         if (geoInventory != null && inputPathPatterns == null) {
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
-            List<InputSplit> splits = GeodbInputFormat.createInputSplits(conf, paths);
-            LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
-            return splits;
+            splits = GeodbInputFormat.createInputSplits(conf, paths);
+            LOG.info(String.format("%d files returned from geo-inventory '%s').", paths.size(), geoInventory));
         } else if (geoInventory == null && inputPathPatterns != null) {
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
             HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
 
             ProductInventory productInventory = ProductInventory.createInventory(conf);
-            List<InputSplit> splits = new ArrayList<>(1000);
+            splits = new ArrayList<>(1000);
             if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
                 List<DateRange> dateRanges = createDateRangeList(dateRangesString);
                 for (DateRange dateRange : dateRanges) {
-                    FileStatus[] fileStatuses = getFileStatuses(hdfsFileSystemService,
-                                                                inputPathPatterns,
-                                                                dateRange.getStartDate(),
-                                                                dateRange.getStopDate(),
-                                                                regionName,
-                                                                conf);
-                    createSplits(productInventory, fileStatuses, splits, conf);
+                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
+                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, null);
+                    createSplits(productInventory, fileStatusIt, splits, conf);
                 }
             } else {
-                FileStatus[] fileStatuses = getFileStatuses(hdfsFileSystemService,
-                                                            inputPathPatterns,
-                                                            null,
-                                                            null,
-                                                            regionName,
-                                                            conf);
-                createSplits(productInventory, fileStatuses, splits, conf);
+                List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
+                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, null);
+                createSplits(productInventory, fileStatusIt, splits, conf);
             }
-
-            LOG.info("Total files to process : " + splits.size());
-            return splits;
         } else if (geoInventory != null && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
-            Set<String> pathStringInDB = GeodbInputFormat.queryGeoInventory(false, conf);
-            Set<Path> qualifiedPath = makeQualified(pathStringInDB, conf);
-
+            Set<String> pathInDB = GeodbInputFormat.queryGeoInventory(false, conf);
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
             HdfsFileSystemService hdfsFileSystemService = new HdfsFileSystemService(jobClientsMap);
 
             ProductInventory productInventory = ProductInventory.createInventory(conf);
-            List<InputSplit> splits = new ArrayList<>(1000);
+            splits = new ArrayList<>(1000);
             if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
                 List<DateRange> dateRanges = createDateRangeList(dateRangesString);
                 for (DateRange dateRange : dateRanges) {
-                    FileStatus[] fileStatuses = getFileStatuses(hdfsFileSystemService,
-                                                                inputPathPatterns,
-                                                                dateRange.getStartDate(),
-                                                                dateRange.getStopDate(),
-                                                                regionName,
-                                                                conf);
-                    fileStatuses = filterWithGeoDB(fileStatuses, qualifiedPath);
-                    createSplits(productInventory, fileStatuses, splits, conf);
+                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
+                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, pathInDB);
+                    createSplits(productInventory, fileStatusIt, splits, conf);
                 }
             } else {
-                FileStatus[] fileStatuses = getFileStatuses(hdfsFileSystemService,
-                                                            inputPathPatterns,
-                                                            null,
-                                                            null,
-                                                            regionName,
-                                                            conf);
-                fileStatuses = filterWithGeoDB(fileStatuses, qualifiedPath);
-                createSplits(productInventory, fileStatuses, splits, conf);
+                List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
+                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, pathInDB);
+                createSplits(productInventory, fileStatusIt, splits, conf);
             }
-
-            LOG.info("Total files to process : " + splits.size());
-            return splits;
         } else {
             throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
                                                             JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
                                                             JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
         }
-    }
-
-    private Set<Path> makeQualified(Set<String> pathStringInDB, Configuration conf) throws IOException {
-        Set<Path> qualifiedPath = new HashSet<>();
-        for (String stringPath : pathStringInDB) {
-            Path path = new Path(stringPath);
-            qualifiedPath.add(path.getFileSystem(conf).makeQualified(path));
-        }
-        return qualifiedPath;
-    }
-
-    private FileStatus[] filterWithGeoDB(FileStatus[] fileStatuses, Set<Path> pathInDB) {
-        List<FileStatus> remaining = new ArrayList<>();
-        for (FileStatus fileStatus : fileStatuses) {
-            Path fileStatusPath = fileStatus.getPath();
-            if (!pathInDB.contains(fileStatusPath)) {
-                remaining.add(fileStatus);
-            }
-        }
-        return remaining.toArray(new FileStatus[0]);
+        LOG.info("Total files to process : " + splits.size());
+        return splits;
     }
 
     private List<DateRange> createDateRangeList(String dateRangesString) throws IOException {
@@ -181,52 +139,72 @@ public class PatternBasedInputFormat extends InputFormat {
         return dateRanges;
     }
 
-
     protected void createSplits(ProductInventory productInventory,
-                                FileStatus[] fileStatuses,
+                                RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
                                 Configuration conf) throws IOException {
-        for (FileStatus file : fileStatuses) {
-            long fileLength = file.getLen();
-            FileSystem fs = file.getPath().getFileSystem(conf);
-            BlockLocation[] blocks = fs.getFileBlockLocations(file, 0, fileLength);
-            if (blocks != null && blocks.length > 0) {
-                BlockLocation block = blocks[0];
-                // create a split for the input
-                if (productInventory == null) {
-                    // no inventory, process whole product
-                    splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-                } else {
-                    ProductInventoryEntry entry = productInventory.getEntry(file.getPath().getName());
-                    if (entry != null && entry.getProcessLength() > 0) {
-                        // when listed process the given subset
-                        int start = entry.getProcessStartLine();
-                        int length = entry.getProcessLength();
-                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts(), start, length));
-                    } else if (entry == null) {
-                        // when not listed process whole product
-                        splits.add(new ProductSplit(file.getPath(), fileLength, block.getHosts()));
-                    }
-                }
-            } else {
-                String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
-                throw new IOException(String.format(msgFormat, file.getPath()));
+        while (fileStatusIt.hasNext()) {
+            LocatedFileStatus locatedFileStatus = fileStatusIt.next();
+            InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
+            if (split != null) {
+                splits.add(split);
             }
         }
     }
 
-    protected FileStatus[] getFileStatuses(HdfsFileSystemService fileSystemService,
-                                           String inputPathPatterns,
-                                           Date minDate,
-                                           Date maxDate,
-                                           String regionName,
-                                           Configuration conf) throws IOException {
-        InputPathResolver inputPathResolver = new InputPathResolver();
-        inputPathResolver.setMinDate(minDate);
-        inputPathResolver.setMaxDate(maxDate);
-        inputPathResolver.setRegionName(regionName);
-        List<String> inputPatterns = inputPathResolver.resolve(inputPathPatterns);
-        return fileSystemService.globFileStatuses(inputPatterns, conf);
+    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws IOException {
+        long fileLength = file.getLen();
+        System.out.println("file.getPath() = " + file.getPath());
+
+        BlockLocation[] blocks;
+        if (file instanceof LocatedFileStatus) {
+            blocks = ((LocatedFileStatus) file).getBlockLocations();
+        } else {
+            FileSystem fs = file.getPath().getFileSystem(conf);
+            blocks = fs.getFileBlockLocations(file, 0, fileLength);
+        }
+        
+        if (blocks != null && blocks.length > 0) {
+            BlockLocation block = blocks[0];
+            // create a split for the input
+            if (productInventory == null) {
+                // no inventory, process whole product
+                return new ProductSplit(file.getPath(), fileLength, block.getHosts());
+            } else {
+                ProductInventoryEntry entry = productInventory.getEntry(file.getPath().getName());
+                if (entry != null && entry.getProcessLength() > 0) {
+                    // when listed process the given subset
+                    int start = entry.getProcessStartLine();
+                    int length = entry.getProcessLength();
+                    return new ProductSplit(file.getPath(), fileLength, block.getHosts(), start, length);
+                } else if (entry == null) {
+                    // when not listed process whole product
+                    return new ProductSplit(file.getPath(), fileLength, block.getHosts());
+                }
+            }
+        } else {
+            String msgFormat = "Failed to retrieve block location for file '%s'. Ignoring it.";
+            throw new IOException(String.format(msgFormat, file.getPath()));
+        }
+        return null;
+    }
+
+    protected RemoteIterator<LocatedFileStatus> getFileStatuses(HdfsFileSystemService fileSystemService,
+                                                                List<String> inputPatterns,
+                                                                Configuration conf,
+                                                                Set<String> existingPathes) throws IOException {
+        FileSystemPathIterator.FileStatusFilter extraFilter = null;
+        if (existingPathes != null && existingPathes.size() > 0) {
+            extraFilter = fileStatus -> {
+                String dbPath = GeodbScanMapper.getDBPath(fileStatus.getPath(), conf);
+                return !existingPathes.contains(dbPath);
+            };
+        }
+        return fileSystemService.globFileStatusIterator(inputPatterns, conf, extraFilter);
+    }
+
+    protected List<String> getInputPatterns(String inputPathPatterns, Date minDate, Date maxDate, String regionName) {
+        return InputPathResolver.getInputPathPatterns(inputPathPatterns, minDate, maxDate, regionName);
     }
 
     /**
@@ -234,8 +212,8 @@ public class PatternBasedInputFormat extends InputFormat {
      */
     @Override
     public RecordReader<NullWritable, NullWritable> createRecordReader(InputSplit split,
-                                                                       TaskAttemptContext context) throws IOException,
-            InterruptedException {
+                                                                       TaskAttemptContext context) 
+            throws IOException, InterruptedException {
         return new NoRecordReader();
     }
 }

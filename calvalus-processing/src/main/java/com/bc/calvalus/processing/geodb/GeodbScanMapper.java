@@ -157,7 +157,7 @@ public class GeodbScanMapper extends Mapper<NullWritable, NullWritable, Text, Te
     /**
      * Removes the schema and the autority, if they are from the default filesystem
      */
-    private String getDBPath(Path productPath, Configuration configuration) {
+    public static String getDBPath(Path productPath, Configuration configuration) {
         URI productURI = productPath.toUri();
         URI defaultURI = FileSystem.getDefaultUri(configuration);
 

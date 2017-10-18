@@ -17,10 +17,13 @@
 package com.bc.calvalus.inventory;
 
 import com.bc.calvalus.JobClientsMap;
+import com.bc.calvalus.inventory.hadoop.FileSystemPathIterator;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.security.AccessControlException;
 
 import java.io.IOException;
@@ -117,6 +120,8 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return fileSystem.open(qualifiedPath);
     }
 
+    // use globFileStatusIterator instead 
+    @Deprecated
     public FileStatus[] globFileStatuses(List<String> pathPatterns, Configuration conf) throws IOException {
         Pattern pattern = createPattern(pathPatterns, conf);
         String commonPathPrefix = getCommonPathPrefix(pathPatterns);
@@ -125,6 +130,22 @@ public abstract class AbstractFileSystemService implements FileSystemService {
         return collectFileStatuses(commonFS, qualifiedPath, pattern);
     }
 
+    public RemoteIterator<LocatedFileStatus> globFileStatusIterator(List<String> pathPatterns, Configuration conf, FileSystemPathIterator.FileStatusFilter extraFilter) throws IOException {
+        Pattern pattern = createPattern(pathPatterns, conf);
+        String commonPathPrefix = getCommonPathPrefix(pathPatterns);
+        FileSystem fs = new Path(commonPathPrefix).getFileSystem(conf);
+        Path rootPath = makeQualified(fs, commonPathPrefix);
+        List<FileSystemPathIterator.FileStatusFilter> acceptFilter = new ArrayList<>();
+        acceptFilter.add(FileSystemPathIterator.HIDDEN_FILTER);
+        if (pattern != null) {
+            acceptFilter.add(FileSystemPathIterator.filterPattern(pattern));
+        }
+        if (extraFilter != null) {
+            acceptFilter.add(extraFilter);
+        }
+        return new FileSystemPathIterator(fs, acceptFilter).listFiles(rootPath, true);
+    }
+    
     public Path makeQualified(FileSystem fileSystem, String child) {
         Path path = new Path(child);
         if (!path.isAbsolute()) {
