@@ -154,7 +154,6 @@ public class PatternBasedInputFormat extends InputFormat {
 
     protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws IOException {
         long fileLength = file.getLen();
-        System.out.println("file.getPath() = " + file.getPath());
 
         BlockLocation[] blocks;
         if (file instanceof LocatedFileStatus) {
