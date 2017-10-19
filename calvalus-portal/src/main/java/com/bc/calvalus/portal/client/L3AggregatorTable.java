@@ -27,6 +27,7 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.ProvidesKey;
+import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
@@ -149,6 +150,10 @@ public class L3AggregatorTable {
 
     public void setStyle(CalvalusStyle style) {
         this.style = style;
+    }
+    
+    public void addSelectionChangeHandler(SelectionChangeEvent.Handler handler) {
+        selectionModel.addSelectionChangeHandler(handler);
     }
     
     public boolean hasSelection() {

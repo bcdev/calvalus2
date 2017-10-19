@@ -28,6 +28,7 @@ import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -128,7 +129,7 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.addRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+                updateRemoveVariableButtonEnablement();
             }
         });
 
@@ -136,27 +137,25 @@ public class L3ConfigForm extends Composite {
             @Override
             public void onClick(ClickEvent event) {
                 variableTable.removeSelectedRow();
-                removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+                updateRemoveVariableButtonEnablement();
             }
         });
-        removeVariableButton.setEnabled(false);
+        updateRemoveVariableButtonEnablement();
 
         addAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.addRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
 
         removeAggregatorButton.addClickHandler(new ClickHandler() {
             @Override
             public void onClick(ClickEvent event) {
                 aggregatorTable.removeSelectedRow();
-                removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
-            }
+                updateRemoveAggregatorButtonEnablement();            }
         });
-        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
+        updateRemoveAggregatorButtonEnablement();
 
         variableTable.addValueChangeHandler(new ValueChangeHandler<L3VariableTable.ConfiguredVariable>() {
             @Override
@@ -164,13 +163,25 @@ public class L3ConfigForm extends Composite {
                 updateAvailableVariables();
             }
         });
+        variableTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveVariableButtonEnablement();                 
+            }
+        });
+        aggregatorTable.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
+            @Override
+            public void onSelectionChange(SelectionChangeEvent event) {
+                updateRemoveAggregatorButtonEnablement();                 
+            }
+        });
+        
         ValueChangeHandler<Integer> periodCountUpdater = new ValueChangeHandler<Integer>() {
             @Override
             public void onValueChange(ValueChangeEvent<Integer> event) {
                 updatePeriodCount();
             }
         };
-
         steppingPeriodLength.setValue(10);
         steppingPeriodLength.addValueChangeHandler(periodCountUpdater);
 
@@ -202,7 +213,15 @@ public class L3ConfigForm extends Composite {
 
         HelpSystem.addClickHandler(showL3ParametersHelp, "l3Parameters");
     }
+    
+    private void updateRemoveAggregatorButtonEnablement() {
+        removeAggregatorButton.setEnabled(aggregatorTable.getAggregatorList().size() > 0 && aggregatorTable.hasSelection());
+    }
 
+    private void updateRemoveVariableButtonEnablement() {
+        removeVariableButton.setEnabled(variableTable.getVariableList().size() > 0 && variableTable.hasSelection());
+    }
+    
     private List<DtoAggregatorDescriptor> retrieveAggregatorDescriptors(PortalContext portalContext, String[] filterAggregatorNamesArray) {
         List<DtoAggregatorDescriptor> allAvailable = new ArrayList<DtoAggregatorDescriptor>();
         if (true) {
