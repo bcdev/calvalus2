@@ -16,7 +16,7 @@
                 <g:VerticalPanel spacing="2">
                     <g:Label>In-situ and point data files:</g:Label>
 
-                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="14" width="40em"/>
+                    <g:ListBox ui:field='recordSources' multipleSelect="false" visibleItemCount="20" width="35em"/>
                     <g:HorizontalPanel spacing="2">
                         <g:Button ui:field='addRecordSourceButton' text="Add"/>
                         <g:Button ui:field='checkRecordSourceButton' text="Check"/>
@@ -26,7 +26,7 @@
                 </g:VerticalPanel>
 
                 <g:HTMLPanel>
-                    <table cellspacing="2" style="width: 30em">
+                    <table cellspacing="2" style="width: 35em">
                         <tr>
                             <td>
                                 <g:Label>Macro pixel size:</g:Label>
@@ -35,6 +35,18 @@
                                 <g:IntegerBox ui:field="macroPixelSize" visibleLength="8"/>
                             </td>
                             <td>pixels</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    Size of the macro pixel given as number of 'normal' pixels 'n'.
+                                    An area comprising n x n
+                                    pixels will be considered in the match-up process. Should be an odd integer,
+                                    so that n/2 - 1 pixels are considered around a given center pixel.
+                                    The default value size is 5 pixels so that an area of 5 x 5 pixels will be
+                                    considered.
+                                </g:HTML>
+                            </td>
                         </tr>
                         <tr>
                             <td>
@@ -50,7 +62,7 @@
                                 <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
                                     The time difference is given in hours.
                                     Alternatively the difference can be given in full days using the 'd' suffix e.g. 0d,1d,...
-                                    This crititerion can be disabled by entering '0' or leaving it empty.
+                                    This criterion can be disabled by entering '0' or leaving it empty.
                                 </g:HTML>
                             </td>
                         </tr>
@@ -63,6 +75,15 @@
                             </td>
                         </tr>
                         <tr>
+                            <td colspan="3">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    Coefficient for <i>filtered mean criterion</i>.
+                                    If the value is less than or equal to 0,
+                                    the criterion will not be used. The default value is 1.5.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>
                                 <g:Label>Filter overlapping Match-ups:</g:Label>
                             </td>
@@ -71,11 +92,26 @@
                             </td>
                         </tr>
                         <tr>
+                            <td colspan="3">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    If enabled, overlapping match-ups, within one data product, are removed.
+                                    Only the match-up closest in time to the in-situ data is preserved.
+                                </g:HTML>
+                            </td>
+                        </tr>
+                        <tr>
                             <td>
                                 <g:Label>Only extract complete Macro pixel:</g:Label>
                             </td>
                             <td colspan="2">
                                 <g:CheckBox ui:field='onlyExtractComplete'/>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">
+                                <g:HTML wordWrap="true" addStyleNames="{style.explanatoryLabel}">
+                                    If enabled, only macro pixels that comprise the complete n x n area are extracted.
+                                </g:HTML>
                             </td>
                         </tr>
                         <tr>
