@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * @author hans
  */
-@ApplicationPath("/")
+@ApplicationPath("/calvalus")
 public class CalvalusApplication extends Application {
 
     private static final Set<Object> emptySet = Collections.emptySet();
@@ -20,6 +20,7 @@ public class CalvalusApplication extends Application {
     public Set<Class<?>> getClasses() {
         classes.add(CalvalusService.class);
         classes.add(CORSFilter.class);
+        classes.add(AuthenticationFilter.class);
         return classes;
     }
 

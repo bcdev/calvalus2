@@ -45,6 +45,13 @@
             <artifactId>gson</artifactId>
             <version>2.6.2</version>
         </dependency>
+
+        <!-- Test Framework -->
+        <dependency>
+            <artifactId>junit</artifactId>
+            <groupId>junit</groupId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

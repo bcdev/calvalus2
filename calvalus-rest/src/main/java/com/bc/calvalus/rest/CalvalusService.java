@@ -34,7 +34,7 @@ public class CalvalusService {
 
     @GET
     @Path("test")
-    @Produces(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.TEXT_PLAIN)
     public String getTestEndpoint() throws IOException, ProductionException {
         return "Hello world!";
     }
