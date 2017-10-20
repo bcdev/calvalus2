@@ -26,6 +26,11 @@ for Maven-built software project:
   /opt/java/jdk1.8.0_102/bin/java -cp ./snap/snap-engine/snap-runtime/target/snap-runtime.jar org.esa.snap.runtime.BundleCreator ~/tmp/snap-6.0-SNAPSHOT-bundle.zip .
 for Calvalus project:
   Build Calvalus with Maven and look into calvalus-snap/target/snap-bundle/
+  
+Remove:
+ - xercesImpl.jar
+ - *idepix*.jar
+ - *c2r*.jar  
 
 ===========================================================================
 Software archive
@@ -105,7 +110,7 @@ java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distributio
 
 For SNAP
 --------
-SNAP_BUNDLE=calvalus-snap-2.10-SNAPSHOT
+SNAP_BUNDLE=calvalus-2.14-portal
 java -jar calvalus-distribution/target/cpt.jar -e --uninstall $SNAP_BUNDLE
 java -jar calvalus-distribution/target/cpt.jar -e --deploy  calvalus-distribution/target/calvalus-bundle/*.jar $SNAP_BUNDLE
 
