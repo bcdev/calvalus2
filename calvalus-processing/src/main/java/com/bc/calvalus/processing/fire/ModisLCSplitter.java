@@ -27,11 +27,10 @@ public class ModisLCSplitter {
     public static void main(String[] args) throws IOException {
         FileSystem fileSystem = FileSystems.getDefault();
 
-        String modisInputPath = "D:\\workspace\\fire-cci\\modis-for-lc";
+        String modisInputPath = "C:\\ssd\\modis-reference";
         String outputPath = "D:\\workspace\\fire-cci\\splitted-lc-data\\modis";
 
-        String[] years = {"2010"};
-//        String[] years = {"2000", "2005", "2010"};
+        String[] years = {"2000", "2005", "2010"};
         List<Runnable> tasks = new ArrayList<>();
 
         for (String year : years) {
@@ -52,7 +51,8 @@ public class ModisLCSplitter {
             resamplingOp.setSourceProduct(lcProduct);
 
             String[] tiles = new String[]{
-                    "h08v08", "h08v09", "h09v08", "h09v09", "h10v10", "h11v08", "h11v09", "h11v10", "h11v11", "h11v12", "h12v08", "h12v09", "h12v10", "h12v11", "h12v12", "h13v08", "h13v09", "h13v10", "h13v11", "h13v12", "h13v14", "h14v09", "h14v10", "h14v11", "h14v14"
+//                    "h08v08", "h08v09", "h09v08", "h09v09", "h10v10", "h11v08", "h11v09", "h11v10", "h11v11", "h11v12", "h12v08", "h12v09", "h12v10", "h12v11", "h12v12", "h13v08", "h13v09", "h13v10", "h13v11", "h13v12", "h13v14", "h14v09", "h14v10", "h14v11", "h14v14"
+                    "h11v01", "h12v01", "h13v01", "h14v01", "h15v00", "h16v00", "h16v01", "h17v00", "h17v01", "h18v00", "h18v01", "h19v00", "h19v01", "h20v00", "h21v00", "h22v00", "h23v01"
             };
 
             Files.list(Paths.get(modisInputPath)).filter(path -> path.toString().endsWith(".hdf")).filter((Path path) -> {

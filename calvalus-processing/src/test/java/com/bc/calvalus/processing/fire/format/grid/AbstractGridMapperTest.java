@@ -180,22 +180,22 @@ public class AbstractGridMapperTest {
     @Test
     public void acceptanceTestModisGridFormat() throws Exception {
         List<Product> products = new ArrayList<>();
-        products.add(ProductIO.readProduct("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\burned_2001_1_h19v08.nc"));
+        products.add(ProductIO.readProduct("C:\\ssd\\modis-analysis\\burned_2006_3_h10v02.nc"));
 
         AbstractGridMapper mapper = new ModisGridMapper();
-        File lcFile = new File("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\h19v08-2000.nc");
+        File lcFile = new File("C:\\ssd\\modis-analysis\\h10v02-2000.nc");
         Product lcProduct = ProductIO.readProduct(lcFile);
 
         Product[] products1 = products.toArray(new Product[0]);
         Product[] lcProducts = {lcProduct};
         ArrayList<ZipFile> geoLookupTables = new ArrayList<>();
-        ZipFile geoLookupTable = new ZipFile("D:\\workspace\\fire-cci\\testdata\\modis-grid-input\\modis-geo-luts-076x.zip");
+        ZipFile geoLookupTable = new ZipFile("C:\\ssd\\modis-analysis\\geoluts\\modis-geo-luts-000x.zip");
         geoLookupTables.add(geoLookupTable);
-        String targetTile = "765,325";
+        String targetTile = "3,92";
         ModisFireGridDataSource dataSource = new ModisFireGridDataSource(products1, lcProducts, geoLookupTables, targetTile);
         mapper.setDataSource(dataSource);
 
-        GridCell gridCell = mapper.computeGridCell(2001, 1);
+        GridCell gridCell = mapper.computeGridCell(2006, 3);
         Product product = new Product("test", "test", 1, 1);
         Band ba1 = product.addBand("ba1", ProductData.TYPE_FLOAT32);
         ba1.setData(new ProductData.Float(gridCell.baFirstHalf));

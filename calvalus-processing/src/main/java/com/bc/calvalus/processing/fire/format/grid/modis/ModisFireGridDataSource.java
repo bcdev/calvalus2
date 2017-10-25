@@ -191,7 +191,7 @@ public class ModisFireGridDataSource extends AbstractFireGridDataSource {
 
     private static HashMap<String, Set<String>> getGeoLookupTable(int targetCellX, int targetCellY, List<ZipFile> geoLookupTables) throws IOException {
         Gson gson = new Gson();
-        String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX, targetCellY);
+        String lutName = String.format("modis-geo-lut-%s-%s.json", targetCellX < 10 ? "0" + targetCellX : targetCellX, targetCellY);
         ZipEntry entry = null;
         ZipFile geoLookupTableFile = null;
         for (ZipFile geoLookupTable0 : geoLookupTables) {

@@ -38,6 +38,9 @@ public class ModisGridMapperTest {
 
     @Test
     public void testStandardError() throws Exception {
+        Product product = ProductIO.readProduct("c:\\ssd\\modis-analysis\\burned_2006_1_h19v09.nc");
+
+
         double[] p = new double[14255];
         try (CsvReader r = new CsvReader(new FileReader(new File("c:\\Users\\Thomas\\Desktop\\Mappe3.csv")), new char[]{';'})) {
             List<double[]> doubles = r.readDoubleRecords();
@@ -47,7 +50,7 @@ public class ModisGridMapperTest {
             }
         }
 
-        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 1);
+        float errorPerPixel = new ModisGridMapper().getErrorPerPixel(p, 746);
 
     }
 }

@@ -1,10 +1,8 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
-import com.bc.calvalus.processing.fire.format.PixelProductArea;
-import com.bc.calvalus.processing.fire.format.S2Strategy;
+import com.bc.calvalus.processing.fire.format.pixel.GlobalPixelProductAreaProvider.GlobalPixelProductArea;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.dataio.bigtiff.BigGeoTiffProductWriterPlugIn;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -27,12 +25,11 @@ public class PixelFinaliseMapperTest {
         System.getProperties().put("snap.dataio.bigtiff.tiling.height", "" + TILE_SIZE);
         System.getProperties().put("snap.dataio.bigtiff.force.bigtiff", "true");
 
-        Product lcProduct = ProductIO.readProduct("c:\\ssd\\2010.nc");
+        Product lcProduct = ProductIO.readProduct("c:\\ssd\\modis-analysis\\africa-2000.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
-        String baseFilename = PixelFinaliseMapper.createBaseFilename("2016", "02", "fv4.2", "h37v17;185;90;190;95");
-        Product product = PixelFinaliseMapper.remap(new File("C:\\ssd\\L3_2016-02-01_2016-02-29.nc"), baseFilename, "6", lcProduct, () -> System.out.println("PixelFinaliseMapperTest.progress"));
+        Product product = PixelFinaliseMapper.remap(new File("C:\\ssd\\modis-analysis\\subset_0_of_L3_2006-03-01_2006-03-31.nc"), "c:\\ssd\\test.nc", "4", lcProduct, () -> System.out.println("PixelFinaliseMapperTest.progress"));
 
-        ProductIO.writeProduct(product, "C:\\ssd\\" + baseFilename + "_test256.tif", BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        ProductIO.writeProduct(product, "C:\\ssd\\test4.nc", "NetCDF4-CF");
     }
 
     @Test
@@ -105,6 +102,25 @@ public class PixelFinaliseMapperTest {
         final Rectangle destRect = new Rectangle(10, 10);
         int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
         assertEquals(10, neighbourValue);
+    }
+
+    @Test
+    public void testFindNeighbourValue_on_edge_2() throws Exception {
+        int pixelIndex = 53248;
+        int wrongNeighbourPixelIndex = 52991;
+
+        float[] sourceJdArray = new float[256 * 256];
+        Arrays.fill(sourceJdArray, Float.NaN);
+        sourceJdArray[wrongNeighbourPixelIndex] = 10;
+
+        int[] lcArray = new int[256 * 256];
+        Arrays.fill(lcArray, 210); // all non-burnable
+        lcArray[wrongNeighbourPixelIndex] = 180; // burnable
+
+
+        final Rectangle destRect = new Rectangle(19712, 25344, 256, 256);
+        int neighbourValue = (int) PixelFinaliseMapper.findNeighbourValue(sourceJdArray, lcArray, pixelIndex, destRect.width, true).neighbourValue;
+        assertEquals(-2, neighbourValue);
     }
 
     @Test
@@ -216,18 +232,22 @@ public class PixelFinaliseMapperTest {
     @Ignore
     @Test
     public void testCreateMetadata() throws Exception {
-        for (PixelProductArea area : new S2Strategy().getAllAreas()) {
-            for (MonthYear monthYear : monthYears()) {
-                String baseFilename = PixelFinaliseMapper.createBaseFilename(monthYear.year, monthYear.month, "v1", "h37v17;185;90;190;95");
-                String metadata = PixelFinaliseMapper.createMetadata(monthYear.year, monthYear.month, "v1", "h37v17;185;90;190;95");
-                try (FileWriter fw = new FileWriter("d:\\workspace\\fire-cci\\temp\\s2-pixel-metadata\\" + baseFilename + ".xml")) {
-                    fw.write(metadata);
-                }
+//        for (PixelProductArea area : new S2Strategy().getAllAreas()) {
+        for (GlobalPixelProductArea area : GlobalPixelProductArea.values()) {
+//            for (MonthYear monthYear : s2MonthYears()) {
+            // "h37v17;185;90;190;95"
+            String areaString = area.nicename + ";" + area.left + ";" + area.right + ";" + area.top + ";" + area.bottom;
+            String baseFilename = PixelFinaliseMapper.createBaseFilename("2006", "03", "v5.0", areaString);
+            String metadata = PixelFinaliseMapper.createMetadata("2006", "03", "v5.0", areaString);
+            try (FileWriter fw = new FileWriter("c:\\ssd\\" + baseFilename + ".xml")) {
+                fw.write(metadata);
             }
         }
+//        }
     }
 
-    private static MonthYear[] monthYears() {
+
+    private static MonthYear[] s2MonthYears() {
         ArrayList<MonthYear> monthYears = new ArrayList<>();
         for (String m : new String[]{"06", "07", "08", "09", "10", "11", "12"}) {
             monthYears.add(new MonthYear(m, "2015"));

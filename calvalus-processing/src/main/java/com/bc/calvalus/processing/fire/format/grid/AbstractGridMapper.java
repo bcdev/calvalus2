@@ -140,6 +140,15 @@ public abstract class AbstractGridMapper extends Mapper<Text, FileSplit, Text, G
                 errorsFirstHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnFirstHalf, numberOfBurnedPixels);
                 errorsSecondHalf[targetPixelIndex] = getErrorPerPixel(data.probabilityOfBurnSecondHalf, numberOfBurnedPixels);
 
+                for (int i = 0; i < errorsFirstHalf.length; i++) {
+                    if (baFirstHalf[i] < 0.00001) {
+                        errorsFirstHalf[i] = 0;
+                    }
+                    if (baSecondHalf[i] < 0.00001) {
+                        errorsSecondHalf[i] = 0;
+                    }
+                }
+
                 targetPixelIndex++;
                 pm.worked(1);
             }

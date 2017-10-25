@@ -182,7 +182,7 @@ public class ModisGridMapper extends AbstractGridMapper {
         double[] pb_i_star = new double[probabilityOfBurn.length];
 
         for (int i = 0; i < probabilityOfBurn.length; i++) {
-            double pb_i = probabilityOfBurn[i] / 100;
+            double pb_i = probabilityOfBurn[i];
             pb_i_star[i] = pb_i * S;
         }
 
@@ -191,15 +191,14 @@ public class ModisGridMapper extends AbstractGridMapper {
             checksum += v;
         }
 
-        if (Math.abs(checksum * 100 - numberOfBurnedPixels) > 0.0001) {
-            throw new IllegalStateException(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum * 100, numberOfBurnedPixels));
+        if (Math.abs(checksum - numberOfBurnedPixels) > 0.0001) {
+            LOG.warning(String.format("Math.abs(checksum (%s) - numberOfBurnedPixels (%s)) > 0.0001", checksum, numberOfBurnedPixels));
         }
 
         double var_c = 0.0;
         int count = 0;
         for (double p : pb_i_star) {
             var_c += p * (1 - p);
-            count++;
             if (Double.isNaN(p)) {
                 continue;
             }
@@ -210,6 +209,7 @@ public class ModisGridMapper extends AbstractGridMapper {
             if (p < 0) {
                 throw new IllegalStateException("p < 0");
             }
+            count++;
         }
 
         if (count == 0) {

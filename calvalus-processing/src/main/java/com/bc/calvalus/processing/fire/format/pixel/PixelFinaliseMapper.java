@@ -1,8 +1,6 @@
 package com.bc.calvalus.processing.fire.format.pixel;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.analysis.QuicklookGenerator;
-import com.bc.calvalus.processing.analysis.Quicklooks;
 import com.bc.calvalus.processing.beam.CalvalusProductIO;
 import com.bc.calvalus.processing.fire.format.LcRemapping;
 import com.bc.calvalus.processing.hadoop.ProductSplit;
@@ -31,7 +29,6 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.Format;
 import org.jdom2.output.XMLOutputter;
 
-import javax.imageio.ImageIO;
 import javax.media.jai.PlanarImage;
 import java.awt.*;
 import java.awt.image.DataBuffer;
@@ -45,6 +42,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.text.NumberFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.Year;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -54,7 +52,7 @@ import java.util.logging.Logger;
 public class PixelFinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    static final int TILE_SIZE = 256;
+    static final int TILE_SIZE = 1;
 
     public static final String KEY_LC_PATH = "LC_PATH";
     public static final String KEY_VERSION = "VERSION";
@@ -118,20 +116,20 @@ public class PixelFinaliseMapper extends Mapper {
         FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done");
-        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
-        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
-        qlConfig.setImageType("png");
-        qlConfig.setBandName("JD");
-        qlConfig.setSubSamplingX(125);
-        qlConfig.setSubSamplingY(125);
-        File localCpd = new File("fire-modis-pixel.cpd");
-        CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/fire-modis-pixel.cpd"), localCpd, context.getConfiguration());
-        qlConfig.setCpdURL(localCpd.toURI().toURL().toExternalForm());
-        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
-        if (image != null) {
-            ImageIO.write(image, "png", new File(baseFilename + ".png"));
-            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
-        }
+//        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
+//        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
+//        qlConfig.setImageType("png");
+//        qlConfig.setBandName("JD");
+//        qlConfig.setSubSamplingX(125);
+//        qlConfig.setSubSamplingY(125);
+//        File localCpd = new File("fire-modis-pixel.cpd");
+//        CalvalusProductIO.copyFileToLocal(new Path("/calvalus/projects/fire/aux/fire-modis-pixel.cpd"), localCpd, context.getConfiguration());
+//        qlConfig.setCpdURL(localCpd.toURI().toURL().toExternalForm());
+//        RenderedImage image = QuicklookGenerator.createImage(context, result, qlConfig);
+//        if (image != null) {
+//            ImageIO.write(image, "png", new File(baseFilename + ".png"));
+//            FileUtil.copy(new File(baseFilename + ".png"), fs, pngPath, false, context.getConfiguration());
+//        }
     }
 
     static Product remap(File localL3, String baseFilename, String sensorId, Product lcProduct, Progressable context) throws IOException {
@@ -166,6 +164,7 @@ public class PixelFinaliseMapper extends Mapper {
 
     static String createMetadata(String year, String month, String version, String areaString) throws IOException {
         String nicename = areaString.split(";")[0];
+        GlobalPixelProductAreaProvider.GlobalPixelProductArea area = GlobalPixelProductAreaProvider.GlobalPixelProductArea.valueOf(nicename.toUpperCase().replace(" ", "_"));
         String left = areaString.split(";")[1];
         String top = areaString.split(";")[2];
         String right = areaString.split(";")[3];
@@ -176,9 +175,10 @@ public class PixelFinaliseMapper extends Mapper {
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", nicename);
+        velocityContext.put("zoneId", area.index);
         velocityContext.put("zoneName", nicename);
-        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
+//        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
+        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
         velocityContext.put("westLon", Integer.parseInt(left) - 180);
         velocityContext.put("eastLon", Integer.parseInt(right) - 180);
         velocityContext.put("northLat", 90 - Integer.parseInt(top));
@@ -214,7 +214,7 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 10 * PixelFinaliseMapper.TILE_SIZE == 0) {
+            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
                 CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of JD image.");
             }
             float[] sourceJdArray = new float[destRect.width * destRect.height];
@@ -234,7 +234,9 @@ public class PixelFinaliseMapper extends Mapper {
 
                     float sourceJd = sourceJdArray[pixelIndex];
                     if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
-                        sourceJd = 0;
+                        if (sourceJd > 0) {
+                            sourceJd = 0;
+                        }
                     }
 
                     if (Float.isNaN(sourceJd)) {
@@ -271,7 +273,7 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 10 * PixelFinaliseMapper.TILE_SIZE == 0) {
+            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
                 CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of CL image.");
             }
             float[] sourceClArray = new float[destRect.width * destRect.height];
@@ -318,7 +320,7 @@ public class PixelFinaliseMapper extends Mapper {
         }
     }
 
-    private static class LcImage extends SingleBandedOpImage {
+    static class LcImage extends SingleBandedOpImage {
 
         private final Band sourceLcBand;
         private final Band sourceJdBand;
@@ -333,7 +335,7 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 10 * PixelFinaliseMapper.TILE_SIZE == 0) {
+            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
                 CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of LC image.");
             }
             context.progress();
@@ -357,12 +359,15 @@ public class PixelFinaliseMapper extends Mapper {
                     int lcValue = lcData[pixelIndex];
 
                     if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
-                        jdValue = 0;
+                        if (jdValue > 0) {
+                            jdValue = 0;
+                        }
                     }
 
                     if (Float.isNaN(jdValue)) {
-                        NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, false);
+                        NeighbourResult neighbourResult = PixelFinaliseMapper.findNeighbourValue(jdArray, lcData, pixelIndex, destRect.width, true);
                         lcValue = lcData[neighbourResult.newPixelIndex];
+                        jdValue = neighbourResult.neighbourValue;
                     }
 
                     if (jdValue <= 0 || jdValue >= 997) {
@@ -389,7 +394,7 @@ public class PixelFinaliseMapper extends Mapper {
 
         @Override
         protected void computeRect(PlanarImage[] sources, WritableRaster dest, Rectangle destRect) {
-            if (destRect.x == 0 && dest.getMinY() % 10 * PixelFinaliseMapper.TILE_SIZE == 0) {
+            if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
                 CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of sensor image.");
             }
             float[] jdData = new float[destRect.width * destRect.height];
@@ -416,7 +421,7 @@ public class PixelFinaliseMapper extends Mapper {
                     }
 
                     if (Float.isNaN(jdValue)) {
-                        jdValue = PixelFinaliseMapper.findNeighbourValue(jdData, lcData, pixelIndex, destRect.width, false).neighbourValue;
+                        jdValue = PixelFinaliseMapper.findNeighbourValue(jdData, lcData, pixelIndex, destRect.width, true).neighbourValue;
                     }
 
                     if (jdValue > 0 && jdValue < 900) {
@@ -435,6 +440,10 @@ public class PixelFinaliseMapper extends Mapper {
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
+                if (pixelIndex % width == 0 && xDirection == -1) {
+                    continue;
+                }
+
                 int newPixelIndex = pixelIndex + yDirection * width + xDirection;
                 if (newPixelIndex < jdData.length) {
                     if (newPixelIndex < 0 || newPixelIndex >= jdData.length) {
@@ -568,7 +577,7 @@ public class PixelFinaliseMapper extends Mapper {
             "            <gmd:citation>" +
             "                <gmd:CI_Citation>" +
             "                    <gmd:title>" +
-            "                        <gco:CharacterString>Fire_cci SFD Burned Area product v1.0 – Zone ${zoneId}" +
+            "                        <gco:CharacterString>Fire_cci Pixel MODIS Burned Area product v5.0 – Zone ${zoneId}" +
             "                        </gco:CharacterString>" +
             "                    </gmd:title>" +
             "                    <gmd:date>" +
@@ -589,7 +598,7 @@ public class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>2017-02-25</gco:Date>" +
+            "                                <gco:Date>TBD</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -603,7 +612,7 @@ public class PixelFinaliseMapper extends Mapper {
             "                    <gmd:identifier>" +
             "                        <gmd:MD_Identifier>" +
             "                            <gmd:code>" +
-            "                                <gco:CharacterString></gco:CharacterString>" +
+            "                                <gco:CharacterString>doi: 10.5285/9c666602b89e468493e1c907a4de62ff</gco:CharacterString>" +
             "                            </gmd:code>" +
             "                        </gmd:MD_Identifier>" +
             "                    </gmd:identifier>" +
@@ -623,34 +632,31 @@ public class PixelFinaliseMapper extends Mapper {
             "</gco:CharacterString>" +
             "<gco:CharacterString>" +
             "#[[" +
-            "The product is a multi-layer TIFF with the following naming convention: ${IndicativeDate}-ESACCI-L3S_FIRE-BA-" +
-            "${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif." +
-            "${Indicative Date} is the identifying date for this data set. Format is YYYY[MM[DD]], where YYYY is the " +
-            "four digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to " +
-            "31. For monthly products the date will be set to 01. " +
-            "${Indicative sensor} is MSI. ${Additional Segregator} " +
-            "is the AREA_${TILE_CODE} being the tile code described in the Product User Guide. " +
-            "${File Version} is the File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional " +
-            ". and another 1 or more digits.). An example is: " +
-            "20050301-ESACCI-L3S_FIRE-BA-MSI-AREA_h38v16-${REPLACE_WITH_VERSION}.tif.]]#" +
+            "The product is a multi-layer TIFF with the following naming convention:" +
+            "${IndicativeDate}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif. " +
+            "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
+            "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
+            "For monthly products the date will be set to 01. ${Indicative sensor} is MODIS. ${Additional Segregator} " +
+            "is the AREA_${TILE_CODE} being the tile code described in the Product User Guide. ${File Version} is the " +
+            "File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another " +
+            "1 or more digits.). An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-f${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3_PUG_SFD available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG.1.0 available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.00017966 deg (approx. 20m); Pixel " +
-            "value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned in " +
-            "the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is allocated to pixels " +
-            "that are not taken into account in " +
-            "the burned area processing (continuous water, ocean). Data type = Integer; Number of layers = 1; Data depth = 16" +
+            "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
+            "Pixel value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned " +
+            "in the month; a value of -1 is allocated to pixels that are not observed in the month; a value of -2 is " +
+            "allocated to pixels that are not burnable (urban areas, bare areas, water bodies and permanent snow and " +
+            "ice). Data type = Integer; Number of layers = 1; Data depth = 16" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.00017966 deg (approx. 20m); Pixel value = 0 to " +
-            "100, where the value is the probability in percentage that the pixel is actually burned, as a result " +
-            "of both the pre-processing and the actual burned area classification. The higher the value, the " +
-            "higher the confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are " +
-            "not burned, or not observed in the month, or not taken into account in the burned area processing (continuous water, ocean). Data type = Byte; " +
-            "Number of layers = 1;" +
-            "Data depth = 8" +
+            "<gco:CharacterString>Layer 2: Confidence Level; Pixel Spacing = 0.0022457331 deg  (approx. 250m); Pixel " +
+            "value = 0 to 100, where the value is the probability in percentage that the pixel is actually burned, as a " +
+            "result of the different steps of the burned area classification. The higher the value, the higher the " +
+            "confidence that the pixel is actually burned. A value of 0 is allocated to pixels that are not observed in " +
+            "the month, or not taken into account in the burned area processing (non burnable). Data type = Byte; Number " +
+            "of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover (LC). N is the " +
+            "<gco:CharacterString>Layer 3: Land cover of that pixel, extracted from the CCI LandCover v1.6.1 (LC). N is the " +
             "number of the land cover category in the reference " +
             "map. It is only valid when layer 1 &gt; 0. Pixel value is 0 to N under the following codes: " +
             "10 = Cropland, rainfed; " +
@@ -671,8 +677,11 @@ public class PixelFinaliseMapper extends Mapper {
             "160 = Tree cover, flooded, fresh or brackish water; " +
             "170 = Tree cover, flooded, saline water; " +
             "180 = Shrub or herbaceous cover, flooded, fresh/saline/brackish water; " +
-            "Pixel Spacing = 0.00017966 deg (approx. 20m); Data type = Byte; Number of layers = 1; Data depth = 8" +
+            "Pixel Spacing = 0.0022457331 deg  (approx. 250m); Data type = Byte; Number of layers = 1; Data depth = 8" +
             "</gco:CharacterString>" +
+            "<gco:CharacterString>Layer 4: Sensor; Pixel Spacing = 0.0022457331 deg  (approx. 250m); Pixel value = 0 to " +
+            "N, where the value is the code of the sensor used to retrieve the burned area. It is only valid when layer " +
+            "1 &gt; 0. For this product N=2 (MODIS). Data type = Byte; Number of layers = 1; Data depth = 8</gco:CharacterString>" +
             "</gmd:abstract>" +
             "" +
             "            <gmd:pointOfContact>" +
