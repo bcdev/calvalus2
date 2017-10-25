@@ -31,14 +31,11 @@ import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
-import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.vividsolutions.jts.geom.Geometry;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.esa.snap.core.util.StringUtils;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
@@ -80,17 +77,23 @@ public class L2PlusProductionType extends HadoopProductionType {
         String globalOutputDir = "";
         String formattingInputDir;
         Workflow.Sequential l2WorkflowItem = new Workflow.Sequential();
-        if (processorProductionRequest.getProcessorName().equals("Formatting")) {
+        String processorName = processorProductionRequest.getProcessorName();
+        if (processorName != null && processorName.equals("Formatting")) {
             formattingInputDir = productionRequest.getString("inputPath");
         } else {
             HadoopWorkflowItem processingItem = createProcessingItem(productionId, productionName, dateRanges,
                                                                      productionRequest, processorProductionRequest);
             globalOutputDir = processingItem.getOutputDir();
-            ProcessorDescriptor processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+            ProcessorDescriptor processorDesc = null;
+            if (processorName != null) {
+                processorDesc = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+            }
             formattingInputDir = globalOutputDir + "/" + L2ProductionType.getPathPatternForProcessingResult(processorDesc);
-            LOG.info("choosing pattern " + formattingInputDir + " for processor " + processorProductionRequest.getProcessorName() + " descriptor " + processorDesc);
-            if (processorDesc == null) {
-                LOG.info("looking for bundle " + processorProductionRequest.getProcessorBundle() + " location " + processorProductionRequest.getProcessorBundleLocation());
+            if (processorName != null) {
+                LOG.info("choosing pattern " + formattingInputDir + " for processor " + processorName + " descriptor " + processorDesc);
+                if (processorDesc == null) {
+                    LOG.info("looking for bundle " + processorProductionRequest.getProcessorBundle() + " location " + processorProductionRequest.getProcessorBundleLocation());
+                }
             }
             l2WorkflowItem.add(processingItem);
         }
@@ -98,7 +101,10 @@ public class L2PlusProductionType extends HadoopProductionType {
         String outputFormat = productionRequest.getString("outputFormat", productionRequest.getString(
                 JobConfigNames.CALVALUS_OUTPUT_FORMAT, null));
 
-        ProcessorDescriptor processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        ProcessorDescriptor processorDescriptor = null;
+        if (processorName != null) {
+            processorDescriptor = processorProductionRequest.getProcessorDescriptor(getProcessingService());
+        }
         boolean isFormattingImplicit = processorDescriptor != null &&
                                        processorDescriptor.getFormatting() == ProcessorDescriptor.FormattingType.IMPLICIT;
         boolean isFormattingRequested = outputFormat != null && !outputFormat.equals("SEQ");
@@ -212,8 +218,6 @@ public class L2PlusProductionType extends HadoopProductionType {
                                                     List<DateRange> dateRanges, ProductionRequest productionRequest,
                                                     ProcessorProductionRequest processorProductionRequest) throws
                                                                                                            ProductionException {
-
-        productionRequest.ensureParameterSet(ProcessorProductionRequest.PROCESSOR_NAME);
 
         String outputDir = getOutputPath(productionRequest, productionId, "");
 
