@@ -26,8 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 /**
  * @author thomas
@@ -59,31 +57,40 @@ public class ModisGridInputFormat extends InputFormat {
 
         for (String targetCell : tilesLut.keySet()) {
             List<FileStatus> fileStatuses = new ArrayList<>();
-            SortedSet<String> inputTiles = new TreeSet<>(tilesLut.get(targetCell));
+            Set<String> inputTiles = tilesLut.get(targetCell);
+            List<String> tilesWithBurnedData = new ArrayList<>();
             for (String inputTile : inputTiles) {
                 String inputPathPattern = "hdfs://calvalus/calvalus/projects/fire/modis-ba/" + year + "/" + month + "/burned_" + year + "_" + singleMonth + "_" + inputTile + ".nc";
-                Collections.addAll(fileStatuses, getFileStatuses(inputPathPattern, conf));
+                FileStatus[] elements = getFileStatuses(inputPathPattern, conf);
+                if (elements.length > 0) {
+                    tilesWithBurnedData.add(inputTile);
+                }
+                Collections.addAll(fileStatuses, elements);
             }
-            if (!fileStatuses.isEmpty()) {
-                addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetCell, inputTiles);
-            }
+            addSplit(fileStatuses.toArray(new FileStatus[0]), splits, conf, GridFormatUtils.lcYear(Integer.parseInt(year)), targetCell, inputTiles, tilesWithBurnedData);
         }
 
         CalvalusLogger.getLogger().info(String.format("Created %d split(s).", splits.size()));
         return splits;
     }
 
-    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetCell, SortedSet<String> inputTileSet) throws IOException {
+    private void addSplit(FileStatus[] fileStatuses, List<InputSplit> splits, Configuration conf, String lcYear, String targetCell, Set<String> inputTiles, List<String> tilesWithBurnedData) throws IOException {
         List<Path> filePaths = new ArrayList<>();
         List<Long> fileLengths = new ArrayList<>();
-        String[] inputTiles = inputTileSet.toArray(new String[0]);
-        for (int i = 0; i < fileStatuses.length; i++) {
-            FileStatus fileStatus = fileStatuses[i];
-            Path path = fileStatus.getPath();
-            filePaths.add(path);
-            fileLengths.add(fileStatus.getLen());
-            String lcTile = inputTiles[i];
-            String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + String.format("%s-%s.nc", lcTile, lcYear);
+        for (String inputTile : inputTiles) {
+            if (tilesWithBurnedData.contains(inputTile)) {
+                for (FileStatus fileStatus : fileStatuses) {
+                    Path path = fileStatus.getPath();
+                    if (path.getName().contains(inputTile)) {
+                        filePaths.add(path);
+                        fileLengths.add(fileStatus.getLen());
+                    }
+                }
+            } else {
+                filePaths.add(new Path("dummy-" + inputTile));
+                fileLengths.add(0L);
+            }
+            String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + String.format("%s-%s.nc", inputTile, lcYear);
             FileStatus lcPath = FileSystem.get(conf).getFileStatus(new Path(lcInputPath));
             filePaths.add(lcPath.getPath());
             fileLengths.add(lcPath.getLen());

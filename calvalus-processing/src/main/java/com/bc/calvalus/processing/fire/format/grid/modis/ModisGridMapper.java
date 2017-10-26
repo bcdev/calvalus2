@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.lib.input.CombineFileSplit;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.util.ProductUtils;
 
@@ -56,24 +57,32 @@ public class ModisGridMapper extends AbstractGridMapper {
         Product[] lcProducts = new Product[numProducts];
         int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i += 2) {
-            File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
-            File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
-            Product p = ProductIO.readProduct(sourceProductFile);
-            if (p == null) {
-                throw new IllegalStateException("Cannot read file " + paths[i]);
-            }
-            if (p.getName().contains("h18")) {
-                Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
-                ProductUtils.copyGeoCoding(p, temp);
-                CommonUtils.fixH18Band(p, temp, "classification");
-                CommonUtils.fixH18BandByte(p, temp, "numObs1");
-                CommonUtils.fixH18BandByte(p, temp, "numObs2");
-                if (p.containsBand("uncertainty")) {
-                    CommonUtils.fixH18Band(p, temp, "uncertainty");
+            if (paths[i].getName().contains("dummy")) {
+                Product product = new Product("dummyburned_year_month_" + paths[i].getName(), "dummy", 4800, 4800);
+                product.addBand("classification", "0", ProductData.TYPE_INT16);
+                product.addBand("numObs1", "0", ProductData.TYPE_UINT8);
+                product.addBand("numObs2", "0", ProductData.TYPE_UINT8);
+                sourceProducts[productIndex] = product;
+            } else {
+                File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());
+                Product p = ProductIO.readProduct(sourceProductFile);
+                if (p == null) {
+                    throw new IllegalStateException("Cannot read file " + paths[i]);
                 }
-                p = temp;
+                if (p.getName().contains("h18")) {
+                    Product temp = new Product(p.getName(), p.getProductType(), p.getSceneRasterWidth(), p.getSceneRasterHeight());
+                    ProductUtils.copyGeoCoding(p, temp);
+                    CommonUtils.fixH18Band(p, temp, "classification");
+                    CommonUtils.fixH18BandByte(p, temp, "numObs1");
+                    CommonUtils.fixH18BandByte(p, temp, "numObs2");
+                    if (p.containsBand("uncertainty")) {
+                        CommonUtils.fixH18Band(p, temp, "uncertainty");
+                    }
+                    p = temp;
+                }
+                sourceProducts[productIndex] = p;
             }
-            sourceProducts[productIndex] = p;
+            File lcProductFile = CalvalusProductIO.copyFileToLocal(paths[i + 1], context.getConfiguration());
             lcProducts[productIndex] = ProductIO.readProduct(lcProductFile);
 
             productIndex++;

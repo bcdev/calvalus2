@@ -5,7 +5,6 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.File;
@@ -22,17 +21,20 @@ public class ModisFireGridDataSourceTest {
 
     @Test
     public void name() throws Exception {
-        System.out.println((byte) 110);
+        Product p = ProductIO.readProduct("c:\\ssd\\modis-analysis\\grid-test\\burned_2007_6_h18v02.nc");
+        Product lc = ProductIO.readProduct("C:\\ssd\\modis-analysis\\grid-test\\h18v02-2000.nc");
+        ZipFile geolookup = new ZipFile(new File("c:\\ssd\\modis-analysis\\grid-test\\modis-geo-luts-079x.zip"));
+        ArrayList<ZipFile> zipFiles = new ArrayList<>();
+        zipFiles.add(geolookup);
+        ModisFireGridDataSource source = new ModisFireGridDataSource(new Product[]{p}, new Product[]{lc}, zipFiles, "" + (795 / 32) * 32 + "," + 1);
 
-        Product lc = ProductIO.readProduct("C:\\ssd\\h19v09-2000.nc");
-        Band band = lc.getBand("lccs_class");
-        ProductData productData = ProductData.createInstance(band.getDataType(), 100 * 100);
-        band.readRasterData(3553, 1042, 100, 100, productData);
-//        band.readRasterData(0, 0, 4800, 4800, productData);
-        System.out.println(productData.getElemIntAt(0));
-        System.out.println(productData.getElemIntAt(1));
-        System.out.println(productData.getElemIntAt(2));
-//        System.out.println(productData.getElemIntAt(2));
+        source.setDoyFirstHalf(158);
+        source.setDoySecondHalf(173);
+        source.setDoyFirstOfMonth(152);
+        source.setDoyLastOfMonth(181);
+
+        SourceData data = source.readPixels(794 - 768, 65 - 1);
+
     }
 
     @Test
