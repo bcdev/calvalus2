@@ -417,7 +417,9 @@ public class PixelFinaliseMapper extends Mapper {
                     float jdValue = jdData[pixelIndex];
 
                     if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcData[pixelIndex]))) {
-                        jdValue = 0;
+                        if (jdValue > 0) {
+                            jdValue = 0;
+                        }
                     }
 
                     if (Float.isNaN(jdValue)) {
