@@ -48,9 +48,9 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
         // disable cache, otherwise org.apache.hadoop.fs.FileSystem.Cache grows forever
         serviceConfiguration.put("calvalus.hadoop.fs.hdfs.impl.disable.cache", "true");
         // transfer configuration from calvalus.properties to system properties
-        if (serviceConfiguration.containsKey("calvalus.system.calvalus.accesscontrol.external")) {
+        if (serviceConfiguration.containsKey("calvalus.accesscontrol.external")) {
             System.setProperty("calvalus.accesscontrol.external",
-                               serviceConfiguration.get("calvalus.system.calvalus.accesscontrol.external"));
+                               serviceConfiguration.get("calvalus.accesscontrol.external"));
         }
 
         Configuration hadoopConfiguration = createHadoopConfiguration(serviceConfiguration);
