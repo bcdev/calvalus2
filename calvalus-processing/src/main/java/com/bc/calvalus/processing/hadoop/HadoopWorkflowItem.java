@@ -204,6 +204,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 JobID jobId = submitJob(job);  // TODO: maybe move out of scope of the doAs, the impl of submitJob does a doAs as well
 
                 CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
+                CalvalusLogger.getLogger().info("-------------------------------");
                 HashMap<String, String> calvalusConfMap = new HashMap<>();
                 for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
                     if (keyValue.getKey().startsWith("calvalus")) {
@@ -219,7 +220,8 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                                 CalvalusLogger.getLogger().info(keyValue.getKey() + " = " + keyValue.getValue());
                             }
                         });
-
+                CalvalusLogger.getLogger().info("-------------------------------");
+                
                 setJobId(jobId);
                 return job;
             });
