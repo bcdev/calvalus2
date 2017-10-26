@@ -52,7 +52,7 @@ import java.util.logging.Logger;
 public class PixelFinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
-    static final int TILE_SIZE = 1;
+    static final int TILE_SIZE = 256;
 
     public static final String KEY_LC_PATH = "LC_PATH";
     public static final String KEY_VERSION = "VERSION";
