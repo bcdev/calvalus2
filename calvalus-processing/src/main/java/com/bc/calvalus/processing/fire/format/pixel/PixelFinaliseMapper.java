@@ -440,7 +440,8 @@ public class PixelFinaliseMapper extends Mapper {
 
         for (int yDirection : yDirections) {
             for (int xDirection : xDirections) {
-                if (pixelIndex % width == 0 && xDirection == -1) {
+                if (pixelIndex % width == 0 && xDirection == -1
+                        || (pixelIndex + 1) % width == 0 && xDirection == 1) {
                     continue;
                 }
 
