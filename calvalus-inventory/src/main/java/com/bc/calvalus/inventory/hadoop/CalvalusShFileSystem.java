@@ -265,7 +265,7 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     @Override
     public void setPermission(Path path, FsPermission permission) throws IOException {
         setAccessTime();
-        if (isLoginUser) { unixFileSystem.setPermission(path, permission); }
+        if (isLoginUser) { unixFileSystem.setPermission(path, permission); return; }
         String p = path.toUri().getPath();
         Process proc = callUnixCommand("chmod", p, String.format("%o", permission.toShort()));
         LOG.info("permission of " + p + " externally set");
