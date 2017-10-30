@@ -26,9 +26,11 @@ import org.esa.snap.core.gpf.GPF;
 import org.esa.snap.core.gpf.Operator;
 import org.esa.snap.core.gpf.OperatorSpi;
 import org.esa.snap.core.gpf.annotations.ParameterBlockConverter;
+import org.esa.snap.core.gpf.annotations.ParameterDescriptorFactory;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -131,7 +133,7 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
             // transform request into parameter objects
             Map<String, Object> parameterMap;
             try {
-                parameterMap = getOperatorParameterMap(operatorName, operatorParameters);
+                parameterMap = getOperatorParameterMap(source, operatorName, operatorParameters);
                 for (int i=0; i<getInputParameters().length; i+=2) {
                     if (! "output".equals(getInputParameters()[i])) {
                         parameterMap.put(getInputParameters()[i], getInputParameters()[i + 1]);
@@ -145,13 +147,23 @@ public class SnapOperatorAdapter extends SubsetProcessorAdapter {
         return product;
     }
 
-    public static Map<String, Object> getOperatorParameterMap(String operatorName, String level2Parameters) throws
-                                                                                                            BindingException {
+    public static Map<String, Object> getOperatorParameterMap(Product inputProduct, 
+                                                              String operatorName, 
+                                                              String level2Parameters) throws BindingException {
         if (level2Parameters == null) {
             return Collections.emptyMap();
         }
         Class<? extends Operator> operatorClass = getOperatorClass(operatorName);
-        return new ParameterBlockConverter().convertXmlToMap(level2Parameters, operatorClass);
+        ParameterBlockConverter parameterBlockConverter;
+        if (inputProduct != null) {
+            Map<String, Product> sourceProductMap = new HashMap<>();
+            sourceProductMap.put("source", inputProduct);
+            ParameterDescriptorFactory descriptorFactory = new ParameterDescriptorFactory(sourceProductMap);
+            parameterBlockConverter = new ParameterBlockConverter(descriptorFactory);
+        } else {
+            parameterBlockConverter = new ParameterBlockConverter();
+        }
+        return parameterBlockConverter.convertXmlToMap(level2Parameters, operatorClass);
     }
 
     private static Class<? extends Operator> getOperatorClass(String operatorName) {
