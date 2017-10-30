@@ -116,6 +116,7 @@
             <url-pattern>/calvalus/backend/*</url-pattern>
             <url-pattern>/calvalus/upload/*</url-pattern>
             <url-pattern>/calvalus/download/*</url-pattern>
+            <url-pattern>/processors.jsp</url-pattern>
             <url-pattern>/pub</url-pattern>
             <url-pattern>/pub/</url-pattern>
             <url-pattern>/pub/docs</url-pattern>
