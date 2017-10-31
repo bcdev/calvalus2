@@ -58,10 +58,10 @@ public class ModisGridMapper extends AbstractGridMapper {
         int productIndex = 0;
         for (int i = 0; i < paths.length - 1; i += 2) {
             if (paths[i].getName().contains("dummy")) {
-                Product product = new Product("dummyburned_year_month_" + paths[i].getName(), "dummy", 4800, 4800);
+                Product product = new Product(paths[i].getName(), "dummy", 4800, 4800);
                 product.addBand("classification", "0", ProductData.TYPE_INT16);
-                product.addBand("numObs1", "0", ProductData.TYPE_UINT8);
-                product.addBand("numObs2", "0", ProductData.TYPE_UINT8);
+                product.addBand("numObs1", "3", ProductData.TYPE_UINT8);
+                product.addBand("numObs2", "3", ProductData.TYPE_UINT8);
                 sourceProducts[productIndex] = product;
             } else {
                 File sourceProductFile = CalvalusProductIO.copyFileToLocal(paths[i], context.getConfiguration());

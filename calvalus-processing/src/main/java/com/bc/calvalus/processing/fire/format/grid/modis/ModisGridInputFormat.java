@@ -87,7 +87,7 @@ public class ModisGridInputFormat extends InputFormat {
                     }
                 }
             } else {
-                filePaths.add(new Path("dummy-" + inputTile));
+                filePaths.add(new Path("dummyburned_year_month_" + inputTile));
                 fileLengths.add(0L);
             }
             String lcInputPath = "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + String.format("%s-%s.nc", inputTile, lcYear);

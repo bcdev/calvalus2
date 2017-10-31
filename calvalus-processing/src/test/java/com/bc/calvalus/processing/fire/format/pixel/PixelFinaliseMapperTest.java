@@ -236,7 +236,7 @@ public class PixelFinaliseMapperTest {
         for (GlobalPixelProductArea area : GlobalPixelProductArea.values()) {
 //            for (MonthYear monthYear : s2MonthYears()) {
             // "h37v17;185;90;190;95"
-            String areaString = area.nicename + ";" + area.left + ";" + area.right + ";" + area.top + ";" + area.bottom;
+            String areaString = area.index + ";" + area.nicename + ";" + area.left + ";" + area.right + ";" + area.top + ";" + area.bottom;
             String baseFilename = PixelFinaliseMapper.createBaseFilename("2006", "03", "v5.0", areaString);
             String metadata = PixelFinaliseMapper.createMetadata("2006", "03", "v5.0", areaString);
             try (FileWriter fw = new FileWriter("c:\\ssd\\" + baseFilename + ".xml")) {

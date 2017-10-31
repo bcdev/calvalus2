@@ -152,30 +152,30 @@ public class PixelFinaliseMapper extends Mapper {
 
         jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
         clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand));
-        lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand, context));
+        lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
         sensorBand.setSourceImage(new SensorImage(sourceJdBand, sourceLcBand, sensorId));
 
         return target;
     }
 
     static String createBaseFilename(String year, String month, String version, String areaString) {
-        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0].replace(" ", "_"), version);
+        return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
     }
 
     static String createMetadata(String year, String month, String version, String areaString) throws IOException {
-        String nicename = areaString.split(";")[0];
-        GlobalPixelProductAreaProvider.GlobalPixelProductArea area = GlobalPixelProductAreaProvider.GlobalPixelProductArea.valueOf(nicename.toUpperCase().replace(" ", "_"));
-        String left = areaString.split(";")[1];
-        String top = areaString.split(";")[2];
-        String right = areaString.split(";")[3];
-        String bottom = areaString.split(";")[4];
+        String area = areaString.split(";")[0];
+        String nicename = areaString.split(";")[1];
+        String left = areaString.split(";")[2];
+        String top = areaString.split(";")[3];
+        String right = areaString.split(";")[4];
+        String bottom = areaString.split(";")[5];
 
         VelocityEngine velocityEngine = new VelocityEngine();
         velocityEngine.init();
         VelocityContext velocityContext = new VelocityContext();
         velocityContext.put("UUID", UUID.randomUUID().toString());
         velocityContext.put("date", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Instant.now()));
-        velocityContext.put("zoneId", area.index);
+        velocityContext.put("zoneId", area);
         velocityContext.put("zoneName", nicename);
 //        velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(Year.of(2017).atMonth(2).atDay(8)));
         velocityContext.put("creationDate", DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(LocalDate.now()));
@@ -324,13 +324,11 @@ public class PixelFinaliseMapper extends Mapper {
 
         private final Band sourceLcBand;
         private final Band sourceJdBand;
-        private final Progressable context;
 
-        private LcImage(Band sourceLcBand, Band sourceJdBand, Progressable context) {
+        private LcImage(Band sourceLcBand, Band sourceJdBand) {
             super(DataBuffer.TYPE_BYTE, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceLcBand = sourceLcBand;
             this.sourceJdBand = sourceJdBand;
-            this.context = context;
         }
 
         @Override
@@ -338,7 +336,6 @@ public class PixelFinaliseMapper extends Mapper {
             if (destRect.x == 0 && dest.getMinY() % 22 * PixelFinaliseMapper.TILE_SIZE == 0) {
                 CalvalusLogger.getLogger().info("Computed " + NumberFormat.getPercentInstance().format((float) destRect.y / (float) sourceJdBand.getRasterHeight()) + " of LC image.");
             }
-            context.progress();
             float[] jdArray = new float[destRect.width * destRect.height];
             try {
                 sourceJdBand.readRasterData(destRect.x, destRect.y, destRect.width, destRect.height, new ProductData.Float(jdArray));

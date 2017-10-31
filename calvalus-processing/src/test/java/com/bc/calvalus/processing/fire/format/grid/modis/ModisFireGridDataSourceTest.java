@@ -5,6 +5,7 @@ import com.bc.calvalus.processing.fire.format.grid.SourceData;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.datamodel.ProductData;
 import org.junit.Test;
 
 import java.io.File;
@@ -21,20 +22,30 @@ public class ModisFireGridDataSourceTest {
 
     @Test
     public void name() throws Exception {
-        Product p = ProductIO.readProduct("c:\\ssd\\modis-analysis\\grid-test\\burned_2007_6_h18v02.nc");
-        Product lc = ProductIO.readProduct("C:\\ssd\\modis-analysis\\grid-test\\h18v02-2000.nc");
+//        Product p = ProductIO.readProduct("c:\\ssd\\modis-analysis\\grid-test\\burned_2007_6_h18v01.nc");
+        Product product = new Product("dummyburned_year_month_h18v01", "dummy", 4800, 4800);
+        product.addBand("classification", "0", ProductData.TYPE_INT16);
+        product.addBand("numObs1", "0", ProductData.TYPE_UINT8);
+        product.addBand("numObs2", "0", ProductData.TYPE_UINT8);
+
+
+        Product lc = ProductIO.readProduct("C:\\ssd\\modis-analysis\\grid-test\\h18v01-2000.nc");
         ZipFile geolookup = new ZipFile(new File("c:\\ssd\\modis-analysis\\grid-test\\modis-geo-luts-079x.zip"));
         ArrayList<ZipFile> zipFiles = new ArrayList<>();
         zipFiles.add(geolookup);
-        ModisFireGridDataSource source = new ModisFireGridDataSource(new Product[]{p}, new Product[]{lc}, zipFiles, "" + (795 / 32) * 32 + "," + 1);
+        ModisFireGridDataSource source = new ModisFireGridDataSource(new Product[]{product}, new Product[]{lc}, zipFiles, "" + (798 / 32) * 32 + "," + (79 / 32) * 32);
 
         source.setDoyFirstHalf(158);
         source.setDoySecondHalf(173);
         source.setDoyFirstOfMonth(152);
         source.setDoyLastOfMonth(181);
 
-        SourceData data = source.readPixels(794 - 768, 65 - 1);
-
+        SourceData data = source.readPixels(798 - (798 / 32) * 32, 79 - (79 / 32) * 32);
+        for (boolean b : data.burnable) {
+            if (b) {
+                System.out.println("miau");
+            }
+        }
     }
 
     @Test

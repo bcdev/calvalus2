@@ -156,7 +156,7 @@ public class ModisStrategy implements SensorStrategy {
             job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "-" + CommonUtils.lcYear(year) + ".nc");
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv5.0");
             PixelProductArea area = new ModisStrategy().getArea(job.getConfiguration().get("calvalus.area"));
-            String areaString = String.format("%s;%s;%s;%s;%s", area.nicename, area.left, area.top, area.right, area.bottom);
+            String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_AREA_STRING, areaString);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_SENSOR_ID, "2");
             job.setNumReduceTasks(0);
