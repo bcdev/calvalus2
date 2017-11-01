@@ -45,6 +45,8 @@ import java.io.OutputStream;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -81,6 +83,7 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
+        long t1 = System.currentTimeMillis(); 
         if (inputFormat != null) {
             LOG.info("Trying to find reader for inputFormat: " + inputFormat);
         }
@@ -135,6 +138,8 @@ public class CalvalusProductIO {
         } else {
             LOG.warning("GeoCoding: null");
         }
+        long t2 = System.currentTimeMillis();
+        LOG.info(String.format("CalvalusProductIO.readProduct %s took %,d ms", path, t2 - t1));
         return product;
     }
 
@@ -166,16 +171,19 @@ public class CalvalusProductIO {
     }
 
     public static File[] uncompressArchiveToDir(Path path, File localDir, Configuration conf) throws IOException {
+        long t1 = System.currentTimeMillis();
         FileSystem fs = path.getFileSystem(conf);
         InputStream inputStream = new BufferedInputStream(fs.open(path));
         List<File> extractedFiles = new ArrayList<>();
 
         String archiveName = path.getName().toLowerCase();
+        long localSize = 0;
         if (archiveName.endsWith(".zip")) {
             try (ZipInputStream zipIn = new ZipInputStream(inputStream)) {
                 ZipEntry entry;
                 while ((entry = zipIn.getNextEntry()) != null) {
                     extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), zipIn));
+                    localSize += entry.getSize();
                 }
             }
         } else if (isTarCompressed(archiveName)) {
@@ -183,11 +191,15 @@ public class CalvalusProductIO {
                 TarEntry entry;
                 while ((entry = tarIn.getNextEntry()) != null) {
                     extractedFiles.add(handleEntry(localDir, entry.getName(), entry.isDirectory(), tarIn));
+                    localSize += entry.getSize();
+                    
                 }
             }
         } else {
             throw new IOException("unsupported archive format: " + archiveName);
         }
+        long t2 = System.currentTimeMillis();
+        LOG.info(String.format("uncompressArchiveToDir %s size %,d bytes, took %,d ms", path, localSize, t2 - t1));
         return extractedFiles.toArray(new File[0]);
     }
 
@@ -275,6 +287,12 @@ public class CalvalusProductIO {
                     }
                     return productReader.readProductNodes(input, null);
                 } catch (IOException e) {
+                    String msg = String.format("Exception from productReader.readProductNodes from %s", input);
+                    LogRecord lr = new LogRecord(Level.WARNING, msg);
+                    lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
+                    lr.setSourceMethodName("readProductWithInputFormat");
+                    lr.setThrown(e);
+                    LOG.log(lr);
                     return null;
                 }
             }
@@ -300,6 +318,12 @@ public class CalvalusProductIO {
             try {
                 return productReader.readProductNodes(input, null);
             } catch (IOException e) {
+                String msg = String.format("Exception from productReader.readProductNodes from %s", input);
+                LogRecord lr = new LogRecord(Level.WARNING, msg);
+                lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
+                lr.setSourceMethodName("readProductWithAutodetect");
+                lr.setThrown(e);
+                LOG.log(lr);
                 return null;
             }
         }
