@@ -17,13 +17,11 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.ceres.core.ProgressMonitor;
 import org.apache.hadoop.conf.Configuration;
 import org.esa.snap.core.dataio.AbstractProductReader;
 import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.IllegalFileFormatException;
-import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
 import org.esa.snap.core.datamodel.Band;
@@ -34,7 +32,6 @@ import org.esa.snap.core.util.io.SnapFileFilter;
 import java.io.File;
 import java.io.IOException;
 import java.text.ParseException;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -106,25 +103,27 @@ public class Sen2CorCalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
-
-                // find *MTD*xml file
-                File productXML = null;
-                for (File file : unzippedFiles) {
-                    if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                        productXML = file;
-                        break;
+                File localFile = null;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                    // find *MTD*xml file
+                    for (File file : unzippedFiles) {
+                        if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
+                            localFile = file;
+                            break;
+                        }
                     }
+                    if (localFile == null) {
+                        throw new IllegalFileFormatException("input has no MTD_SAF file.");
+                    }
+                    CalvalusLogger.getLogger().info("productXML file = " + localFile);
                 }
-                if (productXML == null) {
-                    throw new IllegalFileFormatException("input has no MTD_SAF file.");
-                }
-                CalvalusLogger.getLogger().info("productXML file = " + productXML);
-
                 Product product;
-                product = Sentinel2CalvalusReaderPlugin.readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
+                product = Sentinel2CalvalusReaderPlugin.readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
                 if (product.getStartTime() == null && product.getEndTime() == null) {
-                    setTimeFromFilename(product, productXML.getName());
+                    setTimeFromFilename(product, localFile.getName());
                 }
                 return product;
             } else {

@@ -114,29 +114,34 @@ public class LandsatCalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
-                // find manifest file
-                File mtlFile = null;
-                for (File file : unzippedFiles) {
-                    if (file.getName().toLowerCase().endsWith("_mtl.txt")) {
-                        mtlFile = file;
-                        break;
+                File localFile = null;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                    // find manifest file
+                    for (File file : unzippedFiles) {
+                        if (file.getName().toLowerCase().endsWith("_mtl.txt")) {
+                            localFile = file;
+                            break;
+                        }
+                    }
+                    if (localFile == null) {
+                        throw new IllegalFileFormatException("input has no MTL file.");
                     }
                 }
-                if (mtlFile == null) {
-                    throw new IllegalFileFormatException("input has no MTL file.");
-                }
+
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_30M);
                 System.out.println("inputFormat = " + inputFormat);
 
                 switch (inputFormat) {
                     case FORMAT_15M:
-                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF15m");
+                        return ProductIO.readProduct(localFile, "Landsat8GeoTIFF15m");
                     case FORMAT_30M:
-                        return ProductIO.readProduct(mtlFile, "Landsat8GeoTIFF30m");
+                        return ProductIO.readProduct(localFile, "Landsat8GeoTIFF30m");
                     default:
-                        return ProductIO.readProduct(mtlFile);
+                        return ProductIO.readProduct(localFile);
                 }
             } else {
                 throw new IllegalFileFormatException("input is not of the correct type.");

@@ -114,27 +114,30 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
             if (input instanceof PathConfiguration) {
                 PathConfiguration pathConfig = (PathConfiguration) input;
                 Configuration configuration = pathConfig.getConfiguration();
-                File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
+                File localFile = null;
+                if ("file".equals(pathConfig.getPath().toUri().getScheme())) {
+                    localFile = new File(pathConfig.getPath().toUri());
+                } else {
+                    File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
-                // find *MTD*xml file
-                File productXML = null;
-                for (File file : unzippedFiles) {
-                    if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                        productXML = file;
-                        break;
+                    // find *MTD*xml file
+                    for (File file : unzippedFiles) {
+                        if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
+                            localFile = file;
+                            break;
+                        }
                     }
+                    if (localFile == null) {
+                        throw new IllegalFileFormatException("input has no MTD_SAF file.");
+                    }
+                    CalvalusLogger.getLogger().info("productXML file = " + localFile);
                 }
-                if (productXML == null) {
-                    throw new IllegalFileFormatException("input has no MTD_SAF file.");
-                }
-                CalvalusLogger.getLogger().info("productXML file = " + productXML);
-
                 String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
-                product = readProduct(productXML, "SENTINEL-2-MSI-MultiRes");
+                product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
                 if (product.getStartTime() == null && product.getEndTime() == null) {
-                    setTimeFromFilename(product, productXML.getName());
+                    setTimeFromFilename(product, localFile.getName());
                 }
                 if (!inputFormat.equals(FORMAT_MULTI)) {
                     product.setProductReader(this);
