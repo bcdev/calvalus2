@@ -164,12 +164,12 @@ public class L2FormattingMapper extends Mapper<NullWritable, NullWritable, NullW
         List<Quicklooks.QLConfig> qlConfigList = getValidQlConfigs(jobConfig);
         for (Quicklooks.QLConfig qlConfig : qlConfigList) {
             String imageFileName;
-            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
-                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
-                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
-            } else {
+//            if (context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REGEX) != null
+//                    && context.getConfiguration().get(JobConfigNames.CALVALUS_OUTPUT_REPLACEMENT) != null) {
+//                imageFileName = L2FormattingMapper.getProductName(context.getConfiguration(), productName);
+//            } else {
                 imageFileName = productName;
-            }
+//            }
             if (qlConfigList.size() > 1) {
                 imageFileName = imageFileName + "_" + qlConfig.getBandName();
             }
