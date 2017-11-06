@@ -117,6 +117,7 @@
         <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-commons</artifactId></dependency>
         <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-io</artifactId></dependency>
         <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1</artifactId></dependency>
+        <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-sentinel1-ui</artifactId></dependency>
         <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-op-utilities</artifactId></dependency>
         <dependency><groupId>org.esa.s1tbx</groupId><artifactId>s1tbx-rcp</artifactId></dependency>
 

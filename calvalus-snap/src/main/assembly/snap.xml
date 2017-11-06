@@ -116,6 +116,7 @@
                 <include>org.esa.s1tbx:s1tbx-commons</include>
                 <include>org.esa.s1tbx:s1tbx-io</include>
                 <include>org.esa.s1tbx:s1tbx-op-sentinel1</include>
+                <include>org.esa.s1tbx:s1tbx-op-sentinel1-ui</include>
                 <include>org.esa.s1tbx:s1tbx-op-utilities</include>
                 <include>org.esa.s1tbx:s1tbx-rcp</include>
 
