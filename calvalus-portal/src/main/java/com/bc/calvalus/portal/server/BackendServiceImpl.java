@@ -62,6 +62,7 @@ import com.bc.calvalus.production.cli.WpsProductionRequestConverter;
 import com.bc.calvalus.production.cli.WpsXmlRequestConverter;
 import com.bc.calvalus.production.util.DateRangeCalculator;
 import com.bc.calvalus.production.util.DebugTokenGenerator;
+import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
@@ -70,6 +71,7 @@ import org.jdom.JDOMException;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -90,6 +92,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -119,8 +122,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     public static final String VERSION = String.format("Calvalus version %s (built %s)",
-                                                       calvalusVersionProperties.get("version"),
-                                                       calvalusVersionProperties.get("timestamp"));
+            calvalusVersionProperties.get("version"),
+            calvalusVersionProperties.get("timestamp"));
     public static final String COPYRIGHT_YEAR = "2017";
 
     private static final int PRODUCTION_STATUS_OBSERVATION_PERIOD = 5000;
@@ -876,6 +879,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoCalvalusConfig getCalvalusConfig() {
         if ("debug".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
             serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(backendConfig.getConfigMap(), getUserName()));
+        } else if ("saml".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
+            try {
+                HttpSession session = getThreadLocalRequest().getSession();
+//                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), ""));
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                LOG.log(Level.SEVERE, e.getMessage(), e);
+            }
         }
         backendConfig.getConfigMap().put("user", getUserName());
         String[] configuredRoles;
