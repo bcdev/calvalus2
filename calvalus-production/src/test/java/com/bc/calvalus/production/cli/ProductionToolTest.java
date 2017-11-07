@@ -3,6 +3,7 @@ package com.bc.calvalus.production.cli;
 import org.apache.xml.security.Init;
 import org.apache.xml.security.encryption.XMLCipher;
 import org.apache.xml.security.utils.EncryptionConstants;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -86,7 +87,8 @@ public class ProductionToolTest {
             "    </xenc:CipherData>" +
             "  </xenc:EncryptedData>" +
             "</Security>";
-    
+
+    @Ignore
     @Test
     public void testSamlDecipher() throws Exception {
 

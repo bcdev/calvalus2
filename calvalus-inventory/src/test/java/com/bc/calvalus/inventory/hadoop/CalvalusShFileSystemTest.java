@@ -33,8 +33,7 @@ import static org.junit.Assert.*;
 
 
 /**
- * @author MarcoZ
- * @author Norman
+ * @author boe
  */
 public class CalvalusShFileSystemTest {
 
@@ -42,7 +41,7 @@ public class CalvalusShFileSystemTest {
     @Ignore
     public void testListStatus() throws Exception {
         System.setProperty("calvalus.accesscontrol.external", "true");
-        String user = "boe";
+        String user = "vboxadd";
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         JobClient jobClient = jobClientsMap.getJobClient(user);
         FileSystem fileSystem = jobClientsMap.getFileSystem(user);
@@ -55,7 +54,7 @@ public class CalvalusShFileSystemTest {
     @Ignore
     public void testGlob() throws Exception {
         System.setProperty("calvalus.accesscontrol.external", "true");
-        String user = "dhus";
+        String user = "vboxadd";
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         JobClient jobClient = jobClientsMap.getJobClient(user);
         FileSystem fileSystem = jobClientsMap.getFileSystem(user);
@@ -68,7 +67,7 @@ public class CalvalusShFileSystemTest {
     @Ignore
     public void testCat() throws Exception {
         System.setProperty("calvalus.accesscontrol.external", "true");
-        String user = "boe";
+        String user = "vboxadd";
         JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
         JobClient jobClient = jobClientsMap.getJobClient(user);
         FileSystem fileSystem = jobClientsMap.getFileSystem(user);
