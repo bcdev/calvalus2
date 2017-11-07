@@ -120,11 +120,14 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 } else {
                     File[] unzippedFiles = CalvalusProductIO.uncompressArchiveToCWD(pathConfig.getPath(), configuration);
 
-                    // find *MTD*xml file
+                    // find *MTD*xml file in top directory
                     for (File file : unzippedFiles) {
                         if (file.getName().matches("(?:^MTD|.*MTD_SAF).*xml$")) {
-                            localFile = file;
-                            break;
+                            File parentFile = file.getParentFile();
+                            if (parentFile != null && parentFile.getName().endsWith(".SAFE")) {
+                                localFile = file;
+                                break;
+                            }
                         }
                     }
                     if (localFile == null) {
@@ -136,6 +139,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
+                File productFileLocation = product.getFileLocation();
                 if (product.getStartTime() == null && product.getEndTime() == null) {
                     setTimeFromFilename(product, localFile.getName());
                 }
@@ -153,6 +157,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                         throw new IllegalArgumentException(msg);
                     }
                     product = GPF.createProduct("Resample", params, product);
+                    product.setFileLocation(productFileLocation);
                 }
                 return product;
             } else {

@@ -35,6 +35,7 @@ import org.esa.snap.core.datamodel.Product;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.*;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -100,7 +101,8 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         scriptGenerator.addScriptResources(conf, parameterSuffix);
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
-
+            
+            getLogger().info("prepare: " + executable + " " + inputPath.toString()+ " " + outputPath.toString());
             String[] cmdArray = {"./prepare", inputPath.toString(), outputPath.toString()};
             Process process = Runtime.getRuntime().exec(cmdArray);
             String processLogName = executable + "-prepare";
@@ -213,6 +215,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         }
         scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
+        getLogger().info("process: " + executable + " " + inputFile.getCanonicalPath());
         String[] cmdArray = {"./process", inputFile.getCanonicalPath()};
         Process process = Runtime.getRuntime().exec(cmdArray);
         String processLogName = executable + "-process";
@@ -293,6 +296,7 @@ public class ExecutableProcessorAdapter extends ProcessorAdapter {
         if (scriptGenerator.hasStepScript()) {
             scriptGenerator.writeScriptFiles(cwd, debugScriptGenerator);
 
+            getLogger().info("finalize: " + executable + " " + Arrays.toString(outputFilesNames) + " " + outputPath.toString());
             String[] cmdArray = new String[outputFilesNames.length + 2];
             cmdArray[0] = "./finalize";
             System.arraycopy(outputFilesNames, 0, cmdArray, 1, outputFilesNames.length);

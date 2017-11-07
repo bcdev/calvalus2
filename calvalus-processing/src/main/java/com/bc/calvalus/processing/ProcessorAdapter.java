@@ -38,8 +38,6 @@ import org.esa.snap.runtime.Engine;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
@@ -157,7 +155,7 @@ public abstract class ProcessorAdapter {
                 java.nio.file.Path destChild = dir.resolve(destName);
                 try {
                     Files.createDirectory(destChild);
-                } catch (FileAlreadyExistsException _) {}
+                } catch (FileAlreadyExistsException ignore) {}
                 shallowCopyRecursive(srcChild, destChild);
             }
         }
@@ -171,12 +169,12 @@ public abstract class ProcessorAdapter {
                 if (Files.isDirectory(srcChild, LinkOption.NOFOLLOW_LINKS)) {
                     try {
                         Files.createDirectory(destChild);
-                    } catch (FileAlreadyExistsException _) {}
+                    } catch (FileAlreadyExistsException ignore) {}
                     shallowCopyRecursive(srcChild, destChild);
                 } else {
                     try {
                         Files.createSymbolicLink(destChild, srcChild);
-                    } catch (FileAlreadyExistsException _) {}
+                    } catch (FileAlreadyExistsException ignore) {}
                 }
             }
         }
@@ -365,6 +363,7 @@ public abstract class ProcessorAdapter {
             String geometryWkt = getConfiguration().get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
             boolean fullSwath = getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_FULL_SWATH, false);
             Geometry regionGeometry = GeometryUtils.createGeometry(geometryWkt);
+            LOG.info("getInputRectangle: for geometryWkt = " + geometryWkt);
             ProcessingRectangleCalculator calculator = new ProcessingRectangleCalculator(regionGeometry,
                                                                                          roiRectangle,
                                                                                          inputSplit,
@@ -375,7 +374,7 @@ public abstract class ProcessorAdapter {
                 }
             };
             inputRectangle = calculator.computeRect();
-            LOG.info("computed inputRectangle = " + inputRectangle);
+            LOG.info("getInputRectangle: calculated inputRectangle = " + inputRectangle);
         }
         return inputRectangle;
     }
@@ -406,14 +405,17 @@ public abstract class ProcessorAdapter {
         String inputFormat = conf.get(JobConfigNames.CALVALUS_INPUT_FORMAT, null);
         if (inputFile != null) {
             if (inputFormat != null) {
+                LOG.info(String.format("openInputProduct: inputFile  = %s inputFormat  = %s", inputFile, inputFormat));
                 return ProductIO.readProduct(inputFile, inputFormat);
             } else {
+                LOG.info(String.format("openInputProduct: inputFile  = %s", inputFile));
                 return ProductIO.readProduct(inputFile);
             }
         } else {
+            LOG.info(String.format("openInputProduct: inputPath  = %s inputFormat  = %s", getInputPath(), inputFormat));
             Product product = CalvalusProductIO.readProduct(getInputPath(), getConfiguration(), inputFormat);
             File fileLocation = product.getFileLocation();
-            System.out.println("fileLocation = " + fileLocation);
+            LOG.info(String.format("openInputProduct: fileLocation  = %s", fileLocation));
             if (fileLocation != null) {
                 setInputFile(fileLocation);
             }

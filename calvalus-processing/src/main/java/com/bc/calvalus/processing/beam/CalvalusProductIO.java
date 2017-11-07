@@ -17,12 +17,11 @@
 package com.bc.calvalus.processing.beam;
 
 import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.hadoop.FSImageInputStream;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.hadoop.io.IOUtils;
-import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.dataio.DecodeQualification;
 import org.esa.snap.core.dataio.ProductIOPlugInManager;
 import org.esa.snap.core.dataio.ProductReader;
 import org.esa.snap.core.dataio.ProductReaderPlugIn;
@@ -83,10 +82,8 @@ public class CalvalusProductIO {
      * @throws java.io.IOException If an I/O error occurs
      */
     public static Product readProduct(PathConfiguration pathConf, String inputFormat) throws IOException {
-        long t1 = System.currentTimeMillis(); 
-        if (inputFormat != null) {
-            LOG.info("Trying to find reader for inputFormat: " + inputFormat);
-        }
+        long t1 = System.currentTimeMillis();
+        LOG.info(String.format("readProduct: path %s [%s]", pathConf.getPath(), inputFormat));
         Product product = readProductImpl(pathConf, PathConfiguration.class, inputFormat);
         if (product == null) {
             final Path path = pathConf.getPath();
@@ -104,43 +101,50 @@ public class CalvalusProductIO {
             }
         }
         if (product == null) {
-            LOG.info("No reader found. Available plugin classes:");
-            Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
-            while (allReaderPlugIns.hasNext()) {
-                ProductReaderPlugIn readerPlugIn = allReaderPlugIns.next();
-                String name = readerPlugIn.getClass().getName();
-                LOG.info(name);
-            }
+            logAllAvailableProductReaders();
             throw new IOException(String.format("No reader found for product: '%s'", pathConf.getPath().toString()));
         }
         final Path path = pathConf.getPath();
         String pathName = path.getName();
         if (pathName.startsWith("CCI-Fire-MERIS-SDR-L3") && pathName.endsWith(".nc")) {
-            LOG.info("Product " + pathName + " has no time information...extracting it from file name...");
+            LOG.info("readProduct: Product " + pathName + " has no time information...extracting it from file name...");
             setDateToMerisSdrProduct(product, pathName);
-            LOG.info(String.format("...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
+            LOG.info(String.format("readProduct: ...done. Product start time: %s; product end time: %s", product.getStartTime().format(), product.getEndTime().format()));
         }
-        LOG.info(String.format("Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
+        LOG.info(String.format("readProduct: Opened product width = %d height = %d", product.getSceneRasterWidth(), product.getSceneRasterHeight()));
         Dimension tiling = product.getPreferredTileSize();
         if (tiling != null) {
-            LOG.info(String.format("Tiling: width = %d height = %d", (int) tiling.getWidth(), (int) tiling.getHeight()));
+            LOG.info(String.format("readProduct: Tiling: width = %d height = %d", (int) tiling.getWidth(), (int) tiling.getHeight()));
         } else {
-            LOG.info("Tiling: NONE");
+            LOG.info("readProduct: Tiling: NONE");
         }
         ProductReader productReader = product.getProductReader();
         if (productReader != null) {
-            LOG.info(String.format("ProductReader: %s", productReader.toString()));
-            LOG.info(String.format("ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
+            LOG.info(String.format("readProduct: ProductReader: %s", productReader.toString()));
+            LOG.info(String.format("readProduct: ProductReaderPlugin: %s", productReader.getReaderPlugIn().toString()));
         }
         GeoCoding geoCoding = product.getSceneGeoCoding();
         if (geoCoding != null) {
-            LOG.info(String.format("GeoCoding: %s", geoCoding.toString()));
+            LOG.info(String.format("readProduct: GeoCoding: %s", geoCoding.getClass().getSimpleName()));
         } else {
-            LOG.warning("GeoCoding: null");
+            LOG.warning("readProduct: GeoCoding: null");
         }
         long t2 = System.currentTimeMillis();
-        LOG.info(String.format("CalvalusProductIO.readProduct %s took %,d ms", path, t2 - t1));
+        LOG.info(String.format("readProduct: took %,d ms for %s", t2 - t1, path));
         return product;
+    }
+
+    private static void logAllAvailableProductReaders() {
+        LOG.severe("No reader found. Available plugin classes:");
+        List<String> readerNames = new ArrayList<>();
+        Iterator<ProductReaderPlugIn> allReaderPlugIns = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+        while (allReaderPlugIns.hasNext()) {
+            readerNames.add(allReaderPlugIns.next().getClass().getName());
+        }
+        readerNames.sort(String::compareTo);
+        for (String readerName : readerNames) {
+            LOG.severe("    " + readerName);
+        }
     }
 
     /**
@@ -148,7 +152,6 @@ public class CalvalusProductIO {
      *
      * @param path The path to the file in the HDFS.
      * @param conf The Hadoop configuration.
-     * @throws IOException
      */
     public static File copyFileToLocal(Path path, Configuration conf) throws IOException {
         File localFile = new File(".", path.getName());
@@ -156,12 +159,17 @@ public class CalvalusProductIO {
     }
 
     public static File copyFileToLocal(Path path, File localFile, Configuration conf) throws IOException {
-        LOG.info("Copying file to local: " + path + " --> " + localFile);
-        if (!localFile.exists()) {
-            FileSystem fs = path.getFileSystem(conf);
-            FileUtil.copy(fs, path, localFile, false, conf);
+        LOG.info("copyFileToLocal: " + path + " --> " + localFile);
+        if (localFile.exists()) {
+            LOG.info("copyFileToLocal: File already exist");
         } else {
-            LOG.info("File already exist");
+            if ("file".equals(path.toUri().getScheme())) {
+                LOG.info("copyFileToLocal: creating symlink");
+                FileUtil.symLink(path.toString(), localFile.getAbsolutePath());                
+            } else {
+                FileSystem fs = path.getFileSystem(conf);
+                FileUtil.copy(fs, path, localFile, false, conf);
+            }
         }
         return localFile;
     }
@@ -199,7 +207,7 @@ public class CalvalusProductIO {
             throw new IOException("unsupported archive format: " + archiveName);
         }
         long t2 = System.currentTimeMillis();
-        LOG.info(String.format("uncompressArchiveToDir %s size %,d bytes, took %,d ms", path, localSize, t2 - t1));
+        LOG.info(String.format("uncompressArchiveToDir: size %,d bytes  took %,d ms  from %s", localSize, t2 - t1, path));
         return extractedFiles.toArray(new File[0]);
     }
 
@@ -241,7 +249,7 @@ public class CalvalusProductIO {
         return name.endsWith(".tar.gz") || name.endsWith(".tgz");
     }
 
-    static boolean isTbz(String name) {
+    private static boolean isTbz(String name) {
         return name.endsWith(".tar.bz") || name.endsWith(".tbz") || name.endsWith(".tar.bz2") || name.endsWith(".tbz2");
     }
 
@@ -259,7 +267,6 @@ public class CalvalusProductIO {
         }
     }
 
-
     private static ImageInputStream openImageInputStream(Path path, Configuration conf) throws IOException {
         FileSystem fs = path.getFileSystem(conf);
         FileStatus status = fs.getFileStatus(path);
@@ -268,36 +275,43 @@ public class CalvalusProductIO {
     }
 
     private static Product readProductImpl(Object input, Class<?> inputClass, String inputFormat) {
-        if (inputFormat != null) {
-            return readProductWithInputFormat(input, inputClass, inputFormat);
-        } else {
-            return readProductWithAutodetect(input);
-        }
-    }
-
-    private static Product readProductWithInputFormat(Object input, Class<?> inputClass, String inputFormat) {
-        ProductReader productReader = ProductIO.getProductReader(inputFormat);
-        if (productReader != null) {
-            ProductReaderPlugIn readerPlugIn = productReader.getReaderPlugIn();
+        Iterator<ProductReaderPlugIn> it = ProductIOPlugInManager.getInstance().getAllReaderPlugIns();
+        ProductReaderPlugIn selectedPlugIn = null;
+        while (it.hasNext()) {
+            ProductReaderPlugIn readerPlugIn = it.next();
             if (canHandle(readerPlugIn, inputClass)) {
+                if (inputFormat != null && !supportsFormat(readerPlugIn, inputFormat)) {
+                    continue;
+                }
                 try {
-                    // TODO Is it ok to set this in the shared configuration?
-                    if (input instanceof PathConfiguration) {
-                        ((PathConfiguration) input).getConfiguration().set(JobConfigNames.CALVALUS_INPUT_FORMAT, inputFormat);
+                    DecodeQualification decodeQualification = readerPlugIn.getDecodeQualification(input);
+                    if (decodeQualification == DecodeQualification.INTENDED) {
+                        selectedPlugIn = readerPlugIn;
+                        break;
+                    } else if (decodeQualification == DecodeQualification.SUITABLE) {
+                        selectedPlugIn = readerPlugIn;
                     }
-                    return productReader.readProductNodes(input, null);
-                } catch (IOException e) {
-                    String msg = String.format("Exception from productReader.readProductNodes from %s", input);
-                    LogRecord lr = new LogRecord(Level.WARNING, msg);
-                    lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
-                    lr.setSourceMethodName("readProductWithInputFormat");
-                    lr.setThrown(e);
-                    LOG.log(lr);
-                    return null;
+                } catch (Exception e) {
+                    LOG.severe("readProductImpl: Error attempting to read " + input + " with plugin reader " + readerPlugIn.toString() + ": " + e.getMessage());
                 }
             }
         }
-        return null;
+        if (selectedPlugIn != null) {
+            ProductReader productReader = selectedPlugIn.createReaderInstance();
+            try {
+                return productReader.readProductNodes(input, null);
+            } catch (IOException e) {
+                String msg = String.format("Exception from productReader.readProductNodes from %s", input);
+                LogRecord lr = new LogRecord(Level.WARNING, msg);
+                lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
+                lr.setSourceMethodName("readProductImpl");
+                lr.setThrown(e);
+                LOG.log(lr);
+                return null;
+            }
+        } else {
+            return null;
+        }
     }
 
     private static boolean canHandle(ProductReaderPlugIn readerPlugIn, Class<?> inputClass) {
@@ -312,21 +326,12 @@ public class CalvalusProductIO {
         return false;
     }
 
-    private static Product readProductWithAutodetect(Object input) {
-        ProductReader productReader = ProductIO.getProductReaderForInput(input);
-        if (productReader != null) {
-            try {
-                return productReader.readProductNodes(input, null);
-            } catch (IOException e) {
-                String msg = String.format("Exception from productReader.readProductNodes from %s", input);
-                LogRecord lr = new LogRecord(Level.WARNING, msg);
-                lr.setSourceClassName("com.bc.calvalus.processing.beam.CalvalusProductIO");
-                lr.setSourceMethodName("readProductWithAutodetect");
-                lr.setThrown(e);
-                LOG.log(lr);
-                return null;
+    private static boolean supportsFormat(ProductReaderPlugIn readerPlugIn, String inputFormat) {
+        for (String otherFormatName : readerPlugIn.getFormatNames()) {
+            if (otherFormatName.equalsIgnoreCase(inputFormat)) {
+                return true;
             }
         }
-        return null;
+        return false;
     }
 }
