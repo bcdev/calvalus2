@@ -26,7 +26,118 @@
 <%@ page import="java.util.ArrayList" %>
 <%@ page import="java.util.Comparator" %>
 <%@ page import="com.bc.calvalus.portal.server.BackendServiceImpl" %>
+<%@ page import="java.util.List" %>
+<%!
+    static class BundleView {
+        final String title;
+        final List<ProcessorView> processorViews;
 
+        BundleView(String title) {
+            this.title = title;
+            this.processorViews = new ArrayList<>();
+        }
+        
+        int numRows() {
+            int numRows = 0;
+            for (ProcessorView processorView : processorViews) {
+                numRows += processorView.numRows();
+            }
+            return numRows;
+        }
+
+        static BundleView create(BundleDescriptor bundle) {
+            String bundleName = bundle.getBundleName();
+            String bundleVersion = bundle.getBundleVersion();
+            String bundleText = bundleName + " - " + bundleVersion;
+            String bundleLocation = bundle.getBundleLocation();
+            if (!bundleLocation.endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
+                String bundleLocShort = bundleLocation.substring(bundleLocation.lastIndexOf('/') + 1);
+                bundleText += "<br/><b>WARNING: bundle names and version don't match directory:</b><br/>" +
+                        bundleLocShort;
+            }
+            return new BundleView(bundleText);
+        }
+    }
+
+    static class ProcessorView {
+        final String title;
+        final List<PropertyView> propertyViews;
+
+        ProcessorView(String title, List<PropertyView> propertyViews) {
+            this.title = title;
+            this.propertyViews = propertyViews;
+        }
+        
+        int numRows() {
+            return propertyViews.size();
+        }
+        
+        static ProcessorView create(ProcessorDescriptor processor) {
+            String pExeName = processor.getExecutableName();
+            String pVersion = processor.getProcessorVersion();
+            String pDesc = processor.getProcessorName().replaceAll(" ", "&nbsp;");
+            String processorText = pExeName + " (v " + pVersion + ")<br/>" + pDesc;
+            return new ProcessorView(processorText, createPropertyViews(processor));
+        }
+
+        static List<PropertyView> createPropertyViews(ProcessorDescriptor processor) {
+            List<PropertyView> propertyViews = new ArrayList<>();
+
+            if (processor.getInputProductTypes() != null && processor.getInputProductTypes().length > 0) {
+                String input = String.join(", ", processor.getInputProductTypes());
+                propertyViews.add(new PropertyView("Input", input, true));
+            }
+            if (processor.getOutputProductType() != null) {
+                String output = processor.getOutputProductType();
+                propertyViews.add(new PropertyView("Output", output, true));
+            }
+            if (!processor.getOutputRegex().isEmpty()) {
+                propertyViews.add(new PropertyView("Output RegEx", processor.getOutputRegex(), true));
+            }
+            if (processor.getFormatting() != null) {
+                propertyViews.add(new PropertyView("Formatting", processor.getFormatting().toString(), true));
+            }
+            if (processor.getOutputVariables() != null) {
+                ProcessorDescriptor.Variable[] outputVariables = processor.getOutputVariables();
+                String[] bandNames = new String[outputVariables.length];
+                for (int b = 0; b < outputVariables.length; b++) {
+                    bandNames[b] = outputVariables[b].getName();
+                }
+                propertyViews.add(new PropertyView("Variables", String.join(", ", bandNames), true));
+            }
+            Map<String, String> jobConfiguration = processor.getJobConfiguration();
+            ArrayList<String> keys = new ArrayList<>(jobConfiguration.keySet());
+            keys.sort(new Comparator<String>() {
+                @Override
+                public int compare(String s, String anotherString) {
+                    return s.compareTo(anotherString);
+                }
+            });
+            for (String key : keys) {
+                propertyViews.add(new PropertyView(key, jobConfiguration.get(key), false));
+            }
+            return propertyViews;
+        }
+    }
+
+    static class PropertyView {
+        final String name;
+        final String value;
+
+        PropertyView(String name, String value, boolean isBold) {
+            if (isBold) {
+                this.name = "<b>"+name+"</b>";
+            } else {
+                this.name = name;
+            }
+            value = value.replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
+            if (value.startsWith("&lt;")) {
+                value = "<pre>" + value + "</pre";
+            }
+            this.value = value;
+        }
+    }
+%>
 
 <html>
 <head>
@@ -40,9 +151,7 @@
     <tr>
         <th>Bundle</th>
         <th>Processor</th>
-        <th>Input</th>
-        <th>Output</th>
-        <th>Job Properties</th>
+        <th colspan="2">Job Properties</th>
     </tr>
     </thead>
     <tbody>
@@ -51,86 +160,61 @@
         ServiceContainer serviceContainer = (ServiceContainer) sc.getAttribute("serviceContainer");
         final BundleFilter systemFilter = new BundleFilter();
         systemFilter.withProvider(BundleFilter.PROVIDER_SYSTEM);
-        final BundleDescriptor[] bundleDescriptors;
+        List<BundleView> bundleViews = new ArrayList<>();
         try {
             final Principal userPrincipal = request.getUserPrincipal();
             if (userPrincipal != null && serviceContainer != null) {
                 String userName = userPrincipal.getName();
-                bundleDescriptors = serviceContainer.getProductionService().getBundles(userName, systemFilter);
+                BundleDescriptor[] bundleDescriptors = serviceContainer.getProductionService().getBundles(userName, systemFilter);
                 for (BundleDescriptor bundle : bundleDescriptors) {
                     ProcessorDescriptor[] processorDescriptors = bundle.getProcessorDescriptors();
                     if (processorDescriptors != null) {
-
-                        String bundleName = bundle.getBundleName();
-                        String bundleVersion = bundle.getBundleVersion();
-                        String bundleText = bundleName + " - " + bundleVersion;
-                        String bundleLocation = bundle.getBundleLocation();
-                        if (!bundleLocation.endsWith("/" + bundle.getBundleName() + "-" + bundle.getBundleVersion())) {
-                            String bundleLocShort = bundleLocation.substring(bundleLocation.lastIndexOf('/') + 1); 
-                            bundleText += "<br/><b>WARNING: bundle names and version don't match directory:</b><br/>" +
-                                    bundleLocShort;
+                        BundleView bundleView = BundleView.create(bundle);
+                        for (ProcessorDescriptor processorDescriptor : processorDescriptors) {
+                            bundleView.processorViews.add(ProcessorView.create(processorDescriptor));
                         }
-                        for (int i = 0; i < processorDescriptors.length; i++) {
-                            ProcessorDescriptor processor = processorDescriptors[i];
-                            String pExeName = processor.getExecutableName();
-                            String pVersion = processor.getProcessorVersion();
-                            String pDesc = processor.getProcessorName().replaceAll(" ", "&nbsp;");
-                            String processorText = pExeName + " (v " +pVersion+")<br/>"+pDesc;
-                            Map<String, String> jobConfiguration = processor.getJobConfiguration();
-                            ArrayList<String> keys = new ArrayList<>(jobConfiguration.keySet());
-                            keys.sort(new Comparator<String>() {
-                                @Override
-                                public int compare(String s, String anotherString) {
-                                    return s.compareTo(anotherString);
-                                }
-                            });
-                            String input = "";
-                            if (processor.getInputProductTypes() != null && processor.getInputProductTypes().length > 0) {
-                                input = String.join("<br/>", processor.getInputProductTypes());
-                            }
-                            String output = "";
-                            if (processor.getOutputProductType() != null) {
-                                output = processor.getOutputProductType();
-                            }
-                            StringBuilder jobProperties = new StringBuilder();
-                            if (keys.size() > 0) {
-                                jobProperties.append("<table>");
-                                for (String key : keys) {
-                                    String value = jobConfiguration.get(key).replaceAll("<", "&lt;").replaceAll(">", "&gt;").trim();
-                                    if (value.startsWith("&lt;")) {
-                                        value = "<pre>"+value+"</pre";
-                                    }
-                                    jobProperties.append("<tr>");
-                                    jobProperties.append("<td>").append(key).append("</td>");
-                                    jobProperties.append("<td>&nbsp;=&nbsp;</td>");
-                                    jobProperties.append("<td>").append(value).append("</td>");
-                                    jobProperties.append("</tr>");
-                                }
-                                jobProperties.append("</table>");
-                            }
-                            
-    %>
-    <tr>
-        <%
-            if (i == 0) {
-        %>
-        <td rowspan="<%=processorDescriptors.length %>"><%=bundleText %></td>
-        <%
-            }
-        %>
-        <td><%=processorText %></td>
-        <td><%=input %></td>
-        <td><%=output %></td>
-        <td><%=jobProperties.toString() %></td>
-    </tr>
-    <%
-                        }
+                        bundleViews.add(bundleView);
                     }
                 }
             }
         } catch (ProductionException e) {
             e.printStackTrace(new PrintWriter(out));
         }
+        for (BundleView bundleView : bundleViews) {
+            List<ProcessorView> processorViews = bundleView.processorViews;
+            for (int p = 0; p < processorViews.size(); p++) {
+                ProcessorView processorView = processorViews.get(p);
+                List<PropertyView> propertyViews = processorView.propertyViews;
+                for (int i = 0; i < propertyViews.size(); i++) {
+                    PropertyView propertyView = propertyViews.get(i);
+    %>
+    <tr>
+        <%
+            if (p == 0 && i == 0) {
+        %>
+        <td rowspan="<%=bundleView.numRows() %>"><%=bundleView.title %>
+        </td>
+        <%
+            }
+        %>
+        <%
+            if (i == 0) {
+        %>
+        <td rowspan="<%=processorView.numRows() %>"><%=processorView.title %>
+        </td>
+        <%
+            }
+        %>
+        <td><%=propertyView.name %>
+        </td>
+        <td><%=propertyView.value %>
+        </td>
+    </tr>
+    <%
+                }
+            }
+        }
+
     %>
     </tbody>
 </table>
@@ -138,7 +222,8 @@
 <table style="width: 99%; border: 0;" align="center">
     <tr>
         <td>
-            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %> Brockmann Consult GmbH
+            <p class="copyrightApp"><%= BackendServiceImpl.VERSION %>, &#169; <%= BackendServiceImpl.COPYRIGHT_YEAR %>
+                Brockmann Consult GmbH
                 &nbsp;-&nbsp;<a href="http://www.brockmann-consult.de/bc-web/impressum.html"
                                 target="_blank">Impressum</a></p>
         </td>
