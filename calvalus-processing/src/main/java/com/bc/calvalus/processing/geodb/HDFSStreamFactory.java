@@ -83,19 +83,23 @@ class HDFSStreamFactory implements StreamFactory {
             Path path = new Path(filename);
             try {
                 // filename are always files, never directories
-                FileStatus[] statuses = path.getFileSystem(conf).listStatus(path);
-                if (statuses.length > 1) {
-                    String msg = String.format("list of (%s) results in multiple results: %s",
-                                               path, Arrays.toString(statuses));
-                    throw new IOException(msg);
-                }
-                existingFiles.add(statuses[0]);
+                FileStatus status = path.getFileSystem(conf).getFileStatus(path);
+                existingFiles.add(status);
+//              current impl. of CalvalusShFileSystem does not support listStatus of files, only of directories
+//                FileStatus[] statuses = path.getFileSystem(conf).listStatus(path);
+//                if (statuses.length > 1) {
+//                    String msg = String.format("list of (%s) results in multiple results: %s",
+//                                               path, Arrays.toString(statuses));
+//                    throw new IOException(msg);
+//                }
+//                existingFiles.add(statuses[0]);
             } catch (IOException ioe) {
                 // this file may no exits,ignore it
             }
         }
         existingFiles.sort(Comparator.comparingLong(FileStatus::getModificationTime));
         Collections.reverse(existingFiles);
+        // return existingFiles.stream().map(f -> f.getPath().toString()).toArray(String[]::new); ?
         String[] result = new String[existingFiles.size()];
         for (int i = 0; i < result.length; i++) {
             result[i] = existingFiles.get(i).getPath().toString();
