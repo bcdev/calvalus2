@@ -28,9 +28,9 @@ import org.apache.hadoop.io.IOUtils;
 import javax.imageio.stream.ImageInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -53,6 +53,12 @@ class HDFSStreamFactory implements StreamFactory {
         FileStatus status = fs.getFileStatus(hdfsPath);
         FSDataInputStream in = fs.open(hdfsPath);
         return new FSImageInputStream(in, status.getLen());
+    }
+
+    @Override
+    public InputStream createInputStream(String path) throws IOException {
+        Path hdfsPath = new Path(path);
+        return hdfsPath.getFileSystem(conf).open(hdfsPath);
     }
 
     @Override

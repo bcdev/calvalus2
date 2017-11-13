@@ -102,7 +102,7 @@ public class GeodbInputFormat extends InputFormat {
     }
 
     public static Set<String> queryGeoInventory(boolean failOnMissingDB, Configuration conf) throws IOException {
-        Constrain[] constrains = parseConstraint(conf);
+        Constrain constrain = parseConstraint(conf);
         Set<String> paths = new HashSet<>();
         String[] geoInventories = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY).split(",");
         for (String geoInventory : geoInventories) {
@@ -111,50 +111,37 @@ public class GeodbInputFormat extends InputFormat {
             inventory.setUpdatePrefix("scan.");
             inventory.setVerbose(true);
             inventory.setFailOnMissingDB(failOnMissingDB);
-            paths.addAll(inventory.query(constrains));
+            paths.addAll(inventory.query(constrain));
         }
         return paths;
     }
 
-    private static Constrain[] parseConstraint(Configuration conf) throws IOException {
-        List<Constrain> constrains = new ArrayList<>();
+    private static Constrain parseConstraint(Configuration conf) throws IOException {
+        Constrain.Builder cb = new Constrain.Builder();
         String geometryWkt = conf.get(JobConfigNames.CALVALUS_REGION_GEOMETRY);
         if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
             Geometry geometry = GeometryUtils.parseWKT(geometryWkt);
-            if (geometry == null || isBiggerThanAHalfSphere(geometry)) {
-                geometryWkt = null;
+            if (geometry != null && !isBiggerThanAHalfSphere(geometry)) {
+                cb.withPolygon(geometryWkt);    
             }
         }
+        cb.useOnlyProductStartDate(true);
+        parseMatchupParameters(conf, cb);
+
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         boolean isDateRangeSet = StringUtils.isNotNullAndNotEmpty(dateRangesString);
         if (isDateRangeSet) {
             String[] dateRangesStrings = dateRangesString.split(",");
             for (String dateRangeString : dateRangesStrings) {
                 try {
-                    Constrain.Builder cb = new Constrain.Builder();
-                    if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
-                        cb.polygon(geometryWkt);
-                    }
                     DateRange dateRange = DateRange.parseDateRange(dateRangeString);
-                    cb.startDate(dateRange.getStartDate()).endDate(dateRange.getStopDate());
-                    cb.useOnlyProductStartDate(true);
-                    parseMatchupParameters(conf, cb);
-                    constrains.add(cb.build());
+                    cb.addDateRang(dateRange.getStartDate(), dateRange.getStopDate());
                 } catch (ParseException e) {
                     throw new IOException(e);
                 }
             }
-        } else {
-            Constrain.Builder cb = new Constrain.Builder();
-            if (StringUtils.isNotNullAndNotEmpty(geometryWkt)) {
-                cb.polygon(geometryWkt);
-            }
-            cb.useOnlyProductStartDate(true);
-            parseMatchupParameters(conf, cb);
-
-            constrains.add(cb.build());
         }
-        return constrains.toArray(new Constrain[0]);
+        return cb.build();
     }
 
     private static boolean isBiggerThanAHalfSphere(Geometry geometry) {
@@ -188,7 +175,7 @@ public class GeodbInputFormat extends InputFormat {
                         simpleRecords.add(new SimpleRecord(location));
                     }
                 }
-                cb.insitu(simpleRecords);
+                cb.withInsituRecords(simpleRecords);
                 if (hasTime) {
                     cb.useOnlyProductStartDate(false);
                 }
@@ -198,12 +185,12 @@ public class GeodbInputFormat extends InputFormat {
                         String trimmed = maxTimeDifference.trim();
                         String daysAsString = trimmed.substring(0, trimmed.length() - 1);
                         int days = Integer.parseInt(daysAsString);
-                        cb.timeDelta((days + 2) * 24 * 60 * 60 * 1000L); // TODO teach geoDB to understand 0d,1d,..
+                        cb.withInsituTimeDelta((days + 2) * 24 * 60 * 60 * 1000L); // TODO teach geoDB to understand 0d,1d,..
                     } else {
                         double timeDifferenceHours = Double.parseDouble(maxTimeDifference);
                         if (timeDifferenceHours > 0) {
                             long timeDelta = Math.round(timeDifferenceHours * 60 * 60 * 1000); // h to ms
-                            cb.timeDelta(timeDelta);
+                            cb.withInsituTimeDelta(timeDelta);
                         }
                     }
                 }
