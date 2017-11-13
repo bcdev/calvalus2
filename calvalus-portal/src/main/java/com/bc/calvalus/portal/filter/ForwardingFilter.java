@@ -58,6 +58,7 @@ public class ForwardingFilter implements Filter {
                 inputSelectionCookies.add(new Cookie("endTime", inputSelection.getDateRange().getEndTime()));
             }
             if(inputSelection.getRegionGeometry() != null) inputSelectionCookies.add(new Cookie("regionGeometry", inputSelection.getRegionGeometry()));
+            inputSelectionCookies.add(new Cookie("populateData", "true"));
         }
         if (calvalusPortalContext == null) {
             System.out.println("context null");

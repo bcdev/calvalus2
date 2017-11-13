@@ -32,7 +32,6 @@ import com.google.gwt.view.client.SingleSelectionModel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -297,8 +296,10 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     OrderProductionView orderProductionView = (OrderProductionView) portalView;
                     if (orderProductionView.isRestoringRequestPossible()) {
                         String productionType = orderProductionView.getProductionType();
-                        Map<String, String> parameters = getParametersFromCookies();
-                        orderProductionView.setProductionParameters(parameters);
+                        if(isPopulateData()){
+                            Map<String, String> parameters = getParametersFromCookies();
+                            orderProductionView.setProductionParameters(parameters);
+                        }
                         productionTypeViews.put(productionType, orderProductionView);
                     }
                 }
@@ -358,13 +359,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         };
     }
 
+    private boolean isPopulateData() {
+        return Boolean.parseBoolean(Cookies.getCookie("populateData"));
+    }
+
     private Map<String, String> getParametersFromCookies() {
-        Collection<String> cookieNames = Cookies.getCookieNames();
-        GWT.log("============test GWT==========");
-        for (String cookieName : cookieNames) {
-            GWT.log(cookieName + " : " + Cookies.getCookie(cookieName));
-        }
-        GWT.log("============test GWT==========");
         Map<String, String> parameters = new HashMap<>();
         parameters.put("geoInventory", "/calvalus/geoInventory/S2_L1C_v2,/calvalus/geoInventory/S2_L1C_africa");
         String startTime = Cookies.getCookie("startTime");
