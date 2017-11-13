@@ -15,6 +15,16 @@
         <param-value>config/calvalus.properties</param-value>
     </context-param>
 
+    <filter>
+        <filter-name>RedirectionFilter</filter-name>
+        <filter-class>com.bc.calvalus.portal.filter.ForwardingFilter</filter-class>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>RedirectionFilter</filter-name>
+        <url-pattern>/init</url-pattern>
+    </filter-mapping>
+
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
