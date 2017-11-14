@@ -66,18 +66,26 @@ import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
+import org.jasig.cas.client.validation.AssertionImpl;
 import org.jdom.JDOMException;
+import org.w3c.dom.Document;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -882,8 +890,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         } else if ("saml".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
             try {
                 HttpSession session = getThreadLocalRequest().getSession();
-//                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
-                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), ""));
+                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
+                String saml = getStringFromDoc(samlToken);
+                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), saml));
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -943,4 +953,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             throw convert(e);
         }
     }
+
+    private String getStringFromDoc(Document doc)    {
+        try {
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+            writer.flush();
+            return writer.toString();
+        }
+        catch(TransformerException ex) {
+            throw new IllegalArgumentException("Unable to parse SAML token", ex);
+        }
+    }
+
 }
