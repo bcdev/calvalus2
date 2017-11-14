@@ -25,6 +25,11 @@
         <url-pattern>/init</url-pattern>
     </filter-mapping>
 
+    <servlet-mapping>
+        <servlet-name>insertSelectionServlet</servlet-name>
+        <url-pattern>/insert</url-pattern>
+    </servlet-mapping>
+
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
@@ -77,10 +82,20 @@
         <servlet-class>com.bc.calvalus.portal.server.FileDownloadServlet</servlet-class>
     </servlet>
 
-    <servlet-mapping>
-        <servlet-name>stagingServlet</servlet-name>
-        <url-pattern>/staging/*</url-pattern>
-    </servlet-mapping>
+    <servlet>
+        <servlet-name>insertSelectionServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.InsertSelectionServlet</servlet-class>
+    </servlet>
+
+    <servlet>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.ContextRetrievalServiceImpl</servlet-class>
+    </servlet>
+
+    <!--<servlet-mapping>-->
+        <!--<servlet-name>stagingServlet</servlet-name>-->
+        <!--<url-pattern>/staging/*</url-pattern>-->
+    <!--</servlet-mapping>-->
 
     <servlet-mapping>
         <servlet-name>backendServlet</servlet-name>
@@ -98,6 +113,11 @@
     <servlet-mapping>
         <servlet-name>downloadServlet</servlet-name>
         <url-pattern>/calvalus/download</url-pattern>
+    </servlet-mapping>
+
+    <servlet-mapping>
+        <servlet-name>retrieveContextServlet</servlet-name>
+        <url-pattern>/calvalus/retrieve</url-pattern>
     </servlet-mapping>
 
     <!-- You can set the default session timeout (in minutes) for all newly   -->

@@ -1,5 +1,6 @@
 package com.bc.calvalus.portal.filter;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 
@@ -12,6 +13,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -22,7 +24,7 @@ import java.util.List;
 /**
  * @author hans
  */
-public class ForwardingFilter implements Filter {
+public class ForwardingFilter extends HttpServlet implements Filter {
 
     private FilterConfig config;
 
@@ -41,7 +43,7 @@ public class ForwardingFilter implements Filter {
             HttpServletRequest servletRequest = (HttpServletRequest) request;
             oldCookies = servletRequest.getCookies();
             for (Cookie oldCookie : oldCookies) {
-                if(!"JSESSIONID".equalsIgnoreCase(oldCookie.getName())){
+                if (!"JSESSIONID".equalsIgnoreCase(oldCookie.getName())) {
                     oldCookie.setValue(null);
                     oldCookie.setMaxAge(0);
                 }
@@ -50,14 +52,20 @@ public class ForwardingFilter implements Filter {
             IOUtils.copy(servletRequest.getInputStream(), writer);
             String inputSelectionString = writer.toString();
             Gson gson = new Gson();
-            InputSelection inputSelection = gson.fromJson(inputSelectionString, InputSelection.class);
-            if(inputSelection.getCollectionName() != null) inputSelectionCookies.add(new Cookie("collectionName", inputSelection.getCollectionName()));
-            if(inputSelection.getProductIdentifiers() != null) inputSelectionCookies.add(new Cookie("productIdentifiers", inputSelection.getProductIdentifiers().toString()));
-            if (inputSelection.getDateRange() != null) {
-                inputSelectionCookies.add(new Cookie("startTime", inputSelection.getDateRange().getStartTime()));
-                inputSelectionCookies.add(new Cookie("endTime", inputSelection.getDateRange().getEndTime()));
+            DtoInputSelection dtoInputSelection = gson.fromJson(inputSelectionString, DtoInputSelection.class);
+            if (dtoInputSelection.getCollectionName() != null) {
+                inputSelectionCookies.add(new Cookie("collectionName", dtoInputSelection.getCollectionName()));
             }
-            if(inputSelection.getRegionGeometry() != null) inputSelectionCookies.add(new Cookie("regionGeometry", inputSelection.getRegionGeometry()));
+            if (dtoInputSelection.getProductIdentifiers() != null) {
+                inputSelectionCookies.add(new Cookie("productIdentifiers", dtoInputSelection.getProductIdentifiers().toString()));
+            }
+            if (dtoInputSelection.getDateRange() != null) {
+                inputSelectionCookies.add(new Cookie("startTime", dtoInputSelection.getDateRange().getStartTime()));
+                inputSelectionCookies.add(new Cookie("endTime", dtoInputSelection.getDateRange().getEndTime()));
+            }
+            if (dtoInputSelection.getRegionGeometry() != null) {
+                inputSelectionCookies.add(new Cookie("regionGeometry", dtoInputSelection.getRegionGeometry()));
+            }
             inputSelectionCookies.add(new Cookie("populateData", "true"));
         }
         if (calvalusPortalContext == null) {

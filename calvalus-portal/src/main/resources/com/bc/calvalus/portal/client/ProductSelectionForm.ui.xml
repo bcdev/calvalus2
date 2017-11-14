@@ -1,0 +1,31 @@
+<!DOCTYPE ui:UiBinder SYSTEM "http://dl.google.com/gwt/DTD/xhtml.ent" >
+<ui:UiBinder xmlns:ui='urn:ui:com.google.gwt.uibinder'
+             xmlns:g='urn:import:com.google.gwt.user.client.ui'>
+
+    <ui:style src="style.css"/>
+
+    <g:HorizontalPanel spacing="16">
+        <g:VerticalPanel spacing="2">
+
+            <g:HTMLPanel styleName="{style.panelTitle}">
+                <g:InlineLabel styleName="{style.panelTitleText}">Input Files</g:InlineLabel>
+            </g:HTMLPanel>
+
+
+            <g:VerticalPanel spacing="2" styleName="{style.inputFileSetPanel}">
+                <g:HorizontalPanel spacing="0">
+                    <g:ListBox ui:field="productListBox" width="45em" visibleItemCount="8" name="inputProductSet"/>
+
+                    <g:VerticalPanel width="1em"/>
+
+                    <g:HTMLPanel width="37em">
+                        <g:Button ui:field='pasteFromCatalogueButton' text="Paste from catalogue"/>
+                        <g:Button ui:field='testButton' text="Test"/>
+                    </g:HTMLPanel>
+                </g:HorizontalPanel>
+            </g:VerticalPanel>
+
+        </g:VerticalPanel>
+    </g:HorizontalPanel>
+
+</ui:UiBinder>

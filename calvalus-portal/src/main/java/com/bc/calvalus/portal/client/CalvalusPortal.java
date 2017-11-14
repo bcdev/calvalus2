@@ -7,8 +7,11 @@ import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
 import com.bc.calvalus.portal.shared.BackendService;
 import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.ContextRetrievalService;
+import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
 import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
 import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.bc.calvalus.portal.shared.DtoProduction;
@@ -67,10 +70,12 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     };
 
     private final BackendServiceAsync backendService;
+    private final ContextRetrievalServiceAsync retrievalService;
     private boolean initialised;
 
     // Data provided by various external services
     private ListDataProvider<Region> regions;
+    private DtoInputSelection inputSelection;
     private DtoProductSet[] productSets;
     private DtoProcessorDescriptor[] systemProcessors;
     private DtoProcessorDescriptor[] userProcessors;
@@ -102,6 +107,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     public CalvalusPortal() {
         backendService = GWT.create(BackendService.class);
+        retrievalService = GWT.create(ContextRetrievalService.class);
         productionListFiltered = true;
     }
 
@@ -208,6 +214,21 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
+    public ContextRetrievalServiceAsync getContextRetrievalService() {
+        return retrievalService;
+    }
+
+    @Override
+    public DtoInputSelection getInputSelection() {
+        return inputSelection;
+    }
+
+    @Override
+    public void retrieveInputSelection() {
+        retrievalService.getInputSelection(new RetrieveInputsCallback());
+    }
+
+    @Override
     public void showView(String id) {
         mainMenu.selectView(id);
     }
@@ -296,10 +317,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     OrderProductionView orderProductionView = (OrderProductionView) portalView;
                     if (orderProductionView.isRestoringRequestPossible()) {
                         String productionType = orderProductionView.getProductionType();
-                        if(isPopulateData()){
-                            Map<String, String> parameters = getParametersFromCookies();
-                            orderProductionView.setProductionParameters(parameters);
-                        }
+//                        retrievalService.getInputSelection(new RetrieveInputsCallback());
+//                        if(isPopulateData()){
+//                            Map<String, String> parameters = getParametersFromContext();
+//                            orderProductionView.setProductionParameters(parameters);
+//                        }
                         productionTypeViews.put(productionType, orderProductionView);
                     }
                 }
@@ -363,16 +385,19 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         return Boolean.parseBoolean(Cookies.getCookie("populateData"));
     }
 
-    private Map<String, String> getParametersFromCookies() {
+    private Map<String, String> getParametersFromContext() {
+        DtoInputSelection inputSelection = this.getInputSelection();
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("geoInventory", "/calvalus/geoInventory/S2_L1C_v2,/calvalus/geoInventory/S2_L1C_africa");
-        String startTime = Cookies.getCookie("startTime");
-        startTime = startTime.split("T")[0];
-        String endTime = Cookies.getCookie("endTime");
-        endTime = endTime.split("T")[0];
-        parameters.put("minDate", startTime);
-        parameters.put("maxDate", endTime);
-        parameters.put("regionWKT", Cookies.getCookie("regionGeometry"));
+        if(inputSelection != null){
+            parameters.put("geoInventory", inputSelection.getCollectionName());
+            String startTime = inputSelection.getDateRange().getStartTime();
+            startTime = startTime.split("T")[0];
+            String endTime = inputSelection.getDateRange().getEndTime();
+            endTime = endTime.split("T")[0];
+            parameters.put("minDate", startTime);
+            parameters.put("maxDate", endTime);
+            parameters.put("regionWKT", inputSelection.getRegionGeometry());
+        }
         return parameters;
     }
 
@@ -443,6 +468,26 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private String getProductionFilterString() {
         return BackendService.PARAM_NAME_CURRENT_USER_ONLY + "=" + isProductionListFiltered();
+    }
+
+    private class RetrieveInputsCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            GWT.log("=======successful callback======");
+            if (inputSelection != null) {
+                CalvalusPortal.this.inputSelection = inputSelection;
+                GWT.log(inputSelection.getCollectionName());
+            } else {
+                GWT.log("no input selection");
+            }
+            GWT.log("=======successful callback======");
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("failed callback");
+        }
     }
 
     private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {
