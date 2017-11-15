@@ -45,6 +45,7 @@ import java.util.*;
  */
 public class ProductSetFilterForm extends Composite {
 
+    private static final String TEMPORARY_REGION_NAME = "catalogue_search";
     private final PortalContext portal;
 
     interface TheUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
@@ -101,8 +102,8 @@ public class ProductSetFilterForm extends Composite {
 
         dateList.setEnabled(false);
         dateList.setValue("2008-06-01\n" +
-                          "2008-06-02\n" +
-                          "2008-06-03");
+                "2008-06-02\n" +
+                "2008-06-03");
 
         temporalFilterOff.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
@@ -244,7 +245,7 @@ public class ProductSetFilterForm extends Composite {
                     boolean startDateValid = (minDate.compareTo(startDate) <= 0);
                     if (!startDateValid) {
                         throw new ValidationException(this.minDate,
-                                                      "Start date must be equal to or after the product set's start date.");
+                                "Start date must be equal to or after the product set's start date.");
                     }
                 }
                 if (productSet.getMaxDate() != null) {
@@ -252,7 +253,7 @@ public class ProductSetFilterForm extends Composite {
                     boolean endDateValid = (endDate.compareTo(maxDate) <= 0);
                     if (!endDateValid) {
                         throw new ValidationException(this.maxDate,
-                                                      "End date must be equal to or before the product set's end date.");
+                                "End date must be equal to or before the product set's end date.");
                     }
                 }
             }
@@ -274,7 +275,7 @@ public class ProductSetFilterForm extends Composite {
         if (productSet.getPath().contains("${region}")) {
             if (!spatialFilterByRegion.getValue()) {
                 throw new ValidationException(spatialFilterByRegion,
-                                              "You have to select a region, because the file set's path requires it.");
+                        "You have to select a region, because the file set's path requires it.");
             }
         }
     }
@@ -325,7 +326,7 @@ public class ProductSetFilterForm extends Composite {
         return parameters;
     }
 
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback(){
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
         return new UpdateProductListCallback();
     }
 
@@ -379,6 +380,7 @@ public class ProductSetFilterForm extends Composite {
                 temporalFilterOff.setValue(true, true);
             }
         }
+        regionMap.getRegionMapSelectionModel().clearSelection();
         String regionNameValue = parameters.get("regionName");
         if (regionNameValue != null) {
             Region region = regionMap.getRegion(regionNameValue);
@@ -399,7 +401,15 @@ public class ProductSetFilterForm extends Composite {
                     return;
                 }
             }
-            // TODO handle failure
+            Region region = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
+            if (region != null) {
+                regionMap.removeRegion(region);
+            }
+            Region temp_region = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
+            regionMap.addRegion(temp_region);
+            spatialFilterByRegion.setValue(true, true);
+            regionMap.getRegionMapSelectionModel().setSelected(temp_region, true);
+            return;
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();
