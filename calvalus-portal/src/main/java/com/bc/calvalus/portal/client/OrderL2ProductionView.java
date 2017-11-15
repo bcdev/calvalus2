@@ -22,11 +22,7 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -53,14 +49,16 @@ public class OrderL2ProductionView extends OrderProductionView {
             l2ConfigForm.setProductSet(productSet);
         });
 
-        productSelectionForm = new ProductSelectionForm(getPortal());
-        productSelectionForm.updateListBox();
-
         l2ConfigForm = new L2ConfigForm(portalContext, false);
         l2ConfigForm.addChangeHandler(event -> handleProcessorChanged());
 
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
+
+        productSelectionForm = new ProductSelectionForm(getPortal());
+        productSelectionForm.addInputSelectionChangeHandler(productSelectionForm.getInputSelectionCallback());
+        productSelectionForm.addInputSelectionChangeHandler(productSetSelectionForm.getInputSelectionCallback());
+        productSelectionForm.addInputSelectionChangeHandler(productSetFilterForm.getInputSelectionCallback());
 
         outputParametersForm = new OutputParametersForm(portalContext);
         l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());

@@ -5,22 +5,11 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.BackendService;
-import com.bc.calvalus.portal.shared.BackendServiceAsync;
-import com.bc.calvalus.portal.shared.ContextRetrievalService;
-import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
-import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
-import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
-import com.bc.calvalus.portal.shared.DtoInputSelection;
-import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
-import com.bc.calvalus.portal.shared.DtoProductSet;
-import com.bc.calvalus.portal.shared.DtoProduction;
-import com.bc.calvalus.portal.shared.DtoRegion;
+import com.bc.calvalus.portal.shared.*;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.maps.client.LoadApi;
-import com.google.gwt.user.client.Cookies;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
@@ -33,11 +22,7 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
 /**
@@ -51,22 +36,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     public static final String NO_FILTER = "";
     private static final String[] VIEW_NAMES = {
-                "newsView",
-                "l2View",
-                "maView",
-                "raView",
-                "l3View",
-                "taView",
-                "freshmonView",
-                "bootstrappingView",
-                "vicariousCalibrationView",
-                "matchupComparisonView",
-                "l2ToL3ComparisonView",
-                "regionsView",
-                "requestsView",
-                "bundlesView",
-                "masksView",
-                "productionsView"
+            "newsView",
+            "l2View",
+            "maView",
+            "raView",
+            "l3View",
+            "taView",
+            "freshmonView",
+            "bootstrappingView",
+            "vicariousCalibrationView",
+            "matchupComparisonView",
+            "l2ToL3ComparisonView",
+            "regionsView",
+            "requestsView",
+            "bundlesView",
+            "masksView",
+            "productionsView"
     };
 
     private final BackendServiceAsync backendService;
@@ -219,16 +204,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     @Override
-    public DtoInputSelection getInputSelection() {
-        return inputSelection;
-    }
-
-    @Override
-    public void retrieveInputSelection() {
-        retrievalService.getInputSelection(new RetrieveInputsCallback());
-    }
-
-    @Override
     public void showView(String id) {
         mainMenu.selectView(id);
     }
@@ -265,43 +240,43 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private PortalView createViewOf(String name) {
         switch (name) {
-        case "newsView":
-            return new FrameView(this, "NewsView", "News", "calvalus-news.html");
-        case "l2View":
-            return new OrderL2ProductionView(this);
-        case "maView":
-            return new OrderMAProductionView(this);
-        case "raView":
-            return new OrderRAProductionView(this);
-        case "l3View":
-            return new OrderL3ProductionView(this);
-        case "taView":
-            return new OrderTAProductionView(this);
-        case "freshmonView":
-            return new OrderFreshmonProductionView(this);
-        case "bootstrappingView":
-            return new OrderBootstrappingView(this);
-        case "vicariousCalibrationView":
-            return new OrderVCProductionView(this);
-        case "matchupComparisonView":
-            return new OrderMACProductionView(this);
-        case "l2ToL3ComparisonView":
-            return new OrderL2toL3ProductionView(this);
-        case "regionsView":
-            return new ManageRegionsView(this);
-        case "bundlesView":
-            return new ManageBundleView(this);
-        case "requestsView":
-            return new ManageRequestView(this);
-        case "masksView":
-            return new ManageMasksView(this);
-        case "productionsView":
-            manageProductionsView = new ManageProductionsView(this);
-            return manageProductionsView;
-        case "emptyView":
-            return new FrameView(this, "EmptyView", "Empty", "empty.html");
-        default:
-            throw new RuntimeException("unknown view " + name);
+            case "newsView":
+                return new FrameView(this, "NewsView", "News", "calvalus-news.html");
+            case "l2View":
+                return new OrderL2ProductionView(this);
+            case "maView":
+                return new OrderMAProductionView(this);
+            case "raView":
+                return new OrderRAProductionView(this);
+            case "l3View":
+                return new OrderL3ProductionView(this);
+            case "taView":
+                return new OrderTAProductionView(this);
+            case "freshmonView":
+                return new OrderFreshmonProductionView(this);
+            case "bootstrappingView":
+                return new OrderBootstrappingView(this);
+            case "vicariousCalibrationView":
+                return new OrderVCProductionView(this);
+            case "matchupComparisonView":
+                return new OrderMACProductionView(this);
+            case "l2ToL3ComparisonView":
+                return new OrderL2toL3ProductionView(this);
+            case "regionsView":
+                return new ManageRegionsView(this);
+            case "bundlesView":
+                return new ManageBundleView(this);
+            case "requestsView":
+                return new ManageRequestView(this);
+            case "masksView":
+                return new ManageMasksView(this);
+            case "productionsView":
+                manageProductionsView = new ManageProductionsView(this);
+                return manageProductionsView;
+            case "emptyView":
+                return new FrameView(this, "EmptyView", "Empty", "empty.html");
+            default:
+                throw new RuntimeException("unknown view " + name);
         }
     }
 
@@ -317,11 +292,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
                     OrderProductionView orderProductionView = (OrderProductionView) portalView;
                     if (orderProductionView.isRestoringRequestPossible()) {
                         String productionType = orderProductionView.getProductionType();
-//                        retrievalService.getInputSelection(new RetrieveInputsCallback());
-//                        if(isPopulateData()){
-//                            Map<String, String> parameters = getParametersFromContext();
-//                            orderProductionView.setProductionParameters(parameters);
-//                        }
                         productionTypeViews.put(productionType, orderProductionView);
                     }
                 }
@@ -350,22 +320,22 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
         selectionModel.addSelectionChangeHandler(
-                    new SelectionChangeEvent.Handler() {
-                        public void onSelectionChange(SelectionChangeEvent event) {
-                            final PortalView selected = selectionModel.getSelectedObject();
-                            if (selected != null) {
-                                if (currentView != null) {
-                                    GWT.log("Now hiding: " + currentView.getTitle());
-                                    currentView.onHidden();
-                                }
-                                currentView = selected;
-                                GWT.log("Now showing: " + selected.getTitle());
-                                viewPanel.showWidget(selected.asWidget());
-                                Window.scrollTo(0, 0);
-                                selected.onShowing();
+                new SelectionChangeEvent.Handler() {
+                    public void onSelectionChange(SelectionChangeEvent event) {
+                        final PortalView selected = selectionModel.getSelectedObject();
+                        if (selected != null) {
+                            if (currentView != null) {
+                                GWT.log("Now hiding: " + currentView.getTitle());
+                                currentView.onHidden();
                             }
+                            currentView = selected;
+                            GWT.log("Now showing: " + selected.getTitle());
+                            viewPanel.showWidget(selected.asWidget());
+                            Window.scrollTo(0, 0);
+                            selected.onShowing();
                         }
-                    });
+                    }
+                });
 
         removeSplashScreen();
 
@@ -381,26 +351,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         };
     }
 
-    private boolean isPopulateData() {
-        return Boolean.parseBoolean(Cookies.getCookie("populateData"));
-    }
-
-    private Map<String, String> getParametersFromContext() {
-        DtoInputSelection inputSelection = this.getInputSelection();
-        Map<String, String> parameters = new HashMap<>();
-        if(inputSelection != null){
-            parameters.put("geoInventory", inputSelection.getCollectionName());
-            String startTime = inputSelection.getDateRange().getStartTime();
-            startTime = startTime.split("T")[0];
-            String endTime = inputSelection.getDateRange().getEndTime();
-            endTime = endTime.split("T")[0];
-            parameters.put("minDate", startTime);
-            parameters.put("maxDate", endTime);
-            parameters.put("regionWKT", inputSelection.getRegionGeometry());
-        }
-        return parameters;
-    }
-
     private void showMainPanel(Widget mainPanel) {
         //noinspection GwtToHtmlReferences
         RootPanel.get("mainPanel").add(mainPanel);
@@ -412,11 +362,11 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private boolean isAllInputDataAvailable() {
         return regions != null
-               && productSets != null
-               && systemProcessors != null && userProcessors != null && allUserProcessors != null
-               && systemAggregators != null && userAggregators != null
-               && productions != null
-               && calvalusConfig != null;
+                && productSets != null
+                && systemProcessors != null && userProcessors != null && allUserProcessors != null
+                && systemAggregators != null && userAggregators != null
+                && productions != null
+                && calvalusConfig != null;
     }
 
     private synchronized void updateProductions(DtoProduction[] unknownProductions) {
@@ -468,26 +418,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     private String getProductionFilterString() {
         return BackendService.PARAM_NAME_CURRENT_USER_ONLY + "=" + isProductionListFiltered();
-    }
-
-    private class RetrieveInputsCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            GWT.log("=======successful callback======");
-            if (inputSelection != null) {
-                CalvalusPortal.this.inputSelection = inputSelection;
-                GWT.log(inputSelection.getCollectionName());
-            } else {
-                GWT.log("no input selection");
-            }
-            GWT.log("=======successful callback======");
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            GWT.log("failed callback");
-        }
     }
 
     private class InitRegionsCallback implements AsyncCallback<DtoRegion[]> {
@@ -633,9 +563,9 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
             for (String key : config.getConfig().keySet()) {
                 if (key.startsWith("calvalus.portal.")) {
                     calvalusConfig.put(key.substring("calvalus.portal.".length()),
-                                       roleSupports(key, config.getRoles(), config.getConfig()));
+                            roleSupports(key, config.getRoles(), config.getConfig()));
                 } else if (key.startsWith("calvalus.queue.")
-                           && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
+                        && contains(config.getRoles(), key.substring("calvalus.queue.".length()))) {
                     for (String queue : config.getConfig().get(key).split(" ")) {
                         if (!queueList.contains(queue)) {
                             queueList.add(queue);

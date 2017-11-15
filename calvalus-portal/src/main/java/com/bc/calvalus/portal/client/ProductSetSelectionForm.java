@@ -1,26 +1,19 @@
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
-import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.DomEvent;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.*;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-
 import java.util.Map;
 
 /**
@@ -80,19 +73,9 @@ public class ProductSetSelectionForm extends Composite {
 
         callback = new UpdateProductSetsCallback();
 
-        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent event) {
-                updateDetailsView();
-            }
-        });
+        productSetListBox.addChangeHandler(event -> updateDetailsView());
 
-        ValueChangeHandler<Boolean> valueChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                updateProductSetsListBox();
-            }
-        };
+        ValueChangeHandler<Boolean> valueChangeHandler = booleanValueChangeEvent -> updateProductSetsListBox();
         predefinedProductSets.addValueChangeHandler(valueChangeHandler);
         userProductionProductSets.addValueChangeHandler(valueChangeHandler);
         allProductionProductSets.addValueChangeHandler(valueChangeHandler);
@@ -129,7 +112,7 @@ public class ProductSetSelectionForm extends Composite {
     private void updateListBox(DtoProductSet[] newProductSets) {
         DtoProductSet[] filteredProductSets = newProductSets;
         if (productSetFilter != null) {
-            ArrayList<DtoProductSet> filtered = new ArrayList<DtoProductSet>(newProductSets.length);
+            ArrayList<DtoProductSet> filtered = new ArrayList<>(newProductSets.length);
             for (DtoProductSet productSet : newProductSets) {
                 if (productSetFilter.accept(productSet)) {
                     filtered.add(productSet);
@@ -195,12 +178,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
-        productSetListBox.addChangeHandler(new com.google.gwt.event.dom.client.ChangeHandler() {
-            @Override
-            public void onChange(ChangeEvent changeEvent) {
-                changeHandler.onProductSetChanged(getSelectedProductSet());
-            }
-        });
+        productSetListBox.addChangeHandler(changeEvent -> changeHandler.onProductSetChanged(getSelectedProductSet()));
     }
 
     public DtoProductSet getSelectedProductSet() {
@@ -220,13 +198,12 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    public static interface ChangeHandler {
-
+    public interface ChangeHandler {
         void onProductSetChanged(DtoProductSet productSet);
     }
 
     public Map<String, String> getValueMap() {
-        Map<String, String> parameters = new HashMap<String, String>();
+        Map<String, String> parameters = new HashMap<>();
         DtoProductSet selectedProductSet = getSelectedProductSet();
         if (selectedProductSet.getGeoInventory() != null) {
             parameters.put("geoInventory", selectedProductSet.getGeoInventory());
@@ -236,12 +213,51 @@ public class ProductSetSelectionForm extends Composite {
         return parameters;
     }
 
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback(){
+        return new UpdateProductListCallback();
+    }
+
+    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("negative callback triggered inside ProductSetSelectionForm");
+        }
+    }
+
+    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+        Map<String, String> parameters = new HashMap<>();
+        if (inputSelection != null) {
+            parameters.put("geoInventory", inputSelection.getCollectionName());
+            parameters.put("collectionName", inputSelection.getCollectionName());
+            String startTime = inputSelection.getDateRange().getStartTime();
+            startTime = startTime.split("T")[0];
+            String endTime = inputSelection.getDateRange().getEndTime();
+            endTime = endTime.split("T")[0];
+            parameters.put("minDate", startTime);
+            parameters.put("maxDate", endTime);
+            parameters.put("regionWKT", inputSelection.getRegionGeometry());
+        }
+        return parameters;
+    }
+
     public void setValues(Map<String, String> parameters) {
+        String collectionName = parameters.get("collectionName");
         String geoInventory = parameters.get("geoInventory");
         String inputPath = parameters.get("inputPath");
         int newSelectionIndex = -2;
         for (int i = 0; i < currentProductSets.length; i++) {
             DtoProductSet productSet = currentProductSets[i];
+            if (collectionName != null && productSet.getName().equalsIgnoreCase(collectionName)) {
+                newSelectionIndex = i;
+                break;
+            }
             if ((geoInventory != null &&
                     productSet.getGeoInventory() != null &&
                     geoInventory.equals(productSet.getGeoInventory()))

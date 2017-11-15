@@ -20,7 +20,6 @@
 
                     <g:HTMLPanel width="37em">
                         <g:Button ui:field='pasteFromCatalogueButton' text="Paste from catalogue"/>
-                        <g:Button ui:field='testButton' text="Test"/>
                     </g:HTMLPanel>
                 </g:HorizontalPanel>
             </g:VerticalPanel>

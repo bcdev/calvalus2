@@ -20,10 +20,9 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -33,21 +32,11 @@ import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Composite;
-import com.google.gwt.user.client.ui.RadioButton;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
-import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.*;
 import com.google.gwt.user.datepicker.client.DateBox;
-import com.google.gwt.view.client.SelectionChangeEvent;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A form that lets users filter a selected product set by time and region.
@@ -132,12 +121,7 @@ public class ProductSetFilterForm extends Composite {
 //        spatialFilterOff.addValueChangeHandler(valueChangeHandler);
 //        spatialFilterByRegion.addValueChangeHandler(valueChangeHandler);
 
-        manageRegionsAnchor.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                portal.showView(ManageRegionsView.ID);
-            }
-        });
+        manageRegionsAnchor.addClickHandler(event -> portal.showView(ManageRegionsView.ID));
 
         addChangeHandler(new ChangeHandler() {
             @Override
@@ -163,7 +147,7 @@ public class ProductSetFilterForm extends Composite {
             numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
         } else if (temporalFilterByDateList.getValue()) {
             String[] splits = dateList.getValue().split("\\s");
-            HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            HashSet<String> set = new HashSet<>(Arrays.asList(splits));
             set.remove("");
             numDays.setValue("" + set.size());
         } else if (productSet != null) {
@@ -204,44 +188,24 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
-        ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Date> event) {
+        ValueChangeHandler<Date> dateValueChangeHandler = event ->
                 changeHandler.temporalFilterChanged(getValueMap());
-            }
-        };
         minDate.addValueChangeHandler(dateValueChangeHandler);
         maxDate.addValueChangeHandler(dateValueChangeHandler);
-        ValueChangeHandler<Boolean> booleanValueChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+        ValueChangeHandler<Boolean> booleanValueChangeHandler = booleanValueChangeEvent ->
                 changeHandler.temporalFilterChanged(getValueMap());
-            }
-        };
         temporalFilterOff.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateRange.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateList.addValueChangeHandler(booleanValueChangeHandler);
-        dateList.addValueChangeHandler(new ValueChangeHandler<String>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<String> stringValueChangeEvent) {
-                changeHandler.temporalFilterChanged(getValueMap());
-            }
-        });
+        dateList.addValueChangeHandler(stringValueChangeEvent ->
+                changeHandler.temporalFilterChanged(getValueMap()));
 
-        ValueChangeHandler<Boolean> spatialFilterChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
+        ValueChangeHandler<Boolean> spatialFilterChangeHandler = booleanValueChangeEvent ->
                 changeHandler.spatialFilterChanged(getValueMap());
-            }
-        };
         spatialFilterOff.addValueChangeHandler(spatialFilterChangeHandler);
         spatialFilterByRegion.addValueChangeHandler(spatialFilterChangeHandler);
-        regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
-                changeHandler.spatialFilterChanged(getValueMap());
-            }
-        });
+        regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(selectionChangeEvent ->
+                changeHandler.spatialFilterChanged(getValueMap()));
     }
 
     // note: factory is found solely for return type, method name is insignificant
@@ -317,7 +281,7 @@ public class ProductSetFilterForm extends Composite {
 
     public Map<String, String> getValueMap() {
 
-        Map<String, String> parameters = new HashMap<String, String>();
+        Map<String, String> parameters = new HashMap<>();
 
         if (temporalFilterOff.getValue() && productSet != null) {
             Date minDate = productSet.getMinDate();
@@ -358,6 +322,40 @@ public class ProductSetFilterForm extends Composite {
             }
         }
 
+        return parameters;
+    }
+
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback(){
+        return new UpdateProductListCallback();
+    }
+
+    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("negative callback triggered inside ProductSetFilterForm");
+        }
+    }
+
+    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+        Map<String, String> parameters = new HashMap<>();
+        if (inputSelection != null) {
+            parameters.put("geoInventory", inputSelection.getCollectionName());
+            parameters.put("collectionName", inputSelection.getCollectionName());
+            String startTime = inputSelection.getDateRange().getStartTime();
+            startTime = startTime.split("T")[0];
+            String endTime = inputSelection.getDateRange().getEndTime();
+            endTime = endTime.split("T")[0];
+            parameters.put("minDate", startTime);
+            parameters.put("maxDate", endTime);
+            parameters.put("regionWKT", inputSelection.getRegionGeometry());
+        }
         return parameters;
     }
 

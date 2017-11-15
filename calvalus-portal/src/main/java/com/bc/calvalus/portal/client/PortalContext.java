@@ -38,10 +38,6 @@ public interface PortalContext {
 
     ContextRetrievalServiceAsync getContextRetrievalService();
 
-    DtoInputSelection getInputSelection();
-
-    void retrieveInputSelection();
-
     void showView(String id);
 
     Timer getProductionsUpdateTimer();

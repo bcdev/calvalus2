@@ -4,6 +4,7 @@ import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.ListBox;
@@ -14,19 +15,16 @@ import java.util.List;
 /**
  * A form that lets users select a product.
  *
- * @author Norman
+ * @author Hans
  */
 public class ProductSelectionForm extends Composite {
 
     interface TheUiBinder extends UiBinder<Widget, ProductSelectionForm> {
-
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
 
     private final PortalContext portal;
-
-    private DtoInputSelection inputSelection;
 
     @UiField
     ListBox productListBox;
@@ -34,33 +32,15 @@ public class ProductSelectionForm extends Composite {
     @UiField
     Button pasteFromCatalogueButton;
 
-    @UiField
-    Button testButton;
-
-    public ProductSelectionForm(PortalContext portalContext) {
+    ProductSelectionForm(PortalContext portalContext) {
         this.portal = portalContext;
-        this.inputSelection = portal.getInputSelection();
-
         initWidget(uiBinder.createAndBindUi(this));
-
-        pasteFromCatalogueButton.addClickHandler(event -> {
-            portal.retrieveInputSelection();
-        });
-
-        testButton.addClickHandler(event -> {
-            DtoInputSelection inputSelection = portal.getInputSelection();
-            if (inputSelection != null) {
-                this.inputSelection = portal.getInputSelection();
-                updateListBox();
-            }
-        });
     }
 
-    public void updateListBox() {
+    private void updateListBox(DtoInputSelection inputSelection) {
         productListBox.clear();
         if (inputSelection != null) {
             List<String> newProducts = inputSelection.getProductIdentifiers();
-            GWT.log(String.valueOf(newProducts.size()));
             int newSelectionIndex = 0;
             for (String product : newProducts) {
                 productListBox.addItem(product);
@@ -68,6 +48,28 @@ public class ProductSelectionForm extends Composite {
             if (productListBox.getItemCount() > 0) {
                 productListBox.setSelectedIndex(newSelectionIndex);
             }
+        }
+    }
+
+    void addInputSelectionChangeHandler(AsyncCallback<DtoInputSelection> callback) {
+        pasteFromCatalogueButton.addClickHandler(event ->
+                portal.getContextRetrievalService().getInputSelection(callback));
+    }
+
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
+        return new UpdateProductListCallback();
+    }
+
+    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            updateListBox(inputSelection);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            productListBox.clear();
         }
     }
 }
