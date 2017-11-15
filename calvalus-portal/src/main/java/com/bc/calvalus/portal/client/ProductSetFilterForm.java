@@ -326,40 +326,6 @@ public class ProductSetFilterForm extends Composite {
         return parameters;
     }
 
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
-        return new UpdateProductListCallback();
-    }
-
-    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
-            setValues(inputSelectionMap);
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            GWT.log("negative callback triggered inside ProductSetFilterForm");
-        }
-    }
-
-    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
-        Map<String, String> parameters = new HashMap<>();
-        if (inputSelection != null) {
-            parameters.put("geoInventory", inputSelection.getCollectionName());
-            parameters.put("collectionName", inputSelection.getCollectionName());
-            String startTime = inputSelection.getDateRange().getStartTime();
-            startTime = startTime.split("T")[0];
-            String endTime = inputSelection.getDateRange().getEndTime();
-            endTime = endTime.split("T")[0];
-            parameters.put("minDate", startTime);
-            parameters.put("maxDate", endTime);
-            parameters.put("regionWKT", inputSelection.getRegionGeometry());
-        }
-        return parameters;
-    }
-
     public void setValues(Map<String, String> parameters) {
         String dateListValue = parameters.get("dateList");
         if (dateListValue != null) {
@@ -409,6 +375,7 @@ public class ProductSetFilterForm extends Composite {
             regionMap.addRegion(temp_region);
             spatialFilterByRegion.setValue(true, true);
             regionMap.getRegionMapSelectionModel().setSelected(temp_region, true);
+            LocateRegionsAction.locateRegion(regionMap, temp_region);
             return;
         }
         spatialFilterOff.setValue(true, true);
@@ -420,6 +387,37 @@ public class ProductSetFilterForm extends Composite {
         void temporalFilterChanged(Map<String, String> data);
 
         void spatialFilterChanged(Map<String, String> data);
+    }
+
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
+        return new UpdateProductListCallback();
+    }
+
+    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            GWT.log("unable to access inputSelection", caught);
+        }
+    }
+
+    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+        Map<String, String> parameters = new HashMap<>();
+        if (inputSelection != null) {
+            String startTime = inputSelection.getDateRange().getStartTime();
+            startTime = startTime.split("T")[0];
+            String endTime = inputSelection.getDateRange().getEndTime();
+            endTime = endTime.split("T")[0];
+            parameters.put("minDate", startTime);
+            parameters.put("maxDate", endTime);
+            parameters.put("regionWKT", inputSelection.getRegionGeometry());
+        }
+        return parameters;
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {

@@ -218,7 +218,6 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
-
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
             Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
@@ -227,7 +226,7 @@ public class ProductSetSelectionForm extends Composite {
 
         @Override
         public void onFailure(Throwable caught) {
-            GWT.log("negative callback triggered inside ProductSetSelectionForm");
+            GWT.log("unable to access inputSelection", caught);
         }
     }
 
@@ -236,13 +235,6 @@ public class ProductSetSelectionForm extends Composite {
         if (inputSelection != null) {
             parameters.put("geoInventory", inputSelection.getCollectionName());
             parameters.put("collectionName", inputSelection.getCollectionName());
-            String startTime = inputSelection.getDateRange().getStartTime();
-            startTime = startTime.split("T")[0];
-            String endTime = inputSelection.getDateRange().getEndTime();
-            endTime = endTime.split("T")[0];
-            parameters.put("minDate", startTime);
-            parameters.put("maxDate", endTime);
-            parameters.put("regionWKT", inputSelection.getRegionGeometry());
         }
         return parameters;
     }
