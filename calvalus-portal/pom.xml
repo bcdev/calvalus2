@@ -381,11 +381,50 @@
                                 <resource>
                                     <directory>src/main/resources-code</directory>
                                 </resource>
+                                <resource>
+                                    <directory>src/main/webapp-code-patch</directory>
+                                </resource>
                             </webResources>
+                            <warSourceDirectory>src/main/webapp</warSourceDirectory>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>bfg</id>
+            <build>
+                <resources>
+                    <resource>
+                        <directory>src/main/resources</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                        <directory>src/main/resources-code/WEB-INF/classes</directory>
+                        <filtering>true</filtering>
+                    </resource>
+                </resources>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <configuration>
+                            <attachClasses>true</attachClasses>
+                            <webResources>
+                                <resource>
+                                    <directory>src/main/resources-default</directory>
+                                </resource>
+                                <resource>
+                                    <directory>src/main/webapp-calbfg-patch</directory>
+                                </resource>
+                            </webResources>
+                            <warSourceDirectory>src/main/webapp</warSourceDirectory>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
     </profiles>
+
 </project>
