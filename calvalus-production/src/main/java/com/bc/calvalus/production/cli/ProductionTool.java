@@ -34,6 +34,9 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 import org.jdom.JDOMException;
+import org.jdom2.Element;
+import org.jdom2.input.SAXBuilder;
+import org.jdom2.output.XMLOutputter;
 
 import javax.crypto.Cipher;
 import java.io.DataOutputStream;
@@ -41,6 +44,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -90,7 +94,7 @@ import java.util.TimeZone;
 public class ProductionTool {
 
     private static final String DEFAULT_CONFIG_PATH = new File(ProductionServiceConfig.getUserAppDataDir(),
-                                                               "calvalus.config").getPath();
+            "calvalus.config").getPath();
 
     private static final String DEFAULT_SNAP_BUNDLE = HadoopProcessingService.DEFAULT_SNAP_BUNDLE;
     private static final String DEFAULT_CALVALUS_BUNDLE = HadoopProcessingService.DEFAULT_CALVALUS_BUNDLE;
@@ -125,12 +129,12 @@ public class ProductionTool {
         }
 
         boolean hasOtherCommand = commandLine.hasOption("deploy")
-                                  || commandLine.hasOption("uninstall")
-                                  || commandLine.hasOption("install")
-                                  || commandLine.hasOption("kill")
-                                  || commandLine.hasOption("copy")
-                                  || commandLine.hasOption("ingestion")
-                                  || commandLine.hasOption("help");
+                || commandLine.hasOption("uninstall")
+                || commandLine.hasOption("install")
+                || commandLine.hasOption("kill")
+                || commandLine.hasOption("copy")
+                || commandLine.hasOption("ingestion")
+                || commandLine.hasOption("help");
         List argList = commandLine.getArgList();
         if (argList.size() == 0 && !hasOtherCommand) {
             exit("Error: Missing argument REQUEST. (use option --help for usage help)", -1);
@@ -193,7 +197,7 @@ public class ProductionTool {
 
             HadoopServiceContainerFactory productionServiceFactory = new HadoopServiceContainerFactory();
             serviceContainer = productionServiceFactory.create(config, ProductionServiceConfig.getUserAppDataDir(),
-                                                                                new File("."));
+                    new File("."));
 
             if (commandLine.hasOption("kill")) {
                 cancelProduction(serviceContainer.getProductionService(), commandLine.getOptionValue("kill"), config);
@@ -235,6 +239,7 @@ public class ProductionTool {
                     say(String.format("Fetching SAML token from %s and adding to request.", casUrl));
                     String tgt = fetchTgt(casUrl);
                     String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
+                    samlToken = fixRootNode(samlToken);
                     serviceContainer.getProductionService().registerJobHook(new TokenGenerator(config, samlToken));
                     break;
                 default:
@@ -265,6 +270,22 @@ public class ProductionTool {
                 }
             }
         }
+    }
+
+    static String fixRootNode(String samlToken) {
+        SAXBuilder builder = new SAXBuilder();
+        org.jdom2.Document jDomDoc;
+        Element assertionElement;
+        try (StringReader characterStream = new StringReader(samlToken)) {
+            jDomDoc = builder.build(characterStream);
+            assertionElement = jDomDoc.getRootElement().getChildren().get(0);
+            jDomDoc.detachRootElement();
+            assertionElement.detach();
+            jDomDoc.setRootElement(assertionElement);
+        } catch (org.jdom2.JDOMException | IOException e) {
+            throw new IllegalStateException(e);
+        }
+        return new XMLOutputter().outputString(jDomDoc);
     }
 
     private String fetchSamlToken(String tgt, final String casUrl, String portalUrl) throws IOException {
@@ -389,9 +410,9 @@ public class ProductionTool {
             productionService.updateStatuses(userName);
             ProcessStatus stagingStatus = production.getStagingStatus();
             say(String.format("Staging status: state=%s, progress=%s, message='%s'",
-                              stagingStatus.getState(),
-                              stagingStatus.getProgress(),
-                              stagingStatus.getMessage()));
+                    stagingStatus.getState(),
+                    stagingStatus.getProgress(),
+                    stagingStatus.getMessage()));
         }
         if (production.getStagingStatus().getState() == ProcessState.COMPLETED) {
             say("Staging completed.");
@@ -411,9 +432,9 @@ public class ProductionTool {
             productionService.updateStatuses(userName);
             ProcessStatus processingStatus = production.getProcessingStatus();
             say(String.format("Production remote status: state=%s, progress=%s, message='%s'",
-                              processingStatus.getState(),
-                              processingStatus.getProgress(),
-                              processingStatus.getMessage()));
+                    processingStatus.getState(),
+                    processingStatus.getProgress(),
+                    processingStatus.getMessage()));
         }
         Runtime.getRuntime().removeShutdownHook(shutDownHook);
 
@@ -567,9 +588,9 @@ public class ProductionTool {
 //            return hadoop.doAs(new PrivilegedExceptionAction<FileSystem>() {
 //                @Override
 //                public FileSystem run() throws Exception {
-                    Configuration hadoopConfig = getHadoopConf(config);
-                    // this get the faulf FS, which is HDFS
-                    return FileSystem.get(hadoopConfig);
+        Configuration hadoopConfig = getHadoopConf(config);
+        // this get the faulf FS, which is HDFS
+        return FileSystem.get(hadoopConfig);
 //                }
 //            });
 //        } catch (InterruptedException e) {
@@ -655,10 +676,10 @@ public class ProductionTool {
     private void printHelp() {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.printHelp(TOOL_NAME + " [OPTION]... REQUEST",
-                                "\nThe Calvalus production tool submits a production REQUEST to a Calvalus production system. REQUEST must be a plain text XML file " +
-                                "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
-                                TOOL_OPTIONS,
-                                "", false);
+                "\nThe Calvalus production tool submits a production REQUEST to a Calvalus production system. REQUEST must be a plain text XML file " +
+                        "conforming to the WPS Execute operation request (see http://schemas.opengis.net/wps/1.0.0/wpsExecute_request.xsd). OPTION may be one or more of the following:",
+                TOOL_OPTIONS,
+                "", false);
     }
 
     public CommandLine parseCommandLine(String... args) throws ParseException {
@@ -670,139 +691,139 @@ public class ProductionTool {
     public static Options createCommandlineOptions() {
         Options options = new Options();
         options.addOption(OptionBuilder
-                                  .withLongOpt("quiet")
-                                  .withDescription("Quiet mode, only minimum console output.")
-                                  .create("q"));
+                .withLongOpt("quiet")
+                .withDescription("Quiet mode, only minimum console output.")
+                .create("q"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("errors")
-                                  .withDescription("Print full Java stack trace on exceptions.")
-                                  .create("e"));
+                .withLongOpt("errors")
+                .withDescription("Print full Java stack trace on exceptions.")
+                .create("e"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("help")
-                                  .withDescription("Prints out usage help.")
-                                  .create()); // (sub) commands don't have short options
+                .withLongOpt("help")
+                .withDescription("Prints out usage help.")
+                .create()); // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("calvalus")
-                                  .hasArg()
-                                  .withArgName("NAME")
-                                  .withDescription(
-                                          "The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
-                                  .create("C"));
+                .withLongOpt("calvalus")
+                .hasArg()
+                .withArgName("NAME")
+                .withDescription(
+                        "The name of the Calvalus software bundle used for the production. Defaults to '" + DEFAULT_CALVALUS_BUNDLE + "'.")
+                .create("C"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("snap")
-                                  .hasArg()
-                                  .withArgName("NAME")
-                                  .withDescription(
-                                          "The name of the SNAP software bundle used for the production. Defaults to '" + DEFAULT_SNAP_BUNDLE + "'.")
-                                  .create("S"));
+                .withLongOpt("snap")
+                .hasArg()
+                .withArgName("NAME")
+                .withDescription(
+                        "The name of the SNAP software bundle used for the production. Defaults to '" + DEFAULT_SNAP_BUNDLE + "'.")
+                .create("S"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("config")
-                                  .hasArg()
-                                  .withArgName("FILE")
-                                  .withDescription(
-                                          "The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
-                                  .create("c"));
+                .withLongOpt("config")
+                .hasArg()
+                .withArgName("FILE")
+                .withDescription(
+                        "The Calvalus configuration file (Java properties format). Defaults to '" + DEFAULT_CONFIG_PATH + "'.")
+                .create("c"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("auth")
-                                  .hasArg()
-                                  .withArgName("NAME")
-                                  .withDescription(
-                                          "Authentication method. One of unix, saml, debug. Defaults to '" + DEFAULT_AUTH_METHOD + "'.")
-                                  .create("a"));
+                .withLongOpt("auth")
+                .hasArg()
+                .withArgName("NAME")
+                .withDescription(
+                        "Authentication method. One of unix, saml, debug. Defaults to '" + DEFAULT_AUTH_METHOD + "'.")
+                .create("a"));
         options.addOption(OptionBuilder
-                                  .withLongOpt("copy")
-                                  .hasArgs()
-                                  .withArgName("FILES")
-                                  .withDescription(
-                                          "Copies FILES to '/calvalus/home/<user>' before any request is executed." +
-                                          "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("copy")
+                .hasArgs()
+                .withArgName("FILES")
+                .withDescription(
+                        "Copies FILES to '/calvalus/home/<user>' before any request is executed." +
+                                "Use character '" + File.pathSeparator + "' to separate paths in FILES.")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("deploy")
-                                  .hasArgs()
-                                  .withArgName("FILES-->BUNDLE")
-                                  .withDescription(
-                                          "Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
-                                          "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
-                                          "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
-                                          "Alternatively a list of files and as last argument the bundle name can be given.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("deploy")
+                .hasArgs()
+                .withArgName("FILES-->BUNDLE")
+                .withDescription(
+                        "Deploys FILES (usually JARs) to the Calvalus BUNDLE before any request is executed. " +
+                                "Use the character string '-->' to separate list of FILES from BUNDLE name. " +
+                                "Use character '" + File.pathSeparator + "' to separate multiple paths in FILES. " +
+                                "Alternatively a list of files and as last argument the bundle name can be given.")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("install")
-                                  .hasArgs()
-                                  .withArgName("BUNDLES")
-                                  .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
-                                                   "on Calvalus before any request is executed." +
-                                                   "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("install")
+                .hasArgs()
+                .withArgName("BUNDLES")
+                .withDescription("Installs list of BUNDLES (directories, ZIP-, or JAR-files) " +
+                        "on Calvalus before any request is executed." +
+                        "Use character '" + File.pathSeparator + "' to separate multiple entries in BUNDLES.")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("uninstall")
-                                  .hasArgs()
-                                  .withArgName("BUNDLES")
-                                  .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
-                                                   "from Calvalus before any request is executed." +
-                                                   "Use character ',' to separate multiple entries in BUNDLES.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("uninstall")
+                .hasArgs()
+                .withArgName("BUNDLES")
+                .withDescription("Uninstalls list of BUNDLES (directories or ZIP-files) " +
+                        "from Calvalus before any request is executed." +
+                        "Use character ',' to separate multiple entries in BUNDLES.")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("kill")
-                                  .hasArgs()
-                                  .withArgName("PID")
-                                  .withDescription("Kills the production with given identifier PID.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("kill")
+                .hasArgs()
+                .withArgName("PID")
+                .withDescription("Kills the production with given identifier PID.")
+                .create());  // (sub) commands don't have short options
 
 
         options.addOption(OptionBuilder
-                                  .withLongOpt("ingestion")
-                                  .hasArgs()
-                                  .withArgName("FILES")
-                                  .withDescription("Transfers EO data products to HDFS.")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("ingestion")
+                .hasArgs()
+                .withArgName("FILES")
+                .withDescription("Transfers EO data products to HDFS.")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("producttype")
-                                  .hasArg()
-                                  .withDescription("Product type of uploaded files, defaults to " + IngestionTool.DEFAULT_PRODUCT_TYPE+ ", not set for pathtemplate ingestion")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("producttype")
+                .hasArg()
+                .withDescription("Product type of uploaded files, defaults to " + IngestionTool.DEFAULT_PRODUCT_TYPE + ", not set for pathtemplate ingestion")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("revision")
-                                  .hasArg()
-                                  .withDescription("Revision of uploaded files, defaults to " + IngestionTool.DEFAULT_REVISION + ", not set for pathtemplate ingestion")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("revision")
+                .hasArg()
+                .withDescription("Revision of uploaded files, defaults to " + IngestionTool.DEFAULT_REVISION + ", not set for pathtemplate ingestion")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("replication")
-                                  .hasArg()
-                                  .withDescription("Replication factor of uploaded files, defaults 1")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("replication")
+                .hasArg()
+                .withDescription("Replication factor of uploaded files, defaults 1")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("blocksize")
-                                  .hasArg()
-                                  .withDescription("Block size in MB for uploaded files, defaults to file size")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("blocksize")
+                .hasArg()
+                .withDescription("Block size in MB for uploaded files, defaults to file size")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("filenamepattern")
-                                  .hasArg()
-                                  .withDescription("Regular expression matching filenames or paths below ingestion dir, defaults to 'producttype.*\\.N1'")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("filenamepattern")
+                .hasArg()
+                .withDescription("Regular expression matching filenames or paths below ingestion dir, defaults to 'producttype.*\\.N1'")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("timeelements")
-                                  .hasArg()
-                                  .withDescription("match groups composed to a date string according to timeformat, e.g. '\\1\\2\\3', not set for canonical type-and-revision ingestion")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("timeelements")
+                .hasArg()
+                .withDescription("match groups composed to a date string according to timeformat, e.g. '\\1\\2\\3', not set for canonical type-and-revision ingestion")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("timeformat")
-                                  .hasArg()
-                                  .withDescription("SimpleDateFormat pattern, e.g. yyyyMMdd, not set for canonical type-and-revision ingestion")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("timeformat")
+                .hasArg()
+                .withDescription("SimpleDateFormat pattern, e.g. yyyyMMdd, not set for canonical type-and-revision ingestion")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("pathtemplate")
-                                  .hasArg()
-                                  .withDescription("3 cases: SimpleDateFormat pattern (e.g. '/calvalus/eodata/MER_RR__1P/r03/'yyyy'/'MM'/'dd) if timeelements and timeformat are provided," +
-                                                           " path element template (e.g. '/calvalus/eodata/MER_RR__1P/r03/\\1/\\2/\\3') if timeelements and timeformat are not provided," +
-                                                           " not set for canonical type-and-revision ingestion")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("pathtemplate")
+                .hasArg()
+                .withDescription("3 cases: SimpleDateFormat pattern (e.g. '/calvalus/eodata/MER_RR__1P/r03/'yyyy'/'MM'/'dd) if timeelements and timeformat are provided," +
+                        " path element template (e.g. '/calvalus/eodata/MER_RR__1P/r03/\\1/\\2/\\3') if timeelements and timeformat are not provided," +
+                        " not set for canonical type-and-revision ingestion")
+                .create());  // (sub) commands don't have short options
         options.addOption(OptionBuilder
-                                  .withLongOpt("verify")
-                                  .withDescription("Verify existence and size to avoid double copying, defaults to false")
-                                  .create());  // (sub) commands don't have short options
+                .withLongOpt("verify")
+                .withDescription("Verify existence and size to avoid double copying, defaults to false")
+                .create());  // (sub) commands don't have short options
         return options;
     }
 

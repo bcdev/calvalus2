@@ -14,9 +14,15 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,6 +34,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -91,7 +98,27 @@ public class ProductionToolTest {
     @Ignore
     @Test
     public void testSamlDecipher() throws Exception {
+        Document document = getDecipheredDoc();
+        Node subject = document.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "Subject").item(0);
+        assertNotNull(subject);
+        NodeList subjectChildNodes = subject.getChildNodes();
+        assertEquals(2, subjectChildNodes.getLength());
+        Node nameId = subjectChildNodes.item(0);
+        assertNotNull(nameId);
+        assertEquals("cvuser1", nameId.getTextContent());
+    }
 
+    @Ignore
+    @Test
+    public void testFixRootNode() throws Exception {
+        Document document = getDecipheredDoc();
+        String result = ProductionTool.fixRootNode(getStringFromDoc(document));
+        String replace = result.replaceAll("\\r\\n", "");
+        assertTrue(replace.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+                "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\""));
+    }
+
+    private static Document getDecipheredDoc() throws Exception {
         Init.init();
 
         // fill in private Calvalus key here to successfully run the test; see \projects\ongoing\CODE\integration\authentication\keys\calvalus_priv.der
@@ -103,18 +130,11 @@ public class ProductionToolTest {
 
         PrivateKey myPrivKey = readPrivateKey(keyPath);
         Document document = parseXml(encryptedSaml);
-        document = decipher(myPrivKey, document);
-
-        Node subject = document.getElementsByTagNameNS("urn:oasis:names:tc:SAML:2.0:assertion", "Subject").item(0);
-        assertNotNull(subject);
-        NodeList subjectChildNodes = subject.getChildNodes();
-        assertEquals(2, subjectChildNodes.getLength());
-        Node nameId = subjectChildNodes.item(0);
-        assertNotNull(nameId);
-        assertEquals("cvuser1", nameId.getTextContent());
+        document = getDecipheredDoc(myPrivKey, document);
+        return document;
     }
 
-    private static Document decipher(PrivateKey myPrivKey, Document document) throws Exception {
+    private static Document getDecipheredDoc(PrivateKey myPrivKey, Document document) throws Exception {
         Element encryptedDataElement = (Element) document.getElementsByTagNameNS(EncryptionConstants.EncryptionSpecNS, EncryptionConstants._TAG_ENCRYPTEDDATA).item(0);
         XMLCipher xmlCipher = XMLCipher.getInstance();
         xmlCipher.init(XMLCipher.DECRYPT_MODE, null);
@@ -137,6 +157,22 @@ public class ProductionToolTest {
         DocumentBuilder db = dbf.newDocumentBuilder();
         InputStream inputStream = new ByteArrayInputStream(xml.getBytes());
         return db.parse(inputStream);
+    }
+
+    private String getStringFromDoc(Document doc)    {
+        try {
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+            writer.flush();
+            return writer.toString();
+        }
+        catch(TransformerException ex) {
+            throw new IllegalArgumentException("Unable to parse SAML token", ex);
+        }
     }
 
 }
