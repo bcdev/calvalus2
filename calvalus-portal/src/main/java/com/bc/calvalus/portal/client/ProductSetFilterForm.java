@@ -346,6 +346,7 @@ public class ProductSetFilterForm extends Composite {
                 temporalFilterOff.setValue(true, true);
             }
         }
+        spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();
         String regionNameValue = parameters.get("regionName");
         if (regionNameValue != null) {
@@ -409,10 +410,14 @@ public class ProductSetFilterForm extends Composite {
     private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
         Map<String, String> parameters = new HashMap<>();
         if (inputSelection != null) {
-            String startTime = inputSelection.getDateRange().getStartTime();
-            startTime = startTime.split("T")[0];
-            String endTime = inputSelection.getDateRange().getEndTime();
-            endTime = endTime.split("T")[0];
+            String startTime = null;
+            String endTime = null;
+            if (inputSelection.getDateRange() != null) {
+                startTime = inputSelection.getDateRange().getStartTime();
+                startTime = startTime.split("T")[0];
+                endTime = inputSelection.getDateRange().getEndTime();
+                endTime = endTime.split("T")[0];
+            }
             parameters.put("minDate", startTime);
             parameters.put("maxDate", endTime);
             parameters.put("regionWKT", inputSelection.getRegionGeometry());

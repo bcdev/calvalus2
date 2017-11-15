@@ -12,13 +12,19 @@
             </g:HTMLPanel>
 
 
-            <g:VerticalPanel spacing="2" styleName="{style.inputFileSetPanel}">
+            <g:VerticalPanel spacing="2" styleName="{style.inputFilePanel}">
                 <g:HorizontalPanel spacing="0">
-                    <g:ListBox ui:field="productListBox" width="45em" visibleItemCount="8" name="inputProductSet"/>
+                    <g:FlowPanel styleName="{style.inputFileListPanel}">
+                        <g:ListBox ui:field="productListBox" width="45em" visibleItemCount="8" name="inputProductSet"/>
+                        <g:FlowPanel styleName="{style.fileCount}">
+                            <g:InlineLabel styleName="{style.fileCountLabel}">File count:</g:InlineLabel>
+                            <g:InlineLabel ui:field="inputFileCount"/>
+                        </g:FlowPanel>
+                    </g:FlowPanel>
 
                     <g:VerticalPanel width="1em"/>
 
-                    <g:HTMLPanel width="37em">
+                    <g:HTMLPanel width="20em">
                         <g:Button ui:field='pasteFromCatalogueButton' text="Paste from catalogue"/>
                     </g:HTMLPanel>
                 </g:HorizontalPanel>
