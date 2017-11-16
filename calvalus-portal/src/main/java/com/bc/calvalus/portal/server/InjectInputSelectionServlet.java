@@ -13,7 +13,7 @@ import java.io.StringWriter;
 /**
  * @author hans
  */
-public class InsertSelectionServlet extends HttpServlet {
+public class InjectInputSelectionServlet extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)

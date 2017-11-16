@@ -15,19 +15,9 @@
         <param-value>config/calvalus.properties</param-value>
     </context-param>
 
-    <filter>
-        <filter-name>RedirectionFilter</filter-name>
-        <filter-class>com.bc.calvalus.portal.filter.ForwardingFilter</filter-class>
-    </filter>
-
-    <filter-mapping>
-        <filter-name>RedirectionFilter</filter-name>
-        <url-pattern>/init</url-pattern>
-    </filter-mapping>
-
     <servlet-mapping>
-        <servlet-name>insertSelectionServlet</servlet-name>
-        <url-pattern>/insert</url-pattern>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <url-pattern>/injectInputSelection</url-pattern>
     </servlet-mapping>
 
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
@@ -83,8 +73,8 @@
     </servlet>
 
     <servlet>
-        <servlet-name>insertSelectionServlet</servlet-name>
-        <servlet-class>com.bc.calvalus.portal.server.InsertSelectionServlet</servlet-class>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <servlet-class>com.bc.calvalus.portal.server.InjectInputSelectionServlet</servlet-class>
     </servlet>
 
     <servlet>
