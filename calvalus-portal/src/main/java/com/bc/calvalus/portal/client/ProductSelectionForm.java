@@ -5,9 +5,14 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.InlineLabel;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Widget;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A form that lets users select a product.
@@ -17,6 +22,7 @@ import java.util.List;
 public class ProductSelectionForm extends Composite {
 
     interface TheUiBinder extends UiBinder<Widget, ProductSelectionForm> {
+
     }
 
     private static TheUiBinder uiBinder = GWT.create(TheUiBinder.class);
@@ -32,31 +38,42 @@ public class ProductSelectionForm extends Composite {
     @UiField
     Button pasteFromCatalogueButton;
 
+    @UiField
+    Button clearSelectionButton;
+
     ProductSelectionForm(PortalContext portalContext) {
         this.portal = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
     }
 
-    private void updateListBox(DtoInputSelection inputSelection) {
+    public void setValues(Map<String, String> parameters) {
         productListBox.clear();
-        if (inputSelection != null) {
-            List<String> newProducts = inputSelection.getProductIdentifiers();
-            if (newProducts != null) {
-                int newSelectionIndex = 0;
-                for (String product : newProducts) {
-                    productListBox.addItem(product);
-                }
-                inputFileCount.setText(String.valueOf(productListBox.getItemCount()));
-                if (productListBox.getItemCount() > 0) {
-                    productListBox.setSelectedIndex(newSelectionIndex);
-                }
+        String productIdentifiersString = parameters.get("productIdentifiers");
+        if (productIdentifiersString != null && !"".equals(productIdentifiersString)) {
+            String[] productIdentifiers = productIdentifiersString.split(",");
+            for (String product : productIdentifiers) {
+                productListBox.addItem(product);
             }
+            inputFileCount.setText(String.valueOf(productListBox.getItemCount()));
         }
     }
 
+    public interface ClickHandler {
+
+        void onClearSelectionClick();
+    }
+
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
+    }
+
     void addInputSelectionChangeHandler(AsyncCallback<DtoInputSelection> callback) {
-        pasteFromCatalogueButton.addClickHandler(event ->
-                portal.getContextRetrievalService().getInputSelection(callback));
+        pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().getInputSelection(callback));
+    }
+
+    void addClearSelectionHandler(ClickHandler clickHandler) {
+        clearSelectionButton.addClickHandler(event -> clickHandler.onClearSelectionClick());
     }
 
     AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
@@ -67,12 +84,25 @@ public class ProductSelectionForm extends Composite {
 
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
-            updateListBox(inputSelection);
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            setValues(inputSelectionMap);
         }
 
         @Override
         public void onFailure(Throwable caught) {
             productListBox.clear();
         }
+    }
+
+    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+        Map<String, String> parameters = new HashMap<>();
+        if (inputSelection != null) {
+            if (inputSelection.getProductIdentifiers() != null) {
+                parameters.put("productIdentifiers", String.join(",", inputSelection.getProductIdentifiers()));
+            } else {
+                parameters.put("productIdentifiers", "");
+            }
+        }
+        return parameters;
     }
 }

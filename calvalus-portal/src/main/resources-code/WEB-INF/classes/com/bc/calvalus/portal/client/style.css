@@ -140,6 +140,15 @@
     margin: 0 10px 0 0;
 }
 
+.inputFileButtonContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.marginTop10 {
+    margin-top: 10px;
+}
+
 /******************
 * General styling *
 *******************/

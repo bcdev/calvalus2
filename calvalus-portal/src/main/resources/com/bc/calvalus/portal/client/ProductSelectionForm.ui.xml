@@ -24,9 +24,11 @@
 
                     <g:VerticalPanel width="1em"/>
 
-                    <g:HTMLPanel width="20em">
+                    <g:FlowPanel width="20em" styleName="{style.inputFileButtonContainer}">
                         <g:Button ui:field='pasteFromCatalogueButton' text="Paste from catalogue"/>
-                    </g:HTMLPanel>
+                        <g:HorizontalPanel height="1em"/>
+                        <g:Button ui:field='clearSelectionButton' text="Clear selection"/>
+                    </g:FlowPanel>
                 </g:HorizontalPanel>
             </g:VerticalPanel>
 

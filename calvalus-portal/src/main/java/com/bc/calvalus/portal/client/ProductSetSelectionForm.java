@@ -9,7 +9,12 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.Widget;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -199,6 +204,7 @@ public class ProductSetSelectionForm extends Composite {
     }
 
     public interface ChangeHandler {
+
         void onProductSetChanged(DtoProductSet productSet);
     }
 
@@ -213,11 +219,17 @@ public class ProductSetSelectionForm extends Composite {
         return parameters;
     }
 
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback(){
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
+    }
+
+    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
         return new UpdateProductListCallback();
     }
 
     private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
             Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
@@ -251,9 +263,9 @@ public class ProductSetSelectionForm extends Composite {
                 break;
             }
             if ((geoInventory != null &&
-                    productSet.getGeoInventory() != null &&
-                    geoInventory.equals(productSet.getGeoInventory()))
-                    || (inputPath != null &&
+                 productSet.getGeoInventory() != null &&
+                 geoInventory.equals(productSet.getGeoInventory()))
+                || (inputPath != null &&
                     productSet.getPath() != null &&
                     inputPath.equals(productSet.getPath()))) {
                 newSelectionIndex = i;

@@ -33,10 +33,20 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Composite;
+import com.google.gwt.user.client.ui.RadioButton;
+import com.google.gwt.user.client.ui.TextArea;
+import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * A form that lets users filter a selected product set by time and region.
@@ -102,8 +112,8 @@ public class ProductSetFilterForm extends Composite {
 
         dateList.setEnabled(false);
         dateList.setValue("2008-06-01\n" +
-                "2008-06-02\n" +
-                "2008-06-03");
+                          "2008-06-02\n" +
+                          "2008-06-03");
 
         temporalFilterOff.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
@@ -167,7 +177,7 @@ public class ProductSetFilterForm extends Composite {
         if (this.productSet != null) {
             String regionName = productSet.getRegionName();
             if (regionName == null || regionName.isEmpty() ||
-                    regionName.equalsIgnoreCase("global") || productSet.getRegionWKT() == null) {
+                regionName.equalsIgnoreCase("global") || productSet.getRegionWKT() == null) {
                 // global
                 regionMap.getMapWidget().setZoom(0);
                 regionMap.getMapWidget().panTo(LatLng.newInstance(0.0, 0.0));
@@ -190,23 +200,23 @@ public class ProductSetFilterForm extends Composite {
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
         ValueChangeHandler<Date> dateValueChangeHandler = event ->
-                changeHandler.temporalFilterChanged(getValueMap());
+                    changeHandler.temporalFilterChanged(getValueMap());
         minDate.addValueChangeHandler(dateValueChangeHandler);
         maxDate.addValueChangeHandler(dateValueChangeHandler);
         ValueChangeHandler<Boolean> booleanValueChangeHandler = booleanValueChangeEvent ->
-                changeHandler.temporalFilterChanged(getValueMap());
+                    changeHandler.temporalFilterChanged(getValueMap());
         temporalFilterOff.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateRange.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateList.addValueChangeHandler(booleanValueChangeHandler);
         dateList.addValueChangeHandler(stringValueChangeEvent ->
-                changeHandler.temporalFilterChanged(getValueMap()));
+                                                   changeHandler.temporalFilterChanged(getValueMap()));
 
         ValueChangeHandler<Boolean> spatialFilterChangeHandler = booleanValueChangeEvent ->
-                changeHandler.spatialFilterChanged(getValueMap());
+                    changeHandler.spatialFilterChanged(getValueMap());
         spatialFilterOff.addValueChangeHandler(spatialFilterChangeHandler);
         spatialFilterByRegion.addValueChangeHandler(spatialFilterChangeHandler);
         regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(selectionChangeEvent ->
-                changeHandler.spatialFilterChanged(getValueMap()));
+                                                                                     changeHandler.spatialFilterChanged(getValueMap()));
     }
 
     // note: factory is found solely for return type, method name is insignificant
@@ -245,7 +255,7 @@ public class ProductSetFilterForm extends Composite {
                     boolean startDateValid = (minDate.compareTo(startDate) <= 0);
                     if (!startDateValid) {
                         throw new ValidationException(this.minDate,
-                                "Start date must be equal to or after the product set's start date.");
+                                                      "Start date must be equal to or after the product set's start date.");
                     }
                 }
                 if (productSet.getMaxDate() != null) {
@@ -253,7 +263,7 @@ public class ProductSetFilterForm extends Composite {
                     boolean endDateValid = (endDate.compareTo(maxDate) <= 0);
                     if (!endDateValid) {
                         throw new ValidationException(this.maxDate,
-                                "End date must be equal to or before the product set's end date.");
+                                                      "End date must be equal to or before the product set's end date.");
                     }
                 }
             }
@@ -275,7 +285,7 @@ public class ProductSetFilterForm extends Composite {
         if (productSet.getPath().contains("${region}")) {
             if (!spatialFilterByRegion.getValue()) {
                 throw new ValidationException(spatialFilterByRegion,
-                        "You have to select a region, because the file set's path requires it.");
+                                              "You have to select a region, because the file set's path requires it.");
             }
         }
     }
@@ -390,11 +400,17 @@ public class ProductSetFilterForm extends Composite {
         void spatialFilterChanged(Map<String, String> data);
     }
 
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
+    }
+
     AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
         return new UpdateProductListCallback();
     }
 
     private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
+
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
             Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
