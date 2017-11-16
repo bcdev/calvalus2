@@ -63,6 +63,33 @@ public class DummyFSDataInputStream extends FSDataInputStream {
         this.in = in;
     }
 
+    /**
+     *Verbatim copy from: java.io.InputStream#skip(long) 
+     * to prevent FileInputstream from skipping wrongly
+     */
+    @Override
+    public long skip(long n) throws IOException {
+
+        long remaining = n;
+        int nr;
+
+        if (n <= 0) {
+            return 0;
+        }
+
+        int size = (int)Math.min(8192, remaining);
+        byte[] skipBuffer = new byte[size];
+        while (remaining > 0) {
+            nr = read(skipBuffer, 0, (int)Math.min(size, remaining));
+            if (nr < 0) {
+                break;
+            }
+            remaining -= nr;
+        }
+
+        return n - remaining;
+    }
+
     @Override
     public void seek(long desired) throws IOException {
         throw new UnsupportedOperationException();

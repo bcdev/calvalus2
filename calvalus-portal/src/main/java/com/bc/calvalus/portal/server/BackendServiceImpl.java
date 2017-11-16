@@ -66,18 +66,29 @@ import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import org.esa.snap.core.datamodel.GeoPos;
+import org.jasig.cas.client.validation.AssertionImpl;
 import org.jdom.JDOMException;
+import org.jdom2.Element;
+import org.jdom2.input.DOMBuilder;
+import org.jdom2.output.DOMOutputter;
+import org.w3c.dom.Document;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.security.Principal;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -298,31 +309,31 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             DtoProcessorDescriptor[] dtoDescriptors = new DtoProcessorDescriptor[processorDescriptors.length];
             for (int i = 0; i < processorDescriptors.length; i++) {
                 dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
-                                            bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(),
-                                            bundleDescriptor.getOwner(),
-                                            processorDescriptors[i]);
+                        bundleDescriptor.getBundleVersion(),
+                        bundleDescriptor.getBundleLocation(),
+                        bundleDescriptor.getOwner(),
+                        processorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
             return new DtoProcessorDescriptor[]{
                     new DtoProcessorDescriptor(null,
-                                               BundleFilter.DUMMY_PROCESSOR_NAME,
-                                               "",
-                                               "",
-                                               bundleDescriptor.getBundleName(),
-                                               bundleDescriptor.getBundleVersion(),
-                                               bundleDescriptor.getBundleLocation(),
-                                               "",
-                                               null,
-                                               null,
-                                               DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null,
-                                               null)
+                            BundleFilter.DUMMY_PROCESSOR_NAME,
+                            "",
+                            "",
+                            bundleDescriptor.getBundleName(),
+                            bundleDescriptor.getBundleVersion(),
+                            bundleDescriptor.getBundleLocation(),
+                            "",
+                            null,
+                            null,
+                            DtoProcessorDescriptor.DtoProcessorCategory.LEVEL2,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null)
             };
         }
     }
@@ -333,10 +344,10 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             DtoAggregatorDescriptor[] dtoDescriptors = new DtoAggregatorDescriptor[aggregatorDescriptors.length];
             for (int i = 0; i < aggregatorDescriptors.length; i++) {
                 dtoDescriptors[i] = convert(bundleDescriptor.getBundleName(),
-                                            bundleDescriptor.getBundleVersion(),
-                                            bundleDescriptor.getBundleLocation(),
-                                            bundleDescriptor.getOwner(),
-                                            aggregatorDescriptors[i]);
+                        bundleDescriptor.getBundleVersion(),
+                        bundleDescriptor.getBundleLocation(),
+                        bundleDescriptor.getOwner(),
+                        aggregatorDescriptors[i]);
             }
             return dtoDescriptors;
         } else {
@@ -567,16 +578,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 }
             }
             String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
-                                             recordSource.getTimeAndLocationColumnDescription(),
-                                             numRecords);
+                    recordSource.getTimeAndLocationColumnDescription(),
+                    numRecords);
             if (numRecords > 0) {
                 reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
-                                           latMin, latMax, lonMin, lonMax);
+                        latMin, latMax, lonMin, lonMax);
             }
             if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
                 reportMsg += String.format("Time range: [%s, %s]\n",
-                                           CCSDS_FORMAT.format(new Date(timeMin)),
-                                           CCSDS_FORMAT.format(new Date(timeMax)));
+                        CCSDS_FORMAT.format(new Date(timeMin)),
+                        CCSDS_FORMAT.format(new Date(timeMax)));
             } else {
                 reportMsg += "No time information given.\n";
             }
@@ -627,46 +638,46 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private DtoProductSet convert(ProductSet productSet) {
         return new DtoProductSet(productSet.getProductType(),
-                                 productSet.getName(),
-                                 productSet.getPath(),
-                                 productSet.getMinDate(),
-                                 productSet.getMaxDate(),
-                                 productSet.getRegionName(),
-                                 productSet.getRegionWKT(),
-                                 productSet.getBandNames(),
-                                 productSet.getGeoInventory());
+                productSet.getName(),
+                productSet.getPath(),
+                productSet.getMinDate(),
+                productSet.getMaxDate(),
+                productSet.getRegionName(),
+                productSet.getRegionWKT(),
+                productSet.getBandNames(),
+                productSet.getGeoInventory());
     }
 
     private DtoProcessorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                            ProcessorDescriptor processorDescriptor) {
         return new DtoProcessorDescriptor(processorDescriptor.getExecutableName(),
-                                          processorDescriptor.getProcessorName(),
-                                          processorDescriptor.getProcessorVersion(),
-                                          processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
-                                          bundleName,
-                                          bundleVersion,
-                                          bundlePath,
-                                          owner,
-                                          processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
-                                          convert(processorDescriptor.getInputProductTypes()),
-                                          convert(processorDescriptor.getProcessorCategory()),
-                                          processorDescriptor.getOutputProductType(),
-                                          convert(processorDescriptor.getOutputFormats()),
-                                          processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
-                                          processorDescriptor.getMaskExpression(),
-                                          convert(processorDescriptor.getOutputVariables()),
-                                          convert(processorDescriptor.getParameterDescriptors()));
+                processorDescriptor.getProcessorName(),
+                processorDescriptor.getProcessorVersion(),
+                processorDescriptor.getDefaultParameters() != null ? processorDescriptor.getDefaultParameters().trim() : "",
+                bundleName,
+                bundleVersion,
+                bundlePath,
+                owner,
+                processorDescriptor.getDescriptionHtml() != null ? processorDescriptor.getDescriptionHtml() : "",
+                convert(processorDescriptor.getInputProductTypes()),
+                convert(processorDescriptor.getProcessorCategory()),
+                processorDescriptor.getOutputProductType(),
+                convert(processorDescriptor.getOutputFormats()),
+                processorDescriptor.getFormatting() != null ? processorDescriptor.getFormatting().toString() : "OPTIONAL",
+                processorDescriptor.getMaskExpression(),
+                convert(processorDescriptor.getOutputVariables()),
+                convert(processorDescriptor.getParameterDescriptors()));
     }
 
     private DtoAggregatorDescriptor convert(String bundleName, String bundleVersion, String bundlePath, String owner,
                                             AggregatorDescriptor aggregatorDescriptor) {
         return new DtoAggregatorDescriptor(aggregatorDescriptor.getAggregator(),
-                                           bundleName,
-                                           bundleVersion,
-                                           bundlePath,
-                                           owner,
-                                           aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
-                                           convert(aggregatorDescriptor.getParameterDescriptors()));
+                bundleName,
+                bundleVersion,
+                bundlePath,
+                owner,
+                aggregatorDescriptor.getDescriptionHtml() != null ? aggregatorDescriptor.getDescriptionHtml() : "",
+                convert(aggregatorDescriptor.getParameterDescriptors()));
     }
 
     private DtoProcessorDescriptor.DtoProcessorCategory convert(ProcessorDescriptor.ProcessorCategory processorCategory) {
@@ -685,11 +696,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         for (int i = 0; i < parameterDescriptors.length; i++) {
             ProcessorDescriptor.ParameterDescriptor parameterDescriptor = parameterDescriptors[i];
             dtoParameterDescriptors[i] = new DtoParameterDescriptor(parameterDescriptor.getName(),
-                                                                    parameterDescriptor.getType(),
-                                                                    parameterDescriptor.getDescription(),
-                                                                    parameterDescriptor.getDefaultValue(),
-                                                                    convert(parameterDescriptor.getValueSet()),
-                                                                    convert(parameterDescriptor.getValueRange()));
+                    parameterDescriptor.getType(),
+                    parameterDescriptor.getDescription(),
+                    parameterDescriptor.getDefaultValue(),
+                    convert(parameterDescriptor.getValueSet()),
+                    convert(parameterDescriptor.getValueRange()));
         }
         return dtoParameterDescriptors;
     }
@@ -716,8 +727,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         for (int i = 0; i < outputVariables.length; i++) {
             ProcessorDescriptor.Variable outputVariable = outputVariables[i];
             processorVariables[i] = new DtoProcessorVariable(outputVariable.getName(),
-                                                             outputVariable.getDefaultAggregator(),
-                                                             outputVariable.getDefaultWeightCoeff());
+                    outputVariable.getDefaultAggregator(),
+                    outputVariable.getDefaultWeightCoeff());
         }
         return processorVariables;
     }
@@ -735,21 +746,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             additionalStagingPaths = null;
         }
         return new DtoProduction(production.getId(),
-                                 production.getName(),
-                                 productionRequest.getUserName(),
-                                 productionRequest.getProductionType(),
-                                 production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
-                                 backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
-                                 convert(additionalStagingPaths),
-                                 production.isAutoStaging(),
-                                 convert(production.getProcessingStatus(), production.getWorkflow()),
-                                 convert(production.getStagingStatus()));
+                production.getName(),
+                productionRequest.getUserName(),
+                productionRequest.getProductionType(),
+                production.getWorkflow() instanceof HadoopWorkflowItem ? ((HadoopWorkflowItem) production.getWorkflow()).getOutputDir() : null,
+                backendConfig.getStagingPath() + "/" + production.getStagingPath() + "/",
+                convert(additionalStagingPaths),
+                production.isAutoStaging(),
+                convert(production.getProcessingStatus(), production.getWorkflow()),
+                convert(production.getStagingStatus()));
     }
 
     private DtoProductionRequest convert(String requestId, ProductionRequest productionRequest) {
         return new DtoProductionRequest(requestId,
-                                        productionRequest.getProductionType(),
-                                        productionRequest.getParameters());
+                productionRequest.getProductionType(),
+                productionRequest.getParameters());
     }
 
     private DtoProcessStatus convert(ProcessStatus status, WorkflowItem workflow) {
@@ -763,15 +774,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             processingSeconds = (int) ((stopTime.getTime() - startTime.getTime()) / 1000);
         }
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                    status.getMessage(),
-                                    status.getProgress(),
-                                    processingSeconds);
+                status.getMessage(),
+                status.getProgress(),
+                processingSeconds);
     }
 
     private DtoProcessStatus convert(ProcessStatus status) {
         return new DtoProcessStatus(DtoProcessState.valueOf(status.getState().name()),
-                                    status.getMessage(),
-                                    status.getProgress());
+                status.getMessage(),
+                status.getProgress());
     }
 
     private DtoProductionResponse convert(ProductionResponse productionResponse) {
@@ -780,8 +791,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     private ProductionRequest convert(DtoProductionRequest gwtProductionRequest) {
         return new ProductionRequest(gwtProductionRequest.getProductionType(),
-                                     getUserName(),
-                                     gwtProductionRequest.getProductionParameters());
+                getUserName(),
+                gwtProductionRequest.getProductionParameters());
     }
 
     private BackendServiceException convert(Exception e) {
@@ -821,8 +832,8 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     backendConfig.getProductionServiceFactoryClassName());
             ServiceContainerFactory serviceContainerFactory = (ServiceContainerFactory) productionServiceFactoryClass.newInstance();
             serviceContainer = serviceContainerFactory.create(backendConfig.getConfigMap(),
-                                                              backendConfig.getLocalAppDataDir(),
-                                                              backendConfig.getLocalStagingDir());
+                    backendConfig.getLocalAppDataDir(),
+                    backendConfig.getLocalStagingDir());
             // Make the production servlet accessible by other servlets:
             getServletContext().setAttribute("serviceContainer", serviceContainer);
         } catch (Exception e) {
@@ -882,8 +893,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         } else if ("saml".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
             try {
                 HttpSession session = getThreadLocalRequest().getSession();
-//                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
-                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), ""));
+                AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
+                samlToken = fixRootNode(samlToken);
+                String saml = getStringFromDoc(samlToken);
+                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), saml));
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -906,6 +920,17 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         backendConfig.getConfigMap().put("roles", accu.toString());
         //LOG.info("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
+    }
+
+    static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {
+        DOMBuilder builder = new DOMBuilder();
+        org.jdom2.Document jDomDoc = builder.build(samlToken);
+        Element assertionElement = jDomDoc.getRootElement().getChildren().get(0);
+        jDomDoc.detachRootElement();
+        assertionElement.detach();
+        jDomDoc.setRootElement(assertionElement);
+        DOMOutputter outputter = new DOMOutputter();
+        return outputter.output(jDomDoc);
     }
 
     @Override
@@ -943,4 +968,20 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             throw convert(e);
         }
     }
+
+    private String getStringFromDoc(Document doc) {
+        try {
+            DOMSource domSource = new DOMSource(doc);
+            StringWriter writer = new StringWriter();
+            StreamResult result = new StreamResult(writer);
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.transform(domSource, result);
+            writer.flush();
+            return writer.toString();
+        } catch (TransformerException ex) {
+            throw new IllegalArgumentException("Unable to parse SAML token", ex);
+        }
+    }
+
 }
