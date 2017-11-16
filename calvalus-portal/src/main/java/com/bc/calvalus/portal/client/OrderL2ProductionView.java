@@ -174,23 +174,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         outputParametersForm.setValues(parameters);
     }
 
-    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
-            productSelectionForm.setValues(inputSelectionMap);
-            productSetSelectionForm.setValues(inputSelectionMap);
-            productSetFilterForm.setValues(inputSelectionMap);
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            Dialog.error("Error in retrieving input selection", caught.getMessage());
-        }
-    }
-
-    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+    static Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
         Map<String, String> parameters = new HashMap<>();
         if (inputSelection != null) {
             if (inputSelection.getProductIdentifiers() != null) {
@@ -215,6 +199,22 @@ public class OrderL2ProductionView extends OrderProductionView {
             parameters.put("collectionName", inputSelection.getCollectionName());
         }
         return parameters;
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            productSelectionForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
     }
 
     private void handleProcessorChanged() {

@@ -16,8 +16,10 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -35,6 +37,7 @@ public class OrderMAProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductSelectionForm productSelectionForm;
     private L2ConfigForm l2ConfigForm;
     private MAConfigForm maConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -58,6 +61,21 @@ public class OrderMAProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
+        productSelectionForm = new ProductSelectionForm(getPortal());
+        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.ClickHandler() {
+            @Override
+            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                return new InputSelectionCallback();
+            }
+
+            @Override
+            public void onClearSelectionClick() {
+                productSelectionForm.removeSelections();
+                productSetSelectionForm.removeSelections();
+                productSetFilterForm.removeSelections();
+            }
+        });
+
         maConfigForm = new MAConfigForm(portalContext);
 
         outputParametersForm = new OutputParametersForm(portalContext);
@@ -70,6 +88,7 @@ public class OrderMAProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        panel.add(productSelectionForm);
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
         panel.add(outputParametersForm);
@@ -150,5 +169,21 @@ public class OrderMAProductionView extends OrderProductionView {
         l2ConfigForm.setValues(parameters);
         maConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = OrderL2ProductionView.parseParametersFromContext(inputSelection);
+            productSelectionForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
     }
 }
