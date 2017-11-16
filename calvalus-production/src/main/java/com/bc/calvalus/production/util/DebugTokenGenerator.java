@@ -4,6 +4,7 @@ import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.mapreduce.Job;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.opensaml.saml2.core.Assertion;
 import org.opensaml.xml.ConfigurationException;
 import org.opensaml.xml.io.MarshallingException;
@@ -111,7 +112,7 @@ public class DebugTokenGenerator extends SamlUtil implements HadoopJobHook {
         attributes.put("uid", userName);
         attributes.put("groups", "calvalus");
         int timeoutSeconds = 60 * 60 * 24;
-        Assertion assertion = build(CALVALUS_ISSUER, "user uid", attributes, new DateTime("2017-06-23T10:27:05.354Z"), timeoutSeconds);
+        Assertion assertion = build(CALVALUS_ISSUER, userName, attributes, DateTime.now(DateTimeZone.UTC), timeoutSeconds);
         assertion = sign(assertion, credential);
         return toString(assertion);
     }
