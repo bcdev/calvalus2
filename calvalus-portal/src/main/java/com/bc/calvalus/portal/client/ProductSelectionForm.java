@@ -58,7 +58,11 @@ public class ProductSelectionForm extends Composite {
         }
     }
 
-    public interface ClickHandler {
+    // do not remove the static modifier even though suggested by IntelliJ
+    // https://stackoverflow.com/a/21930980/2676893
+    public static interface ClickHandler {
+
+        AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback();
 
         void onClearSelectionClick();
     }
@@ -68,41 +72,9 @@ public class ProductSelectionForm extends Composite {
         setValues(emptyInputSelectionMap);
     }
 
-    void addInputSelectionChangeHandler(AsyncCallback<DtoInputSelection> callback) {
-        pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().getInputSelection(callback));
-    }
-
-    void addClearSelectionHandler(ClickHandler clickHandler) {
+    void addInputSelectionHandler(ClickHandler clickHandler) {
+        pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().
+                    getInputSelection(clickHandler.getInputSelectionChangedCallback()));
         clearSelectionButton.addClickHandler(event -> clickHandler.onClearSelectionClick());
-    }
-
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
-        return new UpdateProductListCallback();
-    }
-
-    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
-            setValues(inputSelectionMap);
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            productListBox.clear();
-        }
-    }
-
-    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
-        Map<String, String> parameters = new HashMap<>();
-        if (inputSelection != null) {
-            if (inputSelection.getProductIdentifiers() != null) {
-                parameters.put("productIdentifiers", String.join(",", inputSelection.getProductIdentifiers()));
-            } else {
-                parameters.put("productIdentifiers", "");
-            }
-        }
-        return parameters;
     }
 }

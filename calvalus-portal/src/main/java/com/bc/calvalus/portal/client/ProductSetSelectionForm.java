@@ -1,6 +1,5 @@
 package com.bc.calvalus.portal.client;
 
-import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Document;
@@ -203,8 +202,9 @@ public class ProductSetSelectionForm extends Composite {
         }
     }
 
-    public interface ChangeHandler {
-
+    // do not remove the static modifier even though suggested by IntelliJ
+    // https://stackoverflow.com/a/21930980/2676893
+    public static interface ChangeHandler {
         void onProductSetChanged(DtoProductSet productSet);
     }
 
@@ -222,33 +222,6 @@ public class ProductSetSelectionForm extends Composite {
     void removeSelections() {
         Map<String, String> emptyInputSelectionMap = new HashMap<>();
         setValues(emptyInputSelectionMap);
-    }
-
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
-        return new UpdateProductListCallback();
-    }
-
-    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
-            setValues(inputSelectionMap);
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            GWT.log("unable to access inputSelection", caught);
-        }
-    }
-
-    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
-        Map<String, String> parameters = new HashMap<>();
-        if (inputSelection != null) {
-            parameters.put("geoInventory", inputSelection.getCollectionName());
-            parameters.put("collectionName", inputSelection.getCollectionName());
-        }
-        return parameters;
     }
 
     public void setValues(Map<String, String> parameters) {

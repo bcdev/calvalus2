@@ -20,7 +20,6 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionMap;
 import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
-import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -32,7 +31,6 @@ import com.google.gwt.maps.client.overlays.Polygon;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiFactory;
 import com.google.gwt.uibinder.client.UiField;
-import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.RadioButton;
@@ -403,42 +401,6 @@ public class ProductSetFilterForm extends Composite {
     void removeSelections() {
         Map<String, String> emptyInputSelectionMap = new HashMap<>();
         setValues(emptyInputSelectionMap);
-    }
-
-    AsyncCallback<DtoInputSelection> getInputSelectionCallback() {
-        return new UpdateProductListCallback();
-    }
-
-    private class UpdateProductListCallback implements AsyncCallback<DtoInputSelection> {
-
-        @Override
-        public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
-            setValues(inputSelectionMap);
-        }
-
-        @Override
-        public void onFailure(Throwable caught) {
-            GWT.log("unable to access inputSelection", caught);
-        }
-    }
-
-    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
-        Map<String, String> parameters = new HashMap<>();
-        if (inputSelection != null) {
-            String startTime = null;
-            String endTime = null;
-            if (inputSelection.getDateRange() != null) {
-                startTime = inputSelection.getDateRange().getStartTime();
-                startTime = startTime.split("T")[0];
-                endTime = inputSelection.getDateRange().getEndTime();
-                endTime = endTime.split("T")[0];
-            }
-            parameters.put("minDate", startTime);
-            parameters.put("maxDate", endTime);
-            parameters.put("regionWKT", inputSelection.getRegionGeometry());
-        }
-        return parameters;
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {

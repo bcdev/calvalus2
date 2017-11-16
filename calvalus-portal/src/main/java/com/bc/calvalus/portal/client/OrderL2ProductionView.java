@@ -16,8 +16,10 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -60,13 +62,18 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         productSelectionForm = new ProductSelectionForm(getPortal());
-        productSelectionForm.addInputSelectionChangeHandler(productSelectionForm.getInputSelectionCallback());
-        productSelectionForm.addInputSelectionChangeHandler(productSetSelectionForm.getInputSelectionCallback());
-        productSelectionForm.addInputSelectionChangeHandler(productSetFilterForm.getInputSelectionCallback());
-        productSelectionForm.addClearSelectionHandler(() -> {
-            productSelectionForm.removeSelections();
-            productSetSelectionForm.removeSelections();
-            productSetFilterForm.removeSelections();
+        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.ClickHandler() {
+            @Override
+            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                return new InputSelectionCallback();
+            }
+
+            @Override
+            public void onClearSelectionClick() {
+                productSelectionForm.removeSelections();
+                productSetSelectionForm.removeSelections();
+                productSetFilterForm.removeSelections();
+            }
         });
 
         outputParametersForm = new OutputParametersForm(portalContext);
@@ -89,28 +96,6 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
-    }
-
-    private void handleProcessorChanged() {
-        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
-        if (processorDescriptor != null) {
-            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
-            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
-            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
-            String formattingType = processorDescriptor.getFormattingType();
-            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
-            if (!implicitlyFormatted) {
-                add("NetCDF4", outputFormats);
-                add("BigGeoTiff", outputFormats);
-            }
-            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
-        }
-    }
-
-    private static void add(String format, List<String> outputFormats) {
-        if (!outputFormats.contains(format)) {
-            outputFormats.add(format);
-        }
     }
 
     @Override
@@ -187,5 +172,70 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = parseParametersFromContext(inputSelection);
+            productSelectionForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
+    }
+
+    private Map<String, String> parseParametersFromContext(DtoInputSelection inputSelection) {
+        Map<String, String> parameters = new HashMap<>();
+        if (inputSelection != null) {
+            if (inputSelection.getProductIdentifiers() != null) {
+                parameters.put("productIdentifiers", String.join(",", inputSelection.getProductIdentifiers()));
+            } else {
+                parameters.put("productIdentifiers", "");
+            }
+
+            String startTime = null;
+            String endTime = null;
+            if (inputSelection.getDateRange() != null) {
+                startTime = inputSelection.getDateRange().getStartTime();
+                startTime = startTime.split("T")[0];
+                endTime = inputSelection.getDateRange().getEndTime();
+                endTime = endTime.split("T")[0];
+            }
+            parameters.put("minDate", startTime);
+            parameters.put("maxDate", endTime);
+            parameters.put("regionWKT", inputSelection.getRegionGeometry());
+
+            parameters.put("geoInventory", inputSelection.getCollectionName());
+            parameters.put("collectionName", inputSelection.getCollectionName());
+        }
+        return parameters;
+    }
+
+    private void handleProcessorChanged() {
+        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
+        if (processorDescriptor != null) {
+            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
+            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
+            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
+            String formattingType = processorDescriptor.getFormattingType();
+            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
+            if (!implicitlyFormatted) {
+                add("NetCDF4", outputFormats);
+                add("BigGeoTiff", outputFormats);
+            }
+            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
+        }
+    }
+
+    private static void add(String format, List<String> outputFormats) {
+        if (!outputFormats.contains(format)) {
+            outputFormats.add(format);
+        }
     }
 }
