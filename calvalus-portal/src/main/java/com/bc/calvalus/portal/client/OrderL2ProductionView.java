@@ -134,6 +134,16 @@ public class OrderL2ProductionView extends OrderProductionView {
             productSetFilterForm.validateForm();
             l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
+
+            String collectionNameSelected = productSetSelectionForm.getValueMap().get("collectionName");
+            String collectionNameFromCatalogueSearch = productSelectionForm.getValueMap().get("collectionName");
+            if (collectionNameFromCatalogueSearch != null &&
+                !collectionNameSelected.equals(collectionNameFromCatalogueSearch)) {
+                throw new ValidationException(productSetSelectionForm,
+                                              "The selected input files are not consistent with the selected input file set. " +
+                                              "To change the input file set, please first clear the input files selection");
+            }
+
             if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numDaysValue = Integer.parseInt(productSetFilterForm.numDays.getValue());
@@ -170,6 +180,7 @@ public class OrderL2ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        productSelectionForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
     }

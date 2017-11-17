@@ -137,6 +137,16 @@ public class OrderMAProductionView extends OrderProductionView {
             productSetFilterForm.validateForm();
             l2ConfigForm.validateForm();
             maConfigForm.validateForm();
+
+            String collectionNameSelected = productSetSelectionForm.getValueMap().get("collectionName");
+            String collectionNameFromCatalogueSearch = productSelectionForm.getValueMap().get("collectionName");
+            if (collectionNameFromCatalogueSearch != null &&
+                !collectionNameSelected.equals(collectionNameFromCatalogueSearch)) {
+                throw new ValidationException(productSetSelectionForm,
+                                              "The selected input files are not consistent with the selected input file set. " +
+                                              "To change the input file set, please first clear the input files selection");
+            }
+
             return true;
         } catch (ValidationException e) {
             e.handle();
@@ -166,6 +176,7 @@ public class OrderMAProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        productSelectionForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         maConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);

@@ -91,6 +91,81 @@ public class ProductSetSelectionForm extends Composite {
         HelpSystem.addClickHandler(showProductSetSelectionHelp, "productSetSelection");
     }
 
+    public void addChangeHandler(final ChangeHandler changeHandler) {
+        productSetListBox.addChangeHandler(changeEvent -> changeHandler.onProductSetChanged(getSelectedProductSet()));
+    }
+
+    public DtoProductSet getSelectedProductSet() {
+        int selectedIndex = productSetListBox.getSelectedIndex();
+        if (selectedIndex >= 0) {
+            return currentProductSets[selectedIndex];
+        } else {
+            return null;
+        }
+    }
+
+    public void validateForm() throws ValidationException {
+        DtoProductSet productSet = getSelectedProductSet();
+        boolean productSetValid = productSet != null;
+        if (!productSetValid) {
+            throw new ValidationException(productSetListBox, "An input product set must be selected.");
+        }
+    }
+
+    // do not remove the static modifier even though suggested by IntelliJ
+    // https://stackoverflow.com/a/21930980/2676893
+    public static interface ChangeHandler {
+
+        void onProductSetChanged(DtoProductSet productSet);
+
+    }
+
+    public Map<String, String> getValueMap() {
+        Map<String, String> parameters = new HashMap<>();
+        DtoProductSet selectedProductSet = getSelectedProductSet();
+        if (selectedProductSet.getGeoInventory() != null) {
+            parameters.put("geoInventory", selectedProductSet.getGeoInventory());
+        } else {
+            parameters.put("inputPath", selectedProductSet.getPath());
+        }
+        parameters.put("collectionName", selectedProductSet.getName());
+        return parameters;
+    }
+
+    public void setValues(Map<String, String> parameters) {
+        String collectionName = parameters.get("collectionName");
+        String geoInventory = parameters.get("geoInventory");
+        String inputPath = parameters.get("inputPath");
+        int newSelectionIndex = -2;
+        for (int i = 0; i < currentProductSets.length; i++) {
+            DtoProductSet productSet = currentProductSets[i];
+            if (collectionName != null && productSet.getName().equalsIgnoreCase(collectionName)) {
+                newSelectionIndex = i;
+                break;
+            }
+            if ((geoInventory != null &&
+                 productSet.getGeoInventory() != null &&
+                 geoInventory.equals(productSet.getGeoInventory()))
+                || (inputPath != null &&
+                    productSet.getPath() != null &&
+                    inputPath.equals(productSet.getPath()))) {
+                newSelectionIndex = i;
+                break;
+            }
+        }
+        // TODO handle error
+
+        if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
+            productSetListBox.setSelectedIndex(newSelectionIndex);
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
+        }
+    }
+
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
+    }
+
     private void updateProductSetsListBox() {
         String filter = getFilter();
         if (filter.isEmpty()) {
@@ -178,78 +253,6 @@ public class ProductSetSelectionForm extends Composite {
             productSetEndDate.setText("");
             productSetRegionName.setText("");
             productSetGeoInventory.setText("");
-        }
-    }
-
-    public void addChangeHandler(final ChangeHandler changeHandler) {
-        productSetListBox.addChangeHandler(changeEvent -> changeHandler.onProductSetChanged(getSelectedProductSet()));
-    }
-
-    public DtoProductSet getSelectedProductSet() {
-        int selectedIndex = productSetListBox.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            return currentProductSets[selectedIndex];
-        } else {
-            return null;
-        }
-    }
-
-    public void validateForm() throws ValidationException {
-        DtoProductSet productSet = getSelectedProductSet();
-        boolean productSetValid = productSet != null;
-        if (!productSetValid) {
-            throw new ValidationException(productSetListBox, "An input product set must be selected.");
-        }
-    }
-
-    // do not remove the static modifier even though suggested by IntelliJ
-    // https://stackoverflow.com/a/21930980/2676893
-    public static interface ChangeHandler {
-        void onProductSetChanged(DtoProductSet productSet);
-    }
-
-    public Map<String, String> getValueMap() {
-        Map<String, String> parameters = new HashMap<>();
-        DtoProductSet selectedProductSet = getSelectedProductSet();
-        if (selectedProductSet.getGeoInventory() != null) {
-            parameters.put("geoInventory", selectedProductSet.getGeoInventory());
-        } else {
-            parameters.put("inputPath", selectedProductSet.getPath());
-        }
-        return parameters;
-    }
-
-    void removeSelections() {
-        Map<String, String> emptyInputSelectionMap = new HashMap<>();
-        setValues(emptyInputSelectionMap);
-    }
-
-    public void setValues(Map<String, String> parameters) {
-        String collectionName = parameters.get("collectionName");
-        String geoInventory = parameters.get("geoInventory");
-        String inputPath = parameters.get("inputPath");
-        int newSelectionIndex = -2;
-        for (int i = 0; i < currentProductSets.length; i++) {
-            DtoProductSet productSet = currentProductSets[i];
-            if (collectionName != null && productSet.getName().equalsIgnoreCase(collectionName)) {
-                newSelectionIndex = i;
-                break;
-            }
-            if ((geoInventory != null &&
-                 productSet.getGeoInventory() != null &&
-                 geoInventory.equals(productSet.getGeoInventory()))
-                || (inputPath != null &&
-                    productSet.getPath() != null &&
-                    inputPath.equals(productSet.getPath()))) {
-                newSelectionIndex = i;
-                break;
-            }
-        }
-        // TODO handle error
-
-        if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
-            productSetListBox.setSelectedIndex(newSelectionIndex);
-            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
         }
     }
 
