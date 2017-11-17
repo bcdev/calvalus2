@@ -28,7 +28,9 @@
 <div id="container" style="height: 100vh">
     <div class="header-panel">
         <div class="header-logo">
-            <img src="images/code-logo.png" alt="CODE logo"/>
+            <a href="https://code-de.org/">
+                <img src="images/code-logo.png" alt="CODE logo"/>
+            </a>
         </div>
         <div class="header-title">
             Processing Service

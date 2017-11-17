@@ -8,7 +8,7 @@
 
 <%
     session.invalidate();
-    response.sendRedirect("https://tsedos.eoc.dlr.de/cas-codede/logout");
+    response.sendRedirect("https://tsedos.eoc.dlr.de/cas-codede/logout?service=https://processing.code-de.org/");
 %>
 
 </body>
