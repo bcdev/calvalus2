@@ -30,6 +30,8 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -67,12 +69,30 @@ public class PatternBasedInputFormat extends InputFormat {
         String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
+        Set<String> productIdentifiers = new HashSet<>(conf.getStringCollection(
+                    JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS));
 
         List<InputSplit> splits;
         if (geoInventory != null && inputPathPatterns == null) {
             Set<String> paths = GeodbInputFormat.queryGeoInventory(true, conf);
+            LOG.info(String.format("%d files returned from geo-inventory '%s'.", paths.size(), geoInventory));
+            if (!productIdentifiers.isEmpty()) {
+                Iterator<String> pathIterator = paths.iterator();
+                while (pathIterator.hasNext()) {
+                    String path = pathIterator.next();
+                    String filename = path.substring(path.lastIndexOf("/") + 1);
+                    if (!productIdentifiers.contains(filename)) {
+                        pathIterator.remove();
+                    }
+                }
+                LOG.info(String.format("filtered using %d productIdentifiers: %d files remaining'.",
+                                       productIdentifiers.size(), paths.size()));
+                for (String path : paths) {
+                    LOG.info(path);
+                }
+            }
             splits = GeodbInputFormat.createInputSplits(conf, paths);
-            LOG.info(String.format("%d files returned from geo-inventory '%s').", paths.size(), geoInventory));
+            LOG.info(String.format("%d splits created.", splits.size()));
         } else if (geoInventory == null && inputPathPatterns != null) {
 
             JobClientsMap jobClientsMap = new JobClientsMap(new JobConf(conf));
@@ -83,13 +103,22 @@ public class PatternBasedInputFormat extends InputFormat {
             if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
                 List<DateRange> dateRanges = createDateRangeList(dateRangesString);
                 for (DateRange dateRange : dateRanges) {
-                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
-                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, null);
+                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
+                                                                  dateRange.getStopDate(), regionName);
+                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
+                                                                                     inputPatterns, conf, null);
+                    if (!productIdentifiers.isEmpty()) {
+                        fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
+                    }
                     createSplits(productInventory, fileStatusIt, splits, conf);
                 }
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
-                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, null);
+                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
+                                                                                 conf, null);
+                if (!productIdentifiers.isEmpty()) {
+                    fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
+                }
                 createSplits(productInventory, fileStatusIt, splits, conf);
             }
         } else if (geoInventory != null && inputPathPatterns != null) {
@@ -103,22 +132,57 @@ public class PatternBasedInputFormat extends InputFormat {
             if (InputPathResolver.containsDateVariables(inputPathPatterns)) {
                 List<DateRange> dateRanges = createDateRangeList(dateRangesString);
                 for (DateRange dateRange : dateRanges) {
-                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(), dateRange.getStopDate(), regionName);
-                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, pathInDB);
+                    List<String> inputPatterns = getInputPatterns(inputPathPatterns, dateRange.getStartDate(),
+                                                                  dateRange.getStopDate(), regionName);
+                    RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
+                                                                                     inputPatterns, conf, pathInDB);
                     createSplits(productInventory, fileStatusIt, splits, conf);
                 }
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
-                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns, conf, pathInDB);
+                RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
+                                                                                 conf, pathInDB);
                 createSplits(productInventory, fileStatusIt, splits, conf);
             }
         } else {
-            throw new IOException(String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
-                                                            JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
-                                                            JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
+            throw new IOException(
+                        String.format("Missing job parameter for inputFormat. Neither %s nor %s had been set.",
+                                      JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS,
+                                      JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY));
         }
         LOG.info("Total files to process : " + splits.size());
         return splits;
+    }
+
+    private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(RemoteIterator<LocatedFileStatus> fileStatusIt,
+                                               Set<String> productIdentifiers) throws IOException {
+        return new RemoteIterator<LocatedFileStatus>() {
+
+            LocatedFileStatus next = getNext();
+
+            @Override
+            public boolean hasNext() throws IOException {
+                return next != null;
+            }
+
+            @Override
+            public LocatedFileStatus next() throws IOException {
+                LocatedFileStatus current = next;
+                next = getNext();
+                return current;
+            }
+
+             private LocatedFileStatus getNext() throws IOException {
+                while (fileStatusIt.hasNext()) {
+                    LocatedFileStatus fileStatus = fileStatusIt.next();
+                    String filename = fileStatus.getPath().getName();
+                    if (productIdentifiers.contains(filename)) {
+                        return fileStatus;
+                    }
+                }
+                return null;
+             }
+        };
     }
 
     private List<DateRange> createDateRangeList(String dateRangesString) throws IOException {
@@ -152,7 +216,8 @@ public class PatternBasedInputFormat extends InputFormat {
         }
     }
 
-    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws IOException {
+    protected InputSplit createSplit(ProductInventory productInventory, Configuration conf, FileStatus file) throws
+                                                                                                             IOException {
         long fileLength = file.getLen();
 
         BlockLocation[] blocks;
@@ -162,7 +227,7 @@ public class PatternBasedInputFormat extends InputFormat {
             FileSystem fs = file.getPath().getFileSystem(conf);
             blocks = fs.getFileBlockLocations(file, 0, fileLength);
         }
-        
+
         if (blocks != null && blocks.length > 0) {
             BlockLocation block = blocks[0];
             // create a split for the input
@@ -211,8 +276,8 @@ public class PatternBasedInputFormat extends InputFormat {
      */
     @Override
     public RecordReader<NullWritable, NullWritable> createRecordReader(InputSplit split,
-                                                                       TaskAttemptContext context) 
-            throws IOException, InterruptedException {
+                                                                       TaskAttemptContext context)
+                throws IOException, InterruptedException {
         return new NoRecordReader();
     }
 }

@@ -166,6 +166,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSelectionForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;

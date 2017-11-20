@@ -249,6 +249,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSelectionForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());

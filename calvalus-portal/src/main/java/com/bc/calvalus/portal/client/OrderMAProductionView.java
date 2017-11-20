@@ -160,6 +160,7 @@ public class OrderMAProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSelectionForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
