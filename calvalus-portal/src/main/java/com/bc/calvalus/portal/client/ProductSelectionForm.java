@@ -8,12 +8,10 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.InlineLabel;
-import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,9 +31,10 @@ public class ProductSelectionForm extends Composite {
 
     private String productIdentifiersString;
     private String collectionName;
+    private int productIdentifiersCount;
 
     @UiField
-    ListBox productListBox;
+    TextArea productListTextArea;
 
     @UiField
     InlineLabel inputFileCount;
@@ -49,15 +48,17 @@ public class ProductSelectionForm extends Composite {
     ProductSelectionForm(PortalContext portalContext) {
         this.portal = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
+
+        productListTextArea.addChangeHandler(event -> {
+            parseProductList();
+            updateProductListTextArea();
+            updateFileCount();
+        });
     }
 
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<>();
-        productListBox.getItemCount();
-        List<String> productIdentifierList = new ArrayList<>();
-        for (int i = 0; i < productListBox.getItemCount(); i++) {
-            productIdentifierList.add(productListBox.getItemText(i));
-        }
+        String[] productIdentifierList = productListTextArea.getText().split("\n");
         parameters.put("collectionName", collectionName);
         parameters.put("productIdentifiers", String.join(",", productIdentifierList));
         return parameters;
@@ -66,7 +67,8 @@ public class ProductSelectionForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         productIdentifiersString = parameters.get("productIdentifiers");
         collectionName = parameters.get("collectionName");
-        updateProductListBox();
+        updateProductListTextArea();
+        updateFileCount();
     }
 
     // do not remove the static modifier even though suggested by IntelliJ
@@ -89,14 +91,23 @@ public class ProductSelectionForm extends Composite {
         clearSelectionButton.addClickHandler(event -> clickHandler.onClearSelectionClick());
     }
 
-    private void updateProductListBox() {
-        productListBox.clear();
+    private void parseProductList() {
+        String[] productIdentifierList = productListTextArea.getText().split("\n");
+        productIdentifiersString = String.join(",", productIdentifierList);
+    }
+
+    private void updateProductListTextArea() {
+        String productIdentifiersText = "";
+        productIdentifiersCount = 0;
         if (productIdentifiersString != null && !"".equals(productIdentifiersString)) {
-            String[] productIdentifiers = productIdentifiersString.split(",");
-            for (String product : productIdentifiers) {
-                productListBox.addItem(product);
-            }
-            inputFileCount.setText(String.valueOf(productListBox.getItemCount()));
+            String[] productIdentifiersArray = productIdentifiersString.split(",");
+            productIdentifiersCount = productIdentifiersArray.length;
+            productIdentifiersText = String.join("\n", productIdentifiersArray);
         }
+        productListTextArea.setText(productIdentifiersText);
+    }
+
+    private void updateFileCount() {
+        inputFileCount.setText(String.valueOf(productIdentifiersCount));
     }
 }

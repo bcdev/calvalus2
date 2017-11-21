@@ -87,9 +87,6 @@ public class PatternBasedInputFormat extends InputFormat {
                 }
                 LOG.info(String.format("filtered using %d productIdentifiers: %d files remaining'.",
                                        productIdentifiers.size(), paths.size()));
-                for (String path : paths) {
-                    LOG.info(path);
-                }
             }
             splits = GeodbInputFormat.createInputSplits(conf, paths);
             LOG.info(String.format("%d splits created.", splits.size()));
@@ -154,8 +151,9 @@ public class PatternBasedInputFormat extends InputFormat {
         return splits;
     }
 
-    private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(RemoteIterator<LocatedFileStatus> fileStatusIt,
-                                               Set<String> productIdentifiers) throws IOException {
+    private RemoteIterator<LocatedFileStatus> filterUsingProductIdentifiers(
+                RemoteIterator<LocatedFileStatus> fileStatusIt,
+                Set<String> productIdentifiers) throws IOException {
         return new RemoteIterator<LocatedFileStatus>() {
 
             LocatedFileStatus next = getNext();
@@ -172,7 +170,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 return current;
             }
 
-             private LocatedFileStatus getNext() throws IOException {
+            private LocatedFileStatus getNext() throws IOException {
                 while (fileStatusIt.hasNext()) {
                     LocatedFileStatus fileStatus = fileStatusIt.next();
                     String filename = fileStatus.getPath().getName();
@@ -181,7 +179,7 @@ public class PatternBasedInputFormat extends InputFormat {
                     }
                 }
                 return null;
-             }
+            }
         };
     }
 

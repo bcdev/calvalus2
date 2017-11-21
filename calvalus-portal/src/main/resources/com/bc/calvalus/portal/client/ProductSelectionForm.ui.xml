@@ -15,7 +15,7 @@
             <g:VerticalPanel spacing="2" styleName="{style.inputFilePanel}">
                 <g:HorizontalPanel spacing="0">
                     <g:FlowPanel styleName="{style.inputFileListPanel}">
-                        <g:ListBox ui:field="productListBox" width="45em" visibleItemCount="8" name="inputProductSet"/>
+                        <g:TextArea ui:field="productListTextArea" width="43em" visibleLines="10"/>
                         <g:FlowPanel styleName="{style.fileCount}">
                             <g:InlineLabel styleName="{style.fileCountLabel}">File count:</g:InlineLabel>
                             <g:InlineLabel ui:field="inputFileCount"/>
