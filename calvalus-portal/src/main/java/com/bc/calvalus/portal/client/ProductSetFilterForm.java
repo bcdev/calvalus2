@@ -214,7 +214,8 @@ public class ProductSetFilterForm extends Composite {
         spatialFilterOff.addValueChangeHandler(spatialFilterChangeHandler);
         spatialFilterByRegion.addValueChangeHandler(spatialFilterChangeHandler);
         regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(selectionChangeEvent ->
-                                                                                     changeHandler.spatialFilterChanged(getValueMap()));
+                                                                                     changeHandler.spatialFilterChanged(
+                                                                                                 getValueMap()));
     }
 
     // note: factory is found solely for return type, method name is insignificant
@@ -356,6 +357,14 @@ public class ProductSetFilterForm extends Composite {
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();
+        Region existingTemporaryRegion = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
+        if (existingTemporaryRegion != null) {
+            regionMap.removeRegion(existingTemporaryRegion);
+        }
+        List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
+        for (Region region : regionList) {
+            regionMap.getRegionMapSelectionModel().setSelected(region, false);
+        }
         String regionNameValue = parameters.get("regionName");
         if (regionNameValue != null) {
             Region region = regionMap.getRegion(regionNameValue);
@@ -369,22 +378,17 @@ public class ProductSetFilterForm extends Composite {
         String regionWKTValue = parameters.get("regionWKT");
         if (regionWKTValue != null) {
             List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
+            spatialFilterByRegion.setValue(true, true);
             for (Region region : list) {
                 if (region.getGeometryWkt() != null && region.getGeometryWkt().equals(regionWKTValue)) {
-                    spatialFilterByRegion.setValue(true, true);
                     regionMap.getRegionMapSelectionModel().setSelected(region, true);
                     return;
                 }
             }
-            Region region = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
-            if (region != null) {
-                regionMap.removeRegion(region);
-            }
-            Region temp_region = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
-            regionMap.addRegion(temp_region);
-            spatialFilterByRegion.setValue(true, true);
-            regionMap.getRegionMapSelectionModel().setSelected(temp_region, true);
-            LocateRegionsAction.locateRegion(regionMap, temp_region);
+            Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
+            regionMap.addRegion(tempRegion);
+            regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
+            LocateRegionsAction.locateRegion(regionMap, tempRegion);
             return;
         }
         spatialFilterOff.setValue(true, true);
