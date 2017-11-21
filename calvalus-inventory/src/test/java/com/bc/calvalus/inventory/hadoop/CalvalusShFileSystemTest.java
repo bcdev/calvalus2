@@ -26,7 +26,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 
 import static org.junit.Assert.*;
@@ -75,6 +77,25 @@ public class CalvalusShFileSystemTest {
             String line;
             while ((line = in.readLine()) != null) {
                 System.out.println("|" + line + "|");
+            }
+        };
+    }
+
+    @Test
+    @Ignore
+    public void testCatGeoIndex() throws Exception {
+        System.setProperty("calvalus.accesscontrol.external", "true");
+        String user = "vboxadd";
+        JobClientsMap jobClientsMap = new JobClientsMap(new JobConf());
+        JobClient jobClient = jobClientsMap.getJobClient(user);
+        FileSystem fileSystem = jobClientsMap.getFileSystem(user);
+        try (BufferedInputStream in = new BufferedInputStream(fileSystem.open(new Path("/home/boe/tmp/geo_index.b")))) {
+            try (BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream("/home/boe/tmp/geo_index.b.copy"))) {
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0) {
+                    out.write(buf, 0, n);
+                }
             }
         };
     }

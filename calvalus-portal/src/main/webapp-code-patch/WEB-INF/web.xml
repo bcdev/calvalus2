@@ -117,8 +117,7 @@
     </session-config>
 
     <welcome-file-list>
-        <!--<welcome-file>calvalus.jsp</welcome-file>-->
-        <welcome-file>about.jsp</welcome-file>
+        <welcome-file>calvalus.jsp</welcome-file>
     </welcome-file-list>
 
     <filter>
