@@ -8,16 +8,16 @@
     <ui:style src="style.css"/>
 
 
-    <g:FlowPanel styleName="{style.filterPanel}">
+    <g:FlowPanel styleName="{style.filterPanel}" width="70em">
 
-        <g:FlowPanel styleName="{style.temporalFilterPanel}">
+        <g:FlowPanel styleName="{style.temporalFilterPanel}" width="30%">
 
             <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
                 <g:InlineLabel styleName="{style.panelTitleText}">Temporal Filter</g:InlineLabel>
             </g:HTMLPanel>
 
             <g:HTMLPanel>
-                <table cellspacing="2">
+                <table cellspacing="2" width="100%">
                     <tr>
                     </tr>
                     <tr>
@@ -36,14 +36,14 @@
                         <td>&nbsp;&nbsp;&nbsp;</td>
                         <td>Start date:</td>
                         <td align="right">
-                            <date:DateBox ui:field='minDate' width="6em" styleName="{style.dateBox}"/>
+                            <date:DateBox ui:field='minDate' styleName="{style.dateBox}"/>
                         </td>
                     </tr>
                     <tr>
                         <td>&nbsp;&nbsp;&nbsp;</td>
                         <td>End date:</td>
                         <td align="right">
-                            <date:DateBox ui:field='maxDate' width="6em" styleName="{style.dateBox}"/>
+                            <date:DateBox ui:field='maxDate' styleName="{style.dateBox}"/>
                         </td>
                     </tr>
                     <tr>
@@ -72,7 +72,7 @@
 
         </g:FlowPanel>
 
-        <g:FlowPanel styleName="{style.spatialFilterPanel}">
+        <g:FlowPanel styleName="{style.spatialFilterPanel}" width="70%">
 
             <g:HTMLPanel styleName="{style.panelTitle}" width="100%">
                 <g:InlineLabel styleName="{style.panelTitleText}">Spatial Filter</g:InlineLabel>
