@@ -15,11 +15,6 @@
         <param-value>config/calvalus.properties</param-value>
     </context-param>
 
-    <servlet-mapping>
-        <servlet-name>injectInputSelectionServlet</servlet-name>
-        <url-pattern>/injectInputSelection</url-pattern>
-    </servlet-mapping>
-
     <!-- Default servlet (used to customise directory listings). Comment out in GWT dev-mode. -->
 
     <servlet>
@@ -82,10 +77,10 @@
         <servlet-class>com.bc.calvalus.portal.server.ContextRetrievalServiceImpl</servlet-class>
     </servlet>
 
-    <!--<servlet-mapping>-->
-        <!--<servlet-name>stagingServlet</servlet-name>-->
-        <!--<url-pattern>/staging/*</url-pattern>-->
-    <!--</servlet-mapping>-->
+    <servlet-mapping>
+        <servlet-name>stagingServlet</servlet-name>
+        <url-pattern>/staging/*</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>backendServlet</servlet-name>
@@ -104,7 +99,10 @@
         <servlet-name>downloadServlet</servlet-name>
         <url-pattern>/calvalus/download</url-pattern>
     </servlet-mapping>
-
+    <servlet-mapping>
+        <servlet-name>injectInputSelectionServlet</servlet-name>
+        <url-pattern>/injectInputSelection</url-pattern>
+    </servlet-mapping>
     <servlet-mapping>
         <servlet-name>retrieveContextServlet</servlet-name>
         <url-pattern>/calvalus/retrieve</url-pattern>

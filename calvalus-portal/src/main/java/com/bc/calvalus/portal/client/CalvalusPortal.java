@@ -5,7 +5,16 @@ import com.bc.calvalus.portal.client.map.Region;
 import com.bc.calvalus.portal.client.map.RegionConverter;
 import com.bc.calvalus.portal.client.map.RegionMapModel;
 import com.bc.calvalus.portal.client.map.RegionMapModelImpl;
-import com.bc.calvalus.portal.shared.*;
+import com.bc.calvalus.portal.shared.BackendService;
+import com.bc.calvalus.portal.shared.BackendServiceAsync;
+import com.bc.calvalus.portal.shared.ContextRetrievalService;
+import com.bc.calvalus.portal.shared.ContextRetrievalServiceAsync;
+import com.bc.calvalus.portal.shared.DtoAggregatorDescriptor;
+import com.bc.calvalus.portal.shared.DtoCalvalusConfig;
+import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
+import com.bc.calvalus.portal.shared.DtoProductSet;
+import com.bc.calvalus.portal.shared.DtoProduction;
+import com.bc.calvalus.portal.shared.DtoRegion;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
@@ -22,7 +31,11 @@ import com.google.gwt.view.client.ListDataProvider;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 /**
@@ -60,7 +73,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
     // Data provided by various external services
     private ListDataProvider<Region> regions;
-    private DtoInputSelection inputSelection;
     private DtoProductSet[] productSets;
     private DtoProcessorDescriptor[] systemProcessors;
     private DtoProcessorDescriptor[] userProcessors;
@@ -549,7 +561,6 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
     }
 
     private class CalvalusConfigCallback implements AsyncCallback<DtoCalvalusConfig> {
-
         public CalvalusConfigCallback() {
         }
 

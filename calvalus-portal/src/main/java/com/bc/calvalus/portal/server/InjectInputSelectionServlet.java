@@ -4,6 +4,7 @@ import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.google.gson.Gson;
 import org.apache.commons.io.IOUtils;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +20,9 @@ public class InjectInputSelectionServlet extends HttpServlet {
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
                 throws IOException {
         StringWriter writer = new StringWriter();
-        IOUtils.copy(servletRequest.getInputStream(), writer);
+        try (ServletInputStream inputStream = servletRequest.getInputStream()) {
+            IOUtils.copy(inputStream, writer);
+        }
         String inputSelectionString = writer.toString();
         Gson gson = new Gson();
         DtoInputSelection dtoInputSelection = gson.fromJson(inputSelectionString, DtoInputSelection.class);

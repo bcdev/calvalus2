@@ -48,7 +48,7 @@ public class OrderMAProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
@@ -62,7 +62,7 @@ public class OrderMAProductionView extends OrderProductionView {
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
         productSelectionForm = new ProductSelectionForm(getPortal());
-        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.ClickHandler() {
+        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.InputSelectionHandler() {
             @Override
             public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
                 return new InputSelectionCallback();
@@ -88,7 +88,9 @@ public class OrderMAProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
-        if (getPortal().withPortalFeature("inputFiles")) panel.add(productSelectionForm);
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            panel.add(productSelectionForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(maConfigForm);
         panel.add(outputParametersForm);
@@ -187,7 +189,7 @@ public class OrderMAProductionView extends OrderProductionView {
 
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
-            Map<String, String> inputSelectionMap = OrderL2ProductionView.parseParametersFromContext(inputSelection);
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
             productSelectionForm.setValues(inputSelectionMap);
             productSetSelectionForm.setValues(inputSelectionMap);
             productSetFilterForm.setValues(inputSelectionMap);

@@ -73,7 +73,7 @@ public class ProductSelectionForm extends Composite {
 
     // do not remove the static modifier even though suggested by IntelliJ
     // https://stackoverflow.com/a/21930980/2676893
-    public static interface ClickHandler {
+    public static interface InputSelectionHandler {
 
         AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback();
 
@@ -85,10 +85,10 @@ public class ProductSelectionForm extends Composite {
         setValues(emptyInputSelectionMap);
     }
 
-    void addInputSelectionHandler(ClickHandler clickHandler) {
+    void addInputSelectionHandler(InputSelectionHandler inputSelectionHandler) {
         pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().
-                    getInputSelection(clickHandler.getInputSelectionChangedCallback()));
-        clearSelectionButton.addClickHandler(event -> clickHandler.onClearSelectionClick());
+                    getInputSelection(inputSelectionHandler.getInputSelectionChangedCallback()));
+        clearSelectionButton.addClickHandler(event -> inputSelectionHandler.onClearSelectionClick());
     }
 
     private void parseProductList() {

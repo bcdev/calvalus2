@@ -395,16 +395,16 @@ public class ProductSetFilterForm extends Composite {
         regionMap.getRegionMapSelectionModel().clearSelection();
     }
 
-    public interface ChangeHandler {
-
-        void temporalFilterChanged(Map<String, String> data);
-
-        void spatialFilterChanged(Map<String, String> data);
-    }
-
     void removeSelections() {
         Map<String, String> emptyInputSelectionMap = new HashMap<>();
         setValues(emptyInputSelectionMap);
+    }
+
+    public interface ChangeHandler {
+
+        void temporalFilterChanged(Map<String, String> data);
+        void spatialFilterChanged(Map<String, String> data);
+
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {

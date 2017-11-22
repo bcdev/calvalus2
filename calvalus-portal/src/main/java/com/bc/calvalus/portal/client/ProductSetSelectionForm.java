@@ -91,8 +91,8 @@ public class ProductSetSelectionForm extends Composite {
         HelpSystem.addClickHandler(showProductSetSelectionHelp, "productSetSelection");
     }
 
-    public void addChangeHandler(final ChangeHandler changeHandler) {
-        productSetListBox.addChangeHandler(changeEvent -> changeHandler.onProductSetChanged(getSelectedProductSet()));
+    public void addChangeHandler(final ProductSetChangeHandler productSetChangeHandler) {
+        productSetListBox.addChangeHandler(changeEvent -> productSetChangeHandler.onProductSetChanged(getSelectedProductSet()));
     }
 
     public DtoProductSet getSelectedProductSet() {
@@ -114,7 +114,7 @@ public class ProductSetSelectionForm extends Composite {
 
     // do not remove the static modifier even though suggested by IntelliJ
     // https://stackoverflow.com/a/21930980/2676893
-    public static interface ChangeHandler {
+    public static interface ProductSetChangeHandler {
 
         void onProductSetChanged(DtoProductSet productSet);
 

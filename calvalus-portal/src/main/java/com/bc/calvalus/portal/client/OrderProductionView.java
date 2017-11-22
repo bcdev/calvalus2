@@ -2,7 +2,6 @@ package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoProductionRequest;
 import com.bc.calvalus.portal.shared.DtoProductionResponse;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -22,6 +21,8 @@ import java.util.Map;
  * @author Norman
  */
 public abstract class OrderProductionView extends PortalView {
+
+    static final String INPUT_FILES_PANEL = "inputFilesPanel";
 
     protected OrderProductionView(PortalContext portalContext) {
         super(portalContext);
