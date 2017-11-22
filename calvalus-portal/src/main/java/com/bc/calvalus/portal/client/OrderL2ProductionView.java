@@ -84,7 +84,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
-        panel.add(productSelectionForm);
+        if (getPortal().withPortalFeature("inputFiles")) panel.add(productSelectionForm);
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
         Anchor l2Help = new Anchor("Show Help");
