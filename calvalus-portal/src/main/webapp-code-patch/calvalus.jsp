@@ -48,11 +48,6 @@
                     <span class="header-info-text">HELP</span>
                 </a>
             </div>
-            <div class="header-info-about">
-                <a href="about.jsp" target="_blank" class="header-info-about" style="text-decoration:none;">
-                    <span class="header-info-text">ABOUT</span>
-                </a>
-            </div>
             <div class="header-user-logout">
                 <% if (userPrincipal != null) { %>
                 <a href='<%= response.encodeURL("logout.jsp") %>' style="text-decoration: none">
@@ -100,11 +95,6 @@
                 <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="footer-info-text">Help</span>
-                </a>
-            </div>
-            <div class="footer-info-about">
-                <a href="about.jsp" target="_blank" class="header-info-about" style="text-decoration:none;">
-                    <span class="footer-info-text">About</span>
                 </a>
             </div>
         </div>

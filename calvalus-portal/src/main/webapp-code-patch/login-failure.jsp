@@ -21,9 +21,6 @@
 
                         <h2 class="subTitle">Portal for Earth Observation Cal/Val and User Services</h2>
                     </td>
-                    <td class="userName">
-                        <a href="about.jsp">About</a>
-                    </td>
                 </tr>
             </table>
             <hr/>
