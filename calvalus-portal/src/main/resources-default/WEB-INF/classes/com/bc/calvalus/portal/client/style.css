@@ -118,6 +118,37 @@
     font-size: 14px;
 }
 
+/**********************
+* Input files styling *
+***********************/
+.inputFilePanel {
+    font-family: Calibri, Verdana, Arial, sans-serif;
+    color: #777799;
+}
+
+.inputFileListPanel {
+    display: flex;
+    flex-direction: column;
+}
+
+.fileCount {
+    display: flex;
+}
+
+.fileCountLabel {
+    font-weight: 700;
+    margin: 0 10px 0 0;
+}
+
+.inputFileButtonContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.marginTop10 {
+    margin-top: 10px;
+}
+
 /******************
 * General styling *
 *******************/

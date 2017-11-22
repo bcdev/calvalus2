@@ -59,7 +59,7 @@ public class OrderVCProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);

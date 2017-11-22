@@ -81,7 +81,7 @@ public class OrderFreshmonProductionView extends OrderProductionView {
         final List<String> bandsToSelect = Arrays.asList(DEFAULT_BAND_SELECTION);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal(), productSetFilter);
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);

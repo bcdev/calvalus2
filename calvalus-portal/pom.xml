@@ -67,6 +67,13 @@
             <artifactId>calvalus-production</artifactId>
         </dependency>
 
+        <!-- JSON utility tool -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.6.2</version>
+        </dependency>
+
         <!--<dependency>-->
         <!--<groupId>org.gwtopenmaps.openlayers</groupId>-->
         <!--<artifactId>gwt-openlayers-client</artifactId>-->

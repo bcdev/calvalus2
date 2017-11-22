@@ -16,13 +16,19 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProcessorDescriptor;
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Demo view that lets users submit a new L2 production.
@@ -35,6 +41,7 @@ public class OrderL2ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductSelectionForm productSelectionForm;
     private L2ConfigForm l2ConfigForm;
     private OutputParametersForm outputParametersForm;
     private Widget widget;
@@ -54,6 +61,21 @@ public class OrderL2ProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
+        productSelectionForm = new ProductSelectionForm(getPortal());
+        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.InputSelectionHandler() {
+            @Override
+            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                return new InputSelectionCallback();
+            }
+
+            @Override
+            public void onClearSelectionClick() {
+                productSelectionForm.removeSelections();
+                productSetSelectionForm.removeSelections();
+                productSetFilterForm.removeSelections();
+            }
+        });
+
         outputParametersForm = new OutputParametersForm(portalContext);
         l2ConfigForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
         handleProcessorChanged();
@@ -62,6 +84,9 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)){
+            panel.add(productSelectionForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(outputParametersForm);
         Anchor l2Help = new Anchor("Show Help");
@@ -73,28 +98,6 @@ public class OrderL2ProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
-    }
-
-    private void handleProcessorChanged() {
-        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
-        if (processorDescriptor != null) {
-            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
-            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
-            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
-            String formattingType = processorDescriptor.getFormattingType();
-            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
-            if (!implicitlyFormatted) {
-                add("NetCDF4", outputFormats);
-                add("BigGeoTiff", outputFormats);
-            }
-            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
-        }
-    }
-
-    private static void add(String format, List<String> outputFormats) {
-        if (!outputFormats.contains(format)) {
-            outputFormats.add(format);
-        }
     }
 
     @Override
@@ -133,6 +136,16 @@ public class OrderL2ProductionView extends OrderProductionView {
             productSetFilterForm.validateForm();
             l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
+
+            String collectionNameSelected = productSetSelectionForm.getValueMap().get("collectionName");
+            String collectionNameFromCatalogueSearch = productSelectionForm.getValueMap().get("collectionName");
+            if (collectionNameFromCatalogueSearch != null &&
+                !collectionNameSelected.equals(collectionNameFromCatalogueSearch)) {
+                throw new ValidationException(productSetSelectionForm,
+                                              "The selected input files are not consistent with the selected input file set. " +
+                                              "To change the input file set, please first clear the input files selection");
+            }
+
             if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numDaysValue = Integer.parseInt(productSetFilterForm.numDays.getValue());
@@ -155,6 +168,7 @@ public class OrderL2ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSelectionForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
         return parameters;
@@ -169,7 +183,46 @@ public class OrderL2ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        productSelectionForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
+            productSelectionForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
+    }
+
+    private void handleProcessorChanged() {
+        DtoProcessorDescriptor processorDescriptor = l2ConfigForm.getSelectedProcessorDescriptor();
+        if (processorDescriptor != null) {
+            outputParametersForm.showFormatSelectionPanel(processorDescriptor.getFormattingType().equals("OPTIONAL"));
+            String[] processorOutputFormats = processorDescriptor.getOutputFormats();
+            List<String> outputFormats = new ArrayList<>(Arrays.asList(processorOutputFormats));
+            String formattingType = processorDescriptor.getFormattingType();
+            boolean implicitlyFormatted = formattingType.equals("IMPLICIT");
+            if (!implicitlyFormatted) {
+                add("NetCDF4", outputFormats);
+                add("BigGeoTiff", outputFormats);
+            }
+            outputParametersForm.setAvailableOutputFormats(outputFormats.toArray(new String[0]));
+        }
+    }
+
+    private static void add(String format, List<String> outputFormats) {
+        if (!outputFormats.contains(format)) {
+            outputFormats.add(format);
+        }
     }
 }

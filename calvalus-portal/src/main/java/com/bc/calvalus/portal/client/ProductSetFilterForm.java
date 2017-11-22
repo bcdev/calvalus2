@@ -22,8 +22,6 @@ import com.bc.calvalus.portal.client.map.RegionMapWidget;
 import com.bc.calvalus.portal.client.map.actions.LocateRegionsAction;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.i18n.client.DateTimeFormat;
@@ -40,7 +38,6 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.datepicker.client.DateBox;
-import com.google.gwt.view.client.SelectionChangeEvent;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -56,6 +53,7 @@ import java.util.Map;
  */
 public class ProductSetFilterForm extends Composite {
 
+    private static final String TEMPORARY_REGION_NAME = "catalogue_search";
     private final PortalContext portal;
 
     interface TheUiBinder extends UiBinder<Widget, ProductSetFilterForm> {
@@ -132,12 +130,7 @@ public class ProductSetFilterForm extends Composite {
 //        spatialFilterOff.addValueChangeHandler(valueChangeHandler);
 //        spatialFilterByRegion.addValueChangeHandler(valueChangeHandler);
 
-        manageRegionsAnchor.addClickHandler(new ClickHandler() {
-            @Override
-            public void onClick(ClickEvent event) {
-                portal.showView(ManageRegionsView.ID);
-            }
-        });
+        manageRegionsAnchor.addClickHandler(event -> portal.showView(ManageRegionsView.ID));
 
         addChangeHandler(new ChangeHandler() {
             @Override
@@ -163,7 +156,7 @@ public class ProductSetFilterForm extends Composite {
             numDays.setValue("" + ((millisPerDay + max.getTime()) - min.getTime()) / millisPerDay);
         } else if (temporalFilterByDateList.getValue()) {
             String[] splits = dateList.getValue().split("\\s");
-            HashSet<String> set = new HashSet<String>(Arrays.asList(splits));
+            HashSet<String> set = new HashSet<>(Arrays.asList(splits));
             set.remove("");
             numDays.setValue("" + set.size());
         } else if (productSet != null) {
@@ -182,7 +175,7 @@ public class ProductSetFilterForm extends Composite {
         if (this.productSet != null) {
             String regionName = productSet.getRegionName();
             if (regionName == null || regionName.isEmpty() ||
-                    regionName.equalsIgnoreCase("global") || productSet.getRegionWKT() == null) {
+                regionName.equalsIgnoreCase("global") || productSet.getRegionWKT() == null) {
                 // global
                 regionMap.getMapWidget().setZoom(0);
                 regionMap.getMapWidget().panTo(LatLng.newInstance(0.0, 0.0));
@@ -204,44 +197,25 @@ public class ProductSetFilterForm extends Composite {
     }
 
     public void addChangeHandler(final ChangeHandler changeHandler) {
-        ValueChangeHandler<Date> dateValueChangeHandler = new ValueChangeHandler<Date>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Date> event) {
-                changeHandler.temporalFilterChanged(getValueMap());
-            }
-        };
+        ValueChangeHandler<Date> dateValueChangeHandler = event ->
+                    changeHandler.temporalFilterChanged(getValueMap());
         minDate.addValueChangeHandler(dateValueChangeHandler);
         maxDate.addValueChangeHandler(dateValueChangeHandler);
-        ValueChangeHandler<Boolean> booleanValueChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                changeHandler.temporalFilterChanged(getValueMap());
-            }
-        };
+        ValueChangeHandler<Boolean> booleanValueChangeHandler = booleanValueChangeEvent ->
+                    changeHandler.temporalFilterChanged(getValueMap());
         temporalFilterOff.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateRange.addValueChangeHandler(booleanValueChangeHandler);
         temporalFilterByDateList.addValueChangeHandler(booleanValueChangeHandler);
-        dateList.addValueChangeHandler(new ValueChangeHandler<String>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<String> stringValueChangeEvent) {
-                changeHandler.temporalFilterChanged(getValueMap());
-            }
-        });
+        dateList.addValueChangeHandler(stringValueChangeEvent ->
+                                                   changeHandler.temporalFilterChanged(getValueMap()));
 
-        ValueChangeHandler<Boolean> spatialFilterChangeHandler = new ValueChangeHandler<Boolean>() {
-            @Override
-            public void onValueChange(ValueChangeEvent<Boolean> booleanValueChangeEvent) {
-                changeHandler.spatialFilterChanged(getValueMap());
-            }
-        };
+        ValueChangeHandler<Boolean> spatialFilterChangeHandler = booleanValueChangeEvent ->
+                    changeHandler.spatialFilterChanged(getValueMap());
         spatialFilterOff.addValueChangeHandler(spatialFilterChangeHandler);
         spatialFilterByRegion.addValueChangeHandler(spatialFilterChangeHandler);
-        regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
-            @Override
-            public void onSelectionChange(SelectionChangeEvent selectionChangeEvent) {
-                changeHandler.spatialFilterChanged(getValueMap());
-            }
-        });
+        regionMap.getRegionMapSelectionModel().addSelectionChangeHandler(selectionChangeEvent ->
+                                                                                     changeHandler.spatialFilterChanged(
+                                                                                                 getValueMap()));
     }
 
     // note: factory is found solely for return type, method name is insignificant
@@ -317,7 +291,7 @@ public class ProductSetFilterForm extends Composite {
 
     public Map<String, String> getValueMap() {
 
-        Map<String, String> parameters = new HashMap<String, String>();
+        Map<String, String> parameters = new HashMap<>();
 
         if (temporalFilterOff.getValue() && productSet != null) {
             Date minDate = productSet.getMinDate();
@@ -381,6 +355,16 @@ public class ProductSetFilterForm extends Composite {
                 temporalFilterOff.setValue(true, true);
             }
         }
+        spatialFilterOff.setValue(true, true);
+        regionMap.getRegionMapSelectionModel().clearSelection();
+        Region existingTemporaryRegion = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
+        if (existingTemporaryRegion != null) {
+            regionMap.removeRegion(existingTemporaryRegion);
+        }
+        List<Region> regionList = regionMap.getRegionModel().getRegionProvider().getList();
+        for (Region region : regionList) {
+            regionMap.getRegionMapSelectionModel().setSelected(region, false);
+        }
         String regionNameValue = parameters.get("regionName");
         if (regionNameValue != null) {
             Region region = regionMap.getRegion(regionNameValue);
@@ -394,24 +378,33 @@ public class ProductSetFilterForm extends Composite {
         String regionWKTValue = parameters.get("regionWKT");
         if (regionWKTValue != null) {
             List<Region> list = regionMap.getRegionModel().getRegionProvider().getList();
+            spatialFilterByRegion.setValue(true, true);
             for (Region region : list) {
                 if (region.getGeometryWkt() != null && region.getGeometryWkt().equals(regionWKTValue)) {
-                    spatialFilterByRegion.setValue(true, true);
                     regionMap.getRegionMapSelectionModel().setSelected(region, true);
                     return;
                 }
             }
-            // TODO handle failure
+            Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
+            regionMap.addRegion(tempRegion);
+            regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
+            LocateRegionsAction.locateRegion(regionMap, tempRegion);
+            return;
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();
     }
 
+    void removeSelections() {
+        Map<String, String> emptyInputSelectionMap = new HashMap<>();
+        setValues(emptyInputSelectionMap);
+    }
+
     public interface ChangeHandler {
 
         void temporalFilterChanged(Map<String, String> data);
-
         void spatialFilterChanged(Map<String, String> data);
+
     }
 
     private class TimeSelValueChangeHandler implements ValueChangeHandler<Boolean> {

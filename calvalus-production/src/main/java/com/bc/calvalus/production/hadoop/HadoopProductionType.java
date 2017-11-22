@@ -122,6 +122,9 @@ public abstract class HadoopProductionType implements ProductionType {
 
     protected void setInputLocationParameters(ProductionRequest productionRequest, Configuration conf) throws ProductionException {
         Map<String, String> productionRequestParameters = productionRequest.getParameters();
+        if(productionRequestParameters.containsKey("productIdentifiers")){
+            conf.set(JobConfigNames.CALVALUS_INPUT_PRODUCT_IDENTIFIERS, productionRequest.getString("productIdentifiers"));
+        }
         if (productionRequestParameters.containsKey("inputTable")) {
             conf.set(JobConfigNames.CALVALUS_INPUT_TABLE, productionRequest.getString("inputTable"));
         } else if (productionRequestParameters.containsKey("geoInventory")) {

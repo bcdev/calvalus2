@@ -16,10 +16,12 @@
 
 package com.bc.calvalus.portal.client;
 
+import com.bc.calvalus.portal.shared.DtoInputSelection;
 import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
@@ -41,6 +43,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
+    private ProductSelectionForm productSelectionForm;
     private L2ConfigForm l2ConfigForm;
     private L3ConfigForm l3ConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -51,7 +54,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         super(portalContext);
 
         productSetSelectionForm = new ProductSetSelectionForm(getPortal());
-        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ChangeHandler() {
+        productSetSelectionForm.addChangeHandler(new ProductSetSelectionForm.ProductSetChangeHandler() {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
@@ -72,6 +75,21 @@ public class OrderL3ProductionView extends OrderProductionView {
             @Override
             public void spatialFilterChanged(Map<String, String> data) {
                 l3ConfigForm.updateSpatialParameters(productSetFilterForm.getSelectedRegion());
+            }
+        });
+
+        productSelectionForm = new ProductSelectionForm(getPortal());
+        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.InputSelectionHandler() {
+            @Override
+            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                return new InputSelectionCallback();
+            }
+
+            @Override
+            public void onClearSelectionClick() {
+                productSelectionForm.removeSelections();
+                productSetSelectionForm.removeSelections();
+                productSetFilterForm.removeSelections();
             }
         });
 
@@ -98,6 +116,9 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            panel.add(productSelectionForm);
+        }
         panel.add(l2ConfigForm);
         panel.add(l3ConfigForm);
         panel.add(outputParametersForm);
@@ -108,6 +129,22 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(createOrderPanel());
 
         this.widget = panel;
+    }
+
+    private class InputSelectionCallback implements AsyncCallback<DtoInputSelection> {
+
+        @Override
+        public void onSuccess(DtoInputSelection inputSelection) {
+            Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
+            productSelectionForm.setValues(inputSelectionMap);
+            productSetSelectionForm.setValues(inputSelectionMap);
+            productSetFilterForm.setValues(inputSelectionMap);
+        }
+
+        @Override
+        public void onFailure(Throwable caught) {
+            Dialog.error("Error in retrieving input selection", caught.getMessage());
+        }
     }
 
     private void updateTemporalParameters(Map<String, String> data) {
@@ -180,6 +217,16 @@ public class OrderL3ProductionView extends OrderProductionView {
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
+
+            String collectionNameSelected = productSetSelectionForm.getValueMap().get("collectionName");
+            String collectionNameFromCatalogueSearch = productSelectionForm.getValueMap().get("collectionName");
+            if (collectionNameFromCatalogueSearch != null &&
+                !collectionNameSelected.equals(collectionNameFromCatalogueSearch)) {
+                throw new ValidationException(productSetSelectionForm,
+                                              "The selected input files are not consistent with the selected input file set. " +
+                                              "To change the input file set, please first clear the input files selection");
+            }
+
             if (! getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numPeriods = l3ConfigForm.periodCount.getValue();
@@ -204,6 +251,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
+        parameters.putAll(productSelectionForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
@@ -219,6 +267,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
+        productSelectionForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         l3ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
