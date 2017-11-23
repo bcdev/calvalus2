@@ -14,7 +14,8 @@
 
 .main-panel {
     display: flex;
-    height: 220em;
+    height: calc(100% - 140px);
+    overflow-x: hidden;
 }
 
 .header-panel {
@@ -256,6 +257,9 @@ select[multiple]:focus option:checked {
     color: white;
     flex: 0 0 200px;
     font-size: 14px;
+    margin-bottom: -5000px; /*maybe not really the best solution, very hackish. */
+    padding-bottom: 5000px; /*Investigate for a better one to get the side menu stretch to the end of the page*/
+    overflow-y: hidden;
 }
 
 .title {
@@ -311,6 +315,11 @@ select[multiple]:focus option:checked {
 p, li {
     font-family: Georgia, Times, serif;
     font-size: 10pt;
+}
+
+.panelGeneric {
+    overflow: auto;
+    background-color: red;
 }
 
 /* Needed to change the cursor when hovering over the gwt-anchor on ManageBundleForm */
