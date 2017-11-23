@@ -133,12 +133,18 @@ public class PatternBasedInputFormat extends InputFormat {
                                                                   dateRange.getStopDate(), regionName);
                     RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService,
                                                                                      inputPatterns, conf, pathInDB);
+                    if (!productIdentifiers.isEmpty()) {
+                        fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
+                    }
                     createSplits(productInventory, fileStatusIt, splits, conf);
                 }
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
                 RemoteIterator<LocatedFileStatus> fileStatusIt = getFileStatuses(hdfsFileSystemService, inputPatterns,
                                                                                  conf, pathInDB);
+                if (!productIdentifiers.isEmpty()) {
+                    fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
+                }
                 createSplits(productInventory, fileStatusIt, splits, conf);
             }
         } else {
