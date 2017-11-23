@@ -201,10 +201,12 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 validateJob(job);
                 // maybe add calvalus.token parameter
                 getProcessingService().runHooksBeforeSubmission(job);
-                JobID jobId = submitJob(job);  // TODO: maybe move out of scope of the doAs, the impl of submitJob does a doAs as well
+                JobID jobId = submitJob(job);  // the impl of submitJob does a doAs as well, but maybe with the wrong user
 
                 CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
                 CalvalusLogger.getLogger().info("-------------------------------");
+                CalvalusLogger.getLogger().info("remoteUser=" + remoteUser.getShortUserName()
+                                                + " mapreduce.job.user.name=" + job.getConfiguration().get("mapreduce.job.user.name"));
                 HashMap<String, String> calvalusConfMap = new HashMap<>();
                 for (Map.Entry<String, String> keyValue : job.getConfiguration()) {
                     if (keyValue.getKey().startsWith("calvalus")) {

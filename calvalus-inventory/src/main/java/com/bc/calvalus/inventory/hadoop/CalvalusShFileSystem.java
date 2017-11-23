@@ -19,13 +19,17 @@ package com.bc.calvalus.inventory.hadoop;
 import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.CalvalusLogger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.BlockLocation;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileSystemSetter;
 import org.apache.hadoop.fs.LocalFileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
+import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.Progressable;
@@ -39,6 +43,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -160,6 +165,54 @@ public class CalvalusShFileSystem extends LocalFileSystem {
     }
 
     @Override
+    public FileStatus[] listStatus(Path path, PathFilter filter) throws FileNotFoundException, IOException {
+        setAccessTime();
+        if (isLoginUser) { return unixFileSystem.listStatus(path, filter); }
+        String p = path.toUri().getPath();
+        Process proc = callUnixCommand("ls", p);
+        List<FileStatus> files = collectPathsOutput(proc);
+        handleReturnCode(proc, files, path);
+        for (int i = 0; i < files.size();) {
+            if (! filter.accept(files.get(i).getPath())) {
+                files.remove(i);
+            } else {
+                ++i;
+            }
+        }
+        LOG.info("dir " + path + " externally listed and filtered, " + files.size() + " entries");
+        return files.toArray(new FileStatus[files.size()]);
+    }
+
+    @Override
+    public RemoteIterator<LocatedFileStatus> listLocatedStatus(Path f)
+    throws IOException {
+      return new RemoteIterator<LocatedFileStatus>() {
+        private final FileStatus[] stats = listStatus(f);
+        private int i = 0;
+
+        @Override
+        public boolean hasNext() {
+          return i<stats.length;
+        }
+
+        @Override
+        public LocatedFileStatus next() throws IOException {
+          if (!hasNext()) {
+            throw new NoSuchElementException("No more entry in " + f);
+          }
+          FileStatus result = stats[i++];
+          // for files, use getBlockLocations(FileStatus, int, int) to avoid
+          // calling getFileStatus(Path) to load the FileStatus again
+          BlockLocation[] locs = result.isFile() ?
+              getFileBlockLocations(result, 0, result.getLen()) :
+              null;
+          return new LocatedFileStatus(result, locs);
+        }
+      };
+    }
+
+
+    @Override
     public FileStatus getFileStatus(Path path) throws IOException {
         setAccessTime();
         if (isLoginUser) { return unixFileSystem.getFileStatus(path); }
@@ -189,6 +242,25 @@ public class CalvalusShFileSystem extends LocalFileSystem {
         List<FileStatus> files = collectPathsOutput(proc);
         handleReturnCode(proc, files, path);
         LOG.info("paths " + p + " externally listed, " + files.size() + " entries");
+        return files.toArray(new FileStatus[files.size()]);
+    }
+
+    @Override
+    public FileStatus[] globStatus(Path path, PathFilter filter) throws IOException {
+        setAccessTime();
+        if (isLoginUser) { return unixFileSystem.globStatus(path); }
+        String p = path.toUri().getPath();
+        Process proc = callUnixCommand("glob", p);
+        List<FileStatus> files = collectPathsOutput(proc);
+        handleReturnCode(proc, files, path);
+        for (int i = 0; i < files.size();) {
+            if (! filter.accept(files.get(i).getPath())) {
+                files.remove(i);
+            } else {
+                ++i;
+            }
+        }
+        LOG.info("paths " + p + " externally listed and filtered, " + files.size() + " entries");
         return files.toArray(new FileStatus[files.size()]);
     }
 
