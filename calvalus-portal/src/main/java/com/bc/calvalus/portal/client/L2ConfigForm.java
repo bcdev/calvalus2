@@ -204,7 +204,10 @@ public class L2ConfigForm extends Composite {
                 productSetChanged = false;
             }
         }
-        processorList.setSelectedIndex(selectionMandatory ? newSelectionIndex : newSelectionIndex + 1);
+        if (newSelectionIndex == 0 && !selectionMandatory && processorDescriptors.size() > 0) {
+            newSelectionIndex = 1; // always select the fist processor
+        }
+        processorList.setSelectedIndex(newSelectionIndex);
         if (productSetChanged) {
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
         }
