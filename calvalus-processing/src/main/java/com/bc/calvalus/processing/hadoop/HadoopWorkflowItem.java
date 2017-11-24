@@ -128,6 +128,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     }
 
     private String getDiagnosticFromFirstFailedTask() {
+        if (Boolean.getBoolean("calvalus.donotinquirediagnostics")) {
+            return "Diagnostics not available due to internal network restrictions.";
+        }
         org.apache.hadoop.mapred.JobID downgradeJobId = org.apache.hadoop.mapred.JobID.downgrade(jobId);
         try {
             JobClient jobClient = processingService.getJobClient(userName);

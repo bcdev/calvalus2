@@ -52,6 +52,10 @@ public class HadoopServiceContainerFactory implements ServiceContainerFactory {
             System.setProperty("calvalus.accesscontrol.external",
                                serviceConfiguration.get("calvalus.accesscontrol.external"));
         }
+        if (serviceConfiguration.containsKey("calvalus.donotinquirediagnostics")) {
+            System.setProperty("calvalus.donotinquirediagnostics",
+                               serviceConfiguration.get("calvalus.donotinquirediagnostics"));
+        }
 
         Configuration hadoopConfiguration = createHadoopConfiguration(serviceConfiguration);
         JobConf jobConf = new JobConf(hadoopConfiguration);
