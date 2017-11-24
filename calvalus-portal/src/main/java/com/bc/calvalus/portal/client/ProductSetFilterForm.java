@@ -103,15 +103,15 @@ public class ProductSetFilterForm extends Composite {
         radioGroupId++;
 
         minDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        minDate.setValue(DATE_FORMAT.parse("2008-05-01"));
+        minDate.setValue(DATE_FORMAT.parse("2017-06-01"));
 
         maxDate.setFormat(new DateBox.DefaultFormat(DATE_FORMAT));
-        maxDate.setValue(DATE_FORMAT.parse("2008-07-31"));
+        maxDate.setValue(DATE_FORMAT.parse("2017-06-30"));
 
         dateList.setEnabled(false);
-        dateList.setValue("2008-06-01\n" +
-                          "2008-06-02\n" +
-                          "2008-06-03");
+        dateList.setValue("2017-06-01\n" +
+                          "2017-06-02\n" +
+                          "2017-06-03");
 
         temporalFilterOff.setName("temporalFilter" + radioGroupId);
         temporalFilterByDateRange.setName("temporalFilter" + radioGroupId);
