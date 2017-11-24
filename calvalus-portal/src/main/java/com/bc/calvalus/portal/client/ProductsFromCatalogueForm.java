@@ -1,6 +1,7 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoInputSelection;
+import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -19,9 +20,9 @@ import java.util.Map;
  *
  * @author Hans
  */
-public class ProductSelectionForm extends Composite {
+public class ProductsFromCatalogueForm extends Composite {
 
-    interface TheUiBinder extends UiBinder<Widget, ProductSelectionForm> {
+    interface TheUiBinder extends UiBinder<Widget, ProductsFromCatalogueForm> {
 
     }
 
@@ -45,7 +46,7 @@ public class ProductSelectionForm extends Composite {
     @UiField
     Button clearSelectionButton;
 
-    ProductSelectionForm(PortalContext portalContext) {
+    ProductsFromCatalogueForm(PortalContext portalContext) {
         this.portal = portalContext;
         initWidget(uiBinder.createAndBindUi(this));
 
@@ -56,10 +57,18 @@ public class ProductSelectionForm extends Composite {
         });
     }
 
+    public void validateForm(String collectionNameSelected) throws ValidationException {
+        if (collectionName != null &&
+                !collectionNameSelected.equals(collectionName)) {
+            throw new ValidationException(this,
+                                          "The selected input files are not consistent with the selected input file set. " +
+                                                  "To change the input file set, please first clear the input files selection");
+        }
+    }
+
     public Map<String, String> getValueMap() {
         Map<String, String> parameters = new HashMap<>();
         String[] productIdentifierList = productListTextArea.getText().split("\n");
-        parameters.put("collectionName", collectionName);
         parameters.put("productIdentifiers", String.join(",", productIdentifierList));
         return parameters;
     }

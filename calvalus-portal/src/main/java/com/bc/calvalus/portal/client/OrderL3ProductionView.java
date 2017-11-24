@@ -43,7 +43,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
     private ProductSetSelectionForm productSetSelectionForm;
     private ProductSetFilterForm productSetFilterForm;
-    private ProductSelectionForm productSelectionForm;
+    private ProductsFromCatalogueForm productsFromCatalogueForm;
     private L2ConfigForm l2ConfigForm;
     private L3ConfigForm l3ConfigForm;
     private OutputParametersForm outputParametersForm;
@@ -78,8 +78,8 @@ public class OrderL3ProductionView extends OrderProductionView {
             }
         });
 
-        productSelectionForm = new ProductSelectionForm(getPortal());
-        productSelectionForm.addInputSelectionHandler(new ProductSelectionForm.InputSelectionHandler() {
+        productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+        productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
             @Override
             public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
                 return new InputSelectionCallback();
@@ -87,7 +87,7 @@ public class OrderL3ProductionView extends OrderProductionView {
 
             @Override
             public void onClearSelectionClick() {
-                productSelectionForm.removeSelections();
+                productsFromCatalogueForm.removeSelections();
                 productSetSelectionForm.removeSelections();
                 productSetFilterForm.removeSelections();
             }
@@ -117,7 +117,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
         if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
-            panel.add(productSelectionForm);
+            panel.add(productsFromCatalogueForm);
         }
         panel.add(l2ConfigForm);
         panel.add(l3ConfigForm);
@@ -136,7 +136,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         @Override
         public void onSuccess(DtoInputSelection inputSelection) {
             Map<String, String> inputSelectionMap = UIUtils.parseParametersFromContext(inputSelection);
-            productSelectionForm.setValues(inputSelectionMap);
+            productsFromCatalogueForm.setValues(inputSelectionMap);
             productSetSelectionForm.setValues(inputSelectionMap);
             productSetFilterForm.setValues(inputSelectionMap);
         }
@@ -214,18 +214,12 @@ public class OrderL3ProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
+            productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
 
-            String collectionNameSelected = productSetSelectionForm.getValueMap().get("collectionName");
-            String collectionNameFromCatalogueSearch = productSelectionForm.getValueMap().get("collectionName");
-            if (collectionNameFromCatalogueSearch != null &&
-                !collectionNameSelected.equals(collectionNameFromCatalogueSearch)) {
-                throw new ValidationException(productSetSelectionForm,
-                                              "The selected input files are not consistent with the selected input file set. " +
-                                              "To change the input file set, please first clear the input files selection");
-            }
+            
 
             if (! getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
@@ -251,7 +245,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
-        parameters.putAll(productSelectionForm.getValueMap());
+        parameters.putAll(productsFromCatalogueForm.getValueMap());
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
@@ -267,7 +261,7 @@ public class OrderL3ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
-        productSelectionForm.setValues(parameters);
+        productsFromCatalogueForm.setValues(parameters);
         l2ConfigForm.setValues(parameters);
         l3ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
