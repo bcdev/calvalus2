@@ -33,7 +33,6 @@ public class SamlCreateTicketValidator extends AbstractCasProtocolUrlBasedTicket
 
     public SamlCreateTicketValidator(String casServerUrlPrefix) {
         super(casServerUrlPrefix);
-        System.out.println("SamlCreateTicketValidator instantiated.");
     }
 
     @Override
@@ -58,8 +57,6 @@ public class SamlCreateTicketValidator extends AbstractCasProtocolUrlBasedTicket
 
             HashMap<String, Object> attributes = new HashMap<>();
             attributes.put("rawSamlToken", document);
-
-            System.out.println("Returning CAS Assertion for user '" + subject + "' with attributes " + attributes);
 
             return new AssertionImpl(new AttributePrincipalImpl(subject, attributes));
         } catch (Exception ex) {
