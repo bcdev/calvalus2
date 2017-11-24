@@ -74,7 +74,12 @@ public class JobClientsMap {
                 new Exception("Where is anonymous created=").printStackTrace();
             }
             UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
-            JobClient jobClient = new JobClient(new JobConf(jobConfTemplate));
+            JobClient jobClient = null;
+            try {
+                jobClient = remoteUser.doAs((PrivilegedExceptionAction<JobClient>) () -> new JobClient(new JobConf(jobConfTemplate)));
+            } catch (InterruptedException e) {
+                throw new IOException(e);   
+            }
             CacheEntry cacheEntry = new CacheEntry(jobClient);
             jobClientsCache.put(userName, cacheEntry);
             if (withExternalAccessControl) {
