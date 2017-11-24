@@ -72,6 +72,8 @@ import org.jdom2.Element;
 import org.jdom2.input.DOMBuilder;
 import org.jdom2.output.DOMOutputter;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -82,6 +84,11 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -121,6 +128,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     private static final Logger LOG = CalvalusLogger.getLogger();
     private static final Properties calvalusVersionProperties;
     private static final String REQUEST_FILE_EXTENSION = ".xml";
+    private static final String USER_ROLE = "calvalus.portal.userRole";
 
     static {
         InputStream in = BackendServiceImpl.class.getResourceAsStream("/calvalus-version.properties");
@@ -879,15 +887,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     public boolean isUserInRole(String role) {
-        return (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") || getThreadLocalRequest().isUserInRole(role)) &&
+        return (!backendConfig.getConfigMap().containsKey(USER_ROLE) || getThreadLocalRequest().isUserInRole(role)) &&
                 // and the portal is either generic or destined to this user role ...
-                (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") ||
-                        backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() == 0 ||
-                        Arrays.asList(backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ")).contains(role));
+                (!backendConfig.getConfigMap().containsKey(USER_ROLE) ||
+                        backendConfig.getConfigMap().get(USER_ROLE).trim().length() == 0 ||
+                        Arrays.asList(backendConfig.getConfigMap().get(USER_ROLE).trim().split(" ")).contains(role));
     }
 
     @Override
     public DtoCalvalusConfig getCalvalusConfig() {
+        List<String> samlRoles = new ArrayList<>();
         if ("debug".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
             serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(backendConfig.getConfigMap(), getUserName()));
         } else if ("saml".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
@@ -898,6 +907,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                 samlToken = fixRootNode(samlToken);
                 String saml = getStringFromDoc(samlToken);
                 serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), saml));
+                samlRoles = getGroupMemberships(samlToken);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 LOG.log(Level.SEVERE, e.getMessage(), e);
@@ -905,20 +915,21 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
         backendConfig.getConfigMap().put("user", getUserName());
         String[] configuredRoles;
-        if (backendConfig.getConfigMap().containsKey("calvalus.portal.userRole")
-                && backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().length() > 0) {
-            configuredRoles = backendConfig.getConfigMap().get("calvalus.portal.userRole").trim().split(" ");
+        if (backendConfig.getConfigMap().containsKey(USER_ROLE) && backendConfig.getConfigMap().get(USER_ROLE).trim().length() > 0) {
+            configuredRoles = backendConfig.getConfigMap().get(USER_ROLE).trim().split(" ");
         } else {
             configuredRoles = new String[]{"calvalus"};
         }
+
         List<String> accu = new ArrayList<>();
         for (String role : configuredRoles) {
-            if (!backendConfig.getConfigMap().containsKey("calvalus.portal.userRole") || getThreadLocalRequest().isUserInRole(role)) {
+            boolean noRolesConfigured = !backendConfig.getConfigMap().containsKey(USER_ROLE);
+            if (noRolesConfigured || samlRoles.contains(role) || getThreadLocalRequest().isUserInRole(role)) {
                 accu.add(role);
             }
         }
+
         backendConfig.getConfigMap().put("roles", accu.toString());
-        //LOG.info("getCalvalusConfig returns " + getUserName() + " " + accu.size() + " " + backendConfig.getConfigMap().size());
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
     }
 
@@ -932,6 +943,25 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         DOMOutputter outputter = new DOMOutputter();
         return outputter.output(jDomDoc);
     }
+
+    static List<String> getGroupMemberships(Document samlToken) throws XPathExpressionException {
+        List<String> groupMemberships = new ArrayList<>();
+        XPathFactory xPathfactory = XPathFactory.newInstance();
+        XPath xpath = xPathfactory.newXPath();
+        String expression =
+                "/*[local-name()='Assertion']" +
+                        "/*[local-name()='AttributeStatement']" +
+                        "/*[local-name()='Attribute'][@Name=\"memberOf\"]" +
+                        "/*[local-name()='AttributeValue']";
+        XPathExpression expr = xpath.compile(expression);
+        NodeList nodeList = (NodeList) expr.evaluate(samlToken, XPathConstants.NODESET);
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node item = nodeList.item(i);
+            groupMemberships.add(item.getTextContent().split(",")[0].split("=")[1]);
+        }
+        return groupMemberships;
+    }
+
 
     @Override
     public String[][] calculateL3Periods(String minDate, String maxDate, String steppingPeriodLength, String compositingPeriodLength) {
