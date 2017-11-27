@@ -911,14 +911,6 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         return "anonymous";
     }
 
-    public boolean isUserInRole(String role) {
-        return (!backendConfig.getConfigMap().containsKey(USER_ROLE) || getThreadLocalRequest().isUserInRole(role)) &&
-                // and the portal is either generic or destined to this user role ...
-                (!backendConfig.getConfigMap().containsKey(USER_ROLE) ||
-                        backendConfig.getConfigMap().get(USER_ROLE).trim().length() == 0 ||
-                        Arrays.asList(backendConfig.getConfigMap().get(USER_ROLE).trim().split(" ")).contains(role));
-    }
-
     @Override
     public DtoCalvalusConfig getCalvalusConfig() {
         List<String> samlRoles = new ArrayList<>();
