@@ -343,7 +343,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         mainMenuElement.getParentElement().getStyle().setProperty("display", "flex");
         mainMenuElement.getParentElement().getStyle().setProperty("height", "100%");
         mainMenuElement.getParentElement().getStyle().setProperty("width", "100%");
-        mainMenuElement.getParentElement().getStyle().setProperty("overflow", "auto");
+        mainMenuElement.getParentElement().getStyle().setProperty("overflow", "hidden");
 
         SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
         selectionModel.addSelectionChangeHandler(

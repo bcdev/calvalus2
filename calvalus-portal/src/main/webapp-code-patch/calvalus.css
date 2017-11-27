@@ -162,12 +162,6 @@
     flex-direction: row;
 }
 
-.footer-info-impressum {
-    width: 100%;
-    margin: auto;
-    text-align: center;
-}
-
 .footer-info-help {
     width: 100%;
     margin: auto;
@@ -257,9 +251,7 @@ select[multiple]:focus option:checked {
     color: white;
     flex: 0 0 200px;
     font-size: 14px;
-    margin-bottom: -5000px; /*maybe not really the best solution, very hackish. */
-    padding-bottom: 5000px; /*Investigate for a better one to get the side menu stretch to the end of the page*/
-    overflow-y: hidden;
+    overflow-y: auto;
 }
 
 .title {

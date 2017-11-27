@@ -43,7 +43,7 @@
                 <% } %>
             </div>
             <div class="header-info-help">
-                <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp"
+                <a href="https://code-de.org/help" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="header-info-text">HELP</span>
                 </a>
@@ -85,14 +85,14 @@
             </div>
         </div>
         <div class="footer-info">
-            <div class="footer-info-impressum">
-                <a href="http://www.brockmann-consult.de/bc-web/impressum.html"
+            <div class="footer-info-about">
+                <a href="https://code-de.org/about"
                    target="_blank" style="text-decoration:none;">
-                    <span class="footer-info-text">Impressum</span>
+                    <span class="footer-info-text">About</span>
                 </a>
             </div>
             <div class="footer-info-help">
-                <a href="http://www.brockmann-consult.de/beam-wiki/x/W4C8Aw" target="_CVHelp"
+                <a href="https://code-de.org/help" target="_CVHelp"
                    style="text-decoration:none;">
                     <span class="footer-info-text">Help</span>
                 </a>
