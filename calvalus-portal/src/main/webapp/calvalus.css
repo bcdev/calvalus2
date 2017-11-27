@@ -44,7 +44,7 @@
 }
 
 .copyright {
-	background-color:#B4C1D7;
+    background-color: #B4C1D7;
     font-family: Calibri, Verdana, Arial, sans-serif;
     font-size: 9pt;
     color: #FFF;
@@ -71,7 +71,7 @@
     text-align: center;
     padding-top: 20px;
     width: 300px;
-    margin:0px auto;
+    margin: 0px auto;
 }
 
 .headerPanel {
@@ -83,7 +83,7 @@
     padding: 5px;
 }
 
-p,li {
+p, li {
     font-family: Georgia, Times, serif;
     font-size: 10pt;
 }
@@ -96,4 +96,16 @@ p,li {
 .anchor {
     color: #888;
     font-family: Calibri, Verdana, Arial, sans-serif;
+}
+
+.view-container {
+    height: 220em;
+    width: 105em;
+}
+
+.main-panel-sub {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }

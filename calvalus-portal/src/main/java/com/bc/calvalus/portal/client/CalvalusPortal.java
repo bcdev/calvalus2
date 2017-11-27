@@ -320,8 +320,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
         mainMenu = new MainMenu(views);
 
         DeckLayoutPanel viewPanel = new DeckLayoutPanel();
-        viewPanel.setSize("calc(100% - 180px)",
-                          "100%");  // TODO use as minimum, and fill window size if window is larger
+        viewPanel.getElement().setClassName("view-container");
         viewPanel.setVisible(true);
         for (PortalView view : views) {
             viewPanel.add(view.asWidget());
@@ -340,10 +339,7 @@ public class CalvalusPortal implements EntryPoint, PortalContext {
 
         Element mainMenuElement = mainMenu.getWidget().getElement();
         mainMenuElement.setClassName("main-menu");
-        mainMenuElement.getParentElement().getStyle().setProperty("display", "flex");
-        mainMenuElement.getParentElement().getStyle().setProperty("height", "100%");
-        mainMenuElement.getParentElement().getStyle().setProperty("width", "100%");
-        mainMenuElement.getParentElement().getStyle().setProperty("overflow", "hidden");
+        mainMenuElement.getParentElement().setClassName("main-panel-sub");
 
         SingleSelectionModel<PortalView> selectionModel = mainMenu.getSelectionModel();
         selectionModel.addSelectionChangeHandler(
