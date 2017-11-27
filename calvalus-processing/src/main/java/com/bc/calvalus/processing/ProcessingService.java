@@ -81,16 +81,4 @@ public interface ProcessingService<JobId> {
      * Load details about the region data.
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
-
-    /**
-     * Registers hooks to be applied before job submission
-     * @param hook
-     */
-    void registerJobHook(HadoopJobHook hook);
-
-    /**
-     * Runs registers hooks
-     * @param job
-     */
-    void runHooksBeforeSubmission(Job job);
 }

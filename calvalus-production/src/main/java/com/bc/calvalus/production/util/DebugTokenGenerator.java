@@ -52,12 +52,11 @@ public class DebugTokenGenerator extends SamlUtil implements HadoopJobHook {
     private final String userName;
     private final Credential debugCredential;
 
-    public DebugTokenGenerator(Map<String, String> config, String userName) {
-        super(config);
+    public DebugTokenGenerator(String publicKey, String privateKey, String certificate, String userName) {
+        super(publicKey);
         this.userName = userName;
         try {
-            debugCredential = readCredentials(config.get("calvalus.crypt.debug-private-key"),
-                                              config.get("calvalus.crypt.debug-certificate"));
+            debugCredential = readCredentials(privateKey, certificate);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException | CertificateException e) {
             throw new RuntimeException("exception reading keys and certificates", e);
         }

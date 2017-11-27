@@ -88,7 +88,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final Map<String, ShapefileCacheEntry> shapeAttributeCache;
     private final Logger logger;
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
-    private final List<HadoopJobHook> jobHooks = new ArrayList<>();
     private boolean withExternalAccessControl;
 
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
@@ -665,18 +664,6 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
         public ShapefileCacheEntry(long modificationTime, String[][] data) {
             this.data = data;
             this.modificationTime = modificationTime;
-        }
-    }
-
-    @Override
-    public void registerJobHook(HadoopJobHook hook) {
-        jobHooks.add(hook);
-    }
-
-    @Override
-    public void runHooksBeforeSubmission(Job job) {
-        for (HadoopJobHook hook : jobHooks) {
-            hook.beforeSubmit(job);
         }
     }
 

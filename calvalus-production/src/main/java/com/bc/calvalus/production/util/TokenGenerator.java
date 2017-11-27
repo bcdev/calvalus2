@@ -13,7 +13,6 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import java.util.Map;
 
 /**
  * TODO add API doc
@@ -39,8 +38,8 @@ public class TokenGenerator extends SamlUtil implements HadoopJobHook {
 
     private final String samlToken;
 
-    public TokenGenerator(Map<String, String> config, String samlToken) {
-        super(config);
+    public TokenGenerator(String publicKey, String samlToken) {
+        super(publicKey);
         this.samlToken = samlToken;
     }
 

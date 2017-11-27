@@ -57,6 +57,7 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
     private final String userName;
     private final Configuration jobConfig;
     private JobID jobId;
+    private HadoopJobHook jobHook;
 
     public HadoopWorkflowItem(HadoopProcessingService processingService,
                               String userName,
@@ -125,6 +126,10 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 setStatus(newJobStatus);
             }
         }
+    }
+
+    public void setJobHook(HadoopJobHook jobHook) {
+        this.jobHook = jobHook;
     }
 
     private String getDiagnosticFromFirstFailedTask() {
@@ -203,7 +208,9 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
                 ProcessorFactory.installProcessorBundles(userName, job.getConfiguration(), fileSystem);
                 validateJob(job);
                 // maybe add calvalus.token parameter
-                getProcessingService().runHooksBeforeSubmission(job);
+                if (jobHook != null) {
+                    jobHook.beforeSubmit(job);
+                }
                 JobID jobId = submitJob(job);  // the impl of submitJob does a doAs as well, but maybe with the wrong user
 
                 CalvalusLogger.getLogger().info("Submitted Job with Id: " + jobId);
@@ -293,4 +300,5 @@ public abstract class HadoopWorkflowItem extends AbstractWorkflowItem {
         }
 
     }
+
 }

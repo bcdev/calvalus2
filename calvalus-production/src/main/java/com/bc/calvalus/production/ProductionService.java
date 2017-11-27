@@ -71,6 +71,18 @@ public interface ProductionService {
     ProductionResponse orderProduction(ProductionRequest request) throws ProductionException;
 
     /**
+     * Orders a new productions.
+     *
+     * @param request The request.
+     * @param jobHook a hook run before each job is submitted.
+     *
+     * @return The response.
+     *
+     * @throws ProductionException If a service error occurred.
+     */
+    ProductionResponse orderProduction(ProductionRequest request, HadoopJobHook jobHook) throws ProductionException;
+
+    /**
      * Requests cancellation of productions with given IDs.
      *
      * @param productionIds The production IDs.
@@ -153,10 +165,4 @@ public interface ProductionService {
      */
     public String[][] loadRegionDataInfo(String username, String url) throws IOException;
 
-    /**
-     * Registers hooks to be applied before job submission
-     * @param hook
-     */
-    void registerJobHook(HadoopJobHook hook);
-    
 }

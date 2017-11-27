@@ -7,7 +7,6 @@ import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobIdFormat;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
-import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import org.junit.Ignore;
 
 import java.io.IOException;
@@ -78,15 +77,5 @@ public class TestProcessingService implements ProcessingService<String> {
     @Override
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         return new String[0][];
-    }
-
-    @Override
-    public void registerJobHook(HadoopJobHook hook) {
-        // noop
-    }
-
-    @Override
-    public void runHooksBeforeSubmission(org.apache.hadoop.mapreduce.Job job) {
-        // noop
     }
 }

@@ -121,10 +121,10 @@ public class SamlUtil {
         }
     }
 
-    public SamlUtil(Map<String, String> config) {
+    public SamlUtil(String publicKey) {
         this();
         try {
-            calvalusPublicKey = readPublicKey(config.get("calvalus.crypt.calvalus-public-key"));
+            calvalusPublicKey = readPublicKey(publicKey);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException | IOException e) {
             throw new RuntimeException("exception reading keys and certificates", e);
         }

@@ -4,6 +4,7 @@ import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.WorkflowItem;
 import com.bc.calvalus.ingestion.IngestionTool;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.production.Production;
 import com.bc.calvalus.production.ProductionException;
@@ -227,11 +228,15 @@ public class ProductionTool {
             } else {
                 authPolicy = config.getOrDefault("calvalus.crypt.auth", "unix");
             }
+            HadoopJobHook hook = null;
             switch (authPolicy) {
                 case "unix":
                     break;
                 case "debug":
-                    serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(config, getUserName()));
+                    String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+                    String privateKey = config.get("calvalus.crypt.debug-private-key");
+                    String certificate = config.get("calvalus.crypt.debug-certificate");
+                    hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
                     break;
                 case "saml":
                     String casUrl = config.getOrDefault("calvalus.cas.url", "https://tsedos.eoc.dlr.de/cas-codede");
@@ -240,13 +245,14 @@ public class ProductionTool {
                     String tgt = fetchTgt(casUrl);
                     String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
                     samlToken = fixRootNode(samlToken);
-                    serviceContainer.getProductionService().registerJobHook(new TokenGenerator(config, samlToken));
+                    String publicKeySaml = config.get("calvalus.crypt.calvalus-public-key");
+                    hook = new TokenGenerator(publicKeySaml, samlToken);
                     break;
                 default:
                     throw new RuntimeException("unknown auth type " + authPolicy);
             }
 
-            Production production = orderProduction(serviceContainer.getProductionService(), request);
+            Production production = orderProduction(serviceContainer.getProductionService(), request, hook);
             if (production.isAutoStaging()) {
                 stageProduction(serviceContainer.getProductionService(), production);
             }
@@ -357,11 +363,11 @@ public class ProductionTool {
         }
     }
 
-    private Production orderProduction(ProductionService productionService, ProductionRequest request) throws
+    private Production orderProduction(ProductionService productionService, ProductionRequest request, HadoopJobHook hook) throws
             ProductionException,
             InterruptedException {
         say("Ordering production...");
-        ProductionResponse productionResponse = productionService.orderProduction(request);
+        ProductionResponse productionResponse = productionService.orderProduction(request, hook);
         Production production = productionResponse.getProduction();
         say("Production successfully ordered. The production ID is: " + production.getId());
         observeProduction(productionService, production);

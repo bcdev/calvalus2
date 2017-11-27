@@ -46,6 +46,7 @@ import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
+import com.bc.calvalus.processing.hadoop.HadoopJobHook;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.ma.Record;
 import com.bc.calvalus.processing.ma.RecordSource;
@@ -100,16 +101,7 @@ import java.security.Principal;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -411,10 +403,32 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     }
 
     @Override
-    public DtoProductionResponse orderProduction(DtoProductionRequest productionRequest) throws
+    public DtoProductionResponse orderProduction(DtoProductionRequest dtoProductionRequest) throws
             BackendServiceException {
         try {
-            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(convert(productionRequest));
+            ProductionRequest productionRequest = convert(dtoProductionRequest);
+            HadoopJobHook hook = null;
+            Map<String, String> config = backendConfig.getConfigMap();
+            if ("debug".equals(config.get("calvalus.crypt.auth"))) {
+                String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+                String privateKey = config.get("calvalus.crypt.debug-private-key");
+                String certificate = config.get("calvalus.crypt.debug-certificate");
+                hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
+            } else if ("saml".equals(config.get("calvalus.crypt.auth"))) {
+                try {
+                    HttpSession session = getThreadLocalRequest().getSession();
+                    AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
+                    Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
+                    samlToken = fixRootNode(samlToken);
+                    String saml = getStringFromDoc(samlToken);
+                    String publicKey = config.get("calvalus.crypt.calvalus-public-key");
+                    hook = new TokenGenerator(publicKey, saml);
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    LOG.log(Level.SEVERE, e.getMessage(), e);
+                }
+            }
+            ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(productionRequest, hook);
             return convert(productionResponse);
         } catch (ProductionException e) {
             throw convert(e);
@@ -908,40 +922,38 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     @Override
     public DtoCalvalusConfig getCalvalusConfig() {
         List<String> samlRoles = new ArrayList<>();
-        if ("debug".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
-            serviceContainer.getProductionService().registerJobHook(new DebugTokenGenerator(backendConfig.getConfigMap(), getUserName()));
-        } else if ("saml".equals(backendConfig.getConfigMap().get("calvalus.crypt.auth"))) {
+        Map<String, String> userSpecificConfig = new HashMap<>(backendConfig.getConfigMap());
+       if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
             try {
                 HttpSession session = getThreadLocalRequest().getSession();
                 AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
                 Document samlToken = (Document) assertion.getPrincipal().getAttributes().get("rawSamlToken");
                 samlToken = fixRootNode(samlToken);
-                String saml = getStringFromDoc(samlToken);
-                serviceContainer.getProductionService().registerJobHook(new TokenGenerator(backendConfig.getConfigMap(), saml));
                 samlRoles = getGroupMemberships(samlToken);
             } catch (Exception e) {
                 System.out.println(e.getMessage());
                 LOG.log(Level.SEVERE, e.getMessage(), e);
             }
         }
-        backendConfig.getConfigMap().put("user", getUserName());
+        userSpecificConfig.put("user", getUserName());
         String[] configuredRoles;
-        if (backendConfig.getConfigMap().containsKey(USER_ROLE) && backendConfig.getConfigMap().get(USER_ROLE).trim().length() > 0) {
-            configuredRoles = backendConfig.getConfigMap().get(USER_ROLE).trim().split(" ");
+        String roleParameter = userSpecificConfig.get(USER_ROLE);
+        if (roleParameter != null && roleParameter.trim().length() > 0) {
+            configuredRoles = roleParameter.trim().split(" ");
         } else {
             configuredRoles = new String[]{"calvalus"};
         }
 
         List<String> accu = new ArrayList<>();
         for (String role : configuredRoles) {
-            boolean noRolesConfigured = !backendConfig.getConfigMap().containsKey(USER_ROLE);
+            boolean noRolesConfigured = roleParameter == null;
             if (noRolesConfigured || samlRoles.contains(role) || getThreadLocalRequest().isUserInRole(role)) {
                 accu.add(role);
             }
         }
 
-        backendConfig.getConfigMap().put("roles", accu.toString());
-        return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), backendConfig.getConfigMap());
+        userSpecificConfig.put("roles", accu.toString());
+        return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), userSpecificConfig);
     }
 
     static Document fixRootNode(Document samlToken) throws org.jdom2.JDOMException {

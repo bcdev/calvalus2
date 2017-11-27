@@ -1,16 +1,14 @@
 package com.bc.calvalus.production;
 
 
-import com.bc.calvalus.commons.CalvalusLogger;
-import com.bc.calvalus.commons.ProcessState;
-import com.bc.calvalus.commons.ProcessStatus;
-import com.bc.calvalus.commons.WorkflowException;
+import com.bc.calvalus.commons.*;
 import com.bc.calvalus.commons.shared.BundleFilter;
 import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
+import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.production.hadoop.HadoopProductionType;
 import com.bc.calvalus.production.store.ProductionStore;
 import com.bc.calvalus.staging.Staging;
@@ -41,7 +39,7 @@ import java.util.regex.Pattern;
  */
 public class ProductionServiceImpl extends Observable implements ProductionService {
 
-    public static enum Action {
+    public enum Action {
         CANCEL,
         DELETE,
         RESTART,// todo - implement restart (nf)
@@ -103,6 +101,11 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
 
     @Override
     public ProductionResponse orderProduction(ProductionRequest productionRequest) throws ProductionException {
+        return orderProduction(productionRequest, null);
+    }
+
+    @Override
+    public ProductionResponse orderProduction(ProductionRequest productionRequest, HadoopJobHook jobHook) throws ProductionException {
         String user = productionRequest.getUserName();
         String type = productionRequest.getProductionType();
         logger.info("orderProduction: " + type + " (for " + user + ")");
@@ -121,13 +124,27 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
                 production = remoteUser.doAs((PrivilegedExceptionAction<Production>) () ->
                     productionType.createProduction(productionRequest)
                 );
-                production.getWorkflow().submit();
+                WorkflowItem workflow = production.getWorkflow();
+                if (jobHook != null) {
+                    injectJobHook(jobHook, workflow);
+                }
+                workflow.submit();
             } catch (Throwable t) {
                 logger.log(Level.SEVERE, t.getMessage(), t);
                 throw new ProductionException(String.format("Failed to submit production: %s", t.getMessage()), t);
             }
             productionStore.addProduction(production);
             return new ProductionResponse(production);
+        }
+    }
+
+    private static void injectJobHook(HadoopJobHook jobHook, WorkflowItem workflowItem)  {
+        if (workflowItem instanceof HadoopWorkflowItem) {
+            HadoopWorkflowItem hadoopWorkflowItem = (HadoopWorkflowItem) workflowItem;
+            hadoopWorkflowItem.setJobHook(jobHook);
+        }
+        for (WorkflowItem item : workflowItem.getItems()) {
+            injectJobHook(jobHook, item);
         }
     }
 
@@ -398,10 +415,5 @@ public class ProductionServiceImpl extends Observable implements ProductionServi
     @Override
     public String[][] loadRegionDataInfo(String username, String url) throws IOException {
         return processingService.loadRegionDataInfo(username, url);
-    }
-
-    @Override
-    public void registerJobHook(HadoopJobHook hook) {
-         processingService.registerJobHook(hook);
     }
 }
