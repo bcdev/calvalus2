@@ -685,7 +685,7 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      */
     public static InputStream openUrlAsStream(String url, Configuration conf) throws IOException {
         InputStream inputStream;
-        if (url.startsWith("hdfs:")) {
+        if (url.startsWith("hdfs:") || Boolean.getBoolean("calvalus.accesscontrol.external")) {
             final Path path = new Path(url);
             inputStream = path.getFileSystem(conf).open(path);
         } else {
