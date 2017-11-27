@@ -180,6 +180,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public void init() throws ServletException {
+        if (serviceContainer != null) {
+            LOG.log(Level.WARNING, String.format("Found pre-existing service container %s, closing...", serviceContainer.toString()));
+            try {
+                serviceContainer.close();
+            } catch (ProductionException e) {
+                LOG.log(Level.WARNING, "Unable to close obsolete service container.", e);
+            }
+            serviceContainer = null;
+            System.gc();
+        }
         if (serviceContainer == null) {
             synchronized (this) {
                 if (serviceContainer == null) {
