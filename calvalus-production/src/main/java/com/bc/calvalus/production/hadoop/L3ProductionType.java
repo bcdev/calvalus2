@@ -15,7 +15,6 @@ import com.bc.calvalus.production.ProductionException;
 import com.bc.calvalus.production.ProductionRequest;
 import com.bc.calvalus.production.ProductionType;
 import com.bc.calvalus.production.util.DateRangeCalculator;
-import com.bc.calvalus.staging.Staging;
 import com.bc.calvalus.staging.StagingService;
 import com.bc.ceres.binding.Property;
 import com.bc.ceres.binding.PropertyContainer;
@@ -30,7 +29,7 @@ import org.esa.snap.binning.operator.VariableConfig;
 import org.esa.snap.binning.support.SEAGrid;
 
 import java.beans.PropertyChangeListener;
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -41,9 +40,6 @@ import java.util.List;
  * @author Norman
  */
 public class L3ProductionType extends HadoopProductionType {
-
-    public static final int MONTHLY = -30;
-    public static final int WEEKLY = -7;
 
     public static class Spi extends HadoopProductionType.Spi {
 
@@ -302,14 +298,21 @@ public class L3ProductionType extends HadoopProductionType {
 
     static VariableConfig[] getVariables(ProductionRequest request) throws ProductionException {
         int expressionCount = request.getInteger("expression.count", 0);
+        int vIndex = 0;
         VariableConfig[] variableConfigs = new VariableConfig[expressionCount];
         for (int i = 0; i < expressionCount; i++) {
             String prefix = "expression." + i;
             String name = request.getString(prefix + ".variable");
-            String exp = request.getString(prefix + ".expression");
-            variableConfigs[i] = new VariableConfig(name, exp);
+            String exp = request.getString(prefix + ".expression", "");
+            if (!exp.isEmpty()){
+                variableConfigs[vIndex++] = new VariableConfig(name, exp);
+            }
         }
-        return variableConfigs;
+        if (expressionCount == vIndex) {
+            return variableConfigs;
+        } else {
+            return Arrays.copyOfRange(variableConfigs, 0, vIndex);
+        }
     }
 
     static int getNumRows(ProductionRequest request) throws ProductionException {

@@ -440,17 +440,13 @@ public class L3ConfigForm extends Composite {
         parameters.put("variables.count", vIndex + "");
 
         List<L3VariableTable.ConfiguredVariable> variableList = variableTable.getVariableList();
-        int eIndex = 0;
         for (int i = 0; i < variableList.size(); i++) {
             L3VariableTable.ConfiguredVariable variable = variableList.get(i);
-            if (!variable.getExpression().isEmpty()) {
-                parameters.put("expression." + i + ".variable", variable.getName());
-                parameters.put("expression." + i + ".expression", variable.getExpression());
-                eIndex++;
-            }
+            parameters.put("expression." + i + ".variable", variable.getName());
+            parameters.put("expression." + i + ".expression", variable.getExpression());
         }
-        if (eIndex > 0) {
-            parameters.put("expression.count", eIndex + "");
+        if (variableList.size() > 0) {
+            parameters.put("expression.count", variableList.size() + "");
         }
 
         parameters.put("maskExpr", maskExpr.getText());
@@ -512,8 +508,8 @@ public class L3ConfigForm extends Composite {
             int numExpr = Integer.valueOf(eCountValue);
             for (int i = 0; i < numExpr; i++) {
                 String vName = parameters.get("expression." + i + ".variable");
-                String vExpr = parameters.get("expression." + i + ".expression");
-                if (vName != null && vExpr != null) {
+                String vExpr = parameters.getOrDefault("expression." + i + ".expression", "");
+                if (vName != null) {
                     variableTable.addRow(vName, vExpr);
                 }
             }
