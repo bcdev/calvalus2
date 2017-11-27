@@ -54,7 +54,7 @@ public class WpsConnection {
                 // sleeps for one minute before retrying after failure
                 try {
                     Thread.currentThread().wait(60 * 1000);
-                } catch (InterruptedException _) {}
+                } catch (InterruptedException ignore) {}
                 drainTimer();
                 LOGGER.info("queue drained and renewed");
             }
@@ -100,7 +100,7 @@ public class WpsConnection {
         if (in != null) {
             try {
                 in.close();
-            } catch (IOException _) {
+            } catch (IOException ignore) {
             }
             in = null;
         }
