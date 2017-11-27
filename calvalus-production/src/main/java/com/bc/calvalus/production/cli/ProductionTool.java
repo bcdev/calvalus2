@@ -239,8 +239,8 @@ public class ProductionTool {
                     hook = new DebugTokenGenerator(publicKey, privateKey, certificate, getUserName());
                     break;
                 case "saml":
-                    String casUrl = config.getOrDefault("calvalus.cas.url", "https://tsedos.eoc.dlr.de/cas-codede");
-                    String portalUrl = config.getOrDefault("calvalus.portal.url", "http://cd-cvportal:8080/calvalus-portal/calvalus.jsp");
+                    String casUrl = config.getOrDefault("calvalus.cas.url", "https://sso.eoc.dlr.de/cas-codede");
+                    String portalUrl = config.getOrDefault("calvalus.portal.url", "https://processing.code-de.org/calvalus.jsp");
                     say(String.format("Fetching SAML token from %s and adding to request.", casUrl));
                     String tgt = fetchTgt(casUrl);
                     String samlToken = fetchSamlToken(tgt, casUrl, portalUrl);
