@@ -137,10 +137,12 @@ public class OrderMAProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+                productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            }
             l2ConfigForm.validateForm();
             maConfigForm.validateForm();
-            
+
             return true;
         } catch (ValidationException e) {
             e.handle();

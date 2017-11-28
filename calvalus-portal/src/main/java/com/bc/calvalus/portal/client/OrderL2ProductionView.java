@@ -134,7 +134,9 @@ public class OrderL2ProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+                productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
+            }
             l2ConfigForm.validateForm();
             outputParametersForm.validateForm();
 
