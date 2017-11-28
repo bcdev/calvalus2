@@ -135,7 +135,7 @@ public class Sentinel2CalvalusReaderPlugin implements ProductReaderPlugIn {
                     }
                     CalvalusLogger.getLogger().info("productXML file = " + localFile);
                 }
-                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_60M);
+                String inputFormat = configuration.get(JobConfigNames.CALVALUS_INPUT_FORMAT, FORMAT_20M);
                 CalvalusLogger.getLogger().info("inputFormat = " + inputFormat);
                 Product product;
                 product = readProduct(localFile, "SENTINEL-2-MSI-MultiRes");
