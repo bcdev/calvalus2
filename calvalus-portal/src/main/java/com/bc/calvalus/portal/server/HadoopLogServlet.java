@@ -41,6 +41,7 @@ import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.logaggregation.AggregatedLogFormat;
 import org.apache.hadoop.yarn.logaggregation.LogAggregationUtils;
 import org.apache.hadoop.yarn.util.ConverterUtils;
+import org.owasp.esapi.User;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -67,6 +68,8 @@ import static com.bc.calvalus.portal.server.BackendServiceImpl.getUserName;
  */
 public class HadoopLogServlet extends HttpServlet {
 
+    private boolean withExternalAccessControl;
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         doGet(req, resp);
@@ -80,6 +83,7 @@ public class HadoopLogServlet extends HttpServlet {
             return;
         }
         ServiceContainer serviceContainer = (ServiceContainer) getServletContext().getAttribute("serviceContainer");
+        withExternalAccessControl = serviceContainer.getHadoopConfiguration().getBoolean("calvalus.accesscontrol.external", false);
         try {
             Production production = serviceContainer.getProductionService().getProduction(productionId);
             final String userName = getUserName(req).toLowerCase();
@@ -158,7 +162,12 @@ public class HadoopLogServlet extends HttpServlet {
                         // TODO in case of status == failed --> check if task has really failed.
 //                        displayTaskLogs(event.getTaskAttemptId(), event.getTaskTrackerHttp(), resp);
 
-                        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(userName);
+                        UserGroupInformation remoteUser;
+                        if (withExternalAccessControl) {
+                            remoteUser = UserGroupInformation.createRemoteUser("yarn");
+                        } else {
+                            remoteUser = UserGroupInformation.createRemoteUser(userName);
+                        }
                         try {
                             remoteUser.doAs(new PrivilegedExceptionAction<Integer>() {
                                 @Override
