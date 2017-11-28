@@ -58,7 +58,8 @@ public class OrderL3ProductionView extends OrderProductionView {
             @Override
             public void onProductSetChanged(DtoProductSet productSet) {
                 productSetFilterForm.setProductSet(productSet);
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                                    productSetSelectionForm.getSelectedProductSet());
                 l2ConfigForm.setProductSet(productSet);
             }
         });
@@ -78,31 +79,35 @@ public class OrderL3ProductionView extends OrderProductionView {
             }
         });
 
-        productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
-        productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
-            @Override
-            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
-                return new InputSelectionCallback();
-            }
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+            productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
+                @Override
+                public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                    return new InputSelectionCallback();
+                }
 
-            @Override
-            public void onClearSelectionClick() {
-                productsFromCatalogueForm.removeSelections();
-                productSetSelectionForm.removeSelections();
-                productSetFilterForm.removeSelections();
-            }
-        });
+                @Override
+                public void onClearSelectionClick() {
+                    productsFromCatalogueForm.removeSelections();
+                    productSetSelectionForm.removeSelections();
+                    productSetFilterForm.removeSelections();
+                }
+            });
+        }
 
         l2ConfigForm = new L2ConfigForm(portalContext, false);
         l2ConfigForm.addChangeHandler(new ChangeHandler() {
             @Override
             public void onChange(ChangeEvent event) {
-                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+                l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                                    productSetSelectionForm.getSelectedProductSet());
             }
         });
 
         l3ConfigForm = new L3ConfigForm(portalContext);
-        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(), productSetSelectionForm.getSelectedProductSet());
+        l3ConfigForm.setProcessorDescriptor(l2ConfigForm.getSelectedProcessorDescriptor(),
+                                            productSetSelectionForm.getSelectedProductSet());
         l3ConfigForm.steppingPeriodLength.setValue(30);
         l3ConfigForm.compositingPeriodLength.setValue(30);
 
@@ -116,7 +121,7 @@ public class OrderL3ProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
-        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+        if (productsFromCatalogueForm != null) {
             panel.add(productsFromCatalogueForm);
         }
         panel.add(l2ConfigForm);
@@ -214,21 +219,21 @@ public class OrderL3ProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            if (productsFromCatalogueForm != null) {
                 productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
             }
             l2ConfigForm.validateForm();
             l3ConfigForm.validateForm();
             outputParametersForm.validateForm();
 
-            
 
-            if (! getPortal().withPortalFeature("unlimitedJobSize")) {
+            if (!getPortal().withPortalFeature("unlimitedJobSize")) {
                 try {
                     final int numPeriods = l3ConfigForm.periodCount.getValue();
                     final int periodLength = l3ConfigForm.compositingPeriodLength.getValue();
-                    if (numPeriods * periodLength > 365+366) {
-                        throw new ValidationException(productSetFilterForm.numDays, "days to be processed larger than allowed");
+                    if (numPeriods * periodLength > 365 + 366) {
+                        throw new ValidationException(productSetFilterForm.numDays,
+                                                      "days to be processed larger than allowed");
                     }
                 } catch (NumberFormatException e) {
                     // ignore
@@ -247,7 +252,9 @@ public class OrderL3ProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
-        parameters.putAll(productsFromCatalogueForm.getValueMap());
+        if (productsFromCatalogueForm != null) {
+            parameters.putAll(productsFromCatalogueForm.getValueMap());
+        }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(l3ConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
@@ -263,7 +270,9 @@ public class OrderL3ProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
-        productsFromCatalogueForm.setValues(parameters);
+        if (productsFromCatalogueForm != null) {
+            productsFromCatalogueForm.setValues(parameters);
+        }
         l2ConfigForm.setValues(parameters);
         l3ConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);

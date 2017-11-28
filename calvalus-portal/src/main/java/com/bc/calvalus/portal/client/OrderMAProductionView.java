@@ -33,6 +33,7 @@ import java.util.Map;
  * @author Norman
  */
 public class OrderMAProductionView extends OrderProductionView {
+
     public static final String ID = OrderMAProductionView.class.getName();
 
     private ProductSetSelectionForm productSetSelectionForm;
@@ -61,20 +62,22 @@ public class OrderMAProductionView extends OrderProductionView {
         productSetFilterForm = new ProductSetFilterForm(portalContext);
         productSetFilterForm.setProductSet(productSetSelectionForm.getSelectedProductSet());
 
-        productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
-        productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
-            @Override
-            public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
-                return new InputSelectionCallback();
-            }
+        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            productsFromCatalogueForm = new ProductsFromCatalogueForm(getPortal());
+            productsFromCatalogueForm.addInputSelectionHandler(new ProductsFromCatalogueForm.InputSelectionHandler() {
+                @Override
+                public AsyncCallback<DtoInputSelection> getInputSelectionChangedCallback() {
+                    return new InputSelectionCallback();
+                }
 
-            @Override
-            public void onClearSelectionClick() {
-                productsFromCatalogueForm.removeSelections();
-                productSetSelectionForm.removeSelections();
-                productSetFilterForm.removeSelections();
-            }
-        });
+                @Override
+                public void onClearSelectionClick() {
+                    productsFromCatalogueForm.removeSelections();
+                    productSetSelectionForm.removeSelections();
+                    productSetFilterForm.removeSelections();
+                }
+            });
+        }
 
         maConfigForm = new MAConfigForm(portalContext);
 
@@ -88,7 +91,7 @@ public class OrderMAProductionView extends OrderProductionView {
         panel.setWidth("100%");
         panel.add(productSetSelectionForm);
         panel.add(productSetFilterForm);
-        if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+        if (productsFromCatalogueForm != null) {
             panel.add(productsFromCatalogueForm);
         }
         panel.add(l2ConfigForm);
@@ -137,7 +140,7 @@ public class OrderMAProductionView extends OrderProductionView {
         try {
             productSetSelectionForm.validateForm();
             productSetFilterForm.validateForm();
-            if (getPortal().withPortalFeature(INPUT_FILES_PANEL)) {
+            if (productsFromCatalogueForm != null) {
                 productsFromCatalogueForm.validateForm(productSetSelectionForm.getSelectedProductSet().getName());
             }
             l2ConfigForm.validateForm();
@@ -156,7 +159,9 @@ public class OrderMAProductionView extends OrderProductionView {
         HashMap<String, String> parameters = new HashMap<String, String>();
         parameters.putAll(productSetSelectionForm.getValueMap());
         parameters.putAll(productSetFilterForm.getValueMap());
-        parameters.putAll(productsFromCatalogueForm.getValueMap());
+        if (productsFromCatalogueForm != null) {
+            parameters.putAll(productsFromCatalogueForm.getValueMap());
+        }
         parameters.putAll(l2ConfigForm.getValueMap());
         parameters.putAll(maConfigForm.getValueMap());
         parameters.putAll(outputParametersForm.getValueMap());
@@ -173,7 +178,9 @@ public class OrderMAProductionView extends OrderProductionView {
     public void setProductionParameters(Map<String, String> parameters) {
         productSetSelectionForm.setValues(parameters);
         productSetFilterForm.setValues(parameters);
-        productsFromCatalogueForm.setValues(parameters);
+        if (productsFromCatalogueForm != null) {
+            productsFromCatalogueForm.setValues(parameters);
+        }
         l2ConfigForm.setValues(parameters);
         maConfigForm.setValues(parameters);
         outputParametersForm.setValues(parameters);
