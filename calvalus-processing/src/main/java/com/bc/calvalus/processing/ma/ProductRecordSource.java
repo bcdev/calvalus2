@@ -101,6 +101,7 @@ public class ProductRecordSource implements RecordSource {
 
         if (maxTimeDifference != null) {
             if (maxTimeDifference.trim().endsWith("d")) {
+                // days (0d is  a test criteria)
                 String trimmed = maxTimeDifference.trim();
                 if (!trimmed.isEmpty()) {
                     String daysAsString = trimmed.substring(0, trimmed.length() - 1);
@@ -108,7 +109,8 @@ public class ProductRecordSource implements RecordSource {
                     return days >= 0;
                 }
             } else {
-                return Double.parseDouble(maxTimeDifference) >= 0;
+                // default is hours, 0 means no test
+                return Double.parseDouble(maxTimeDifference) > 0;
             }
         }
         return false;
