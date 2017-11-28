@@ -362,7 +362,7 @@ public class L2ConfigForm extends Composite {
                                                bundleLocationValue, processorNameValue);
             if (selectionIndex > -1) {
                 processorList.setSelectedIndex(selectionMandatory ? selectionIndex : selectionIndex + 1);
-                updateProcessorDetails();
+                DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
                 if (processorParameterValue != null) {
                     processorParametersArea.setValue(processorParameterValue);
                 }
@@ -372,7 +372,7 @@ public class L2ConfigForm extends Composite {
         if (!processorSelected) {
             // no matching processor found, select the first
             processorList.setSelectedIndex(0);
-            updateProcessorDetails();
+            DomEvent.fireNativeEvent(Document.get().createChangeEvent(), processorList);
         }
         // TODO handle failure
     }
