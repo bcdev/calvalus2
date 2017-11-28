@@ -355,7 +355,7 @@ public class ProductSetFilterForm extends Composite {
                 temporalFilterOff.setValue(true, true);
             }
         }
-        spatialFilterOff.setValue(true, true);
+        spatialFilterOff.setValue(true, true);  // TODO there is a second identical line below
         regionMap.getRegionMapSelectionModel().clearSelection();
         Region existingTemporaryRegion = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
         if (existingTemporaryRegion != null) {
@@ -385,11 +385,13 @@ public class ProductSetFilterForm extends Composite {
                     return;
                 }
             }
-            Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
-            regionMap.addRegion(tempRegion);
-            regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
-            LocateRegionsAction.locateRegion(regionMap, tempRegion);
-            return;
+            if (! "Globe".equals(regionNameValue)) {
+                Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
+                regionMap.addRegion(tempRegion);
+                regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
+                LocateRegionsAction.locateRegion(regionMap, tempRegion);
+                return;
+            }
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();
