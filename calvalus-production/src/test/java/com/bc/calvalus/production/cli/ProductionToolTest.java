@@ -112,7 +112,7 @@ public class ProductionToolTest {
     @Test
     public void testFixRootNode() throws Exception {
         Document document = getDecipheredDoc();
-        String result = ProductionTool.fixRootNode(getStringFromDoc(document));
+        String result = getStringFromDoc(ProductionTool.fixRootNode(document));
         String replace = result.replaceAll("\\r\\n", "");
         assertTrue(replace.startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
                 "<saml2:Assertion xmlns:saml2=\"urn:oasis:names:tc:SAML:2.0:assertion\""));
