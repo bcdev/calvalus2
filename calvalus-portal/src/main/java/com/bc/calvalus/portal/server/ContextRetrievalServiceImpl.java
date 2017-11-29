@@ -9,8 +9,10 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
  */
 public class ContextRetrievalServiceImpl extends RemoteServiceServlet implements ContextRetrievalService {
 
+    private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
+
     @Override
-    public DtoInputSelection getInputSelection() {
-        return (DtoInputSelection) getServletContext().getAttribute("catalogueSearch");
+    public DtoInputSelection getInputSelection(String userName) {
+        return (DtoInputSelection) getServletContext().getAttribute(CATALOGUE_SEARCH_PREFIX + userName);
     }
 }

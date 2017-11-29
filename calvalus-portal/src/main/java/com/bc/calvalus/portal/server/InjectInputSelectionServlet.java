@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
+import java.security.Principal;
 
 /**
  * @author hans
@@ -20,11 +21,16 @@ public class InjectInputSelectionServlet extends HttpServlet {
 
     private static final String FORWARD_URL = "/close-window.jsp";
 
+    private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
+
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse) {
         String requestPayload = servletRequest.getParameter("request");
         DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(requestPayload);
-        getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+        Principal userPrincipal = servletRequest.getUserPrincipal();
+        if (userPrincipal != null) {
+            getServletContext().setAttribute(CATALOGUE_SEARCH_PREFIX + userPrincipal.getName(), dtoInputSelection);
+        }
     }
 
     @Override
@@ -36,7 +42,10 @@ public class InjectInputSelectionServlet extends HttpServlet {
             payload = (String) session.getAttribute(PAYLOAD_PREFIX + sessionId);
         }
         DtoInputSelection dtoInputSelection = getDtoInputSelectionFromJson(payload);
-        getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+        Principal userPrincipal = servletRequest.getUserPrincipal();
+        if (userPrincipal != null) {
+            getServletContext().setAttribute(CATALOGUE_SEARCH_PREFIX + userPrincipal.getName(), dtoInputSelection);
+        }
         RequestDispatcher rd = getServletContext().getRequestDispatcher(FORWARD_URL);
         try {
             rd.forward(servletRequest, servletResponse);
