@@ -40,11 +40,13 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 
 import javax.crypto.Cipher;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -338,6 +340,16 @@ public class ProductionTool {
             throw new GeneralSecurityException("Could not retrieve TGT from URL " + casUrl);
         }
         List<String> setCookieFields = headerFields.get("Set-Cookie");
+        if (setCookieFields.size() < 2) {
+            InputStream in = conn.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            throw new IOException("Fetching TGT failed. Reply from CAS server:\n" + result.toString());
+        }
         String setCookie = setCookieFields.get(1);
         String tgtPart1 = setCookie.split(";")[0];
 
