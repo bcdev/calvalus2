@@ -1,7 +1,6 @@
 package com.bc.calvalus.portal.client;
 
 import com.bc.calvalus.portal.shared.DtoInputSelection;
-import com.bc.calvalus.portal.shared.DtoProductSet;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
@@ -96,7 +95,7 @@ public class ProductsFromCatalogueForm extends Composite {
 
     void addInputSelectionHandler(InputSelectionHandler inputSelectionHandler) {
         pasteFromCatalogueButton.addClickHandler(event -> portal.getContextRetrievalService().
-                    getInputSelection(inputSelectionHandler.getInputSelectionChangedCallback()));
+                    getInputSelection(portal.getUserName(), inputSelectionHandler.getInputSelectionChangedCallback()));
         clearSelectionButton.addClickHandler(event -> inputSelectionHandler.onClearSelectionClick());
     }
 

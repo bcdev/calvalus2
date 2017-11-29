@@ -10,11 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.security.Principal;
 
 /**
  * @author hans
  */
 public class InjectInputSelectionServlet extends HttpServlet {
+
+    private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
 
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
@@ -26,6 +29,9 @@ public class InjectInputSelectionServlet extends HttpServlet {
         String inputSelectionString = writer.toString();
         Gson gson = new Gson();
         DtoInputSelection dtoInputSelection = gson.fromJson(inputSelectionString, DtoInputSelection.class);
-        getServletContext().setAttribute("catalogueSearch", dtoInputSelection);
+        Principal userPrincipal = servletRequest.getUserPrincipal();
+        if (userPrincipal != null) {
+            getServletContext().setAttribute(CATALOGUE_SEARCH_PREFIX + userPrincipal.getName(), dtoInputSelection);
+        }
     }
 }

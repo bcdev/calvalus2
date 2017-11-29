@@ -9,6 +9,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("retrieve")
 public interface ContextRetrievalService extends RemoteService {
 
-    DtoInputSelection getInputSelection();
+    DtoInputSelection getInputSelection(String userName);
 
 }
