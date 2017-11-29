@@ -5,14 +5,14 @@
     <parent>
         <groupId>com.bc.calvalus</groupId>
         <artifactId>calvalus</artifactId>
-        <version>2.14-SNAPSHOT</version>
+        <version>2.14</version>
     </parent>
 
     <artifactId>calvalus-distribution</artifactId>
     <packaging>pom</packaging>
 
     <properties>
-        <snap.bundle.version>5.0.1</snap.bundle.version>
+        <snap.bundle.version>5-cv-2.14</snap.bundle.version>
     </properties>
 
     <name>Calvalus Distribution CPT+Bundle</name>

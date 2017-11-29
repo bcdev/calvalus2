@@ -66,6 +66,7 @@ import com.bc.calvalus.production.util.DebugTokenGenerator;
 import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.jasig.cas.client.validation.AssertionImpl;
 import org.jdom.JDOMException;
@@ -98,6 +99,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.security.Principal;
+import java.security.PrivilegedExceptionAction;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -582,49 +584,52 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public String checkUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
-            Iterable<Record> records = recordSource.getRecords();
-            int numRecords = 0;
-            double latMin = +Double.MAX_VALUE;
-            double latMax = -Double.MAX_VALUE;
-            double lonMin = +Double.MAX_VALUE;
-            double lonMax = -Double.MAX_VALUE;
-            long timeMin = Long.MAX_VALUE;
-            long timeMax = Long.MIN_VALUE;
+            return remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                Iterable<Record> records = recordSource.getRecords();
+                int numRecords = 0;
+                double latMin = +Double.MAX_VALUE;
+                double latMax = -Double.MAX_VALUE;
+                double lonMin = +Double.MAX_VALUE;
+                double lonMax = -Double.MAX_VALUE;
+                long timeMin = Long.MAX_VALUE;
+                long timeMax = Long.MIN_VALUE;
 
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    numRecords++;
-                    latMin = Math.min(latMin, location.getLat());
-                    latMax = Math.max(latMax, location.getLat());
-                    lonMin = Math.min(lonMin, location.getLon());
-                    lonMax = Math.max(lonMax, location.getLon());
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        numRecords++;
+                        latMin = Math.min(latMin, location.getLat());
+                        latMax = Math.max(latMax, location.getLat());
+                        lonMin = Math.min(lonMin, location.getLon());
+                        lonMax = Math.max(lonMax, location.getLon());
+                    }
+                    Date time = record.getTime();
+                    if (time != null) {
+                        timeMin = Math.min(timeMin, time.getTime());
+                        timeMax = Math.max(timeMax, time.getTime());
+                    }
                 }
-                Date time = record.getTime();
-                if (time != null) {
-                    timeMin = Math.min(timeMin, time.getTime());
-                    timeMax = Math.max(timeMax, time.getTime());
+                String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
+                                                 recordSource.getTimeAndLocationColumnDescription(),
+                                                 numRecords);
+                if (numRecords > 0) {
+                    reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
+                                               latMin, latMax, lonMin, lonMax);
                 }
-            }
-            String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
-                    recordSource.getTimeAndLocationColumnDescription(),
-                    numRecords);
-            if (numRecords > 0) {
-                reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
-                        latMin, latMax, lonMin, lonMax);
-            }
-            if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
-                reportMsg += String.format("Time range: [%s, %s]\n",
-                        CCSDS_FORMAT.format(new Date(timeMin)),
-                        CCSDS_FORMAT.format(new Date(timeMax)));
-            } else {
-                reportMsg += "No time information given.\n";
-            }
-            return reportMsg.replace("\n", "<br>");
+                if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
+                    reportMsg += String.format("Time range: [%s, %s]\n",
+                                               CCSDS_FORMAT.format(new Date(timeMin)),
+                                               CCSDS_FORMAT.format(new Date(timeMax)));
+                } else {
+                    reportMsg += "No time information given.\n";
+                }
+                return reportMsg.replace("\n", "<br>");
+            });
         } catch (Exception e) {
             throw convert(e);
         }
@@ -632,25 +637,28 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public float[] listUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+            return remoteUser.doAs((PrivilegedExceptionAction<float[]>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
             RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
-            Iterable<Record> records = recordSource.getRecords();
-            List<GeoPos> geoPoses = new ArrayList<>();
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    geoPoses.add(location);
+                Iterable<Record> records = recordSource.getRecords();
+                List<GeoPos> geoPoses = new ArrayList<>();
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        geoPoses.add(location);
+                    }
                 }
-            }
-            float[] latLons = new float[geoPoses.size() * 2];
-            int i = 0;
-            for (GeoPos geoPos : geoPoses) {
-                latLons[i++] = (float) geoPos.lat;
-                latLons[i++] = (float) geoPos.lon;
-            }
-            return latLons;
+                float[] latLons = new float[geoPoses.size() * 2];
+                int i = 0;
+                for (GeoPos geoPos : geoPoses) {
+                    latLons[i++] = (float) geoPos.lat;
+                    latLons[i++] = (float) geoPos.lon;
+                }
+                return latLons;
+            });
         } catch (Exception e) {
             throw convert(e);
         }
