@@ -31,8 +31,11 @@ import java.util.HashMap;
 
 public class SamlCreateTicketValidator extends AbstractCasProtocolUrlBasedTicketValidator {
 
-    public SamlCreateTicketValidator(String casServerUrlPrefix) {
+    private final String calvalusPrivateKeyPath;
+
+    public SamlCreateTicketValidator(String casServerUrlPrefix, String calvalusPrivateKeyPath) {
         super(casServerUrlPrefix);
+        this.calvalusPrivateKeyPath = calvalusPrivateKeyPath;
     }
 
     @Override
@@ -46,7 +49,7 @@ public class SamlCreateTicketValidator extends AbstractCasProtocolUrlBasedTicket
         org.apache.xml.security.Init.init();
 
         try {
-            PrivateKey myPrivKey = readPrivateKey("/home/cvop/.calvalus/calvalus_priv.der");
+            PrivateKey myPrivKey = readPrivateKey(calvalusPrivateKeyPath);
             Document document = parseXml(response);
             document = decipher(myPrivKey, document);
 

@@ -149,6 +149,10 @@
             <param-name>redirectAfterValidation</param-name>
             <param-value>true</param-value>
         </init-param>
+        <init-param>
+            <param-name>calvalus.crypt.samlkey-private-key</param-name>
+            <param-value>/home/cvop/.calvalus/samlkey_priv.der</param-value>
+        </init-param>
 
     </filter>
 

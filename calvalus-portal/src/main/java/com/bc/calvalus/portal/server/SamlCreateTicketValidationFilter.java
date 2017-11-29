@@ -26,7 +26,11 @@ public class SamlCreateTicketValidationFilter extends AbstractTicketValidationFi
      */
     protected final TicketValidator getTicketValidator(final FilterConfig filterConfig) {
         final String casServerUrlPrefix = getPropertyFromInitParams(filterConfig, "casServerUrlPrefix", null);
-        final SamlCreateTicketValidator validator = new SamlCreateTicketValidator(casServerUrlPrefix);
+        final String calvalusPrivateKeyPath = getPropertyFromInitParams(filterConfig, "calvalus.crypt.samlkey-private-key", null);
+        if (calvalusPrivateKeyPath == null) {
+            throw new RuntimeException("Must configure path to calvalus private key, property 'calvalus.crypt.samlkey-private-key'");
+        }
+        final SamlCreateTicketValidator validator = new SamlCreateTicketValidator(casServerUrlPrefix, calvalusPrivateKeyPath);
 
         validator.setRenew(parseBoolean(getPropertyFromInitParams(filterConfig, "renew", "false")));
         validator.setEncoding(getPropertyFromInitParams(filterConfig, "encoding", null));
