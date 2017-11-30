@@ -308,8 +308,10 @@ public class L3ConfigForm extends Composite {
                 defaultValidMask = defaultMaskExpression;
             }
         } else {
-            String[] bandNames = productSet.getBandNames();
-            Collections.addAll(l3InputVarNames, bandNames);
+            if (productSet != null) {
+                String[] bandNames = productSet.getBandNames();
+                Collections.addAll(l3InputVarNames, bandNames);
+            }
         }
         updateAvailableVariables();
         if (aggregatorTable.getAggregatorList().size() == 0) {
