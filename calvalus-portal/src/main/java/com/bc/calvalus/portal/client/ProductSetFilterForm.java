@@ -338,16 +338,16 @@ public class ProductSetFilterForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         String dateListValue = parameters.get("dateList");
         if (dateListValue != null) {
-            dateList.setValue(dateListValue);
+            dateList.setValue(dateListValue, true);
             temporalFilterByDateList.setValue(true, true);
         } else {
             String minDateValue = parameters.get("minDate");
             if (minDateValue != null) {
-                minDate.setValue(DATE_FORMAT.parse(minDateValue));
+                minDate.setValue(DATE_FORMAT.parse(minDateValue), true);
             }
             String maxDateValue = parameters.get("maxDate");
             if (maxDateValue != null) {
-                maxDate.setValue(DATE_FORMAT.parse(maxDateValue));
+                maxDate.setValue(DATE_FORMAT.parse(maxDateValue), true);
             }
             if (minDateValue != null || maxDateValue != null) {
                 temporalFilterByDateRange.setValue(true, true);
