@@ -136,7 +136,8 @@ public class ProductSetSelectionForm extends Composite {
         String collectionName = parameters.get("collectionName");
         String geoInventory = parameters.get("geoInventory");
         String inputPath = parameters.get("inputPath");
-        int newSelectionIndex = -2;
+
+        int newSelectionIndex = 0;
         for (int i = 0; i < currentProductSets.length; i++) {
             DtoProductSet productSet = currentProductSets[i];
             if (collectionName != null && productSet.getName().equalsIgnoreCase(collectionName)) {
@@ -154,7 +155,6 @@ public class ProductSetSelectionForm extends Composite {
             }
         }
         // TODO handle error
-
         if (newSelectionIndex != productSetListBox.getSelectedIndex()) {
             productSetListBox.setSelectedIndex(newSelectionIndex);
             DomEvent.fireNativeEvent(Document.get().createChangeEvent(), productSetListBox);
