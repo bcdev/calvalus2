@@ -69,15 +69,16 @@ public class GeodbInputFormat extends InputFormat {
     @Override
     public List<InputSplit> getSplits(JobContext context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
+        int requestSizeLimit = conf.getInt(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, 0);
         Set<String> paths = queryGeoInventory(true, conf);
-        List<InputSplit> splits = createInputSplits(conf, paths);
+        List<InputSplit> splits = createInputSplits(conf, paths, requestSizeLimit);
         String geoInventory = conf.get(JobConfigNames.CALVALUS_INPUT_GEO_INVENTORY);
         LOG.info(String.format("%d splits added (from %d returned from geo-inventory '%s').", splits.size(), paths.size(), geoInventory));
         return splits;
     }
 
-    public static List<InputSplit> createInputSplits(Configuration conf, Collection<String> paths) throws IOException {
-        List<InputSplit> splits = new ArrayList<>();
+    public static List<InputSplit> createInputSplits(Configuration conf, Collection<String> paths, int requestSizeLimit) throws IOException {
+        List<InputSplit> splits = new ArrayList<>(requestSizeLimit);
         for (String stringPath : paths) {
             final Path path = new Path(stringPath);
             FileSystem fileSystem = path.getFileSystem(conf);
@@ -96,6 +97,9 @@ public class GeodbInputFormat extends InputFormat {
                 }
             } catch (FileNotFoundException e) {
                 LOG.warning("cannot find input " + stringPath);
+            }
+            if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {
+                break;
             }
         }
         return splits;

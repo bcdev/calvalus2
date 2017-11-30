@@ -53,6 +53,8 @@ public interface JobConfigNames {
     String CALVALUS_OUTPUT_QUICKLOOKS = "calvalus.output.quicklooks";
     String CALVALUS_QUICKLOOK_PARAMETERS = "calvalus.ql.parameters";
 
+    String CALVALUS_REQUEST_SIZE_LIMIT = "calvalus.requestSizeLimit";
+
     String CALVALUS_L2_OPERATOR = "calvalus.l2.operator";
     String CALVALUS_L2_PARAMETERS = "calvalus.l2.parameters";
     String CALVALUS_L2_PROCESSOR_TYPE = "calvalus.l2.processorType";
