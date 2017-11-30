@@ -65,6 +65,7 @@ public class PatternBasedInputFormat extends InputFormat {
 
         // parse request
         Configuration conf = job.getConfiguration();
+        int requestSizeLimit = conf.getInt(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, 0);
         String inputPathPatterns = conf.get(JobConfigNames.CALVALUS_INPUT_PATH_PATTERNS);
         String regionName = conf.get(JobConfigNames.CALVALUS_INPUT_REGION_NAME);
         String dateRangesString = conf.get(JobConfigNames.CALVALUS_INPUT_DATE_RANGES);
@@ -88,7 +89,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 LOG.info(String.format("filtered using %d productIdentifiers: %d files remaining'.",
                                        productIdentifiers.size(), paths.size()));
             }
-            splits = GeodbInputFormat.createInputSplits(conf, paths);
+            splits = GeodbInputFormat.createInputSplits(conf, paths, requestSizeLimit);
             LOG.info(String.format("%d splits created.", splits.size()));
         } else if (geoInventory == null && inputPathPatterns != null) {
 
@@ -107,7 +108,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                        splits = splits.subList(0, requestSizeLimit);
+                        break;
+                    }
                 }
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
@@ -116,7 +121,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
             }
         } else if (geoInventory != null && inputPathPatterns != null) {
             // --> update index: splits for all products that are NOT in the geoDB
@@ -136,7 +141,11 @@ public class PatternBasedInputFormat extends InputFormat {
                     if (!productIdentifiers.isEmpty()) {
                         fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                     }
-                    createSplits(productInventory, fileStatusIt, splits, conf);
+                    createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
+                    if (requestSizeLimit > 0 && splits.size() >= requestSizeLimit) {
+                        splits = splits.subList(0, requestSizeLimit);
+                        break;
+                    }
                 }
             } else {
                 List<String> inputPatterns = getInputPatterns(inputPathPatterns, null, null, regionName);
@@ -145,7 +154,7 @@ public class PatternBasedInputFormat extends InputFormat {
                 if (!productIdentifiers.isEmpty()) {
                     fileStatusIt = filterUsingProductIdentifiers(fileStatusIt, productIdentifiers);
                 }
-                createSplits(productInventory, fileStatusIt, splits, conf);
+                createSplits(productInventory, fileStatusIt, splits, conf, requestSizeLimit);
             }
         } else {
             throw new IOException(
@@ -210,12 +219,15 @@ public class PatternBasedInputFormat extends InputFormat {
     protected void createSplits(ProductInventory productInventory,
                                 RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
-                                Configuration conf) throws IOException {
+                                Configuration conf, int requestSizeLimit) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
             InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
             if (split != null) {
                 splits.add(split);
+                if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {
+                    break;
+                }
             }
         }
     }
