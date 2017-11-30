@@ -9,6 +9,7 @@ import com.bc.calvalus.processing.fire.format.grid.s2.S2GridMapper;
 import com.bc.calvalus.processing.fire.format.grid.s2.S2GridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
 import com.bc.calvalus.processing.fire.format.pixel.s2.JDAggregator;
+import com.bc.calvalus.processing.fire.format.pixel.s2.S2PixelFinaliseMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -193,10 +194,10 @@ public class S2Strategy implements SensorStrategy {
             job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/s2-lc/2010.nc");
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv1.0");
             PixelProductArea area = new S2Strategy().getArea(job.getConfiguration().get("calvalus.area"));
-            String areaString = String.format("%s;%s;%s;%s;%s", area.nicename, area.left, area.top, area.right, area.bottom);
+            String areaString = String.format("%s;%s;%s;%s;%s;%s", area.index, area.nicename, area.left, area.top, area.right, area.bottom);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_AREA_STRING, areaString);
             job.getConfiguration().set(PixelFinaliseMapper.KEY_SENSOR_ID, "6");
-            job.setMapperClass(PixelFinaliseMapper.class);
+            job.setMapperClass(S2PixelFinaliseMapper.class);
             job.setNumReduceTasks(0);
             FileOutputFormat.setOutputPath(job, new Path(getOutputDir()));
         }

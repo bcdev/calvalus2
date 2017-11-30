@@ -9,6 +9,7 @@ import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridMapper;
 import com.bc.calvalus.processing.fire.format.grid.modis.ModisGridReducer;
 import com.bc.calvalus.processing.fire.format.pixel.PixelFinaliseMapper;
 import com.bc.calvalus.processing.fire.format.pixel.modis.ModisJDAggregator;
+import com.bc.calvalus.processing.fire.format.pixel.modis.ModisPixelFinaliseMapper;
 import com.bc.calvalus.processing.hadoop.HadoopProcessingService;
 import com.bc.calvalus.processing.hadoop.HadoopWorkflowItem;
 import com.bc.calvalus.processing.hadoop.PatternBasedInputFormat;
@@ -151,7 +152,7 @@ public class ModisStrategy implements SensorStrategy {
         @Override
         protected void configureJob(Job job) throws IOException {
             job.setInputFormatClass(PatternBasedInputFormat.class);
-            job.setMapperClass(PixelFinaliseMapper.class);
+            job.setMapperClass(ModisPixelFinaliseMapper.class);
             int year = Integer.parseInt(getJobConfig().get("calvalus.year"));
             job.getConfiguration().set(PixelFinaliseMapper.KEY_LC_PATH, "hdfs://calvalus/calvalus/projects/fire/aux/modis-lc/" + area.toLowerCase() + "-" + CommonUtils.lcYear(year) + ".nc");
             job.getConfiguration().set(PixelFinaliseMapper.KEY_VERSION, "fv5.0");

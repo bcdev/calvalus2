@@ -9,7 +9,6 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.util.Progressable;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.VelocityEngine;
 import org.esa.snap.core.dataio.ProductIO;
@@ -49,7 +48,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-public class PixelFinaliseMapper extends Mapper {
+public abstract class PixelFinaliseMapper extends Mapper {
 
     private static final Logger LOG = CalvalusLogger.getLogger();
     static final int TILE_SIZE = 256;
@@ -95,8 +94,12 @@ public class PixelFinaliseMapper extends Mapper {
         File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
         File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
 
+        Product source = ProductIO.readProduct(localL3);
+
         Product lcProduct = ProductIO.readProduct(localLC);
-        Product result = remap(localL3, baseFilename, sensorId, lcProduct, context);
+        lcProduct = collocateWithSource(lcProduct, source);
+
+        Product result = remap(source, baseFilename, sensorId, lcProduct);
 
         LOG.info("Creating metadata...");
         String metadata = createMetadata(year, month, version, areaString);
@@ -132,8 +135,9 @@ public class PixelFinaliseMapper extends Mapper {
 //        }
     }
 
-    static Product remap(File localL3, String baseFilename, String sensorId, Product lcProduct, Progressable context) throws IOException {
-        Product source = ProductIO.readProduct(localL3);
+    protected abstract Product collocateWithSource(Product lcProduct, Product source);
+
+    Product remap(Product source, String baseFilename, String sensorId, Product lcProduct) throws IOException {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
@@ -151,12 +155,14 @@ public class PixelFinaliseMapper extends Mapper {
         Band sourceLcBand = lcProduct.getBand("lccs_class");
 
         jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
-        clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand));
+        clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler()));
         lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
         sensorBand.setSourceImage(new SensorImage(sourceJdBand, sourceLcBand, sensorId));
 
         return target;
     }
+
+    protected abstract ClScaler getClScaler();
 
     static String createBaseFilename(String year, String month, String version, String areaString) {
         return String.format("%s%s01-ESACCI-L3S_FIRE-BA-MODIS-AREA_%s-%s", year, month, areaString.split(";")[0], version);
@@ -207,7 +213,7 @@ public class PixelFinaliseMapper extends Mapper {
         private final Band lcBand;
 
         JdImage(Band sourceJdBand, Band lcBand) {
-            super(DataBuffer.TYPE_INT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
+            super(DataBuffer.TYPE_SHORT, sourceJdBand.getRasterWidth(), sourceJdBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceJdBand = sourceJdBand;
             this.lcBand = lcBand;
         }
@@ -263,12 +269,14 @@ public class PixelFinaliseMapper extends Mapper {
         private final Band sourceClBand;
         private final Band sourceJdBand;
         private final Band lcBand;
+        private final ClScaler clScaler;
 
-        private ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand) {
+        private ClImage(Band sourceClBand, Band sourceJdBand, Band lcBand, ClScaler clScaler) {
             super(DataBuffer.TYPE_BYTE, sourceClBand.getRasterWidth(), sourceClBand.getRasterHeight(), new Dimension(PixelFinaliseMapper.TILE_SIZE, PixelFinaliseMapper.TILE_SIZE), null, ResolutionLevel.MAXRES);
             this.sourceClBand = sourceClBand;
             this.sourceJdBand = sourceJdBand;
             this.lcBand = lcBand;
+            this.clScaler = clScaler;
         }
 
         @Override
@@ -292,6 +300,7 @@ public class PixelFinaliseMapper extends Mapper {
 
                     int targetCl;
                     float sourceCl = sourceClArray[pixelIndex];
+                    sourceCl = clScaler.scaleCl(sourceCl);
                     float jdValue = sourceJdArray[pixelIndex];
 
                     if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
@@ -478,6 +487,12 @@ public class PixelFinaliseMapper extends Mapper {
 
     }
 
+    public interface ClScaler {
+
+        float scaleCl(float cl);
+
+    }
+
     private static final String TEMPLATE = "" +
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             "<gmi:MI_Metadata" +
@@ -598,7 +613,7 @@ public class PixelFinaliseMapper extends Mapper {
             "                        <!-- publication date-->" +
             "                        <gmd:CI_Date>" +
             "                            <gmd:date>" +
-            "                                <gco:Date>TBD</gco:Date>" +
+            "                                <gco:Date>2017-11-30</gco:Date>" +
             "                            </gmd:date>" +
             "                            <gmd:dateType>" +
             "                                <gmd:CI_DateTypeCode" +
@@ -626,7 +641,7 @@ public class PixelFinaliseMapper extends Mapper {
             "error-characterised, global data sets of burned areas (BA) derived from existing satellite " +
             "observations. The Fire_cci BA products consist of a Pixel " +
             "and Grid product addressing the needs and requirements of climate, atmospheric and ecosystem " +
-            "scientists and researchers supporting their modelling efforts. Further information to the ESA CCI " +
+            "scientists and researchers supporting their modelling efforts. Further information on the ESA CCI " +
             "Programme and a comprehensive documentation on the underlying algorithms, work flow, production " +
             "system and product validation is publicly accessible on https://www.esa-fire-cci.org/." +
             "</gco:CharacterString>" +
@@ -641,7 +656,7 @@ public class PixelFinaliseMapper extends Mapper {
             "File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another " +
             "1 or more digits.). An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-f${REPLACE_WITH_VERSION}.tif.]]#" +
             "</gco:CharacterString>" +
-            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG.1.0 available at: www.esa-fire-cci.org/documents" +
+            "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.0 available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>Layer 1: Date of the first detection; Pixel Spacing = 0.0022457331 deg  (approx. 250m); " +
             "Pixel value = Day of the year, from 1 to 365 (or 366) A value of 0 is included when the pixel is not burned " +
@@ -702,7 +717,7 @@ public class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -735,7 +750,7 @@ public class PixelFinaliseMapper extends Mapper {
             "                            <gmd:onlineResource>" +
             "                                <gmd:CI_OnlineResource>" +
             "                                    <gmd:linkage>" +
-            "                                        <gmd:URL>http://esa-fire-cci.org/</gmd:URL>" +
+            "                                        <gmd:URL>http://www.esa-fire-cci.org/</gmd:URL>" +
             "                                    </gmd:linkage>" +
             "                                </gmd:CI_OnlineResource>" +
             "                            </gmd:onlineResource>" +
@@ -853,7 +868,7 @@ public class PixelFinaliseMapper extends Mapper {
             "            <gmd:spatialResolution>" +
             "                <gmd:MD_Resolution>" +
             "                    <gmd:distance>" +
-            "                        <gco:Distance uom=\"degrees\">0.00017966</gco:Distance>" +
+            "                        <gco:Distance uom=\"degrees\">0.0022457331</gco:Distance>" +
             "                    </gmd:distance>" +
             "                </gmd:MD_Resolution>" +
             "            </gmd:spatialResolution>" +
