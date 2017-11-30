@@ -44,6 +44,7 @@ import com.bc.calvalus.portal.shared.DtoRegionDataInfo;
 import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
@@ -430,6 +431,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     LOG.log(Level.SEVERE, e.getMessage(), e);
                 }
             }
+            HttpSession session = getThreadLocalRequest().getSession();
+            Object requestSizeLimit = session.getAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
+            if (requestSizeLimit != null) {
+                productionRequest.setParameter(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, (String) requestSizeLimit);
+            }
             ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(productionRequest, hook);
             return convert(productionResponse);
         } catch (ProductionException e) {
@@ -615,16 +621,16 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     }
                 }
                 String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
-                                                 recordSource.getTimeAndLocationColumnDescription(),
-                                                 numRecords);
+                        recordSource.getTimeAndLocationColumnDescription(),
+                        numRecords);
                 if (numRecords > 0) {
                     reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
-                                               latMin, latMax, lonMin, lonMax);
+                            latMin, latMax, lonMin, lonMax);
                 }
                 if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
                     reportMsg += String.format("Time range: [%s, %s]\n",
-                                               CCSDS_FORMAT.format(new Date(timeMin)),
-                                               CCSDS_FORMAT.format(new Date(timeMax)));
+                            CCSDS_FORMAT.format(new Date(timeMin)),
+                            CCSDS_FORMAT.format(new Date(timeMax)));
                 } else {
                     reportMsg += "No time information given.\n";
                 }
@@ -642,7 +648,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             return remoteUser.doAs((PrivilegedExceptionAction<float[]>) () -> {
                 String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
                 RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
                 Iterable<Record> records = recordSource.getRecords();
                 List<GeoPos> geoPoses = new ArrayList<>();
                 for (Record record : records) {
@@ -923,7 +929,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoCalvalusConfig getCalvalusConfig() {
         List<String> samlRoles = new ArrayList<>();
         Map<String, String> userSpecificConfig = new HashMap<>(backendConfig.getConfigMap());
-       if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
+        if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
             try {
                 HttpSession session = getThreadLocalRequest().getSession();
                 AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
@@ -953,6 +959,36 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
 
         userSpecificConfig.put("roles", accu.toString());
+
+        int requestSizeLimit = 0;
+        for (String role : accu) {
+            String key = JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "." + role;
+            String roleRequestSizeLimit = userSpecificConfig.get(key);
+            if (roleRequestSizeLimit != null) {
+                int limit;
+                try {
+                    limit = Integer.parseInt(roleRequestSizeLimit);
+                    if (limit == 0) {
+                        requestSizeLimit = 0;
+                        break;
+                    }
+                    if (requestSizeLimit < limit) {
+                        requestSizeLimit = limit;
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.log(Level.WARNING, "Illegal value for property '" + key + "': " + roleRequestSizeLimit, e);
+                }
+            }
+        }
+
+        userSpecificConfig.put(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        HttpSession session = getThreadLocalRequest().getSession();
+        session.setAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        LOG.info("Roles of user '" + getUserName() + "': " + Arrays.toString(accu.toArray(new String[0])));
+        LOG.info("requestSizeLimit of user '" + getUserName() + "': " + requestSizeLimit);
+
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), userSpecificConfig);
     }
 
