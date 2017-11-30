@@ -104,7 +104,17 @@ import java.security.PrivilegedExceptionAction;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -960,7 +970,15 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
         userSpecificConfig.put("roles", accu.toString());
 
+        String defaultSizeLimit = userSpecificConfig.get(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
         int requestSizeLimit = 0;
+        if (defaultSizeLimit != null) {
+            try {
+                requestSizeLimit = Integer.parseInt(defaultSizeLimit);
+            } catch (NumberFormatException e) {
+                LOG.log(Level.WARNING, "Illegal value for property '" + JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "': " + defaultSizeLimit, e);
+            }
+        }
         for (String role : accu) {
             String key = JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "." + role;
             String roleRequestSizeLimit = userSpecificConfig.get(key);
@@ -981,7 +999,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
             }
         }
 
-        userSpecificConfig.put(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+        //userSpecificConfig.put(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
 
         HttpSession session = getThreadLocalRequest().getSession();
         session.setAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
