@@ -148,7 +148,7 @@ public class PixelFinaliseMapperTest {
         Product lcProduct = ProductIO.readProduct("c:\\ssd\\modis-analysis\\africa-2000.nc");
         lcProduct.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
         final File localL3 = new File("C:\\ssd\\modis-analysis\\subset_0_of_L3_2006-03-01_2006-03-31.nc");
-        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "c:\\ssd\\test.nc", "4", lcProduct, 0);
+        Product product = getPixelFinaliseMapper().remap(ProductIO.readProduct(localL3), "c:\\ssd\\test.nc", "4", lcProduct);
 
         ProductIO.writeProduct(product, "C:\\ssd\\test4.nc", "NetCDF4-CF");
     }
