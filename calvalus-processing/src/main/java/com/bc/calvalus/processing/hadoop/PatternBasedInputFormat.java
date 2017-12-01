@@ -81,7 +81,8 @@ public class PatternBasedInputFormat extends InputFormat {
                 while (pathIterator.hasNext()) {
                     String path = pathIterator.next();
                     String filename = path.substring(path.lastIndexOf("/") + 1);
-                    if (!productIdentifiers.contains(filename)) {
+                    String filenameWithoutExtension = stripExtension(filename);
+                    if (!productIdentifiers.contains(filenameWithoutExtension)) {
                         pathIterator.remove();
                     }
                 }
@@ -180,13 +181,22 @@ public class PatternBasedInputFormat extends InputFormat {
                 while (fileStatusIt.hasNext()) {
                     LocatedFileStatus fileStatus = fileStatusIt.next();
                     String filename = fileStatus.getPath().getName();
-                    if (productIdentifiers.contains(filename)) {
+                    String filenameWithoutExtension = stripExtension(filename);
+                    if (productIdentifiers.contains(filenameWithoutExtension)) {
                         return fileStatus;
                     }
                 }
                 return null;
             }
         };
+    }
+
+    private String stripExtension(String filename) {
+        int index = filename.indexOf(".");
+        if (index >= 0) {
+            return filename.substring(0, index);
+        }
+        return filename;
     }
 
     private List<DateRange> createDateRangeList(String dateRangesString) throws IOException {
