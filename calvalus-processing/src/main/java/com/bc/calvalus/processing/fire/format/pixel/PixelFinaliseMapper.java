@@ -58,13 +58,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
     public static final String KEY_AREA_STRING = "AREA_STRING";
     public static final String KEY_SENSOR_ID = "SENSOR_ID";
 
-    private static final int JD = 0;
-    private static final int CL = 1;
-    private static final int LC = 2;
-    private static final int SE = 3;
-
-    private static final int[] BAND_TYPES = new int[]{JD, CL, LC, SE};
-
 
     @Override
     public void run(Context context) throws IOException, InterruptedException {
@@ -90,13 +83,13 @@ public abstract class PixelFinaliseMapper extends Mapper {
         String baseFilename = createBaseFilename(year, month, version, areaString);
 
         String outputDir = context.getConfiguration().get("calvalus.output.dir");
-        Path tifPath_JD = new Path(outputDir + "/" + baseFilename + "-JD.tif");
-        Path tifPath_CL = new Path(outputDir + "/" + baseFilename + "-CL.tif");
-        Path tifPath_LC = new Path(outputDir + "/" + baseFilename + "-LC.tif");
-        Path tifPath_sensor = new Path(outputDir + "/" + baseFilename + "-sensor.tif");
+        Path tifPath = new Path(outputDir + "/" + baseFilename + ".tif");
         FileSystem fileSystem = FileSystem.get(context.getConfiguration());
 
-        Path[] outputPaths = new Path[]{tifPath_JD, tifPath_CL, tifPath_LC, tifPath_sensor};
+        if (fileSystem.exists(tifPath)) {
+            LOG.info("File '" + inputSplitLocation + "' already exists, done.");
+            return;
+        }
 
         File localL3 = CalvalusProductIO.copyFileToLocal(inputSplitLocation, context.getConfiguration());
         File localLC = CalvalusProductIO.copyFileToLocal(new Path(lcPath), context.getConfiguration());
@@ -106,38 +99,24 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product lcProduct = ProductIO.readProduct(localLC);
         lcProduct = collocateWithSource(lcProduct, source);
 
-        Product resultJD = remap(source, baseFilename, sensorId, lcProduct, JD);
-        Product resultCL = remap(source, baseFilename, sensorId, lcProduct, CL);
-        Product resultLC = remap(source, baseFilename, sensorId, lcProduct, LC);
-        Product resultSe = remap(source, baseFilename, sensorId, lcProduct, SE);
+        Product result = remap(source, baseFilename, sensorId, lcProduct);
 
-        Product[] results = new Product[]{resultJD, resultCL, resultLC, resultSe};
-
-        FileSystem fs = outputPaths[0].getFileSystem(context.getConfiguration());
-        for (int i = 0; i < results.length; i++) {
-            CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/4...");
-            Path tifPath = outputPaths[i];
-
-            if (fileSystem.exists(tifPath)) {
-                LOG.info("File '" + tifPath + "' already exists, skipping.");
-                continue;
-            }
-
-            Product result = results[i];
-            final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
-            String localFilename = baseFilename + "-" + BAND_TYPES[i] + ".tif";
-            geotiffWriter.writeProductNodes(result, localFilename);
-            geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
-            CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
-            FileUtil.copy(new File(localFilename), fs, tifPath, false, context.getConfiguration());
-        }
-
-        LOG.info("...done. Creating metadata...");
-        Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
+        LOG.info("Creating metadata...");
         String metadata = createMetadata(year, month, version, areaString);
         try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
             fw.write(metadata);
-        }
+            }
+        CalvalusLogger.getLogger().info("...done. Writing final product...");
+
+            final ProductWriter geotiffWriter = ProductIO.getProductWriter(BigGeoTiffProductWriterPlugIn.FORMAT_NAME);
+        geotiffWriter.writeProductNodes(result, baseFilename + ".tif");
+            geotiffWriter.writeBandRasterData(result.getBandAt(0), 0, 0, 0, 0, null, ProgressMonitor.NULL);
+
+        Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
+        Path pngPath = new Path(outputDir + "/" + baseFilename + ".png");
+            CalvalusLogger.getLogger().info(String.format("...done. Copying final product to %s...", tifPath.getParent().toString()));
+        FileSystem fs = tifPath.getFileSystem(context.getConfiguration());
+        FileUtil.copy(new File(baseFilename + ".tif"), fs, tifPath, false, context.getConfiguration());
         FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
         CalvalusLogger.getLogger().info("...done");
 //        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
@@ -158,7 +137,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
     protected abstract Product collocateWithSource(Product lcProduct, Product source);
 
-    Product remap(Product source, String baseFilename, String sensorId, Product lcProduct, int band) throws IOException {
+    Product remap(Product source, String baseFilename, String sensorId, Product lcProduct) throws IOException {
         source.setPreferredTileSize(TILE_SIZE, TILE_SIZE);
 
         Product target = new Product(baseFilename, "fire-cci-pixel-product", source.getSceneRasterWidth(), source.getSceneRasterHeight());
@@ -166,31 +145,19 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         ProductUtils.copyGeoCoding(source, target);
 
+        Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
+        Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
+        Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
+        Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
+
         Band sourceJdBand = source.getBand("JD");
         Band sourceClBand = source.getBand("CL");
         Band sourceLcBand = lcProduct.getBand("lccs_class");
 
-        switch (band) {
-            case JD:
-                Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
                 jdBand.setSourceImage(new JdImage(sourceJdBand, sourceLcBand));
-                break;
-            case CL:
-                Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
                 clBand.setSourceImage(new ClImage(sourceClBand, sourceJdBand, sourceLcBand, getClScaler()));
-                break;
-            case LC:
-                Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
                 lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
-                break;
-            case SE:
-                Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
                 sensorBand.setSourceImage(new SensorImage(sourceJdBand, sourceLcBand, sensorId));
-                break;
-            default:
-                throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");
-        }
-
 
         return target;
     }
@@ -334,9 +301,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
                     int targetCl;
                     float sourceCl = sourceClArray[pixelIndex];
                     sourceCl = clScaler.scaleCl(sourceCl);
-                    if (sourceCl > 100) {
-                        sourceCl = 100.0F;
-                    }
                     float jdValue = sourceJdArray[pixelIndex];
 
                     if (!LcRemapping.isInBurnableLcClass(LcRemapping.remap(lcArray[pixelIndex]))) {
