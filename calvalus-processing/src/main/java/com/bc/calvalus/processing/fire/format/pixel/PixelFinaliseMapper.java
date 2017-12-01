@@ -145,7 +145,7 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         ProductUtils.copyGeoCoding(source, target);
 
-        Band jdBand = target.addBand("JD", ProductData.TYPE_INT32);
+        Band jdBand = target.addBand("JD", ProductData.TYPE_INT16);
         Band clBand = target.addBand("CL", ProductData.TYPE_INT8);
         Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
         Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
