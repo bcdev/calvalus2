@@ -338,16 +338,16 @@ public class ProductSetFilterForm extends Composite {
     public void setValues(Map<String, String> parameters) {
         String dateListValue = parameters.get("dateList");
         if (dateListValue != null) {
-            dateList.setValue(dateListValue);
+            dateList.setValue(dateListValue, true);
             temporalFilterByDateList.setValue(true, true);
         } else {
             String minDateValue = parameters.get("minDate");
             if (minDateValue != null) {
-                minDate.setValue(DATE_FORMAT.parse(minDateValue));
+                minDate.setValue(DATE_FORMAT.parse(minDateValue), true);
             }
             String maxDateValue = parameters.get("maxDate");
             if (maxDateValue != null) {
-                maxDate.setValue(DATE_FORMAT.parse(maxDateValue));
+                maxDate.setValue(DATE_FORMAT.parse(maxDateValue), true);
             }
             if (minDateValue != null || maxDateValue != null) {
                 temporalFilterByDateRange.setValue(true, true);
@@ -355,7 +355,7 @@ public class ProductSetFilterForm extends Composite {
                 temporalFilterOff.setValue(true, true);
             }
         }
-        spatialFilterOff.setValue(true, true);
+        spatialFilterOff.setValue(true, true);  // TODO there is a second identical line below
         regionMap.getRegionMapSelectionModel().clearSelection();
         Region existingTemporaryRegion = regionMap.getRegion("user." + TEMPORARY_REGION_NAME);
         if (existingTemporaryRegion != null) {
@@ -385,11 +385,13 @@ public class ProductSetFilterForm extends Composite {
                     return;
                 }
             }
-            Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
-            regionMap.addRegion(tempRegion);
-            regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
-            LocateRegionsAction.locateRegion(regionMap, tempRegion);
-            return;
+            if (! "Globe".equals(regionNameValue)) {
+                Region tempRegion = new Region(TEMPORARY_REGION_NAME, new String[]{"user"}, regionWKTValue);
+                regionMap.addRegion(tempRegion);
+                regionMap.getRegionMapSelectionModel().setSelected(tempRegion, true);
+                LocateRegionsAction.locateRegion(regionMap, tempRegion);
+                return;
+            }
         }
         spatialFilterOff.setValue(true, true);
         regionMap.getRegionMapSelectionModel().clearSelection();

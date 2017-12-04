@@ -37,7 +37,7 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
     protected void createSplits(ProductInventory productInventory,
                                 RemoteIterator<LocatedFileStatus> fileStatusIt,
                                 List<InputSplit> splits,
-                                Configuration conf) throws IOException {
+                                Configuration conf, int requestSizeLimit) throws IOException {
         while (fileStatusIt.hasNext()) {
             LocatedFileStatus locatedFileStatus = fileStatusIt.next();
             String fileName = locatedFileStatus.getPath().getName();
@@ -48,6 +48,9 @@ public class SeasonalTilesInputFormat extends PatternBasedInputFormat {
             InputSplit split = createSplit(productInventory, conf, locatedFileStatus);
             if (split != null) {
                 splits.add(split);
+                if (requestSizeLimit > 0 && splits.size() == requestSizeLimit) {
+                    break;
+                }
             }
         }
     }

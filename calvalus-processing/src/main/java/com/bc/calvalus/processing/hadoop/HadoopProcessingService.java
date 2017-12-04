@@ -21,6 +21,7 @@ import com.bc.calvalus.JobClientsMap;
 import com.bc.calvalus.commons.ProcessState;
 import com.bc.calvalus.commons.ProcessStatus;
 import com.bc.calvalus.commons.shared.BundleFilter;
+import com.bc.calvalus.inventory.FileSystemService;
 import com.bc.calvalus.processing.BundleDescriptor;
 import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.JobIdFormat;
@@ -74,7 +75,7 @@ import java.util.logging.Logger;
 public class HadoopProcessingService implements ProcessingService<JobID> {
 
     public static final String CALVALUS_SOFTWARE_PATH = "/calvalus/software/1.0";
-    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.14-SNAPSHOT";
+    public static final String DEFAULT_CALVALUS_BUNDLE = "calvalus-2.15-SNAPSHOT";
     public static final String DEFAULT_SNAP_BUNDLE = "snap-5.0";
     public static final String BUNDLE_DESCRIPTOR_XML_FILENAME = "bundle-descriptor.xml";
     private static final long CACHE_RETENTION = 30 * 1000;
@@ -90,12 +91,15 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
     private final ExecutorService executorService = Executors.newFixedThreadPool(3);
     private boolean withExternalAccessControl;
 
+    private static JobClientsMap jobClientsMapSingleton = null;
+
     public HadoopProcessingService(JobClientsMap jobClientsMap) throws IOException {
         this(jobClientsMap, CALVALUS_SOFTWARE_PATH);
     }
 
     public HadoopProcessingService(JobClientsMap jobClientsMap, String softwareDir) throws IOException {
         this.jobClientsMap = jobClientsMap;
+        jobClientsMapSingleton = jobClientsMap;
         this.softwareDir = softwareDir;
         this.jobStatusMap = new WeakHashMap<>();
         this.withExternalAccessControl = Boolean.getBoolean("calvalus.accesscontrol.external");
@@ -672,7 +676,13 @@ public class HadoopProcessingService implements ProcessingService<JobID> {
      */
     public static InputStream openUrlAsStream(String url, Configuration conf) throws IOException {
         InputStream inputStream;
-        if (url.startsWith("hdfs:") || Boolean.getBoolean("calvalus.accesscontrol.external")) {
+        if (Boolean.getBoolean("calvalus.accesscontrol.external") && jobClientsMapSingleton != null) {
+            String userName = UserGroupInformation.getCurrentUser().getShortUserName();
+            final Path path = new Path(url);
+            FileSystem fs = jobClientsMapSingleton.getFileSystem(userName, conf, path);
+            System.out.println("HadoopProcessingService.openUrlAsStream user " + userName + " path " + url + " fileSystem " + fs);
+            inputStream = fs.open(path);
+        } else if (url.startsWith("hdfs:")) {
             final Path path = new Path(url);
             inputStream = path.getFileSystem(conf).open(path);
         } else {

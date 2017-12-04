@@ -44,6 +44,7 @@ import com.bc.calvalus.portal.shared.DtoRegionDataInfo;
 import com.bc.calvalus.portal.shared.DtoValueRange;
 import com.bc.calvalus.processing.AggregatorDescriptor;
 import com.bc.calvalus.processing.BundleDescriptor;
+import com.bc.calvalus.processing.JobConfigNames;
 import com.bc.calvalus.processing.MaskDescriptor;
 import com.bc.calvalus.processing.ProcessorDescriptor;
 import com.bc.calvalus.processing.hadoop.HadoopJobHook;
@@ -66,6 +67,7 @@ import com.bc.calvalus.production.util.DebugTokenGenerator;
 import com.bc.calvalus.production.util.TokenGenerator;
 import com.bc.ceres.binding.ValueRange;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.esa.snap.core.datamodel.GeoPos;
 import org.jasig.cas.client.validation.AssertionImpl;
 import org.jdom.JDOMException;
@@ -98,10 +100,21 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.security.Principal;
+import java.security.PrivilegedExceptionAction;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -428,6 +441,11 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
                     LOG.log(Level.SEVERE, e.getMessage(), e);
                 }
             }
+            HttpSession session = getThreadLocalRequest().getSession();
+            Object requestSizeLimit = session.getAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
+            if (requestSizeLimit != null) {
+                productionRequest.setParameter(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, (String) requestSizeLimit);
+            }
             ProductionResponse productionResponse = serviceContainer.getProductionService().orderProduction(productionRequest, hook);
             return convert(productionResponse);
         } catch (ProductionException e) {
@@ -582,49 +600,52 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public String checkUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
-            Iterable<Record> records = recordSource.getRecords();
-            int numRecords = 0;
-            double latMin = +Double.MAX_VALUE;
-            double latMax = -Double.MAX_VALUE;
-            double lonMin = +Double.MAX_VALUE;
-            double lonMax = -Double.MAX_VALUE;
-            long timeMin = Long.MAX_VALUE;
-            long timeMax = Long.MIN_VALUE;
+            return remoteUser.doAs((PrivilegedExceptionAction<String>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                Iterable<Record> records = recordSource.getRecords();
+                int numRecords = 0;
+                double latMin = +Double.MAX_VALUE;
+                double latMax = -Double.MAX_VALUE;
+                double lonMin = +Double.MAX_VALUE;
+                double lonMax = -Double.MAX_VALUE;
+                long timeMin = Long.MAX_VALUE;
+                long timeMax = Long.MIN_VALUE;
 
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    numRecords++;
-                    latMin = Math.min(latMin, location.getLat());
-                    latMax = Math.max(latMax, location.getLat());
-                    lonMin = Math.min(lonMin, location.getLon());
-                    lonMax = Math.max(lonMax, location.getLon());
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        numRecords++;
+                        latMin = Math.min(latMin, location.getLat());
+                        latMax = Math.max(latMax, location.getLat());
+                        lonMin = Math.min(lonMin, location.getLon());
+                        lonMax = Math.max(lonMax, location.getLon());
+                    }
+                    Date time = record.getTime();
+                    if (time != null) {
+                        timeMin = Math.min(timeMin, time.getTime());
+                        timeMax = Math.max(timeMax, time.getTime());
+                    }
                 }
-                Date time = record.getTime();
-                if (time != null) {
-                    timeMin = Math.min(timeMin, time.getTime());
-                    timeMax = Math.max(timeMax, time.getTime());
+                String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
+                        recordSource.getTimeAndLocationColumnDescription(),
+                        numRecords);
+                if (numRecords > 0) {
+                    reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
+                            latMin, latMax, lonMin, lonMax);
                 }
-            }
-            String reportMsg = String.format("%s. \nNumber of records with valid geo location: %d\n",
-                    recordSource.getTimeAndLocationColumnDescription(),
-                    numRecords);
-            if (numRecords > 0) {
-                reportMsg += String.format("Latitude range: [%s, %s]\nLongitude range: [%s, %s]\n",
-                        latMin, latMax, lonMin, lonMax);
-            }
-            if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
-                reportMsg += String.format("Time range: [%s, %s]\n",
-                        CCSDS_FORMAT.format(new Date(timeMin)),
-                        CCSDS_FORMAT.format(new Date(timeMax)));
-            } else {
-                reportMsg += "No time information given.\n";
-            }
-            return reportMsg.replace("\n", "<br>");
+                if (timeMin != Long.MAX_VALUE && timeMax != Long.MIN_VALUE) {
+                    reportMsg += String.format("Time range: [%s, %s]\n",
+                            CCSDS_FORMAT.format(new Date(timeMin)),
+                            CCSDS_FORMAT.format(new Date(timeMax)));
+                } else {
+                    reportMsg += "No time information given.\n";
+                }
+                return reportMsg.replace("\n", "<br>");
+            });
         } catch (Exception e) {
             throw convert(e);
         }
@@ -632,25 +653,28 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
 
     @Override
     public float[] listUserRecordSource(String filePath) throws BackendServiceException {
+        UserGroupInformation remoteUser = UserGroupInformation.createRemoteUser(getUserName());
         try {
-            String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
-            RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
-            RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
-            Iterable<Record> records = recordSource.getRecords();
-            List<GeoPos> geoPoses = new ArrayList<>();
-            for (Record record : records) {
-                GeoPos location = record.getLocation();
-                if (location != null && location.isValid()) {
-                    geoPoses.add(location);
+            return remoteUser.doAs((PrivilegedExceptionAction<float[]>) () -> {
+                String url = serviceContainer.getFileSystemService().getQualifiedPath(getUserName(), filePath);
+                RecordSourceSpi recordSourceSpi = RecordSourceSpi.getForUrl(url);
+                RecordSource recordSource = recordSourceSpi.createRecordSource(url, serviceContainer.getHadoopConfiguration());
+                Iterable<Record> records = recordSource.getRecords();
+                List<GeoPos> geoPoses = new ArrayList<>();
+                for (Record record : records) {
+                    GeoPos location = record.getLocation();
+                    if (location != null && location.isValid()) {
+                        geoPoses.add(location);
+                    }
                 }
-            }
-            float[] latLons = new float[geoPoses.size() * 2];
-            int i = 0;
-            for (GeoPos geoPos : geoPoses) {
-                latLons[i++] = (float) geoPos.lat;
-                latLons[i++] = (float) geoPos.lon;
-            }
-            return latLons;
+                float[] latLons = new float[geoPoses.size() * 2];
+                int i = 0;
+                for (GeoPos geoPos : geoPoses) {
+                    latLons[i++] = (float) geoPos.lat;
+                    latLons[i++] = (float) geoPos.lon;
+                }
+                return latLons;
+            });
         } catch (Exception e) {
             throw convert(e);
         }
@@ -915,7 +939,7 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
     public DtoCalvalusConfig getCalvalusConfig() {
         List<String> samlRoles = new ArrayList<>();
         Map<String, String> userSpecificConfig = new HashMap<>(backendConfig.getConfigMap());
-       if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
+        if ("saml".equals(userSpecificConfig.get("calvalus.crypt.auth"))) {
             try {
                 HttpSession session = getThreadLocalRequest().getSession();
                 AssertionImpl assertion = (AssertionImpl) session.getAttribute("_const_cas_assertion_");
@@ -945,6 +969,44 @@ public class BackendServiceImpl extends RemoteServiceServlet implements BackendS
         }
 
         userSpecificConfig.put("roles", accu.toString());
+
+        String defaultSizeLimit = userSpecificConfig.get(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT);
+        int requestSizeLimit = 0;
+        if (defaultSizeLimit != null) {
+            try {
+                requestSizeLimit = Integer.parseInt(defaultSizeLimit);
+            } catch (NumberFormatException e) {
+                LOG.log(Level.WARNING, "Illegal value for property '" + JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "': " + defaultSizeLimit, e);
+            }
+        }
+        for (String role : accu) {
+            String key = JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT + "." + role;
+            String roleRequestSizeLimit = userSpecificConfig.get(key);
+            if (roleRequestSizeLimit != null) {
+                int limit;
+                try {
+                    limit = Integer.parseInt(roleRequestSizeLimit);
+                    if (limit == 0) {
+                        requestSizeLimit = 0;
+                        break;
+                    }
+                    if (requestSizeLimit < limit) {
+                        requestSizeLimit = limit;
+                    }
+                } catch (NumberFormatException e) {
+                    LOG.log(Level.WARNING, "Illegal value for property '" + key + "': " + roleRequestSizeLimit, e);
+                }
+            }
+        }
+
+        //userSpecificConfig.put(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        HttpSession session = getThreadLocalRequest().getSession();
+        session.setAttribute(JobConfigNames.CALVALUS_REQUEST_SIZE_LIMIT, "" + requestSizeLimit);
+
+        LOG.info("Roles of user '" + getUserName() + "': " + Arrays.toString(accu.toArray(new String[0])));
+        LOG.info("requestSizeLimit of user '" + getUserName() + "': " + requestSizeLimit);
+
         return new DtoCalvalusConfig(getUserName(), accu.toArray(new String[accu.size()]), userSpecificConfig);
     }
 
