@@ -9,6 +9,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
+    <name>Calvalus WPS Implementation</name>
+    <description>BC-WPS implementation for Calvalus.</description>
     <artifactId>calvalus-wps-impl</artifactId>
 
     <properties>
