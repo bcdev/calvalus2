@@ -6,11 +6,17 @@ import com.bc.calvalus.reporting.restservice.ws.UsageStatistic;
 import com.bc.wps.utilities.PropertiesWrapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
+import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.file.FileVisitResult;
+import java.nio.file.FileVisitor;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
@@ -34,9 +40,6 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * @author hans , muhammad
@@ -53,7 +56,8 @@ public class JSONExtractor {
         List<UsageStatistic> usageStatisticList = new ArrayList<>();
         String[] fileList = Paths.get(databaseFolderPath).toFile().list();
         Predicate<String> filterFileLogBtwDate = filterFileLogBtwDate(startDate, endDate);
-        List<String> fileListCollected = Arrays.stream(fileList).filter(filterFileLogBtwDate).collect(Collectors.toList());
+        List<String> fileListCollected = Arrays.stream(fileList).filter(filterFileLogBtwDate).collect(
+                    Collectors.toList());
         for (String fileNameToLoad : fileListCollected) {
             String fullPathToLogFile = Paths.get(databaseFolderPath).resolve(fileNameToLoad).toString();
             usageStatisticList.addAll(getAllStatistics(fullPathToLogFile));
@@ -94,19 +98,22 @@ public class JSONExtractor {
         return groupUserUsageStatistic;
     }
 
-    public Map<String, List<UsageStatistic>> getAllUserUsageBetween(String startDate, String endDate) throws IOException {
+    public Map<String, List<UsageStatistic>> getAllUserUsageBetween(String startDate, String endDate) throws
+                                                                                                      IOException {
         Predicate<Long> predicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = loadStatistiBetweenDate(startDate, endDate);
-        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(
+                    p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
 
         ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
         usageStatisticList.forEach(p -> groupUserUsageStatistic.computeIfAbsent(p.getUser(), stringKey ->
-                filterUser(stringKey, usageStatisticList)
+                    filterUser(stringKey, usageStatisticList)
         ));
         return groupUserUsageStatistic;
     }
 
-    public Map<String, List<UsageStatistic>> getAllDateUsageBetween(String startDate, String endDate) throws IOException {
+    public Map<String, List<UsageStatistic>> getAllDateUsageBetween(String startDate, String endDate) throws
+                                                                                                      IOException {
         List<UsageStatistic> allStatistics = loadStatistiBetweenDate(startDate, endDate);
         Set<String> dates = getDatesBetween(startDate, endDate);
         Map<String, List<UsageStatistic>> usageWithDate = new HashMap<>();
@@ -114,23 +121,25 @@ public class JSONExtractor {
         dates.forEach(date -> {
             Predicate<Long> predicate = filterDateIntervals(date, date);
             List<UsageStatistic> usageStatisticList = allStatistics
-                    .stream()
-                    .filter(p -> predicate.test(p.getFinishTime()))
-                    .collect(Collectors.toList());
+                        .stream()
+                        .filter(p -> predicate.test(p.getFinishTime()))
+                        .collect(Collectors.toList());
             usageWithDate.put(date, usageStatisticList);
         });
 
         return usageWithDate;
     }
 
-    public Map<String, List<UsageStatistic>> getAllQueueUsageBetween(String startDate, String endDate) throws IOException {
+    public Map<String, List<UsageStatistic>> getAllQueueUsageBetween(String startDate, String endDate) throws
+                                                                                                       IOException {
         Predicate<Long> predicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = loadStatistiBetweenDate(startDate, endDate);
-        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(
+                    p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
         ConcurrentHashMap<String, List<UsageStatistic>> groupUserUsageStatistic = new ConcurrentHashMap<>();
 
         usageStatisticList.forEach(p -> groupUserUsageStatistic.computeIfAbsent(p.getQueue(), queue ->
-                filterQueue(queue, usageStatisticList)
+                    filterQueue(queue, usageStatisticList)
         ));
         return groupUserUsageStatistic;
     }
@@ -138,7 +147,8 @@ public class JSONExtractor {
     public List<UsageStatistic> getAllJobsBetween(String startDate, String endDate) throws IOException {
         Predicate<Long> predicate = filterDateTimeIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = getAllStatistics(PropertiesWrapper.get("reporting.folder.path"));
-        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
+        List<UsageStatistic> usageStatisticList = allStatistics.stream().filter(
+                    p -> predicate.test(p.getFinishTime())).collect(Collectors.toList());
         return usageStatisticList;
     }
 
@@ -163,7 +173,8 @@ public class JSONExtractor {
         return singleUserStatistics;
     }
 
-    public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageBetween(String user, String startDate, String endDate) throws
+                                                                                                         IOException {
         Predicate<Long> rangePredicate = filterDateIntervals(startDate, endDate);
         List<UsageStatistic> allStatistics = loadStatistiBetweenDate(startDate, endDate);
         return getSingleUserRangeStatistic(rangePredicate, user, allStatistics);
@@ -177,13 +188,16 @@ public class JSONExtractor {
     }
 
 
-    public List<UsageStatistic> getSingleUserUsageInYearMonth(String user, String year, String month) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageInYearMonth(String user, String year, String month)
+                throws IOException {
         Predicate<FilterUserTimeInterval> yearMonthPredicate = FilterUserTimeInterval::filterMonth;
         return getSingleUserDate(yearMonthPredicate, user, year, month, INIT_FIRST_DAY);
 
     }
 
-    public List<UsageStatistic> getSingleUserUsageYearMonthDay(String user, String year, String month, String day) throws IOException {
+    public List<UsageStatistic> getSingleUserUsageYearMonthDay(String user, String year, String month,
+                                                               String day)
+                throws IOException {
         Predicate<FilterUserTimeInterval> ymdPredicate = FilterUserTimeInterval::filterDay;
         return getSingleUserDate(ymdPredicate, user, year, month, day);
     }
@@ -224,10 +238,10 @@ public class JSONExtractor {
             }
 
             boolean startRange = (instantStartDT.isBefore(start) || instantStartDT.equals(start))
-                    && (instantStartET.isAfter(start) || instantStartET.equals(start));
+                                 && (instantStartET.isAfter(start) || instantStartET.equals(start));
 
             boolean endRange = (instantStartDT.isBefore(end) || instantStartDT.equals(end))
-                    && (instantStartET.isAfter(end) || instantStartDT.equals(end));
+                               && (instantStartET.isAfter(end) || instantStartDT.equals(end));
 
             return startRange || endRange;
         };
@@ -260,14 +274,41 @@ public class JSONExtractor {
     }
 
 
-    private List<UsageStatistic> getAllStatistics(String databasePath) throws IOException {
-        InputStream inputStream;
-        inputStream = new BufferedInputStream(new FileInputStream(databasePath));
-        String reportingJsonString = extractJsonString(inputStream);
+    private List<UsageStatistic> getAllStatistics(String databasePathString) throws IOException {
         Gson gson = new Gson();
-        return gson.fromJson(reportingJsonString,
-                             new TypeToken<List<UsageStatistic>>() {
-                             }.getType());
+        List<UsageStatistic> usageStatisticList = new ArrayList<>();
+        Path databasePath = Paths.get(databasePathString);
+        logger.info("retrieving usage statistics...");
+        FileVisitor<Path> fileVisitor = new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                        throws IOException {
+                logger.info("checking file " + file);
+                if (file.toString().toLowerCase().endsWith(".json") && !Files.isDirectory(file)) {
+                    String fileContents = new String(Files.readAllBytes(file));
+                    String reportingJsonString = constructJsonString(fileContents);
+                    List<UsageStatistic> usageStatisticsSingleFile = gson.fromJson(reportingJsonString,
+                                                                                   new TypeToken<List<UsageStatistic>>() {
+                                                                                   }.getType());
+                    usageStatisticList.addAll(usageStatisticsSingleFile);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    return FileVisitResult.CONTINUE;
+                }
+            }
+        };
+        if (Files.isDirectory(databasePath)) {
+            Files.walkFileTree(databasePath, fileVisitor);
+        } else {
+            logger.info("checking file " + databasePath);
+            String fileContents = new String(Files.readAllBytes(databasePath));
+            String reportingJsonString = constructJsonString(fileContents);
+            List<UsageStatistic> usageStatisticSingle = gson.fromJson(reportingJsonString,
+                                                                      new TypeToken<List<UsageStatistic>>() {
+                                                                      }.getType());
+            usageStatisticList.addAll(usageStatisticSingle);
+        }
+        return usageStatisticList;
     }
 
     @NotNull
@@ -276,7 +317,8 @@ public class JSONExtractor {
         return compile.matcher(aLong);
     }
 
-    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> predTime, String userName, List<UsageStatistic> allStatisticUsage) {
+    private List<UsageStatistic> getSingleUserRangeStatistic(Predicate<Long> predTime, String userName,
+                                                             List<UsageStatistic> allStatisticUsage) {
         ConcurrentHashMap<String, List<UsageStatistic>> filterUserWithDate = new ConcurrentHashMap<>();
         List<UsageStatistic> userStatisticInYear = new ArrayList<>();
         filterUserWithDate.put(userName, userStatisticInYear);
@@ -302,18 +344,23 @@ public class JSONExtractor {
         List<UsageStatistic> usageStatisticList = loadStatisticOfYearMonth(year, month);
 
         usageStatisticList
-                .forEach(usage ->
-                                 extractUserDate.computeIfPresent(usage.getUser(), getUserFromYear(intervalPredicate, year, month, day, userStatisticInYear, usage)));
+                    .forEach(usage ->
+                                         extractUserDate.computeIfPresent(usage.getUser(),
+                                                                          getUserFromYear(intervalPredicate, year,
+                                                                                          month, day,
+                                                                                          userStatisticInYear, usage)));
         return userStatisticInYear;
     }
 
     @NotNull
-    private BiFunction<String, List<UsageStatistic>, List<UsageStatistic>> getUserFromYear(Predicate<FilterUserTimeInterval> intervalPredicate,
-                                                                                           String yr, String mnth, String dy,
-                                                                                           List<UsageStatistic> userStatisticInYear,
-                                                                                           UsageStatistic usage) {
+    private BiFunction<String, List<UsageStatistic>, List<UsageStatistic>> getUserFromYear(
+                Predicate<FilterUserTimeInterval> intervalPredicate,
+                String yr, String mnth, String dy,
+                List<UsageStatistic> userStatisticInYear,
+                UsageStatistic usage) {
         return (stringKey, usageStatistics) -> {
-            FilterUserTimeInterval filterUserTimeInterval = new FilterUserTimeInterval(usage.getFinishTime(), yr, mnth, dy);
+            FilterUserTimeInterval filterUserTimeInterval = new FilterUserTimeInterval(usage.getFinishTime(), yr, mnth,
+                                                                                       dy);
 
             if (intervalPredicate.test(filterUserTimeInterval)) {
                 userStatisticInYear.add(usage);
@@ -324,12 +371,14 @@ public class JSONExtractor {
 
     @NotNull
     private List<UsageStatistic> filterUser(String stringKey, List<UsageStatistic> usageStatisticList) {
-        return usageStatisticList.stream().filter(p -> p.getUser().equalsIgnoreCase(stringKey)).collect(Collectors.toList());
+        return usageStatisticList.stream().filter(p -> p.getUser().equalsIgnoreCase(stringKey)).collect(
+                    Collectors.toList());
     }
 
     @NotNull
     private List<UsageStatistic> filterQueue(String queue, List<UsageStatistic> usageStatisticList) {
-        return usageStatisticList.stream().filter(p -> p.getQueue().equalsIgnoreCase(queue)).collect(Collectors.toList());
+        return usageStatisticList.stream().filter(p -> p.getQueue().equalsIgnoreCase(queue)).collect(
+                    Collectors.toList());
     }
 
     @NotNull
@@ -353,9 +402,8 @@ public class JSONExtractor {
     }
 
     @NotNull
-    private String extractJsonString(InputStream inputStream) throws IOException {
-        String reportingJsonString = IOUtils.toString(inputStream);
-        reportingJsonString = StringUtils.stripEnd(reportingJsonString.trim(), ",");
+    private String constructJsonString(String fileContentsString) throws IOException {
+        String reportingJsonString = StringUtils.stripEnd(fileContentsString.trim(), ",");
         reportingJsonString = "[" + reportingJsonString + "]";
         return reportingJsonString;
     }
