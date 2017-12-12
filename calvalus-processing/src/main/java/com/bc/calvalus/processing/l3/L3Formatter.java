@@ -117,7 +117,8 @@ public class L3Formatter {
 
         Configuration conf = context.getConfiguration();
         GpfUtils.init(conf);
-        Engine.start();  // TODO is this required here? It was in ProcessorAdapter()
+        Engine.start();  // required here!  L3Formatter has no ProcessorAdapter
+        CalvalusLogger.restoreCalvalusLogFormatter();
         ConverterRegistry.getInstance().setConverter(Product.class, new ProductConverter(conf));
         String format = conf.get(JobConfigNames.CALVALUS_OUTPUT_FORMAT, null);
         String compression = conf.get(JobConfigNames.CALVALUS_OUTPUT_COMPRESSION, null);

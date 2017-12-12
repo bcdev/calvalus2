@@ -117,6 +117,7 @@ public abstract class ProcessorAdapter {
         }
         GpfUtils.init(conf);
         Engine.start();
+        CalvalusLogger.restoreCalvalusLogFormatter();
     }
 
     protected MapContext getMapContext() {
