@@ -247,7 +247,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
     private boolean postprocessTargetProduct() throws IOException {
         if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_OUTPUT_SUBSETTING, false)) {
             getLogger().info("output subsetting of split " + getInputPath());
-            targetProduct = createSubset(targetProduct);
+            targetProduct = createSubsetFromOutput(targetProduct);
         }
         if (targetProduct.getSceneRasterWidth() == 0 || targetProduct.getSceneRasterHeight() == 0) {
             getLogger().info("Skip processing");
@@ -290,7 +290,7 @@ public class SnapGraphAdapter extends SubsetProcessorAdapter {
                 sourceProduct = getInputProduct();
                 if (getConfiguration().getBoolean(JobConfigNames.CALVALUS_INPUT_SUBSETTING, true)) {
                     getLogger().info("input subsetting of split " + sourcePath);
-                    sourceProduct = createSubset(sourceProduct);
+                    sourceProduct = createSubsetFromInput(sourceProduct);
                 }
             } else {
                 // other source product
