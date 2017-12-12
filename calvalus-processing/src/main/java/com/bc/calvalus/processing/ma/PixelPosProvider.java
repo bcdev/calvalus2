@@ -88,6 +88,10 @@ public class PixelPosProvider {
             productStartTime = productEndTime = 0L;
         }
         allowedPixelDisplacement = 5;
+        
+        LOG.info("pixelTimeProvider = " + this.pixelTimeProvider);
+        LOG.info("timeRangeProvider = " + this.timeRangeProvider);
+        
     }
 
     /**
@@ -285,7 +289,7 @@ public class PixelPosProvider {
         }
     }
 
-    static interface TimeRangeProvider {
+    interface TimeRangeProvider {
         long getMinReferenceTime(Record referenceRecord);
 
         long getMaxReferenceTime(Record referenceRecord);
@@ -307,6 +311,11 @@ public class PixelPosProvider {
         @Override
         public long getMaxReferenceTime(Record referenceRecord) {
             return referenceRecord.getTime().getTime() + timeDifferenceMS;
+        }
+
+        @Override
+        public String toString() {
+            return "DefaultTimeRangeProvider{timeDifferenceMS=" + timeDifferenceMS + "}";
         }
     }
 
@@ -341,6 +350,11 @@ public class PixelPosProvider {
             double lon = referenceRecord.getLocation().getLon();
             utc.setTimeInMillis(time.getTime() + (long) (lon * 24 / 360 * HOUR_IN_MS));
             return utc.get(Calendar.HOUR_OF_DAY) * HOUR_IN_MS + utc.getTimeInMillis() % HOUR_IN_MS;
+        }
+
+        @Override
+        public String toString() {
+            return "CalDayTimeRangeProvider{timeDifferenceMS=" + timeDifferenceMS + "}";
         }
     }
 }
