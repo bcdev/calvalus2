@@ -61,9 +61,8 @@ public abstract class PixelFinaliseMapper extends Mapper {
     private static final int JD = 0;
     private static final int CL = 1;
     private static final int LC = 2;
-    private static final int SE = 3;
 
-    private static final int[] BAND_TYPES = new int[]{JD, CL, LC, SE};
+    private static final int[] BAND_TYPES = new int[]{JD, CL, LC};
 
 
     @Override
@@ -109,13 +108,12 @@ public abstract class PixelFinaliseMapper extends Mapper {
         Product resultJD = remap(source, baseFilename, sensorId, lcProduct, JD);
         Product resultCL = remap(source, baseFilename, sensorId, lcProduct, CL);
         Product resultLC = remap(source, baseFilename, sensorId, lcProduct, LC);
-        Product resultSe = remap(source, baseFilename, sensorId, lcProduct, SE);
 
-        Product[] results = new Product[]{resultJD, resultCL, resultLC, resultSe};
+        Product[] results = new Product[]{resultJD, resultCL, resultLC};
 
         FileSystem fs = outputPaths[0].getFileSystem(context.getConfiguration());
         for (int i = 0; i < results.length; i++) {
-            CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/4...");
+            CalvalusLogger.getLogger().info("Writing final product " + (i + 1) + "/" + BAND_TYPES.length + "...");
             Path tifPath = outputPaths[i];
 
             if (fileSystem.exists(tifPath)) {
@@ -134,11 +132,13 @@ public abstract class PixelFinaliseMapper extends Mapper {
 
         LOG.info("...done. Creating metadata...");
         Path xmlPath = new Path(outputDir + "/" + baseFilename + ".xml");
-        String metadata = createMetadata(year, month, version, areaString);
-        try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
-            fw.write(metadata);
+        if (!fileSystem.exists(xmlPath)) {
+            String metadata = createMetadata(year, month, version, areaString);
+            try (FileWriter fw = new FileWriter(baseFilename + ".xml")) {
+                fw.write(metadata);
             }
-        FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
+            FileUtil.copy(new File(baseFilename + ".xml"), fs, xmlPath, false, context.getConfiguration());
+        }
         CalvalusLogger.getLogger().info("...done");
 //        CalvalusLogger.getLogger().info("...done. Creating quicklook...");
 //        Quicklooks.QLConfig qlConfig = new Quicklooks.QLConfig();
@@ -182,10 +182,6 @@ public abstract class PixelFinaliseMapper extends Mapper {
             case LC:
                 Band lcBand = target.addBand("LC", ProductData.TYPE_UINT8);
                 lcBand.setSourceImage(new LcImage(sourceLcBand, sourceJdBand));
-                break;
-            case SE:
-                Band sensorBand = target.addBand("sensor", ProductData.TYPE_INT8);
-                sensorBand.setSourceImage(new SensorImage(sourceJdBand, sourceLcBand, sensorId));
                 break;
             default:
                 throw new IllegalArgumentException("Programming error: invalid value '" + band + "' for band.");
@@ -683,14 +679,16 @@ public abstract class PixelFinaliseMapper extends Mapper {
             "</gco:CharacterString>" +
             "<gco:CharacterString>" +
             "#[[" +
-            "The product is a multi-layer TIFF with the following naming convention:" +
-            "${IndicativeDate}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}.tif. " +
+            "The product is a set of single-layer GeoTIFF files with the following naming convention: " +
+            "${Indicative Date}-ESACCI-L3S_FIRE-BA-${Indicative sensor}[-${Additional Segregator}]-fv${xx.x}[-${layer}].tif. " +
             "${Indicative Date} is the identifying date for this data set. Format is YYYYMMDD, where YYYY is the four " +
             "digit year, MM is the two digit month from 01 to 12 and DD is the two digit day of the month from 01 to 31. " +
-            "For monthly products the date will be set to 01. ${Indicative sensor} is MODIS. ${Additional Segregator} " +
-            "is the AREA_${TILE_CODE} being the tile code described in the Product User Guide. ${File Version} is the " +
-            "File version number in the form n{1,}[.n{1,}] (That is 1 or more digits followed by optional . and another " +
-            "1 or more digits.). An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-f${REPLACE_WITH_VERSION}.tif.]]#" +
+            "For monthly products the date will be set to 01. " +
+            "${Indicative sensor} is MODIS. ${Additional Segregator} is the AREA_${TILE_CODE} being the tile code " +
+            "described in the Product User Guide. ${File Version} is the File version number in the form n{1,}[.n{1,}] " +
+            "(That is 1 or more digits followed by optional . and another 1 or more digits.). ${layer} is the code for " +
+            "the layer represented in each file, being: JD: layer 1, CL: layer 2, and LC: layer 3. " +
+            "An example is: 20050301-ESACCI-L3S_FIRE-BA-MODIS-AREA_5-${REPLACE_WITH_VERSION}-JD.tif.]]#" +
             "</gco:CharacterString>" +
             "<gco:CharacterString>For further information on the product, please consult the Product User Guide: Fire_cci_D3.3.3_PUG-MODIS_v1.0 available at: www.esa-fire-cci.org/documents" +
             "</gco:CharacterString>" +
