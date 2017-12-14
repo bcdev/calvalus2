@@ -17,6 +17,8 @@ import org.geojson.LngLatAlt;
 import org.geojson.Point;
 import org.geojson.Polygon;
 
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +36,11 @@ import java.util.List;
 public class InjectInputSelectionServlet extends HttpServlet {
 
     private static final String CATALOGUE_SEARCH_PREFIX = "catalogueSearch_";
+
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+    }
 
     @Override
     protected void doPost(HttpServletRequest servletRequest, HttpServletResponse servletResponse)
