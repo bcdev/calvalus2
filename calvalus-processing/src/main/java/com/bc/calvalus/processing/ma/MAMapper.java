@@ -107,7 +107,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             }
 
             Area pixelArea = PixelPosProvider.computePixelArea(pixelPosRecords, maConfig.getMacroPixelSize());
-            System.out.println("pixelArea.isEmpty = " + pixelArea.isEmpty());
+            LOG.info("pixelArea.isEmpty = " + pixelArea.isEmpty());
 
             long referencePixelTime = (now() - t0);
             LOG.info(String.format("tested reference records, found %s matches, took %s sec",
@@ -116,6 +116,7 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
             if (!pixelArea.isEmpty()) {
                 t0 = now();
                 if (!pullProcessing) {
+                    // prepare call to external processor
                     Rectangle fullScene = new Rectangle(inputProduct.getSceneRasterWidth(),
                                                         inputProduct.getSceneRasterHeight());
                     Rectangle maRectangle = pixelArea.getBounds();
@@ -145,9 +146,12 @@ public class MAMapper extends Mapper<NullWritable, NullWritable, Text, RecordWri
                 extractionPM.beginTask("Extraction", pixelPosRecords.size() * 2);
                 ProductRecordSource productRecordSource;
                 Iterable<Record> extractedRecordSource;
+                boolean useInputPixelPos = conf.getBoolean(JobConfigNames.CALVALUS_MA_USE_INPUT_PIXEL_POS, false);
+                LOG.info("useInputPixelPos = " + useInputPixelPos);
                 try {
                     AffineTransform transform = processorAdapter.getInput2OutputTransform();
-                    if (transform == null) {
+                    if (!useInputPixelPos || transform == null) {
+                        LOG.info("Retrieving pixel positions from processed product");
                         transform = new AffineTransform();
                         referenceRecordSource = getReferenceRecordSource(maConfig, regionGeometry, conf);
                         pixelPosProvider = new PixelPosProvider(processedProduct,

@@ -1,5 +1,6 @@
 package com.bc.calvalus.processing.ma;
 
+import com.bc.calvalus.commons.CalvalusLogger;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.FlagCoding;
 import org.esa.snap.core.datamodel.GeoPos;
@@ -18,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.logging.Logger;
 
 /**
  * Generates an output record from a {@link Product} using an input reference record.
@@ -30,6 +32,8 @@ public class PixelExtractor {
     public static final String GOOD_PIXEL_MASK_NAME = "_good_pixel";
     public static final String ATTRIB_NAME_AGGREG_PREFIX = "*";
     public static final String EXCLUSION_REASON_ALL_MASKED = "PIXEL_EXPRESSION";
+    
+    private static final Logger LOG = CalvalusLogger.getLogger();
 
     private final Header header;
     private final Product product;
@@ -86,12 +90,12 @@ public class PixelExtractor {
     public Record extract(Record inputRecord, PixelPos originalPixelPos, Date originalPixelTime) throws IOException {
         Point2D extractionPos = i2oTransform.transform(originalPixelPos, null);
         PixelPos extractionPixelPos = new PixelPos((float) extractionPos.getX(), (float) extractionPos.getY());
-        System.out.println("PixelExtractor.extract: originalPixelPos = " + originalPixelPos + "extractionPixelPos = " + extractionPixelPos);
+        LOG.info("extract: originalPixelPos = " + originalPixelPos + "extractionPixelPos = " + extractionPixelPos);
 
         Rectangle productRect = new Rectangle(product.getSceneRasterWidth(), product.getSceneRasterHeight());
 
         if (!product.containsPixel(extractionPixelPos)) {
-            System.out.println("pixel pos not in product");
+            LOG.info("extract: pixel pos not in product");
             return null;
         }
 
@@ -101,11 +105,11 @@ public class PixelExtractor {
                               macroPixelSize, macroPixelSize));
 
         if (macroPixelRect.isEmpty()) {
-            System.out.println("macro pixel rect is empty");
+            LOG.info("extract: macro pixel rect is empty");
             return null;
         }
         if (onlyExtractComplete && (macroPixelRect.width < macroPixelSize || macroPixelRect.height < macroPixelSize)) {
-            System.out.println("macro pixel is not complete");
+            LOG.info("extract: macro pixel is not complete");
             return null;
         }
         int x0 = macroPixelRect.x;

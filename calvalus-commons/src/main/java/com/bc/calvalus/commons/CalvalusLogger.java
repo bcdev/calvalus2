@@ -28,6 +28,8 @@ import java.util.logging.*;
  */
 public class CalvalusLogger {
 
+    private static final Formatter calvalusFormatter = new LogFormatter();
+    private static final Handler calvalusHandler = new ConsoleHandler();
     private static final Logger calvalusLogger = createLogger();
 
     public static Logger getLogger() {
@@ -37,28 +39,28 @@ public class CalvalusLogger {
     private static Logger createLogger() {
         Logger logger = Logger.getLogger("com.bc.calvalus");
         logger.setUseParentHandlers(false);
-        Handler handler = new ConsoleHandler();
-//        FileHandler handler = null;
-//        try {
-//            handler = new FileHandler("/tmp/calvalus.log");
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            throw new RuntimeException(e);
-//        }
-        handler.setFormatter(new LogFormatter());
-        logger.addHandler(handler);
+        calvalusHandler.setFormatter(calvalusFormatter);
+        logger.addHandler(calvalusHandler);
         logger.setLevel(Level.INFO);
 
         Logger snapLogger = Logger.getLogger("org.esa.snap");
         snapLogger.setUseParentHandlers(false);
-        snapLogger.addHandler(handler);
+        snapLogger.addHandler(calvalusHandler);
         snapLogger.setLevel(Level.INFO);
 
         Logger rootLogger = Logger.getLogger("");
         rootLogger.setUseParentHandlers(false);
-        rootLogger.addHandler(handler);
+        rootLogger.addHandler(calvalusHandler);
         rootLogger.setLevel(Level.INFO);
         return logger;
+    }
+
+    /**
+     * The start of the SNAP Engine replace our formatter with another one
+     * @see org.esa.snap.runtime.EngineConfig#replaceConsoleLoggerFormatter(java.util.logging.Logger)
+     */
+    public static void restoreCalvalusLogFormatter() {
+        calvalusHandler.setFormatter(calvalusFormatter); 
     }
 
     /**
