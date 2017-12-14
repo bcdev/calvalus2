@@ -7,8 +7,10 @@ import static org.mockito.Mockito.*;
 
 import com.bc.calvalus.portal.shared.DtoDateRange;
 import com.bc.calvalus.portal.shared.DtoInputSelection;
+import com.google.gson.JsonSyntaxException;
 import com.sun.security.auth.UserPrincipal;
 import org.junit.*;
+import org.junit.rules.*;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Matchers;
 import org.mockito.stubbing.Answer;
@@ -30,19 +32,26 @@ public class InjectInputSelectionServletTest {
 
     private HttpServletRequest mockRequest;
     private HttpServletResponse mockResponse;
+    private ServletConfig mockServletConfig;
+    private ServletContext mockServletContext;
 
     private InjectInputSelectionServlet injectServlet;
 
+    @Rule
+    public ExpectedException thrownException = ExpectedException.none();
+
     @Before
-    public void setUp() throws Exception {
-        mockRequest = getMockHttpServletRequest();
+    public void setUp() {
         mockResponse = mock(HttpServletResponse.class);
+        mockServletConfig = mock(ServletConfig.class);
+        mockServletContext = mock(ServletContext.class);
     }
 
     @Test
     public void canSetInputSelectionInServletContext() throws Exception {
-        ServletConfig mockServletConfig = mock(ServletConfig.class);
-        ServletContext mockServletContext = mock(ServletContext.class);
+        String completeJsonRequest = getCompleteJsonRequest();
+        mockRequest = getMockHttpServletRequest(completeJsonRequest);
+
         when(mockServletContext.getAttribute("catalogueSearch_user1")).thenReturn(getTransformedInputSelection());
         when(mockServletConfig.getServletContext()).thenReturn(mockServletContext);
 
@@ -84,13 +93,59 @@ public class InjectInputSelectionServletTest {
         assertThat(productIdentifiers.get(1), equalTo("productId2"));
         assertThat(inputSelectionFromContext.getDateRange().getStartTime(), equalTo("2017-11-01T00:00:00.00Z"));
         assertThat(inputSelectionFromContext.getDateRange().getEndTime(), equalTo("2017-11-02T00:00:00.00Z"));
-        assertThat(inputSelectionFromContext.getRegionGeometry(), equalTo("POLYGON((-16.5234375 34.538237527295756,49.5703125 34.538237527295756,49.5703125 -38.052416771864834,-16.5234375 -38.052416771864834,-16.5234375 34.538237527295756))"));
+        assertThat(inputSelectionFromContext.getRegionGeometry(),
+                   equalTo("POLYGON((-16.5234375 34.538237527295756,49.5703125 34.538237527295756,49.5703125 -38.052416771864834,-16.5234375 -38.052416771864834,-16.5234375 34.538237527295756))"));
     }
 
-    private HttpServletRequest getMockHttpServletRequest() throws IOException {
+    @Test
+    public void canSetInputSelectionWithPointInServletContext() throws Exception {
+        String jsonRequest = getJsonRequestWithPoint();
+        mockRequest = getMockHttpServletRequest(jsonRequest);
+
+        when(mockServletContext.getAttribute("catalogueSearch_user1")).thenReturn(getTransformedInputSelection());
+        when(mockServletConfig.getServletContext()).thenReturn(mockServletContext);
+
+        injectServlet = new InjectInputSelectionServlet();
+        injectServlet.init(mockServletConfig);
+        injectServlet.doPost(mockRequest, mockResponse);
+
+        ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<DtoInputSelection> captor = ArgumentCaptor.forClass(DtoInputSelection.class);
+        verify(mockServletContext, times(1)).setAttribute(stringCaptor.capture(), captor.capture());
+
+        DtoInputSelection value = captor.getValue();
+        assertThat(value, instanceOf(DtoInputSelection.class));
+        assertThat(value.getCollectionName(), equalTo("Sentinel-2 SPONGE no geo-index"));
+        assertThat(value.getRegionGeometry(),
+                   equalTo("POLYGON((10.524795 51.439422, 10.524805 51.439422, 10.524805 51.439432, 10.524795 51.439432, 10.524795 51.439422))"));
+        assertThat(value.getProductIdentifiers().size(), equalTo(2));
+        assertThat(value.getProductIdentifiers().get(0),
+                   equalTo("EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36LTN_20170919T080811"));
+        assertThat(value.getProductIdentifiers().get(1),
+                   equalTo("EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36NXF_20170919T080811"));
+        assertThat(value.getDateRange().getStartTime(), equalTo("2015-06-05T00:00:00.00Z"));
+        assertThat(value.getDateRange().getEndTime(), equalTo("2015-06-10T00:00:00.00Z"));
+    }
+
+    @Test
+    public void canThrowExceptionWhenInvalidGeojson() throws Exception {
+        String jsonRequest = getJsonRequestWithInvalidGeoJson();
+        mockRequest = getMockHttpServletRequest(jsonRequest);
+
+        when(mockServletContext.getAttribute("catalogueSearch_user1")).thenReturn(getTransformedInputSelection());
+        when(mockServletConfig.getServletContext()).thenReturn(mockServletContext);
+
+        thrownException.expect(JsonSyntaxException.class);
+        thrownException.expectMessage("Expected name at line 11 column 6 path $.regionGeometry.type");
+
+        injectServlet = new InjectInputSelectionServlet();
+        injectServlet.init(mockServletConfig);
+        injectServlet.doPost(mockRequest, mockResponse);
+    }
+
+    private HttpServletRequest getMockHttpServletRequest(String jsonRequest) throws IOException {
         HttpServletRequest mockRequest = mock(HttpServletRequest.class);
-        String completeJsonRequest = getCompleteJsonRequest();
-        ServletInputStream mockServletInputStream = getMockServletInputStream(completeJsonRequest);
+        ServletInputStream mockServletInputStream = getMockServletInputStream(jsonRequest);
         when(mockRequest.getInputStream()).thenReturn(mockServletInputStream);
         UserPrincipal mockUserPrincipal = new UserPrincipal("user1");
         when(mockRequest.getUserPrincipal()).thenReturn(mockUserPrincipal);
@@ -122,6 +177,43 @@ public class InjectInputSelectionServletTest {
                                      dateRange,
                                      "POLYGON((-16.5234375 34.538237527295756,49.5703125 34.538237527295756,49.5703125 -38.052416771864834,-16.5234375 -38.052416771864834,-16.5234375 34.538237527295756))"
         );
+    }
+
+    private String getJsonRequestWithInvalidGeoJson() {
+        return "{\n" +
+               "\t\"collectionName\": \"Sentinel-2 SPONGE no geo-index\",\n" +
+               "\t\"productIdentifiers\": [\"EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36LTN_20170919T080811\",\n" +
+               "\t\"EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36NXF_20170919T080811\"],\n" +
+               "\t\"dateRange\": {\n" +
+               "\t\t\"startTime\": \"2015-06-05T00:00:00.00Z\",\n" +
+               "\t\t\"endTime\": \"2015-06-10T00:00:00.00Z\"\n" +
+               "\t},\n" +
+               "\t\"regionGeometry\": {\n" +
+               "      \"type\": \"Feature\",\n" +
+               "    }\n" +
+               "}";
+    }
+
+    private String getJsonRequestWithPoint() {
+        return "{\n" +
+               "\t\"collectionName\": \"Sentinel-2 SPONGE no geo-index\",\n" +
+               "\t\"productIdentifiers\": [\"EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36LTN_20170919T080811\",\n" +
+               "\t\"EOP:CODE-DE:S2_L1C:/S2A_MSIL1C_20170919T074611_N0205_R135_T36NXF_20170919T080811\"],\n" +
+               "\t\"dateRange\": {\n" +
+               "\t\t\"startTime\": \"2015-06-05T00:00:00.00Z\",\n" +
+               "\t\t\"endTime\": \"2015-06-10T00:00:00.00Z\"\n" +
+               "\t},\n" +
+               "\t\"regionGeometry\": {\n" +
+               "      \"type\": \"Feature\",\n" +
+               "      \"geometry\": {\n" +
+               "        \"type\": \"Point\",\n" +
+               "             \"coordinates\": [10.52479963549, 51.43942678482501]\n" +
+               "      },\n" +
+               "      \"properties\": {\n" +
+               "        \"name\": \"Bleicherode\"\n" +
+               "      }\n" +
+               "    }\n" +
+               "}";
     }
 
     private String getCompleteJsonRequest() {
