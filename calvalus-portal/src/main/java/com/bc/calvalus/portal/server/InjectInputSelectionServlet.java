@@ -121,14 +121,19 @@ public class InjectInputSelectionServlet extends HttpServlet {
     }
 
     private String convertPointToWkt(Point point) {
-        // TODO: ask MB how to best implement point selection
-        System.out.println("=============Point===============");
         LngLatAlt pointCoordinates = point.getCoordinates();
-        System.out.println(pointCoordinates);
-        System.out.println(pointCoordinates.getLatitude());
-        System.out.println(pointCoordinates.getLongitude());
-        System.out.println(pointCoordinates.getAltitude());
-        System.out.println("=============Point===============");
-        return "";
+        // convert point to polygon because it is not supported by Calvalus at the moment (14.12.17)
+        double pointLongitude = pointCoordinates.getLongitude();
+        double lon1 = pointLongitude - 0.000005;
+        double lon2 = pointLongitude + 0.000005;
+        double pointLatitude = pointCoordinates.getLatitude();
+        double lat1 = pointLatitude - 0.000005;
+        double lat2 = pointLatitude + 0.000005;
+        return String.format("POLYGON((%f %f, %f %f, %f %f, %f %f, %f %f))",
+                             lon1, lat1,
+                             lon2, lat1,
+                             lon2, lat2,
+                             lon1, lat2,
+                             lon1, lat1);
     }
 }
