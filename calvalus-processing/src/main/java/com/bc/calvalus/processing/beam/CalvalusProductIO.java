@@ -271,7 +271,7 @@ public class CalvalusProductIO {
         FileSystem fs = path.getFileSystem(conf);
         FileStatus status = fs.getFileStatus(path);
         FSDataInputStream in = fs.open(path);
-        return new FSImageInputStream(in, status.getLen());
+        return new FSImageInputStream(in, status.getLen(), path.toString());
     }
 
     private static Product readProductImpl(Object input, Class<?> inputClass, String inputFormat) {

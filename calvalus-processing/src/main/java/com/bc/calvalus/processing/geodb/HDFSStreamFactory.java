@@ -52,7 +52,7 @@ class HDFSStreamFactory implements StreamFactory {
         FileSystem fs = hdfsPath.getFileSystem(conf);
         FileStatus status = fs.getFileStatus(hdfsPath);
         FSDataInputStream in = fs.open(hdfsPath);
-        return new FSImageInputStream(in, status.getLen());
+        return new FSImageInputStream(in, status.getLen(), path);
     }
 
     @Override
