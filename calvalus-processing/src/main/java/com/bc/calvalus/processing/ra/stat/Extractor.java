@@ -123,7 +123,7 @@ public abstract class Extractor {
 
     public void extract(ProgressMonitor pm) throws IOException, InterruptedException {
         Point[] tileIndices = maskImage.getTileIndices(null);
-        LOG.info(String.format("Extracting data from %d tiles for %d regions", tileIndices.length, regionFilters.size()));
+        LOG.info(String.format("Start extracting data from %d tiles for %d regions", tileIndices.length, regionFilters.size()));
         pm.beginTask("extraction", tileIndices.length * regionFilters.size());
         for (Point maskTileIndex : tileIndices) {
             final Extractor.RasterStack rasterStack = getRasters(maskTileIndex);

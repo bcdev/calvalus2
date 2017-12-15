@@ -31,9 +31,7 @@ import java.util.logging.Logger;
  */
 public class GpfUtils {
 
-    private static final int M = 1024 * 1024;
-    public static final int DEFAULT_TILE_CACHE_SIZE = 512 * M; // 512 M
-
+    private static final long OneMiB = 1024L * 1024L;
     private static final Logger LOG = CalvalusLogger.getLogger();
 
     /**
@@ -46,9 +44,13 @@ public class GpfUtils {
     }
 
     public static void initGpf(Configuration configuration, Class aClass) {
+        final long maxMemory = Runtime.getRuntime().maxMemory() / OneMiB;
+        LOG.info(String.format("Java Virtual Machine max memory is %d MiB", maxMemory));
         initSystemProperties(configuration);
         SystemUtils.init3rdPartyLibs(aClass);
         JAI.enableDefaultTileCache();
+        final long tileCacheSize = JAI.getDefaultInstance().getTileCache().getMemoryCapacity() / OneMiB;
+        LOG.info(String.format("JAI tile cache size is %d MiB", tileCacheSize));
         GPF.getDefaultInstance().getOperatorSpiRegistry().loadOperatorSpis();
 
         String tmpDir = System.getProperties().getProperty("java.io.tmpdir");
